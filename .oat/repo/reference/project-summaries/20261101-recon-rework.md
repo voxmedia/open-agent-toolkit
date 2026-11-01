@@ -1,44 +1,196 @@
 ---
-oat_generated: false
-purpose: project-observations
-oat_last_updated: 2026-09-10
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-09-11
+oat_generated: true
+oat_summary_last_task: prev8-t03
+oat_summary_revision_count: 8
+oat_summary_includes_revisions:
+  [p-rev1, p-rev2, p-rev3, p-rev4, p-rev5, p-rev6, p-rev7, p-rev8]
 ---
 
-# Project Log: recon-rework
+# Summary: Recon rework
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+Recon had drifted from its intended role as an inexpensive, high-volume evidence
+workflow: one homogeneous run-wide target made every worker inherit the cost and
+capability of the hardest assignment. This project restored economical per-wave
+routing while keeping the calling agent responsible for scope, approval,
+interpretation, evidence sufficiency, and final conclusions.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+## What Was Implemented
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- Added a closed manifest-v2 packet contract with independently selected per-wave
+  targets, task classes, floors, rationale, conditions, and session-local explicit
+  approval. Legacy manifest v1 and persisted approval fingerprints were removed;
+  evidence artifact formats remain independently versioned at v1.
+- Added shared routing helpers and a thin `prepare-routing.mjs` CLI for complete
+  pre-approval previews and exact approved-versus-constructed target checks. The
+  helpers preserve provider-native model, effort, reasoning-mode, service-tier,
+  and opaque selector values without trying to rank models by name.
+- Added bounded conditional escalation with forward-only dependencies, finite
+  activation and execution limits, explicit dispositions, and exact outcome
+  accounting. A conditional contradiction-resolution wave seeks discriminating
+  evidence; standard and thorough profiles still have exactly one terminal
+  reconciliation.
+- Enforced the complete approved profile topology at both proposal and final
+  packet validation, including profile-specific mode allowlists, 4/10/20 adaptive
+  evidence-lane caps, exact singleton cardinality, condition binding, and rejection
+  of shadow reconciliation. Hostile collection shapes now return structured errors,
+  withdraw stale output, and preserve independent diagnostics instead of throwing.
+- Consolidated condition semantics and same-run attribution, and replaced encoded
+  conditional-gap strings with structured wave/lane identity. These changes closed
+  every retrospective follow-up directly in the project.
+- Required same-run condition evidence, gather-before-compile provenance, and exact
+  approved-wave ownership for primary and redundant gather passes. Pass outcomes
+  now reconcile at exact lane granularity, preserving honest mixed-lane partials
+  while rejecting same-lane contradictions.
+- Published categorical contracts for lane-outcome and same-run evidence failures,
+  and bounded derivative-diagnostic suppression so independent defects stay
+  visible without avoidable cascades.
+- Aligned the recon controller, worker role, shared orchestration guidance,
+  packet renderer, public docs, bundled runtime, provider projections, and bundle
+  consistency tests. Recon remains at skill version `1.1.2`; all five public
+  packages remain in lockstep at `0.2.73`.
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+## Key Decisions
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- **Restore economical recon routing and caller-owned judgment.** Select each
+  bounded wave independently from current provider guidance, starting with the
+  least costly qualified route. One explicit approval binds every exact intended
+  target, topology, scope, limit, and selection reason. Predeclared conditional
+  escalation cannot become an automatic retry or target substitution, and packet
+  routing intent is not actual-launch proof. This supersedes homogeneous
+  run-wide dispatch while preserving the unsupported-receipt prohibition. See
+  [DR-260910-restore-economical-recon](../../repo/reference/decisions/DR-260910-restore-economical-recon.md).
+- **Use session-local recon approval.** Proposal, explicit approval, and exact
+  launch remain adjacent in one live session. Reload, resume, or proposal change
+  clears approval and requires a fresh preview; no compatibility fingerprint or
+  controller-authored proof is persisted. See
+  [DR-260911-use-session-local-recon](../../repo/reference/decisions/DR-260911-use-session-local-recon.md).
 
-## Entry format
+## Design Deltas
 
-Judgment entries:
+- Planning review clarified that contradiction search and judgment-bearing
+  synthesis are separate assignments. The implemented topology therefore uses an
+  optional adversary-mode contradiction-resolution evidence pass followed by one
+  mandatory terminal reconciliation with its own approved target. Foreseeable
+  judgment needs are priced into that terminal wave; unexpected inadequacy returns
+  an out-of-envelope gap for renewed approval.
+- Final code review found that preview validation enforced the topology but final
+  packet validation did not. `p04-t03` moved the rule into one shared production
+  validator used at both boundaries.
+- A later complexity review established that backward compatibility and persisted
+  approval fingerprints protected no required outcome. Phase 5 removed both,
+  centralized condition validation, and completed the structured-gap work instead
+  of carrying small maintenance items into a backlog.
+- Merged-head review exposed aggregate profile caps that both rejected the maximum
+  quick topology and admitted foreign modes, plus hostile object-valued collection
+  paths. Revisions 2 and 3 replaced that rule with explicit allowed modes, adaptive
+  caps, and exact singleton bounds at both preview and packet boundaries.
+- Later review cycles made provenance and outcome ownership explicit: condition
+  evidence must belong to the same run, thorough compilation must consume both
+  gather waves, each derived pass belongs to its approved wave, and material gaps
+  identify the exact lane before they affect assurance.
 
-```text
-### 2026-09-10 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+## Notable Challenges
 
-Structural entries:
+- Phase 2 exhausted the normal two review-fix rounds with one Important topology
+  finding still open. A user-authorized third bounded fix added ordered singleton
+  cardinality and condition-binding enforcement; a fresh fourth review then passed
+  with no findings.
+- After merging current `origin/main`, merged-head lifecycle review and the first
+  configured-gate attempt found two input/topology defects and three cap-contract
+  mismatches. All five were fixed; both narrowed lifecycle reviews passed, and the
+  second cross-family configured-gate attempt reported no findings.
+- Verification-note whitespace triggered the phase recovery protocol once. The
+  recovery commit changed only tracked evidence formatting, reran the scoped
+  checks, and preserved the original task commit.
+- Five late review rounds found increasingly narrow provenance, ownership, and
+  outcome-reconciliation defects. Each blocking defect received a bounded revision
+  and a passing phase review; the final diagnostic-only edge stayed fail-closed
+  and was explicitly deferred instead of extending implementation again.
 
-```text
-### 2026-09-10 · structural · <producer> · <ref>
-```
+## Tradeoffs Made
 
-## Entries
+- Recon validates structural class/floor consistency and exact target identity,
+  but does not infer capability from model names. Qualification remains owned by
+  current provider guidance, the live catalog, and the calling agent.
+- Backward compatibility was intentionally dropped. Supporting manifest v1 and
+  persisted approval fingerprints would add branches and fixtures without serving
+  a required user outcome; evidence artifacts retain their separate v1 contract.
+- The integration suite uses provider-shaped synthetic controls rather than live
+  provider launches. It proves production helper and workflow behavior, not native
+  runtime identity or billing.
 
-Entries are chronological and append-only.
+## Revision History
+
+- **p-rev1:** Merged current `origin/main`, resolved nine conflicts semantically,
+  advanced the lockstep public packages to `0.2.73`, and passed the complete
+  repository gate sequence plus lint and format.
+- **p-rev2:** Fixed the merged-head review's profile-mode/cap mismatch and hostile
+  manifest collection failures, including stale-output withdrawal and fallible
+  negative controls.
+- **p-rev3:** Fixed the configured gate's remaining singleton-lane bound, aligned
+  the adaptive-cap references, and made preview output distinguish counted adaptive
+  lanes from total lanes. The terminal gate then passed with 0 findings.
+- **p-rev4:** Required conditional predicate evidence to belong to the current run,
+  then suppressed only the derivative predecessor and predicate diagnostics when a
+  primary evidence-ownership check fails. The narrowed phase review passed cleanly.
+- **p-rev5:** Moved thorough redundant gathering before compilation and required
+  the candidate ledger to bind both independent dossiers by exact provenance
+  before review briefs are built. The focused and full recon suites passed.
+- **p-rev6:** Bound primary and redundant gather pass derivation to the approved
+  wave that owns each lane, preventing cross-wave impersonation while retaining
+  honest partial outcomes. The narrowed review passed with no findings.
+- **p-rev7:** Reconciled complete artifacts with material failed or omitted pass
+  outcomes before profile derivation, so contradictory evidence cannot preserve
+  assurance or publication. The authorized review cycle passed cleanly.
+- **p-rev8:** Refined that reconciliation to exact lane identity, documented the
+  public categorical contract, and bounded derivative thorough-ledger diagnostics.
+  Mixed-lane partials remain publishable at their achieved profile; same-lane
+  contradictions remain invalid.
+
+## Integration Notes
+
+- Canonical behavior lives under `.agents/skills/recon`; generated CLI assets and
+  provider views must continue to come from repository build/sync tooling.
+- The manifest exposes approved intended routing only. Constructed invocation,
+  accepted execution, or observed runtime identity may be claimed only when the
+  responsible launcher supplies that evidence.
+- Quick remains an evidence packet for an intelligent caller and intentionally has
+  no independent semantic pass. Standard/thorough assurance still depends on their
+  required typed evidence and single terminal reconciliation.
+- Final verification passed all eight CI-equivalent gates in order plus `pnpm lint`
+  and `pnpm format`, for ten required repository gates total; the terminal recon
+  suite passed 281/281. Release validation packed all five public packages at
+  `0.2.73`, docs built, and targeted negative controls proved the assurance guards
+  can fail. Earlier repeatable evidence is in
+  [phase-4-validation.md](references/verification/phase-4-validation.md).
+- Final lifecycle review
+  `final-review-2026-09-11T230845Z.md` (review `reviews/archived/final-review-2026-09-11T230845Z.md`, local to the project; not archived)
+  passed with 0C/0I/0M/1m; Thomas explicitly deferred its fail-closed,
+  diagnostic-only Minor.
+- Configured exit-gate run `965e9704-ba33-443b-adca-e494b6692fbc` passed at the
+  Important threshold with 0C/0I/0M/2m and was durably received as allowed. Its
+  second Minor joins the same post-release diagnostic cleanup.
+
+## Follow-up Items
+
+- **Post-release recon diagnostic cleanup:** suppress the derivative thorough
+  gather-input diagnostic when terminal reconciliation is absent, and share the
+  singleton-qualified legacy gap predicate across all pass-outcome consumers.
+  Both accepted Minors are diagnostic-only; affected packets already remain
+  invalid and unpublishable.
+
+## Explainer Outcome
+
+- **project-recap:** skipped — recorded interactive decision; no recap run or run
+  path was created.
+
+## Workflow Observations
 
 ### 2026-09-10 · structural · oat-project-implement · p01
 
@@ -211,17 +363,3 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 ### 2026-09-12 · structural · oat-project-review-receive · final
 
 run-4-exit-gate-pass-receive-20260912T001359Z Gate 965e9704-ba33-443b-adca-e494b6692fbc passed at Important with 0C/0I/0M/2m; m1 preserves the user-approved diagnostic deferral and m2 is deferred to the same cleanup with no publication effect.
-
-### 2026-09-12 · structural · oat-project-implement · complete
-
-implementation-complete-p-rev8-20260912T014702Z All 31 tasks, final verification, final lifecycle review, configured exit gate, refreshed summary/docs/PR, and final HiLL approval are complete; PR #285 remains open for review.
-
-## End-of-run synthesis
-
-Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
-machinery, consolidated condition diagnostics, replaced free-text conditional
-gap identity with structured fields, and closed every retrospective and review
-follow-up directly in this PR. The terminal review is clean, 265/265 recon tests
-pass, all repository gates pass, and fourteen guard-neutralization controls prove
-the assurance-bearing clauses fail when their guards are removed. No retrospective
-item was filed to backlog.
