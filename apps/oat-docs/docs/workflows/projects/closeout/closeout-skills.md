@@ -584,7 +584,8 @@ writes a PR description file, clears the active
 project (or keeps it until an archive succeeds), commits the completion
 bookkeeping, and pushes it. A yes to the PR question, or
 `workflow.createPrOnComplete: true` when no PR is tracked, creates a new PR
-against `main`. If a PR is already open, the skill updates its description
+against the base branch resolved from `git.defaultBranch` (default `main`), the
+same way `oat-project-pr-final` resolves it. If a PR is already open, the skill updates its description
 with `gh pr edit` when archiving or for a synced project. Archives keep no
 `pr/` directory, so when archiving the skill carries the regenerated PR body in
 a temporary file until the PR is created or updated; a run that resumes an
