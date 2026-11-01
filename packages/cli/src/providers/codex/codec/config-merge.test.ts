@@ -2,6 +2,7 @@ import TOML from '@iarna/toml';
 import { describe, expect, it } from 'vitest';
 
 import {
+  describeCodexConfigMerge,
   mergeCodexConfig,
   mergeCodexConfigForRole,
   readCodexMaxDepth,
@@ -38,42 +39,75 @@ describe('mergeCodexConfig', () => {
   });
 
   it.each([
-    { label: 'missing', existingContent: null, expectedDepth: 2 },
+    {
+      label: 'missing',
+      existingContent: null,
+      expectedDepth: 2 as unknown,
+      added: true,
+      notice: null,
+    },
     {
       label: 'invalid',
       existingContent: '[agents]\nmax_depth = "invalid"\n',
-      expectedDepth: 2,
+      expectedDepth: 'invalid' as unknown,
+      added: false,
+      notice: 'conflict',
     },
     {
-      label: 'lower',
+      label: 'zero',
+      existingContent: '[agents]\nmax_depth = 0\n',
+      expectedDepth: 0 as unknown,
+      added: false,
+      notice: 'conflict',
+    },
+    {
+      label: 'one',
       existingContent: '[agents]\nmax_depth = 1\n',
-      expectedDepth: 2,
+      expectedDepth: 1 as unknown,
+      added: false,
+      notice: 'note',
     },
     {
       label: 'equal',
       existingContent: '[agents]\nmax_depth = 2\n',
-      expectedDepth: 2,
+      expectedDepth: 2 as unknown,
+      added: false,
+      notice: null,
     },
     {
       label: 'higher',
       existingContent: '[agents]\nmax_depth = 4\n',
-      expectedDepth: 4,
+      expectedDepth: 4 as unknown,
+      added: false,
+      notice: null,
     },
   ])(
-    'enforces the depth floor when target depth is $label',
-    ({ existingContent, expectedDepth }) => {
+    'adds a missing depth and keeps an explicit depth ($label)',
+    ({ existingContent, expectedDepth, added, notice }) => {
       const result = mergeCodexConfig({
         existingContent,
         desiredRoles: [managedRole],
       });
 
-      expect(readCodexMaxDepth(result.mergedContent)).toBe(expectedDepth);
+      const parsed = TOML.parse(result.mergedContent) as Record<
+        string,
+        Record<string, unknown>
+      >;
+      expect(parsed.agents!.max_depth).toBe(expectedDepth);
+      expect(
+        result.addedKeys.some(({ key }) => key === 'agents.max_depth'),
+      ).toBe(added);
+      expect(
+        result.userValueNotices
+          .filter(({ key }) => key === 'agents.max_depth')
+          .map(({ kind }) => kind),
+      ).toEqual(notice ? [notice] : []);
     },
   );
 
-  it('preserves a higher inherited depth without changing max_threads', () => {
+  it('adds a missing depth at the higher inherited depth', () => {
     const result = mergeCodexConfig({
-      existingContent: '[agents]\nmax_depth = 3\nmax_threads = 8\n',
+      existingContent: '[agents]\nmax_threads = 8\n',
       desiredRoles: [managedRole],
       inheritedMaxDepth: 5,
     });
@@ -83,6 +117,77 @@ describe('mergeCodexConfig', () => {
 
     expect(agents.max_depth).toBe(5);
     expect(agents.max_threads).toBe(8);
+    expect(result.addedKeys).toEqual([
+      { key: 'features.multi_agent', value: true },
+      { key: 'agents.max_depth', value: 5 },
+    ]);
+  });
+
+  it('keeps an explicit depth below the inherited depth', () => {
+    const result = mergeCodexConfig({
+      existingContent: '[agents]\nmax_depth = 3\nmax_threads = 8\n',
+      desiredRoles: [managedRole],
+      inheritedMaxDepth: 5,
+    });
+
+    expect(readCodexMaxDepth(result.mergedContent)).toBe(3);
+    expect(result.userValueNotices).toEqual([]);
+  });
+
+  it.each([
+    {
+      label: 'tables',
+      existing:
+        '[features]\nmulti_agent = false\n\n[agents]\nmax_depth = 1\n\n[agents.oat-reviewer]\ndescription = "Reviewer"\nconfig_file = "agents/oat-reviewer.toml"\n',
+    },
+    {
+      label: 'dotted keys',
+      existing:
+        'features.multi_agent = false\nagents.max_depth = 1\nagents.oat-reviewer.description = "Reviewer"\nagents.oat-reviewer.config_file = "agents/oat-reviewer.toml"\n',
+    },
+  ])(
+    'never rewrites user multi_agent = false and max_depth = 1 ($label)',
+    ({ existing }) => {
+      const result = mergeCodexConfig({
+        existingContent: existing,
+        desiredRoles: [managedRole],
+      });
+
+      expect(result.mergedContent).toBe(existing);
+      expect(result.changed).toBe(false);
+      expect(result.addedKeys).toEqual([]);
+      expect(result.userValueNotices).toEqual([
+        {
+          key: 'features.multi_agent',
+          kind: 'conflict',
+          value: false,
+          message: 'OAT-managed Codex roles need true',
+        },
+        {
+          key: 'agents.max_depth',
+          kind: 'note',
+          value: 1,
+          message: 'this disables only optional nested work',
+        },
+      ]);
+      expect(describeCodexConfigMerge(result)).toEqual([
+        'conflict: kept features.multi_agent = false (OAT-managed Codex roles need true)',
+        'note: kept agents.max_depth = 1 (this disables only optional nested work)',
+      ]);
+    },
+  );
+
+  it('names each key it adds to a config that lacks them', () => {
+    const result = mergeCodexConfig({
+      existingContent: 'model = "gpt-5.6-sol"\n',
+      desiredRoles: [managedRole],
+    });
+
+    expect(result.userValueNotices).toEqual([]);
+    expect(describeCodexConfigMerge(result)).toEqual([
+      'added features.multi_agent = true',
+      'added agents.max_depth = 2',
+    ]);
   });
 
   it('preserves unmanaged settings and removes stale managed roles', () => {
@@ -202,10 +307,9 @@ describe('mergeCodexConfig', () => {
     });
 
     expect(readCodexMaxDepth(first.mergedContent)).toBe(6);
-    expect(second).toEqual({
-      ...first,
-      changed: false,
-    });
+    expect(second.changed).toBe(false);
+    expect(second.mergedContent).toBe(first.mergedContent);
+    expect(second.addedKeys).toEqual([]);
   });
 });
 
@@ -282,7 +386,7 @@ describe('mergeCodexConfig preserves user-owned content', () => {
         '# END codex-router-managed',
         '',
         '[agents]',
-        'max_depth = 2 # raised by oat',
+        'max_depth = 1 # raised by oat',
         '',
         '[agents.oat-reviewer]',
         '# reviewer tuning',
@@ -373,8 +477,8 @@ describe('mergeCodexConfig preserves user-owned content', () => {
         '',
       ),
       expected: lines(
-        'features.multi_agent = true # toggled',
-        'agents.max_depth = 2',
+        'features.multi_agent = false # toggled',
+        'agents.max_depth = 1',
         'agents.oat-reviewer.description = "Reviewer"',
         'agents.oat-reviewer.config_file = "agents/oat-reviewer.toml"',
         '',
@@ -452,7 +556,7 @@ describe('mergeCodexConfig preserves user-owned content', () => {
         '"""',
         '[agents]',
         '# depth comment',
-        'max_depth = 2',
+        'max_depth = 1',
         '',
         '[agents.oat-reviewer]',
         'description = "Reviewer"',

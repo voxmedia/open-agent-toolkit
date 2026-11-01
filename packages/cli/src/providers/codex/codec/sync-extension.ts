@@ -42,7 +42,9 @@ import {
   SUPPORTED_CODEX_ROLE_TARGETS,
 } from './catalog';
 import {
+  type CodexConfigMergeResult,
   type CodexManagedRoleConfig,
+  describeCodexConfigMerge,
   mergeCodexConfig,
   readCodexMaxDepth,
 } from './config-merge';
@@ -146,6 +148,19 @@ async function readOptionalFile(path: string): Promise<string | null> {
   }
 
   return readFile(path, 'utf8');
+}
+
+function describeConfigOperation(
+  summary: string,
+  configMerge: CodexConfigMergeResult,
+): string {
+  const details = describeCodexConfigMerge(configMerge);
+  if (configMerge.removedRoles.length > 0) {
+    details.unshift(
+      `removes stale role tables: ${configMerge.removedRoles.map((role) => `agents.${role}`).join(', ')}`,
+    );
+  }
+  return [summary, ...details].join('; ');
 }
 
 function normalizeManagedRolesConfig(
@@ -875,14 +890,14 @@ export async function computeCodexProjectExtensionPlan(
           : 'skip',
     target: 'config',
     path: '.codex/config.toml',
-    reason:
+    reason: describeConfigOperation(
       existingConfigContent === null
         ? 'codex config missing'
         : configMerge.changed
-          ? configMerge.removedRoles.length > 0
-            ? `codex config differs from desired managed state; removes stale role tables: ${configMerge.removedRoles.map((role) => `agents.${role}`).join(', ')}`
-            : 'codex config differs from desired managed state'
+          ? 'codex config differs from desired managed state'
           : 'codex config already in sync',
+      configMerge,
+    ),
     content: configMerge.mergedContent,
   });
 

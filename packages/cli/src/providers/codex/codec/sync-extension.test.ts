@@ -194,7 +194,7 @@ describe('codex sync extension', () => {
     expect(secondPlan.aggregateConfigHash).toBe(firstPlan.aggregateConfigHash);
   });
 
-  it('updates project config to the higher inherited user max depth', async () => {
+  it('keeps an explicit project max depth below the inherited user depth', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
     tempDirs.push(root, home);
@@ -217,8 +217,77 @@ describe('codex sync extension', () => {
       (operation) => operation.target === 'config',
     );
 
-    expect(configOperation).toMatchObject({ action: 'update' });
-    expect(configOperation?.content).toContain('max_depth = 4');
+    expect(configOperation).toMatchObject({
+      action: 'update',
+      reason:
+        'codex config differs from desired managed state; added features.multi_agent = true',
+    });
+    expect(configOperation?.content).toContain('max_depth = 2');
+    expect(configOperation?.content).not.toContain('max_depth = 4');
+  });
+
+  it.each([
+    {
+      label: 'tables',
+      config:
+        '[features]\nmulti_agent = false\n\n[agents]\nmax_depth = 1\n\n[agents.custom-agent]\ndescription = "custom-agent description"\nconfig_file = "agents/custom-agent.toml"\n',
+    },
+    {
+      label: 'dotted keys',
+      config:
+        'features.multi_agent = false\nagents.max_depth = 1\nagents.custom-agent.description = "custom-agent description"\nagents.custom-agent.config_file = "agents/custom-agent.toml"\n',
+    },
+  ])(
+    'reports kept user values even when the config operation is a skip ($label)',
+    async ({ config }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+      tempDirs.push(root);
+      const canonicalDir = join(root, '.agents', 'agents');
+      await mkdir(canonicalDir, { recursive: true });
+      const canonicalPath = join(canonicalDir, 'custom-agent.md');
+      await writeFile(canonicalPath, canonicalAgentFileContent('custom-agent'));
+      const entries: CanonicalEntry[] = [
+        { name: 'custom-agent.md', type: 'agent', canonicalPath, isFile: true },
+      ];
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(join(root, '.codex', 'config.toml'), config);
+      const first = await computeCodexProjectExtensionPlan(root, entries);
+      await applyCodexProjectExtensionPlan(root, first);
+
+      const plan = await computeCodexProjectExtensionPlan(root, entries);
+
+      expect(
+        plan.operations.find((operation) => operation.target === 'config'),
+      ).toMatchObject({
+        action: 'skip',
+        reason:
+          'codex config already in sync; conflict: kept features.multi_agent = false (OAT-managed Codex roles need true); note: kept agents.max_depth = 1 (this disables only optional nested work)',
+      });
+      await expect(
+        readFile(join(root, '.codex', 'config.toml'), 'utf8'),
+      ).resolves.toBe(config);
+    },
+  );
+
+  it('reports an explicit max_depth = 0 as a conflict', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 0\n',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, []);
+
+    const configOperation = plan.operations.find(
+      (operation) => operation.target === 'config',
+    );
+    expect(configOperation).toMatchObject({
+      action: 'skip',
+      reason:
+        'codex config already in sync; conflict: kept agents.max_depth = 0 (default OAT dispatch needs at least 1)',
+    });
   });
 
   it.each([
@@ -274,8 +343,11 @@ describe('codex sync extension', () => {
     );
 
     expect(configOperation).toMatchObject({ action: 'update' });
-    expect(configOperation?.content).toContain('max_depth = 2');
+    expect(configOperation?.content).toContain('max_depth = 1');
     expect(configOperation?.content).not.toContain('max_depth = 8');
+    expect(configOperation?.reason).toContain(
+      'note: kept agents.max_depth = 1 (this disables only optional nested work)',
+    );
     await applyCodexProjectExtensionPlan(home, plan);
     await expect(readFile(projectConfigPath, 'utf8')).resolves.toBe(
       projectConfig,
