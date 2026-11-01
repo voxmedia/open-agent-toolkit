@@ -218,6 +218,59 @@ Reviewer request `rgi-p02-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`)
 
 **Outcome:** fixes queued: p02-t02
 
+### Task p02-t02: Address p02 review findings
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p02-impl-20261101-01
+**Handle:** direct:rgi-p02-fix-20261101-01:p02-t02
+**Source review:** `reviews/archived/p02-review-2026-11-01T224642Z.md` (H1, H2, H3, H4, M1, M2, M3, M4, M5, L1, L2, L3, L4)
+**Intent:** Make archive, finding, replay, gate, receipt, settlement-schema, descriptive-record, committed-state, and goal-scope corroboration match the accepted p02 Design, with one load-bearing negative-control probe per refusal clause.
+**Files:** `packages/cli/src/commands/project/clerical-settlement/**`, `packages/cli/README.md`, and `apps/oat-docs/docs/reference/cli-reference.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli build && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/clerical-settlement src/commands/project/delivery`
+**Commit:** 56bae738d81454b669858508150b520c6a045706
+**Proof:** The built-CLI verifier, help snapshot, delivery check and delivery evidence suites passed 175/175; CLI lint and type-check, `pnpm check`, isolated-HOME help/contracts (1157/1157), direct CLI build and `pnpm build` exited 0.
+
+**Review fixes:**
+
+- H1: archive corroboration now treats a missing moved-away source as normal, requires the archived artifact's event/revision/date/invocation/gate identity to agree with the row and receipt, checks a surviving source byte-for-byte, and tests real move plus collision-suffix semantics.
+- H2: proposal targets are unique by record and field; locations resolve to the selected row or exact journal field line; finding claims name their corrected field. Shared-repair and substantive-on-genuine-repair controls refuse.
+- H3: every replay names top-level `publishedHead`; non-goal subject checks and clerical-only settlement-successor checks extend through it; goal-only fields are scope-bound; settlement commits cannot rewrite Reviewed Head.
+- H4: retained gate proof is captured production `oat --json gate review` shape (`runId`, `target`, `artifactPath`, `generatedAt`) and is corroborated with artifact frontmatter, source/archive mapping and the row. The fixture records its production provenance.
+- M1-M5: replay rechecks code type; receipts bind scope/artifact/counts/finding IDs; per-guard proof is recorded below; descriptive prose is restricted to exact fields under `Clerical Observation:`; subject diffs disable rename detection.
+- L1-L4: settlement entries are strict-schema records only under `## Reviews and Gates`; known goal section 12.8 violations refuse before repair inspection; tracked project dirt refuses; labelled milestone/delivery identities normalize through the delivery subject.
+
+**Per-guard negative controls:** every row temporarily neutralized only the named guard, rebuilt the CLI, ran all built-CLI verifier tests, observed the named test fail, and then restored the guard. All unrelated tests passed in each run (24/24, 25/25, or 26/26 according to the then-current suite size).
+
+| Guard neutralized                  | Targeted control                          | Neutralized outcome                                    | Restored outcome                   |
+| ---------------------------------- | ----------------------------------------- | ------------------------------------------------------ | ---------------------------------- |
+| Archived generated-at/row identity | different-run archive                     | Target test failed; bad archive verified               | `reviewed-revision-mismatch`       |
+| Unique `(record, field)` ownership | two findings sharing Artifact             | Target test failed; shared repair verified             | `repair-target-shared`             |
+| Exact location line                | clerical claim at `plan.md:1`             | Target test failed; wrong line verified                | `finding-location-record-mismatch` |
+| Claim-to-field binding             | substantive Medium on genuine Date repair | Target test failed; substantive claim verified         | `finding-claim-field-mismatch`     |
+| Finding path binding               | substantive finding at `app.ts:1`         | Target test failed at the next line guard              | `finding-location-mismatch`        |
+| Explicit replay `publishedHead`    | replay proposal omitting it               | Target test failed; parser reached verifier            | proposal `error`                   |
+| Goal-only field scope              | `goal` on phase event                     | Target test failed; smuggled field verified            | `goal-scope-mismatch`              |
+| Post-repair successor path         | later `app.ts` commit                     | Target test failed at the next successor guard         | `settlement-successor-substantive` |
+| Settlement journal boundary        | settlement commit rewrites observation    | Target test failed at goal section 12.8                | `settlement-successor-overreach`   |
+| Immutable replay Reviewed Head     | settlement commit rewrites row head       | Target test failed at successor overreach              | `durable-proof-contradictory`      |
+| Gate run corroboration             | captured gate result has another run      | Target test failed; mismatch verified                  | `gate-proof-mismatch`              |
+| Replay code type                   | artifact row with code-claiming entry     | Target test failed at later durable binding            | `durable-proof-missing`            |
+| Receipt scope                      | receipt for `p99`                         | Target test failed; wrong receipt verified             | `receipt-event-mismatch`           |
+| Receipt artifact                   | unrelated citation                        | Target test failed; wrong citation verified            | `receipt-artifact-mismatch`        |
+| Receipt counts                     | Medium/Low mismatch                       | Target test failed; wrong counts verified              | `receipt-counts-mismatch`          |
+| Receipt finding IDs                | IDs omitted                               | Target test failed; incomplete receipt verified        | `receipt-findings-mismatch`        |
+| Descriptive heading allowlist      | Review Received receipt target            | Target test failed at exact-field enforcement          | `repair-kind-ineligible`           |
+| Non-goal `--no-renames`            | move reviewed `app.ts` into project       | Target test failed; moved subject verified             | `reviewed-subject-changed`         |
+| Settlement section placement       | entry outside Reviews and Gates           | Target test failed at successor enforcement            | `settlement-entry-not-unique`      |
+| Settlement schema errors           | missing proof                             | Both schema-targeted tests failed; 23 unrelated passed | `settlement-entry-malformed`       |
+| Static goal section 12.8 refusal   | goal Reviewed Head proposal               | Target test failed later in the unchanged evaluator    | `goal-12.8-known-ineligible`       |
+| Committed-state cleanliness        | dirty tracked `plan.md`                   | Target test failed; committed blobs verified           | `project-state-dirty`              |
+| Goal scope normalization           | `m01: implementation review`              | Positive target failed before delivery evaluation      | verified after normalization       |
+| Exact event uniqueness             | duplicate Reviews rows                    | Target test failed at repair snapshot ambiguity        | `event-not-unique`                 |
+| Reviewed Head self-oracle          | Reviews row as source                     | Target test failed at repair-kind eligibility          | `reviewed-head-self-oracle`        |
+| Status exclusion from repair mask  | Status promoted to passed                 | Target test failed; promotion escaped field check      | `repair-field-overreach`           |
+| First-settlement code-only type    | artifact review event                     | Target test failed; artifact review verified           | `review-type-ineligible`           |
+
 ## Phase p03: Records and code consumers
 
 **Status:** pending
