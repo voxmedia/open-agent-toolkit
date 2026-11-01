@@ -7,6 +7,7 @@ oat_last_updated: 2026-11-01
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
+oat_auto_review_at_hill_checkpoints: false # brief: no checkpoints
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: goal
 oat_phase_review_gate:
