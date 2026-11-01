@@ -542,7 +542,19 @@ export async function commitExactPaths(
             head ? ['read-tree', head] : ['read-tree', '--empty'],
             isolated,
           );
-          await git(root, ['add', '-A', '--', ...paths], isolated);
+          // Git refuses a tracked file whose parent directory an ignore rule
+          // matches. Only paths the base already tracks may bypass ignore
+          // rules; an untracked ignored path is still refused.
+          const tracked = new Set(
+            (await git(root, ['ls-files', '-z', '--', ...paths], isolated))
+              .split('\0')
+              .filter(Boolean),
+          );
+          const untracked = paths.filter((path) => !tracked.has(path));
+          if (untracked.length)
+            await git(root, ['add', '-A', '--', ...untracked], isolated);
+          if (tracked.size)
+            await git(root, ['add', '-A', '-f', '--', ...tracked], isolated);
           if (!(await git(root, ['diff', '--cached', '--name-only'], isolated)))
             return (operationResult = {
               outcome: 'nothing',
