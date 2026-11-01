@@ -1466,6 +1466,62 @@ describe('codex sync extension', () => {
     ).toEqual(['oat-reviewer']);
   });
 
+  it('keeps a config table the user re-pointed away from a stale owned role file', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await mkdir(join(root, '.codex', 'agents'), { recursive: true });
+    for (const role of ['gone', 'stale']) {
+      await writeFile(
+        join(root, '.codex', 'agents', `${role}.toml`),
+        [
+          '# oat-managed: true',
+          `# oat-role: ${role}`,
+          '# oat-owner: project-config',
+          'developer_instructions = "role"',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+    }
+    await writeFile(
+      join(root, '.codex', 'agents', 'replacement.toml'),
+      'developer_instructions = "mine"\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      [
+        '[agents.gone]',
+        'description = "mine"',
+        'config_file = "agents/replacement.toml"',
+        '',
+        '[agents.stale]',
+        'description = "stale"',
+        'config_file = "agents/stale.toml"',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, []);
+    const removed = plan.operations
+      .filter((operation) => operation.action === 'remove')
+      .map((operation) => operation.path)
+      .sort();
+    const config = plan.operations.find(
+      (operation) => operation.target === 'config',
+    )?.content;
+
+    expect(removed).toEqual([
+      '.codex/agents/gone.toml',
+      '.codex/agents/stale.toml',
+    ]);
+    expect(config).toContain('[agents.gone]');
+    expect(config).toContain('config_file = "agents/replacement.toml"');
+    expect(config).not.toContain('[agents.stale]');
+  });
+
   it('removes only stale roles owned by the current configuration scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);

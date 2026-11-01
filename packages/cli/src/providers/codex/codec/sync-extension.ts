@@ -630,15 +630,23 @@ function removesCanonicalAgent(
   });
 }
 
+interface StaleManagedRoles {
+  /** Role names whose `.codex/agents/<name>.toml` file is stale and owned. */
+  roleFiles: string[];
+  /** Role names whose `[agents.<name>]` table still names a stale owned file. */
+  configTables: string[];
+}
+
 async function collectStaleManagedRoles(
   scopeRoot: string,
   existingConfigContent: string | null,
   desiredRoleNames: Set<string>,
   cleanupOwners: readonly CodexRoleOwner[],
   removeLegacyProjectRoles: boolean,
-): Promise<string[]> {
+): Promise<StaleManagedRoles> {
   const agents = parseConfigAgentTable(existingConfigContent);
-  const stale = new Set<string>();
+  const staleFiles = new Set<string>();
+  const staleTables = new Set<string>();
 
   const isStaleManagedRole = (roleName: string, roleContent: string | null) => {
     if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
@@ -672,7 +680,8 @@ async function collectStaleManagedRoles(
       continue;
     }
 
-    stale.add(roleName);
+    staleTables.add(roleName);
+    staleFiles.add(roleName);
   }
 
   const agentsDir = join(scopeRoot, '.codex', 'agents');
@@ -689,7 +698,7 @@ async function collectStaleManagedRoles(
     }
 
     const roleName = basename(roleFile, '.toml');
-    if (desiredRoleNames.has(roleName) || stale.has(roleName)) {
+    if (desiredRoleNames.has(roleName) || staleFiles.has(roleName)) {
       continue;
     }
 
@@ -698,10 +707,14 @@ async function collectStaleManagedRoles(
       continue;
     }
 
-    stale.add(roleName);
+    // A table of the same name that points elsewhere was re-pointed by the
+    // user; only the leftover file is OAT's to remove.
+    staleFiles.add(roleName);
   }
 
-  return [...stale].sort((left, right) => left.localeCompare(right));
+  const sorted = (names: Set<string>) =>
+    [...names].sort((left, right) => left.localeCompare(right));
+  return { roleFiles: sorted(staleFiles), configTables: sorted(staleTables) };
 }
 
 export async function computeCodexProjectExtensionPlan(
@@ -764,7 +777,7 @@ export async function computeCodexProjectExtensionPlan(
           ).map((role) => role.roleName),
         )
       : desiredRoleNames;
-  const staleRoles = cleansStaleRoles
+  const staleRoles: StaleManagedRoles = cleansStaleRoles
     ? await collectStaleManagedRoles(
         scopeRoot,
         existingConfigContent,
@@ -772,9 +785,14 @@ export async function computeCodexProjectExtensionPlan(
         codexCleanupOwners(scopeRoot, options),
         !isUserCodexScope(scopeRoot, options),
       )
-    : [];
+    : { roleFiles: [], configTables: [] };
 
-  if (isPartialSync && desiredRoles.length === 0 && staleRoles.length === 0) {
+  if (
+    isPartialSync &&
+    desiredRoles.length === 0 &&
+    staleRoles.roleFiles.length === 0 &&
+    staleRoles.configTables.length === 0
+  ) {
     const aggregateConfigHash = hashContent(existingConfigContent ?? '');
     return {
       provider: 'codex',
@@ -838,7 +856,7 @@ export async function computeCodexProjectExtensionPlan(
     });
   }
 
-  for (const staleRole of staleRoles) {
+  for (const staleRole of staleRoles.roleFiles) {
     const staleRolePath = join(
       scopeRoot,
       '.codex',
@@ -866,7 +884,7 @@ export async function computeCodexProjectExtensionPlan(
   const configMerge = mergeCodexConfig({
     existingContent: existingConfigContent,
     desiredRoles: normalizeManagedRolesConfig(desiredRoles),
-    staleManagedRoles: staleRoles,
+    staleManagedRoles: staleRoles.configTables,
     inheritedMaxDepth,
   });
 
@@ -893,7 +911,7 @@ export async function computeCodexProjectExtensionPlan(
 
   const managedRoles = [
     ...desiredRoles.map((role) => role.roleName),
-    ...staleRoles,
+    ...staleRoles.roleFiles,
   ];
   const aggregateConfigHash = hashContent(configMerge.mergedContent);
   return {
