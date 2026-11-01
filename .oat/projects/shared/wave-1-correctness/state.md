@@ -153,12 +153,12 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-11-01T02:01:00Z'
   decided_at: '2026-11-01T02:01:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-31T22:29:55.721Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-01T01:24:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-01T02:06:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -190,6 +190,7 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ Plan complete
 - ✓ Implementation tasks complete
 - ⧗ Awaiting final review
+- ✓ Documentation sync complete (gate `DOCUMENT-02`, auto-resolved through the `--auto` path): delta analysis found no false or missing claims in `README.md`, `packages/cli/README.md` or `apps/oat-docs/docs` after p05 and the p01-t05/t06 exit-gate fixes; the chained repo-reference update recorded the project in `.oat/repo/pjm/current-state.md`, `roadmap.md` and the backlog index overview (commit `10561bd14`)
 
 ## Blockers
 
