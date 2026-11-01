@@ -942,22 +942,23 @@ When every gate passes, no task is appended and nothing is committed.
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
-| ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01   | code     | fixes_completed | 2026-11-01 | reviews/archived/p01-code-review-2026-11-01T001410Z.md      | c5e8cf91ab98f3aa42dd8f4008f38a0adf1d342c | auto       | -                 |
-| p01   | code     | passed          | 2026-11-01 | reviews/archived/p01-code-review-2026-11-01T002805Z.md      | 53c562a31f478b34b9f053aa55e827dd7433e13f | auto       | -                 |
-| p02   | code     | passed          | 2026-10-31 | reviews/archived/p02-code-review-2026-10-31T234909Z.md      | 5a46800c62fd2b68f86255ecbda22c768016d62f | auto       | -                 |
-| p03   | code     | fixes_completed | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T000944Z.md      | 58aa2d4b686544cfc67631220577d9b9369f86d7 | auto       | -                 |
-| p03   | code     | passed          | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T002455Z.md      | 28c375820bcacb504d616b99fe6cf662dbf5a881 | auto       | -                 |
-| p04   | code     | passed          | 2026-11-01 | reviews/archived/p04-code-review-2026-11-01T001445Z.md      | e7a16361fecf3129061d03d9316dbab8cb3cbb06 | auto       | -                 |
-| p05   | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T005919Z.md      | 411314d1f53bd4b7611af7cbe9ae3899dffa4fb0 | auto       | -                 |
-| p05   | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T010437Z.md      | 772ced76e13d4d732e0714dfed3417930e79b63a | auto       | -                 |
-| final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T012159Z.md         | 63b8bf8ca44f353597c843c8cb8247e853dc7d05 | auto       | -                 |
-| plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
-| plan  | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
-| final | code     | fixes_completed | 2026-11-01 | reviews/archived/final-review-2026-11-01T012851Z.md         | 106363c85d88997f88ad8a8a8534f8cfdc03936a | gate       | codex-6-sol-xhigh |
-| final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015001Z.md         | 5ac69c397894b9e0757d2481b260ba689c38911e | auto       | -                 |
-| final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015445Z.md         | b72c8fc983546455ff511f797a2478b4631eb9c2 | gate       | codex-6-sol-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01    | code     | fixes_completed | 2026-11-01 | reviews/archived/p01-code-review-2026-11-01T001410Z.md      | c5e8cf91ab98f3aa42dd8f4008f38a0adf1d342c | auto       | -                 |
+| p01    | code     | passed          | 2026-11-01 | reviews/archived/p01-code-review-2026-11-01T002805Z.md      | 53c562a31f478b34b9f053aa55e827dd7433e13f | auto       | -                 |
+| p02    | code     | passed          | 2026-10-31 | reviews/archived/p02-code-review-2026-10-31T234909Z.md      | 5a46800c62fd2b68f86255ecbda22c768016d62f | auto       | -                 |
+| p03    | code     | fixes_completed | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T000944Z.md      | 58aa2d4b686544cfc67631220577d9b9369f86d7 | auto       | -                 |
+| p03    | code     | passed          | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T002455Z.md      | 28c375820bcacb504d616b99fe6cf662dbf5a881 | auto       | -                 |
+| p04    | code     | passed          | 2026-11-01 | reviews/archived/p04-code-review-2026-11-01T001445Z.md      | e7a16361fecf3129061d03d9316dbab8cb3cbb06 | auto       | -                 |
+| p05    | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T005919Z.md      | 411314d1f53bd4b7611af7cbe9ae3899dffa4fb0 | auto       | -                 |
+| p05    | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T010437Z.md      | 772ced76e13d4d732e0714dfed3417930e79b63a | auto       | -                 |
+| p-rev1 | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T012159Z.md         | 63b8bf8ca44f353597c843c8cb8247e853dc7d05 | auto       | -                 |
+| plan   | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
+| plan   | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
+| final  | code     | fixes_completed | 2026-11-01 | reviews/archived/final-review-2026-11-01T012851Z.md         | 106363c85d88997f88ad8a8a8534f8cfdc03936a | gate       | codex-6-sol-xhigh |
+| final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015001Z.md         | 5ac69c397894b9e0757d2481b260ba689c38911e | auto       | -                 |
+| final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015445Z.md         | b72c8fc983546455ff511f797a2478b4631eb9c2 | gate       | codex-6-sol-xhigh |
 
 Plan artifact review disposition (Auto Artifact-Review Loop, structured
 mode, native Cursor variant `oat-reviewer-claude-opus-5-5-high` resolved for
@@ -988,6 +989,52 @@ cell; never truncate a widened row back to five columns.
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: GitHub PR review on https://github.com/voxmedia/open-agent-toolkit/pull/395 (`warp-factories[bot]`, two Critical findings, reproduced by the root); operator authorized the revision on 2026-11-01.
+
+### Task prev1-t01: (revision) Remove a Codex config table only when it still names the stale owned role file
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Step 1:** In `collectStaleManagedRoles`, track stale role files and stale
+config tables separately. A `[agents.<name>]` table is removed only when its
+`config_file` still names the stale OAT-owned role file; a table the user
+re-pointed at another file stays, while the leftover owned file is still
+removed. Regression test: sync `gone`, re-point `[agents.gone].config_file` to
+an unmanaged `agents/replacement.toml`, delete the canonical agent, sync; the
+table and `replacement.toml` survive and `gone.toml` is removed. Record the
+negative control (pre-fix bad state accepted, post-fix rejected, valid control
+still removes an un-re-pointed stale table).
+
+**Step 2: Verify** — focused tests (isolated HOME), CLI lint and type-check.
+
+**Step 3: Commit** — `fix(prev1-t01): keep re-pointed Codex config tables during stale cleanup`
+
+### Task prev1-t02: (revision) Never delete a Codex role file outside the repository
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+
+**Step 1:** Before a stale role file is removed, resolve its real path
+(following symlinks, including a symlinked `.codex/agents` directory) and skip
+the removal, and its table, when it lies outside the sync scope root.
+Regression test: `.codex/agents` symlinked to an external directory holding a
+stale owned role; sync leaves the external file in place. Record the negative
+control (pre-fix deletion accepted, post-fix refused, valid in-scope stale role
+still removed).
+
+**Step 2: Verify** — focused tests, lint, type-check, forced CLI suite.
+
+**Step 3: Commit** — `fix(prev1-t02): never delete Codex role files outside the sync scope`
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -998,7 +1045,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
 - Phase 5: 6 tasks - Docs, generated views, version bump, backlog close-out, review fixes p05-t05 and p05-t06 (Definition of Done gates run as its phase-end check)
 
-**Total: 25 tasks**
+- Phase p-rev1: 2 tasks - Revision 1 (PR #395 review findings)
+
+**Total: 27 tasks**
 
 Ready for code review and merge.
 

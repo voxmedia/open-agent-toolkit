@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,16 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 6     | 6/6       |
-| Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | complete | 4     | 4/4       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 6     | 6/6       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 6     | 6/6       |
+| Phase 2      | complete    | 7     | 7/7       |
+| Phase 3      | complete    | 4     | 4/4       |
+| Phase 4      | complete    | 2     | 2/2       |
+| Phase 5      | complete    | 6     | 6/6       |
+| Phase p-rev1 | in_progress | 2     | 0/2       |
 
-**Total:** 25/25 tasks completed
+**Total:** 25/27 tasks completed
 
 ---
 
@@ -670,6 +671,39 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - R2-M1 (Medium): the note still said a dangling `.codex/agents/` link no longer stops sync → fix task p05-t06 (not re-reviewed by the phase loop; covered by the final review).
 
 **Outcome:** passed (no Critical/High in either round); fixes completed through p05-t06
+
+---
+
+## Phase p-rev1: Revision 1
+
+**Status:** in_progress
+**Started:** 2026-11-01
+
+### Revision Received: GitHub PR comments
+
+**Date:** 2026-11-01
+**Source:** https://github.com/voxmedia/open-agent-toolkit/pull/395 review by `warp-factories[bot]` (CHANGES_REQUESTED on `68fc0c5fb17187ee6c797cdd9fa3d9802b40a5ae`); operator authorized the revision on 2026-11-01
+
+**Changes requested:**
+
+- Critical: stale cleanup deletes a `[agents.<name>]` table the user re-pointed at an unmanaged `config_file` (thread on `sync-extension.ts:697`).
+- Critical: stale cleanup follows a symlinked `.codex/agents` and deletes role files outside the sync scope (thread on `sync-extension.ts:610`).
+
+**New tasks added:** prev1-t01, prev1-t02
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill.
+
+### Task prev1-t01: (revision) Remove a Codex config table only when it still names the stale owned role file
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task prev1-t02: (revision) Never delete a Codex role file outside the repository
+
+**Status:** pending
+**Commit:** -
 
 ---
 
