@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { lstat, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
@@ -2792,30 +2792,30 @@ export async function clearActiveIdea(repoRoot: string): Promise<void> {
   });
 }
 
-export function detectDefaultBranch(repoRoot: string): string {
-  try {
-    const branch = execSync(
-      'gh repo view --json defaultBranchRef --jq .defaultBranchRef.name',
-      {
-        cwd: repoRoot,
-        encoding: 'utf8',
-        timeout: 10_000,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      },
-    ).trim();
-    if (branch) return branch;
-  } catch {
-    // gh not available or not authenticated — fall through
-  }
+export type GitCommandRunner = (args: readonly string[], cwd: string) => string;
 
+const runGitCommand: GitCommandRunner = (args, cwd) =>
+  execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    timeout: 5_000,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+/**
+ * Local-only default-branch detection: `origin/HEAD`, then `main`. It runs
+ * only `git`, so it never contacts a remote service or runs `gh`.
+ */
+export function detectDefaultBranch(
+  repoRoot: string,
+  runGit: GitCommandRunner = runGitCommand,
+): string {
   try {
-    const ref = execSync('git rev-parse --abbrev-ref origin/HEAD', {
-      cwd: repoRoot,
-      encoding: 'utf8',
-      timeout: 5_000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-    if (ref.startsWith('origin/')) return ref.replace('origin/', '');
+    const ref = runGit(
+      ['rev-parse', '--abbrev-ref', 'origin/HEAD'],
+      repoRoot,
+    ).trim();
+    if (ref.startsWith('origin/')) return ref.slice('origin/'.length);
   } catch {
     // origin/HEAD not set — fall through
   }

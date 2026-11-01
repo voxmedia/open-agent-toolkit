@@ -760,13 +760,18 @@ async function runGuidedSetupImpl(
     : resolution!.activeAdapters.map((adapter) => adapter.displayName);
 
   context.logger.info('[1/5] Tool packs…');
-  // Defer the per-pack scope gate to the tools flow: `gate` asks the customize
-  // prompt after pack selection (and only when a user-eligible pack is
-  // selected). Non-interactive setup applies additive defaults with no prompt.
+  // An explicit --scope project|user reaches the tools flow as an explicit
+  // selection: packs install at that scope only. Otherwise defer the per-pack
+  // scope gate to the tools flow: `gate` asks the customize prompt after pack
+  // selection (and only when a user-eligible pack is selected).
+  // Non-interactive setup applies additive defaults with no prompt.
+  const explicitScope = context.scope === 'project' || context.scope === 'user';
   const scopeSelection: ScopeSelectionMode = context.interactive
     ? 'gate'
     : 'defaults';
-  const guidedContext: CommandContext = { ...context, scopeSelection };
+  const guidedContext: CommandContext = explicitScope
+    ? context
+    : { ...context, scopeSelection };
   const installedPacks =
     explicitProjectGuidance === undefined
       ? await dependencies.runToolPacks(guidedContext)
@@ -1390,7 +1395,10 @@ export function createInitCommand(
   return withProjectGuidanceOptions(withScopeOption(new Command('init')))
     .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
-    .option('--no-hook', 'Skip optional pre-commit hook install')
+    .option(
+      '--no-hook',
+      'Remove an installed optional pre-commit hook and skip installing one',
+    )
     .option('--setup', 'Run guided setup after initialization')
     .addCommand(createInitToolsCommand())
     .action(async (_options, command: Command) => {

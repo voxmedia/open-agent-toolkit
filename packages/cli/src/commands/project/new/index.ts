@@ -22,6 +22,8 @@ import {
 
 const COMMIT_STATUS_MESSAGES = {
   skipped_disabled: 'Scaffold commit: skipped (--no-commit)',
+  skipped_local_scope:
+    'Scaffold commit: skipped (local-scope projects are gitignored and never committed)',
   skipped_no_worktree: 'Scaffold commit: skipped (not a git work tree)',
   skipped_nothing: 'Scaffold commit: skipped (nothing to commit)',
 } as const;
