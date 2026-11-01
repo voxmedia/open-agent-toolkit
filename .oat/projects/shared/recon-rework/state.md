@@ -84,7 +84,8 @@ oat_post_implement_sequence:
   failure: null
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: open
+oat_pr_status: merged
+oat_pr_status_observed_at: '2026-11-01T15:58:00Z'
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null

@@ -62,7 +62,8 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: complete
-oat_pr_status: open
+oat_pr_status: merged
+oat_pr_status_observed_at: '2026-11-01T15:58:00Z'
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/356
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null
