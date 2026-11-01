@@ -16,16 +16,16 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 6     | 6/6       |
-| Phase 2      | complete    | 7     | 7/7       |
-| Phase 3      | complete    | 4     | 4/4       |
-| Phase 4      | complete    | 2     | 2/2       |
-| Phase 5      | complete    | 6     | 6/6       |
-| Phase p-rev1 | in_progress | 2     | 2/2       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 6     | 6/6       |
+| Phase 2      | complete | 7     | 7/7       |
+| Phase 3      | complete | 4     | 4/4       |
+| Phase 4      | complete | 2     | 2/2       |
+| Phase 5      | complete | 6     | 6/6       |
+| Phase p-rev1 | complete | 3     | 3/3       |
 
-**Total:** 27/27 tasks completed
+**Total:** 28/28 tasks completed
 
 ---
 
@@ -676,7 +676,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase p-rev1: Revision 1
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-01
 
 ### Revision Received: GitHub PR comments
@@ -731,6 +731,37 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ---
 
+### Task prev1-t03: (review) Document the Codex cleanup exceptions and make the probe portable
+
+**Status:** completed
+**Commit:** 7dd13abe20f84d01945811cd5e0ff45a0ceb4390
+
+**Outcome (required when completed):**
+
+- `providers.md` states that a re-pointed `[agents.<role>]` table is kept and that cleanup never deletes a role file whose real path is outside the sync scope; the probe uses a portable re-point step and fails setup loudly if it did not re-point.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/providers.md`, `.oat/projects/shared/wave-1-correctness/references/pr395-codex-cleanup-probe.sh`
+
+**Verification:** `pnpm --filter oat-docs check` exit 0; docs check exit 0; probe re-run against the post-fix build reports KEPT / SURVIVED with controls passing.
+
+### Review Received: p-rev1
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p-rev1-code-review-2026-11-01T160420Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 3
+
+- Both PR #395 Critical findings verified fixed as the operator specified; reviewer copied the regression tests onto the pre-fix source (both fail) and re-ran the probe (pre-fix DELETED/DELETED, post-fix KEPT/SURVIVED); edge probes (partial sync, user scope, whole `.codex` symlinked, nested and `..` `config_file`, dry-run) pass; 863 provider/sync tests pass.
+- L1 (Low): a table whose `config_file` names a nested owned file can still lead to removing a different `.codex/agents/<name>.toml` without an ownership check of that file; contrived, and present on `origin/main` → recorded under Deferred Findings.
+- L2 (Low): `providers.md` did not mention the new exceptions → fixed in prev1-t03.
+- L3 (Low): probe usage comment and macOS-only `sed -i ''` → fixed in prev1-t03.
+
+**Outcome:** passed (request `wave1-p-rev1-review-1`)
+
+---
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -755,7 +786,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=wave1-p05-review-2 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p05 task p05-t06 (review fix) — reason: one-sentence docs correction for review R2-M1 after the p05 fix loop; root model claude-opus-5-5 (Cursor). No child launched.
 - Root-inline phase: p01 task p01-t06 (review fix) — reason: one-line regression found while validating the p01-t05 commit; root model claude-opus-5-5 (Cursor). No child launched.
-- Root-inline phase: p-rev1 tasks prev1-t01, prev1-t02 (operator-authorized revision for PR #395 review findings) — reason: small bounded fix the operator asked the root to make; root model claude-opus-5-5 (Cursor). No child launched.
+- Root-inline phase: p-rev1 tasks prev1-t01, prev1-t02, prev1-t03 (operator-authorized revision for PR #395 review findings) — reason: small bounded fix the operator asked the root to make; root model claude-opus-5-5 (Cursor). No child launched.
 
 <!-- orchestration-runs-end -->
 
@@ -863,6 +894,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - p02 note: the EPIPE handler does not treat `ENOTCONN` as quiet; separate decision if it is observed in practice.
 
 - final L1: root `AGENTS.md:9` hand-written maintainer line recommends `oat sync --scope all`; outside the item (which names the generated guidance block); leave to maintainers.
+
+- p-rev1 L1: a `[agents.<name>]` table whose `config_file` names a nested OAT-owned stale file can still cause removal of a separate `.codex/agents/<name>.toml` without an ownership check of that file; contrived setup, pre-existing on `origin/main`; follow-up candidate.
 
 ## Deviations from Plan / Design
 

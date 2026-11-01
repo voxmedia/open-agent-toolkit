@@ -952,7 +952,7 @@ When every gate passes, no task is appended and nothing is committed.
 | p04    | code     | passed          | 2026-11-01 | reviews/archived/p04-code-review-2026-11-01T001445Z.md      | e7a16361fecf3129061d03d9316dbab8cb3cbb06 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T005919Z.md      | 411314d1f53bd4b7611af7cbe9ae3899dffa4fb0 | auto       | -                 |
 | p05    | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T010437Z.md      | 772ced76e13d4d732e0714dfed3417930e79b63a | auto       | -                 |
-| p-rev1 | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p-rev1 | code     | passed          | 2026-11-01 | reviews/archived/p-rev1-code-review-2026-11-01T160420Z.md   | d7a101a372bd7de74d4e4730314ab6c73260df99 | auto       | -                 |
 | final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T012159Z.md         | 63b8bf8ca44f353597c843c8cb8247e853dc7d05 | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
 | plan   | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
@@ -1033,6 +1033,20 @@ still removed).
 
 **Step 3: Commit** — `fix(prev1-t02): never delete Codex role files outside the sync scope`
 
+### Task prev1-t03: (review) Document the Codex cleanup exceptions and make the probe portable
+
+Review fix for `reviews/archived/p-rev1-code-review-2026-11-01T160420Z.md`
+(Low L2: `provider-sync/providers.md` did not mention the two new cleanup
+exceptions; Low L3: the probe's usage comment named the wrong file and its
+macOS-only `sed -i ''` re-point step silently did nothing on Linux).
+
+**Files:** `apps/oat-docs/docs/provider-sync/providers.md`,
+`.oat/projects/shared/wave-1-correctness/references/pr395-codex-cleanup-probe.sh`.
+
+**Verify:** `pnpm --filter oat-docs check`, docs check, probe re-run.
+
+**Commit** — `docs(prev1-t03): document Codex cleanup exceptions and make the probe portable`
+
 ---
 
 ## Implementation Complete
@@ -1045,9 +1059,9 @@ still removed).
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
 - Phase 5: 6 tasks - Docs, generated views, version bump, backlog close-out, review fixes p05-t05 and p05-t06 (Definition of Done gates run as its phase-end check)
 
-- Phase p-rev1: 2 tasks - Revision 1 (PR #395 review findings)
+- Phase p-rev1: 3 tasks - Revision 1 (PR #395 review findings), including review fix prev1-t03
 
-**Total: 27 tasks**
+**Total: 28 tasks**
 
 Ready for code review and merge.
 

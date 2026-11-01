@@ -87,6 +87,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 autonomous-wave1-20261031-04 Observation: after the final review and two cross-family exit-gate runs passed, warp-factories requested changes on PR #395 with two reproduced critical defects in collectStaleManagedRoles: a re-pointed user [agents.*] table is deleted via the directory scan, and rm follows a symlinked .codex/agents outside the sync scope. Impact: the delivery is not mergeable as-is; the run stops at unresolved-critical-findings because oat-project-revise has no autonomous inventory rows. Recommendation: widening a destructive cleanup's eligibility should require probes for symlinked provider directories and for tables whose config_file no longer names the stale file.
 
+### 2026-11-01 · structural · oat-project-implement · p-rev1
+
+wave1-20261101-prev1-outcome: p-rev1 (operator-authorized revision for PR #395 Critical findings) passed review with 1 review-fix task (prev1-t03, docs and probe portability).
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
