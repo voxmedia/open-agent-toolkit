@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: a83d62d13
-oat_blockers: []
+oat_blockers:
+  - 'PR #395 has 2 unresolved critical review findings (warp-factories): Codex stale cleanup deletes a re-pointed user [agents.*] table, and follows a symlinked .codex/agents outside the sync scope; route through oat-project-revise'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -196,7 +197,7 @@ Implementation complete - final review, implementation exit gate and the post-im
 
 ## Blockers
 
-None
+- PR #395 external review: 2 unresolved critical findings in Codex stale-role cleanup (see implementation.md `## Reviews and Gates`); route through `oat-project-revise`.
 
 ## Next Milestone
 

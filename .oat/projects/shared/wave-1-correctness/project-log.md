@@ -78,6 +78,15 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md run=55df7ef0-1867-448a-ae66-a8f39e483790
 
+### 2026-11-01 · project · bug · Post-PR bot review found two critical Codex stale-cleanup defects every internal review missed
+
+**Category:** gotcha
+**Source:** autonomous-wave1-20261031-04
+**Origin:** oat-project-autonomous
+**Recorded:** 2026-11-01T02:21:27Z
+
+autonomous-wave1-20261031-04 Observation: after the final review and two cross-family exit-gate runs passed, warp-factories requested changes on PR #395 with two reproduced critical defects in collectStaleManagedRoles: a re-pointed user [agents.*] table is deleted via the directory scan, and rm follows a symlinked .codex/agents outside the sync scope. Impact: the delivery is not mergeable as-is; the run stops at unresolved-critical-findings because oat-project-revise has no autonomous inventory rows. Recommendation: widening a destructive cleanup's eligibility should require probes for symlinked provider directories and for tables whose config_file no longer names the stale file.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
