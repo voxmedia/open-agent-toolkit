@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t04
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | complete | 4     | 4/4       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | complete    | 7     | 7/7       |
+| Phase 3 | complete    | 4     | 4/4       |
+| Phase 4 | complete    | 2     | 2/2       |
+| Phase 5 | in_progress | 4     | 4/4       |
 
-**Total:** 17/21 tasks completed
+**Total:** 21/21 tasks completed
 
 ---
 
@@ -489,34 +489,96 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 5: Integration — docs, generated views, release, close-out
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-11-01
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Docs and READMEs describe the shipped behavior: agent delete/rename cleanup (manual-cleanup warnings removed), kept Codex user values, install-scope semantics, `init --setup` without `gh`, corrected messages, and `oat sync --scope project` guidance; fixed "Known surprises in 0.3.14" entries removed (heading kept for anchors).
+- This repository's five canonical-derived `.codex/agents/*.toml` files carry `# oat-owner: project-config`.
+- Lockstep bump of the five public packages to 0.3.39; all seven Wave 1 backlog items archived.
+
+**Key files touched:**
+
+- `README.md`, `apps/oat-docs/docs/reference/what-oat-writes.md`, `provider-sync/{manifest-and-drift,pilot-with-a-team,providers,scope-and-surface,commands}.md`, `getting-started/{tool-packs,bootstrap}.md`, `reference/{troubleshooting,oat-directory-structure}.md`, `workflows/projects/execution/implementation-execution.md`
+- `.codex/agents/*.toml` (5), `.oat/sync/manifest.json`
+- `packages/*/package.json` (5), `packages/cli/assets/public-package-versions.json`
+- `.oat/repo/pjm/backlog/{items,archived}/` (7 moves), `completed.md`, `index.md`
+
+**Verification:** Definition of Done gates (phase-end check) all exit 0 — see `## Reviews and Gates`.
+
+**Notes / Decisions:**
+
+- `oat pjm doctor` exits 1 only on the pre-existing `pjm:backlog_completed_unarchived` warning (11 older items, present before this close-out); none of the seven Wave 1 items are involved.
+- Commits used the branch-built CLI (`node packages/cli/dist/index.js internal commit-paths`), since PATH `oat` 0.3.37 predates the p04-t01 fix.
 
 ### Task p05-t01: Update docs that describe the fixed behavior
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3edc770270fd5acad05b21110ca26cbe75169168
+
+**Outcome (required when completed):**
+
+- Delta-analyzed docs against merged code and tests; only now-false claims changed; review notes p01 L2, p02 L3, p03 L1 and the pre-0.3.39 ownerless Codex role caveat covered.
+
+**Files changed:**
+
+- `README.md` and 11 pages under `apps/oat-docs/docs/`
+
+**Verification:** `pnpm --filter oat-docs docs:check` exit 0 (0 errors, 2 fewer warnings than base); `pnpm --filter oat-docs check` exit 0; generated `apps/oat-docs/index.md` unchanged. Built-CLI scratch checks: `tools remove --pack workflows` dropped Codex roles/tables 69 → 0; `tools install core --scope project` exits 1 with no HOME writes.
 
 ---
 
 ### Task p05-t02: Refresh this repository's generated provider views
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ef3acc10490a4d2e193a60fc3cb0f71fe97bf190
+
+**Outcome (required when completed):**
+
+- Five canonical-derived `.codex/agents/*.toml` gained the owner header; `.codex/config.toml` unchanged.
+
+**Files changed:**
+
+- `.codex/agents/{oat-codebase-mapper,oat-phase-implementer,oat-reviewer,recon-worker,skeptical-evaluator}.toml`
+
+**Verification:** `cli:source -- sync --scope project` exit 0; second run "No changes required"; `cli:source -- status --scope project` exit 0.
 
 ---
 
 ### Task p05-t03: Lockstep version bump to 0.3.39
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fce8224c31b86b7ddc0fb21514f3ede247010429
+
+**Outcome (required when completed):**
+
+- Five public packages and `public-package-versions.json` at 0.3.39; manifest `oatVersion` restamped.
+
+**Files changed:**
+
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`
+
+**Verification:** `pnpm release:check-versions` exit 0 (after `git fetch origin main`); `pnpm run check:skill-bumps` exit 0; `pnpm release:validate` exit 0.
 
 ---
 
 ### Task p05-t04: Archive the delivered backlog items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c1f06b07340e795cb5dc5ee624e706cbfc191368
+
+**Outcome (required when completed):**
+
+- All seven items archived with outcome summaries; one exact-path commit of the 16-path `affectedPaths` union.
+
+**Files changed:**
+
+- `.oat/repo/pjm/backlog/items/` → `archived/` (7), `.oat/repo/pjm/backlog/completed.md`, `.oat/repo/pjm/backlog/index.md`
+
+**Verification:** 7 archive runs exit 0; `cli:source -- pjm doctor --json` reports no drift from these items (pre-existing unrelated warning only).
 
 ---
 
@@ -573,6 +635,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - Parallel group `[p01, p02, p03, p04]` fan-in (2026-11-01): base `ae94cfb0d4638b067deadabece6054226b9ff9de`; merged `--no-ff` in plan order (p01 `079951602`, p02 `671797a41`, p03 `80d09d048`, p04 `130cae1bf`) with no conflicts and no cross-branch file overlap. Integration verification: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli` exit 0 (437 files / 9276 tests, cache bypassed); `pnpm test:scripts` exit 0; no isolated HOME left under TMPDIR.
 - Autonomy gates in implementation: `IMPLEMENT-03` resolved HiLL checkpoints to `['p05']` with auto-review on; `IMPLEMENT-08` not needed (Cursor native dispatch available without authorization; Tier 1).
 - Phase reviews: p01 passed (round 2), p02 passed, p03 passed (round 2), p04 passed; native `oat-reviewer-claude-opus-5-5-high` at the `high` ceiling (same model family as the implementers; the configured cross-family `oat-project-implement` gate reviews the final code).
+
+- Phase 5 phase-end check, Definition of Done gates in CI order (2026-11-01, HEAD `c1f06b07340e795cb5dc5ee624e706cbfc191368`): `pnpm check` exit 0 (0/11 cached); `pnpm type-check` exit 0 (forced rerun exit 0, 0 cached); `pnpm test` exit 0 (test tasks executed, plus smoke, skills, scripts); `pnpm build` exit 0 (forced rerun exit 0, 0/5 cached); `pnpm run check:skill-bumps` exit 0; `git fetch origin main` + `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0; `pnpm build:docs` exit 0 (forced rerun exit 0, 0/6 cached); docs index regeneration + `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Also `pnpm test:evidence` exit 0 (437 files / 9276 CLI tests, cache bypassed, no HOME left), `pnpm lint` exit 0, `pnpm format` exit 0. No cross-phase reconciliation task needed.
 
 ## Deferred Findings
 
