@@ -36,7 +36,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -72,7 +72,19 @@ oat_milestone_status: aligning
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
-oat_milestone_gates: {}
+oat_milestone_gates:
+  m01:
+    plan:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:66d63aff72cc37ed55e9cf802c28370207c4f944c86e7b7662eaa2eaf1c381eb'
+      reviewed_head: cbc8836c7ca14d56742831a13fc0cd8e1fba2057
+      subject:
+        kind: plan
+        scope: [p01, p02, p03, p04, p05]
+        ref: cbc8836c7ca14d56742831a13fc0cd8e1fba2057
+      decided_at: '2026-11-01T21:45:51Z'
 oat_deliveries: []
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -131,7 +143,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-01T15:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-01T21:45:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -156,7 +168,8 @@ Plan - Authoring the goal Project Brief and its milestones
 - ✓ Goal project scaffolded
 - ✓ Brief and implementation artifacts scaffolded
 - ✓ Alignment interview (two rounds) complete; brief and milestones authored
-- ⧗ Brief artifact review, gate and approval
+- ✓ Brief artifact review (three attempts), `oat-project-goal` gate passed, approved 2026-11-01
+- ⧗ m01 (p01-p05) implementation
 
 ## Blockers
 

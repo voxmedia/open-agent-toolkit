@@ -1,11 +1,11 @@
 ---
-oat_template: true
-oat_status: in_progress
-oat_ready_for: null
+oat_template: false
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-11-01
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: goal
@@ -301,6 +301,7 @@ changes policy or exceeds a budget.
 
 - **Endpoint:** merged — each milestone is delivered as its own pull request into `main`, and a milestone counts as delivered at its endpoint only when that PR is observed merged. The next milestone activates only after re-alignment against the observed integration base.
 - **Authority:** The operator approves this brief and each milestone amendment, and merges each milestone PR. The agent accepts phases only through the normal ladder (author self-check, a fresh per-phase review, the configured gates, and the milestone integrated review). There is no self-settlement in m01: its phases, gates and integrated review accept only through the existing ladder, without the clerical-settlement rule. From m02 activation onward, the approved rule may govern this project's reviews only through capabilities already released and installed in the actual execution toolchain (user-scope skills included), and m02's own amendment approval and plan gate cannot depend on the planning-gate settlement m02 has yet to ship. The agent never merges, never self-issues an approval or an exhaustion disposition, and never pushes a brief amendment onto an open delivery branch. Within the approved outcomes, constraints and evidence, the agent may split, add or reorder phases inside a milestone and make provisional phases concrete, logging each change.
+- **Brief approved:** 2026-11-01 by user at cbc8836c7ca14d56742831a13fc0cd8e1fba2057
 
 ## Milestones
 

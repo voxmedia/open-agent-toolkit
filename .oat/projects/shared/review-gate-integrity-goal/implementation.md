@@ -5,6 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-11-01
 oat_current_task_id: p01
 oat_generated: false
+oat_template: false
 ---
 
 # Implementation: review-gate-integrity-goal
@@ -42,35 +43,51 @@ oat_generated: false
 | ----- | ------- | ----- | -------- |
 | p01   | pending | 1     | 0/1      |
 | p02   | pending | 1     | 0/1      |
+| p03   | pending | 1     | 0/1      |
+| p04   | pending | 1     | 0/1      |
+| p05   | pending | 1     | 0/1      |
+| p06   | pending | 1     | 0/1      |
+| p07   | pending | 1     | 0/1      |
+| p08   | pending | 1     | 0/1      |
+| p09   | pending | 1     | 0/1      |
 
-**Total:** 0/[N] phases accepted
+**Total:** 0/9 phases accepted
 
 ---
 
-## Phase p01: [Phase Name]
+## Phase p01: Verdict parser finding identification
 
 **Status:** pending
-**Base:** [full base SHA, recorded when the phase starts]
-**Head:** [full head SHA, recorded when the phase's work ends, before its review]
-**Executor:** [root | phase-implementer:<id> | worker:<id> | inline:<exception-ref> | reconciled]
 
-[Summary prose: verification, review disposition, authority changes, deviations, next action.]
+## Phase p02: Read-only clerical-resolution verifier
 
-<!-- Execution records follow the summary. Replace this example with real records when work starts: -->
+**Status:** pending
 
-```markdown
-### Task p01-t01: [Execution record name]
+## Phase p03: Records and code consumers
 
-**Status:** completed
-**Commit:** [full commit SHA]
-**Executor:** worker:w1
+**Status:** pending
 
-Intent, files, proof command, result.
-```
+## Phase p04: Receive settlement and the reviewer's advisory tag
 
----
+**Status:** pending
 
-## Phase p02: [Phase Name]
+## Phase p05: Implement paths, end-to-end composition, docs and decision record
+
+**Status:** pending
+
+## Phase p06: Planning-gate clerical settlement
+
+**Status:** pending
+
+## Phase p07: Exact-event consistency, provenance and pending reviews
+
+**Status:** pending
+
+## Phase p08: Gate convergence visibility and classification reporting
+
+**Status:** pending
+
+## Phase p09: Non-goal closeout freshness for every required receipt
 
 **Status:** pending
 
@@ -100,6 +117,7 @@ Intent, files, proof command, result.
 **Outcome:** passed
 
 - Gate `oat-project-goal` (plan, m01): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-01.
+- Brief approved 2026-11-01 by user at `cbc8836c7ca14d56742831a13fc0cd8e1fba2057`; `oat_milestone_gates.m01.plan` written `allowed` / `passed`.
 
 ## Deferred Findings
 
@@ -115,31 +133,10 @@ Document any intentional deviations from the brief. Include accepted review find
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- [capability 1]
-
-**Behavioral changes (user-facing):**
-
-- [bullet]
-
-**Key files / modules:**
-
-- `[path]` - [purpose]
-
-**Verification performed:**
-
-- [tests/lint/typecheck/build/manual steps]
-
-**Outcomes audit:**
-
-- Outcome 1: [observed evidence (accepted phase, commit, or verification result) or the recorded deferral]
-
-**Brief deltas (if any):**
-
-- [what changed vs plan.md and why]
+Filled at terminal closeout.
 
 ## References
 
 - Brief: `plan.md`
 - Research: `references/research/`
+- Project log: `project-log.md`
