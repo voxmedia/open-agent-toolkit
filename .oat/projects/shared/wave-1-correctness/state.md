@@ -99,11 +99,11 @@ oat_quick_start_gate:
   reviewed_head: 'b37cd7c49b32083f10e7d1794d2c9d92baa01966'
   decided_at: '2026-10-31T23:08:13Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -123,7 +123,7 @@ oat_implement_exit_gate:
   reviewed_head: '3d83c54411cc20acef66dedf9e2653f028fca814'
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
-  freshness_head: '1725e312009d966651529e8fb665ca8c6e7751a8'
+  freshness_head: '68fc0c5fb17187ee6c797cdd9fa3d9802b40a5ae'
   freshness_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
   waivers: []
   launch_state: result_persisted
