@@ -272,6 +272,24 @@ Reviewer request `rgi-p02-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`)
 | Status exclusion from repair mask  | Status promoted to passed                 | Target test failed; promotion escaped field check      | `repair-field-overreach`           |
 | First-settlement code-only type    | artifact review event                     | Target test failed; artifact review verified           | `review-type-ineligible`           |
 
+### Review Received: p02 (round 2)
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p02-review-2026-11-01T232603Z.md
+
+**Findings:** Critical 0 · High 3 · Medium 1 · Low 2
+
+Reviewer request `rgi-p02-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`); reviewed range `c8a12f51dc6ee7a4f863a0fbb0c58290377e2292..4497d05f532e3d52984efaf7fde684c65f008b71`; reconnaissance not attempted. All 13 round-1 fixes were confirmed, and three per-guard controls were re-proven in a throwaway copy. New gaps follow.
+
+- H1 (High): first settlement refuses every real Reviews row, because `Date` must equal the full artifact timestamp while producers write date-only cells (fixtures used full timestamps) → fix task p02-t03.
+- H2 (High): replay refuses ordinary lifecycle bookkeeping after settlement (for example the goal `reviewing → delivering` state write) that section 12.8 accepts; the allowlist the round-1 guidance prescribed is too narrow → fix task p02-t03.
+- H3 (High): gate-event replay verifies when the committed settlement entry omits its gate proof → fix task p02-t03.
+- M1 (Medium): the claim-to-field binding is a raw substring test, so a finding titled "Update …" satisfies `Date` → fix task p02-t03.
+- L1 (Low): the descriptive-prose kind can only target a `Clerical Observation:` heading that nothing produces → fix task p02-t03; bind it to real descriptive prose that is not a marker or receipt.
+- L2 (Low): p02 Reviews row still `fixes_added` and round-1 review and fix run lines absent → rejected with rationale: this round's Review Scope named review-outcome bookkeeping and run-line updates out of scope; Step 7b writes them after the review settles.
+
+**Outcome:** fixes queued: p02-t03 (fix round 2 of 2)
+
 ## Phase p03: Records and code consumers
 
 **Status:** pending
