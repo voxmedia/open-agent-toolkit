@@ -2,10 +2,14 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseReviewGateVerdict } from './review-verdict';
+import {
+  parseReviewGateVerdict,
+  ReviewVerdictValidationError,
+} from './review-verdict';
 
 describe('parseReviewGateVerdict', () => {
   const tempDirs: string[] = [];
@@ -23,6 +27,26 @@ describe('parseReviewGateVerdict', () => {
     const artifactPath = join(root, 'review.md');
     await writeFile(artifactPath, content, 'utf8');
     return artifactPath;
+  }
+
+  async function readFixture(name: string): Promise<string> {
+    return readFile(
+      fileURLToPath(new URL(`./__fixtures__/${name}`, import.meta.url)),
+      'utf8',
+    );
+  }
+
+  function issue339Reproduction(fixture: string): string {
+    const match = /```markdown\n([\s\S]*?)\n```/.exec(fixture);
+    if (!match?.[1]) {
+      throw new Error(
+        'issue #339 fixture is missing its markdown reproduction',
+      );
+    }
+    return match[1].replace(
+      '## Findings\n\n### Medium',
+      '## Findings\n\n### Critical\n\nNone\n\n### High\n\nNone\n\n### Medium',
+    );
   }
 
   it('prefers explicit frontmatter counts and review metadata', async () => {
@@ -90,7 +114,133 @@ oat_review_low_count: 4
         medium: 3,
         low: 4,
       },
+      findings: [
+        {
+          id: 'C1',
+          severity: 'critical',
+          title: 'Critical one',
+          location: null,
+        },
+        {
+          id: 'C2',
+          severity: 'critical',
+          title: 'Critical two',
+          location: null,
+        },
+        {
+          id: 'H1',
+          severity: 'high',
+          title: 'High one',
+          location: null,
+        },
+        {
+          id: 'M1',
+          severity: 'medium',
+          title: 'Medium one',
+          location: null,
+        },
+        {
+          id: 'M2',
+          severity: 'medium',
+          title: 'Medium two',
+          location: null,
+        },
+        {
+          id: 'M3',
+          severity: 'medium',
+          title: 'Medium three',
+          location: null,
+        },
+        {
+          id: 'L1',
+          severity: 'low',
+          title: 'Low one',
+          location: null,
+        },
+        {
+          id: 'L2',
+          severity: 'low',
+          title: 'Low two',
+          location: null,
+        },
+        {
+          id: 'L3',
+          severity: 'low',
+          title: 'Low three',
+          location: null,
+        },
+        {
+          id: 'L4',
+          severity: 'low',
+          title: 'Low four',
+          location: null,
+        },
+      ],
       blocking: true,
+    });
+  });
+
+  it('identifies the published issue #339 reproduction without counting its detail bullets', async () => {
+    const fixture = await readFixture('issue-339-review-shape.md');
+    const bodyOnly = issue339Reproduction(fixture).replace(
+      /^Findings by severity:.*\n\n/,
+      '',
+    );
+    const artifactPath = await writeArtifact(bodyOnly);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 2, low: 1 },
+      findings: [
+        {
+          id: 'M1',
+          severity: 'medium',
+          title: 'Title of the first finding',
+          location: 'src/a.ts:1-10',
+        },
+        {
+          id: 'M2',
+          severity: 'medium',
+          title: 'Title of the second finding',
+          location: 'src/b.ts:1-10',
+        },
+        {
+          id: 'L1',
+          severity: 'low',
+          title: '…',
+          location: null,
+        },
+      ],
+    });
+  });
+
+  it('refuses the abbreviated issue #339 reproduction when its declared Low count disagrees', async () => {
+    const fixture = await readFixture('issue-339-review-shape.md');
+    const artifactPath = await writeArtifact(issue339Reproduction(fixture));
+
+    const error = await parseReviewGateVerdict(artifactPath).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+
+    expect(error).toBeInstanceOf(ReviewVerdictValidationError);
+    expect(error).toMatchObject({
+      code: 'finding_count_disagreement',
+      status: 'artifact_validation_failed',
+      receiveEligible: false,
+    });
+    expect((error as Error).message).toMatch(
+      /contradicts itself about finding counts \(low\)[\s\S]*3 low[\s\S]*1 low/i,
+    );
+  });
+
+  it('keeps the wave-5 returned message fixed as a structured refusal', async () => {
+    const fixture = await readFixture('backlog-wave-5-exit-gate-r1-return.md');
+    const artifactPath = await writeArtifact(fixture);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'findings_unrecognizable',
+      status: 'artifact_validation_failed',
+      receiveEligible: false,
     });
   });
 
@@ -679,6 +829,193 @@ None
     });
   });
 
+  it('keeps a distinct list finding whose title starts like a detail label', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+---
+
+# Review
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**M1 — Grouped finding** (\`src/grouped.ts:3\`)
+
+- Issue: This belongs to M1.
+- Fix: Keep the grouping narrow.
+
+- **Issue: a genuinely separate finding** (\`src/separate.ts:9\`)
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 2, low: 0 },
+      findings: [
+        {
+          id: 'M1',
+          severity: 'medium',
+          title: 'Grouped finding',
+          location: 'src/grouped.ts:3',
+        },
+        {
+          id: 'M2',
+          severity: 'medium',
+          title: 'Issue: a genuinely separate finding',
+          location: 'src/separate.ts:9',
+        },
+      ],
+    });
+  });
+
+  it('refuses an orphaned closed-label detail bullet', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+- Issue: This detail has no explicit bold title owner.
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_detail_orphaned',
+      receiveEligible: false,
+    });
+  });
+
+  it('ignores a fenced example of the bold-title finding shape', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+\`\`\`markdown
+**M1 — Example only**
+
+- Issue: This is fenced example content.
+- Fix: It must not become a finding.
+\`\`\`
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 0, low: 0 },
+      findings: [],
+    });
+  });
+
+  it('does not carry detail ownership across severity sections', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**M1 — Medium owner**
+
+- Issue: This belongs to M1.
+
+### Low
+
+- Fix: This cannot belong to the prior severity.
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_detail_orphaned',
+      receiveEligible: false,
+    });
+  });
+
+  it('accepts only the captured plain and bold closed detail labels', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+**H1 — Captured wave label shapes**
+
+- **Cause:** captured cause
+- **Impact:** captured impact
+- **Reproduction:** captured reproduction
+- **Coverage gap:** captured coverage gap
+- **Fix:** captured fix
+
+### Medium
+
+**M1 — Captured issue label shapes**
+
+- Issue: captured issue
+- Fix: captured fix
+- Fix (optional): captured optional fix
+- Requirement: captured requirement
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 1, medium: 1, low: 0 },
+      findings: [
+        {
+          id: 'H1',
+          severity: 'high',
+          title: 'Captured wave label shapes',
+          location: null,
+        },
+        {
+          id: 'M1',
+          severity: 'medium',
+          title: 'Captured issue label shapes',
+          location: null,
+        },
+      ],
+    });
+  });
+
   it('ignores markdown headings inside fenced code blocks while finding severity sections', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
@@ -836,7 +1173,7 @@ Findings by severity: 0 critical, 0 high, 0 medium, 0 low
     });
   });
 
-  it('rejects a count line that contradicts findings in the body', async () => {
+  it('returns a structured refusal for a genuine count disagreement', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
 oat_review_scope: p01
@@ -845,7 +1182,7 @@ oat_review_invocation: manual
 
 # Review
 
-Findings by severity: 0 critical, 0 high, 0 medium, 0 low
+Findings by severity: 0 critical, 2 high, 0 medium, 0 low
 
 ## Findings
 
@@ -866,12 +1203,21 @@ None
 None
 `);
 
-    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
-      /contradicts itself about finding counts \(high\)[\s\S]*count line[\s\S]*Findings sections/i,
+    const error = await parseReviewGateVerdict(artifactPath).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+    expect(error).toMatchObject({
+      code: 'finding_count_disagreement',
+      status: 'artifact_validation_failed',
+      receiveEligible: false,
+    });
+    expect((error as Error).message).toMatch(
+      /contradicts itself about finding counts \(high\)[\s\S]*2 high[\s\S]*1 high/i,
     );
   });
 
-  it('rejects frontmatter counts that contradict findings in the body', async () => {
+  it('returns a structured refusal for stale-zero frontmatter counts', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
 oat_review_scope: p01
@@ -903,12 +1249,21 @@ None
 None
 `);
 
-    await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
+    const error = await parseReviewGateVerdict(artifactPath).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+    expect(error).toMatchObject({
+      code: 'finding_count_disagreement',
+      status: 'artifact_validation_failed',
+      receiveEligible: false,
+    });
+    expect((error as Error).message).toMatch(
       /contradicts itself about finding counts \(high\)[\s\S]*frontmatter count fields[\s\S]*Findings sections/i,
     );
   });
 
-  it('names the list-item requirement when a section of prose findings tallies zero', async () => {
+  it('names the accepted list and explicit-title grammar when prose findings tally zero', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: code
 oat_review_scope: p01
@@ -944,7 +1299,7 @@ None
     // the message there is nothing to correct from, and the rerun repeats the
     // same shape and loses the whole review again.
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toThrow(
-      /Only markdown list items count as findings[\s\S]*`- `[\s\S]*bold paragraph/i,
+      /markdown list items[\s\S]*`- `[\s\S]*explicit bold title marker[\s\S]*Issue:[\s\S]*Coverage gap:/i,
     );
   });
 

@@ -358,7 +358,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -369,23 +369,28 @@ describe('review skill contracts', () => {
     expect(nextStep).toBeLessThan(templateEnd);
   });
 
-  it('states the list-item finding contract in the template and the gate parsing contract', () => {
+  it('states the finding grammar in the template and the gate parsing contract', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');
     const templateEnd = content.indexOf('````', templateStart + 4);
     const findingsHeading = content.indexOf('\n## Findings\n', templateStart);
-    const listItemNote = content.indexOf(
-      'Every finding MUST be written as a markdown list item',
+    const findingGrammarNote = content.indexOf(
+      'Write every finding as a markdown list item',
     );
 
-    // The gate counts only list items, so this requirement is load-bearing:
-    // a reviewer that writes findings as prose has its whole artifact refused.
-    // The requirement has to sit where findings are written, not only in the
-    // parsing contract paragraph far below the template.
-    expect(listItemNote).toBeGreaterThan(findingsHeading);
-    expect(listItemNote).toBeLessThan(templateEnd);
+    // The narrow finding grammar is load-bearing: unsupported prose has its
+    // whole artifact refused. The requirement has to sit where findings are
+    // written, not only in the parsing contract paragraph far below.
+    expect(findingGrammarNote).toBeGreaterThan(findingsHeading);
+    expect(findingGrammarNote).toBeLessThan(templateEnd);
     expect(content).toContain(
-      'the gate counts only markdown list items (`- `, `* `, `+ `, or `1. `) as findings',
+      'The standard shape is one markdown list item (`- `, `* `, `+ `, or `1. `) per finding',
+    );
+    expect(content).toContain(
+      'The one accepted alternate shape is an explicit bold finding-title marker with a matching severity ID',
+    );
+    expect(content).toContain(
+      '`Issue:`, `Fix:`, `Fix (optional):`, `Requirement:`, `Cause:`, `Impact:`, `Reproduction:`, or `Coverage gap:`',
     );
   });
 
