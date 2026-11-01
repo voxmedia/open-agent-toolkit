@@ -290,6 +290,42 @@ Reviewer request `rgi-p02-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`)
 
 **Outcome:** fixes queued: p02-t03 (fix round 2 of 2)
 
+### Task p02-t03: Address p02 round-2 findings
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p02-impl-20261101-01
+**Handle:** direct:rgi-p02-fix-20261101-02:p02-t03
+**Source review:** `reviews/archived/p02-review-2026-11-01T232603Z.md` (H1, H2, H3, M1, L1; L2 rejected as out-of-scope bookkeeping)
+**Intent:** Make first settlement accept real date-only Reviews rows, make replay reuse the production bookkeeping judgments while preserving bound evidence, require committed gate proof, strictly bind claims to corrected fields, and fail closed on descriptive prose until p04 defines a real producer.
+**Files:** `packages/cli/src/commands/project/clerical-settlement/**`, `packages/cli/README.md`, and `apps/oat-docs/docs/reference/cli-reference.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli build && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/clerical-settlement src/commands/project/delivery`.
+**Commit:** 7cb72f013bae1c3282da74b72e4b771e0e06e8da
+**Proof:** Direct CLI build and the built-CLI verifier, delivery and help suites passed 194/194; CLI lint, CLI type-check, `pnpm check`, isolated-HOME help/contracts (1157/1157), and `pnpm build` exited 0.
+
+**Review fixes:**
+
+- H1: Reviews `Date` is the UTC date of artifact `generated_at`; absent artifact invocation normalizes to the real row sentinel `-` in first-settlement and replay. Archive identity uses the archived frontmatter plus generated-at filename lineage and accepts a receive-style move whose source is gone.
+- H2: goal replay delegates the whole chain to the unchanged section 12.8 production evaluator. Non-goal replay keeps the strict reviewed-subject check and delegates post-repair commits to the same production per-file bookkeeping judgments instead of maintaining a narrower allowlist. A real `reviewing → delivering` state transition and appended observation verify; later code and recorded-evidence rewrites refuse.
+- H3: gate replay requires the settlement entry's committed gate proof and corroborates its run, target, generated-at, reviewed head, archive and retained artifact path against the other committed bindings.
+- M1: finding titles must contain the exact corrected field token followed by `cell` or `column`, case-insensitively and at word boundaries; `Update …` cannot satisfy `Date`.
+- L1: descriptive prose is fail-closed with `descriptive-prose-target-unavailable` until p04 defines a real lifecycle-produced prose target. L2 remains intentionally untouched as review-outcome bookkeeping outside this fix scope.
+
+**Per-guard negative controls:** each row temporarily neutralized only the named guard, rebuilt the CLI, ran the complete built-CLI verifier suite, observed the targeted control fail, and restored the guard. The final restored suite passed 30/30.
+
+| Guard neutralized                                | Targeted control                                 | Neutralized outcome                                                      | Restored outcome                       |
+| ------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------ | -------------------------------------- |
+| First-settlement date-only source                | real date-only Reviews metadata                  | Target failed; 25 unrelated tests passed                                 | verified                               |
+| Replay date-only binding                         | replay without local artifact                    | Target failed; 24 unrelated tests passed                                 | verified                               |
+| First-settlement absent-invocation normalization | date-only row with Invocation `-`                | Target failed; 29 unrelated tests passed                                 | verified                               |
+| Replay absent-invocation normalization           | committed proof with null invocation and row `-` | Target failed; 29 unrelated tests passed                                 | verified                               |
+| Archived generated-at filename lineage           | archived counterpart from a different run        | Target failed; bad archive verified; 29 unrelated tests passed           | `archive-identity-mismatch`            |
+| Non-goal production successor judgment           | rewritten recorded journal observation           | Target failed; rewrite verified; 29 unrelated tests passed               | bookkeeping-successor refusal          |
+| Goal section 12.8 successor judgment             | later substantive `app.ts` commit                | Target failed; substantive successor verified; 28 unrelated tests passed | `goal-12.8-disallowed-path`            |
+| Committed gate-proof presence                    | gate replay with `proof.gate: null`              | Target failed; missing proof verified; 29 unrelated tests passed         | `durable-proof-missing`                |
+| Committed gate-proof contradiction               | gate replay with another artifact path           | Target failed; contradiction verified; 29 unrelated tests passed         | `gate-proof-mismatch`                  |
+| Exact field token and suffix                     | `Update review metadata` proposed for Date       | Two claim-binding targets failed; 28 unrelated tests passed              | `finding-claim-field-mismatch`         |
+| Descriptive-prose target unavailable             | invented `Clerical Observation` target           | Target failed; invented target verified; 29 unrelated tests passed       | `descriptive-prose-target-unavailable` |
+
 ## Phase p03: Records and code consumers
 
 **Status:** pending
