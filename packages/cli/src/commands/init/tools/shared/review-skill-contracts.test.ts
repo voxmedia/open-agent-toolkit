@@ -389,6 +389,11 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'The one accepted alternate shape is an explicit bold finding-title marker with a matching severity ID',
     );
+    expect(content).toContain('the separator is exactly one em dash (`—`)');
+    expect(content).toContain(
+      'A top-level list item beginning with an exact closed label is treated as a detail',
+    );
+    expect(content).toContain('the first blank after a detail ends ownership');
     expect(content).toContain(
       '`Issue:`, `Fix:`, `Fix (optional):`, `Requirement:`, `Cause:`, `Impact:`, `Reproduction:`, or `Coverage gap:`',
     );

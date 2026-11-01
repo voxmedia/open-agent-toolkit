@@ -24,6 +24,12 @@ export interface ReviewGateVerdict {
     low: number;
   };
   findings: ReviewFindingRecord[];
+  /**
+   * True only when all four severity sections are present and the records for
+   * each severity exactly cover `counts`. Consumers that require per-finding
+   * coverage must refuse a verdict when this is false.
+   */
+  findingsComplete: boolean;
   blocking: boolean;
   normalization?: {
     insertedSeverities: Severity[];
@@ -61,7 +67,9 @@ export interface ReviewFindingRecord {
 
 export type ReviewVerdictValidationCode =
   | 'finding_count_disagreement'
+  | 'finding_detail_ambiguous'
   | 'finding_detail_orphaned'
+  | 'finding_id_duplicate'
   | 'finding_title_severity_mismatch'
   | 'findings_unrecognizable';
 
@@ -636,13 +644,15 @@ function identifyFindingsInSection(
   severity: Severity,
   artifactPath: string,
   priorFindingCount: number,
+  usedFindingIds: Set<string>,
 ): ReviewFindingRecord[] {
   if (sectionContentIsEmpty(content)) {
     return [];
   }
 
   const findings: ReviewFindingRecord[] = [];
-  let explicitOwnerActive = false;
+  let detailOwnerState: 'none' | 'awaiting' | 'active' | 'ended' = 'none';
+  let ownedDetailLabels = new Set<(typeof DETAIL_LABELS)[number]>();
   let activeFence: ReturnType<typeof fenceMarker> = null;
 
   const addFinding = (parsed: ParsedFindingTitle): void => {
@@ -653,10 +663,25 @@ function identifyFindingsInSection(
         `Review artifact at ${artifactPath} has finding ${parsed.id} under ${severityDisplayName(severity)}; the explicit finding ID must use the ${expectedPrefix} prefix for its severity.`,
       );
     }
+    let id =
+      parsed.id ??
+      `${expectedPrefix}${priorFindingCount + findings.length + 1}`;
+    if (!parsed.id) {
+      let ordinal = priorFindingCount + findings.length + 1;
+      while (usedFindingIds.has(id)) {
+        ordinal += 1;
+        id = `${expectedPrefix}${ordinal}`;
+      }
+    }
+    if (usedFindingIds.has(id)) {
+      throw new ReviewVerdictValidationError(
+        'finding_id_duplicate',
+        `Review artifact at ${artifactPath} declares duplicate finding ID ${id}; every per-finding record must have a unique ID.`,
+      );
+    }
+    usedFindingIds.add(id);
     findings.push({
-      id:
-        parsed.id ??
-        `${expectedPrefix}${priorFindingCount + findings.length + 1}`,
+      id,
       severity,
       title: parsed.title,
       location: parsed.location,
@@ -666,7 +691,8 @@ function identifyFindingsInSection(
   for (const line of markdownLines(content)) {
     const marker = fenceMarker(line.text);
     if (marker) {
-      explicitOwnerActive = false;
+      detailOwnerState = 'none';
+      ownedDetailLabels.clear();
       if (!activeFence) {
         activeFence = marker;
       } else if (
@@ -685,7 +711,15 @@ function identifyFindingsInSection(
     const explicitTitle = parseExplicitFindingTitle(line.text);
     if (explicitTitle) {
       addFinding(explicitTitle);
-      explicitOwnerActive = true;
+      detailOwnerState = 'awaiting';
+      ownedDetailLabels = new Set();
+      continue;
+    }
+
+    if (line.text.trim().length === 0) {
+      if (detailOwnerState === 'active') {
+        detailOwnerState = 'ended';
+      }
       continue;
     }
 
@@ -694,22 +728,36 @@ function identifyFindingsInSection(
       const listText = line.text.slice(listMatch[0].length);
       const label = detailLabel(listText);
       if (label) {
-        if (!explicitOwnerActive) {
+        if (detailOwnerState === 'none') {
           throw new ReviewVerdictValidationError(
             'finding_detail_orphaned',
             `Review artifact at ${artifactPath} has an orphaned ${label} detail bullet in ${severityDisplayName(severity)}; closed-label column-zero details require an immediately preceding explicit bold finding title in the same severity section.`,
           );
         }
+        if (detailOwnerState === 'ended' || ownedDetailLabels.has(label)) {
+          const reason =
+            detailOwnerState === 'ended'
+              ? 'starts a second detail run after ownership ended'
+              : 'repeats a label already used by the same finding';
+          throw new ReviewVerdictValidationError(
+            'finding_detail_ambiguous',
+            `Review artifact at ${artifactPath} has an ambiguous ${label} detail bullet in ${severityDisplayName(severity)} because it ${reason}; use one contiguous run with each closed label at most once.`,
+          );
+        }
+        ownedDetailLabels.add(label);
+        detailOwnerState = 'active';
         continue;
       }
 
       addFinding(parseListFindingTitle(listText));
-      explicitOwnerActive = false;
+      detailOwnerState = 'none';
+      ownedDetailLabels.clear();
       continue;
     }
 
-    if (line.text.trim().length > 0 && !/^<!--.*-->$/.test(line.text.trim())) {
-      explicitOwnerActive = false;
+    if (!/^<!--.*-->$/.test(line.text.trim())) {
+      detailOwnerState = 'none';
+      ownedDetailLabels.clear();
     }
   }
 
@@ -850,6 +898,7 @@ function analyzeSeveritySections(
     low: 0,
   };
   const findings: ReviewFindingRecord[] = [];
+  const usedFindingIds = new Set<string>();
 
   for (const [offset, heading] of severityHeadings.entries()) {
     const nextHeading = severityHeadings[offset + 1];
@@ -863,12 +912,33 @@ function analyzeSeveritySections(
       heading.severity,
       artifactPath,
       counts[heading.severity],
+      usedFindingIds,
     );
     counts[heading.severity] += sectionFindings.length;
     findings.push(...sectionFindings);
   }
 
   return { counts, findings };
+}
+
+function findingRecordsAreComplete(
+  content: string,
+  counts: ReviewGateVerdict['counts'],
+  analysis: SeveritySectionAnalysis | null,
+): boolean {
+  if (!analysis) {
+    return false;
+  }
+  const presentSeverities = new Set(
+    findSeverityHeadings(content).map((heading) => heading.severity),
+  );
+  return SEVERITIES.every(
+    (severity) =>
+      presentSeverities.has(severity) &&
+      analysis.counts[severity] === counts[severity] &&
+      analysis.findings.filter((finding) => finding.severity === severity)
+        .length === counts[severity],
+  );
 }
 
 function parseFindingsSectionCounts(
@@ -1015,7 +1085,7 @@ interface CountSource {
  * the arithmetic, is what the parser objected to.
  */
 const FINDING_LIST_ITEM_CONTRACT_HINT =
-  'Findings in a Findings severity section must be either markdown list items (a line starting with `- `, `* `, `+ `, or `1. `) or an explicit bold title marker such as `**M1 — title**` with an optional location suffix. An explicit title may own following column-zero detail bullets only for the exact labels Issue:, Fix:, Fix (optional):, Requirement:, Cause:, Impact:, Reproduction:, and Coverage gap: (plain or with the label itself bold). Orphaned or ambiguous detail bullets are refused. Rewrite unsupported prose findings or correct the declared counts to match.';
+  'Findings in a Findings severity section must be either markdown list items (a line starting with `- `, `* `, `+ `, or `1. `) or an explicit bold title marker such as `**M1 — title**` with an optional location suffix; the title separator is exactly one em dash (`—`). An explicit title may own one contiguous run of following column-zero detail bullets only for the exact labels Issue:, Fix:, Fix (optional):, Requirement:, Cause:, Impact:, Reproduction:, and Coverage gap: (plain or with the label itself bold). A top-level list item beginning with an exact closed label is treated as a detail, so a standalone finding must not start with one. Orphaned or ambiguous detail bullets are refused. Rewrite unsupported prose findings or correct the declared counts to match.';
 
 function formatCounts(counts: ReviewGateVerdict['counts']): string {
   return SEVERITIES.map((severity) => `${counts[severity]} ${severity}`).join(
@@ -1216,6 +1286,7 @@ export async function parseReviewGateVerdict(
     ...(hasDispatchAudit ? { dispatchAudit } : {}),
     counts,
     findings: bodyAnalysis?.findings ?? [],
+    findingsComplete: findingRecordsAreComplete(content, counts, bodyAnalysis),
     blocking: hasBlockingFindings(counts),
     ...(insertedSeverities.length > 0
       ? {

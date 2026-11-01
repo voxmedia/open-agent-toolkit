@@ -49,6 +49,17 @@ describe('parseReviewGateVerdict', () => {
     );
   }
 
+  function waveFiveBlockingFinding(fixture: string): string {
+    const start = fixture.indexOf('**H1 —');
+    const end = fixture.indexOf('\n## Non-blocking', start);
+    if (start < 0 || end < 0) {
+      throw new Error(
+        'wave-5 fixture is missing its verbatim H1 blocking-finding block',
+      );
+    }
+    return fixture.slice(start, end);
+  }
+
   it('prefers explicit frontmatter counts and review metadata', async () => {
     const artifactPath = await writeArtifact(`---
 oat_review_type: artifact
@@ -176,6 +187,7 @@ oat_review_low_count: 4
           location: null,
         },
       ],
+      findingsComplete: true,
       blocking: true,
     });
   });
@@ -241,6 +253,43 @@ oat_review_low_count: 4
       code: 'findings_unrecognizable',
       status: 'artifact_validation_failed',
       receiveEligible: false,
+    });
+  });
+
+  it('parses the verbatim wave-5 H1 block when it is placed in canonical severity sections', async () => {
+    const fixture = await readFixture('backlog-wave-5-exit-gate-r1-return.md');
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+${waveFiveBlockingFinding(fixture)}
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 1, medium: 0, low: 0 },
+      findings: [
+        {
+          id: 'H1',
+          severity: 'high',
+          title:
+            'a `~`-prefixed `core.hooksPath` silently disables hooks on every exact-path commit',
+          location:
+            'packages/cli/src/commands/shared/exact-path-commit.ts:534-544',
+        },
+      ],
+      findingsComplete: true,
     });
   });
 
@@ -907,6 +956,117 @@ None
     });
   });
 
+  it('refuses a second detail run under one explicit title', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**M1 — One owner**
+
+- Issue: This starts the owned detail run.
+
+- Fix: A blank after the first detail ended ownership.
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_detail_ambiguous',
+      receiveEligible: false,
+    });
+  });
+
+  it('refuses a repeated closed label within one owned detail run', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+**H1 — Repeated label**
+- Cause: First cause.
+- Cause: A second cause is ambiguous.
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_detail_ambiguous',
+      receiveEligible: false,
+    });
+  });
+
+  it('requires exactly one em dash in an explicit finding title', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**M1 - Hyphen is not the title separator**
+- Issue: This closed-label detail has no accepted owner.
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_detail_orphaned',
+      receiveEligible: false,
+    });
+  });
+
+  it('treats a top-level list item beginning with an exact closed label as detail', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+- Fix: this cannot be a standalone finding title
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_detail_orphaned',
+      receiveEligible: false,
+    });
+  });
+
   it('ignores a fenced example of the bold-title finding shape', async () => {
     const artifactPath = await writeArtifact(`## Findings
 
@@ -962,6 +1122,90 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_orphaned',
+      receiveEligible: false,
+    });
+  });
+
+  it('refuses duplicate explicit finding IDs across the artifact', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+**H1 — First use**
+**H1 — Duplicate use**
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_id_duplicate',
+      receiveEligible: false,
+    });
+  });
+
+  it('skips explicit IDs when generating list-finding IDs', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+**H2 — Explicit first**
+- A list finding receives the next unused ID.
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 2, medium: 0, low: 0 },
+      findings: [
+        { id: 'H2', title: 'Explicit first' },
+        { id: 'H3', title: 'A list finding receives the next unused ID.' },
+      ],
+    });
+  });
+
+  it('refuses an explicit ID that collides with an earlier generated ID', async () => {
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+- The list finding receives H1.
+**H1 — Explicit collision**
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
+      code: 'finding_id_duplicate',
       receiveEligible: false,
     });
   });
@@ -1084,7 +1328,32 @@ Findings by severity: 0 critical, 1 high, 2 medium, 3 low
         medium: 2,
         low: 3,
       },
+      findings: [],
+      findingsComplete: false,
       blocking: true,
+    });
+  });
+
+  it('marks per-finding records incomplete when only some severity sections are present', async () => {
+    const artifactPath = await writeArtifact(`---
+oat_review_type: code
+oat_review_scope: p01
+oat_review_invocation: gate
+---
+
+Findings by severity: 0 critical, 1 high, 0 medium, 0 low
+
+## Findings
+
+### High
+
+- Only the High section is present.
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 1, medium: 0, low: 0 },
+      findings: [{ id: 'H1', severity: 'high' }],
+      findingsComplete: false,
     });
   });
 
