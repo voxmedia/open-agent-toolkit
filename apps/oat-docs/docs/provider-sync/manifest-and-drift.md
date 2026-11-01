@@ -74,11 +74,14 @@ Diagram: canonical assets produce provider views and a manifest; status reports 
 > new name's views. User-authored `[agents.*]` tables stay. A dangling link
 > left in `.cursor/agents/`, `.claude/agents/` or `.codex/agents/` no longer
 > stops sync with an `escapes the sync scope` error. At an agent view path,
-> such as `.cursor/agents/<name>.md`, sync restores the managed link. At the
-> path of a generated Cursor model variant, such as
-> `.cursor/agents/oat-reviewer-<model>-<effort>.md`, sync reports a failed
-> materialization and exits 1; delete the link and rerun sync. A link whose
-> existing target lies outside the sync scope is still refused.
+> such as `.cursor/agents/<name>.md`, sync restores the managed link. Sync
+> cannot write a generated file through a dangling link: at the path of a
+> generated Cursor model variant, such as
+> `.cursor/agents/oat-reviewer-<model>-<effort>.md`, it reports a failed
+> materialization, and at a Codex role path, such as
+> `.codex/agents/<name>.toml` or one of its model variants, it reports the
+> role as `missing`. Either way sync exits 1; delete the link and rerun sync.
+> A link whose existing target lies outside the sync scope is still refused.
 >
 > Codex roles written by versions before 0.3.39 carry no owner header until
 > the next sync rewrites them. If such an agent was deleted before you first
