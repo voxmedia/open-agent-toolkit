@@ -99,9 +99,9 @@ oat_quick_start_gate:
   reviewed_head: 'b37cd7c49b32083f10e7d1794d2c9d92baa01966'
   decided_at: '2026-10-31T23:08:13Z'
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -124,7 +124,7 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     {
       gate_run_id: 55df7ef0-1867-448a-ae66-a8f39e483790,
@@ -136,12 +136,12 @@ oat_implement_exit_gate:
   receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T015445Z.md
   receive_event_identity: 'final|code|final-review-2026-11-01T015445Z.md'
   receive_pre_head: '4a7664ba0e63861d3d1bcb2f56a361a412a7204c'
-  receive_commit: null
+  receive_commit: '54ad3d9e0534c2cc4b35c6943dc1f556907e11ba'
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-11-01T02:00:00Z'
-  decided_at: null
+  updated_at: '2026-11-01T02:01:00Z'
+  decided_at: '2026-11-01T02:01:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
