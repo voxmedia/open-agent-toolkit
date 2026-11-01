@@ -821,6 +821,40 @@ drift; the delivered items are under `.oat/repo/pjm/backlog/archived/`.
 
 ---
 
+### Task p05-t05: (review) Correct remaining stale and inaccurate docs claims
+
+Review fix for `reviews/archived/p05-code-review-2026-11-01T005919Z.md`
+(Medium: `scope-and-surface.md` stale cleanup warning; Medium: `bootstrap.md`
+quoted the old `--no-hook` help; Medium: `manifest-and-drift.md` overclaimed
+that sync restores every dangling link; Low: `packages/cli/README.md` Quick
+Start used `--scope all`).
+
+**Files:** `apps/oat-docs/docs/provider-sync/scope-and-surface.md`,
+`apps/oat-docs/docs/getting-started/bootstrap.md`,
+`apps/oat-docs/docs/provider-sync/manifest-and-drift.md`,
+`packages/cli/README.md`.
+
+**Verify:** docs check, `pnpm --filter oat-docs check`, `pnpm format`, docs
+index freshness.
+
+**Commit** — `docs(p05-t05): correct remaining stale and inaccurate docs claims`
+
+---
+
+### Task p05-t06: (review) Note that dangling Codex role links still stop sync
+
+Review fix for `reviews/archived/p05-code-review-2026-11-01T010437Z.md`
+(Medium: `manifest-and-drift.md` said a dangling link in `.codex/agents/` no
+longer stops sync; a dangling Codex role link still exits 1 as `missing`).
+
+**Files:** `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`.
+
+**Verify:** `pnpm --filter oat-docs check`, docs check.
+
+**Commit** — `docs(p05-t06): note that dangling Codex role links still stop sync`
+
+---
+
 ### Phase 5 phase-end check: Definition of Done gates
 
 This replaces the forced-CLI-only phase-end check for p05. It is a check, not
@@ -867,7 +901,8 @@ When every gate passes, no task is appended and nothing is committed.
 | p03   | code     | fixes_completed | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T000944Z.md      | 58aa2d4b686544cfc67631220577d9b9369f86d7 | auto       | -                 |
 | p03   | code     | passed          | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T002455Z.md      | 28c375820bcacb504d616b99fe6cf662dbf5a881 | auto       | -                 |
 | p04   | code     | passed          | 2026-11-01 | reviews/archived/p04-code-review-2026-11-01T001445Z.md      | e7a16361fecf3129061d03d9316dbab8cb3cbb06 | auto       | -                 |
-| p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p05   | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T005919Z.md      | 411314d1f53bd4b7611af7cbe9ae3899dffa4fb0 | auto       | -                 |
+| p05   | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T010437Z.md      | 772ced76e13d4d732e0714dfed3417930e79b63a | auto       | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
 | plan  | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
@@ -909,9 +944,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 2: 7 tasks - Install scope and CLI messages (items 3, 4)
 - Phase 3: 4 tasks - Lifecycle skill contracts (item 5), including review fix p03-t04
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
-- Phase 5: 4 tasks - Docs, generated views, version bump, backlog close-out (Definition of Done gates run as its phase-end check)
+- Phase 5: 6 tasks - Docs, generated views, version bump, backlog close-out, review fixes p05-t05 and p05-t06 (Definition of Done gates run as its phase-end check)
 
-**Total: 21 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 

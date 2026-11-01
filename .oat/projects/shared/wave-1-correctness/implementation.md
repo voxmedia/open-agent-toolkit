@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: p05-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,7 +24,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 4 | complete    | 2     | 2/2       |
 | Phase 5 | in_progress | 4     | 4/4       |
 
-**Total:** 21/21 tasks completed
+**Total:** 23/23 tasks completed
 
 ---
 
@@ -489,7 +489,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 5: Integration — docs, generated views, release, close-out
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-01
 
 ### Phase Summary (fill when phase is complete)
@@ -582,6 +582,57 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ---
 
+### Task p05-t05: (review) Correct remaining stale and inaccurate docs claims
+
+**Status:** completed
+**Commit:** 772ced76e13d4d732e0714dfed3417930e79b63a
+
+**Outcome (required when completed):**
+
+- `scope-and-surface.md` describes the 0.3.39 cleanup; `bootstrap.md` matches the current `--no-hook` help; `manifest-and-drift.md` limits link restoration to base agent views; `packages/cli/README.md` Quick Start uses `--scope project`.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/scope-and-surface.md`, `apps/oat-docs/docs/getting-started/bootstrap.md`, `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`, `packages/cli/README.md`
+
+**Verification:** docs check exit 0 (0 errors); `pnpm --filter oat-docs check` exit 0; `pnpm format` exit 0; docs index unchanged.
+
+---
+
+### Task p05-t06: (review) Note that dangling Codex role links still stop sync
+
+**Status:** completed
+**Commit:** 0fde958c85c3dafd9db741f9d0d6ab4a258be9d2
+
+**Outcome (required when completed):**
+
+- The dangling-link note says sync cannot write a generated Cursor variant or Codex role through a dangling link and exits 1 (`failed` / `missing`) until the link is deleted.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`
+
+**Verification:** `pnpm --filter oat-docs check` exit 0; docs check exit 0.
+
+**Notes / Decisions:**
+
+- Implemented in the root (small docs-only review fix; see the `Root-inline` line under Orchestration Runs).
+
+### Review Received: p05
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p05-code-review-2026-11-01T005919Z.md, re-review reviews/archived/p05-code-review-2026-11-01T010437Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 3 · Low 1 (round 1); Critical 0 · High 0 · Medium 1 · Low 0 (round 2)
+
+- M1–M3 (Medium): stale cleanup warning in `scope-and-surface.md`, stale `--no-hook` quote in `bootstrap.md`, dangling-link overclaim in `manifest-and-drift.md` → fix task p05-t05; resolved in round 2.
+- L1 (Low): `packages/cli/README.md` Quick Start used `oat sync --scope all` → fixed in p05-t05.
+- R2-M1 (Medium): the note still said a dangling `.codex/agents/` link no longer stops sync → fix task p05-t06 (not re-reviewed by the phase loop; covered by the final review).
+
+**Outcome:** passed (no Critical/High in either round); fixes completed through p05-t06
+
+---
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -601,6 +652,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=wave1-plan-artifact-review-1 · scope=plan · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=wave1-plan-artifact-review-2 · scope=plan · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=wave1-plan-artifact-review-3 · scope=plan · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p05-implementation · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=p05-review-fix-1 · observed=~ · match=~
+- run/v1 · request=wave1-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p05-review-2 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p05 task p05-t06 (review fix) — reason: one-sentence docs correction for review R2-M1 after the p05 fix loop; root model claude-opus-5-5 (Cursor). No child launched.
 
 <!-- orchestration-runs-end -->
 
