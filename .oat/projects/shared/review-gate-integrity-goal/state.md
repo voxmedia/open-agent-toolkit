@@ -2,7 +2,31 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
+  - type: backlog
+    ref: BL-260711-skip-re-review-for-bookkeeping
+  - type: backlog
+    ref: BL-261003-diagnose-review-finding
+  - type: backlog
+    ref: BL-260820-bind-each-gate-review
+  - type: backlog
+    ref: BL-260820-emit-source-qualified
+  - type: backlog
+    ref: BL-261002-list-pending-required-reviews
+  - type: backlog
+    ref: BL-260927-mark-gate-findings-as-new-or
+  - type: backlog
+    ref: BL-261013-classify-review-findings
+  - type: backlog
+    ref: BL-260820-track-pr-closeout-evidence
+  - type: project
+    ref: review-gate-integrity
+absorbed_projects: [review-gate-integrity]
+absorbed_backlog_ids:
+  - BL-260711-skip-re-review-for-bookkeeping
+  - BL-260820-bind-each-gate-review
+  - BL-260820-emit-source-qualified
+  - BL-260820-track-pr-closeout-evidence
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -36,6 +60,13 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
+oat_milestone: m01
+oat_milestone_status: aligning
+oat_goal_status: active
+oat_goal_outcome_audit: null
+oat_goal_recovery: null
+oat_milestone_gates: {}
+oat_deliveries: []
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -93,7 +124,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-01T15:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -117,7 +148,8 @@ Plan - Authoring the goal Project Brief and its milestones
 
 - ✓ Goal project scaffolded
 - ✓ Brief and implementation artifacts scaffolded
-- ⧗ Awaiting goal interview, milestones and brief authoring
+- ✓ Alignment interview (two rounds) complete; brief and milestones authored
+- ⧗ Brief artifact review, gate and approval
 
 ## Blockers
 
