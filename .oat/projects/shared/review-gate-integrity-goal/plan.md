@@ -399,15 +399,16 @@ and p05 consume p03's records.
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact | Reviewed Head                            | Invocation | Gate Target |
-| ----- | -------- | --------------- | ---------- | -------- | ---------------------------------------- | ---------- | ----------- |
-| plan  | artifact | fixes_completed | 2026-11-01 | -        | 6769eba80b12d80acdddea66b32ab8c21b1fd87a | -          | -           |
-| p01   | code     | pending         | -          | -        | -                                        | -          | -           |
-| p02   | code     | pending         | -          | -        | -                                        | -          | -           |
-| p03   | code     | pending         | -          | -        | -                                        | -          | -           |
-| p04   | code     | pending         | -          | -        | -                                        | -          | -           |
-| p05   | code     | pending         | -          | -        | -                                        | -          | -           |
-| final | code     | pending         | -          | -        | -                                        | -          | -           |
+| Scope | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| plan  | artifact | fixes_completed | 2026-11-01 | -                                                  | 6769eba80b12d80acdddea66b32ab8c21b1fd87a | -          | -           |
+| p01   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p02   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p03   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p04   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| p05   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| final | code     | pending         | -          | -                                                  | -                                        | -          | -           |
+| plan  | artifact | received        | 2026-11-01 | reviews/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -          | -           |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
