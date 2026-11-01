@@ -42,7 +42,9 @@ import {
   SUPPORTED_CODEX_ROLE_TARGETS,
 } from './catalog';
 import {
+  type CodexConfigMergeResult,
   type CodexManagedRoleConfig,
+  describeCodexConfigMerge,
   mergeCodexConfig,
   readCodexMaxDepth,
 } from './config-merge';
@@ -51,6 +53,7 @@ import { materializeCodexRole } from './materialize';
 import {
   isOatManagedCodexRoleFile,
   readOatManagedCodexRoleOwner,
+  sanitizeCodexRoleName,
   withOatManagedCodexRoleOwner,
   type CodexRoleOwner,
 } from './shared';
@@ -147,6 +150,19 @@ async function readOptionalFile(path: string): Promise<string | null> {
   return readFile(path, 'utf8');
 }
 
+function describeConfigOperation(
+  summary: string,
+  configMerge: CodexConfigMergeResult,
+): string {
+  const details = describeCodexConfigMerge(configMerge);
+  if (configMerge.removedRoles.length > 0) {
+    details.unshift(
+      `removes stale role tables: ${configMerge.removedRoles.map((role) => `agents.${role}`).join(', ')}`,
+    );
+  }
+  return [summary, ...details].join('; ');
+}
+
 function normalizeManagedRolesConfig(
   desiredRoles: DesiredCodexRole[],
 ): CodexManagedRoleConfig[] {
@@ -161,6 +177,7 @@ async function desiredRolesFromCanonical(
   canonicalEntries: CanonicalEntry[],
   scopeRoot: string,
   materializationTargets: CodexMaterializationTarget[],
+  scopeOwner: CodexRoleOwner,
 ): Promise<DesiredCodexRole[]> {
   const roles: DesiredCodexRole[] = [];
 
@@ -181,7 +198,7 @@ async function desiredRolesFromCanonical(
       description: exported.description,
       configFile: exported.configFile,
       rolePath: join(scopeRoot, '.codex', exported.configFile),
-      content: exported.content,
+      content: withOatManagedCodexRoleOwner(exported.content, scopeOwner),
       sourcePath: entry.canonicalPath,
     });
 
@@ -576,30 +593,87 @@ function parseConfigAgentTable(
   }
 }
 
+function codexScopeOwner(
+  scopeRoot: string,
+  options: CodexMaterializationTargetOptions,
+): CodexRoleOwner {
+  return isUserCodexScope(scopeRoot, options)
+    ? 'user-config'
+    : 'project-config';
+}
+
+function codexCleanupOwners(
+  scopeRoot: string,
+  options: CodexMaterializationTargetOptions,
+): readonly CodexRoleOwner[] {
+  return isUserCodexScope(scopeRoot, options)
+    ? ['user-config']
+    : ['supported-catalogue', 'project-config'];
+}
+
+/**
+ * Role names a partial sync may remove: base exports of the canonical agents
+ * it was asked about that no longer exist, plus the materialized variants of
+ * a removed supported base role. A removed file can no longer be parsed, so
+ * its file name stands in for its role name; any role a present canonical
+ * agent still produces stays protected.
+ */
+async function removedCanonicalRoleFilter(
+  scopeRoot: string,
+  canonicalEntries: CanonicalEntry[],
+  allowedCanonicalPaths: string[],
+  materializationTargets: CodexMaterializationTarget[],
+  scopeOwner: CodexRoleOwner,
+): Promise<((roleName: string) => boolean) | null> {
+  const presentFiles = new Set(
+    canonicalEntries
+      .filter((entry) => entry.type === 'agent' && entry.isFile)
+      .map((entry) => entry.name),
+  );
+  const removedRoleNames = new Set<string>();
+  for (const path of allowedCanonicalPaths) {
+    const match = /^\.agents\/agents\/([^/]+\.md)$/.exec(path);
+    if (match?.[1] && !presentFiles.has(match[1])) {
+      removedRoleNames.add(sanitizeCodexRoleName(match[1]));
+    }
+  }
+  if (removedRoleNames.size === 0) {
+    return null;
+  }
+
+  const protectedRoleNames = new Set(
+    (
+      await desiredRolesFromCanonical(
+        canonicalEntries,
+        scopeRoot,
+        materializationTargets,
+        scopeOwner,
+      )
+    ).map((role) => role.roleName),
+  );
+  const removedBaseRoles = SUPPORTED_CODEX_BASE_ROLES.filter((role) =>
+    removedRoleNames.has(role),
+  );
+  return (roleName) =>
+    !protectedRoleNames.has(roleName) &&
+    (removedRoleNames.has(roleName) ||
+      removedBaseRoles.some((baseRole) => roleName.startsWith(`${baseRole}-`)));
+}
+
 async function collectStaleManagedRoles(
   scopeRoot: string,
   existingConfigContent: string | null,
   desiredRoleNames: Set<string>,
-  cleanupOwner: CodexRoleOwner,
+  cleanupOwners: readonly CodexRoleOwner[],
   removeLegacyProjectRoles: boolean,
+  isCandidate: (roleName: string) => boolean = () => true,
 ): Promise<string[]> {
   const agents = parseConfigAgentTable(existingConfigContent);
   const stale = new Set<string>();
 
-  for (const [roleName, roleConfig] of Object.entries(agents)) {
-    if (desiredRoleNames.has(roleName)) {
-      continue;
-    }
-
-    const configFile = roleConfig.config_file;
-    if (typeof configFile !== 'string' || !configFile.startsWith('agents/')) {
-      continue;
-    }
-
-    const rolePath = join(scopeRoot, '.codex', configFile);
-    const roleContent = await readOptionalFile(rolePath);
+  const isStaleManagedRole = (roleName: string, roleContent: string | null) => {
     if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
-      continue;
+      return false;
     }
 
     const owner = readOatManagedCodexRoleOwner(roleContent);
@@ -609,7 +683,23 @@ async function collectStaleManagedRoles(
       SUPPORTED_CODEX_BASE_ROLES.some((baseRole) =>
         roleName.startsWith(`${baseRole}-`),
       );
-    if (owner !== cleanupOwner && !legacyProjectRole) {
+    return (
+      (owner !== null && cleanupOwners.includes(owner)) || legacyProjectRole
+    );
+  };
+
+  for (const [roleName, roleConfig] of Object.entries(agents)) {
+    if (desiredRoleNames.has(roleName) || !isCandidate(roleName)) {
+      continue;
+    }
+
+    const configFile = roleConfig.config_file;
+    if (typeof configFile !== 'string' || !configFile.startsWith('agents/')) {
+      continue;
+    }
+
+    const rolePath = join(scopeRoot, '.codex', configFile);
+    if (!isStaleManagedRole(roleName, await readOptionalFile(rolePath))) {
       continue;
     }
 
@@ -630,24 +720,16 @@ async function collectStaleManagedRoles(
     }
 
     const roleName = basename(roleFile, '.toml');
-    if (desiredRoleNames.has(roleName) || stale.has(roleName)) {
+    if (
+      desiredRoleNames.has(roleName) ||
+      stale.has(roleName) ||
+      !isCandidate(roleName)
+    ) {
       continue;
     }
 
     const rolePath = join(agentsDir, roleFile);
-    const roleContent = await readOptionalFile(rolePath);
-    if (!roleContent || !isOatManagedCodexRoleFile(roleContent, roleName)) {
-      continue;
-    }
-
-    const owner = readOatManagedCodexRoleOwner(roleContent);
-    const legacyProjectRole =
-      removeLegacyProjectRoles &&
-      owner === null &&
-      SUPPORTED_CODEX_BASE_ROLES.some((baseRole) =>
-        roleName.startsWith(`${baseRole}-`),
-      );
-    if (owner !== cleanupOwner && !legacyProjectRole) {
+    if (!isStaleManagedRole(roleName, await readOptionalFile(rolePath))) {
       continue;
     }
 
@@ -694,12 +776,34 @@ export async function computeCodexProjectExtensionPlan(
     ),
     scopeRoot,
     materializationTargets,
+    codexScopeOwner(scopeRoot, options),
   );
   const desiredRoleNames = new Set(desiredRoles.map((role) => role.roleName));
   const existingConfigPath = configPath(scopeRoot);
   const existingConfigContent = await readOptionalFile(existingConfigPath);
 
-  if (isPartialSync && desiredRoles.length === 0) {
+  const removedRoleFilter = isPartialSync
+    ? await removedCanonicalRoleFilter(
+        scopeRoot,
+        canonicalEntries,
+        allowedCanonicalPaths,
+        materializationTargets,
+        codexScopeOwner(scopeRoot, options),
+      )
+    : null;
+  const staleRoles =
+    isPartialSync && removedRoleFilter === null
+      ? []
+      : await collectStaleManagedRoles(
+          scopeRoot,
+          existingConfigContent,
+          desiredRoleNames,
+          codexCleanupOwners(scopeRoot, options),
+          !isUserCodexScope(scopeRoot, options),
+          removedRoleFilter ?? undefined,
+        );
+
+  if (isPartialSync && desiredRoles.length === 0 && staleRoles.length === 0) {
     const aggregateConfigHash = hashContent(existingConfigContent ?? '');
     return {
       provider: 'codex',
@@ -719,15 +823,6 @@ export async function computeCodexProjectExtensionPlan(
     scopeRoot,
     options,
   );
-  const staleRoles = isPartialSync
-    ? []
-    : await collectStaleManagedRoles(
-        scopeRoot,
-        existingConfigContent,
-        desiredRoleNames,
-        isUserCodexScope(scopeRoot, options) ? 'user-config' : 'project-config',
-        !isUserCodexScope(scopeRoot, options),
-      );
 
   const operations: CodexExtensionWriteOperation[] = [];
 
@@ -814,12 +909,14 @@ export async function computeCodexProjectExtensionPlan(
           : 'skip',
     target: 'config',
     path: '.codex/config.toml',
-    reason:
+    reason: describeConfigOperation(
       existingConfigContent === null
         ? 'codex config missing'
         : configMerge.changed
           ? 'codex config differs from desired managed state'
           : 'codex config already in sync',
+      configMerge,
+    ),
     content: configMerge.mergedContent,
   });
 

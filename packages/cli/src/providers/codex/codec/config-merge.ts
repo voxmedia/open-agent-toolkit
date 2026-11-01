@@ -27,10 +27,27 @@ export interface CodexSingleRoleConfigMergeArgs {
   inheritedMaxDepth?: number;
 }
 
+export type CodexConfigUserKey = 'features.multi_agent' | 'agents.max_depth';
+
+export interface CodexConfigAddedKey {
+  key: CodexConfigUserKey;
+  value: boolean | number;
+}
+
+/** An explicit user value that sync kept although OAT would choose another. */
+export interface CodexConfigUserValueNotice {
+  key: CodexConfigUserKey;
+  kind: 'conflict' | 'note';
+  value: unknown;
+  message: string;
+}
+
 export interface CodexConfigMergeResult {
   mergedContent: string;
   changed: boolean;
   removedRoles: string[];
+  addedKeys: CodexConfigAddedKey[];
+  userValueNotices: CodexConfigUserValueNotice[];
 }
 
 type TomlObject = Record<string, unknown>;
@@ -116,6 +133,64 @@ function canonicalTomlValue(value: unknown): unknown {
   return value;
 }
 
+function renderNoticeValue(value: unknown): string {
+  return typeof value === 'string' ? JSON.stringify(value) : String(value);
+}
+
+function multiAgentNotice(value: unknown): CodexConfigUserValueNotice | null {
+  if (value === undefined || value === true) {
+    return null;
+  }
+  return {
+    key: 'features.multi_agent',
+    kind: 'conflict',
+    value,
+    message: 'OAT-managed Codex roles need true',
+  };
+}
+
+function maxDepthNotice(value: unknown): CodexConfigUserValueNotice | null {
+  if (value === undefined) {
+    return null;
+  }
+  const depth = getFiniteNumber(value);
+  if (depth === null || depth < 1) {
+    return {
+      key: 'agents.max_depth',
+      kind: 'conflict',
+      value,
+      message: 'default OAT dispatch needs at least 1',
+    };
+  }
+  if (depth < 2) {
+    return {
+      key: 'agents.max_depth',
+      kind: 'note',
+      value,
+      message: 'this disables only optional nested work',
+    };
+  }
+  return null;
+}
+
+/**
+ * One line per key sync added and per explicit user value it kept against
+ * OAT's preference, for command output.
+ */
+export function describeCodexConfigMerge(
+  result: Pick<CodexConfigMergeResult, 'addedKeys' | 'userValueNotices'>,
+): string[] {
+  return [
+    ...result.addedKeys.map(
+      ({ key, value }) => `added ${key} = ${renderNoticeValue(value)}`,
+    ),
+    ...result.userValueNotices.map(
+      ({ key, kind, value, message }) =>
+        `${kind}: kept ${key} = ${renderNoticeValue(value)} (${message})`,
+    ),
+  ];
+}
+
 /** Reads a valid numeric agents.max_depth value from Codex TOML content. */
 export function readCodexMaxDepth(content: string | null): number | null {
   const parsed = parseConfig(content);
@@ -152,13 +227,30 @@ export function mergeCodexConfig({
     requireNotTable(role.config_file, `agents.${roleName}.config_file`);
   }
 
-  const maxDepth = Math.max(
-    2,
-    getFiniteNumber(agents.max_depth) ?? 2,
-    getFiniteNumber(inheritedMaxDepth) ?? 2,
-  );
+  // Explicit user values are never rewritten; only absent keys are added.
+  const addedKeys: CodexConfigAddedKey[] = [];
+  const userValueNotices: CodexConfigUserValueNotice[] = [];
+  const expectedFeatures: TomlObject = { ...features };
+  if (features.multi_agent === undefined) {
+    expectedFeatures.multi_agent = true;
+    addedKeys.push({ key: 'features.multi_agent', value: true });
+  }
+  const expectedAgents: TomlObject = { ...agents };
+  const manageMaxDepth = !stale.has('max_depth');
+  if (manageMaxDepth && agents.max_depth === undefined) {
+    const maxDepth = Math.max(2, getFiniteNumber(inheritedMaxDepth) ?? 2);
+    expectedAgents.max_depth = maxDepth;
+    addedKeys.push({ key: 'agents.max_depth', value: maxDepth });
+  }
+  for (const notice of [
+    multiAgentNotice(features.multi_agent),
+    manageMaxDepth ? maxDepthNotice(agents.max_depth) : null,
+  ]) {
+    if (notice) {
+      userValueNotices.push(notice);
+    }
+  }
 
-  const expectedAgents: TomlObject = { ...agents, max_depth: maxDepth };
   for (const role of roles.values()) {
     expectedAgents[role.roleName] = {
       ...getObject(agents[role.roleName]),
@@ -181,19 +273,8 @@ export function mergeCodexConfig({
       : '';
   let mergedContent = original;
 
-  if (features.multi_agent !== true) {
-    mergedContent = setTomlValue(
-      mergedContent,
-      ['features', 'multi_agent'],
-      'true',
-    );
-  }
-  if (agents.max_depth !== maxDepth && !removed.has('max_depth')) {
-    mergedContent = setTomlValue(
-      mergedContent,
-      ['agents', 'max_depth'],
-      String(maxDepth),
-    );
+  for (const { key, value } of addedKeys) {
+    mergedContent = setTomlValue(mergedContent, key.split('.'), String(value));
   }
 
   for (const staleRole of removedRoles) {
@@ -223,7 +304,7 @@ export function mergeCodexConfig({
 
   const expected: TomlObject = {
     ...parsed,
-    features: { ...features, multi_agent: true },
+    features: expectedFeatures,
     agents: expectedAgents,
   };
   let actual: TomlObject | null;
@@ -246,6 +327,8 @@ export function mergeCodexConfig({
     mergedContent,
     changed: mergedContent !== (existingContent ?? ''),
     removedRoles,
+    addedKeys,
+    userValueNotices,
   };
 }
 

@@ -1,6 +1,7 @@
 import {
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   symlink,
@@ -17,6 +18,10 @@ import type {
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 
 import { buildCodexMaterializedRoleName } from './materialize';
+import {
+  isOatManagedCodexRoleFile,
+  readOatManagedCodexRoleOwner,
+} from './shared';
 import {
   applyCodexProjectExtensionPlan,
   codexMaterializationExtension,
@@ -189,7 +194,7 @@ describe('codex sync extension', () => {
     expect(secondPlan.aggregateConfigHash).toBe(firstPlan.aggregateConfigHash);
   });
 
-  it('updates project config to the higher inherited user max depth', async () => {
+  it('keeps an explicit project max depth below the inherited user depth', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
     tempDirs.push(root, home);
@@ -212,8 +217,77 @@ describe('codex sync extension', () => {
       (operation) => operation.target === 'config',
     );
 
-    expect(configOperation).toMatchObject({ action: 'update' });
-    expect(configOperation?.content).toContain('max_depth = 4');
+    expect(configOperation).toMatchObject({
+      action: 'update',
+      reason:
+        'codex config differs from desired managed state; added features.multi_agent = true',
+    });
+    expect(configOperation?.content).toContain('max_depth = 2');
+    expect(configOperation?.content).not.toContain('max_depth = 4');
+  });
+
+  it.each([
+    {
+      label: 'tables',
+      config:
+        '[features]\nmulti_agent = false\n\n[agents]\nmax_depth = 1\n\n[agents.custom-agent]\ndescription = "custom-agent description"\nconfig_file = "agents/custom-agent.toml"\n',
+    },
+    {
+      label: 'dotted keys',
+      config:
+        'features.multi_agent = false\nagents.max_depth = 1\nagents.custom-agent.description = "custom-agent description"\nagents.custom-agent.config_file = "agents/custom-agent.toml"\n',
+    },
+  ])(
+    'reports kept user values even when the config operation is a skip ($label)',
+    async ({ config }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+      tempDirs.push(root);
+      const canonicalDir = join(root, '.agents', 'agents');
+      await mkdir(canonicalDir, { recursive: true });
+      const canonicalPath = join(canonicalDir, 'custom-agent.md');
+      await writeFile(canonicalPath, canonicalAgentFileContent('custom-agent'));
+      const entries: CanonicalEntry[] = [
+        { name: 'custom-agent.md', type: 'agent', canonicalPath, isFile: true },
+      ];
+      await mkdir(join(root, '.codex'), { recursive: true });
+      await writeFile(join(root, '.codex', 'config.toml'), config);
+      const first = await computeCodexProjectExtensionPlan(root, entries);
+      await applyCodexProjectExtensionPlan(root, first);
+
+      const plan = await computeCodexProjectExtensionPlan(root, entries);
+
+      expect(
+        plan.operations.find((operation) => operation.target === 'config'),
+      ).toMatchObject({
+        action: 'skip',
+        reason:
+          'codex config already in sync; conflict: kept features.multi_agent = false (OAT-managed Codex roles need true); note: kept agents.max_depth = 1 (this disables only optional nested work)',
+      });
+      await expect(
+        readFile(join(root, '.codex', 'config.toml'), 'utf8'),
+      ).resolves.toBe(config);
+    },
+  );
+
+  it('reports an explicit max_depth = 0 as a conflict', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 0\n',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(root, []);
+
+    const configOperation = plan.operations.find(
+      (operation) => operation.target === 'config',
+    );
+    expect(configOperation).toMatchObject({
+      action: 'skip',
+      reason:
+        'codex config already in sync; conflict: kept agents.max_depth = 0 (default OAT dispatch needs at least 1)',
+    });
   });
 
   it.each([
@@ -269,8 +343,11 @@ describe('codex sync extension', () => {
     );
 
     expect(configOperation).toMatchObject({ action: 'update' });
-    expect(configOperation?.content).toContain('max_depth = 2');
+    expect(configOperation?.content).toContain('max_depth = 1');
     expect(configOperation?.content).not.toContain('max_depth = 8');
+    expect(configOperation?.reason).toContain(
+      'note: kept agents.max_depth = 1 (this disables only optional nested work)',
+    );
     await applyCodexProjectExtensionPlan(home, plan);
     await expect(readFile(projectConfigPath, 'utf8')).resolves.toBe(
       projectConfig,
@@ -1343,7 +1420,7 @@ describe('codex sync extension', () => {
     const roles = [
       ['stale-project', 'project-config'],
       ['keep-user', 'user-config'],
-      ['keep-supported', 'supported-catalogue'],
+      ['stale-supported', 'supported-catalogue'],
       ['keep-unrelated', null],
     ] as const;
     for (const [role, owner] of roles) {
@@ -1382,20 +1459,307 @@ describe('codex sync extension', () => {
       .filter((operation) => operation.action === 'remove')
       .map((operation) => operation.roleName);
 
-    expect(removed).toEqual(['stale-project']);
+    expect(removed).toEqual(['stale-project', 'stale-supported']);
     expect(plan.operations).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ roleName: 'keep-user', action: 'remove' }),
-        expect.objectContaining({
-          roleName: 'keep-supported',
-          action: 'remove',
-        }),
+      ]),
+    );
+    expect(plan.operations).not.toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           roleName: 'keep-unrelated',
           action: 'remove',
         }),
       ]),
     );
+  });
+
+  it.each([
+    ['project', 'project-config'],
+    ['user', 'user-config'],
+  ] as const)(
+    'stamps base canonical exports at %s scope with the %s owner',
+    async (scope, owner) => {
+      const home = await mkdtemp(join(tmpdir(), 'oat-codex-owner-home-'));
+      const project = await mkdtemp(join(tmpdir(), 'oat-codex-owner-'));
+      tempDirs.push(home, project);
+      const root = scope === 'user' ? home : project;
+      const canonicalDir = join(root, '.agents', 'agents');
+      await mkdir(canonicalDir, { recursive: true });
+      const canonicalPath = join(canonicalDir, 'custom-agent.md');
+      await writeFile(canonicalPath, canonicalAgentFileContent('custom-agent'));
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        [
+          {
+            name: 'custom-agent.md',
+            type: 'agent',
+            canonicalPath,
+            isFile: true,
+          },
+        ],
+        undefined,
+        { userConfigDir: join(home, '.oat') },
+      );
+      const role = plan.operations.find(
+        (operation) => operation.roleName === 'custom-agent',
+      );
+
+      expect(role?.content).toMatch(
+        new RegExp(
+          `^# oat-managed: true\\n# oat-role: custom-agent\\n# oat-owner: ${owner}\\n`,
+        ),
+      );
+      expect(isOatManagedCodexRoleFile(role!.content!, 'custom-agent')).toBe(
+        true,
+      );
+      expect(readOatManagedCodexRoleOwner(role!.content!)).toBe(owner);
+    },
+  );
+
+  describe('stale canonical-derived roles', () => {
+    async function seedSyncedProject(
+      agents: Array<string | { file: string; name: string }>,
+    ): Promise<{
+      root: string;
+      entries: CanonicalEntry[];
+    }> {
+      const root = await mkdtemp(join(tmpdir(), 'oat-codex-stale-'));
+      tempDirs.push(root);
+      const canonicalDir = join(root, '.agents', 'agents');
+      await mkdir(canonicalDir, { recursive: true });
+      const entries: CanonicalEntry[] = [];
+      for (const agent of agents) {
+        const { file, name } =
+          typeof agent === 'string' ? { file: agent, name: agent } : agent;
+        const canonicalPath = join(canonicalDir, `${file}.md`);
+        await writeFile(canonicalPath, canonicalAgentFileContent(name));
+        entries.push({
+          name: `${file}.md`,
+          type: 'agent',
+          canonicalPath,
+          isFile: true,
+        });
+      }
+      const plan = await computeCodexProjectExtensionPlan(root, entries);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+
+      // A user-authored table, a variant owned by another scope, and a
+      // managed role left by an older CLI without an owner header.
+      await writeFile(
+        join(root, '.codex', 'agents', 'legacy-agent.toml'),
+        '# oat-managed: true\n# oat-role: legacy-agent\ndeveloper_instructions = "old"\n',
+      );
+      await writeFile(
+        join(root, '.codex', 'agents', 'oat-reviewer-gpt-6-sol-high-user.toml'),
+        '# oat-managed: true\n# oat-role: oat-reviewer-gpt-6-sol-high-user\n# oat-owner: user-config\ndeveloper_instructions = "user"\n',
+      );
+      const config = await readFile(
+        join(root, '.codex', 'config.toml'),
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.codex', 'config.toml'),
+        `${config}\n[agents.custom]\ndescription = "mine"\nconfig_file = "agents/custom.toml"\n\n[agents.legacy-agent]\ndescription = "old"\nconfig_file = "agents/legacy-agent.toml"\n\n[agents.oat-reviewer-gpt-6-sol-high-user]\ndescription = "user"\nconfig_file = "agents/oat-reviewer-gpt-6-sol-high-user.toml"\n`,
+      );
+      return { root, entries };
+    }
+
+    async function codexRoleFiles(root: string): Promise<string[]> {
+      return (await readdir(join(root, '.codex', 'agents'))).sort();
+    }
+
+    async function codexAgentTables(root: string): Promise<string[]> {
+      const config = await readFile(
+        join(root, '.codex', 'config.toml'),
+        'utf8',
+      );
+      return [...config.matchAll(/^\[agents\.([^\]]+)\]$/gmu)]
+        .map((match) => match[1]!)
+        .sort();
+    }
+
+    function expectUntouchedNeighbours(tables: string[], files: string[]) {
+      expect(tables).toEqual(
+        expect.arrayContaining([
+          'custom',
+          'legacy-agent',
+          'oat-reviewer-gpt-6-sol-high-user',
+        ]),
+      );
+      expect(files).toEqual(
+        expect.arrayContaining([
+          'legacy-agent.toml',
+          'oat-reviewer-gpt-6-sol-high-user.toml',
+        ]),
+      );
+    }
+
+    it('removes a deleted agent role and table during full sync', async () => {
+      const { root, entries } = await seedSyncedProject([
+        'agent-one',
+        'agent-keep',
+      ]);
+      await rm(entries[0]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(root, [entries[1]!]);
+
+      expect(
+        plan.operations
+          .filter((operation) => operation.action === 'remove')
+          .map((operation) => operation.path),
+      ).toEqual(['.codex/agents/agent-one.toml']);
+      expect(
+        plan.operations.find((operation) => operation.target === 'config'),
+      ).toMatchObject({
+        action: 'update',
+        reason: expect.stringContaining('agents.agent-one'),
+      });
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      const files = await codexRoleFiles(root);
+      const tables = await codexAgentTables(root);
+      expect(files).not.toContain('agent-one.toml');
+      expect(tables).not.toContain('agent-one');
+      expect(tables).toContain('agent-keep');
+      expectUntouchedNeighbours(tables, files);
+    });
+
+    it.each([
+      ['some', ['agent-one', 'agent-keep']],
+      ['the last', ['agent-one']],
+    ] as const)(
+      'removes %s removed agent through removedCanonicalPaths',
+      async (_label, agentNames) => {
+        const { root, entries } = await seedSyncedProject([...agentNames]);
+        await rm(entries[0]!.canonicalPath);
+
+        const plan = await computeCodexProjectExtensionPlan(
+          root,
+          entries.slice(1),
+          ['.agents/agents/agent-one.md'],
+        );
+
+        expect(
+          plan.operations
+            .filter((operation) => operation.action === 'remove')
+            .map((operation) => operation.path),
+        ).toEqual(['.codex/agents/agent-one.toml']);
+        expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(
+          0,
+        );
+        const files = await codexRoleFiles(root);
+        const tables = await codexAgentTables(root);
+        expect(files).not.toContain('agent-one.toml');
+        expect(tables).not.toContain('agent-one');
+        if (agentNames.length > 1) {
+          expect(tables).toContain('agent-keep');
+          expect(files).toContain('agent-keep.toml');
+        }
+        expectUntouchedNeighbours(tables, files);
+      },
+    );
+
+    it.each(['full', 'removedCanonicalPaths'] as const)(
+      'removes every variant of a removed supported base role during %s sync',
+      async (mode) => {
+        const { root, entries } = await seedSyncedProject([
+          'oat-reviewer',
+          'oat-reviewer-lite',
+        ]);
+        // A project-config variant from a custom dispatch target.
+        await writeFile(
+          join(root, '.codex', 'agents', 'oat-reviewer-custom-high.toml'),
+          '# oat-managed: true\n# oat-role: oat-reviewer-custom-high\n# oat-owner: project-config\ndeveloper_instructions = "custom"\n',
+        );
+        const before = await codexRoleFiles(root);
+        const variants = before.filter(
+          (file) =>
+            file.startsWith('oat-reviewer-') &&
+            file !== 'oat-reviewer-lite.toml' &&
+            file !== 'oat-reviewer-gpt-6-sol-high-user.toml',
+        );
+        expect(variants.length).toBeGreaterThan(10);
+        await rm(entries[0]!.canonicalPath);
+
+        const plan = await computeCodexProjectExtensionPlan(
+          root,
+          [entries[1]!],
+          mode === 'full' ? undefined : ['.agents/agents/oat-reviewer.md'],
+        );
+        expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(
+          0,
+        );
+
+        const files = await codexRoleFiles(root);
+        const tables = await codexAgentTables(root);
+        expect(files).not.toContain('oat-reviewer.toml');
+        expect(tables).not.toContain('oat-reviewer');
+        for (const variant of variants) {
+          expect(files).not.toContain(variant);
+          expect(tables).not.toContain(variant.replace(/\.toml$/, ''));
+        }
+        expect(files).toContain('oat-reviewer-lite.toml');
+        expect(tables).toContain('oat-reviewer-lite');
+        expectUntouchedNeighbours(tables, files);
+      },
+    );
+
+    it('keeps a role a present agent declares when a removed file shares its name', async () => {
+      const { root, entries } = await seedSyncedProject([
+        { file: 'gone', name: 'gone-old' },
+        { file: 'keep', name: 'gone' },
+      ]);
+      expect(await codexRoleFiles(root)).toEqual(
+        expect.arrayContaining(['gone-old.toml', 'gone.toml']),
+      );
+      await rm(entries[0]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        entries.slice(1),
+        ['.agents/agents/gone.md'],
+      );
+
+      expect(
+        plan.operations.filter((operation) => operation.action === 'remove'),
+      ).toEqual([]);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      expect(await codexRoleFiles(root)).toContain('gone.toml');
+      expect(await codexAgentTables(root)).toContain('gone');
+    });
+
+    it('keeps the variants of a base role a present agent still declares', async () => {
+      const { root, entries } = await seedSyncedProject([
+        'oat-reviewer',
+        { file: 'reviewer-renamed', name: 'oat-reviewer' },
+      ]);
+      const before = await codexRoleFiles(root);
+      const variants = before.filter(
+        (file) =>
+          file.startsWith('oat-reviewer-') &&
+          file !== 'oat-reviewer-gpt-6-sol-high-user.toml',
+      );
+      expect(variants.length).toBeGreaterThan(10);
+      await rm(entries[0]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        entries.slice(1),
+        ['.agents/agents/oat-reviewer.md'],
+      );
+
+      expect(
+        plan.operations.filter((operation) => operation.action === 'remove'),
+      ).toEqual([]);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      const files = await codexRoleFiles(root);
+      expect(files).toContain('oat-reviewer.toml');
+      for (const variant of variants) {
+        expect(files).toContain(variant);
+      }
+    });
   });
 
   it('preserves stale files whose ownership appears only in body text or malformed headers', async () => {
