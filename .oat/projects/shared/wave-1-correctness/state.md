@@ -181,7 +181,7 @@ Revision p-rev1 - fixing the two Critical PR #395 review findings (operator-auth
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode, straight to plan)
-- **Plan:** `plan.md` (complete; 5 phases, 25 tasks)
+- **Plan:** `plan.md` (complete; 5 phases plus revision p-rev1, 28 tasks)
 - **Implementation:** `implementation.md` (all tasks complete)
 
 ## Progress

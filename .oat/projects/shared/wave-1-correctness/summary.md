@@ -18,7 +18,7 @@ Wave 1 of the backlog-and-roadmap review bundled seven confirmed correctness def
 
 ## What Was Implemented
 
-Phases 1–4 ran as one parallel group in isolated worktrees and were merged `--no-ff` with no conflicts. Phase 5 then covered docs, generated views, the release bump and backlog close-out. All 25 tasks completed, including seven review-fix tasks.
+Phases 1–4 ran as one parallel group in isolated worktrees and were merged `--no-ff` with no conflicts. Phase 5 then covered docs, generated views, the release bump and backlog close-out. All 28 tasks completed, including ten review-fix and revision tasks: after the PR opened, revision phase `p-rev1` fixed two Critical findings from the PR review (see Revision below).
 
 - **Stale provider views after an agent delete or rename** (BL-261002-clean-up-stale-provider-views). A dangling agent link no longer aborts `oat sync`, `--dry-run` or `oat status` with "target escapes the sync scope". Sync now removes the stale `.claude/`, `.cursor/` and `.github/agents/` views. Canonical-derived Codex roles carry the scope owner (`project-config` or `user-config`), so full sync and pack removal both delete a removed agent's role file, its model and effort variants, and its `[agents.*]` tables. This holds even when the agent's frontmatter `name` differs from its filename.
 - **Codex user values** (BL-261002-stop-oat-sync-from-changing). `oat sync` and `oat providers codex materialize` never rewrite an explicit `[features] multi_agent` or `[agents] max_depth`. They add only absent keys and report each added key, conflict and note, in both human and `--json` output.
@@ -76,6 +76,16 @@ Quick mode produced no design.md. These deviations from the plan were accepted, 
 ### Workflow issues
 
 - When a host may restart a dispatched child, the phase scope should say whether stale in-boundary changes left by the same request id may be discarded. The root's backup step should copy untracked files with a loop rather than `xargs`. Rationale: three implementers stopped BLOCKED on their own interrupted attempts, costing a round trip each, and one partial test file was not backed up. Source: oat-project:wave-1-correctness#2026-11-01-friction-parallel-phase-implementers-stopped-blocked-on-their-own-interrupted-first-attempts-1
+
+## Revision (p-rev1, after PR review)
+
+An automated PR review (`warp-factories[bot]`) on https://github.com/voxmedia/open-agent-toolkit/pull/395 found two Critical defects in the widened Codex stale-role cleanup; the operator authorized a revision on 2026-11-01.
+
+- `[agents.<name>]` tables are now removed only while their `config_file` still names the stale OAT-owned role file, so a table the user re-pointed at another file stays and only the leftover OAT file is removed (prev1-t01).
+- Stale cleanup resolves real paths and never deletes a role file outside the sync scope, including through a symlinked `.codex/agents` directory (prev1-t02).
+- `provider-sync/providers.md` documents both exceptions; the reproduction probe lives at `references/pr395-codex-cleanup-probe.sh` with pre-/post-fix results (prev1-t03).
+
+Each fix has a regression test proven to fail on the pre-fix source, plus a CLI-level negative control (pre-fix build: table and external file deleted; post-fix build: both preserved; controls pass on both).
 
 ## Follow-up Items
 

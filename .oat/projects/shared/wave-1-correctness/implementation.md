@@ -881,6 +881,18 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - External PR review on https://github.com/voxmedia/open-agent-toolkit/pull/395 (`warp-factories[bot]`, CHANGES_REQUESTED on `68fc0c5fb17187ee6c797cdd9fa3d9802b40a5ae`, after closeout): 2 critical findings in `packages/cli/src/providers/codex/codec/sync-extension.ts` `collectStaleManagedRoles`, both reproduced by the root with a throwaway probe (not committed): (1) the directory scan marks a role stale from a leftover owner-stamped `.codex/agents/<name>.toml` and `mergeCodexConfig` then deletes `[agents.<name>]` even when the user re-pointed that table at an unmanaged `config_file` (violates BL-261002-clean-up-stale-provider-views "user-authored tables untouched"); (2) stale-role `rm` follows a symlinked `.codex/agents` and deletes files outside the sync scope (eligibility widened by p01-t02 to `supported-catalogue` and stamped canonical roles). Unresolved — autonomy boundary `unresolved-critical-findings`; the post-PR feedback owner `oat-project-revise` has no autonomous gate-inventory rows. Operator action: run `oat-project-revise` with the GitHub PR comments (or authorize a revision phase), then re-run final review and the implementation exit gate.
 
+### Review Received: final (re-review after revision p-rev1)
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-01T161645Z.md (narrowed `5ac69c397894b9e0757d2481b260ba689c38911e..6504b9646640ef1d0fb00c4ff0d1cd83bef39e70`, builds on reviews/archived/final-review-2026-11-01T015001Z.md)
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- Both PR #395 Critical findings resolved; regression tests fail on the pre-fix source; probe re-run matches recorded results; full CLI suite 437 files / 9282 tests; docs index fresh. Note: the removal-time containment check is defense in depth (disabling it alone fails nothing).
+- L1 (Low): `summary.md` and the `state.md` body predated the revision → summary Revision section and counts updated in this bookkeeping.
+
+**Outcome:** passed (request `wave1-final-review-3`); `IMPLEMENT-11` re-run with the same native route.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
