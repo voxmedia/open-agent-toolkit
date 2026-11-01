@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -154,11 +154,11 @@ oat_implement_exit_gate:
   updated_at: '2026-11-01T02:01:00Z'
   decided_at: '2026-11-01T02:01:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/395' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-31T22:29:55.721Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-01T02:06:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-01T02:10:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -174,7 +174,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -189,8 +189,10 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ Discovery complete
 - ✓ Plan complete
 - ✓ Implementation tasks complete
-- ⧗ Awaiting final review
+- ✓ Final review and implementation exit gate passed
 - ✓ Documentation sync complete (gate `DOCUMENT-02`, auto-resolved through the `--auto` path): delta analysis found no false or missing claims in `README.md`, `packages/cli/README.md` or `apps/oat-docs/docs` after p05 and the p01-t05/t06 exit-gate fixes; the chained repo-reference update recorded the project in `.oat/repo/pjm/current-state.md`, `roadmap.md` and the backlog index overview (commit `10561bd14`)
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -198,4 +200,8 @@ None
 
 ## Next Milestone
 
-Final review, implementation exit gate, summary, documentation, and final PR
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
