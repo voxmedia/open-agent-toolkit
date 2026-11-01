@@ -66,6 +66,10 @@ wave1-20261031-p05-outcome: p05 passed review (no Critical/High in either round)
 
 autonomous-wave1-20261031-03 Observation: after the p05 implementer ran, the root shell had a function oat() { node "$CLI" "$@" } with CLI unset, so oat calls printed nothing and exited 0 (one project-log append and two validations were silently skipped). Impact: lost bookkeeping until noticed at the final-review resolver. Recommendation: check type oat before relying on oat output in a long-lived shell, and have children invoke the branch CLI by path instead of defining shell functions.
 
+### 2026-11-01 · structural · oat-project-review-provide · final
+
+b066376d-1060-4d4b-b0de-1dac7fe96d0f-recon: two read-only consequential reconnaissance lanes completed at gpt-6.1-sol/high; primary independently reproduced the cleanup candidate and recorded 0 Critical, 0 High, 1 Medium, 0 Low in reviews/final-review-2026-11-01T012851Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
