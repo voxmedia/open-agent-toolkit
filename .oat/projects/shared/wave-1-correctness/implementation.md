@@ -906,6 +906,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - **Gate:** oat-project-implement · **Scope:** final · **Outcome:** generation 3 `allowed/passed` (envelope `ok`, threshold high) · attempt 1 of 2 · no waivers. Generation 2 went stale when p-rev1 changed the implementation.
 
+- Definition of Done gates after revision p-rev1 (2026-11-01, HEAD `45f13c79fb0bc4423f952b29b573fc3a80731e86`): `pnpm check` 0, `pnpm type-check` 0, `pnpm test` 0, `pnpm build` 0, `pnpm run check:skill-bumps` 0, `git fetch origin main` + `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0, docs index regeneration + `git diff --exit-code -- apps/oat-docs/index.md` 0. Turbo replayed cache for `test`, `build`, `build:docs`; the forced uncached run at `6504b9646640ef1d0fb00c4ff0d1cd83bef39e70` (`bash scripts/with-isolated-home.sh pnpm exec turbo run test --force`, CLI 437 files / 9282 tests, plus smoke, skills, scripts, lint, type-check, all exit 0) covers identical package inputs (only `.oat/` changed since).
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
