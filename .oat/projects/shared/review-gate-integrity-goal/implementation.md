@@ -159,6 +159,38 @@ p01 accepted 2026-11-01: per-phase review passed in round 2, every review dispos
 
 Worktree: the project branch checkout. Committing owner: the phase implementer. Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply, because the verifier command, its settlement-entry definition, and its controls share the module, fixtures and test harness, and fail the independence test. Rung 4 does not apply, because this is a new assurance-bearing CLI surface. The selected phase gate runs after the per-phase review passes.
 
+### Task p02-t01: Add the read-only clerical-settlement verifier
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p02-impl-20261101-01
+**Handle:** direct:rgi-p02-impl-20261101-01:p02-t01
+**Intent:** Define the settlement record and `resolved` semantics, implement first-settlement and committed-evidence replay verification with the unchanged goal bookkeeping-successor contract, and expose the verifier through a documented read-only CLI command.
+**Files:** `packages/cli/src/commands/project/clerical-settlement/**`, `packages/cli/src/commands/project/index.ts`, `packages/cli/src/commands/project/delivery/check.ts`, `packages/cli/src/commands/project/delivery/index.ts`, `packages/cli/src/commands/help-snapshots.test.ts`, `packages/cli/README.md`, and `apps/oat-docs/docs/reference/cli-reference.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli build && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/clerical-settlement`
+**Commit:** fcb556d4edb9cd6e5edc1b2ecc16026a7816480e
+**Proof:** CLI build passed; the built-CLI verifier, help snapshot, delivery check, and delivery evidence suites passed 161/161; CLI lint and type-check passed; `pnpm check` passed.
+
+**Known Unknowns resolved:**
+
+- Command and rationale: `oat project clerical-settlement verify --project <path> --proposal <json-file>` is a project-scoped, explicitly read-only verifier. It writes no tracking state, always emits schema-versioned JSON, exits zero only for `status: verified`, and returns ordered per-check reasons so p03 can consume a stable assurance result without embedding verifier policy.
+- Proposal and output shape: proposal schema v1 selects one exact `{ scope, type, artifact }` event, `first-settlement` or `replay`, a full-SHA repair range, one `Review Received:` receipt heading, and exactly one entry per finding with ID, one closed repair kind, corrected field, permitted record, and authoritative source. Goal delivery events also carry their exact subject and published head. Output schema v1 contains the mode, selected tuple, repair range, ordered `{ id, status, reason }` checks, terminal status/reason, and the settlement record when verification succeeds.
+- Settlement entry and `resolved`: `### Clerical Settlement: <deterministic-id>` under `## Reviews and Gates` contains fenced JSON schema v1 bound to the event tuple, receipt heading and digest, complete per-finding records and counts, immutable reviewed revision, repair range, artifact digest/metadata, and retained gate proof when applicable. Reviews `resolved` means the verifier authorized no-re-review routing; it is terminal for that routing decision but never means reviewer `passed`.
+- Task-plan applicability: goal milestone/delivery events use the production delivery scope builder and unchanged brief-contract section 12.8 successor evaluator. Task-plan and other non-delivery scopes do not inherit the brief-specific plan/journal grammar from `delivery/evidence.ts`; they receive strict per-commit named-field enforcement and the invariant that the reviewed subject has no changes outside project records.
+
+**Assurance controls:** the production suite ran against real temporary Git repositories and the built CLI. Each negative fixture was first observed refused with the named reason below. The refusal catch boundary was then temporarily neutralized so a refusal reported `verified`; the same suite produced 10 failing negative-control groups and 24 failed assertions while every paired positive control still passed. After restoring the guard, all 13 tests passed:
+
+- `findingLocation: app.ts:1`: neutralized `verified`; restored `finding-location-mismatch`; genuine archived-reference control `verified`.
+- `artifactType: artifact` and `artifactType: missing`: neutralized `verified`; restored `review-type-ineligible`; code-review archived-reference control `verified`.
+- Goal `repairField: Reviewed Head`: neutralized `verified`; restored `goal-12.8-substantive-change`; goal archived-reference control `verified`.
+- Replay with `rewriteObservation: true`: neutralized `verified`; restored `goal-12.8-substantive-change` naming the recorded journal line; unchanged replay control `verified`.
+- `repairStatus: passed` and `inventReviewedHead: true`: neutralized `verified`; restored `repair-field-overreach` and `reviewed-revision-mismatch`; archived-reference control `verified`.
+- `duplicateEvent: true`: neutralized `verified`; restored `event-not-unique`; unique-event control `verified`.
+- `archiveDifferentRun: true`: neutralized `verified`; restored `archive-identity-mismatch`; byte- and identity-equal archive control `verified`.
+- `gateProofMismatch: true`: neutralized `verified`; restored `gate-proof-mismatch`; corroborated gate run/target control `verified`.
+- Reviewed Head sourced from the selected Reviews row: neutralized `verified`; restored `reviewed-head-self-oracle`; artifact-sourced control `verified`.
+- Replay after omitting committed proof: neutralized `verified`; restored `durable-proof-missing`; replay with the local review file deleted and durable proof retained `verified`.
+- Genuine archived-reference repair: remained `verified` with `archive-identity` and `goal-successor-chain` passing.
+
 ## Phase p03: Records and code consumers
 
 **Status:** pending
