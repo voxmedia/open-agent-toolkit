@@ -720,23 +720,42 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 **What shipped:**
 
-- {capability 1}
+- Provider sync cleans up after a deleted or renamed canonical agent: dangling agent links no longer abort `oat sync`, `--dry-run` or `oat status`; stale `.claude/`, `.cursor/` and `.github/agents/` views, Codex role files, variants and `[agents.*]` tables are removed on full sync and on pack removal (BL-261002-clean-up-stale-provider-views).
+- `oat sync` and `oat providers codex materialize` keep explicit `[features] multi_agent` and `[agents] max_depth` values, add only absent keys, and report each added key, conflict and note (BL-261002-stop-oat-sync-from-changing).
+- `oat tools install` and `oat init --setup` honor the requested scope: no-allowed-scope installs exit 1, explicit `--scope` writes only that scope, help states the real default, and `init --setup` never runs `gh` (BL-261002-honor-the-requested-scope).
+- Corrected `--no-hook` help, adopter-runnable `packs:inventory` remedies, a `skipped_local_scope` scaffold status, quiet exit on `EPIPE`, and project-scope sync in `scripts/worktree/init.sh` and the AGENTS.md guidance block (BL-261002-correct-misleading-init-status).
+- Skill contracts match behavior: no `--retry-limit` hint in `oat-project-implement`, config-resolved base branch in `oat-project-complete`, accurate `oat-project-pr-final` usage text (BL-261002-align-implement-complete).
+- `oat internal commit-paths` commits tracked files under ignored directories (untracked ignored paths still refused), and the lint-staged hook no longer breaks on them (BL-261012-commit-paths-should-accept; re-verified as reproducing before work started).
+- `pnpm test:evidence` and `scripts/with-isolated-home.sh` remove the evidence-grade temporary HOME on every exit path (BL-261011-clean-up-the-isolated-home).
+- Docs, READMEs and this repository's generated Codex views updated; public packages bumped to 0.3.39; all seven backlog items archived.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat tools install core --scope project` now exits 1 ("core is user-scope only"); aggregate `--scope project` skips core; JSON gains `skippedPacks` and recovery code `scope-not-allowed`.
+- Explicit `--scope project|user` no longer touches the other scope's existing placement (no project `localPaths` / `.gitignore` writes under `--scope user`).
+- Codex canonical role files carry `# oat-owner: project-config` (or `user-config`), a one-line change on first sync.
+- Sync output names Codex config keys it added and user values it kept (`multi_agent = false` conflict, `max_depth < 1` conflict, `max_depth = 1` note).
+- `oat project new --scope local` reports `skipped_local_scope`.
+- `oat … | head` exits 0 quietly.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/providers/cursor/codec/materialize.ts`, `providers/codex/codec/{sync-extension,config-merge}.ts` - sync cleanup and Codex config
+- `packages/cli/src/commands/init/tools/index.ts`, `commands/init/index.ts`, `config/oat-config.ts` - install scope and guided setup
+- `packages/cli/src/index.ts`, `commands/status/index.ts`, `commands/doctor/index.ts`, `commands/project/new/*` - messages and EPIPE
+- `packages/cli/src/commands/shared/exact-path-commit.ts`, `.lintstagedrc.mjs` - exact-path commits
+- `scripts/with-isolated-home.sh`, `package.json`, `AGENTS.md`, `scripts/worktree/init.sh` - test HOME and scripts
+- `.agents/skills/oat-project-{implement,complete,pr-final}/SKILL.md` - skill contracts
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Every task: focused vitest with an isolated HOME, CLI lint and type-check; guard-can-fail probes for every new guard; negative controls (pre-fix bad state, post-fix rejection, accepted control) for the install-scope and exact-path commit changes, and a real lint-staged hook probe.
+- Phase-end forced CLI suites per phase; post-fan-in integration (437 files / 9276 tests).
+- All nine Definition of Done gates exit 0 at `c1f06b073` (with forced reruns where turbo replayed cache), plus `pnpm test:evidence`, `pnpm lint`, `pnpm format`; docs checks after the p05 docs fixes.
 
 **Design deltas (if any):**
 
-- None (quick mode; no design.md).
+- None (quick mode; no design.md). Plan deviations are recorded under `## Deviations from Plan / Design`.
 
 ## References
 
