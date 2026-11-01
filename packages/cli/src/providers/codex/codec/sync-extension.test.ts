@@ -1522,6 +1522,78 @@ describe('codex sync extension', () => {
     expect(config).not.toContain('[agents.stale]');
   });
 
+  it('never removes a stale owned role file whose real path is outside the scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    const outside = await mkdtemp(join(tmpdir(), 'oat-codex-outside-'));
+    tempDirs.push(root, outside);
+    const managedRole = (role: string) =>
+      [
+        '# oat-managed: true',
+        `# oat-role: ${role}`,
+        '# oat-owner: supported-catalogue',
+        'developer_instructions = "role"',
+        '',
+      ].join('\n');
+    await writeFile(
+      join(outside, 'oat-reviewer-gpt-6-sol-high.toml'),
+      managedRole('oat-reviewer-gpt-6-sol-high'),
+      'utf8',
+    );
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await symlink(outside, join(root, '.codex', 'agents'));
+    await writeFile(
+      join(root, '.codex', 'config.toml'),
+      '[agents.oat-reviewer-gpt-6-sol-high]\ndescription = "r"\nconfig_file = "agents/oat-reviewer-gpt-6-sol-high.toml"\n',
+      'utf8',
+    );
+
+    const symlinkedDirPlan = await computeCodexProjectExtensionPlan(root, []);
+    await applyCodexProjectExtensionPlan(root, symlinkedDirPlan);
+
+    await expect(
+      readFile(join(outside, 'oat-reviewer-gpt-6-sol-high.toml'), 'utf8'),
+    ).resolves.toContain('# oat-managed: true');
+    expect(
+      symlinkedDirPlan.operations.filter(
+        (operation) => operation.action === 'remove',
+      ),
+    ).toEqual([]);
+    expect(
+      symlinkedDirPlan.operations.find(
+        (operation) => operation.target === 'config',
+      )?.content,
+    ).toContain('[agents.oat-reviewer-gpt-6-sol-high]');
+
+    const inScope = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
+    tempDirs.push(inScope);
+    await mkdir(join(inScope, '.agents', 'agents'), { recursive: true });
+    await mkdir(join(inScope, '.codex', 'agents'), { recursive: true });
+    await symlink(
+      join(outside, 'oat-reviewer-gpt-6-sol-high.toml'),
+      join(inScope, '.codex', 'agents', 'oat-reviewer-gpt-6-sol-high.toml'),
+    );
+    await writeFile(
+      join(inScope, '.codex', 'agents', 'oat-reviewer-gpt-6-sol-max.toml'),
+      managedRole('oat-reviewer-gpt-6-sol-max'),
+      'utf8',
+    );
+    const symlinkedFilePlan = await computeCodexProjectExtensionPlan(
+      inScope,
+      [],
+    );
+    await applyCodexProjectExtensionPlan(inScope, symlinkedFilePlan);
+
+    expect(
+      symlinkedFilePlan.operations
+        .filter((operation) => operation.action === 'remove')
+        .map((operation) => operation.path),
+    ).toEqual(['.codex/agents/oat-reviewer-gpt-6-sol-max.toml']);
+    await expect(
+      readFile(join(outside, 'oat-reviewer-gpt-6-sol-high.toml'), 'utf8'),
+    ).resolves.toContain('# oat-managed: true');
+  });
+
   it('removes only stale roles owned by the current configuration scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);

@@ -665,6 +665,14 @@ async function collectStaleManagedRoles(
     );
   };
 
+  // Stale cleanup deletes files, so a candidate whose real path (through a
+  // symlinked file or `.codex/agents` directory) leaves the scope is skipped.
+  const isWithinScope = (rolePath: string) =>
+    validateRealPathWithinScope(rolePath, scopeRoot).then(
+      () => true,
+      () => false,
+    );
+
   for (const [roleName, roleConfig] of Object.entries(agents)) {
     if (desiredRoleNames.has(roleName)) {
       continue;
@@ -676,7 +684,10 @@ async function collectStaleManagedRoles(
     }
 
     const rolePath = join(scopeRoot, '.codex', configFile);
-    if (!isStaleManagedRole(roleName, await readOptionalFile(rolePath))) {
+    if (
+      !(await isWithinScope(rolePath)) ||
+      !isStaleManagedRole(roleName, await readOptionalFile(rolePath))
+    ) {
       continue;
     }
 
@@ -703,7 +714,10 @@ async function collectStaleManagedRoles(
     }
 
     const rolePath = join(agentsDir, roleFile);
-    if (!isStaleManagedRole(roleName, await readOptionalFile(rolePath))) {
+    if (
+      !(await isWithinScope(rolePath)) ||
+      !isStaleManagedRole(roleName, await readOptionalFile(rolePath))
+    ) {
       continue;
     }
 
@@ -864,8 +878,16 @@ export async function computeCodexProjectExtensionPlan(
       `${staleRole}.toml`,
     );
     const staleRoleContent = await readOptionalFile(staleRolePath);
+    const staleRoleWithinScope = await validateRealPathWithinScope(
+      staleRolePath,
+      scopeRoot,
+    ).then(
+      () => true,
+      () => false,
+    );
 
     if (
+      staleRoleWithinScope &&
       staleRoleContent &&
       isOatManagedCodexRoleFile(staleRoleContent, staleRole)
     ) {
