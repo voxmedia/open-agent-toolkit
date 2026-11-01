@@ -91,6 +91,10 @@ autonomous-wave1-20261031-04 Observation: after the final review and two cross-f
 
 wave1-20261101-prev1-outcome: p-rev1 (operator-authorized revision for PR #395 Critical findings) passed review with 1 review-fix task (prev1-t03, docs and probe portability).
 
+### 2026-11-01 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md run=0d4d9f07-8c22-4907-9108-611d39fc3633
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
