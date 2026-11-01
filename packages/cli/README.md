@@ -20,8 +20,8 @@ npx @open-agent-toolkit/cli --help
 
 ```bash
 oat init --scope project
-oat status --scope all
-oat sync --scope all
+oat status --scope project
+oat sync --scope project
 oat config describe
 ```
 

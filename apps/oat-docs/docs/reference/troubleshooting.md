@@ -95,9 +95,8 @@ link or copy that OAT creates in the tool's own folder, such as
 - If you are working in the OAT source repository: run
   `pnpm run worktree:init`. This command copies local-only files from the main
   worktree, installs dependencies, configures Git hooks, builds the workspace,
-  and runs `oat sync` with no scope flag. A bare `oat sync` uses
-  `--scope all`, so it refreshes user-scope provider views in your home
-  directory as well as the project's.
+  and runs `oat sync --scope project`, which refreshes only the project's
+  provider views and leaves user-scope views in your home directory alone.
 
 ## Codex appears detected but no skill sync actions are listed
 
@@ -328,8 +327,8 @@ npm install --global @open-agent-toolkit/cli
 oat status # or: oat doctor
 ```
 
-The diagnostic's own recovery line says to run `pnpm build`. That applies only
-when you run the CLI from a checkout of the OAT source repository.
+The diagnostic's own recovery line names the same two remedies and mentions
+`pnpm build` only for a checkout of the OAT source repository.
 
 If you are working in the OAT source repository: rebuild the CLI workspace,
 then rerun the command named in the diagnostic:

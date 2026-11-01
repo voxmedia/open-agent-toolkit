@@ -101,7 +101,27 @@ export function isEntrypoint(
   }
 }
 
+/**
+ * A reader that hangs up early (`oat tools list | head -1`) has received all
+ * the output it wanted, so a broken pipe ends the process quietly. Any other
+ * stream error is rethrown and stays fatal.
+ */
+export function exitQuietlyOnBrokenPipe(
+  stream: NodeJS.WriteStream,
+  exit: (code: number) => void = (code) => process.exit(code),
+): void {
+  stream.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EPIPE') {
+      exit(0);
+      return;
+    }
+    throw error;
+  });
+}
+
 if (isEntrypoint()) {
+  exitQuietlyOnBrokenPipe(process.stdout);
+  exitQuietlyOnBrokenPipe(process.stderr);
   void main().catch((error) => {
     const logger = createLogger({ json: false, verbose: false });
     if (error instanceof CliError) {

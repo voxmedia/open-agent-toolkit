@@ -154,7 +154,7 @@ export function buildToolPacksSectionBody(
     );
   }
   lines.push(
-    '- **Refresh provider views:** `oat sync --scope all`',
+    '- **Refresh provider views:** `oat sync --scope project`',
     '- **Update skills to latest versions:** `oat tools update`',
   );
 

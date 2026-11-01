@@ -335,46 +335,41 @@ describe('createToolsInstallCommand', () => {
     );
   });
 
-  it('additive --scope user over a project pack syncs only the added scope (no prune)', async () => {
+  it('explicit --scope user over a project pack writes and syncs only user scope', async () => {
     const { capture, command, installDocs, removeDirectory, syncScopes } =
       createHarness();
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    // docs was at project; --scope user is additive → end-state both, with no
-    // removal of the project install.
+    // docs was at project; --scope user installs at user only and leaves the
+    // project install as it is.
+    expect(installDocs).toHaveBeenCalledTimes(1);
     expect(installDocs).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
     expect(removeDirectory).not.toHaveBeenCalled();
     expect(capture.info.join('\n')).toContain(
-      'Installed tool packs: docs (project + user)',
+      'Installed tool packs: docs (user)',
     );
-    // Only the newly-added user scope is auto-synced; the preserved project
-    // scope is never re-synced or pruned.
     expect(syncScopes).toEqual(['user']);
   });
 
-  it('additive --scope project over a user pack syncs only the added project scope (no prune)', async () => {
-    // Place docs at user so --scope project is a genuine additive add, not a
-    // no-op over the same scope.
+  it('explicit --scope project over a user pack writes and syncs only project scope', async () => {
     const { capture, command, installDocs, removeDirectory, syncScopes } =
       createHarness({ packScope: 'user' });
 
     await runCommand(command, [], ['--scope', 'project']);
 
-    // docs was at user; --scope project is additive → end-state both, with the
-    // new install landing at the project root and no removal of the user
-    // install.
+    // docs was at user; --scope project installs at the project root only and
+    // leaves the user install as it is.
+    expect(installDocs).toHaveBeenCalledTimes(1);
     expect(installDocs).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
     expect(removeDirectory).not.toHaveBeenCalled();
     expect(capture.info.join('\n')).toContain(
-      'Installed tool packs: docs (project + user)',
+      'Installed tool packs: docs (project)',
     );
-    // Only the newly-added project scope is auto-synced; the preserved user
-    // scope is never re-synced or pruned.
     expect(syncScopes).toEqual(['project']);
   });
 });

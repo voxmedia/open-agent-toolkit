@@ -41,8 +41,11 @@ The first practical expansion path is to keep improving the existing owners: [Do
 
 `oat internal commit-paths --identity <operation> --message <message> -- <files...>`
 commits an explicit list of owned files with enabled Git hooks. Include tracked
-removals and both names of a rename. Directories, untracked missing paths,
-unmerged entries and paths outside the repository are rejected; the command
+removals and both names of a rename. A file `HEAD` already tracks is
+committed even when an ignore rule matches it or its directory (for example
+`packages/cli/assets/templates/` under `packages/cli/assets/*`); an untracked
+path that an ignore rule matches is rejected. Directories, untracked missing
+paths, unmerged entries and paths outside the repository are rejected; the command
 does not discover ownership or expand directory/glob pathspecs. Unrelated staged
 entries and worktree bytes remain preserved, including partially staged files.
 On success, owned index/worktree bytes match the hook-final commit.

@@ -2,7 +2,7 @@
 id: BL-261011-clean-up-the-isolated-home
 title: Clean up the isolated HOME directories that evidence-grade test runs
   leave under TMPDIR
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - developer-experience
 assignee: null
 created: 2026-10-11T22:25:08.163Z
-updated: 2026-10-11T22:25:08.163Z
+updated: '2026-11-01T00:42:55Z'
 associated_issues: []
 external_plans: []
 ---

@@ -2,7 +2,7 @@
 id: BL-261002-align-implement-complete
 title: Align implement, complete, and pr-final skill contracts with their actual
   behavior
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:06.018Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T00:42:54Z'
 associated_issues: []
 external_plans: []
 ---

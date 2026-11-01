@@ -2181,9 +2181,10 @@ config_file = "agents/reviewer.toml"
       });
 
       expect(runToolPacks).toHaveBeenCalledWith(
-        expect.objectContaining({ scopeSelection: 'defaults' }),
+        expect.objectContaining({ scope: 'project' }),
         true,
       );
+      expect(runToolPacks.mock.calls[0]?.[0]?.scopeSelection).toBeUndefined();
     });
 
     it.each([false, true])(
@@ -2746,11 +2747,9 @@ config_file = "agents/reviewer.toml"
       });
 
       expect(runToolPacks).toHaveBeenCalledWith(
-        expect.objectContaining({
-          scope: 'project',
-          scopeSelection: 'defaults',
-        }),
+        expect.objectContaining({ scope: 'project' }),
       );
+      expect(runToolPacks.mock.calls[0]?.[0]?.scopeSelection).toBeUndefined();
       expect(selectManyWithAbort).not.toHaveBeenCalled();
       expect(addLocalPathsMock).not.toHaveBeenCalled();
     });

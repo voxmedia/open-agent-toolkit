@@ -455,6 +455,7 @@ describe('scaffoldProject', () => {
     expect(result.scope).toBe('local');
     expect(result.projectPath).toBe('.oat/projects/local/local-project');
     expect(result.committed).toBe(false);
+    expect(result.commitStatus).toBe('skipped_local_scope');
     expect(
       execFileSync('git', ['rev-parse', 'HEAD'], {
         cwd: repoRoot,

@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.12
+  version: 1.6.13
 ---
 
 # Project PR (Final)
@@ -90,7 +90,7 @@ oat-project-pr-final title="feat: add review loop"
 
 ### Without arguments
 
-Run the `oat-project-pr-final` skill and it will ask for:
+Run the `oat-project-pr-final` skill and it fills these from the defaults below without asking, then pushes the branch and creates the PR:
 
 - PR title
   - default when a known ticket is associated: `[{TICKET-NUM}] {Descriptive Project Title}`

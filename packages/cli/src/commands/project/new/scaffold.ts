@@ -73,6 +73,7 @@ export interface ScaffoldProjectOptions {
 export type CommitScaffoldStatus =
   | 'committed'
   | 'skipped_disabled'
+  | 'skipped_local_scope'
   | 'skipped_no_worktree'
   | 'skipped_nothing'
   | 'failed';
@@ -750,7 +751,8 @@ export async function scaffoldProject(
   let parentHeadBeforeRecordCommit: string | undefined;
   let committed = false;
   let commitSha: string | undefined;
-  let commitStatus: CommitScaffoldStatus = 'skipped_disabled';
+  let commitStatus: CommitScaffoldStatus =
+    scope === 'local' ? 'skipped_local_scope' : 'skipped_disabled';
   let commitError: string | undefined;
   let createdFiles: string[] = [];
   let skippedFiles: string[] = [];

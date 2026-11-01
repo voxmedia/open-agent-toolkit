@@ -369,3 +369,10 @@ test('isolates nested smoke bootstrap from normal worktree initialization', asyn
     await rm(repository, { force: true, recursive: true });
   }
 });
+
+test('refreshes only project-scope provider views', async () => {
+  const script = await readFile(initScript, 'utf8');
+
+  assert.match(script, /^pnpm run --silent cli -- sync --scope project$/m);
+  assert.doesNotMatch(script, /\bcli -- sync\b(?! --scope project$)/m);
+});

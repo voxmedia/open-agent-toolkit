@@ -206,11 +206,12 @@ Key behavior:
   project role file; `--scope user` writes only under `~/.codex`
 - `--agent-path` selects a specific canonical agent and `--role-name` overrides
   the generated role name
-- Managed role registration enables multi-agent support and merges an
-  `agents.max_depth` floor of `2`
-- Project writes preserve a higher existing project depth or inherited user
-  depth without mutating user configuration; user writes do not inspect or
-  mutate project configuration
+- Managed role registration adds `[features] multi_agent = true` and
+  `agents.max_depth = 2` only when those keys are absent; an explicit value is
+  kept, and each `Config:` line names a key added or a conflict
+- A project write that adds `max_depth` uses a higher inherited user depth
+  when there is one, without mutating user configuration; user writes do not
+  inspect or mutate project configuration
 - Existing unrelated Codex configuration and custom roles are preserved
 
 ## Notes

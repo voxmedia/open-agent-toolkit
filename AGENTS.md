@@ -25,6 +25,7 @@
 - `pnpm format` - Each workspace package's defined `format` script, plus `format:root` (oxfmt --check over `.agents/skills/**/*.{md,mjs,js,cjs}`, `apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}`); `pnpm check` runs that same `format:root`; use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
+- `pnpm test:evidence` - Forced, uncached `turbo run test` with a self-removing isolated `HOME` (evidence-grade runs; see Definition of Done)
 
 `pnpm check` now runs the root-level formatting check that used to live only
 in `pnpm format`. It runs each workspace package's defined `check` script
@@ -88,10 +89,14 @@ default, so a green `pnpm check` or `pnpm test` frequently executes nothing —
 look for `cache hit, replaying logs` or `>>> FULL TURBO` in the output. Note
 that `pnpm test --force` does **not** force a re-run: pnpm appends the flag to
 the last command of the chained root script, where it lands harmlessly or
-errors. For evidence-grade verification run
-`HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
-and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts` (which runs
-`scripts/worktree/init.test.mjs`), and `pnpm oat:validate-skills` separately
+errors. For evidence-grade verification run `pnpm test:evidence` from the
+repository root (`pnpm exec turbo run test --force` under
+`scripts/with-isolated-home.sh`, which creates a temporary `HOME` under
+`TMPDIR` and removes it on success, failure, `INT` and `TERM`; a bare
+`HOME=$(mktemp -d)` leaves about 48 MB behind per run), and run
+`pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts` (which runs
+`scripts/worktree/init.test.mjs` and `scripts/with-isolated-home.test.mjs`),
+and `pnpm oat:validate-skills` separately
 when they matter. Run `pnpm build` first when you invoke them this way: the
 smoke suite loads the CLI's built resolver from `packages/cli/dist`, which
 `turbo run test` supplies through its `build` dependency but a bare suite
@@ -143,7 +148,7 @@ covers the shared `format:root` portion of `pnpm format` (`.agents/skills`,
 `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`. Run `pnpm lint`
 and `pnpm format` whenever a change touches `tools/smoke` or `.agents/skills`.
 When a change edits skill prose under `.agents/skills`, also run
-`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`:
+`bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`:
 contract tests there pin skill sentences verbatim, so a one-line wording fix
 can fail CI that no lint or format pass predicts.
 

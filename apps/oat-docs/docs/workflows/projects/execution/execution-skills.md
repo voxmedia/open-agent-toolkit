@@ -76,8 +76,7 @@ is ready.
 
 The number of fix attempts after a failed review comes from
 `oat_orchestration_retry_limit` in the project's `state.md` (default 2, range
-0–5). The skill's argument hint also lists `--retry-limit`, but no step reads
-that flag, so passing it changes nothing.
+0–5).
 
 **Prerequisites:** Select an existing project with an approved, complete
 `plan.md` whose readiness points to `oat-project-implement`. The lifecycle

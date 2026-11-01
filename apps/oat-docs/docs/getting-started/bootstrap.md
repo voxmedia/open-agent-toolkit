@@ -73,9 +73,8 @@ on your `PATH`. OAT adds its lines between `# >>> oat pre-commit hook >>>` and
 
 To remove the hook, run `oat init --scope project --no-hook` in the
 repository. (Without `--scope project`, `oat init` uses scope `all` and also
-writes under your home directory.) Although its
-help text reads "Skip optional pre-commit hook install", the flag also removes
-an OAT hook that is already installed. It deletes only the marked OAT block
+writes under your home directory.) As its help text says, `--no-hook` removes
+an installed optional pre-commit hook and skips installing one. It deletes only the marked OAT block
 and keeps any other hook content; if the file contained nothing but the OAT
 block, the file is deleted (or emptied, when it is a symlink). You can also
 delete the lines between the two markers by hand. To install the hook later
@@ -99,8 +98,7 @@ oat init --scope project
 
 ### Where tool packs install
 
-Guided setup uses the same per-pack defaults as `oat tools install`, with one
-difference described at the end of this section. The `--scope` option of `oat tools install` and `oat tools remove` lists `all` as
+Guided setup uses the same per-pack defaults as `oat tools install`. The `--scope` option of `oat tools install` and `oat tools remove` lists `all` as
 its default in `--help`. For `oat tools install`, that default does not mean
 both scopes:
 
@@ -114,21 +112,22 @@ both scopes:
 The `core` pack can only live under your home directory:
 
 - `oat tools install --scope project`, with no pack name, installs the other
-  seven packs in this repository and still installs `core` under your home
-  directory.
-- `oat tools install core --scope project` exits successfully and prints
-  `Installed core tool pack.`, but it writes nothing, neither in the
-  repository nor in your home directory.
+  seven packs in this repository, skips `core`, and reports that core is
+  user-scope only.
+- `oat tools install core --scope project` exits 1 with a message that core is
+  user-scope only and writes nothing.
 - `oat tools remove --all --scope project` fails with
   `Pack core does not allow project scope`, and so does
   `oat tools remove --all` with no `--scope`.
 
-The difference: guided setup does not take its pack scope from `--scope`.
-`oat init --scope project --setup`, run without an interactive terminal,
-installed all eight packs under the home directory. In an interactive
-terminal, answer **Yes** to the per-pack scope question to choose project
-scope, or install packs afterwards with `oat tools install <pack> --scope project`. See [Where packs install](tool-packs.md#where-packs-install) for
-the full rules and how to remove packs.
+Guided setup takes its pack scope from an explicit `--scope`:
+`oat init --scope project --setup` installs the selected packs in this
+repository, skips `core`, and writes nothing under your home directory, and
+`--scope user --setup` installs them at user scope only. Without an
+explicit scope, guided setup keeps the per-pack defaults above. Guided setup
+detects the default branch from `origin/HEAD`, then `main`, and does not run
+`gh`. See [Where packs install](tool-packs.md#where-packs-install) for the full
+rules and how to remove packs.
 
 Related commands:
 

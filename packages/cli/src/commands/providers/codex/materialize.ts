@@ -12,6 +12,8 @@ import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import {
+  type CodexConfigMergeResult,
+  describeCodexConfigMerge,
   mergeCodexConfigForRole,
   readCodexMaxDepth,
 } from '@providers/codex/codec/config-merge';
@@ -29,10 +31,14 @@ interface CodexMaterializeOptions {
   scope: ConcreteScope;
 }
 
+export interface CodexMaterializeCommandResult extends CodexMaterializeResult {
+  config: Pick<CodexConfigMergeResult, 'addedKeys' | 'userValueNotices'>;
+}
+
 interface CodexMaterializePlan {
   configChanged: boolean;
   mergedConfigContent: string;
-  result: CodexMaterializeResult;
+  result: CodexMaterializeCommandResult;
   role: CodexRoleExport;
   roleChanged: boolean;
 }
@@ -77,7 +83,7 @@ function resolveAgentPath(
 }
 
 export function formatCodexMaterializeResult(
-  result: CodexMaterializeResult,
+  result: CodexMaterializeCommandResult,
 ): string {
   return [
     result.dryRun
@@ -88,6 +94,7 @@ export function formatCodexMaterializeResult(
     `Role: ${result.roleName}`,
     `Role file: ${result.rolePath}`,
     `Config file: ${result.configPath}`,
+    ...describeCodexConfigMerge(result.config).map((line) => `Config: ${line}`),
     'TOML preview:',
     result.tomlPreview.trimEnd(),
   ].join('\n');
@@ -159,6 +166,10 @@ async function buildCodexMaterializePlan(
       configPath,
       configFile: role.configFile,
       tomlPreview: role.content,
+      config: {
+        addedKeys: mergedConfig.addedKeys,
+        userValueNotices: mergedConfig.userValueNotices,
+      },
     },
   };
 }

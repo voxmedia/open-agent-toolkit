@@ -353,6 +353,10 @@ export async function checkSkillVersionsDefault(
   };
 }
 
+function assetRecoveryFix(rerun: string): string {
+  return `Reinstall the OAT CLI (\`npm install --global @open-agent-toolkit/cli\`) or point \`OAT_ASSETS_DIR\` at a complete asset bundle for this CLI version, then rerun \`${rerun}\`. In an OAT source checkout, run \`pnpm build\` instead.`;
+}
+
 function formatVersionForDisplay(version: string | null): string {
   return version ?? '(unversioned)';
 }
@@ -1206,7 +1210,7 @@ async function createPackStateChecks(
           description: 'Managed pack inventory availability',
           status: 'warn',
           message: evidence.diagnostics[0]?.detail ?? detail,
-          fix: 'Run `pnpm build` and rerun `oat doctor`.',
+          fix: assetRecoveryFix('oat doctor'),
         },
       ],
       evidence,
@@ -1419,7 +1423,7 @@ async function runChecksForScope(
           error instanceof Error
             ? `Unable to compare installed skill versions: ${error.message}`
             : 'Unable to compare installed skill versions.',
-        fix: 'Run `pnpm build` and rerun `oat doctor`.',
+        fix: assetRecoveryFix('oat doctor'),
       });
     }
 

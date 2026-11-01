@@ -245,11 +245,12 @@ describe('guided setup integration', () => {
     await runInit(command, { globalArgs: ['--scope', 'project'] });
 
     expect(runToolPacks).toHaveBeenCalledTimes(1);
-    // Interactive guided setup defers the per-pack scope gate to the tools
-    // flow via the `gate` signal instead of prompting before pack selection.
+    // An explicit --scope project reaches the tools flow as an explicit
+    // selection, so no per-pack scope gate is deferred.
     expect(runToolPacks).toHaveBeenCalledWith(
-      expect.objectContaining({ scopeSelection: 'gate' }),
+      expect.objectContaining({ scope: 'project' }),
     );
+    expect(runToolPacks.mock.calls[0]?.[0]?.scopeSelection).toBeUndefined();
     expect(addLocalPaths).toHaveBeenCalledWith('/tmp/workspace', [
       '.oat/**/analysis',
       '.oat/**/pr',
@@ -325,9 +326,10 @@ describe('guided setup integration', () => {
     });
 
     expect(runToolPacks).toHaveBeenCalledWith(
-      expect.objectContaining({ scopeSelection: 'defaults' }),
+      expect.objectContaining({ scope: 'project' }),
       true,
     );
+    expect(runToolPacks.mock.calls[0]?.[0]?.scopeSelection).toBeUndefined();
     expect(
       capture.info.some((message) => message.includes('Guided setup complete')),
     ).toBe(true);
@@ -381,7 +383,7 @@ describe('guided setup integration', () => {
     ).toBe(true);
   });
 
-  it('non-interactive: explicit setup skips prompts and applies tool defaults', async () => {
+  it('non-interactive: explicit setup skips prompts and passes the explicit scope to the tools flow', async () => {
     const { command, runToolPacks, capture } = createGuidedSetupHarness({
       interactive: false,
       hookInstalled: true,
@@ -394,10 +396,9 @@ describe('guided setup integration', () => {
     });
 
     expect(runToolPacks).toHaveBeenCalledWith(
-      expect.objectContaining({
-        scopeSelection: 'defaults',
-      }),
+      expect.objectContaining({ scope: 'project' }),
     );
+    expect(runToolPacks.mock.calls[0]?.[0]?.scopeSelection).toBeUndefined();
     expect(
       capture.info.some((msg) => msg.includes('Guided setup complete')),
     ).toBe(true);

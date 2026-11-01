@@ -2,7 +2,7 @@
 id: BL-261002-correct-misleading-init-status
 title: Correct misleading init, status, and doctor messages and stop scripts
   from defaulting to user-scope sync
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:02.822Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T00:42:53Z'
 associated_issues: []
 external_plans: []
 ---

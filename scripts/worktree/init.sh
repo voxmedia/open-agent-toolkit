@@ -4,8 +4,9 @@
 # Copies local-only files from the main worktree (env, config.local.json,
 # MCP configs, local + archived projects), then fills gaps from S3 for
 # archived projects that exist on other machines. Finally installs deps,
-# builds, syncs OAT localPaths into the worktree, and refreshes provider
-# views via `oat sync`.
+# builds, syncs OAT localPaths into the worktree, and refreshes project
+# provider views via `oat sync --scope project`. User-scope views are left
+# alone so bootstrapping a worktree never rewrites ~/.claude or ~/.cursor.
 #
 # Idempotent — safe to re-run in an existing worktree.
 #
@@ -464,5 +465,5 @@ else
   echo "skip local path sync: already in main worktree"
 fi
 
-echo "syncing OAT canonical content to provider views"
-pnpm run --silent cli -- sync
+echo "syncing OAT canonical content to project provider views"
+pnpm run --silent cli -- sync --scope project

@@ -12,11 +12,20 @@ export default {
   // .mjs at commit would add an unaudited failure surface.
   '*.{mjs,cjs}': ['oxfmt --write --no-error-on-unmatched-pattern'],
 
+  // JSON and Markdown under packages/cli/assets/ are excluded: .gitignore
+  // ignores that directory, so lint-staged's re-stage (`git add` without -f)
+  // fails for its tracked files and lint-staged still exits 0. .oxfmtrc
+  // ignorePatterns skips that tree, so no formatting is lost.
+
   // JSON files: format with oxfmt
-  '*.json': ['oxfmt --write --no-error-on-unmatched-pattern'],
+  '!(packages/cli/assets/**)*.json': [
+    'oxfmt --write --no-error-on-unmatched-pattern',
+  ],
 
   // Markdown files: format with oxfmt
   // --no-error-on-unmatched-pattern: files under .oxfmtrc ignorePatterns (for
   // example immutable explainer-kit run packages) must not fail the hook.
-  '*.md': ['oxfmt --write --no-error-on-unmatched-pattern'],
+  '!(packages/cli/assets/**)*.md': [
+    'oxfmt --write --no-error-on-unmatched-pattern',
+  ],
 };

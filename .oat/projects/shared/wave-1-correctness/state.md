@@ -1,0 +1,207 @@
+---
+oat_current_task: null
+oat_last_commit: 9b21a87f3
+oat_blockers: []
+associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
+oat_parent: null # optional child-only coordination parent slug
+oat_siblings: [] # optional child-only sibling slugs
+oat_depends_on: [] # optional child-only sibling dependencies
+oat_children: [] # optional coordination-parent child slugs
+oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval; [] = none for brief modes
+oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_parallel_execution: false
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
+# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
+#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
+#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
+#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
+#     pNN:
+#       used_attempts: 0
+#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
+#   mode: managed # managed | inherit
+#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
+#   providers: # present for capped managed policies; omitted for uncapped/inherit
+#     codex: high # low|medium|high|xhigh
+#     claude: sonnet # haiku|sonnet|opus|fable
+#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
+#     cursor:
+#       high:
+#         - composer-2.5
+#         - { harness: cursor, model: gpt-5.5-xhigh }
+#   source: project-state
+# oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
+oat_workflow_mode: quick # spec-driven | quick | import | lite | brief | goal
+oat_workflow_origin: native # native | imported
+# oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
+#   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
+# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
+#   status: pending # pending | allowed | blocked | stale
+#   resolution: configured # configured | no_gate
+#   disposition: null # null | passed | warned | prompt_approved | project_disabled | no_gate
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   resolved_command: null
+#   resolved_description: null
+#   project_override: null # null or {value: disabled, source: state.md:oat_skill_gate_overrides}
+#   on_failure: block # block | prompt | warn | null
+#   max_attempts: 2
+#   attempts_completed: 0
+#   reviewed_head: null
+#   implementation_base_ref: null # exact logical base ref for the qualified effective-delta fingerprint
+#   implementation_fingerprint: null # new generations use sha256:effective-delta-v2:<digest>; stored v1 values keep v1 semantics
+#   freshness_head: null # rolling accepted tree checkpoint
+#   freshness_fingerprint: null # full effective delta at freshness_head
+#   waivers: [] # append-only operator waivers {waived_by, reason, from_commit, to_commit, covered_fingerprint, waived_at}; never self-issued, never under OAT_AUTONOMOUS=1
+#   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
+#   launch_attempt_id: null
+#   launch_started_at: null
+#   launch_result_receipt: null
+#   gate_run_marker: null
+#   gate_run_id: null
+#   envelope_status: null # ok | blocked | review_failed | other terminal status
+#   artifact: null
+#   handoff: null
+#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
+#   receive_correlation: null
+#   receive_source_artifact: null
+#   receive_archived_artifact: null
+#   receive_event_identity: null
+#   receive_pre_head: null
+#   receive_commit: null
+#   receive_eligible: false
+#   receive_completed: false
+#   failure: null
+#   updated_at: '2026-07-18T00:00:00Z'
+#   decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
+# oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
+#   status: allowed # allowed | blocked
+#   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
+#   decided_at: null # ISO 8601 UTC
+# oat_brief_gate: # optional; persisted brief artifact gate outcome, absent when no gate is configured; provenance only, read back by no route (core record: gate-approval-record.md)
+#   status: allowed # allowed | blocked
+#   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
+#   decided_at: null # ISO 8601 UTC
+oat_quick_start_gate:
+  status: allowed
+  disposition: passed
+  config_fingerprint: 'sha256:7ccf479582114c282e54ca15de9296de164044486b7f4c5d51454c0297ae970f'
+  reviewed_head: 'b37cd7c49b32083f10e7d1794d2c9d92baa01966'
+  decided_at: '2026-10-31T23:08:13Z'
+oat_post_implement_sequence:
+  status: complete
+  source: configured
+  final_phase: p05
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary, document, pr]
+  approval: approved
+  approval_source: oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
+oat_implement_exit_gate:
+  status: allowed
+  resolution: configured
+  disposition: passed
+  config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: '76247b17e14664397ce1d3a2ac842db2bd34dfeb'
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v2:90e5756cadb0a7906a98cc1fbf30d165c6ee654552eea568500e070b19f5dec5'
+  freshness_head: '76247b17e14664397ce1d3a2ac842db2bd34dfeb'
+  freshness_fingerprint: 'sha256:effective-delta-v2:90e5756cadb0a7906a98cc1fbf30d165c6ee654552eea568500e070b19f5dec5'
+  waivers: []
+  launch_state: result_persisted
+  launch_attempt_id: wave1-exit-gate-3
+  launch_started_at: '2026-11-01T16:18:27Z'
+  launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-3.json
+  gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/0d4d9f07-8c22-4907-9108-611d39fc3633.json
+  gate_run_id: 0d4d9f07-8c22-4907-9108-611d39fc3633
+  envelope_status: ok
+  artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md before treating this gate review as consumed.'
+  receive_state: completed
+  receive_correlation:
+    {
+      gate_run_id: 0d4d9f07-8c22-4907-9108-611d39fc3633,
+      scope: final,
+      type: code,
+      source_filename: final-review-2026-11-01T162337Z.md,
+    }
+  receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md
+  receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T162337Z.md
+  receive_event_identity: 'final|code|final-review-2026-11-01T162337Z.md'
+  receive_pre_head: 'd67da24734f070ec2f6230b95a80a4099ae6a3ad'
+  receive_commit: 'cb2484c0c9213d0a4cb5c439dca4778e4561d885'
+  receive_eligible: true
+  receive_completed: true
+  failure: null
+  updated_at: '2026-11-01T16:31:00Z'
+  decided_at: '2026-11-01T16:31:00Z'
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/395' # null | string — tracked PR URL when a PR exists
+oat_project_created: '2026-10-31T22:29:55.721Z' # ISO 8601 UTC timestamp — set once at project creation
+oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-11-01T16:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-10-31T22:33:17.121Z'
+---
+
+# Project State: wave-1-correctness
+
+**Status:** Implementation closeout
+**Started:** 2026-10-31
+**Last Updated:** 2026-11-01
+
+## Current Phase
+
+Implementation complete after revision p-rev1 (PR #395 Critical review findings fixed); final re-review and implementation exit gate generation 3 passed. PR #395 is open for human review (not merged).
+
+## Artifacts
+
+- **Discovery:** `discovery.md` (complete)
+- **Spec:** N/A (quick mode)
+- **Design:** N/A (quick mode, straight to plan)
+- **Plan:** `plan.md` (complete; 5 phases plus revision p-rev1, 28 tasks)
+- **Implementation:** `implementation.md` (all tasks complete)
+
+## Progress
+
+- ✓ Discovery complete
+- ✓ Plan complete
+- ✓ Implementation tasks complete
+- ✓ Final review and implementation exit gate passed
+- ✓ Documentation sync complete (gate `DOCUMENT-02`, auto-resolved through the `--auto` path): delta analysis found no false or missing claims in `README.md`, `packages/cli/README.md` or `apps/oat-docs/docs` after p05 and the p01-t05/t06 exit-gate fixes; the chained repo-reference update recorded the project in `.oat/repo/pjm/current-state.md`, `roadmap.md` and the backlog index overview (commit `10561bd14`)
+- ✓ PR created
+- ⧗ Awaiting human review
+
+## Blockers
+
+None
+
+## Next Milestone
+
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
