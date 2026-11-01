@@ -85,6 +85,26 @@ Negative controls:
 
 Captured-output controls: the wave-5 returned-message fixture's pre-change expected outcome is a structured `findings_unrecognizable` refusal because it is not the separately parsed review artifact and has no canonical Findings sections or count line. The branch build parsed `.oat/projects/shared/review-gate-integrity-goal/reviews/archived/artifact-plan-review-2026-11-01T214129Z.md` as accepted with counts 0/0/0/0, zero finding records, and `blocking: false`.
 
+### Review Received: p01
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p01-review-2026-11-01T220753Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 4 · Low 4
+
+Reviewer request `rgi-p01-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`); reviewed range `56f55a3378d6e35dc3e67dc1437f9ca864477728..ffa8f869881fea4fbf51b7e31105b4a1f033ec63`; reconnaissance not attempted. The phase threshold passes (no Critical or High), but M1 and M4 contradict p01's own Exit evidence and M2 and M3 undermine the records p02 consumes, so they are fixed before acceptance.
+
+- M1 (Medium): detail ownership survives blank lines and repeated labels, so a separate plain-label finding is absorbed instead of refused as ambiguous → fix task p01-t02; R1 and Outcome 3 require an ambiguity refusal.
+- M2 (Medium): explicit and generated finding IDs can collide → fix task p01-t02; the Design matches the verifier's coverage check by finding ID.
+- M3 (Medium): finding records carry no completeness signal against `counts` → fix task p01-t02; p02's "every finding of the event is covered" check reads these records.
+- M4 (Medium): no test parses the captured wave-5 title-and-label block → fix task p01-t02; Exit evidence requires the real-output fixture to evidence the title marker and its labels.
+- L1 (Low): contract and hint do not say the separator must be an em dash → fix task p01-t02 (cheap; each miss costs a rerun).
+- L2 (Low): `- **L1:** text` items give records titled `L1:` → approved deferral to p08 (see Deferred Findings); p08 owns the stable finding key.
+- L3 (Low): the gate JSON envelope drops the structured refusal code → approved deferral (see Deferred Findings); no consumer yet (Feature Planning Triage).
+- L4 (Low): a top-level list item starting with a closed label is now refused, unmentioned in the contract → fix task p01-t02 (contract sentence and pinning test).
+
+**Outcome:** fixes queued: p01-t02
+
 ## Phase p02: Read-only clerical-resolution verifier
 
 **Status:** pending
@@ -150,6 +170,9 @@ Captured-output controls: the wave-5 returned-message fixture's pre-change expec
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
+
+- p01 review L2 (Low): `- **L1:** text` list items parse with title `L1:` and no explicit ID. Deferred to p08, which owns the stable finding key over p01's records. Trigger: p08 start.
+- p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (p02 to p04 or m04) that needs the code without matching message text.
 
 ## Deviations from Plan / Design
 
