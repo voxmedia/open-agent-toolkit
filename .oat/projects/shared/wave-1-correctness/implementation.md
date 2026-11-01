@@ -16,13 +16,13 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | complete    | 7     | 7/7       |
-| Phase 3 | complete    | 4     | 4/4       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | in_progress | 4     | 4/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 7     | 7/7       |
+| Phase 3 | complete | 4     | 4/4       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 6     | 6/6       |
 
 **Total:** 23/23 tasks completed
 
@@ -693,6 +693,21 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - Phase 5 phase-end check, Definition of Done gates in CI order (2026-11-01, HEAD `c1f06b07340e795cb5dc5ee624e706cbfc191368`): `pnpm check` exit 0 (0/11 cached); `pnpm type-check` exit 0 (forced rerun exit 0, 0 cached); `pnpm test` exit 0 (test tasks executed, plus smoke, skills, scripts); `pnpm build` exit 0 (forced rerun exit 0, 0/5 cached); `pnpm run check:skill-bumps` exit 0; `git fetch origin main` + `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0; `pnpm build:docs` exit 0 (forced rerun exit 0, 0/6 cached); docs index regeneration + `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Also `pnpm test:evidence` exit 0 (437 files / 9276 CLI tests, cache bypassed, no HOME left), `pnpm lint` exit 0, `pnpm format` exit 0. No cross-phase reconciliation task needed.
 
+### Review Received: final
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-01T012159Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+- L1 (Low): root `AGENTS.md:9` still says to refresh provider views with `oat sync --scope all`; it is the repository's hand-written maintainer instruction, not the generated guidance block the item names → not changed (outside BL-261002-correct-misleading-init-status; maintainers here use user-scope packs); recorded under Deferred Findings.
+- L2 (Low): the Phase 5 Progress Overview row lagged (refresh-only) → refreshed in this bookkeeping.
+- Deferred ledger: all eight deferred entries judged acceptable to defer, including the one Medium (base-branch chain masked by `oat config get` defaults), which should be filed as a backlog item at closeout.
+
+**Outcome:** passed
+
+- Gate `IMPLEMENT-11` (autonomous final review): route native Cursor `oat-reviewer-claude-opus-5-5-high` (resolver-selected `high` reviewer ceiling, same model family as the implementers; cross-family independence comes from the configured `oat-project-implement` exit gate), request `wave1-final-review-1`, scope `final` `1056ccb18683548a4cdc5d5e81f82a6346defe8e..63b8bf8ca44f353597c843c8cb8247e853dc7d05`.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -704,6 +719,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - p03 R2-L1/L2: Step 11's resume note names one skip route; the standalone `: "${BASE_BRANCH:?…}"` guard does not stop an interactive line-by-line shell. Polish follow-up.
 - p04 L2: a `TERM` sent only to the wrapper PID waits for the child to finish before cleanup (documented in the script header). p04 L3: add a comment to the lint-staged re-stage unit test.
 - p02 note: the EPIPE handler does not treat `ENOTCONN` as quiet; separate decision if it is observed in practice.
+
+- final L1: root `AGENTS.md:9` hand-written maintainer line recommends `oat sync --scope all`; outside the item (which names the generated guidance block); leave to maintainers.
 
 ## Deviations from Plan / Design
 

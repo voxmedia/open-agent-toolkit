@@ -53,6 +53,19 @@ autonomous-wave1-20261031-01 Observation: three of four concurrently dispatched 
 
 autonomous-wave1-20261031-02 Observation: the plan review required probing commit-paths against this repository's real lint-staged hook with an observable log; it showed lint-staged 15.5.2 failing its re-stage on tracked files under an ignored directory while exiting 0. Impact: the fix shipped with a .lintstagedrc.mjs change that a scratch-hook test would not have revealed. Recommendation: keep real-hook probes for exact-path commit changes.
 
+### 2026-11-01 · structural · oat-project-implement · p05
+
+wave1-20261031-p05-outcome: p05 passed review (no Critical/High in either round) with 2 fix rounds (p05-t05 delegated, p05-t06 root-inline docs fix); Definition of Done gates all exit 0.
+
+### 2026-11-01 · project · friction · A child session left an oat shell function that silently no-opped later oat calls
+
+**Category:** environment-limited
+**Source:** autonomous-wave1-20261031-03
+**Origin:** oat-project-autonomous
+**Recorded:** 2026-11-01T01:12:25Z
+
+autonomous-wave1-20261031-03 Observation: after the p05 implementer ran, the root shell had a function oat() { node "$CLI" "$@" } with CLI unset, so oat calls printed nothing and exited 0 (one project-log append and two validations were silently skipped). Impact: lost bookkeeping until noticed at the final-review resolver. Recommendation: check type oat before relying on oat output in a long-lived shell, and have children invoke the branch CLI by path instead of defining shell functions.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

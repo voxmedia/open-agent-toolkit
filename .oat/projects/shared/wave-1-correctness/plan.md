@@ -903,7 +903,7 @@ When every gate passes, no task is appended and nothing is committed.
 | p04   | code     | passed          | 2026-11-01 | reviews/archived/p04-code-review-2026-11-01T001445Z.md      | e7a16361fecf3129061d03d9316dbab8cb3cbb06 | auto       | -                 |
 | p05   | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T005919Z.md      | 411314d1f53bd4b7611af7cbe9ae3899dffa4fb0 | auto       | -                 |
 | p05   | code     | fixes_completed | 2026-11-01 | reviews/archived/p05-code-review-2026-11-01T010437Z.md      | 772ced76e13d4d732e0714dfed3417930e79b63a | auto       | -                 |
-| final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T012159Z.md         | 63b8bf8ca44f353597c843c8cb8247e853dc7d05 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
 | plan  | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
 
