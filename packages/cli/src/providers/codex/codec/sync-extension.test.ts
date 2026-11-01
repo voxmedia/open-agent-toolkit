@@ -1408,6 +1408,64 @@ describe('codex sync extension', () => {
     ).resolves.toContain('# oat-owner: user-config');
   });
 
+  it('removes user-scope roles when a pack removal deletes the supported base roles', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-home-'));
+    tempDirs.push(home);
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: {
+              codex: {
+                high: [
+                  { harness: 'codex', model: 'gpt-6-sol', effort: 'high' },
+                ],
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    await mkdir(join(home, '.agents', 'agents'), { recursive: true });
+    await mkdir(join(home, '.codex', 'agents'), { recursive: true });
+    await writeFile(
+      join(home, '.codex', 'agents', 'oat-reviewer.toml'),
+      [
+        '# oat-managed: true',
+        '# oat-role: oat-reviewer',
+        '# oat-owner: user-config',
+        'developer_instructions = "review"',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(home, '.codex', 'config.toml'),
+      '[agents.oat-reviewer]\ndescription = "review"\nconfig_file = "agents/oat-reviewer.toml"\n',
+      'utf8',
+    );
+
+    const plan = await computeCodexProjectExtensionPlan(
+      home,
+      [],
+      [
+        '.agents/agents/oat-reviewer.md',
+        '.agents/agents/oat-phase-implementer.md',
+      ],
+      { userConfigDir: join(home, '.oat') },
+    );
+
+    expect(
+      plan.operations
+        .filter((operation) => operation.action === 'remove')
+        .map((operation) => operation.roleName),
+    ).toEqual(['oat-reviewer']);
+  });
+
   it('removes only stale roles owned by the current configuration scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-codex-extension-'));
     tempDirs.push(root);

@@ -721,7 +721,7 @@ export async function computeCodexProjectExtensionPlan(
   );
   const scopeOwner = codexScopeOwner(scopeRoot, options);
   if (
-    cleansStaleRoles &&
+    !isPartialSync &&
     isUserCodexScope(scopeRoot, options) &&
     materializationTargets.length > 0
   ) {
