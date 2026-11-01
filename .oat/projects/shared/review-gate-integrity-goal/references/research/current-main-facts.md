@@ -81,6 +81,12 @@ numbers are as of this baseline.
   #339's finding titles are bold lead-in paragraphs, which the shipped contract
   counts as zero (`FINDING_LIST_ITEM_CONTRACT_HINT`, `:831-832`, and the gate
   parsing contract in `.agents/agents/oat-reviewer.md`).
+  _Capture source (2026-11-01):_ the original #339 reviewer artifact is not on
+  this machine. Issue #339 holds a reproduction "abbreviated from the real
+  artifact" (CLI 0.3.13, Claude Opus high, artifact mode). The only other
+  bold-title capture found locally is the machine-local
+  `t3-e32280d5/.oat/projects/archived/backlog-wave-5/analysis/implementation-exit-gate-r1.err`
+  (one `**H1 — …**` title, a different shape from #339).
 - Gate carriers follow `.agents/docs/gate-approval-record.md`: a disposition
   pairs only with `status: allowed` and is `null` when `blocked`; other pairs
   are malformed.
