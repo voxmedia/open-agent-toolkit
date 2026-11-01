@@ -151,7 +151,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 **Outcome (required when completed):**
 
-- The user-scope "bundled managed Codex role definitions are unavailable" guard runs only for full user syncs again, so a user-scope pack removal of the supported base roles removes their `user-config` roles instead of throwing.
+- The user-scope "bundled managed Codex role definitions are unavailable" guard runs only for full user syncs again, so a user-scope removal partial sync whose canonical set lacks the supported base roles removes the removed agents' `user-config` roles instead of throwing (reachable by calling the extension directly; through the CLI the bundled base agents are always in the user-scope canonical set, per the final re-review).
 
 **Files changed:**
 
@@ -761,6 +761,18 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Outcome:** fixes queued: p01-t05
 
 - **Gate:** oat-project-implement · **Scope:** final · **Outcome:** generation 1 envelope `ok` (`review_completed_gate_passed`, threshold high, target `codex-6-sol-xhigh`, different-family) · attempt 1 of 2; receive queued p01-t05, so the generation goes stale when the fix lands and a new generation reruns final verification, final review and the gate.
+
+### Review Received: final (re-review after exit gate fixes)
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-01T015001Z.md (narrowed `63b8bf8ca44f353597c843c8cb8247e853dc7d05..5ac69c397894b9e0757d2481b260ba689c38911e`, builds on reviews/archived/final-review-2026-11-01T012159Z.md)
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- Exit gate M1: resolved by p01-t05 (reviewer re-ran the gate probe with the built CLI: `declared-role.toml` and its table removed by `oat tools remove --pack workflows --scope project`; present-agent roles, user-authored tables and install syncs unaffected; user-scope pack removal exits 0 and removes only that pack's `user-config` role).
+- L1 (Low): p01-t06 wording overstated CLI reachability → corrected in `plan.md` and this journal.
+
+**Outcome:** passed (request `wave1-final-review-2`); `IMPLEMENT-11` re-run with the same native route.
 
 ## Deferred Findings
 

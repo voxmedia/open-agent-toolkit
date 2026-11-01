@@ -322,9 +322,11 @@ disappear; prove the guard can fail.
 
 Root-found regression in p01-t05 while validating it: the removal partial sync
 also ran the user-scope "bundled managed Codex role definitions are
-unavailable" guard, so `oat tools remove --pack workflows --scope user` with
-Codex materialization targets configured would throw instead of removing the
-pack's roles.
+unavailable" guard, so a user-scope removal partial sync whose canonical set
+lacks the supported base roles threw instead of removing the removed agents'
+roles (reachable by calling the extension directly; through the CLI the bundled
+base agents are always part of the user-scope canonical set, per the final
+re-review).
 
 **Files:** `packages/cli/src/providers/codex/codec/sync-extension.ts` and its
 test.
@@ -953,7 +955,8 @@ When every gate passes, no task is appended and nothing is committed.
 | final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T012159Z.md         | 63b8bf8ca44f353597c843c8cb8247e853dc7d05 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
 | plan  | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
-| final | code     | fixes_added     | 2026-11-01 | reviews/archived/final-review-2026-11-01T012851Z.md         | 106363c85d88997f88ad8a8a8534f8cfdc03936a | gate       | codex-6-sol-xhigh |
+| final | code     | fixes_completed | 2026-11-01 | reviews/archived/final-review-2026-11-01T012851Z.md         | 106363c85d88997f88ad8a8a8534f8cfdc03936a | gate       | codex-6-sol-xhigh |
+| final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015001Z.md         | 5ac69c397894b9e0757d2481b260ba689c38911e | auto       | -                 |
 
 Plan artifact review disposition (Auto Artifact-Review Loop, structured
 mode, native Cursor variant `oat-reviewer-claude-opus-5-5-high` resolved for
