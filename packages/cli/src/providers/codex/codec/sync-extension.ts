@@ -614,18 +614,21 @@ function codexCleanupOwners(
 /**
  * Role names a partial sync may remove: base exports of the canonical agents
  * it was asked about that no longer exist, plus the materialized variants of
- * a removed supported base role.
+ * a removed supported base role. A removed file can no longer be parsed, so
+ * its file name stands in for its role name; any role a present canonical
+ * agent still produces stays protected.
  */
-function removedCanonicalRoleFilter(
+async function removedCanonicalRoleFilter(
+  scopeRoot: string,
   canonicalEntries: CanonicalEntry[],
   allowedCanonicalPaths: string[],
-): ((roleName: string) => boolean) | null {
-  const presentAgents = canonicalEntries.filter(
-    (entry) => entry.type === 'agent' && entry.isFile,
-  );
-  const presentFiles = new Set(presentAgents.map((entry) => entry.name));
-  const presentRoleNames = new Set(
-    presentAgents.map((entry) => sanitizeCodexRoleName(entry.name)),
+  materializationTargets: CodexMaterializationTarget[],
+  scopeOwner: CodexRoleOwner,
+): Promise<((roleName: string) => boolean) | null> {
+  const presentFiles = new Set(
+    canonicalEntries
+      .filter((entry) => entry.type === 'agent' && entry.isFile)
+      .map((entry) => entry.name),
   );
   const removedRoleNames = new Set<string>();
   for (const path of allowedCanonicalPaths) {
@@ -638,12 +641,22 @@ function removedCanonicalRoleFilter(
     return null;
   }
 
+  const protectedRoleNames = new Set(
+    (
+      await desiredRolesFromCanonical(
+        canonicalEntries,
+        scopeRoot,
+        materializationTargets,
+        scopeOwner,
+      )
+    ).map((role) => role.roleName),
+  );
   const removedBaseRoles = SUPPORTED_CODEX_BASE_ROLES.filter((role) =>
     removedRoleNames.has(role),
   );
   return (roleName) =>
-    removedRoleNames.has(roleName) ||
-    (!presentRoleNames.has(roleName) &&
+    !protectedRoleNames.has(roleName) &&
+    (removedRoleNames.has(roleName) ||
       removedBaseRoles.some((baseRole) => roleName.startsWith(`${baseRole}-`)));
 }
 
@@ -770,7 +783,13 @@ export async function computeCodexProjectExtensionPlan(
   const existingConfigContent = await readOptionalFile(existingConfigPath);
 
   const removedRoleFilter = isPartialSync
-    ? removedCanonicalRoleFilter(canonicalEntries, allowedCanonicalPaths)
+    ? await removedCanonicalRoleFilter(
+        scopeRoot,
+        canonicalEntries,
+        allowedCanonicalPaths,
+        materializationTargets,
+        codexScopeOwner(scopeRoot, options),
+      )
     : null;
   const staleRoles =
     isPartialSync && removedRoleFilter === null

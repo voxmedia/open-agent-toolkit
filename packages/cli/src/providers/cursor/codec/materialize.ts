@@ -128,10 +128,9 @@ async function isDanglingLink(path: string): Promise<boolean> {
     await stat(path);
     return false;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return true;
-    }
-    throw error;
+    // Other failures, such as a link loop, fall through to the scope check
+    // and its controlled refusal.
+    return (error as NodeJS.ErrnoException).code === 'ENOENT';
   }
 }
 

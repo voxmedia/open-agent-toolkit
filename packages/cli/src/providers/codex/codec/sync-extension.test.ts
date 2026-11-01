@@ -1520,7 +1520,9 @@ describe('codex sync extension', () => {
   );
 
   describe('stale canonical-derived roles', () => {
-    async function seedSyncedProject(agentNames: string[]): Promise<{
+    async function seedSyncedProject(
+      agents: Array<string | { file: string; name: string }>,
+    ): Promise<{
       root: string;
       entries: CanonicalEntry[];
     }> {
@@ -1529,11 +1531,13 @@ describe('codex sync extension', () => {
       const canonicalDir = join(root, '.agents', 'agents');
       await mkdir(canonicalDir, { recursive: true });
       const entries: CanonicalEntry[] = [];
-      for (const name of agentNames) {
-        const canonicalPath = join(canonicalDir, `${name}.md`);
+      for (const agent of agents) {
+        const { file, name } =
+          typeof agent === 'string' ? { file: agent, name: agent } : agent;
+        const canonicalPath = join(canonicalDir, `${file}.md`);
         await writeFile(canonicalPath, canonicalAgentFileContent(name));
         entries.push({
-          name: `${name}.md`,
+          name: `${file}.md`,
           type: 'agent',
           canonicalPath,
           isFile: true,
@@ -1701,6 +1705,61 @@ describe('codex sync extension', () => {
         expectUntouchedNeighbours(tables, files);
       },
     );
+
+    it('keeps a role a present agent declares when a removed file shares its name', async () => {
+      const { root, entries } = await seedSyncedProject([
+        { file: 'gone', name: 'gone-old' },
+        { file: 'keep', name: 'gone' },
+      ]);
+      expect(await codexRoleFiles(root)).toEqual(
+        expect.arrayContaining(['gone-old.toml', 'gone.toml']),
+      );
+      await rm(entries[0]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        entries.slice(1),
+        ['.agents/agents/gone.md'],
+      );
+
+      expect(
+        plan.operations.filter((operation) => operation.action === 'remove'),
+      ).toEqual([]);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      expect(await codexRoleFiles(root)).toContain('gone.toml');
+      expect(await codexAgentTables(root)).toContain('gone');
+    });
+
+    it('keeps the variants of a base role a present agent still declares', async () => {
+      const { root, entries } = await seedSyncedProject([
+        'oat-reviewer',
+        { file: 'reviewer-renamed', name: 'oat-reviewer' },
+      ]);
+      const before = await codexRoleFiles(root);
+      const variants = before.filter(
+        (file) =>
+          file.startsWith('oat-reviewer-') &&
+          file !== 'oat-reviewer-gpt-6-sol-high-user.toml',
+      );
+      expect(variants.length).toBeGreaterThan(10);
+      await rm(entries[0]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        entries.slice(1),
+        ['.agents/agents/oat-reviewer.md'],
+      );
+
+      expect(
+        plan.operations.filter((operation) => operation.action === 'remove'),
+      ).toEqual([]);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      const files = await codexRoleFiles(root);
+      expect(files).toContain('oat-reviewer.toml');
+      for (const variant of variants) {
+        expect(files).toContain(variant);
+      }
+    });
   });
 
   it('preserves stale files whose ownership appears only in body text or malformed headers', async () => {
