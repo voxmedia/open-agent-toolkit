@@ -73,6 +73,17 @@ numbers are as of this baseline.
   in the CLI result (it is in state and artifact frontmatter).
 - The verdict parser still counts every column-zero list line as a finding
   (`review-verdict.ts:271-289`), so unindented detail bullets overcount (#339).
+  _Correction (brief artifact review, 2026-11-01):_ the parser already refuses
+  an artifact whose declared counts and body tallies disagree
+  (`assertAgreeingCounts`, `review-verdict.ts:847-866`, applied at `:904,927`),
+  so the #339 shape with its declared `2 medium, 3 low` line is refused today
+  (forcing a rerun), and the body-only variant is accepted as 6 Medium / 6 Low.
+  #339's finding titles are bold lead-in paragraphs, which the shipped contract
+  counts as zero (`FINDING_LIST_ITEM_CONTRACT_HINT`, `:831-832`, and the gate
+  parsing contract in `.agents/agents/oat-reviewer.md`).
+- Gate carriers follow `.agents/docs/gate-approval-record.md`: a disposition
+  pairs only with `status: allowed` and is `null` when `blocked`; other pairs
+  are malformed.
 - No rule exempts a blocking gate whose findings are only bookkeeping: it
   consumes an attempt and the gate re-runs.
 - `--avoid` defaults to `same-family` and falls back with a warning in
