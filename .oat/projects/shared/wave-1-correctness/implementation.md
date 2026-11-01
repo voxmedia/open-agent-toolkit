@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: p01-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,21 +16,21 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 4/5       |
-| Phase 2 | complete    | 7     | 7/7       |
-| Phase 3 | complete    | 4     | 4/4       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | complete    | 6     | 6/6       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | complete | 7     | 7/7       |
+| Phase 3 | complete | 4     | 4/4       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 6     | 6/6       |
 
-**Total:** 23/24 tasks completed
+**Total:** 25/25 tasks completed
 
 ---
 
 ## Phase 1: Provider sync cleanup and Codex config values
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-31
 **Worktree:** `.worktrees/wave1-p01` (branch `fix/wave-1-correctness-20261031-p01`), merged `--no-ff` at fan-in
 
@@ -125,8 +125,43 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p01-t05: (review) Remove a removed agent's declared-name Codex role on pack removal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** dba5ef0cbe3d4f5274228dfefdb4e484857700af
+
+**Outcome (required when completed):**
+
+- A removal partial sync (an allowed `.agents/agents/*.md` path no longer exists) now runs the full owned-stale cleanup against the roles every present canonical agent produces, so a removed agent's declared-name role, its variants and `[agents.*]` tables are removed even when the name differs from the filename; install partial syncs still skip stale cleanup.
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` and test; `packages/cli/src/commands/sync/stale-agent-views.test.ts`
+
+**Verification:** root-run guard-can-fail: with `sync-extension.ts` reverted to its p01-t04 version, 3 of the new tests fail (declared-role removal, pack removal through `removedCanonicalPaths`); restored, 55 of 55 pass. The producing instance's forced CLI suite ran to completion in the root checkout.
+
+**Notes / Decisions:**
+
+- Produced by a first instance of the `exit-gate-fix-1` continuation whose report never returned; the reporting instance found the commit and a live test run and stopped. The root validated the commit instead of re-dispatching (see Deviations).
+
+---
+
+### Task p01-t06: (review) Keep user-scope pack removal working with Codex materialization targets
+
+**Status:** completed
+**Commit:** 8462c192bcd429ee1236977eb2311926b9d1623a
+
+**Outcome (required when completed):**
+
+- The user-scope "bundled managed Codex role definitions are unavailable" guard runs only for full user syncs again, so a user-scope pack removal of the supported base roles removes their `user-config` roles instead of throwing.
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` and test
+
+**Verification:** probe reproduced the throw at p01-t05 (`CliError: Bundled managed Codex role definitions are unavailable for user sync`); new regression test fails with the guard on removal syncs and passes restored; focused 55 tests pass; CLI lint and type-check exit 0.
+
+**Notes / Decisions:**
+
+- Root-inline (see the `Root-inline` line under Orchestration Runs).
 
 ### Review Received: p01
 
@@ -644,7 +679,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- orchestration-runs-start -->
 
-- run/v1 · request=wave1-p01-implementation · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1,p01-review-fix-1 · observed=~ · match=~
+- run/v1 · request=wave1-p01-implementation · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1,p01-review-fix-1,exit-gate-fix-1 · observed=~ · match=~
 - run/v1 · request=wave1-p02-implementation · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=wave1-p03-implementation · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1,p03-review-fix-1 · observed=~ · match=~
 - run/v1 · request=wave1-p04-implementation · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1 · observed=~ · match=~
@@ -661,6 +696,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=wave1-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=wave1-p05-review-2 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p05 task p05-t06 (review fix) — reason: one-sentence docs correction for review R2-M1 after the p05 fix loop; root model claude-opus-5-5 (Cursor). No child launched.
+- Root-inline phase: p01 task p01-t06 (review fix) — reason: one-line regression found while validating the p01-t05 commit; root model claude-opus-5-5 (Cursor). No child launched.
 
 <!-- orchestration-runs-end -->
 

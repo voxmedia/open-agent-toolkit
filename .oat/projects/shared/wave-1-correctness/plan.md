@@ -318,6 +318,26 @@ disappear; prove the guard can fail.
 
 ---
 
+### Task p01-t06: (review) Keep user-scope pack removal working with Codex materialization targets
+
+Root-found regression in p01-t05 while validating it: the removal partial sync
+also ran the user-scope "bundled managed Codex role definitions are
+unavailable" guard, so `oat tools remove --pack workflows --scope user` with
+Codex materialization targets configured would throw instead of removing the
+pack's roles.
+
+**Files:** `packages/cli/src/providers/codex/codec/sync-extension.ts` and its
+test.
+
+**Steps:** keep the guard for full user syncs only; regression test for a
+user-scope removal of the supported base roles; prove it can fail.
+
+**Verify:** focused tests, lint, type-check, forced CLI suite.
+
+**Commit** — `fix(p01-t06): keep user-scope pack removal working with Codex materialization targets`
+
+---
+
 ## Phase 2: Install scope and CLI messages
 
 Items: BL-261002-honor-the-requested-scope — Honor the requested scope for
@@ -968,13 +988,13 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 5 tasks - Provider sync cleanup and Codex config values (items 1, 2), including review fixes p01-t04 and p01-t05
+- Phase 1: 6 tasks - Provider sync cleanup and Codex config values (items 1, 2), including review fixes p01-t04, p01-t05 and p01-t06
 - Phase 2: 7 tasks - Install scope and CLI messages (items 3, 4)
 - Phase 3: 4 tasks - Lifecycle skill contracts (item 5), including review fix p03-t04
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
 - Phase 5: 6 tasks - Docs, generated views, version bump, backlog close-out, review fixes p05-t05 and p05-t06 (Definition of Done gates run as its phase-end check)
 
-**Total: 24 tasks**
+**Total: 25 tasks**
 
 Ready for code review and merge.
 

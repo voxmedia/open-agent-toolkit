@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: 0fde958c8
+oat_current_task: null
+oat_last_commit: 8462c192b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -43,9 +43,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
-#   status: allowed # pending | allowed | blocked | stale
+#   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
-#   disposition: passed # null | passed | warned | prompt_approved | project_disabled | no_gate
+#   disposition: null # null | passed | warned | prompt_approved | project_disabled | no_gate
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   resolved_command: null
 #   resolved_description: null
@@ -63,23 +63,23 @@ oat_workflow_origin: native # native | imported
 #   launch_attempt_id: null
 #   launch_started_at: null
 #   launch_result_receipt: null
-#   gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/b066376d-1060-4d4b-b0de-1dac7fe96d0f.json
-#   gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f
-#   envelope_status: ok # ok | blocked | review_failed | other terminal status
-#   artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
-#   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md to disposition them before marking the final review row passed.'
-#   receive_state: completed # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation: {gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f, scope: final, type: code, source_filename: final-review-2026-11-01T012851Z.md}
-#   receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
-#   receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T012851Z.md
-#   receive_event_identity: 'final|code|final-review-2026-11-01T012851Z.md'
-#   receive_pre_head: 'cfb5e67804db2e97bd0d27aabb8594e2f5491ce1'
-#   receive_commit: '055b9df690fe0c0a8c95795b1020d0f0ee7631ab'
-#   receive_eligible: true
-#   receive_completed: true
+#   gate_run_marker: null
+#   gate_run_id: null
+#   envelope_status: null # ok | blocked | review_failed | other terminal status
+#   artifact: null
+#   handoff: null
+#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
+#   receive_correlation: null
+#   receive_source_artifact: null
+#   receive_archived_artifact: null
+#   receive_event_identity: null
+#   receive_pre_head: null
+#   receive_commit: null
+#   receive_eligible: false
+#   receive_completed: false
 #   failure: null
-#   updated_at: '2026-11-01T01:35:00Z'
-#   decided_at: '2026-11-01T01:35:00Z' # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
+#   updated_at: '2026-07-18T00:00:00Z'
+#   decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
 # oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
 #   status: allowed # allowed | blocked
 #   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
@@ -99,9 +99,9 @@ oat_quick_start_gate:
   reviewed_head: 'b37cd7c49b32083f10e7d1794d2c9d92baa01966'
   decided_at: '2026-10-31T23:08:13Z'
 oat_implement_exit_gate:
-  status: pending
+  status: stale
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -119,23 +119,29 @@ oat_implement_exit_gate:
   launch_attempt_id: wave1-exit-gate-1
   launch_started_at: '2026-11-01T01:24:53Z'
   launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-1.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
-  receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/b066376d-1060-4d4b-b0de-1dac7fe96d0f.json
+  gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f
+  envelope_status: ok
+  artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
+  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md to disposition them before marking the final review row passed.'
+  receive_state: completed
+  receive_correlation:
+    {
+      gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f,
+      scope: final,
+      type: code,
+      source_filename: final-review-2026-11-01T012851Z.md,
+    }
+  receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
+  receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T012851Z.md
+  receive_event_identity: 'final|code|final-review-2026-11-01T012851Z.md'
+  receive_pre_head: '80196c2c2da87e04ccefc87eaca5624d741f097c'
+  receive_commit: '055b9df690fe0c0a8c95795b1020d0f0ee7631ab'
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-11-01T01:35:00Z'
-  decided_at: null
+  updated_at: '2026-11-01T01:50:00Z'
+  decided_at: '2026-11-01T01:35:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
