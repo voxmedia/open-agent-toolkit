@@ -110,9 +110,9 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -120,39 +120,33 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: '3d83c54411cc20acef66dedf9e2653f028fca814'
+  reviewed_head: '76247b17e14664397ce1d3a2ac842db2bd34dfeb'
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
-  freshness_head: '68fc0c5fb17187ee6c797cdd9fa3d9802b40a5ae'
-  freshness_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
+  implementation_fingerprint: 'sha256:effective-delta-v2:90e5756cadb0a7906a98cc1fbf30d165c6ee654552eea568500e070b19f5dec5'
+  freshness_head: '76247b17e14664397ce1d3a2ac842db2bd34dfeb'
+  freshness_fingerprint: 'sha256:effective-delta-v2:90e5756cadb0a7906a98cc1fbf30d165c6ee654552eea568500e070b19f5dec5'
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: wave1-exit-gate-2
-  launch_started_at: '2026-11-01T01:51:41Z'
-  launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-2.json
-  gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/55df7ef0-1867-448a-ae66-a8f39e483790.json
-  gate_run_id: 55df7ef0-1867-448a-ae66-a8f39e483790
-  envelope_status: ok
-  artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md before treating this gate review as consumed.'
-  receive_state: completed
-  receive_correlation:
-    {
-      gate_run_id: 55df7ef0-1867-448a-ae66-a8f39e483790,
-      scope: final,
-      type: code,
-      source_filename: final-review-2026-11-01T015445Z.md,
-    }
-  receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md
-  receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T015445Z.md
-  receive_event_identity: 'final|code|final-review-2026-11-01T015445Z.md'
-  receive_pre_head: '4a7664ba0e63861d3d1bcb2f56a361a412a7204c'
-  receive_commit: '54ad3d9e0534c2cc4b35c6943dc1f556907e11ba'
-  receive_eligible: true
-  receive_completed: true
+  launch_state: intent_persisted
+  launch_attempt_id: wave1-exit-gate-3
+  launch_started_at: '2026-11-01T16:18:27Z'
+  launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-3.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-11-01T16:15:00Z'
-  decided_at: '2026-11-01T02:01:00Z'
+  updated_at: '2026-11-01T16:18:27Z'
+  decided_at: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/395' # null | string — tracked PR URL when a PR exists
