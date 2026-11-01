@@ -193,6 +193,31 @@ Worktree: the project branch checkout. Committing owner: the phase implementer. 
 - Replay after omitting committed proof: neutralized `verified`; restored `durable-proof-missing`; replay with the local review file deleted and durable proof retained `verified`.
 - Genuine archived-reference repair: remained `verified` with `archive-identity` and `goal-successor-chain` passing.
 
+### Review Received: p02
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p02-review-2026-11-01T224642Z.md
+
+**Findings:** Critical 0 · High 4 · Medium 5 · Low 4
+
+Reviewer request `rgi-p02-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`); reviewed range `c8a12f51dc6ee7a4f863a0fbb0c58290377e2292..09d8f57b55dbf2ab0b2d8f5c9183d212e86974ae`; reconnaissance not attempted. The verifier is read-only and the `delivery/check.ts` refactor preserves behavior, but built-CLI probes found Design gaps. Every finding cites a Design or Decision clause, so all are fixed in p02.
+
+- H1 (High): archive-reference repair reads the original file, so a genuine repair after receive's `mv` is refused with ENOENT (the fixture copied instead of moving) → fix task p02-t02.
+- H2 (High): a substantive finding can verify by sharing another finding's corrected field, and the eligibility binding is path-only → fix task p02-t02.
+- H3 (High): non-goal replay always fails on head mismatch, and a smuggled `goal` field lets later substantive changes inherit verification → fix task p02-t02.
+- H4 (High): gate run/target corroboration reads a proof format no producer emits → fix task p02-t02; corroborate against real retained gate evidence.
+- M1 (Medium): replay does not require the ledger type to be `code` → fix task p02-t02.
+- M2 (Medium): the named receipt is not bound to the event's scope, artifact, counts and finding IDs → fix task p02-t02.
+- M3 (Medium): per-clause fail-ability was not proven; one catch-all neutralization stood in for every guard → fix task p02-t02 (AGENTS.md per-clause rule).
+- M4 (Medium): the descriptive-prose kind can target any journal heading, including receipts and gate markers → fix task p02-t02.
+- M5 (Medium): the reviewed-subject diff misses a file moved into the project directory (rename detection) → fix task p02-t02.
+- L1 (Low): settlement entries are accepted anywhere in the journal and are not schema-validated → fix task p02-t02.
+- L2 (Low): no up-front refusal for a proposal already known to violate section 12.8 → fix task p02-t02 (static refusal, or record that p04's proposal step owns it).
+- L3 (Low): replay mixes committed blobs with working-tree state → fix task p02-t02.
+- L4 (Low): scope equality may refuse genuine goal delivery-scope events (`dNN`, `<id>: …`) → fix task p02-t02.
+
+**Outcome:** fixes queued: p02-t02
+
 ## Phase p03: Records and code consumers
 
 **Status:** pending
