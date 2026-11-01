@@ -99,7 +99,7 @@ oat_quick_start_gate:
   reviewed_head: 'b37cd7c49b32083f10e7d1794d2c9d92baa01966'
   decided_at: '2026-10-31T23:08:13Z'
 oat_post_implement_sequence:
-  status: post_approval
+  status: complete
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
