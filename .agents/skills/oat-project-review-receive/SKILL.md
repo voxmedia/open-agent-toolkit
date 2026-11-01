@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.12
+  version: 1.6.13
 ---
 
 # Receive Review
@@ -470,7 +470,11 @@ reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
    `bound_revisions` from the reviewed member base and head,
    `disposition: passed`), writes each `members[i].reviewed_head` to the
    reviewed member head that `bound_revisions` binds for it, and replaces
-   `exit_gate` with the current allowed milestone exit carrier. The delivery's
+   `exit_gate` with the current allowed milestone exit carrier.
+   When recovering a merged delivery after a base change, the new timestamped
+   review artifact must belong to this delivery and review the actual observed
+   member bases and heads; bind those revisions in `bound_revisions`. Retain
+   the original registered `members[].base` and first endpoint attainment. The delivery's
    `exit_gate` and `members[].reviewed_head` are set once and may change only
    in the commit that records a review naming a different artifact of this
    delivery (section 12.8), so never split these writes. Commit them (Step 7.6), then

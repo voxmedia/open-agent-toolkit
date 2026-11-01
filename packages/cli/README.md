@@ -82,6 +82,8 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat project delivery check --project <path> --subject <mNN|dNN> --json` - read-only goal delivery evidence report for a milestone or registered delivery (`status: ok`, or `undeliverable` with exit 1)
 - `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`; refuses the same incomplete closeout `closeout-check` reports
 
+Delivery re-review after an observed member-base change binds a new, delivery-owned timestamped review to the actual observed bases and heads. Keep the registered member bases and first endpoint attainment unchanged; an old or sibling review cannot authorize rebinding. Git evidence reads allow up to 64 MiB per output stream and fail closed if output exceeds that bound.
+
 ## Requirements
 
 - Node.js `>=22.17.0`

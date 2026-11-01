@@ -143,6 +143,19 @@ a sharing delivery's; any other change to them is not bookkeeping. A bound
 revision that disagrees with its member's `reviewed_head` is not fresh
 (`bound-revision-mismatch`).
 
+A changed observed member base stales the old review. Recover by reviewing the
+actual observed bases and heads in a new timestamped artifact belonging to
+that delivery, then receive it with those `bound_revisions`, matching member
+`reviewed_head` values, and current exit evidence in one commit. Preserve the
+original registered `members[].base` and first endpoint attainment. Reusing
+an old or sibling review artifact cannot authorize this rebinding. Changed-base
+recovery checks the committed transition introducing the current binding,
+including merge parents, so commit the receive before checking it. It does
+not inspect unrelated current-branch code as historical delivery coverage.
+
+Git evidence inspection permits up to 64 MiB per output stream. Exceeding
+that limit is a system error; truncated output is never accepted as evidence.
+
 `oat project delivery refresh` writes only observations and derived staleness
 into `oat_deliveries` and the milestone carriers. The terminal declaration is
 recorded as one `**Goal declared met:**` line in the journal's Final Summary.
