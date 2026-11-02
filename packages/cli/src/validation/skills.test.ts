@@ -2244,7 +2244,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.22',
+        version: '2.3.23',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2253,7 +2253,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.11',
+        version: '1.1.12',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -3387,9 +3387,9 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.17'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.13'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.11'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.11'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.13'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.22'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.12'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.14'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.23'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -5197,7 +5197,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-receive', '1.6.13'],
       ['oat-project-review-receive-remote', '1.5.5'],
       ['oat-project-implement', '2.3.25'],
-      ['oat-project-pr-final', '1.6.13'],
+      ['oat-project-pr-final', '1.6.14'],
       ['oat-project-pr-progress', '1.3.6'],
       ['oat-project-complete', '1.7.19'],
       ['oat-project-next', '1.1.7'],
@@ -6607,9 +6607,9 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.37'],
       ['oat-project-plan', '1.4.19'],
-      ['oat-project-quick-start', '2.3.22'],
+      ['oat-project-quick-start', '2.3.23'],
       ['oat-project-import-plan', '1.4.21'],
-      ['oat-project-lite', '1.1.11'],
+      ['oat-project-lite', '1.1.12'],
       ['oat-project-review-provide', '1.5.17'],
     ] as const;
 
@@ -7657,7 +7657,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.22');
+    expect(readDeclaredVersion(content)).toBe('2.3.23');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -8638,7 +8638,7 @@ describe('lite mode skill contracts', () => {
       '`Assumptions`',
     );
     expect(readDeclaredVersion(summary)).toBe('1.5.11');
-    expect(readDeclaredVersion(document)).toBe('1.8.11');
+    expect(readDeclaredVersion(document)).toBe('1.8.12');
   });
 
   it('routes lite projects through progress and next', async () => {
