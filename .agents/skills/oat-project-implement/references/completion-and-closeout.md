@@ -91,7 +91,11 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
    and persist its `exit` result (`source: milestone-carrier`) as the
    carrier's `freshness` and `freshness_reason`; the command exits 1 while the
-   integrated review is not yet passed, so read only `exit` here. The bounded
+   integrated review is not yet passed, so read only `exit` here. For a
+   phase-only recovery (`delivery_id: null`), add `--recovery` to the
+   milestone check so it validates the committed recovery record and its exact
+   accepted phase set. The ordinary milestone check still judges full
+   membership; registered deliveries keep the ordinary `dNN` check. The bounded
    bookkeeping-successor rule (section 12.8) decides freshness: bookkeeping
    commits after the reviewed head never force a rerun, and a substantive
    commit does.

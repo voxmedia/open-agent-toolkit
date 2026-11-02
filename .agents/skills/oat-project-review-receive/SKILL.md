@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.13
+  version: 1.6.14
 ---
 
 # Receive Review
@@ -479,7 +479,10 @@ reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
    in the commit that records a review naming a different artifact of this
    delivery (section 12.8), so never split these writes. Commit them (Step 7.6), then
    re-validate scope, revisions and the exit carrier with
-   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`:
+   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`.
+   For a phase-only recovery (`delivery_id: null`), add `--recovery` to judge
+   its committed exact accepted phase set; ordinary milestone and registered
+   delivery checks remain unchanged. Interpret the result as follows:
    - `status: ok` → **active target:** write `oat_milestone_status: delivering`
      (`reviewing → delivering`); **older target:** advance the recovery record
      to `stage: delivering`. Only review-receive writes this transition.

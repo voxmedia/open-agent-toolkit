@@ -677,7 +677,10 @@ review scopes) and section 12.5 (the goal exception to the shared ladder):
 3. **Exit gate first.** Before dispatch, run
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
    and read only its `exit` result (`source: milestone-carrier`); the command
-   exits 1 here because no passed integrated review exists yet. A missing,
+   exits 1 here because no passed integrated review exists yet. For a phase-only
+   recovery (`delivery_id: null`), add `--recovery` to the milestone check;
+   it validates the committed exact accepted recovery set. Ordinary milestones
+   and registered deliveries retain their default checks. A missing,
    blocked or stale exit carrier stops and routes to `oat-project-implement`
    scoped closeout: the milestone exit gate precedes the integrated review.
 4. **Range.** Resolve each set member's anchors with the Step 3.0 per-phase

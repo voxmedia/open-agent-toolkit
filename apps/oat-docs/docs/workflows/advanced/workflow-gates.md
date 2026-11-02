@@ -113,6 +113,12 @@ runs unchanged; normal anchor validation, target selection and thresholds
 apply. The artifact records the original `final` hint, actual selected scope
 and exact phase set. This exit review precedes the separate integrated review.
 
+Before registration, validate a phase-only recovery carrier with
+`oat project delivery check --project <path> --subject mNN --recovery --json`.
+The opt-in requires a matching committed recovery record with an exact,
+ordered set of accepted phases. It does not narrow ordinary milestone checks
+or change registered delivery scopes.
+
 A prompt that explicitly requests a whole-project final review retains that
 meaning. Missing or invalid recovery state does not authorize narrowing, and
 an unsupported noncontiguous set is refused. Historical anchors are preserved.

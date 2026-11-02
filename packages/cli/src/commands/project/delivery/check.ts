@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, sep } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import {
   buildCommandContext,
@@ -17,12 +18,16 @@ import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import {
   getProjectState,
+  GOAL_RECOVERY_STAGES,
+  normalizePhaseId,
+  selectPhaseUnits,
   milestonePhaseScope,
   normalizeMilestoneId,
   type GoalDelivery,
   type ProjectState,
 } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
+import YAML from 'yaml';
 
 import {
   deliveryEvidenceScope,
@@ -155,6 +160,116 @@ export interface SubjectEvidenceReport {
 /** Which exit carrier an evaluation judged. */
 export type ExitCarrierSource = 'milestone-carrier' | 'delivery-binding';
 
+/** Read the raw record: the control-plane projection normalizes or drops IDs. */
+function rawRecovery(content: string): Record<string, unknown> | null {
+  const document = YAML.parseDocument(getFrontmatterBlock(content) ?? '', {
+    uniqueKeys: true,
+  });
+  if (document.errors.length > 0) return null;
+  const state: unknown = document.toJS();
+  if (state === null || typeof state !== 'object' || Array.isArray(state))
+    return null;
+  const recovery: unknown = (state as Record<string, unknown>)
+    .oat_goal_recovery;
+  return recovery !== null &&
+    typeof recovery === 'object' &&
+    !Array.isArray(recovery)
+    ? (recovery as Record<string, unknown>)
+    : null;
+}
+
+async function phaseRecoveryScope(
+  project: GoalDeliveryProject,
+  milestone: string,
+  milestoneScope: readonly string[],
+  git: GitRunner,
+): Promise<string[]> {
+  const recovery = rawRecovery(project.stateContent);
+  if (
+    recovery === null ||
+    recovery.milestone !== milestone ||
+    typeof recovery.stage !== 'string' ||
+    !GOAL_RECOVERY_STAGES.some((stage) => stage === recovery.stage) ||
+    !(
+      recovery.review_artifact === null ||
+      (typeof recovery.review_artifact === 'string' &&
+        recovery.review_artifact.trim() !== '')
+    )
+  ) {
+    throw new CliError(
+      'Missing, malformed or mismatched oat_goal_recovery; repair and commit the recovery record for this milestone.',
+      1,
+    );
+  }
+  if (recovery.delivery_id !== null) {
+    throw new CliError(
+      '--recovery requires delivery_id: null; use the ordinary --subject dNN check for a registered delivery recovery.',
+      1,
+    );
+  }
+  const phases = recovery.phase_ids;
+  if (
+    !Array.isArray(phases) ||
+    phases.length === 0 ||
+    phases.some(
+      (id: unknown) =>
+        typeof id !== 'string' ||
+        normalizePhaseId(id) !== id ||
+        !milestoneScope.includes(id),
+    ) ||
+    new Set(phases).size !== phases.length
+  ) {
+    throw new CliError(
+      'Recovery phase_ids must be a nonempty, unique set of canonical phases owned by this milestone; repair and commit oat_goal_recovery.',
+      1,
+    );
+  }
+  const scope = phases as string[];
+  const units = selectPhaseUnits(project.state.progress, scope);
+  if (
+    !isDeepStrictEqual(
+      units.map((unit) => unit.phaseId),
+      scope,
+    )
+  ) {
+    throw new CliError(
+      'Recovery phase_ids must follow plan document order and name existing phase units; repair and commit oat_goal_recovery.',
+      1,
+    );
+  }
+  if (
+    units.some(
+      (unit) =>
+        unit.provisional === true ||
+        unit.extracted !== undefined ||
+        unit.total === 0 ||
+        unit.completed !== unit.total,
+    )
+  ) {
+    throw new CliError(
+      'Recovery phases are not all accepted; finish the scoped implementation before checking delivery evidence.',
+      1,
+    );
+  }
+  const committed = await git.run(
+    ['show', `HEAD:${project.projectDir}/state.md`],
+    {
+      cwd: project.repoRoot,
+      allowFailure: true,
+    },
+  );
+  if (
+    committed.code !== 0 ||
+    !isDeepStrictEqual(rawRecovery(committed.stdout), recovery)
+  ) {
+    throw new CliError(
+      'oat_goal_recovery differs from HEAD or is not committed; commit the recovery record before checking its evidence.',
+      1,
+    );
+  }
+  return scope;
+}
+
 /**
  * Evaluate the delivery evidence for one subject. A registered delivery is
  * judged against its persisted member observations; a milestone (before
@@ -164,9 +279,17 @@ export async function evaluateSubjectEvidence(
   project: GoalDeliveryProject,
   subject: string,
   git: GitRunner,
+  options: { recovery?: boolean } = {},
 ): Promise<SubjectEvidenceReport> {
   const deliveries = project.state.deliveries ?? [];
   const delivery = deliveries.find((entry) => entry.delivery_id === subject);
+
+  if (delivery && options.recovery) {
+    throw new CliError(
+      '--recovery requires a milestone subject (mNN); use the ordinary --subject dNN check for a registered delivery.',
+      1,
+    );
+  }
 
   if (delivery) {
     const milestoneId = delivery.milestone;
@@ -219,9 +342,7 @@ export async function evaluateSubjectEvidence(
     );
   }
   const membership = project.state.milestoneMembership;
-  const scope = membership
-    ? milestonePhaseScope(membership, milestoneId)
-    : null;
+  let scope = membership ? milestonePhaseScope(membership, milestoneId) : null;
   if (scope === null) {
     const [firstError] = membership?.errors ?? [];
     throw new CliError(
@@ -232,14 +353,33 @@ export async function evaluateSubjectEvidence(
     );
   }
 
+  if (options.recovery) {
+    scope = await phaseRecoveryScope(project, milestoneId, scope, git);
+  }
+
   const head = await git.run(['rev-parse', '--verify', 'HEAD'], {
     cwd: project.repoRoot,
     allowFailure: true,
   });
   const publishedHead = head.code === 0 ? head.stdout.trim() : null;
   const rows = reviewRowsFor(project.state.reviews, [milestoneId]);
-  const row = rows.at(-1) ?? null;
-  const milestoneDelivery = latestDeliveryForMilestone(deliveries, milestoneId);
+  const recoveryArtifact = options.recovery
+    ? project.state.goalRecovery?.review_artifact
+    : null;
+  const row =
+    (options.recovery
+      ? rows.filter(
+          (entry) =>
+            recoveryArtifact != null &&
+            // Match the source/archive identity used by delivery review bindings.
+            entry.artifact.replace(/^reviews\/archived\//, 'reviews/') ===
+              recoveryArtifact.replace(/^reviews\/archived\//, 'reviews/'),
+        )
+      : rows
+    ).at(-1) ?? null;
+  const milestoneDelivery = options.recovery
+    ? undefined
+    : latestDeliveryForMilestone(deliveries, milestoneId);
   const workingCarrier =
     project.state.milestoneGates?.[milestoneId]?.exit ?? null;
   const evidence: EvidenceScope =
@@ -354,6 +494,10 @@ export function createProjectDeliveryCheckCommand(
     .description(
       'Report integrated-review and milestone exit-carrier freshness for a goal milestone or delivery under the bookkeeping-successor contract (read-only; status undeliverable and exit 1 when not deliverable)',
     )
+    .option(
+      '--recovery',
+      'Evaluate the committed phase-only recovery for the named milestone',
+    )
     .requiredOption('--project <path>', 'Goal project path')
     .requiredOption(
       '--subject <id>',
@@ -361,7 +505,7 @@ export function createProjectDeliveryCheckCommand(
     )
     .action(
       async (
-        options: { project: string; subject: string },
+        options: { project: string; subject: string; recovery?: boolean },
         command: Command,
       ) => {
         const context = dependencies.buildCommandContext(
@@ -377,6 +521,7 @@ export function createProjectDeliveryCheckCommand(
             project,
             options.subject,
             dependencies.git,
+            { recovery: options.recovery },
           );
           if (context.json) {
             // `ok` means deliverable; an evaluated but refusing subject is
