@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p11-t07
 oat_last_commit: 395b90677db9487e42f01d31b045f4819f3d85ae
 oat_blockers: []
 associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -73,7 +73,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m01
-oat_milestone_status: reviewing
+oat_milestone_status: implementing
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -99,8 +99,8 @@ oat_milestone_gates:
       subject:
         kind: code
         scope: [p01, p02, p10, p11]
-      freshness: fresh
-      freshness_reason: null
+      freshness: stale
+      freshness_reason: 'fixes queued from reviews/archived/m01-review-2026-11-02T234808Z.md'
       decided_at: '2026-11-02T23:39:00Z'
 oat_deliveries: []
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
@@ -160,7 +160,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-02T23:39:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-02T23:50:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -189,7 +189,7 @@ Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
 - ✓ p10 accepted (bookkeeping definition and the receive rule)
 - ✓ p11 accepted (implement and planning paths, docs, release 0.3.44, DR-261102-bookkeeping-only-review)
 - ✓ m01 exit gate passed (fresh at 1a5a37684)
-- ⧗ m01 integrated review, then delivery
+- ⧗ m01 integrated review fixes (p11-t07), then exit gate and a new integrated review
 
 ## Blockers
 

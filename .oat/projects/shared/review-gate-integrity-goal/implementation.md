@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-02
-oat_current_task_id: null
+oat_current_task_id: p11-t07
 oat_generated: false
 oat_template: false
 ---
@@ -999,6 +999,21 @@ The configured `oat-project-implement` exit gate (run `96d2da99-c2db-41e5-9361-f
 **Outcome:** passed
 
 - Gate `oat-project-implement` (code, m01 exit, rerun `96d2da99`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-02. Carrier `oat_milestone_gates.m01.exit` rewritten `allowed`/`passed` at `1a5a37684`; `oat project delivery check --subject m01` reads `exit` fresh; `oat_milestone_status` moves `implementing` → `reviewing`.
+
+### Review Received: m01 (integrated review)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/m01-review-2026-11-02T234808Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 2
+
+Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35dc3e67dc1437f9ca864477728..1a5a37684f05492470952fdc54359a082ac9cc58`, integration commit `234c9b281`), reviewer `oat-reviewer-claude-claude-opus-5-5-high`, manual invocation, reconnaissance not attempted. Composition across p10 and p11 holds on every path; changed-boundary probes on the branch build confirm the marker is count-neutral and the parser deferrals fail closed; suites 1282 passed; bumps, versions, docs index and sync dry run clean; p02 retirement leaves no residue; all six deferrals remain acceptable. Received under the installed ladder (no self-application in m01): review cycle 1 for m01.
+
+- M1 (Medium): limit 1 lists the project's review artifacts as editable tracking files, which with the "provenance wording" inclusion admits edits to reviewer-owned provenance (`oat_review_head_sha`, gate fields) that receive copies into the ledger; Constraint 1 forbids rewriting raw reviewer output → fix task p11-t07: review artifacts are moved or archived by receive and never edited, plus an exclusion for edits to a review artifact's findings, frontmatter or provenance; extend the pin.
+- L1 (Low): the p10 round-3 receipt applied m01's unreleased bookkeeping-only outcome to m01's own review, contrary to the brief's "No self-application in m01" decision → fix task p11-t07: append a correcting line (no rewrite).
+- L2 (Low): the Progress Overview p11 row reads `pending 0/1` though p11 is accepted → fix task p11-t07.
+
+**Outcome:** fixes queued: p11-t07 (late-fix rule: p11 is the last phase of the set and no later phase has a `**Base:**`)
 
 ## Deferred Findings
 

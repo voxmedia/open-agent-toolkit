@@ -272,7 +272,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | final | code     | received        | 2026-11-02 | reviews/archived/final-review-2026-11-02T213631Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | codex-6-sol-xhigh    |
 | final | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233110Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | claude-opus-5-5-high |
 | final | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233729Z.md         | 1a5a37684f05492470952fdc54359a082ac9cc58 | gate       | claude-opus-5-5-high |
-| m01   | code     | received        | 2026-11-02 | reviews/m01-review-2026-11-02T234808Z.md                    | 1a5a37684f05492470952fdc54359a082ac9cc58 | manual     | -                    |
+| m01   | code     | fixes_added     | 2026-11-02 | reviews/archived/m01-review-2026-11-02T234808Z.md           | 1a5a37684f05492470952fdc54359a082ac9cc58 | manual     | -                    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
