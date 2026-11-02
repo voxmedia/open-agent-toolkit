@@ -86,6 +86,8 @@ Use these commands when you want structured runtime/project state out of the CLI
 
 Delivery re-review after an observed member-base change binds a new, delivery-owned timestamped review to the actual observed bases and heads. Keep the registered member bases and first endpoint attainment unchanged; an old or sibling review cannot authorize rebinding. Git evidence reads allow up to 64 MiB per output stream and fail closed if output exceeds that bound.
 
+Final-PR preflight preserves historical planning-review entries recorded as `structured (no artifact); …`. These annotations do not supply file evidence or satisfy code-review gates; real artifact paths still have to resolve.
+
 ## Requirements
 
 - Node.js `>=22.17.0`
