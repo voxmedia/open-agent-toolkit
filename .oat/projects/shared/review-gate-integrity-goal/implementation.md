@@ -965,6 +965,7 @@ The configured `oat-project-implement` exit gate (run `d434e7e7-9a58-43f4-9e0c-e
 **Outcome:** fixes_completed (gate passed its threshold; rerun required over the advanced head)
 
 - Gate `oat-project-implement` (code, m01 exit, attempt 1): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/1/1, receive-eligible, received 2026-11-02; no attempt consumed (not blocked); same-family warning recorded above.
+- Operator routing (m01 exit gate rerun, 2026-11-02): the operator directed the rerun to `--target codex-6-sol-xhigh`, matching the 2026-11-02 routing "Sol gates", because the configured selection falls back to same-family Opus when both families produced the code. One-off routing for this rerun only, not a configuration change.
 
 ## Deferred Findings
 
