@@ -1411,6 +1411,8 @@ describe('help output snapshots', () => {
       status undeliverable and exit 1 when not deliverable)
 
       Options:
+        --recovery        Evaluate the committed phase-only recovery for the named
+                          milestone
         --project <path>  Goal project path
         --subject <id>    Milestone (mNN) or registered delivery (dNN) to evaluate
         -h, --help        display help for command
