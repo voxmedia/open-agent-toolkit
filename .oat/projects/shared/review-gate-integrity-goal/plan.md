@@ -264,7 +264,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p10   | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T170200Z.md           | 73b277434f24cb95f785ac4fa36618b09b6d20e7 | manual     | -           |
 | p10   | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T172814Z.md           | 2eca1422aaee6e93a0b7be53e6b86aa5c2d34b9c | manual     | -           |
 | p10   | code     | passed          | 2026-11-02 | reviews/archived/p10-review-2026-11-02T193214Z.md           | cf26ae9c9f9dc7df0ed17be40f99822ae63ad6e9 | manual     | -           |
-| p11   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p11   | code     | passed          | 2026-11-02 | reviews/archived/p11-review-2026-11-02T210607Z.md           | 204a24f697c61947b64176a4516f33904f3261bf | manual     | -           |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan  | artifact | passed          | 2026-11-01 | reviews/archived/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -          | -           |
 | plan  | artifact | fixes_completed | 2026-11-02 | -                                                           | d09ac39c581ad4fe26b8c006a27266cd6c4a79e3 | -          | -           |

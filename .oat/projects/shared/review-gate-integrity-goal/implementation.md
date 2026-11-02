@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-02
-oat_current_task_id: p11
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -49,7 +49,7 @@ oat_template: false
 | p08   | pending   | 1     | 0/1      |
 | p09   | pending   | 1     | 0/1      |
 
-**Total:** 3/7 phases accepted
+**Total:** 4/7 phases accepted
 
 ---
 
@@ -618,7 +618,7 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 ## Phase p11: Implement and planning paths, docs and release
 
-**Status:** in_progress
+**Status:** completed
 **Base:** ba6405690aa0c5a980c5dac624dba4026c1560b8
 **Head:** 8a97fe85dbaa5d47f4450fa46703403097f71a88
 **Executor:** phase-implementer:rgi-p11-impl-20261102-01
@@ -840,6 +840,24 @@ p10 traced the `wave-skills-promotion` p05 phase gate through review-receive. It
 - Decision `DR-261102-bookkeeping-only-review` (accepted): "Bookkeeping-only review findings settle at receive without a rerun".
 - No test or doc pins the package version, so no other file changed. `pnpm release:check-versions` and `pnpm release:validate` both exited 0 (5 public packages validated at 0.3.44).
 
+### Review Received: p11
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/p11-review-2026-11-02T210607Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 4
+
+Reviewer request `rgi-p11-rev-20261102-01` (`oat-reviewer-claude-claude-opus-5-5-high`); reviewed range `a439d9289d4f5b9b2a2fb660009e366cfd2b273f..204a24f697c61947b64176a4516f33904f3261bf`; reconnaissance not attempted. Every path p11's Intent names carries the branch and names the shared definition; both walkthroughs trace accurately (#233 counter-example checked against `tkstang/personal-agents`, the substitute against `4578e261a`); contract suites 1170/1170; three negative controls each failed one test; bumps, lockstep 0.3.44, decision index, sync dry run, docs index and journal check all clean. Lows addressed now by the root in `395b90677db9487e42f01d31b045f4819f3d85ae`:
+
+- L1 (Low): the docs table said the settled milestone exit carrier stands "while delivery check reads `ok`" → fixed: it reads `exit` fresh, and only the integrated review waits for `status: ok`.
+- L2 (Low): limit 3 named only review-receive as the `passed` writer, but plan-writing's loop step 6 also writes it for a structured `plan` review → fixed: one sentence beside the pinned limit names step 6 as that receive branch; pinned (negative control: neutralizing it fails the pin).
+- L3 (Low): the decision record dropped the archived-path inclusion and stated limit 3 loosely → fixed: inclusions restored verbatim, limit 3 restated, the plan-writing loop named as a settling owner; `oat decision regenerate-index` left the index unchanged.
+- L4 (Low): the exit-gate freshness sentence omitted a non-default `projects.root` → fixed in implement and the docs page: it holds under the default root; outside it, or for a v1 generation, the generation goes stale (fails closed); pinned (negative control: neutralizing it fails the pin).
+
+Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm check`, `pnpm run check:skill-bumps`, docs-index regenerate plus `git diff --exit-code`, `pnpm lint` and `pnpm format` all exit 0.
+
+**Outcome:** passed (Lows addressed now)
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
@@ -878,6 +896,7 @@ p10 traced the `wave-skills-promotion` p05 phase gate through review-receive. It
 - run/v1 · request=rgi-p10-rev-20261102-02 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p10-rev-20261102-03 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p11-impl-20261102-01 · scope=p11 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p11-rev-20261102-01 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

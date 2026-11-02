@@ -67,6 +67,10 @@ p10 accepted at cf26ae9c9: three review rounds (1/2/3, 1/1/2, 0/0/0/2); fix task
 
 Running the installed oat sync on a branch that merged a newer main deleted main's gpt-6-1-terra Codex views and left four reviewer views stale; regenerating with the branch build (node packages/cli/dist/index.js sync) was correct. rgi-p10-sync-gotcha
 
+### 2026-11-02 · structural · oat-project-implement · p11
+
+p11 accepted at 395b90677: one review round (0/0/0/4), Lows addressed now by the root; #233 traced as a counter-example and the wave-skills-promotion p05 gate accepted as the qualifying walkthrough (operator, recorded as a deviation); release 0.3.44 and DR-261102-bookkeeping-only-review; no phase gate. rgi-p11-outcome-20261102
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
