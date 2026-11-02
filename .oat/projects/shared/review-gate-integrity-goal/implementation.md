@@ -620,7 +620,7 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 **Status:** completed
 **Base:** ba6405690aa0c5a980c5dac624dba4026c1560b8
-**Head:** efba7a82519fbd12beae8a42c302220586b140b2
+**Head:** 1a5a37684f05492470952fdc54359a082ac9cc58
 **Executor:** phase-implementer:rgi-p11-impl-20261102-01
 
 Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the implement, planning-skill and docs slices all edit `autonomy-contract.md`, the shared contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase repeats one shared branch across many skills plus a release. `origin/main` has not moved since the p10 base merge (checked at phase start).
@@ -872,6 +872,8 @@ Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm 
 Late-fix rule: the m01 exit gate (run `d434e7e7`, M1) found the p11 `**Head:**` still at `8a97fe85d`, which left this review-fix commit outside every anchored m01 range. No later phase has a `**Base:**`, so the head is advanced to `395b90677db9487e42f01d31b045f4819f3d85ae`, base unchanged.
 
 Late-fix rule (second advance): The head advanced again to `efba7a82519fbd12beae8a42c302220586b140b2`, the receive commit that closes the exit-gate review fixes, so that the gate artifacts committed by the gate CLI after `395b90677` fall inside the reviewed range (see `## Reviews and Gates`).
+
+Late-fix rule (third advance): the second advance commit rewrote a recorded journal line, which the append-only rule and section 12.8 refuse after a reviewed head. Commit `1a5a37684f05492470952fdc54359a082ac9cc58` restored that line and appended the correction, so the head advances to it and the gate reviews a range that contains every rewrite.
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
