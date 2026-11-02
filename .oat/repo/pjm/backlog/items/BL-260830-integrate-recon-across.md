@@ -10,9 +10,10 @@ labels:
   - skills
   - research
   - integration
+  - deferred
 assignee: null
 created: 2026-08-30T23:13:17.543Z
-updated: 2026-08-30T23:13:17.543Z
+updated: 2026-11-01T16:05:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -20,6 +21,15 @@ external_plans: []
 ## Description
 
 Extend the proven standalone recon evidence-packet contract across the broader analysis and research skill family. Define deliberate handoffs for analyze, deep-research, skeptic, synthesize, and review-oriented consumers while preserving each skill's ownership boundary, avoiding duplicate reconnaissance, and keeping raw dossiers outside expensive consumer context by default.
+
+Merged from BL-260719-add-pinned-recon-agents (2026-11-01): the recon-scoped
+`recon-worker` leaf and the `recon` role class in `oat-dispatch-subagents`
+already shipped; a generic pinned recon role is now a conditional criterion
+here.
+
+**Deferred (2026-11-01, operator):** Take up only after
+BL-260830-integrate-recon-with-oat ships and a real duplicate-reconnaissance
+case appears across two of these skills.
 
 ## Acceptance Criteria
 
@@ -38,10 +48,13 @@ Extend the proven standalone recon evidence-packet contract across the broader a
   claims.
 - Handle unavailable source capabilities, structurally invalid runs, and honest
   partial packets consistently across every integrated caller.
-- Reconcile the work with
-  `BL-260719-add-pinned-recon-agents`: reusable pinned worker roles may enhance
-  dispatch but must not become a prerequisite for the general-purpose skill or
-  its consumers.
+- Build a generic, read-only, non-recursive pinned recon role that an
+  orchestrator selects by declared task-class/model floor only when a second
+  non-recon orchestrator needs it. It keeps native generic-worker selection and
+  caller-inline fallback, never selects below the floor, and is never a
+  prerequisite for the general-purpose skill or its consumers
+  (`DR-260910-restore-economical-recon`,
+  `DR-260719-full-reviewers-are-not-recon`).
 - Add cross-skill contract tests, representative end-to-end packet handoffs,
   and documentation that makes automatic invocation, explicit packet
   consumption, and non-integration behavior distinguishable.

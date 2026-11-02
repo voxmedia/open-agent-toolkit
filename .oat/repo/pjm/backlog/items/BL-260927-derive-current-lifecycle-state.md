@@ -12,7 +12,7 @@ labels:
   - state
 assignee: null
 created: 2026-09-27T03:35:36.887Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-01T16:05:00Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/305
@@ -33,6 +33,12 @@ transition helper owns review, phase, and publication status, and summary
 staleness after review-fix phases, publication, rebases or merges is still
 untracked.
 
+Merged from BL-260830-complete-control-plane-backed (2026-11-01): the residual
+`plan.md` and `implementation.md` readers (for example
+`oat-project-progress` still greps `plan.md` for tasks) are the same
+one-authority problem, so their audit and the cloud fallback contract are
+criteria here.
+
 ## Acceptance Criteria
 
 - One transition helper or structured authority owns current review, phase, and publication status (gate transitions are already `state.md`-owned); plan, implementation, and state views are derived from it or updated atomically with it.
@@ -41,6 +47,8 @@ untracked.
 - Adding a review-fix phase, or publishing, rebasing, or merging a tracked PR, invalidates or updates the affected summary fields.
 - Secondary fields and counters are synchronized with the authority or documented as intentionally different.
 - Regression tests cover stale-state retention and reintroduction after an otherwise valid correction.
+- Residual pure readers of `plan.md` and `implementation.md` in lifecycle skills, including brief and goal shapes, use a CLI-owned structured read surface or record an explicit direct-read disposition, and tests lock the structured fields they consume.
+- Cloud environments use one documented checkout-local fallback contract rather than per-skill branches.
 
 ## Markdown docs bootstrap retrospective evidence
 

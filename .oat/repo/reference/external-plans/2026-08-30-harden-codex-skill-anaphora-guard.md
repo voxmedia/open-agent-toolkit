@@ -65,9 +65,9 @@ independently classifies the selected model as a direct-API specialist route.
 
 ## Dependencies
 
-| Type                  | Dependency                                                                                        | Required state                                                                           | Current state            |
-| --------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------ |
-| Related, not blocking | [BL-260827-span-based-prose-guards](../../pjm/backlog/items/BL-260827-span-based-prose-guards.md) | Keep separate until its shared runner, anchor format, and migration roster are designed. | Open and not plan-ready. |
+| Type                  | Dependency                                                                                           | Required state                                                                           | Current state            |
+| --------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------ |
+| Related, not blocking | [BL-260827-span-based-prose-guards](../../pjm/backlog/archived/BL-260827-span-based-prose-guards.md) | Keep separate until its shared runner, anchor format, and migration roster are designed. | Open and not plan-ready. |
 
 There are no unsatisfied hard dependencies.
 
