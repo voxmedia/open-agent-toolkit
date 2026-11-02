@@ -149,26 +149,23 @@ oat_generated: false
 
 # Project State: review-gate-integrity-goal
 
-**Status:** Plan
+**Status:** Implement (m01), brief amendment awaiting approval
 **Started:** 2026-11-01
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-02
 
 ## Current Phase
 
-Plan - Authoring the goal Project Brief and its milestones
+Brief amendment (2026-11-02): artifact review, `oat-project-goal` gate and operator approval for the prose-only m01 (p01, p02, p10, p11)
 
 ## Artifacts
 
-- **Plan:** `plan.md` (scaffolded goal Project Brief template — not started)
-- **Implementation:** `implementation.md` (scaffolded brief journal template — not started)
-- **Research:** `references/research/` (empty)
+- **Plan:** `plan.md` (goal Project Brief, amended 2026-11-02)
+- **Implementation:** `implementation.md`
+- **Research:** `references/research/current-main-facts.md`
 
 ## Progress
 
-- ✓ Goal project scaffolded
-- ✓ Brief and implementation artifacts scaffolded
-- ✓ Alignment interview (two rounds) complete; brief and milestones authored
-- ✓ Brief artifact review (three attempts), `oat-project-goal` gate passed, approved 2026-11-01
+- ✓ Goal project scaffolded; brief reviewed, gated and approved 2026-11-01
 - ✓ p01 accepted; p02 verifier built and reviewed
 - ⧗ Brief amendment (2026-11-02): prose-only bookkeeping rule; m01 is now p01, p02 (retire the verifier), p10, p11
 
@@ -178,4 +175,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-goal` to author the brief and its milestones and approve the first milestone
+Approve the amendment, then resume `oat-project-implement` at p02
