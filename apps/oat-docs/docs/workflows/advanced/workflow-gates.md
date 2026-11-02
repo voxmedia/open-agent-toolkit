@@ -120,8 +120,13 @@ ordered set of accepted phases. It does not narrow ordinary milestone checks
 or change registered delivery scopes.
 
 A prompt that explicitly requests a whole-project final review retains that
-meaning. Missing or invalid recovery state does not authorize narrowing, and
-an unsupported noncontiguous set is refused. Historical anchors are preserved.
+meaning. It cannot satisfy a phase-only recovery's exact exit subject unless
+its configured scope resolves to that same phase set. Scoped closeout reports
+this configuration mismatch before launch and stops for reconciliation; it
+never rewrites the command or relabels the wider review. A `subject-changed`
+result likewise stops closeout rather than retrying the unchanged command.
+Missing or invalid recovery state does not authorize narrowing, and an
+unsupported noncontiguous set is refused. Historical anchors are preserved.
 
 ### Per-project gate overrides
 

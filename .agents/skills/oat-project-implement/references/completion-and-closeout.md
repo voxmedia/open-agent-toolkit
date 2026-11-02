@@ -67,7 +67,13 @@ oat-project-implement --project "$PROJECT_PATH" --json`, canonical
    `oat-project-review-provide` resolves the `final` hint through its
    state-selected recovery-exit rule before anchor expansion; the launcher
    still executes the same argv. A literal whole-project review request keeps
-   its meaning. The carrier subject records the exact ordered milestone or
+   its meaning. Before launching a phase-only recovery gate, check that the
+   configured review scope can resolve to the exact recovery set. A literal
+   whole-project request with a wider scope is incompatible: report the
+   configured scope and required recovery set, leave recovery blocked, and
+   stop for gate-configuration reconciliation. Do not rewrite argv, relabel
+   a wider review, or retry an unchanged command to resolve that mismatch.
+   The carrier subject records the exact ordered milestone or
    recovery phase set actually reviewed. The goal ladder exception applies:
    this gate precedes the integrated delivery review, and queued fixes require it to run again. The gate's own
    Reviews row is admitted as carrier bookkeeping only when it has Type
@@ -94,7 +100,9 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    integrated review is not yet passed, so read only `exit` here. For a
    phase-only recovery (`delivery_id: null`), add `--recovery` to the
    milestone check so it validates the committed recovery record and its exact
-   accepted phase set. The ordinary milestone check still judges full
+   accepted phase set. If `exit.reason` reports `subject-changed`, preserve
+   the stale carrier and stop for scope reconciliation rather than rerunning
+   an unchanged gate command. The ordinary milestone check still judges full
    membership; registered deliveries keep the ordinary `dNN` check. The bounded
    bookkeeping-successor rule (section 12.8) decides freshness: bookkeeping
    commits after the reviewed head never force a rerun, and a substantive

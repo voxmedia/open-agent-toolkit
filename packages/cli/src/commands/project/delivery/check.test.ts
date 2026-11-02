@@ -353,6 +353,51 @@ describe('oat project delivery check', () => {
     expect(mismatch.exitCode).toBe(1);
   });
 
+  it.each(['received', 'passed'])(
+    'refuses a stale recovery pointer when the newest review is %s',
+    async (status) => {
+      const recovery = await phaseRecovery();
+      const reviewed = repo!.git(['rev-parse', 'HEAD~1']);
+      const newestArtifact = 'reviews/recovery-newest.md';
+      await repo!.write(newestArtifact, '# Newest recovery review\n');
+      await repo!.write(
+        'plan.md',
+        `${(await repo!.read('plan.md')).replace('| received |', '| passed |')}\n${reviewRow(status, newestArtifact, reviewed, 'm01: p-rev1')}\n`,
+      );
+      repo!.commitAll('chore(oat): provide a newer recovery review');
+
+      const stale = await check(repo!, 'm01', true);
+      expect(stale.payload).toMatchObject({
+        status: 'undeliverable',
+        review: {
+          fresh: false,
+          reason: expect.stringMatching(/^review-missing/),
+        },
+        exit: { freshness: 'fresh', reason: null },
+        deliverable: false,
+      });
+      expect(stale.exitCode).toBe(1);
+
+      await repo!.write(
+        'state.md',
+        (await repo!.read('state.md')).replace(
+          JSON.stringify(recovery),
+          JSON.stringify({ ...recovery, review_artifact: newestArtifact }),
+        ),
+      );
+      repo!.commitAll('chore(oat): bind recovery to the newest review');
+      process.exitCode = undefined;
+      const current = await check(repo!, 'm01', true);
+      expect(current.payload).toMatchObject({
+        status: status === 'passed' ? 'ok' : 'undeliverable',
+        review: { artifact: newestArtifact, fresh: true, disposition: status },
+        exit: { freshness: 'fresh', reason: null },
+        deliverable: status === 'passed',
+      });
+      expect(current.exitCode).toBe(status === 'passed' ? 0 : 1);
+    },
+  );
+
   it.each([
     ['missing', null, /Missing, malformed or mismatched/],
     ['malformed', { stage: 'unknown' }, /Missing, malformed or mismatched/],

@@ -366,17 +366,15 @@ export async function evaluateSubjectEvidence(
   const recoveryArtifact = options.recovery
     ? project.state.goalRecovery?.review_artifact
     : null;
+  const latestRow = rows.at(-1) ?? null;
   const row =
-    (options.recovery
-      ? rows.filter(
-          (entry) =>
-            recoveryArtifact != null &&
-            // Match the source/archive identity used by delivery review bindings.
-            entry.artifact.replace(/^reviews\/archived\//, 'reviews/') ===
-              recoveryArtifact.replace(/^reviews\/archived\//, 'reviews/'),
-        )
-      : rows
-    ).at(-1) ?? null;
+    options.recovery &&
+    (recoveryArtifact == null ||
+      // Match source/archive identity only after selecting the governing row.
+      latestRow?.artifact.replace(/^reviews\/archived\//, 'reviews/') !==
+        recoveryArtifact.replace(/^reviews\/archived\//, 'reviews/'))
+      ? null
+      : latestRow;
   const milestoneDelivery = options.recovery
     ? undefined
     : latestDeliveryForMilestone(deliveries, milestoneId);
@@ -406,7 +404,7 @@ export async function evaluateSubjectEvidence(
       artifact: null,
       disposition: row?.status ?? null,
       fresh: false,
-      reason: `review-missing: no ${milestoneId} code review row names an artifact`,
+      reason: `review-missing: no governing ${milestoneId} code review row names a matching artifact`,
       members: [],
     };
   } else {
