@@ -260,7 +260,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p02   | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T224642Z.md           | 09d8f57b55dbf2ab0b2d8f5c9183d212e86974ae | manual     | -           |
 | p02   | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T232603Z.md           | 4497d05f532e3d52984efaf7fde684c65f008b71 | manual     | -           |
 | p02   | code     | passed          | 2026-11-01 | reviews/archived/p02-review-2026-11-02T001304Z.md           | 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c | manual     | -           |
-| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p02   | code     | passed          | 2026-11-02 | reviews/archived/p02-review-2026-11-02T162147Z.md           | 8427732e8bfd661a536997096ed43af0bc5376d1 | manual     | -           |
 | p10   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p11   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -           |

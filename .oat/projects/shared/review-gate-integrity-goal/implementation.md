@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-01
-oat_current_task_id: p02
+oat_last_updated: 2026-11-02
+oat_current_task_id: p10
 oat_generated: false
 oat_template: false
 ---
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: review-gate-integrity-goal
 
 **Started:** 2026-11-01
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-02
 
 > This journal records execution of the Project Brief in `plan.md` and is used
 > to resume interrupted sessions.
@@ -42,14 +42,14 @@ oat_template: false
 | Phase | Status    | Units | Accepted |
 | ----- | --------- | ----- | -------- |
 | p01   | completed | 1     | 1/1      |
-| p02   | pending   | 1     | 0/1      |
+| p02   | completed | 1     | 1/1      |
 | p10   | pending   | 1     | 0/1      |
 | p11   | pending   | 1     | 0/1      |
 | p07   | pending   | 1     | 0/1      |
 | p08   | pending   | 1     | 0/1      |
 | p09   | pending   | 1     | 0/1      |
 
-**Total:** 1/7 phases accepted
+**Total:** 2/7 phases accepted
 
 ---
 
@@ -151,10 +151,11 @@ p01 accepted 2026-11-01: per-phase review passed in round 2, every review dispos
 
 ## Phase p02: Retire the clerical-resolution verifier
 
-**Status:** in_progress
+**Status:** completed
 **Base:** c8a12f51dc6ee7a4f863a0fbb0c58290377e2292
 **Head:** 8427732e8bfd661a536997096ed43af0bc5376d1
 **Executor:** phase-implementer:rgi-p02-impl-20261101-01
+**Amendment (2026-11-02):** the operator-approved brief amendment retired the verifier this phase built and dropped the optional phase gates, so no p02 phase gate runs. The root made the revert commit inline under p02-ie1; earlier records keep their phase-implementer executor.
 **Retirement verification (2026-11-02, p02-t04, inline:p02-ie1):** the revert commit `8427732e8` restores every verifier path to `23c7d5ae9`; CLI type-check exited 0 and the isolated-HOME CLI suite passed 9299/9299.
 **Verification:** built-CLI verifier and unchanged goal-successor suites passed 93/93; isolated-HOME help and contract suites passed 1157/1157; CLI lint, CLI type-check, `pnpm check`, and `pnpm build` each exited 0. The restored refusal guard passed all 13 verifier tests after its negative-control neutralization run.
 **Late-fix verification:** after p02-t02, the built-CLI verifier, help snapshot and unchanged delivery suites passed 175/175; isolated-HOME help/contracts passed 1157/1157 on the no-edit rerun after a concurrent-build race; CLI lint, CLI type-check, `pnpm check`, direct CLI build and `pnpm build` exited 0. Twenty-seven restored verifier controls passed after the per-guard neutralization probes recorded below.
@@ -357,6 +358,20 @@ Recorded before editing, under the 2026-11-02 amendment. The remaining p02 work 
 **Commit:** 8427732e8bfd661a536997096ed43af0bc5376d1
 **Proof:** `git diff 23c7d5ae9 8427732e8` over the seven touched paths is empty and `packages/cli/src/commands/project/clerical-settlement/` is gone; CLI type-check exited 0; the isolated-HOME CLI suite passed 437 files and 9299 tests.
 
+### Review Received: p02 (round 4, verifier retirement)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/p02-review-2026-11-02T162147Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Reviewer request `rgi-p02-rev-20261102-04` (`oat-reviewer-claude-claude-opus-5-5-high`); reviewed range `c8a12f51dc6ee7a4f863a0fbb0c58290377e2292..8427732e8bfd661a536997096ed43af0bc5376d1`; reconnaissance not attempted. The revert restores all 13 verifier-touched files to `23c7d5ae9`, no reference to the removed command remains, and the branch CLI rejects `clerical-settlement`.
+
+- L1 (Low): the phase Executor line and start paragraph still described a phase-implementer owner and a selected phase gate → addressed now with a dated amendment line in this section.
+- L2 (Low): journal last-updated dates and the p02 Progress Overview row were stale → addressed now.
+
+**Outcome:** passed
+
 ## Phase p10: Bookkeeping definition and the receive rule
 
 **Status:** pending
@@ -395,6 +410,7 @@ Recorded before editing, under the 2026-11-02 amendment. The remaining p02 work 
 - run/v1 · request=rgi-p02-rev-20261101-02 · scope=project:review-gate-integrity-goal:p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p02-fix-20261101-02 · scope=project:review-gate-integrity-goal:p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=resume:rgi-p02-impl-20261101-01 · observed=~ · match=~
 - run/v1 · request=rgi-p02-rev-20261101-03 · scope=project:review-gate-integrity-goal:p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p02-rev-20261102-04 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
