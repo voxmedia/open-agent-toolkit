@@ -1397,6 +1397,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
     anchor: 'Goal Milestone Closeout',
     match:
+      'resolves the `final` hint through its state-selected recovery-exit rule',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide'],
+    reason:
+      'Describes how the already launched gate reviewer interprets a state-selected scope hint; this statement does not launch another skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    anchor: 'Goal Milestone Closeout',
+    match:
       'Resolve and run the configured implement exit gate exactly as Step 14 does',
     classification: 'non-executing',
     skills: ['oat-project-implement'],

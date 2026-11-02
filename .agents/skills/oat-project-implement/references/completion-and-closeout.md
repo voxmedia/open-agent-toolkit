@@ -62,9 +62,20 @@ oat-project-implement --project "$PROJECT_PATH" --json`, canonical
    `oat --json gate review`, receive eligibility, `onFailure`, `maxAttempts`).
    Run the configured command verbatim, including its
    `--review-scope final`; do not rewrite that argument to the milestone's
-   phase IDs. The carrier subject still records the milestone's ordered phase
-   set. The goal ladder exception applies: this gate precedes the integrated
-   delivery review, and queued fixes require it to run again. The gate's own
+   phase IDs. When that command's prompt explicitly delegates review scope to
+   project state and a committed goal recovery is at `exit_gate`,
+   `oat-project-review-provide` resolves the `final` hint through its
+   state-selected recovery-exit rule before anchor expansion; the launcher
+   still executes the same argv. A literal whole-project review request keeps
+   its meaning. Before launching a phase-only recovery gate, check that the
+   configured review scope can resolve to the exact recovery set. A literal
+   whole-project request with a wider scope is incompatible: report the
+   configured scope and required recovery set, leave recovery blocked, and
+   stop for gate-configuration reconciliation. Do not rewrite argv, relabel
+   a wider review, or retry an unchanged command to resolve that mismatch.
+   The carrier subject records the exact ordered milestone or
+   recovery phase set actually reviewed. The goal ladder exception applies:
+   this gate precedes the integrated delivery review, and queued fixes require it to run again. The gate's own
    Reviews row is admitted as carrier bookkeeping only when it has Type
    `code`, Invocation `gate`, and a non-placeholder Reviewed Head equal to the
    carrier's `reviewed_head`; its non-placeholder artifact is admitted with
@@ -86,7 +97,13 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
    and persist its `exit` result (`source: milestone-carrier`) as the
    carrier's `freshness` and `freshness_reason`; the command exits 1 while the
-   integrated review is not yet passed, so read only `exit` here. The bounded
+   integrated review is not yet passed, so read only `exit` here. For a
+   phase-only recovery (`delivery_id: null`), add `--recovery` to the
+   milestone check so it validates the committed recovery record and its exact
+   accepted phase set. If `exit.reason` reports `subject-changed`, preserve
+   the stale carrier and stop for scope reconciliation rather than rerunning
+   an unchanged gate command. The ordinary milestone check still judges full
+   membership; registered deliveries keep the ordinary `dNN` check. The bounded
    bookkeeping-successor rule (section 12.8) decides freshness: bookkeeping
    commits after the reviewed head never force a rerun, and a substantive
    commit does.
