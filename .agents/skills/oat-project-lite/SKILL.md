@@ -444,6 +444,14 @@ review ...` without the global `--json` placement. Reusable declarations
    - `prompt`: report an unresolved human boundary;
    - `warn`: record the validated gate failure and continue.
 
+   A receive-eligible `blocked` result that review-receive settled in its
+   bookkeeping-only mode (every finding bookkeeping under
+   `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit,
+   receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has
+   satisfied the gate: skip `onFailure`, count no attempt toward the configured
+   limit, and do not re-run the gate. A result with any finding that is not
+   bookkeeping follows the policies above unchanged.
+
 Operational, validation, targeting, launch, and receive failures never inherit
 `onFailure` continuation semantics.
 

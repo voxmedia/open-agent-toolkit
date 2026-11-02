@@ -39,6 +39,15 @@ const CLOSEOUT =
 const VENDORING_SKILLS = [
   'oat-project-review-receive',
   'oat-project-implement',
+  'oat-project-quick-start',
+  'oat-project-plan',
+  'oat-project-import-plan',
+  'oat-project-brief',
+  'oat-project-goal',
+  'oat-project-lite',
+  'oat-project-discover',
+  'oat-project-design',
+  'oat-project-plan-writing',
 ] as const;
 
 function readRepoFile(relativePath: string): string {
@@ -827,5 +836,197 @@ describe('effective-delta v2 exclusions leave a tracking-only fix out of the del
     // Control: a code change after the review changes the delta.
     commitFile(repo, 'src/feature.ts', 'export const x = 2;\n');
     expect(delta()).not.toBe(reviewed);
+  });
+});
+
+describe('planning skill gate executions (p11)', () => {
+  function skillDoc(skill: string): string {
+    return readRepoFile(`.agents/skills/${skill}/SKILL.md`);
+  }
+
+  function gateSection(skill: string, heading: string): string {
+    const doc = skillDoc(skill);
+    const start = doc.indexOf(`\n${heading}\n`);
+    if (start < 0) {
+      throw new Error(`${skill} is missing ${heading}`);
+    }
+    const next = doc.indexOf('\n### ', start + heading.length + 1);
+    return normalize(doc.slice(start, next < 0 ? doc.length : next));
+  }
+
+  const BRANCH_OPENING =
+    'A receive-eligible `blocked` result that review-receive settled in its bookkeeping-only mode (every finding bookkeeping under `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit, receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has satisfied the gate: skip `onFailure`,';
+  const BRANCH_CLOSE =
+    'A result with any finding that is not bookkeeping follows the policies above unchanged.';
+
+  it.each([
+    [
+      'oat-project-quick-start',
+      '### Gate Execution',
+      '- `warn`: record the gate failure and continue.',
+      '- `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`).',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate. Persist it as `allowed/passed` below.',
+    ],
+    [
+      'oat-project-plan',
+      '### Gate Execution',
+      '- `warn`: record the gate failure and continue.',
+      '- `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`).',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate.',
+    ],
+    [
+      'oat-project-import-plan',
+      '### Gate Execution',
+      '- `warn`: record the gate failure and continue.',
+      '- `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`).',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate.',
+    ],
+    [
+      'oat-project-discover',
+      '### Step 12: Gate Execution',
+      '- `warn`: record the gate failure and continue.',
+      '- `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`).',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate.',
+    ],
+    [
+      'oat-project-design',
+      '### Step 7: Gate Execution',
+      '- `warn`: record the gate failure and continue.',
+      '- `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`).',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate.',
+    ],
+    [
+      'oat-project-brief',
+      '### Gate Execution',
+      '- `warn`: record the validated gate failure and continue.',
+      '- `block`: remediate and re-run the gate up to `maxAttempts` attempts (default `2`);',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate. Persist it as `allowed/passed` below.',
+    ],
+    [
+      'oat-project-goal',
+      '### Gate Execution',
+      '- `warn`: record the validated gate failure and continue.',
+      '- `block`: remediate and re-run the gate up to `maxAttempts` attempts (default `2`);',
+      'count no attempt toward `maxAttempts`, and do not re-run the gate. Hold it as an allowed `passed` outcome for Step 3.7.',
+    ],
+    [
+      'oat-project-lite',
+      '### Gate Execution',
+      '- `warn`: record the validated gate failure and continue.',
+      '- `block`: remediate and retry up to the configured limit;',
+      'count no attempt toward the configured limit, and do not re-run the gate.',
+    ],
+  ])(
+    '%s satisfies a bookkeeping-only blocked gate beside its onFailure policies',
+    (skill, heading, warn, block, clause) => {
+      const gate = gateSection(skill, heading);
+      const warnIndex = gate.indexOf(warn);
+      const branchIndex = gate.indexOf(BRANCH_OPENING);
+
+      expect(gate, `${skill} keeps its block policy`).toContain(block);
+      expect(warnIndex, `${skill} warn bullet`).toBeGreaterThan(-1);
+      expect(
+        branchIndex,
+        `${skill} branch follows the policies`,
+      ).toBeGreaterThan(warnIndex);
+      const branch = gate.slice(branchIndex);
+      expect(branch, skill).toContain(clause);
+      expect(branch.indexOf(BRANCH_CLOSE), skill).toBeGreaterThan(
+        branch.indexOf(clause),
+      );
+    },
+  );
+
+  it.each(['oat-project-quick-start', 'oat-project-brief'])(
+    '%s persists a bookkeeping-only gate as allowed/passed beside the passed row',
+    (skill) => {
+      const gate = gateSection(skill, '### Gate Execution');
+      const passed = gate.indexOf('- passed: `allowed/passed`;');
+      const settled = gate.indexOf(
+        '- `blocked` only by bookkeeping findings settled at receive: `allowed/passed`, with no attempt counted and no relaunch;',
+      );
+
+      expect(passed).toBeGreaterThan(-1);
+      expect(settled).toBeGreaterThan(passed);
+    },
+  );
+
+  it.each([
+    [
+      'oat-project-brief',
+      '- Fold minor, artifact-local findings into the brief without changing intent.',
+    ],
+    [
+      'oat-project-goal',
+      'Disposition of findings (`GOAL-09`): fold minor, artifact-local findings',
+    ],
+  ])(
+    '%s routes an all-bookkeeping artifact review through the shared loop branch',
+    (skill, disposition) => {
+      const step36 = normalize(
+        sliceBetween(skillDoc(skill), '### Step 3.6:', '### Gate Execution'),
+      );
+      const branch = step36.indexOf(
+        "When every finding is bookkeeping under `references/docs/bookkeeping-findings.md`, the shared loop's bookkeeping-only branch applies: one tracking-file commit, a note per finding, the `plan` row `passed` with the note `bookkeeping-only fixes applied at receive`, and no re-run.",
+      );
+
+      expect(step36.indexOf(disposition)).toBeGreaterThan(-1);
+      expect(branch).toBeGreaterThan(step36.indexOf(disposition));
+    },
+  );
+});
+
+describe('plan-writing auto artifact-review loop (p11)', () => {
+  const doc = readRepoFile('.agents/skills/oat-project-plan-writing/SKILL.md');
+  const loop = normalize(
+    sliceBetween(
+      doc,
+      '## Auto Artifact-Review Loop',
+      '## Canonical Plan Format',
+    ),
+  );
+
+  it('settles an all-bookkeeping plan result without a new attempt or retry', () => {
+    const clean = loop.indexOf(
+      '- If the structured review is clean, proceed to outcome recording.',
+    );
+    const branch = loop.indexOf(
+      '- Bookkeeping-only result (`plan` target, checked before the bullets below):',
+    );
+    const highFixes = loop.indexOf(
+      '- Apply Critical and High fixes by default when they are local to the reviewed artifact and the fix is unambiguous.',
+    );
+
+    expect(clean).toBeGreaterThan(-1);
+    expect(branch).toBeGreaterThan(clean);
+    expect(highFixes).toBeGreaterThan(branch);
+    const text = loop.slice(branch, highFixes);
+    expect(text).toContain(VENDORED_DOC);
+    expect(text).toContain('a doubtful finding is not bookkeeping');
+    expect(text).toContain(
+      "apply them all in one commit confined to the project's tracking files",
+    );
+    expect(text).toContain(
+      'This starts no new review attempt and consumes no retry.',
+    );
+    expect(text).toContain(
+      'A result with any finding that is not bookkeeping follows the bullets below unchanged.',
+    );
+    // The retry rule it bypasses is unchanged.
+    expect(loop).toContain(
+      '- Each rewrite/re-dispatch cycle consumes one retry.',
+    );
+  });
+
+  it('records the plan row passed with the note, never as a clean review', () => {
+    const plainRow = loop.indexOf(
+      '- For `plan`, update the `plan` artifact row in the Reviews table without deleting any existing rows. Use `passed` when clean;',
+    );
+    const settled = loop.indexOf(
+      `- For a bookkeeping-only \`plan\` result (step 4), use \`passed\` with the note \`${NOTE}\` and one line per finding in the lifecycle output; never report it as a clean review.`,
+    );
+
+    expect(plainRow).toBeGreaterThan(-1);
+    expect(settled).toBeGreaterThan(plainRow);
   });
 });

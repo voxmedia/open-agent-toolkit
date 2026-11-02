@@ -397,6 +397,11 @@ Disposition of findings (`BRIEF-09`):
 - Under autonomy, apply only unambiguous artifact-local fixes, never rewrite
   agreed intent, and stop on an unresolved Critical finding or material
   ambiguity.
+- When every finding is bookkeeping under
+  `references/docs/bookkeeping-findings.md`, the shared loop's bookkeeping-only
+  branch applies: one tracking-file commit, a note per finding, the `plan` row
+  `passed` with the note `bookkeeping-only fixes applied at receive`, and no
+  re-run.
 
 Record the review row in `## Reviews` (or the explicit skip
 `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`).
@@ -454,6 +459,15 @@ review ...` without the global `--json` placement. Reusable declarations
      `OAT_AUTONOMOUS=1` it is a reported boundary;
    - `warn`: record the validated gate failure and continue.
 
+   A receive-eligible `blocked` result that review-receive settled in its
+   bookkeeping-only mode (every finding bookkeeping under
+   `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit,
+   receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has
+   satisfied the gate: skip `onFailure`, count no attempt toward `maxAttempts`,
+   and do not re-run the gate. Persist it as `allowed/passed` below. A result
+   with any finding that is not bookkeeping follows the policies above
+   unchanged.
+
 Operational, validation, targeting, launch, and receive failures never inherit
 `onFailure` continuation semantics.
 
@@ -470,6 +484,8 @@ exactly the core fields defined in `references/docs/gate-approval-record.md`
 brief bookkeeping commit or before stopping:
 
 - passed: `allowed/passed`;
+- `blocked` only by bookkeeping findings settled at receive: `allowed/passed`,
+  with no attempt counted and no relaunch;
 - `warn` failure: `allowed/warned`;
 - a `prompt` failure the operator explicitly continues past: `allowed/prompt_approved`;
 - a `prompt` failure declined or deferred (every `prompt` failure under
