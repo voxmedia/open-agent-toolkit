@@ -2787,6 +2787,61 @@ printf 'artifact-read\\n'`,
         'scope=plan type=artifact artifact=reviews/gone.md',
       );
 
+      // Historical Stoa plan ledger annotations, captured from the real
+      // memory-self-maintenance plan (2026-10-26 through 2026-10-28), describe
+      // structured reviews that intentionally produced no file.
+      const structuredAnnotations = [
+        'structured (no artifact); 3 attempts, residual Lows applied',
+        'structured (no artifact); m02 amendment, 3 attempts, residual findings applied',
+        'structured (no artifact); m03 amendment, 3 attempts (1H/7M/4L → 0H/1M/1L → 0H/1M/2L), residual findings applied',
+        'structured (no artifact); m04 amendment, 3 attempts (1H/8M/6L → 0H/3M/6L → 0H/1M/5L), residual findings applied',
+      ];
+      const structured = runGuard(
+        structuredAnnotations.map(
+          (annotation, index) =>
+            `| plan | artifact | passed | 2026-10-26 | ${index === 0 ? `**${annotation}**` : annotation} |`,
+        ),
+      );
+      expect(structured.stderr).toBe('');
+      expect(structured.status).toBe(0);
+      expect(
+        structured.stdout.match(
+          /structured planning review; no artifact file/g,
+        ),
+      ).toHaveLength(4);
+
+      // Recognizing an annotation must not skip a later real missing path.
+      const structuredAndMissing = runGuard([
+        `| plan | artifact | passed | 2026-10-26 | ${structuredAnnotations[0]} |`,
+        '| plan | artifact | passed | 2026-10-26 | reviews/gone.md |',
+      ]);
+      expect(structuredAndMissing.status).toBe(1);
+      expect(structuredAndMissing.stderr).toContain(
+        'PRFINAL-05: unresolved review-ledger artifact | scope=plan type=artifact artifact=reviews/gone.md',
+      );
+      expect(structuredAndMissing.stdout).toContain(
+        'structured planning review; no artifact file',
+      );
+
+      // Only the observed planning-review annotation is non-file evidence.
+      // Code evidence, a different scope/type, and filename lookalikes still
+      // require actual files, even when their text resembles the annotation.
+      for (const [scope, type, artifact] of [
+        ['plan', 'code', structuredAnnotations[0]],
+        ['p01', 'artifact', structuredAnnotations[0]],
+        ['plan', 'artifact', 'structured (no artifact).md'],
+        ['plan', 'artifact', 'structured (no artifact);.md'],
+      ]) {
+        const lookalike = runGuard([
+          `| ${scope} | ${type} | passed | 2026-10-26 | ${artifact} |`,
+        ]);
+        expect(lookalike.status).toBe(1);
+        expect(lookalike.stderr).toContain(
+          `PRFINAL-05: unresolved review-ledger artifact | scope=${scope} type=${type} artifact=${artifact}`,
+        );
+        expect(lookalike.stdout).toBe('');
+      }
+
       // `reviews/archived/` exists in this fixture, so a file missing from it
       // is an interrupted archive, not a fresh checkout: it stops. The
       // never-materialized shape is covered below, after the tree is removed.
