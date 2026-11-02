@@ -65,6 +65,22 @@ oat_dispatch_policy:
     codex: xhigh
     claude: opus
   source: project-state
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p10:
+      used_attempts: 1
+      pending_attempt:
+        {
+          attempt: 1,
+          event_id: rgi-p10-rec-01,
+          original_request_id: rgi-p10-impl-20261102-01,
+          original_task_id: p10-t01,
+          original_commit: 7f41ac534eeef510a0f9bb01d62beb1863988fd2,
+          discovered_by: 'pnpm run check:skill-bumps',
+          dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high,
+          reservation_head: 7f41ac534eeef510a0f9bb01d62beb1863988fd2,
+          status: completed,
+        }
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m01
