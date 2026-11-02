@@ -987,6 +987,19 @@ The configured `oat-project-implement` exit gate (run `0380f6e0-36ff-47cc-bf80-b
 - Gate `oat-project-implement` (code, m01 exit, rerun `0380f6e0`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-02. Carrier `oat_milestone_gates.m01.exit` rewritten `allowed`/`passed` at `395b90677`.
 - Freshness after the rerun (`oat project delivery check --subject m01`): `exit` stale, `disallowed-path` on `40e839667`. The gate CLI committed attempt 1's artifact after `395b90677`, and section 12.8 admits a gate artifact only when its row's Reviewed Head equals the carrier's, so that commit, the Sol rerun's artifact and their archive moves can never be bookkeeping successors of `395b90677`. Recovery: the p11 head advances again under the late-fix rule to this receive commit, which closes the exit-gate review fixes, and the configured gate reruns over it. Passing reruns consume no attempt.
 
+### Review Received: final (m01 exit gate, rerun at advanced head)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-02T233729Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+The configured `oat-project-implement` exit gate (run `96d2da99-c2db-41e5-9361-f98e0eed24b0`, target `claude-opus-5-5-high`, same-family warning) re-reviewed m01 (`p01, p02, p10, p11`) at the advanced p11 head `1a5a37684f05492470952fdc54359a082ac9cc58`, narrowed to the delta from `395b90677`.
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m01 exit, rerun `96d2da99`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-02. Carrier `oat_milestone_gates.m01.exit` rewritten `allowed`/`passed` at `1a5a37684`; `oat project delivery check --subject m01` reads `exit` fresh; `oat_milestone_status` moves `implementing` → `reviewing`.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
