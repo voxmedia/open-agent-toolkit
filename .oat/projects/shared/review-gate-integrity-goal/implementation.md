@@ -411,6 +411,8 @@ Reviewer request `rgi-p02-rev-20261101-03` (`oat-reviewer-claude-opus-5-5-high`)
 - Gate `oat-project-goal` (plan, m01): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-01.
 - Brief approved 2026-11-01 by user at `cbc8836c7ca14d56742831a13fc0cd8e1fba2057`; `oat_milestone_gates.m01.plan` written `allowed` / `passed`.
 
+- Gate `oat_phase_review_gate` (code, p02): `review_failed`, outcome `unexpected_post_selection_failure`, run `c9c091b6-d051-428b-a998-a95b68b37d78`, target `claude-opus-5-5-high` (cross-family from the `gpt-5.6-sol-high` producer). The target reported "You've hit your weekly limit · resets 11am (America/Chicago)", so no artifact was produced and no retry was consumed. The phase stays in_progress; this is an operator boundary (wait for the reset, or explicitly route another independent target).
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
