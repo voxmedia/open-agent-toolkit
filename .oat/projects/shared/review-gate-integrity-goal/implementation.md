@@ -723,6 +723,94 @@ Each branch sits beside today's text, which stays as it was:
 3. Brief contract section 5: "not a correction round" changed to "a correction round".
 4. Brief contract section 12.5: "never takes the first route" changed to "takes the first route".
 
+### Task p11-t04: Walkthrough of the #233 incident under the amended gate text
+
+**Status:** no-change
+**Executor:** phase-implementer:rgi-p11-impl-20261102-01
+**Handle:** direct:rgi-p11-impl-20261102-01:p11-t04
+**Intent:** Find the #233 incident in recorded history. Trace its blocking gate through the amended text step by step: provenance, Step 1.5, Reviewed Head, the receive branch and the gate owner's branch. Classify each finding against the shared definition, including the operator's pointer decision. Show whether the gate is satisfied with no attempt and no relaunch, now that p11 adds implement's and the planning skills' branches. Report rather than force a finding that does not qualify.
+**Files:** this journal only. The walkthrough is the record, so no implementation commit exists.
+**Proof command:** `gh api -H 'Accept: application/vnd.github.raw' 'repos/tkstang/personal-agents/contents/.oat/projects/shared/executor-reminders-pilot/reviews/artifact-plan-review-2026-08-28T225920Z.md?ref=5b7fa0eac18bc6b7dac6f49820290af8fe020e6c'`
+
+#### Walkthrough A: the #233 incident (does not qualify)
+
+**Finding the incident.**
+
+- Issue #233 reports its evidence only in generalized form. It cites a plan gate that blocked on a design ledger row reading `passed`, and says "Two further full design review rounds were run purely to earn a later 'zero-Important' ledger event".
+- Issue #232 was filed one second earlier (2026-08-29T19:35:48Z; #233 at 19:35:49Z) and names the run: "a design-artifact gate (round 8 of an artifact review loop)".
+- `gh search commits` across the operator's repositories finds the project: `tkstang/personal-agents`, `.oat/projects/shared/executor-reminders-pilot` (spec-driven). There, on 2026-08-28, are design gate rounds 1–6, plan gate attempt 1, design rounds 7 and 8, then plan gate attempt 2. On 2026-08-29 at 19:32, that project's retro recorded "the decision that bookkeeping findings are fixed without re-review (RP-04)" (`44ff1503c`), three minutes before #233 was filed.
+- Stoa memory and vault searches returned no record of the incident. The memory search was not degraded.
+
+**The blocking gate.**
+
+- Plan gate attempt 1: run `ad3d89ca-d6f4-4946-b43b-587f38b503ba`, target `codex-5-6-sol-xhigh`, threshold `important`, `onFailure: block`, attempt 1 of 2.
+- Artifact `reviews/artifact-plan-review-2026-08-28T225920Z.md`, committed in `5b7fa0eac18bc6b7dac6f49820290af8fe020e6c`.
+- `Findings: 0 critical, 3 important, 3 medium, 0 minor`.
+- History's receive (`0a02c400755439d0fa9f0b405761c70bd63de429`) is in that project's `implementation.md` under "Review Received: plan (artifact, gate attempt 1)".
+
+**Under the amended text** (`oat-project-plan` Gate Execution, then review-receive):
+
+1. **Gate Execution item 5.** Assume today's envelope: `status: blocked`, `receiveEligible: true` and a non-null `handoff`, so receive is invoked. The run predates some envelope fields.
+2. **Receive Step 1, provenance.**
+   - `oat_review_type: artifact`, `oat_review_scope: plan`.
+   - `oat_review_invocation: gate`, `oat_gate_target: codex-5-6-sol-xhigh`, `oat_gate_run_id` as above.
+   - The artifact has no `oat_review_head_sha`, so the Reviewed Head is `-`.
+3. **Step 1.5.** The artifact uses the retired tiers: `### Important`, `### Minor` and the `important`/`minor` count line. Receive stops until they are renamed `High` and `Low`. The rename changes no finding or count, and the receipt keeps the reported counts.
+4. **Step 2.** 0 Critical, 3 High, 3 Medium, 0 Low. Not a clean pass.
+5. **Step 2.6, bookkeeping-only mode (checked first).** No finding carries a `(bookkeeping)` mark. Each finding against `references/docs/bookkeeping-findings.md`:
+   - **I1 (High), "The plan claims the upstream design gate passed, but the cited review is blocking"** (`plan.md:904`, the design row `passed` for `artifact-design-review-2026-08-28T223615Z.md`, which reported 0/4/2/0). Not bookkeeping, for three independent reasons:
+     - Its Fix asks to "run a new design artifact review … Record `passed` only on a new zero-blocking review event". That is a **missing review**, an exclusion.
+     - The only record correction it admits is moving that design event from `passed` to `fixes_completed`, which is what history did in `0a02c4007`. That moves another event's status backward, which limit 3 forbids ("monotonically (never moving a status backward)").
+     - It is at best doubtful, and a doubtful finding is not bookkeeping.
+     - The operator's pointer decision does not apply: no resume pointer is involved.
+   - **I2 (High), destructive rollbacks** (`plan.md:673`). It asks for snapshot-and-restore steps in plan tasks p03-t04 and p03-t06 and the launchd task, under FR2, FR6 and NFR4. Plan task content is outside the tracking sections of `plan.md` (limit 1), and it is a content change. Not bookkeeping.
+   - **I3 (High), no safe handoff for the redacted approval handle** (`plan.md:715`). It asks for a handle lifecycle and a new test. Content. Not bookkeeping.
+   - **M1, M2, M3 (Medium).** Each asks for content: a missing `verified → accepted` finalization step, an authenticated post-rotation HTTP probe, and a docs-index checker that can fail. Not bookkeeping.
+   - Result: five findings are content and the sixth is excluded, so the mode is skipped entirely. Every finding, I1 included, follows the artifact mode, as in history.
+6. **Gate Execution item 6 (`oat-project-plan`).**
+   - The new paragraph applies only to a result receive settled as bookkeeping-only, so it does not apply.
+   - `block` applies: attempt 1 of 2 is consumed and the gate is re-run after remediation.
+   - History matches. The plan was revised (`0a02c4007`). I1's missing review drove design gate rounds 7 (`3407de32c`) and 8 (`bc0fce1b3`). Plan gate attempt 2 followed (`1338f7a41c7e958d40dc789e77ace87db0a3aca6`).
+7. **The follow-on rounds do not qualify either.**
+   - Design round 7 (`artifact-design-review-2026-08-28T232718Z.md`, run `8e24dbed-…`) reported 0/2/2/0. Its High findings ask for a typed ingress contract for `diffInfrastructure` and a consistent closed error-code set in `design.md`.
+   - Design round 8 (`…T233302Z.md`, run `dd951814-…`) reported 0/0/3/1, all `design.md` content.
+   - `design.md` is a requirement artifact and never a tracking file (limit 1). #233 says the two further rounds "each found only Minor wording", but the recorded round 7 has two High content findings.
+   - Plan gate attempt 2 (`…T234917Z.md`, run `72076952-…`) reported 0/4/2/0. Five findings are content. Its M2 asks to rewrite the `passed` definition in the Reviews status explanation, which changes a contract and is doubtful at best.
+
+**Outcome.** The amended rule does **not** settle #233's blocking gate, and it should not. The brief characterizes #233 as "a blocking gate whose only findings are such records". The recorded plan gate result had one ledger finding beside five content findings, and that ledger finding demanded new review evidence. Under the definition's exclusions (a missing review, and no backward status move), the result follows today's flow: one attempt used, the gate relaunched and the extra design rounds run. The issue's real cost, two design rounds "to earn a later zero-Important ledger event", is the missing-review class that the operator chose not to settle without review when verified settlement was dropped. This does not meet the "no attempt, no relaunch" half of the exit evidence for #233. The incident's facts do not support it, and the walkthrough reports that rather than widening the definition.
+
+**Reproduce.**
+
+- Artifacts: `gh api -H 'Accept: application/vnd.github.raw' 'repos/tkstang/personal-agents/contents/.oat/projects/shared/executor-reminders-pilot/reviews/<artifact>?ref=<commit>'` with the artifact and commit pairs above (`5b7fa0eac…`, `3407de32c51574474b2e6f215e7b705a8dfe4acb`, `bc0fce1b34b11a3cdd2a5f448a932baae3996a42`, `1338f7a41…`).
+- History's receive and the design-row change: `gh api repos/tkstang/personal-agents/commits/0a02c400755439d0fa9f0b405761c70bd63de429`.
+
+#### Walkthrough B: a qualifying blocking gate, end to end through implement's new branch
+
+p10 traced the `wave-skills-promotion` p05 phase gate through review-receive. Its round-3 correction said the run and the relaunch disappear end to end only once implement's phase-gate loop gets the branch. That branch is now in place. Facts are from `git show 4578e261a:.oat/projects/shared/wave-skills-promotion/...`:
+
+- `oat_phase_review_gate`: `phases: ['p05']`, `exit_nonzero_on: important`.
+- Retry limit: the default 2.
+- Gate run `811c64e3-d0df-47ca-b021-c89f4810c2ee`, target `codex-5-6-sol-max`, reviewing `b0824ce6d22c..17a56f3945f2`.
+- `Findings: 0 critical, 1 important, 0 medium, 0 minor`. The only finding is the stale `state.md` routing.
+
+1. **Optional External Phase Review Gate.** The gate runs after both Step 7 halves and returns `blocked`. Assume today's envelope with all three receive-eligibility conditions, as in A.1.
+2. **Receive.** p10's trace applies unchanged:
+   - the Step 1.5 tier rename;
+   - H1 classified as bookkeeping (pointer copied from the journal's `oat_current_task_id: p06-t01`, counter 23/27, progress labels, the `state.md` summary line a progress label; no exclusion; limits 1–3 hold);
+   - one `state.md`-only fix commit;
+   - the receipt Outcome `passed — bookkeeping-only fixes applied at receive (reviews/archived/p05-review-2026-07-18T184321Z.md)`;
+   - the p05 event `passed` with Reviewed Head `-`.
+3. **Implement, `blocked` with only bookkeeping findings** (the new bullet, checked before today's `blocked` bullet). The gate has passed for p05:
+   - no fixes are routed to the phase implementer;
+   - neither root review nor the gate is re-run;
+   - no gate retry round is consumed, so 0 of 2 are used;
+   - the receipt and the gate's terminal line keep the raw `0/1/0/0` and verdict BLOCKING;
+   - a phase gate writes no carrier.
+4. **Step 7b phase row transition.** A `blocked` gate settled as bookkeeping-only counts as a passed gate. Nothing is queued, so the bookkeeping commit that records the gate sets p05 `complete`. Execution then reaches the p05 HiLL checkpoint, which stays pending.
+5. **Result.** Relaunch run `c221ce46-309b-462c-9ec6-7a393808750d`, its artifact `p05-review-2026-07-18T185045Z.md` and its `passed` row never happen, end to end: one gate run fewer and no retry round used.
+
+**The exit gate path, by text.** Neither incident is an implement exit gate, but its branch was traced on the same terms. After a durable receive, a bookkeeping-only `blocked` envelope persists `allowed/passed`. `attempts_completed` is unchanged, and Step 5's `onFailure` is never reached. The fix commit falls inside the effective-delta v2 exclusion (`.oat/projects`), so the generation stays fresh. A new p11 test executes that last point against a scratch repository.
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
