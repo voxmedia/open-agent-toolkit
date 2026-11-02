@@ -528,6 +528,8 @@
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                          | open   | medium   | bug     | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                    | open   | medium   | task    | M        |
 | BL-261002-provide-a-complete-oat         | Provide a complete OAT uninstall path and make pack removal clean up after itself                    | open   | medium   | feature | L        |
+| BL-261102-provide-a-supported-closeout   | Provide a supported closeout path for legacy-shaped projects                                         | open   | medium   | feature | M        |
+| BL-261102-quote-the-oat-project-pause    | Quote the oat project pause reason so YAML parses it intact                                          | open   | medium   | task    | S        |
 | BL-260830-cli-flag-help-p2-p3-cleanup    | Re-audit CLI grammar across current command tree                                                     | open   | medium   | task    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                               | open   | medium   | idea    | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                    | open   | medium   | feature | L        |
@@ -554,6 +556,7 @@
 | BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                     | open   | low      | task    | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                               | open   | low      | task    | S        |
 | BL-261011-add-brief-to-the-legacy        | Add brief to the legacy generate-oat-state.sh mode table                                             | open   | low      | task    | S        |
+| BL-261102-align-oat-project-complete     | Align oat-project-complete recap skip guidance with the terminal-outcome guard                       | open   | low      | task    | XS       |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                           | open   | low      | task    | XS       |
 | BL-261012-archive-metadata-reads-map     | Archive metadata reads map EACCES to a missing file                                                  | open   | low      | task    | XS       |
 | BL-261011-automate-goal-phase-extraction | Automate goal phase extraction into a child project                                                  | open   | low      | feature | M        |
@@ -566,6 +569,7 @@
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                        | open   | low      | task    | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                             | open   | low      | task    | S        |
 | BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                    | open   | low      | task    | S        |
+| BL-261102-let-pr-skills-fall-back        | Let PR skills fall back to origin/HEAD when git.defaultBranch is unset                               | open   | low      | task    | S        |
 | BL-261002-let-skills-declare-their-side  | Let skills declare their side effects in metadata                                                    | open   | low      | feature | M        |
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                     | open   | low      | task    | S        |
 | BL-261001-make-recon-controller-setup    | Make recon controller setup and preflight self-serve                                                 | open   | low      | feature | M        |
