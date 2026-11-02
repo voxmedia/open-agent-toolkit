@@ -35,6 +35,7 @@ carrier names where it lives and what it adds.
 | Gate outcome                                                    | Record                                                      |
 | --------------------------------------------------------------- | ----------------------------------------------------------- |
 | Passed its threshold                                            | `allowed` / `passed`                                        |
+| Blocked only by bookkeeping findings fixed at receive           | `allowed` / `passed` (no attempt counted, no relaunch)      |
 | Failed under `onFailure: warn`                                  | `allowed` / `warned`                                        |
 | Failed under `onFailure: prompt`, operator explicitly continued | `allowed` / `prompt_approved`                               |
 | Failed under `onFailure: prompt`, operator declined or deferred | `blocked` / `null`                                          |
@@ -47,6 +48,19 @@ Only an explicit operator continuation writes `prompt_approved`. Declining,
 deferring, giving no response, or running under `OAT_AUTONOMOUS=1` writes
 `blocked`, never anything that reads as approval. A rerun of the same gate
 replaces the record.
+
+**Bookkeeping-only gate results.** When a blocking gate result's findings are
+all bookkeeping under the shared definition (`bookkeeping-findings.md`,
+vendored as `references/docs/bookkeeping-findings.md` by the skills that
+receive reviews), and `oat-project-review-receive` fixed them at receive in one
+commit, the gate is satisfied: write `allowed` / `passed`. No attempt is
+counted and the gate is not relaunched. `reviewed_head` stays the commit the
+gate reviewed, never the fix commit. The gate receipt keeps the raw verdict
+and counts: the `### Review Received` receipt's `**Findings:**` line and the
+gate's terminal line under `## Reviews and Gates` record the reported verdict
+and counts unchanged, with the note `bookkeeping-only fixes applied at
+receive`. A result with any finding that is not bookkeeping follows the rows
+above unchanged.
 
 ## Carriers
 
