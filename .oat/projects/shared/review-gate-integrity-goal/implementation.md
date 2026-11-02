@@ -342,6 +342,18 @@ Reviewer request `rgi-p02-rev-20261101-03` (`oat-reviewer-claude-opus-5-5-high`)
 
 **Outcome:** passed (per-phase review); the selected p02 phase gate follows.
 
+### Inline exception p02-ie1: retire the verifier by revert
+
+Recorded before editing, under the 2026-11-02 amendment. The remaining p02 work is a revert of `fcb556d4e`, `56bae738d` and `7cb72f013`: no new surface, no unresolved design, no consequential change, and one existing proof command (CLI type-check plus the CLI test suite). The root executes it inline as committing owner; the phase keeps its `**Base:**` and earlier records, and a fresh per-phase review covers the revert.
+
+### Task p02-t04: Revert the clerical-settlement verifier
+
+**Status:** in_progress
+**Executor:** inline:p02-ie1
+**Intent:** Revert the three verifier commits in one implementation commit so no verifier code, tests, help snapshot, CLI reference or README entry remains.
+**Files:** the paths `fcb556d4e`, `56bae738d` and `7cb72f013` touched.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli type-check && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli test`.
+
 ## Phase p10: Bookkeeping definition and the receive rule
 
 **Status:** pending
