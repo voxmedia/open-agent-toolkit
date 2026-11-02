@@ -10,7 +10,7 @@ labels:
   - lifecycle
 assignee: null
 created: 2026-11-02T14:07:17.505Z
-updated: 2026-11-02T14:07:17.505Z
+updated: 2026-11-02T15:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -21,7 +21,8 @@ oat-project-complete Step 3.6 tells callers to invoke the oat-explainer-kit chec
 
 ## Acceptance Criteria
 
-- Following `oat-project-complete` Step 3.6 literally for a persisted skip with source `interactive`, `configured` or any other non-`failed_attempt` source runs the guard successfully (exit 0, `ok: true`).
+- Following `oat-project-complete` Step 3.6 literally for a persisted skip with source `interactive` or `capability_probe` runs the guard successfully (exit 0, `ok: true`).
+- The guard's skip-source allowlist is unchanged: a skip with source `configured` or any other unlisted source is still rejected, and its existing rejection tests remain.
 - A `skip/failed_attempt` decision still passes `--project-root` with its validated `--manifest` or `--failure` evidence, and the guard still rejects a failed-attempt skip that lacks that evidence.
 - Either the skill passes `--project-root` only for `failed_attempt`, or the guard accepts and ignores it for other skip sources; the skill text and guard behavior agree, and the choice is recorded in the change.
 - A contract test runs the documented invocation for an `interactive` skip and for a `failed_attempt` skip and fails against the current mismatch.
