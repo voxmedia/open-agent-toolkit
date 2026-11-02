@@ -439,6 +439,41 @@ The mark is documented in `oat-reviewer.md` Step 7 (advisory, inside the bold ti
 
 **Provider views:** `oat sync --scope project` regenerated 65 tracked reviewer views (`.codex/agents/oat-reviewer*.toml`, `.cursor/agents/oat-reviewer*.md`), each changed by exactly the two reviewer edits (17 insertions, 1 deletion per file). Sync also deleted the eight `gpt-6-1-terra` Codex views, rewrote `.codex/config.toml` and bumped `oatVersion` in `.oat/sync/manifest.json` from the machine's installed CLI; all three were restored with `git checkout --`, so the manifest has no p10 change (it carries no per-view content hashes).
 
+### Task p10-t03: Goal delivery-check probe for a bookkeeping-only receive fix
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p10-impl-20261102-01
+**Handle:** direct:rgi-p10-impl-20261102-01:p10-t03
+**Intent:** Show through the production scope builder that a section 12.8-permitted bookkeeping fix commit after a goal integrated review leaves `oat project delivery check` at `status: ok`, while a fix that rewrites a recorded journal line reports stale; keep it as an automated test and repeat it with the branch build.
+**Files:** `packages/cli/src/commands/project/delivery/check.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery/check.test.ts`
+**Commit:** 3dc1a862744267689621dad2145a9ffff893ec6d
+**Proof:** delivery suites 125/125 (3 files) exit 0; CLI lint exit 0.
+
+**Automated probe** (kept in `check.test.ts`, production scope builder over a real scratch Git repository from the existing `goal-repo` harness): after the milestone's integrated review is received (row `passed`, `delivering`, `no_gate` exit carrier), one commit applies three bookkeeping fixes: a Progress Overview counter (`0/1` to `1/1`), an appended correcting journal line, and a Reviews row date cell. `delivery check --subject m01` stays `status: ok`, review fresh, exit fresh. The control commit rewrites the recorded line `Build recorded.` instead of appending; the check reports `undeliverable` with `recorded journal line "Build recorded." was removed or rewritten` naming the fix commit. A registered delivery (`d01`) was tried first and dropped: it is judged at its observed member heads, so a later fix commit never enters its range and the control cannot fail there; the milestone is the subject the receive transition checks.
+
+**Negative control:** the evaluator's recorded-line guard (`judgeJournalChange`) temporarily neutralized; the stale control failed (exit 1) while the permitted case still passed. Restored with no diff.
+
+**Branch-build probe:** `pnpm --filter @open-agent-toolkit/cli build` (exit 0), then a scratch script (outside the repository) built the same two scenarios with the harness and ran `node packages/cli/dist/index.js --json project delivery check --project .oat/projects/shared/goal --subject m01` in each scratch repository. Permitted fix: exit 0, `status: ok`, review `fresh: true`, `reason: null`, exit carrier fresh, `deliverable: true`. Rewrite control: exit 1, `status: undeliverable`, review `fresh: false`, reason `substantive-change: <fix sha> makes a substantive change to .oat/projects/shared/goal/implementation.md: recorded journal line "Build recorded." was removed or rewritten`, `deliverable: false`.
+
+### Walkthrough: a recorded bookkeeping-only review rerun under the amended receive text
+
+**Incident.** `claude-effort-levels` (quick mode, archived), revision phase p-rev1. The narrow re-review artifact `p-rev1-review-2026-09-23T010920Z.md` (manual invocation, reviewed head `bf1eb0cc943d302d76ad6f87c08d4901f95b9af2`; committed in `6df4aae89`, so `git show 6df4aae89:.oat/projects/shared/claude-effort-levels/reviews/p-rev1-review-2026-09-23T010920Z.md` reproduces it) reported 0/0/1/0. Its only finding, Medium "The received review remains actionable and completion counts disagree" (`plan.md:398`), asked to archive the already-received prior artifact `p-rev1-review-2026-09-23T005530Z.md`, record that prior event's `fixes_completed` row at its reviewed head `599f066b1`, and align the plan and state completion summaries from 17/20 to 20/20. History then spent one reviewer run: fixes in `6df4aae89` and `128e3a570`, followed by a fresh reviewer dispatch whose artifact `p-rev1-review-2026-09-23T011458Z.md` (at `128e3a570`) found nothing and was recorded `passed`. That receive would have counted three p-rev1 cycles in Step 8 (`005530Z`, `010920Z`, `011458Z`, none gate-originated), the cap.
+
+**Under the amended text:**
+
+1. Steps 1 and 1.5: the active artifact resolves; no retired tiers. Step 2: counts 0/0/1/0, so the clean-pass path is not entered.
+2. Step 2.6, bookkeeping-only mode, checked before every other mode: the receiver classifies M1 against `references/docs/bookkeeping-findings.md`. Moving the prior artifact to `reviews/archived/` and repointing its two `reviews/...` citations is "an archived-artifact path reference". 17/20 to 20/20 in `plan.md` and `state.md` is "a derived counter". The prior event's ledger row is the closest call: the row was missing because the earlier receive (`8a958fcb7`) skipped its Reviews write, and adding it records an event that the journal and that commit already describe, with the Reviewed Head copied from that artifact's own `oat_review_head_sha`. Nothing new is reviewed, no existing row's `Reviewed Head` changes, and the status written is `fixes_completed`, so it is a stale status label for an existing event, not "a missing review" or a `passed` promotion. Limits: the fix touches only the project's tracking files (limit 1); quick mode, so the section 12.8 limit does not apply (limit 2); no Status other than the received event's becomes `passed` (limit 3). Every finding is bookkeeping, so the branch applies.
+3. Branch step 1: the whole fix lands in one commit (what history split across `6df4aae89` and `128e3a570`).
+4. Branch step 2: the receipt lists `M1 (Medium): … → fixed at receive (bookkeeping): archived 005530Z and repointed its citations; recorded its fixes_completed row at 599f066b1; aligned completion to 20/20` and the Outcome line `passed — bookkeeping-only fixes applied at receive (reviews/archived/p-rev1-review-2026-09-23T010920Z.md)`.
+5. Branch step 3 and Step 6: the `010920Z` event is written `passed` (the single exception), with its Date, archived Artifact and `bf1eb0cc9` Reviewed Head.
+6. Branch step 4: no fix task, no execution record, and no reviewer dispatch, so the `011458Z` run never happens; Step 8 is skipped for this result.
+7. Branch steps 5 and 6: not gate-originated and not a goal integrated review, so neither applies.
+8. Branch step 7: archive and commit (Steps 7.5 and 7.6); Step 10 skips the fix-task menu and routes to the normal next action (that project's fresh final review and exit gate); Step 11 reports `Review cycle: not counted (bookkeeping-only fixes applied at receive)`.
+9. Any later p-rev1 receive: Step 8's count skips `010920Z` through its receipt Outcome line, so it starts from 1 cycle (`005530Z`), not 3.
+
+Outcome: the same tracking state is reached with one reviewer dispatch fewer and no review cycle counted.
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
