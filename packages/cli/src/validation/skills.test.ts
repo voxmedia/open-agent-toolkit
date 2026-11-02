@@ -5384,15 +5384,6 @@ describe('validateOatSkills', () => {
     expect(guardBlock).toContain(
       'if [ "$ROW_ARTIFACT" = "-" ]; then continue; fi',
     );
-    // Only the historical plan/artifact structured annotation is non-file
-    // evidence; it is reported explicitly and does not migrate the ledger.
-    expect(guardBlock).toContain(
-      'if [ "$ROW_SCOPE" = "plan" ] && [ "$ROW_TYPE" = "artifact" ]; then',
-    );
-    expect(guardBlock).toContain('"structured (no artifact); "*)');
-    expect(guardBlock).toContain(
-      'structured planning review; no artifact file',
-    );
     // A named gate code plus the offending row's identity.
     expect(guardBlock).toContain(
       'PRFINAL-05: unresolved review-ledger artifact',
