@@ -869,7 +869,9 @@ Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm 
 **Commit:** 395b90677db9487e42f01d31b045f4819f3d85ae
 **Proof:** contract suites 1170/1170; negative controls for the two new pins each failed (exit 1) and were restored; `pnpm check`, `check:skill-bumps`, docs-index freshness, `pnpm lint`, `pnpm format` exit 0.
 
-Late-fix rule: the m01 exit gate (run `d434e7e7`, M1) found the p11 `**Head:**` still at `8a97fe85d`, which left this review-fix commit outside every anchored m01 range. No later phase has a `**Base:**`, so the head is advanced to `395b90677db9487e42f01d31b045f4819f3d85ae`, base unchanged. The head advanced again to `efba7a82519fbd12beae8a42c302220586b140b2`, the receive commit that closes the exit-gate review fixes, so that the gate artifacts committed by the gate CLI after `395b90677` fall inside the reviewed range (see `## Reviews and Gates`).
+Late-fix rule: the m01 exit gate (run `d434e7e7`, M1) found the p11 `**Head:**` still at `8a97fe85d`, which left this review-fix commit outside every anchored m01 range. No later phase has a `**Base:**`, so the head is advanced to `395b90677db9487e42f01d31b045f4819f3d85ae`, base unchanged.
+
+Late-fix rule (second advance): The head advanced again to `efba7a82519fbd12beae8a42c302220586b140b2`, the receive commit that closes the exit-gate review fixes, so that the gate artifacts committed by the gate CLI after `395b90677` fall inside the reviewed range (see `## Reviews and Gates`).
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
