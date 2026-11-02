@@ -380,6 +380,48 @@ Reviewer request `rgi-p02-rev-20261102-04` (`oat-reviewer-claude-claude-opus-5-5
 
 Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply, because the shared definition, the receive branch, the gate write rule, the reviewer marker and their contract pins share the definition text and the contract test files, so slices fail the independence test. Rung 4 does not apply, because the phase adds a new shared rule across several skills. `origin/main` was merged at the phase base (#391, #394, #396, #397, #398, #399).
 
+### Task p10-t01: Shared bookkeeping definition, receive branch and gate write rule
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p10-impl-20261102-01
+**Handle:** direct:rgi-p10-impl-20261102-01:p10-t01
+**Intent:** Write the Outcome 2 definition once in a shared doc, add the all-bookkeeping branch to `oat-project-review-receive` (single `passed` exception, no re-review, no cycle count, goal clean-receive delivery check), add the bookkeeping-only gate write rule to the gate approval record, update the REVIEWRECEIVE autonomy rows, and pin all of it with contract tests.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `.agents/skills/oat-project-review-receive/SKILL.md`, `.agents/skills/oat-project-review-receive/references/docs/bookkeeping-findings.md` (link), `.agents/docs/gate-approval-record.md`, `.agents/docs/autonomy-contract.md`, version bumps of the skills that vendor the changed shared docs, `packages/cli/scripts/bundle-inputs.mjs`, contract tests under `packages/cli/src/commands/init/tools/shared/` and `packages/cli/src/validation/`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 7f41ac534eeef510a0f9bb01d62beb1863988fd2
+**Recovery commit:** c7b22894fa944b3344c4ca6a3ea9746993b5f866 (event `rgi-p10-rec-01`, attempt 1 of 10)
+**Proof:** isolated-HOME contract suites 1112/1112 (27 files) exit 0 before the commit and again at the recovery head; `pnpm run check:skill-bumps` exit 0 at the recovery head (12 changed skill and agent role bumps); oxfmt check exit 0 on every touched file.
+
+**Known Unknowns settled:**
+
+- Shared-definition location: a new shared doc, `.agents/docs/bookkeeping-findings.md`, vendored as `references/docs/bookkeeping-findings.md` by link, exactly as `gate-approval-record.md` and `complexity-review-fallback.md` are. Reason: each consuming skill reads it locally at installed scope (the bundle copies skills with `cp -RL`), with no cross-skill load that `named-skill-load-contract` would have to classify, and p11 only adds one link per skill it changes. The cost is one `linkedFiles` entry in `packages/cli/scripts/bundle-inputs.mjs`, one live-inventory count in `named-skill-load-contract.test.ts` (8 to 9), and one `* -> NG` coverage row in the autonomy contract. p10 links it into `oat-project-review-receive` only.
+- Gate receipts and the raw verdict: today's receipts already keep the raw counts (the `### Review Received` receipt's `**Findings:**` line and the gate's terminal line under `## Reviews and Gates`), but nothing stopped a writer from recording only the carrier's `allowed`/`passed`. The new write rule in `gate-approval-record.md` adds one requirement: both lines keep the reported verdict and counts unchanged, with the note `bookkeeping-only fixes applied at receive`, and `reviewed_head` stays the gate's reviewed commit.
+
+**Shape of the change:** the receive branch is one block at the top of Step 2.6, checked before every other mode, fix-task creation and gate failure policy; the single `passed` exception sits directly after the pinned "use `fixes_completed` until a re-review passes" note; status semantics, the fix-task route, the goal clean-receive transition, Step 8, Steps 10 and 10A and the Step 11 summary each gain one sentence beside their existing text. Step 8's count skips an artifact whose receipt Outcome reads `passed — bookkeeping-only fixes applied at receive (reviews/archived/<file>)`. Changing the two shared docs required one version bump for each skill that vendors them (brief, document, goal, implement, lite, next, pr-final, progress, quick-start, and `oat-project-autonomous` through its `references/gate-inventory.md` link), so p11 must not bump those again.
+
+**Negative controls** (each neutralization run against `bookkeeping-findings-contracts.test.ts`, then restored byte-identical; restored suite 23/23):
+
+- Single `passed` exception line removed from review-receive: 1 failed (exit 1).
+- Step 8 bookkeeping-only skip line removed: the executed cycle-count snippet returned 2 instead of 1, 1 failed (exit 1).
+- Gate rule "No attempt is counted and the gate is not relaunched." replaced with "An attempt is counted.": 1 failed (exit 1).
+- Limit 3 removed from the shared definition: 1 failed (exit 1).
+- Bookkeeping-only block moved below the other handling modes: the branch slice no longer precedes the artifact mode and the suite refused to load (exit 1).
+
+### Recovery Event rgi-p10-rec-01
+
+- Phase/task: p10 / p10-t01
+- Original request: rgi-p10-impl-20261102-01
+- Original commit: 7f41ac534eeef510a0f9bb01d62beb1863988fd2
+- Defect class: composition
+- Discovered by: `pnpm run check:skill-bumps`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: c7b22894fa944b3344c4ca6a3ea9746993b5f866
+- Verification: pre-commit, the bump validator in a throwaway worktree commit and the contract suites (1112/1112) passed; at the committed head, `pnpm run check:skill-bumps` (exit 0) and the contract suites (1112/1112, exit 0) passed.
+- Reason: `oat-project-autonomous` vendors `autonomy-contract.md` through `references/gate-inventory.md`, so the REVIEWRECEIVE row edits required its version bump too. A one-line version bump, mechanically derived and in phase, with no behavior change. The validator diffs committed history only, which is why the pre-commit prevention run missed it.
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
