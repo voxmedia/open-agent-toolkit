@@ -405,6 +405,20 @@ Reviewer request `rgi-p02-rev-20261101-03` (`oat-reviewer-claude-opus-5-5-high`)
 
 - Operator routing (p02 phase gate, 2026-11-01): the operator's orchestrator directed this gate attempt to `--target cursor-opus-5-5-high`, because the configured selection `claude-opus-5-5-high` was unavailable (run `c9c091b6-d051-428b-a998-a95b68b37d78`, `review_failed`, no attempt consumed). Cursor-hosted Claude is billed through Cursor, and the target stays cross-family from the `gpt-5.6-sol-high` producer. This is one-off routing for this gate only, not a configuration change. If it also fails for availability, fall back to waiting for the 11am CT reset and rerunning unchanged.
 
+### Review Received: plan (m01 amendment)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-11-02T155547Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+- No findings. The `oat-project-goal` lifecycle gate (run `803a6f3e-a36a-4bd8-a4d8-fc2047ee60aa`, target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family from the declared `claude-opus-5-5` producer) reviewed the amended brief bundle at `b2a38a09005e35818eccfa4191ad97444316e020` for m01 (`p01, p02, p10, p11`).
+
+**Outcome:** passed
+
+- Gate `oat-project-goal` (plan, m01 amendment): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-02.
+- The 2026-11-02 amendment withdrew the pending p02 phase gate (run `c9c091b6-d051-428b-a998-a95b68b37d78`); it needs no rerun, and the optional phase gates are dropped.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
