@@ -624,6 +624,39 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the implement, planning-skill and docs slices all edit `autonomy-contract.md`, the shared contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase repeats one shared branch across many skills plus a release. `origin/main` has not moved since the p10 base merge (checked at phase start).
 
+### Task p11-t01: Bookkeeping-only branch on implement's review and gate paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p11-impl-20261102-01
+**Handle:** direct:rgi-p11-impl-20261102-01:p11-t01
+**Intent:** Add the all-bookkeeping branch, naming the shared definition, beside today's sentences in implement's per-phase review loop, optional phase gate and Step 7b row transitions (`references/phase-execution.md`), and in the final review, the implement exit gate receive and policy rules and the goal milestone exit gate (`references/completion-and-closeout.md`); vendor the shared definition into implement; pin each branch with contract tests.
+**Files:** `.agents/skills/oat-project-implement/references/phase-execution.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `.agents/skills/oat-project-implement/references/docs/bookkeeping-findings.md` (link), `.agents/docs/autonomy-contract.md` (coverage row), `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `packages/cli/src/validation/named-skill-load-contract.test.ts`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 249a26cb3cdd1d236d891f7fbd3a1d50fbf8d2e6
+**Proof:** isolated-HOME contract suites 1128/1128 (27 files) exit 0; CLI type-check exit 0; oxlint on the test file 0 findings; `pnpm run check:skill-bumps` exit 0 after the commit (12 changed skill and agent role bumps; implement keeps its p10 bump 2.3.26).
+
+Each branch sits beside today's text, which stays as it was:
+
+- **Per-phase loop.** A "Bookkeeping-only round (checked first)" paragraph opens the Bounded Fix and Re-Review Loop. The root fixes in one tracking-file commit and receives through review-receive Step 2.6. No fix child, no reviewer round, no retry round. In brief modes the fix commit does not advance `**Head:**`.
+- **Optional phase gate.** A `blocked` bullet for an all-bookkeeping result follows today's `blocked` bullet and is checked before it: the gate has passed, no retry round, no relaunch, raw verdict and counts kept, no carrier.
+- **Step 7b.** A settled round or gate counts as a pass for the phase row transitions.
+- **Final review.** Both routes, autonomous and interactive, continue to Step 14 on a bookkeeping-only result.
+- **Implement exit gate.** A Structured-outcomes bullet persists `allowed/passed`, leaves `attempts_completed` unchanged, keeps the reviewed basis and `envelope_status: blocked`, and admits the fix commit between `receive_pre_head` and the receive bookkeeping commit. A Step 5 paragraph keeps the result out of `onFailure`.
+- **Goal milestone exit carrier.** It records `allowed`/`passed` with no attempt and no relaunch, `reviewed_head` unchanged. When step 3 reads `exit` stale because of the fix commit, the result reverts to `blocked` and today's attempt flow.
+
+**Freshness, verified and relied on.** The effective-delta v2 exclusion set (`completion-and-closeout.md` Step 14) excludes `$PROJECT_PATH/state.md`, `.oat/projects` and `.oat/repo` by literal pathspec. A new executed test reads those three pathspecs from the doc and builds a scratch repository. After a tracking-only fix (Reviews cell, journal line, `state.md` pointer) under `.oat/projects/`, `git diff --raw -z --no-renames --no-abbrev` gives byte-identical output, while a later code change does not.
+
+**Negative controls** (each neutralized in the working tree, the suite run, then restored byte-identical; 1 of 38 failed each time):
+
+1. Phase loop: "this loop does not run" changed to "this loop runs".
+2. Phase gate: "consume no gate retry round" changed to "consume one gate retry round".
+3. Step 7b: the counts-as-a-pass clause cut.
+4. Exit gate: "leaves `attempts_completed` unchanged" changed to "increments `attempts_completed`".
+5. Exit gate policy: "never reaches these policies" changed to "reaches these policies".
+6. Final review (autonomous): "no further reviewer dispatch" changed to "after a re-review".
+7. Milestone carrier: "uses no attempt and is not relaunched" changed to "uses an attempt and is relaunched".
+8. v2 exclusion: the doc's `.oat/projects` pathspec renamed. Separately, the test's extracted `.oat/projects` exclusion was dropped before hashing, so the executed hash comparison failed.
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
