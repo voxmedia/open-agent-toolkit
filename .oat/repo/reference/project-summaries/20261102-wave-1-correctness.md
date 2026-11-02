@@ -2,12 +2,12 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-01
+oat_last_updated: 2026-11-02
 oat_generated: true
-oat_summary_last_task: p05-t06
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
-oat_summary_learnings_fingerprint: f594cdc881fd019a0d9939bdbed32a46d812d4dd7df9a4c2915ee6f159e106a0
+oat_summary_last_task: prev1-t03
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
+oat_summary_learnings_fingerprint: 29284768efcf6857a1db1e847f06363f67e3fab521ca67aef81c09de8427a3ec
 ---
 
 # Summary: wave-1-correctness
@@ -70,12 +70,13 @@ Quick mode produced no design.md. These deviations from the plan were accepted, 
 
 ### Agent-instruction updates
 
-- When a change touches exact-path commits, probe it against the repository's real lint-staged hook with an observable log, not a scratch hook. Rationale: lint-staged failed its re-stage while exiting 0, and only the real hook showed it. Source: oat-project:wave-1-correctness#2026-11-01-worked-well-real-hook-probe-caught-a-lint-staged-re-stage-failure-a-scratch-hook-would-have-hidden-1
-- Have child sessions invoke the branch CLI by path instead of defining shell functions. In a long-lived shared shell, check `type oat` before relying on its output. Rationale: a leftover function silently turned later `oat` calls into no-ops. This was environment-limited and observed once. Source: oat-project:wave-1-correctness#2026-11-01-friction-a-child-session-left-an-oat-shell-function-that-silently-no-opped-later-oat-calls-1
+- When a change touches exact-path commits, probe it against the repository's real lint-staged hook with an observable log, not a scratch hook. Rationale: lint-staged failed its re-stage while exiting 0, and only the real hook showed it. Source: oat-archive:20261102-wave-1-correctness#2026-11-01-worked-well-real-hook-probe-caught-a-lint-staged-re-stage-failure-a-scratch-hook-would-have-hidden-1
+- Have child sessions invoke the branch CLI by path instead of defining shell functions. In a long-lived shared shell, check `type oat` before relying on its output. Rationale: a leftover function silently turned later `oat` calls into no-ops. This was environment-limited and observed once. Source: oat-archive:20261102-wave-1-correctness#2026-11-01-friction-a-child-session-left-an-oat-shell-function-that-silently-no-opped-later-oat-calls-1
+- When a change widens which files a destructive cleanup may delete, require probes for a symlinked provider directory and for a config table whose `config_file` no longer names the stale file. Rationale: an automated PR review reproduced two Critical defects of exactly those shapes after the final review and two exit-gate runs had passed. Source: oat-archive:20261102-wave-1-correctness#2026-11-01-bug-post-pr-bot-review-found-two-critical-codex-stale-cleanup-defects-every-internal-review-missed-1
 
 ### Workflow issues
 
-- When a host may restart a dispatched child, the phase scope should say whether stale in-boundary changes left by the same request id may be discarded. The root's backup step should copy untracked files with a loop rather than `xargs`. Rationale: three implementers stopped BLOCKED on their own interrupted attempts, costing a round trip each, and one partial test file was not backed up. Source: oat-project:wave-1-correctness#2026-11-01-friction-parallel-phase-implementers-stopped-blocked-on-their-own-interrupted-first-attempts-1
+- When a host may restart a dispatched child, the phase scope should say whether stale in-boundary changes left by the same request id may be discarded. The root's backup step should copy untracked files with a loop rather than `xargs`. Rationale: three implementers stopped BLOCKED on their own interrupted attempts, costing a round trip each, and one partial test file was not backed up. Source: oat-archive:20261102-wave-1-correctness#2026-11-01-friction-parallel-phase-implementers-stopped-blocked-on-their-own-interrupted-first-attempts-1
 
 ## Revision (p-rev1, after PR review)
 
@@ -102,11 +103,13 @@ Each fix has a regression test proven to fail on the pre-fix source, plus a CLI-
 
 ## Workflow Observations
 
-- **2026-11-01 · friction · Parallel phase implementers stopped BLOCKED on their own interrupted first attempts** (project, gotcha) `oat-project:wave-1-correctness#2026-11-01-friction-parallel-phase-implementers-stopped-blocked-on-their-own-interrupted-first-attempts-1`
+- **2026-11-01 · bug · Post-PR bot review found two critical Codex stale-cleanup defects every internal review missed** (project, gotcha) `oat-archive:20261102-wave-1-correctness#2026-11-01-bug-post-pr-bot-review-found-two-critical-codex-stale-cleanup-defects-every-internal-review-missed-1`
+  autonomous-wave1-20261031-04 Observation: after the final review and two cross-family exit-gate runs passed, warp-factories requested changes on PR #395 with two reproduced critical defects in collectStaleManagedRoles: a re-pointed user [agents.*] table is deleted via the directory scan, and rm follows a symlinked .codex/agents outside the sync scope.
+- **2026-11-01 · friction · Parallel phase implementers stopped BLOCKED on their own interrupted first attempts** (project, gotcha) `oat-archive:20261102-wave-1-correctness#2026-11-01-friction-parallel-phase-implementers-stopped-blocked-on-their-own-interrupted-first-attempts-1`
   autonomous-wave1-20261031-01 Observation: three of four concurrently dispatched Cursor phase implementers found partial uncommitted work for their own first task in their worktree (written minutes earlier, no live writer) and stopped BLOCKED at the clean-tree preflight.
-- **2026-11-01 · friction · A child session left an oat shell function that silently no-opped later oat calls** (project, environment-limited) `oat-project:wave-1-correctness#2026-11-01-friction-a-child-session-left-an-oat-shell-function-that-silently-no-opped-later-oat-calls-1`
+- **2026-11-01 · friction · A child session left an oat shell function that silently no-opped later oat calls** (project, environment-limited) `oat-archive:20261102-wave-1-correctness#2026-11-01-friction-a-child-session-left-an-oat-shell-function-that-silently-no-opped-later-oat-calls-1`
   autonomous-wave1-20261031-03 Observation: after the p05 implementer ran, the root shell had a function oat() { node "$CLI" "$@" } with CLI unset, so oat calls printed nothing and exited 0 (one project-log append and two validations were silently skipped).
-- **2026-11-01 · worked-well · Real-hook probe caught a lint-staged re-stage failure a scratch hook would have hidden** (project, efficiency) `oat-project:wave-1-correctness#2026-11-01-worked-well-real-hook-probe-caught-a-lint-staged-re-stage-failure-a-scratch-hook-would-have-hidden-1`
+- **2026-11-01 · worked-well · Real-hook probe caught a lint-staged re-stage failure a scratch hook would have hidden** (project, efficiency) `oat-archive:20261102-wave-1-correctness#2026-11-01-worked-well-real-hook-probe-caught-a-lint-staged-re-stage-failure-a-scratch-hook-would-have-hidden-1`
   autonomous-wave1-20261031-02 Observation: the plan review required probing commit-paths against this repository's real lint-staged hook with an observable log; it showed lint-staged 15.5.2 failing its re-stage on tracked files under an ignored directory while exiting 0.
 
 Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.
