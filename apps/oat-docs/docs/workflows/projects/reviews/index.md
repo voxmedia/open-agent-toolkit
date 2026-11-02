@@ -318,20 +318,22 @@ advisory and changes no count, severity or verdict.
 
 **Where it applies.**
 
-| Path                                                                                      | What the settlement skips                                                                            |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Project review receive, code and artifact (`oat-project-review-receive`)                  | Fix tasks, the re-review and the three-cycle count                                                   |
-| Per-phase review fix loop (`oat-project-implement`)                                       | The fix child, the new review round and a retry round                                                |
-| Optional phase review gate (`oat-project-implement`)                                      | The bounded fix loop, re-running review and gate, and a gate retry round                             |
-| Final review (`oat-project-implement`)                                                    | Fix tasks, the re-review and a review cycle                                                          |
-| Implementation exit gate (`oat-project-implement`)                                        | `onFailure`, a counted attempt and the rerun; the carrier records `allowed/passed`                   |
-| Goal milestone exit gate and integrated review                                            | The rerun; the `exit` carrier records `allowed/passed` while `oat project delivery check` reads `ok` |
-| Plan artifact-review loop (plan, quick-start, lite, import-plan, brief, goal)             | A new review attempt and a retry                                                                     |
-| Lifecycle gates of discover, design, plan, quick-start, import-plan, brief, goal and lite | `onFailure`, a counted attempt and the rerun                                                         |
+| Path                                                                                      | What the settlement skips                                                                                                                                                                       |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project review receive, code and artifact (`oat-project-review-receive`)                  | Fix tasks, the re-review and the three-cycle count                                                                                                                                              |
+| Per-phase review fix loop (`oat-project-implement`)                                       | The fix child, the new review round and a retry round                                                                                                                                           |
+| Optional phase review gate (`oat-project-implement`)                                      | The bounded fix loop, re-running review and gate, and a gate retry round                                                                                                                        |
+| Final review (`oat-project-implement`)                                                    | Fix tasks, the re-review and a review cycle                                                                                                                                                     |
+| Implementation exit gate (`oat-project-implement`)                                        | `onFailure`, a counted attempt and the rerun; the carrier records `allowed/passed`                                                                                                              |
+| Goal milestone exit gate and integrated review                                            | The rerun; the `exit` carrier records `allowed/passed` while `oat project delivery check` reads `exit` fresh, and the integrated review takes the clean-receive transition only on `status: ok` |
+| Plan artifact-review loop (plan, quick-start, lite, import-plan, brief, goal)             | A new review attempt and a retry                                                                                                                                                                |
+| Lifecycle gates of discover, design, plan, quick-start, import-plan, brief, goal and lite | `onFailure`, a counted attempt and the rerun                                                                                                                                                    |
 
 **Freshness.** A tracking-only fix commit leaves the implementation exit
-gate's effective-delta fingerprint unchanged, because `effective-delta-v2`
-excludes `.oat/projects/`. On goal paths `oat project delivery check` judges
+gate's effective-delta fingerprint unchanged for a project under the default
+`.oat/projects/` root, because `effective-delta-v2` excludes `.oat/projects/`.
+A project whose `projects.root` lies outside it, or a legacy v1 generation,
+goes stale and follows the stale-generation rule. On goal paths `oat project delivery check` judges
 the fix under the bookkeeping-successor rule; if it reads stale, the result
 follows the normal flow.
 

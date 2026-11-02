@@ -157,6 +157,9 @@ describe('shared bookkeeping definition', () => {
       'A Reviews Status cell is set to `passed` only by the bookkeeping-only receive branch for the review being received.',
     );
     expect(limits).toContain(
+      'A structured `plan` review never passes through review-receive: for it, step 6 of the Auto Artifact-Review Loop in `oat-project-plan-writing` acts as that receive branch.',
+    );
+    expect(limits).toContain(
       'A finding whose fix would break any of them is not bookkeeping.',
     );
     // Exactly three numbered limits.
@@ -689,6 +692,9 @@ describe('implement final review, exit gate and milestone exit gate (p11)', () =
     );
     expect(bullet).toContain(
       'Under `effective-delta-v2` it changes only paths inside the exclusion set (`.oat/projects`), so the allowed generation stays fresh.',
+    );
+    expect(bullet).toContain(
+      'That holds for a project under the default `.oat/projects/` root; a project whose `projects.root` lies outside it, or a legacy v1 generation, goes stale and follows the stale-generation rule.',
     );
     // The attempt rule it sits beside is unchanged.
     expect(step14).toContain(

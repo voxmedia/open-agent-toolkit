@@ -66,7 +66,10 @@ them is not bookkeeping.
    correct another existing event's stale non-`passed` Status, Date or
    Artifact cell, monotonically (never moving a status backward), but never
    that event's `Reviewed Head`. A missing row is not a stale cell: adding a
-   row for another event is never bookkeeping.
+   row for another event is never bookkeeping. A structured `plan` review
+   never passes through review-receive: for it, step 6 of the Auto
+   Artifact-Review Loop in `oat-project-plan-writing` acts as that receive
+   branch.
 
 ## Who classifies
 

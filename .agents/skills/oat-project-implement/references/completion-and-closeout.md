@@ -699,7 +699,9 @@ disposition.
   bookkeeping commit; reconciliation accepts it only when its diff stays inside
   the project's tracking files. Under `effective-delta-v2` it changes only paths
   inside the exclusion set (`.oat/projects`), so the allowed generation stays
-  fresh.
+  fresh. That holds for a project under the default `.oat/projects/` root; a
+  project whose `projects.root` lies outside it, or a legacy v1 generation,
+  goes stale and follows the stale-generation rule.
 - `block` outcomes consume remediation attempts only after a valid configured
   gate result and its eligible receive disposition are durably processed.
   Increment `attempts_completed` before remediation/rerun. Below
