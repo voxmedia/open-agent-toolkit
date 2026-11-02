@@ -8,10 +8,14 @@ import {
 } from './catalog';
 
 describe('supported Codex role catalogue', () => {
-  it('contains the exact immutable 33-target product set', () => {
+  it('contains the exact immutable 37-target product set', () => {
     expect(SUPPORTED_CODEX_ROLE_TARGETS).toEqual([
       ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
         model: 'gpt-6.1-sol',
+        effort,
+      })),
+      ...['low', 'medium', 'high', 'xhigh'].map((effort) => ({
+        model: 'gpt-6.1-terra',
         effort,
       })),
       ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
@@ -46,12 +50,12 @@ describe('supported Codex role catalogue', () => {
     ]);
   });
 
-  it('expands deterministically to exactly 66 unique pinned variants', () => {
+  it('expands deterministically to exactly 74 unique pinned variants', () => {
     const catalogue = expandSupportedCodexRoleCatalogue();
     const roleNames = catalogue.map((entry) => entry.roleName);
 
-    expect(catalogue).toHaveLength(66);
-    expect(new Set(roleNames)).toHaveLength(66);
+    expect(catalogue).toHaveLength(74);
+    expect(new Set(roleNames)).toHaveLength(74);
     expect(roleNames).toEqual([...roleNames].sort());
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-astra-low');
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-astra-medium');
@@ -67,6 +71,8 @@ describe('supported Codex role catalogue', () => {
     expect(roleNames).toContain('oat-phase-implementer-gpt-5-6-sol-max');
     expect(roleNames).toContain('oat-reviewer-gpt-5-6-sol-max');
     expect(roleNames).not.toContain('oat-reviewer-gpt-6-sol-ultra');
+    expect(roleNames).toContain('oat-phase-implementer-gpt-6-1-terra-low');
+    expect(roleNames).toContain('oat-reviewer-gpt-6-1-terra-xhigh');
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-1-sol-max');
     expect(roleNames).toContain('oat-reviewer-gpt-6-1-sol-xhigh');
     expect(roleNames).not.toContain('oat-reviewer-gpt-6-1-sol-ultra');
@@ -103,6 +109,12 @@ describe('supported Codex role catalogue', () => {
     ).toBe(true);
     expect(
       isSupportedCodexRoleTarget({ model: 'gpt-6-luna', effort: 'ultra' }),
+    ).toBe(false);
+    expect(
+      isSupportedCodexRoleTarget({ model: 'gpt-6.1-terra', effort: 'xhigh' }),
+    ).toBe(true);
+    expect(
+      isSupportedCodexRoleTarget({ model: 'gpt-6.1-terra', effort: 'max' }),
     ).toBe(false);
     expect(
       isSupportedCodexRoleTarget({ model: 'gpt-5.6-terra', effort: 'max' }),

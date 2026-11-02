@@ -10,9 +10,10 @@ labels:
   - sync
   - manifest
   - safety
+  - deferred
 assignee: null
 created: 2026-07-24T16:10:37.662Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-01T16:05:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -26,6 +27,8 @@ all inherited entries without creating child symlinks or allowing update,
 removal, or provider-disable operations to mutate canonical content through the
 directory alias. When the provider collection has unmanaged divergence or the
 alias cannot be proven safe, retain or fall back to ordinary per-entry sync.
+
+**Deferred (2026-11-01, operator):** Take up only when Node, or an approved native dependency, exposes an identity-bound parent-relative symlink primitive; pair with BL-260903-close-manual-only-agents-md.
 
 ## Status Note (2026-09-03)
 

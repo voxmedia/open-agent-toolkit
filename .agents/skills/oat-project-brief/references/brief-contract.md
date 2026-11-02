@@ -640,8 +640,18 @@ changes only permitted bookkeeping:
 
 A substantive change followed by its revert is not a bookkeeping successor.
 Missing Git objects, failed inspection, unknown paths or disallowed edits fail
-closed. A member base change (`observed_base` differs from `base`) invalidates
-delivery evidence independently. Historical deliveries are checked against
+closed. A member base change (`observed_base` differs from the reviewed base in
+`integrated_review.bound_revisions`, falling back to the registered `base`)
+invalidates delivery evidence independently. Recovery requires a new review
+of the actual observed member bases and heads, recorded under a new timestamped
+artifact belonging to that delivery. Bind that review to those observed
+revisions; retain the original registered `members[].base` and first endpoint
+attainment. Reusing the old artifact or a sibling delivery's artifact cannot
+authorize rebinding. Changed-base recovery also verifies the committed
+transition introducing the current review binding, including through merge
+parents, independently of the historical member-head range. Commit the new
+review binding before checking it; uncommitted or uninspectable bindings fail
+closed. Historical deliveries are checked against
 their own observed member revisions, never the branch's latest HEAD. Unequal
 heads alone never invalidate evidence. A delivery's persisted `exit_gate`,
 its `integrated_review` identity (`artifact`, `scope`, `bound_revisions`) and

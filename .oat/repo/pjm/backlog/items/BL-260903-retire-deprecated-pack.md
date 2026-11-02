@@ -10,9 +10,10 @@ labels:
   - evidence
   - diagnostics
   - residue
+  - deferred
 assignee: null
 created: 2026-09-03T00:55:58.261Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-10-31T22:35:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -32,6 +33,8 @@ Test coverage gaps: no declared-but-absent to `User scope` regression on the evi
 Docs never mention `realizedPlacement` or the intent-versus-installation distinction for the picker. Separately, BL-260829's own link to BL-260827-correct-scope-and-adoption is broken: it points at `items/` when the file is in `archived/`.
 
 Low priority. Reopen only if these surfaces cause real confusion in practice.
+
+**Deferred (2026-10-31, operator):** Reopen only on real confusion.
 
 ## Acceptance Criteria
 

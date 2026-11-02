@@ -12,9 +12,10 @@ labels:
   - v2
   - needs-discussion
   - legacy-promoted
+  - deferred
 assignee: null
 created: 2026-08-30T22:33:07.319Z
-updated: 2026-08-30T22:33:07.319Z
+updated: 2026-10-31T22:35:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -22,6 +23,8 @@ external_plans: []
 ## Description
 
 Promoted from legacy backlog record bl-e6fc. Re-evaluate same-runtime different-model or effort execution against the current target-family and provenance architecture before committing to brittle target detection.
+
+**Deferred (2026-10-31, operator):** Speculative against an accepted deferral.
 
 ## Acceptance Criteria
 

@@ -1206,6 +1206,376 @@ Recorded rewritten.
     });
   });
 
+  describe('merged delivery re-review after a base change', () => {
+    const RE_REVIEW = 'reviews/archived/2026-10-12-d01-code-review.md';
+
+    async function mergedWithChangedBase(target: GoalRepo) {
+      target.git(['checkout', '-q', '-b', 'advanced-base']);
+      await target.writeRepo('base.md', '# Independently advanced base\n');
+      const observedBase = target.commitAll('docs: advance the target branch');
+      target.git(['checkout', '-q', 'main']);
+      const chain = await bookkeepingChain(target, {
+        register: (reviewed) =>
+          `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+            reviewed,
+            base: target.baseSha,
+            observedBase,
+            observedHead: reviewed,
+            memberStatus: 'merged',
+            status: 'at_endpoint',
+            attainment: `    endpoint_attainment:\n      observed_at: '2026-10-11T12:00:00Z'\n      members: [{ url: 'https://github.com/owner/name/pull/7', head: '${reviewed}', base: '${observedBase}', status: merged }]\n`,
+          })}`,
+      });
+      const state = await getProjectState(target.projectPath);
+      return { ...chain, observedBase, original: state.deliveries![0]! };
+    }
+
+    it.each(['old', 'wrong', 'observed'] as const)(
+      'judges a new own review bound to the %s base without changing registration or attainment',
+      async (binding) => {
+        repo = await createGoalRepo();
+        const chain = await mergedWithChangedBase(repo);
+        const scope = await productionScope(repo, 'd01');
+        const original = await evaluateDeliveryReview(
+          git,
+          scope,
+          chain.original,
+          ['p01', 'p02'],
+        );
+        expect(original).toMatchObject({ fresh: false });
+        expect(original.reason).toContain('base-changed');
+
+        const reviewedBase =
+          binding === 'observed'
+            ? chain.observedBase
+            : binding === 'old'
+              ? repo.baseSha
+              : chain.headRecording;
+        await repo.write(
+          RE_REVIEW,
+          '# d01 base-change re-review\n\nNo findings.\n',
+        );
+        await repo.write(
+          'plan.md',
+          goalPlan({
+            reviews: [
+              reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+              reviewRow('passed', RE_REVIEW, chain.reviewed, 'd01'),
+            ].join('\n'),
+          }),
+        );
+        await repo.write(
+          'state.md',
+          (await repo.read('state.md'))
+            .replace(
+              `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+              `artifact: ${RE_REVIEW}`,
+            )
+            .replace(
+              `bound_revisions: [{ member: 0, base: '${repo.baseSha}',`,
+              `bound_revisions: [{ member: 0, base: '${reviewedBase}',`,
+            ),
+        );
+        const received = repo.commitAll(
+          'chore(oat): receive merged delivery re-review',
+        );
+        const recovered = (await getProjectState(repo.projectPath))
+          .deliveries![0]!;
+        expect(recovered.members[0]!.base).toBe(repo.baseSha);
+        expect(recovered.endpoint_attainment).toEqual(
+          chain.original.endpoint_attainment,
+        );
+        expect(recovered.status).toBe('at_endpoint');
+        await expect(
+          evaluateSuccessor(
+            git,
+            await productionScope(repo, 'd01'),
+            chain.reviewed,
+            received,
+          ),
+        ).resolves.toMatchObject({
+          fresh: true,
+          code: 'bookkeeping-successor',
+        });
+        const result = await evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          recovered,
+          ['p01', 'p02'],
+        );
+        expect(result.fresh).toBe(binding === 'observed');
+        if (binding === 'observed') {
+          expect(result.reason).toBeNull();
+        } else {
+          expect(result.reason).toContain('base-changed');
+        }
+      },
+    );
+
+    it.each(['old', 'sibling'] as const)(
+      'rejects a base-only rebind under an %s artifact after the merged code head',
+      async (artifact) => {
+        repo = await createGoalRepo();
+        const chain = await mergedWithChangedBase(repo);
+        const sibling = 'reviews/archived/2026-10-12-d02-code-review.md';
+        if (artifact === 'sibling') {
+          await repo.write(sibling, '# d02 review\n\nNo findings.\n');
+          await repo.write(
+            'plan.md',
+            goalPlan({
+              reviews: [
+                reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+                reviewRow('passed', sibling, chain.reviewed, 'd02'),
+              ].join('\n'),
+            }),
+          );
+        }
+        await repo.write(
+          'state.md',
+          (await repo.read('state.md'))
+            .replace(
+              `bound_revisions: [{ member: 0, base: '${repo.baseSha}',`,
+              `bound_revisions: [{ member: 0, base: '${chain.observedBase}',`,
+            )
+            .replace(
+              `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+              `artifact: ${artifact === 'old' ? ARCHIVED_REVIEW_ARTIFACT : sibling}`,
+            ),
+        );
+        repo.commitAll(
+          'chore(oat): rebind historical base without own re-review',
+        );
+        const current = (await getProjectState(repo.projectPath))
+          .deliveries![0]!;
+        expect(current.members[0]!.reviewed_head).toBe(chain.reviewed);
+        expect(current.members[0]!.observed_head).toBe(chain.reviewed);
+        const result = await evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          current,
+          ['p01', 'p02'],
+        );
+        expect(result.fresh).toBe(false);
+        expect(result.reason).toContain('review-provenance');
+      },
+    );
+
+    it('allows a newer own review to repair an earlier same-artifact base edit', async () => {
+      repo = await createGoalRepo();
+      const chain = await mergedWithChangedBase(repo);
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          `bound_revisions: [{ member: 0, base: '${repo.baseSha}',`,
+          `bound_revisions: [{ member: 0, base: '${chain.observedBase}',`,
+        ),
+      );
+      repo.commitAll('chore(oat): earlier invalid base rebind');
+      await repo.write(RE_REVIEW, '# d01 genuine re-review\n\nNo findings.\n');
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+            reviewRow('passed', RE_REVIEW, chain.reviewed, 'd01'),
+          ].join('\n'),
+        }),
+      );
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+          `artifact: ${RE_REVIEW}`,
+        ),
+      );
+      repo.commitAll(
+        'chore(oat): receive genuine own review at same changed base',
+      );
+      // Later observation, disposition and legacy kind migration are not new
+      // review episodes; unrelated code on current main is not published code.
+      await repo.writeRepo(
+        'src/current-main.ts',
+        'export const current = 1;\n',
+      );
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md'))
+          .replace('kind: pr', 'kind: stack')
+          .replace('disposition: passed', 'disposition: stale'),
+      );
+      repo.commitAll(
+        'chore(oat): refresh observations and migrate legacy kind',
+      );
+      const current = (await getProjectState(repo.projectPath)).deliveries![0]!;
+      await expect(
+        evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          current,
+          ['p01', 'p02'],
+        ),
+      ).resolves.toMatchObject({ fresh: true, reason: null });
+      expect(current.members[0]!.base).toBe(repo.baseSha);
+      expect(current.endpoint_attainment).toEqual(
+        chain.original.endpoint_attainment,
+      );
+
+      const uncommitted = structuredClone(current);
+      uncommitted.integrated_review!.scope.push('p03');
+      await expect(
+        evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          uncommitted,
+          ['p01', 'p02'],
+        ),
+      ).resolves.toMatchObject({
+        fresh: false,
+        reason: expect.stringContaining('review-provenance'),
+      });
+      const unavailable: GitRunner = {
+        run: async () => ({ stdout: '', stderr: 'unavailable', code: 128 }),
+      };
+      await expect(
+        evaluateDeliveryReview(
+          unavailable,
+          await productionScope(repo, 'd01'),
+          current,
+          ['p01', 'p02'],
+        ),
+      ).resolves.toMatchObject({
+        fresh: false,
+        reason: expect.stringContaining('inspection-failed'),
+      });
+    });
+
+    it('accepts first registration after the immutable code head', async () => {
+      repo = await createGoalRepo();
+      const chain = await mergedWithChangedBase(repo);
+      repo.git(['reset', '--hard', chain.received]);
+      await repo.write(
+        'state.md',
+        goalState(
+          registryYaml({
+            reviewed: chain.reviewed,
+            base: repo.baseSha,
+            observedBase: chain.observedBase,
+            observedHead: chain.reviewed,
+            memberStatus: 'merged',
+            status: 'at_endpoint',
+          }),
+        ).replace(
+          `bound_revisions: [{ member: 0, base: '${repo.baseSha}',`,
+          `bound_revisions: [{ member: 0, base: '${chain.observedBase}',`,
+        ),
+      );
+      repo.commitAll('chore(oat): register already merged delivery');
+      const current = (await getProjectState(repo.projectPath)).deliveries![0]!;
+      await expect(
+        evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          current,
+          ['p01', 'p02'],
+        ),
+      ).resolves.toMatchObject({ fresh: true, reason: null });
+    });
+
+    it('rejects a matching merge parent laundering a same-artifact base rebind', async () => {
+      repo = await createGoalRepo();
+      const chain = await mergedWithChangedBase(repo);
+      const registered = await repo.read('state.md');
+      repo.git([
+        'checkout',
+        '-q',
+        '-b',
+        'independent-registration',
+        chain.received,
+      ]);
+      await repo.write(
+        'state.md',
+        registered.replace(
+          `bound_revisions: [{ member: 0, base: '${repo.baseSha}',`,
+          `bound_revisions: [{ member: 0, base: '${chain.observedBase}',`,
+        ),
+      );
+      repo.commitAll('chore(oat): register the same artifact on another base');
+      repo.git(['checkout', '-q', 'main']);
+      repo.git([
+        'merge',
+        '-q',
+        '--no-ff',
+        '-X',
+        'theirs',
+        'independent-registration',
+        '-m',
+        'merge competing registrations',
+      ]);
+      const current = (await getProjectState(repo.projectPath)).deliveries![0]!;
+      expect(current.integrated_review!.bound_revisions[0]!.base).toBe(
+        chain.observedBase,
+      );
+      const scope = await productionScope(repo, 'd01');
+      await expect(
+        evaluateSuccessor(
+          git,
+          scope,
+          chain.headRecording,
+          repo.git(['rev-parse', 'HEAD']),
+        ),
+      ).resolves.toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+      });
+      await expect(
+        evaluateDeliveryReview(git, scope, current, ['p01', 'p02']),
+      ).resolves.toMatchObject({
+        fresh: false,
+        reason: expect.stringContaining('review-provenance'),
+      });
+    });
+
+    it('rejects a same-artifact base edit inherited through a merge parent', async () => {
+      repo = await createGoalRepo();
+      const chain = await mergedWithChangedBase(repo);
+      repo.git(['checkout', '-q', '-b', 'invalid-binding']);
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          `bound_revisions: [{ member: 0, base: '${repo.baseSha}',`,
+          `bound_revisions: [{ member: 0, base: '${chain.observedBase}',`,
+        ),
+      );
+      repo.commitAll('chore(oat): invalid historical base rebind');
+      repo.git(['checkout', '-q', 'main']);
+      await repo.writeRepo(
+        'src/current-main.ts',
+        'export const current = 1;\n',
+      );
+      repo.commitAll('feat: advance main independently');
+      repo.git([
+        'merge',
+        '-q',
+        '--no-ff',
+        'invalid-binding',
+        '-m',
+        'merge registry update',
+      ]);
+      const current = (await getProjectState(repo.projectPath)).deliveries![0]!;
+      await expect(
+        evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          current,
+          ['p01', 'p02'],
+        ),
+      ).resolves.toMatchObject({
+        fresh: false,
+        reason: expect.stringContaining('review-provenance'),
+      });
+    });
+  });
+
   describe('set-once delivery exit-gate binding (M2)', () => {
     const binding = (
       decidedAt: string,

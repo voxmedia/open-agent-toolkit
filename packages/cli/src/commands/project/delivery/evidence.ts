@@ -1268,6 +1268,151 @@ export interface ReviewEvaluation {
 }
 
 /**
+ * Only review identity participates here. Observation/disposition refreshes,
+ * legacy delivery-kind migrations and unrelated current code are not reviews.
+ */
+function reviewBinding(value: unknown): Record<string, unknown> | null {
+  if (!isRecord(value) || !isRecord(value['integrated_review'])) return null;
+  const review = value['integrated_review'];
+  const nullableString = (input: unknown): string | null =>
+    typeof input === 'string' ? input : null;
+  const artifact = nullableString(review['artifact']);
+  return {
+    delivery_id: value['delivery_id'],
+    members: (Array.isArray(value['members']) ? value['members'] : []).map(
+      (member: unknown) => ({
+        url: isRecord(member) ? nullableString(member['url']) : null,
+        base: isRecord(member) ? nullableString(member['base']) : null,
+        reviewed_head: isRecord(member)
+          ? nullableString(member['reviewed_head'])
+          : null,
+      }),
+    ),
+    integrated_review: {
+      // Archiving a review does not start a new evidence episode.
+      artifact: artifact?.replace(/^reviews\/archived\//, 'reviews/') ?? null,
+      scope: review['scope'] ?? [],
+      bound_revisions: review['bound_revisions'] ?? [],
+    },
+  };
+}
+
+/**
+ * A base rebind may be received after an immutable merged code head. Inspect
+ * its current committed review episode separately from the code successor
+ * range, so editing old review evidence cannot authenticate itself. Follow
+ * matching identities through every merge parent; stop at genuine new review
+ * introductions, allowing a later own review to repair an earlier bad episode.
+ */
+async function evaluateBaseRebindProvenance(
+  git: GitRunner,
+  scope: EvidenceScope,
+  delivery: GoalDelivery,
+): Promise<Verdict> {
+  try {
+    const head = await resolveCommit(git, scope.repoRoot, 'HEAD');
+    if (head === null) return refuse('inspection-failed: HEAD is unavailable');
+    const statePath = `${scope.projectDir}/state.md`;
+    const bindings = new Map<string, Record<string, unknown> | null>();
+    const readBinding = async (commit: string) => {
+      if (bindings.has(commit)) return bindings.get(commit)!;
+      const blob = await readBlob(git, scope.repoRoot, commit, statePath);
+      if (blob === null) {
+        const tree = await git.run(['ls-tree', commit, '--', statePath], {
+          cwd: scope.repoRoot,
+          allowFailure: true,
+        });
+        if (tree.code !== 0 || tree.stdout !== '') {
+          throw new Error(`could not inspect ${statePath} at ${commit}`);
+        }
+        bindings.set(commit, null);
+        return null;
+      }
+      const parsed = splitFrontmatter(blob);
+      if (parsed === null) throw new Error(`unparseable state at ${commit}`);
+      const binding = reviewBinding(
+        deliveryMap(parsed.data['oat_deliveries']).get(delivery.delivery_id),
+      );
+      bindings.set(commit, binding);
+      return binding;
+    };
+    const current = reviewBinding(delivery);
+    const currentIdentity = stable(current);
+    if (
+      current === null ||
+      stable(await readBinding(head)) !== currentIdentity
+    ) {
+      return refuse(
+        'review-provenance: current review binding differs from committed HEAD',
+      );
+    }
+    const review = current['integrated_review'] as Record<string, unknown>;
+    const artifact = review['artifact'];
+    const own = new Set(
+      (scope.ownEvidenceArtifacts?.get(delivery.delivery_id) ?? []).flatMap(
+        (path) => artifactVariants(projectRelative(scope.projectDir, path)),
+      ),
+    );
+    if (typeof artifact !== 'string' || !own.has(artifact)) {
+      return refuse(
+        'review-provenance: rebound review is not this delivery’s own artifact',
+      );
+    }
+
+    const pending = [head];
+    const visited = new Set<string>();
+    while (pending.length > 0) {
+      const commit = pending.pop()!;
+      if (visited.has(commit)) continue;
+      visited.add(commit);
+      // Raw parent headers retain shallow-boundary parents. A history walk
+      // must not mistake missing ancestry for a genuine first registration.
+      const object = await git.run(['cat-file', '-p', commit], {
+        cwd: scope.repoRoot,
+        allowFailure: true,
+      });
+      const headers = object.stdout.split('\n\n', 1)[0] ?? '';
+      const parents = headers
+        .split('\n')
+        .flatMap((line) => (line.startsWith('parent ') ? [line.slice(7)] : []));
+      if (
+        object.code !== 0 ||
+        !headers.startsWith('tree ') ||
+        parents.some((parent) => !/^[0-9a-f]{40}$/.test(parent))
+      ) {
+        return refuse(
+          `inspection-failed: could not inspect parents of ${commit}`,
+        );
+      }
+      const parentBindings = await Promise.all(parents.map(readBinding));
+      const matching = parents.filter(
+        (_parent, index) => stable(parentBindings[index]) === currentIdentity,
+      );
+      pending.push(...matching);
+      // Follow parents already carrying this identity, and validate the
+      // transition from every other parent. A matching side must not hide an
+      // invalid same-artifact rebind against another merge parent.
+      for (const previous of parentBindings) {
+        if (stable(previous) === currentIdentity) continue;
+        const verdict = judgeDeliveries(
+          previous === null ? [] : [previous],
+          [current],
+          scope,
+        );
+        if (!verdict.ok) {
+          return refuse(`review-provenance: ${commit}: ${verdict.reason}`);
+        }
+      }
+    }
+    return OK;
+  } catch (error) {
+    return refuse(
+      `inspection-failed: review provenance: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
  * Evaluate a registered delivery's integrated review against its observed
  * members (A2): each member's reviewed revision must cover its observed head
  * as a bookkeeping successor, and a member base change invalidates the
@@ -1316,14 +1461,30 @@ export async function evaluateDeliveryReview(
     return result(false, 'member-missing: the delivery has no members');
   }
 
+  if (
+    delivery.members.some((member, index) => {
+      const boundBase = review.bound_revisions.find(
+        (revision) => revision.member === index,
+      )?.base;
+      return (
+        boundBase !== null &&
+        boundBase !== undefined &&
+        boundBase !== member.base
+      );
+    })
+  ) {
+    const provenance = await evaluateBaseRebindProvenance(git, scope, delivery);
+    if (!provenance.ok) return result(false, provenance.reason);
+  }
+
   const members: ReviewEvaluation['members'] = [];
   for (const [index, member] of delivery.members.entries()) {
     const bound = review.bound_revisions.find(
       (revision) => revision.member === index,
     );
-    // The member's reviewed_head is set once at registration and is
-    // authoritative: a bound revision that disagrees with it never relocates
-    // the inspected range.
+    // The member's reviewed_head moves only with its own new review evidence
+    // and remains authoritative: a disagreeing bound head never relocates the
+    // inspected range.
     if (
       bound?.head !== undefined &&
       bound.head !== null &&
@@ -1345,14 +1506,10 @@ export async function evaluateDeliveryReview(
         fresh: false,
         reason: 'member-unobserved: run delivery refresh',
       };
-    } else if (
-      member.base === null ||
-      member.observed_base !== member.base ||
-      (reviewedBase !== null && reviewedBase !== member.base)
-    ) {
+    } else if (reviewedBase === null || member.observed_base !== reviewedBase) {
       verdict = {
         fresh: false,
-        reason: `base-changed: member base ${member.base ?? 'unrecorded'} is now ${member.observed_base}`,
+        reason: `base-changed: reviewed base ${reviewedBase ?? 'unrecorded'} is now ${member.observed_base}`,
       };
     } else {
       const successor = await evaluateSuccessor(

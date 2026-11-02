@@ -9,9 +9,11 @@ import {
   createGoalRepo,
   gateArtifactScenario,
   goalPlan,
+  goalJournal,
   goalState,
   PROJECT_REL,
   registryYaml,
+  REVIEW_ARTIFACT,
   removeRepo,
   reviewRow,
   type GoalRepo,
@@ -42,6 +44,7 @@ interface CheckPayload {
 async function check(
   repo: GoalRepo,
   subject: string,
+  recovery = false,
 ): Promise<{ payload: CheckPayload; exitCode: number | undefined }> {
   const capture = createLoggerCapture();
   const command = createProjectDeliveryCheckCommand({
@@ -73,6 +76,7 @@ async function check(
       PROJECT_REL,
       '--subject',
       subject,
+      ...(recovery ? ['--recovery'] : []),
     ],
     { from: 'user' },
   );
@@ -185,6 +189,310 @@ describe('oat project delivery check', () => {
     repo.commitAll(`chore(oat): register ${topology} stack`);
     return { lower, middle, tip };
   }
+
+  // Real Git reproduction of phase-only recovery: the milestone still owns
+  // earlier phases, while its new correction carrier binds only p-rev1.
+  async function phaseRecovery(reviewScope = 'm01: p-rev1') {
+    repo = await createGoalRepo();
+    const recovery = {
+      milestone: 'm01',
+      delivery_id: null,
+      phase_ids: ['p-rev1'],
+      stage: 'receiving',
+      review_artifact: ARCHIVED_REVIEW_ARTIFACT,
+    };
+    const plan = (reviews = '') =>
+      goalPlan({
+        milestones: '| m01 | p01, p02, p-rev1 |\n| m02 | p03 |',
+        reviews,
+      }).replace(
+        '## Reviews',
+        '## Phase p-rev1: Correction\n\n**Intent:** Correct.\n**Exit evidence:** Corrected.\n**Provisional:** no\n\n## Reviews',
+      );
+    await repo.write('plan.md', plan());
+    await repo.write(
+      'implementation.md',
+      `${goalJournal('', 'completed')}\n## Phase p-rev1: Correction\n\n**Status:** completed\n`,
+    );
+    repo.commitAll('chore(oat): plan accepted correction phase');
+    await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+    const reviewed = repo.commitAll('fix(p-rev1): correction');
+    await repo.write(
+      ARCHIVED_REVIEW_ARTIFACT,
+      '# Recovery review\n\nNo findings.\n',
+    );
+    await repo.write(
+      'plan.md',
+      plan(
+        reviewRow('received', ARCHIVED_REVIEW_ARTIFACT, reviewed, reviewScope),
+      ),
+    );
+    const evidence = registryYaml({ reviewed, base: repo.baseSha })
+      .replace(/^oat_deliveries:[\s\S]*?(?=^oat_milestone_gates:)/m, '')
+      .replace('scope: [p01, p02]', 'scope: [p-rev1]');
+    await repo.write(
+      'state.md',
+      goalState(
+        `oat_milestone: m01\noat_milestone_status: reviewing\noat_goal_recovery: ${JSON.stringify(recovery)}\n${evidence}`,
+      ),
+    );
+    repo.commitAll(
+      'chore(oat): receive recovery carrier and provide integrated review',
+    );
+    return recovery;
+  }
+
+  it('checks a committed phase-only recovery without widening the default milestone', async () => {
+    const recovery = await phaseRecovery();
+    await repo!.write(
+      'state.md',
+      (await repo!.read('state.md')).replace(
+        JSON.stringify(recovery),
+        JSON.stringify({ ...recovery, review_artifact: REVIEW_ARTIFACT }),
+      ),
+    );
+    repo!.commitAll(
+      'chore(oat): retain recovery review source identity across archival',
+    );
+    const ordinary = await check(repo!, 'm01');
+    expect(ordinary.payload.scope).toEqual(['p01', 'p02', 'p-rev1']);
+    expect(ordinary.payload.exit?.reason).toMatch(/^subject-changed/);
+    expect(ordinary.exitCode).toBe(1);
+
+    process.exitCode = undefined;
+    const received = await check(repo!, 'm01', true);
+    expect(received.payload).toMatchObject({
+      status: 'undeliverable',
+      scope: ['p-rev1'],
+      review: { fresh: true, disposition: 'received' },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: false,
+    });
+    expect(received.exitCode).toBe(1);
+
+    await repo!.write(
+      'plan.md',
+      (await repo!.read('plan.md')).replace('| received |', '| passed |'),
+    );
+    repo!.commitAll('chore(oat): receive integrated recovery review');
+    // Unrelated local routing edits must not require all of state.md clean.
+    await repo!.write(
+      'state.md',
+      (await repo!.read('state.md')).replace(
+        'oat_current_task: null',
+        'oat_current_task: p-rev1',
+      ),
+    );
+    const before = snapshot(repo!);
+    process.exitCode = undefined;
+    const passed = await check(repo!, 'm01', true);
+    expect(passed.payload).toMatchObject({
+      status: 'ok',
+      scope: ['p-rev1'],
+      review: { fresh: true, disposition: 'passed' },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(passed.exitCode).toBe(0);
+    expect(snapshot(repo!)).toBe(before);
+  });
+
+  it('requires the recovery review pointer before reusing a passed milestone row', async () => {
+    const recovery = await phaseRecovery('m01');
+    await repo!.write(
+      'plan.md',
+      (await repo!.read('plan.md')).replace('| received |', '| passed |'),
+    );
+    await repo!.write(
+      'state.md',
+      (await repo!.read('state.md')).replace(
+        JSON.stringify(recovery),
+        JSON.stringify({ ...recovery, review_artifact: null }),
+      ),
+    );
+    repo!.commitAll(
+      'chore(oat): persist recovery before its integrated review',
+    );
+
+    const result = await check(repo!, 'm01', true);
+
+    expect(result.payload).toMatchObject({
+      status: 'undeliverable',
+      scope: ['p-rev1'],
+      review: {
+        fresh: false,
+        disposition: null,
+        reason: expect.stringMatching(/^review-missing/),
+      },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: false,
+    });
+    expect(result.exitCode).toBe(1);
+
+    await repo!.write(
+      'state.md',
+      (await repo!.read('state.md')).replace(
+        JSON.stringify({ ...recovery, review_artifact: null }),
+        JSON.stringify({
+          ...recovery,
+          review_artifact: 'reviews/unrelated.md',
+        }),
+      ),
+    );
+    repo!.commitAll('chore(oat): name a different recovery review');
+    process.exitCode = undefined;
+    const mismatch = await check(repo!, 'm01', true);
+    expect(mismatch.payload).toMatchObject({
+      status: 'undeliverable',
+      review: {
+        fresh: false,
+        reason: expect.stringMatching(/^review-missing/),
+      },
+      deliverable: false,
+    });
+    expect(mismatch.exitCode).toBe(1);
+  });
+
+  it.each(['received', 'passed'])(
+    'refuses a stale recovery pointer when the newest review is %s',
+    async (status) => {
+      const recovery = await phaseRecovery();
+      const reviewed = repo!.git(['rev-parse', 'HEAD~1']);
+      const newestArtifact = 'reviews/recovery-newest.md';
+      await repo!.write(newestArtifact, '# Newest recovery review\n');
+      await repo!.write(
+        'plan.md',
+        `${(await repo!.read('plan.md')).replace('| received |', '| passed |')}\n${reviewRow(status, newestArtifact, reviewed, 'm01: p-rev1')}\n`,
+      );
+      repo!.commitAll('chore(oat): provide a newer recovery review');
+
+      const stale = await check(repo!, 'm01', true);
+      expect(stale.payload).toMatchObject({
+        status: 'undeliverable',
+        review: {
+          fresh: false,
+          reason: expect.stringMatching(/^review-missing/),
+        },
+        exit: { freshness: 'fresh', reason: null },
+        deliverable: false,
+      });
+      expect(stale.exitCode).toBe(1);
+
+      await repo!.write(
+        'state.md',
+        (await repo!.read('state.md')).replace(
+          JSON.stringify(recovery),
+          JSON.stringify({ ...recovery, review_artifact: newestArtifact }),
+        ),
+      );
+      repo!.commitAll('chore(oat): bind recovery to the newest review');
+      process.exitCode = undefined;
+      const current = await check(repo!, 'm01', true);
+      expect(current.payload).toMatchObject({
+        status: status === 'passed' ? 'ok' : 'undeliverable',
+        review: { artifact: newestArtifact, fresh: true, disposition: status },
+        exit: { freshness: 'fresh', reason: null },
+        deliverable: status === 'passed',
+      });
+      expect(current.exitCode).toBe(status === 'passed' ? 0 : 1);
+    },
+  );
+
+  it.each([
+    ['missing', null, /Missing, malformed or mismatched/],
+    ['malformed', { stage: 'unknown' }, /Missing, malformed or mismatched/],
+    [
+      'wrong milestone',
+      { milestone: 'm02' },
+      /Missing, malformed or mismatched/,
+    ],
+    ['registered recovery', { delivery_id: 'd01' }, /ordinary --subject dNN/],
+    ['missing delivery id', { delivery_id: undefined }, /delivery_id: null/],
+    ['non-array phases', { phase_ids: 'p-rev1' }, /nonempty, unique set/],
+    ['empty phases', { phase_ids: [] }, /nonempty, unique set/],
+    [
+      'duplicate phases',
+      { phase_ids: ['p-rev1', 'p-rev1'] },
+      /nonempty, unique set/,
+    ],
+    [
+      'invalid phase token',
+      { phase_ids: ['p-rev1', 'not-a-phase'] },
+      /nonempty, unique set/,
+    ],
+    ['noncanonical phase', { phase_ids: ['p-rev01'] }, /nonempty, unique set/],
+    ['foreign phase', { phase_ids: ['p03'] }, /owned by this milestone/],
+    [
+      'out-of-order phases',
+      { phase_ids: ['p-rev1', 'p01'] },
+      /plan document order/,
+    ],
+  ] as const)(
+    'refuses %s recovery evidence',
+    async (_label, patch, message) => {
+      const recovery = await phaseRecovery();
+      await repo!.write(
+        'state.md',
+        (await repo!.read('state.md')).replace(
+          JSON.stringify(recovery),
+          JSON.stringify(patch === null ? null : { ...recovery, ...patch }),
+        ),
+      );
+      repo!.commitAll('chore(oat): persist invalid recovery control');
+      const before = snapshot(repo!);
+
+      const result = await check(repo!, 'm01', true);
+
+      expect(result.payload).toMatchObject({
+        status: 'error',
+        message: expect.stringMatching(message),
+      });
+      expect(result.exitCode).toBe(1);
+      expect(snapshot(repo!)).toBe(before);
+    },
+  );
+
+  it('refuses unaccepted phases in an otherwise committed valid recovery', async () => {
+    await phaseRecovery();
+    await repo!.write(
+      'implementation.md',
+      (await repo!.read('implementation.md')).replace(
+        '## Phase p-rev1: Correction\n\n**Status:** completed',
+        '## Phase p-rev1: Correction\n\n**Status:** in_progress',
+      ),
+    );
+    repo!.commitAll('chore(oat): reopen recovery phase');
+
+    const result = await check(repo!, 'm01', true);
+
+    expect(result.payload).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('not all accepted'),
+    });
+    expect(result.exitCode).toBe(1);
+  });
+
+  it('refuses a recovery record changed in the index but not committed to HEAD', async () => {
+    const recovery = await phaseRecovery();
+    await repo!.write(
+      'state.md',
+      (await repo!.read('state.md')).replace(
+        JSON.stringify(recovery),
+        JSON.stringify({ ...recovery, stage: 'delivering' }),
+      ),
+    );
+    repo!.git(['add', `${PROJECT_REL}/state.md`]);
+    const before = snapshot(repo!);
+
+    const result = await check(repo!, 'm01', true);
+
+    expect(result.payload).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('differs from HEAD'),
+    });
+    expect(result.exitCode).toBe(1);
+    expect(snapshot(repo!)).toBe(before);
+  });
 
   it('reports a milestone fresh across the bookkeeping chain', async () => {
     const chain = await receivedMilestone();
@@ -408,6 +716,31 @@ describe('oat project delivery check', () => {
     });
     expect(exitCode).toBe(0);
     expect(reviewedSha).toHaveLength(40);
+
+    // A phase-only record cannot narrow an existing delivery's frozen scope.
+    await repo.write(
+      'state.md',
+      (await repo.read('state.md')).replace(
+        'oat_milestone: m01',
+        'oat_goal_recovery: { milestone: m01, delivery_id: null, phase_ids: [p02], stage: reviewing, review_artifact: null }\noat_milestone: m01',
+      ),
+    );
+    repo.commitAll('chore(oat): queue a separate phase-only recovery');
+    process.exitCode = undefined;
+    const unchanged = await check(repo, 'd01');
+    expect(unchanged.payload).toMatchObject({
+      status: 'ok',
+      scope: ['p01', 'p02'],
+      deliverable: true,
+    });
+    expect(unchanged.exitCode).toBe(0);
+    process.exitCode = undefined;
+    const optIn = await check(repo, 'd01', true);
+    expect(optIn.payload).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('requires a milestone subject'),
+    });
+    expect(optIn.exitCode).toBe(1);
   });
 
   it('judges a linear registered stack at its tip while reporting every published head', async () => {

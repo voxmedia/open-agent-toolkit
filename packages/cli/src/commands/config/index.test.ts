@@ -3067,11 +3067,12 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-10-01.1');
+      expect(recommendation.version).toBe('2026-10-31.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
             candidates: [
+              { model: 'gpt-6.1-terra', effort: 'low' },
               { model: 'gpt-6-luna', effort: 'low' },
               { model: 'gpt-6-luna', effort: 'medium' },
               { model: 'gpt-6-luna', effort: 'high' },
@@ -3079,6 +3080,7 @@ describe('oat config', () => {
           },
           balanced: {
             candidates: [
+              { model: 'gpt-6.1-terra', effort: 'medium' },
               { model: 'gpt-6-luna', effort: 'xhigh' },
               { model: 'gpt-6-luna', effort: 'max' },
             ],

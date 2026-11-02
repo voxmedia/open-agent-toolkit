@@ -75,7 +75,17 @@ function numericExitCode(error: ExecFileException | null): number {
   return typeof error?.code === 'number' ? error.code : 0;
 }
 
+// Historical journals can exceed execFile's default 1 MiB output buffer.
+// Keep the allowance finite, and never treat truncated evidence as a result.
+const GIT_OUTPUT_LIMIT = 64 * 1024 * 1024;
+
 function spawnFailure(error: ExecFileException): CliError {
+  if (error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
+    return new CliError(
+      'Git output exceeded the 64 MiB limit; evidence inspection stopped without accepting truncated output. Reduce the inspected output before retrying.',
+      2,
+    );
+  }
   const code = typeof error.code === 'string' ? ` (${error.code})` : '';
   return new CliError(
     `Unable to run the Git executable${code}: ${error.message || 'unknown process spawn error'}. Install Git and ensure it is available on PATH.`,
@@ -119,6 +129,7 @@ export function createGitRunner(
             cwd: options.cwd,
             env: gitEnvironment(options.env),
             encoding: 'utf8',
+            maxBuffer: GIT_OUTPUT_LIMIT,
           },
           (error, stdout, stderr) => {
             if (error && typeof error.code !== 'number') {

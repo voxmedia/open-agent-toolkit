@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.6
+  version: 1.3.7
 ---
 
 # Progress PR
@@ -366,6 +366,9 @@ without passing evidence.
    the persisted observations as bookkeeping.
 2. **Check.** Run
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`.
+   For a phase-only recovery (`delivery_id: null`), add `--recovery` to the
+   milestone check before registration; it validates the committed exact
+   accepted recovery set. Existing `dNN` checks retain their frozen scope.
    Register only on `status: ok` (exit 0): a passed, fresh integrated review
    and an allowed, fresh exit carrier (`exit.source: milestone-carrier`).
 3. **Stale evidence stops before registration.** When refresh or check
