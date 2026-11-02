@@ -657,6 +657,39 @@ Each branch sits beside today's text, which stays as it was:
 7. Milestone carrier: "uses no attempt and is not relaunched" changed to "uses an attempt and is relaunched".
 8. v2 exclusion: the doc's `.oat/projects` pathspec renamed. Separately, the test's extracted `.oat/projects` exclusion was dropped before hashing, so the executed hash comparison failed.
 
+### Task p11-t02: Bookkeeping-only branch in the planning gates and the shared artifact-review loop
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p11-impl-20261102-01
+**Handle:** direct:rgi-p11-impl-20261102-01:p11-t02
+**Intent:** Add the all-bookkeeping branch beside the `onFailure` policies in the Gate Execution sections of quick-start, plan, import-plan, brief, goal, lite, discover and design, and beside the fix and retry rules of the plan-writing Auto Artifact-Review Loop. Name it in the brief and goal Step 3.6 dispositions. Record the gate outcome in the quick-start and brief carriers. Vendor the shared definition into each skill. Bump the five skills p10 did not bump (discover, design, plan, import-plan, plan-writing), and pin all of it.
+**Files:** the nine planning `SKILL.md` files and their `references/docs/bookkeeping-findings.md` links, `.agents/docs/autonomy-contract.md` (coverage rows), `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins), `packages/cli/src/validation/named-skill-load-contract.test.ts` (link count comment).
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 3ca5ed4f80866865123f5d38da5a57baee54f37d
+**Proof:** isolated-HOME contract suites 1151/1151 (27 files) exit 0; `oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}'` exit 0; `pnpm run check:skill-bumps` exit 0 after the commit (17 changed skill and agent role bumps: discover 2.2.12, design 2.3.9, plan 1.4.20, import-plan 1.4.22, plan-writing 1.2.39; the other planning skills keep their p10 bump).
+
+**Known Unknown settled (which planning skills restate the retry rules).** All nine named skills do:
+
+- Eight restate the gate block-and-retry rule in Gate Execution: quick-start, plan, import-plan, discover, design, brief, goal and lite.
+- The artifact-review retry loop lives once, in plan-writing's Auto Artifact-Review Loop. Quick-start, plan, import-plan, lite, brief and goal load that loop. Brief and goal also restate their dispositions in Step 3.6.
+
+**Shape of the change.**
+
+- **Gate Execution.** In each of the eight skills, one paragraph follows the `warn` bullet. A receive-eligible `blocked` result settled at receive as bookkeeping-only has satisfied the gate: skip `onFailure`, count no attempt, no rerun. Quick-start and brief persist it as `allowed/passed` with a new carrier list item. Goal holds it as an allowed `passed` outcome for Step 3.7, so the milestone `plan` carrier still waits for approval.
+- **plan-writing.** Step 4 gains a bookkeeping-only bullet for the `plan` target, checked before the fix bullets. It makes one tracking-file commit, starts no new attempt and consumes no retry. Interactive runs still offer Medium and Low edits first. Step 6 records `passed` with the note and never reports it as clean. The `analysis` target is untouched, because analysis artifacts are not project tracking files.
+- **Coverage.** Eight `* -> NG` coverage rows cover the new links under the inventory's skill roots. plan-writing is not one of them. The named-skill inventory comment now counts eleven links onto the shared doc. The realpath count of shared docs stays 9.
+
+**Negative controls** (each neutralized in the working tree, the suite run, then restored byte-identical; 1 of 61 failed each time):
+
+1. quick-start: "and do not re-run the gate" changed to "and re-run the gate".
+2. discover: "skip `onFailure`" changed to "apply `onFailure`".
+3. lite: "count no attempt" changed to "count the attempt".
+4. goal: the hold-as-`passed` clause cut.
+5. brief: the carrier list item removed.
+6. plan-writing step 4: "starts no new review attempt and consumes no retry" changed to "starts a new review attempt and consumes one retry".
+7. plan-writing step 6: "never report it as a clean review" changed to "report it as a clean review".
+8. design: the vendored link removed. The vendoring test failed.
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
