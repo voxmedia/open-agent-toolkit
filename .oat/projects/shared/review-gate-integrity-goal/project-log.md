@@ -54,6 +54,19 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 p02 accepted: verifier retired by revert 8427732e8 (inline p02-ie1); review round 4 passed (0/0/0/2, Lows addressed now); no phase gate (dropped by the 2026-11-02 amendment); rgi-p02-outcome-20261102
 
+### 2026-11-02 · structural · oat-project-implement · p10
+
+p10 accepted at cf26ae9c9: three review rounds (1/2/3, 1/1/2, 0/0/0/2); fix tasks p10-t04 and p10-t05; round-3 Lows fixed at receive as bookkeeping; operator decided journal-copied pointers are bookkeeping (round-2 receipt); one recovery (rgi-p10-rec-01, 1/10); no phase gate. rgi-p10-outcome-20261102
+
+### 2026-11-02 · general · friction · oat sync from installed CLI deletes newer provider views
+
+**Category:** gotcha
+**Source:** rgi-p10-sync-gotcha
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-02T19:34:40Z
+
+Running the installed oat sync on a branch that merged a newer main deleted main's gpt-6-1-terra Codex views and left four reviewer views stale; regenerating with the branch build (node packages/cli/dist/index.js sync) was correct. rgi-p10-sync-gotcha
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

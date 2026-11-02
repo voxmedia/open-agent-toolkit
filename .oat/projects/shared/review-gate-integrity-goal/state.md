@@ -1,6 +1,6 @@
 ---
-oat_current_task: p10
-oat_last_commit: dacb34ebeed067d2228b507866aafab83a7fada3
+oat_current_task: p11
+oat_last_commit: cf26ae9c9f9dc7df0ed17be40f99822ae63ad6e9
 oat_blockers: []
 associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
   - type: backlog
@@ -148,7 +148,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-02T16:54:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-02T19:34:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -174,7 +174,8 @@ Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
 - ✓ p01 accepted; p02 verifier built and reviewed
 - ✓ Brief amendment (2026-11-02): prose-only bookkeeping rule reviewed, gated and approved; m01 is now p01, p02 (retire the verifier), p10, p11
 - ✓ p02 accepted (verifier retired)
-- ⧗ m01 implementation: p10 implemented, under review
+- ✓ p10 accepted (bookkeeping definition and the receive rule)
+- ⧗ m01 implementation, next p11
 
 ## Blockers
 
@@ -182,4 +183,4 @@ None
 
 ## Next Milestone
 
-Continue `oat-project-implement` at p10
+Continue `oat-project-implement` at p11

@@ -262,7 +262,8 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p02   | code     | passed          | 2026-11-01 | reviews/archived/p02-review-2026-11-02T001304Z.md           | 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c | manual     | -           |
 | p02   | code     | passed          | 2026-11-02 | reviews/archived/p02-review-2026-11-02T162147Z.md           | 8427732e8bfd661a536997096ed43af0bc5376d1 | manual     | -           |
 | p10   | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T170200Z.md           | 73b277434f24cb95f785ac4fa36618b09b6d20e7 | manual     | -           |
-| p10   | code     | fixes_added     | 2026-11-02 | reviews/archived/p10-review-2026-11-02T172814Z.md           | 2eca1422aaee6e93a0b7be53e6b86aa5c2d34b9c | manual     | -           |
+| p10   | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T172814Z.md           | 2eca1422aaee6e93a0b7be53e6b86aa5c2d34b9c | manual     | -           |
+| p10   | code     | passed          | 2026-11-02 | reviews/archived/p10-review-2026-11-02T193214Z.md           | cf26ae9c9f9dc7df0ed17be40f99822ae63ad6e9 | manual     | -           |
 | p11   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan  | artifact | passed          | 2026-11-01 | reviews/archived/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -          | -           |

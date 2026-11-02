@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-02
-oat_current_task_id: p10
+oat_current_task_id: p11
 oat_generated: false
 oat_template: false
 ---
@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | completed   | 1     | 1/1      |
-| p10   | in_progress | 1     | 0/1      |
-| p11   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
+| p10   | completed | 1     | 1/1      |
+| p11   | pending   | 1     | 0/1      |
+| p07   | pending   | 1     | 0/1      |
+| p08   | pending   | 1     | 0/1      |
+| p09   | pending   | 1     | 0/1      |
 
-**Total:** 2/7 phases accepted
+**Total:** 3/7 phases accepted
 
 ---
 
@@ -374,7 +374,7 @@ Reviewer request `rgi-p02-rev-20261102-04` (`oat-reviewer-claude-claude-opus-5-5
 
 ## Phase p10: Bookkeeping definition and the receive rule
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 234c9b281bf3e8c8bbf419cc9d44fbf28a462920
 **Head:** d8b3a7c74650f0073bddef8b84c987265c89ce75
 **Executor:** phase-implementer:rgi-p10-impl-20261102-01
@@ -558,6 +558,8 @@ All restored; suites exit 0.
 
 **Coverage against Outcome 1.** This counts as Outcome 1's "one bookkeeping-only phase or final review rerun" because it is a phase-scope code review (`oat_review_scope: p05`, `oat_review_type: code`) that the phase gate produced, and history reran that phase review. The #233 incident that p11 traces is a different gate. Because gate-originated artifacts never count a cycle, this incident cannot show the Step 8 cycle-count skip. That skip is shown by the executed Step 8 test in `bookkeeping-findings-contracts.test.ts` ("excludes an artifact whose receipt records the bookkeeping-only outcome") and by its p10-t01 negative control: with the skip line removed, the snippet counted 2 instead of 1.
 
+**Correction (p10 round-3 review, L1 and L2).** The run `c221ce46` and its artifact never happening (step 7) and "one gate run fewer" (Outcome) hold under the receive text. End to end they also need implement's phase-gate branch, which p11 adds. Until then `references/phase-execution.md` still re-runs root review and the gate after a `blocked` result. In step 5, the incident's Reviews table is the legacy five-column shape, so Step 6 first adds `Reviewed Head`, `Invocation` and `Gate Target` to the header and pads every existing row with `-`. No other event's recorded value changes, so limit 3 and the conclusion stand.
+
 **Counter-example: today's flow still applies.** `claude-effort-levels` p-rev1 re-review `p-rev1-review-2026-09-23T010920Z.md` (reproduce with `git show 6df4aae89:.oat/projects/shared/claude-effort-levels/reviews/p-rev1-review-2026-09-23T010920Z.md`) has one Medium finding.
 
 - It asks to archive the prior artifact, which is an archived-artifact path reference.
@@ -600,6 +602,20 @@ Reviewer request `rgi-p10-rev-20261102-02` (`oat-reviewer-claude-claude-opus-5-5
 
 **Outcome:** fixes queued: p10-t05
 
+### Review Received: p10 (round 3)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/p10-review-2026-11-02T193214Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5-high`); reviewed range `e9c2b783654a954ac89962ec96d66e768e4ab1be..cf26ae9c9f9dc7df0ed17be40f99822ae63ad6e9` (fix range from `997109f45`); reconnaissance not attempted. Round-2 H1, M1, L1 and L2 resolved. The operator's pointer decision is stated faithfully and opens nothing wider. Regression pass clean: one bump per changed skill, branch-build sync plans 0 operations, focused suites 1230/1230, journal check ok. Review cycle 3 of 3.
+
+- L1 (Low): the walkthrough's "never happen" (step 7) and "one gate run fewer" (Outcome) omit the qualifier that implement's phase-gate loop still relaunches until p11 → fixed at receive (bookkeeping): appended a correcting paragraph after the walkthrough's coverage paragraph.
+- L2 (Low): walkthrough step 5 omits that Step 6 widens the legacy five-column Reviews table and pads every row → fixed at receive (bookkeeping): same correcting paragraph.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/p10-review-2026-11-02T193214Z.md)
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
@@ -636,6 +652,11 @@ Reviewer request `rgi-p10-rev-20261102-02` (`oat-reviewer-claude-claude-opus-5-5
 - run/v1 · request=rgi-p02-rev-20261101-03 · scope=project:review-gate-integrity-goal:p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p02-rev-20261102-04 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p10-impl-20261102-01 · scope=p10 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p10-fix-20261102-01 · scope=p10 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p10-impl-20261102-01 · observed=~ · match=~
+- run/v1 · request=rgi-p10-fix-20261102-02 · scope=p10 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p10-impl-20261102-01 · observed=~ · match=~
+- run/v1 · request=rgi-p10-rev-20261102-01 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p10-rev-20261102-02 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p10-rev-20261102-03 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
