@@ -1,6 +1,6 @@
 ---
 oat_current_task: p10
-oat_last_commit: 8427732e8bfd661a536997096ed43af0bc5376d1
+oat_last_commit: dacb34ebeed067d2228b507866aafab83a7fada3
 oat_blockers: []
 associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
   - type: backlog
@@ -69,18 +69,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p10:
       used_attempts: 1
-      pending_attempt:
-        {
-          attempt: 1,
-          event_id: rgi-p10-rec-01,
-          original_request_id: rgi-p10-impl-20261102-01,
-          original_task_id: p10-t01,
-          original_commit: 7f41ac534eeef510a0f9bb01d62beb1863988fd2,
-          discovered_by: 'pnpm run check:skill-bumps',
-          dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high,
-          reservation_head: 7f41ac534eeef510a0f9bb01d62beb1863988fd2,
-          status: completed,
-        }
+      pending_attempt: null
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m01
@@ -159,7 +148,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-02T16:23:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-02T16:54:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -185,7 +174,7 @@ Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
 - ✓ p01 accepted; p02 verifier built and reviewed
 - ✓ Brief amendment (2026-11-02): prose-only bookkeeping rule reviewed, gated and approved; m01 is now p01, p02 (retire the verifier), p10, p11
 - ✓ p02 accepted (verifier retired)
-- ⧗ m01 implementation, next p10
+- ⧗ m01 implementation: p10 implemented, under review
 
 ## Blockers
 
