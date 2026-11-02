@@ -34,6 +34,10 @@ Observation: after the p01 phase implementer ran isolated-HOME test suites, the 
 Impact: the fix-dispatch resolve failed with a misleading 'requires a configured high candidate ladder' error, and a commit author had to be reset.
 Recommendation: children must use an inline HOME=$(mktemp -d) prefix, never export HOME; the root should check $HOME before resolver calls and commits after a child returns.
 
+### 2026-11-02 · structural · oat-project-implement · p02
+
+p02 per-phase review passed in round 3 after two fix rounds (r1 0C/4H/5M/4L, r2 0C/3H/1M/2L, r3 0C/0H/1M/4L; Medium and Lows deferred or handed to p03/p04); head 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c; selected phase gate pending. rgi-p02-review-outcome-20261101
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

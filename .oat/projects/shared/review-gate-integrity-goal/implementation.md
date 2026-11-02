@@ -327,6 +327,23 @@ Reviewer request `rgi-p02-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`)
 | Exact field token and suffix                     | `Update review metadata` proposed for Date       | Two claim-binding targets failed; 28 unrelated tests passed              | `finding-claim-field-mismatch`         |
 | Descriptive-prose target unavailable             | invented `Clerical Observation` target           | Target failed; invented target verified; 29 unrelated tests passed       | `descriptive-prose-target-unavailable` |
 
+### Review Received: p02 (round 3)
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p02-review-2026-11-02T001304Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 4
+
+Reviewer request `rgi-p02-rev-20261101-03` (`oat-reviewer-claude-opus-5-5-high`); reviewed range `c8a12f51dc6ee7a4f863a0fbb0c58290377e2292..9ef1fcb89807a67dd9da78bbe4b6b8e45810116c`; reconnaissance not attempted. All round-2 fixes hold under real-shaped inputs. The fix loop used both retries (limit 2); no blocking finding remains.
+
+- M1 (Medium): the verifier requires the Reviews `Date` cell to equal the artifact's UTC `oat_generated_at` date, but receive writes its local run day, so a genuine repair can be refused (it fails closed) → approved deferral to p03's first record (see Deferred Findings): drop Date from the identity check, since the reviewed head and archived timestamp identify the run.
+- L1 (Low): the p02-t01 task-plan applicability note is stale, and its controls run on a brief-shaped `plan.md` → approved deferral to p03 (see Deferred Findings).
+- L2 (Low): a later phase's code commit stales a phase-scope settlement, and replay runs only when HEAD equals the published head; the p03 consumer decision is unrecorded → handoff to p03 (see Deferred Findings).
+- L3 (Low): two fixture-only constraints (a finding title naming the "`<Field>` cell" or column; a placeholder receipt Outcome line before settlement) are not handed to p04 → handoff to p04 (see Deferred Findings).
+- L4 (Low): Git and I/O failures return `refused` with exit 1 instead of a distinguishable operational failure → approved deferral to p03 (see Deferred Findings).
+
+**Outcome:** passed (per-phase review); the selected p02 phase gate follows.
+
 ## Phase p03: Records and code consumers
 
 **Status:** pending
@@ -368,6 +385,11 @@ Reviewer request `rgi-p02-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`)
 - run/v1 · request=rgi-p01-fix-20261101-01 · scope=project:review-gate-integrity-goal:p01 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=resume:rgi-p01-impl-20261101-01 · observed=~ · match=~
 - run/v1 · request=rgi-p01-rev-20261101-02 · scope=project:review-gate-integrity-goal:p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p02-impl-20261101-01 · scope=project:review-gate-integrity-goal:p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p02-rev-20261101-01 · scope=project:review-gate-integrity-goal:p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p02-fix-20261101-01 · scope=project:review-gate-integrity-goal:p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=resume:rgi-p02-impl-20261101-01 · observed=~ · match=~
+- run/v1 · request=rgi-p02-rev-20261101-02 · scope=project:review-gate-integrity-goal:p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p02-fix-20261101-02 · scope=project:review-gate-integrity-goal:p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=resume:rgi-p02-impl-20261101-01 · observed=~ · match=~
+- run/v1 · request=rgi-p02-rev-20261101-03 · scope=project:review-gate-integrity-goal:p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -396,6 +418,11 @@ Reviewer request `rgi-p02-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`)
 - p01 review L2 (Low): `- **L1:** text` list items parse with title `L1:` and no explicit ID. Deferred to p08, which owns the stable finding key over p01's records. Trigger: p08 start.
 - p01 review round 2 L1 (Low): a wrapped or nested detail line under a bold finding title is refused as orphaned, and the reviewer contract does not warn about the shape. It fails closed. Deferred. Trigger: the first observed refusal of this shape in a real gate run, or p08.
 - p01 review round 2 L2 (Low): explicit-ID duplicate refusal is order-dependent (a plain list finding before `**M1 — …**` is refused as a duplicate). It fails closed. Deferred to p08, which owns finding identity and keys.
+- p02 review round 3 M1 (Medium): Reviews `Date` must equal the artifact's UTC date, which refuses genuine repairs across timezones. Fails closed. Deferred to p03's first record: drop Date from the settlement identity check. Trigger: p03 start.
+- p02 review round 3 L1 (Low): the p02-t01 task-plan applicability note is stale and lacks a task-plan-shaped control. Deferred to p03. Trigger: p03 start.
+- p02 review round 3 L2 (Low): phase-scope settlement staleness after later phases' code commits, and HEAD-equality replay. Handoff: p03 decides how consumers judge an older phase's settlement. Trigger: p03 start.
+- p02 review round 3 L3 (Low): fixture-only constraints (finding title names the field cell; placeholder receipt Outcome before settlement). Handoff to p04's receive proposal step. Trigger: p04 start.
+- p02 review round 3 L4 (Low): operational failures (Git or I/O) are reported as `refused` with exit 1. Deferred to p03: distinguish operational failure (exit 2) from verification refusal. Trigger: p03 start.
 - p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (p02 to p04 or m04) that needs the code without matching message text.
 
 ## Deviations from Plan / Design

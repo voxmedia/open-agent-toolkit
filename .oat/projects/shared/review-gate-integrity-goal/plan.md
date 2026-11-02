@@ -407,7 +407,8 @@ and p05 consume p03's records.
 | p01   | code     | fixes_completed | 2026-11-01 | reviews/archived/p01-review-2026-11-01T220753Z.md           | ffa8f869881fea4fbf51b7e31105b4a1f033ec63 | manual     | -           |
 | p01   | code     | passed          | 2026-11-01 | reviews/archived/p01-review-2026-11-01T222248Z.md           | ded0985d59ee8039415ad163c750cb9abe2f2c08 | manual     | -           |
 | p02   | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T224642Z.md           | 09d8f57b55dbf2ab0b2d8f5c9183d212e86974ae | manual     | -           |
-| p02   | code     | fixes_added     | 2026-11-01 | reviews/archived/p02-review-2026-11-01T232603Z.md           | 4497d05f532e3d52984efaf7fde684c65f008b71 | manual     | -           |
+| p02   | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T232603Z.md           | 4497d05f532e3d52984efaf7fde684c65f008b71 | manual     | -           |
+| p02   | code     | passed          | 2026-11-01 | reviews/archived/p02-review-2026-11-02T001304Z.md           | 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c | manual     | -           |
 | p03   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
