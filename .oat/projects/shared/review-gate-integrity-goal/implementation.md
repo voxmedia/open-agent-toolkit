@@ -875,6 +875,15 @@ Late-fix rule (second advance): The head advanced again to `efba7a82519fbd12beae
 
 Late-fix rule (third advance): the second advance commit rewrote a recorded journal line, which the append-only rule and section 12.8 refuse after a reviewed head. Commit `1a5a37684f05492470952fdc54359a082ac9cc58` restored that line and appended the correction, so the head advances to it and the gate reviews a range that contains every rewrite.
 
+### Task p11-t07: Address m01 integrated review findings
+
+**Status:** in_progress
+**Executor:** root
+**Source review:** `reviews/archived/m01-review-2026-11-02T234808Z.md` (M1, L1, L2)
+**Intent:** Close limit 1's review-artifact gap (review artifacts are moved or archived by receive, never edited; no fix edits a review artifact's findings, frontmatter or provenance) with a pin and a negative control; append the self-application correction after the p10 round-3 receipt; correct the p11 Progress Overview row.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `implementation.md`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
@@ -915,6 +924,7 @@ Late-fix rule (third advance): the second advance commit rewrote a recorded jour
 - run/v1 · request=rgi-p11-impl-20261102-01 · scope=p11 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p11-rev-20261102-01 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p11 review fix (p11-t06) · reason: four Lows of a passing review, fixed at receive · root model claude-opus-5-5
+- Root-inline phase: p11 m01-integrated-review fix (p11-t07) · reason: one Medium and two Lows, a one-sentence definition change plus journal corrections · root model claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
