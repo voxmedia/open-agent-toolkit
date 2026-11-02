@@ -3,18 +3,13 @@ oat_template: false
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-11-01
+oat_last_updated: 2026-11-02
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_auto_review_at_hill_checkpoints: false # brief: no checkpoints
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: goal
-oat_phase_review_gate:
-  enabled: true
-  phases: [p02, p03, p05]
-  review_type: code
-  exit_nonzero_on: high
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
@@ -56,15 +51,22 @@ gate cannot show whether it was converging or stuck (#327), and outside goal
 mode, closeout checks only its sequence snapshot, not whether each required
 receipt still covers the current head (#201).
 
-This goal delivers, one merged milestone at a time: a verified clerical
-settlement that needs no re-review and no attempt debit, first for project
-code-review and implementation paths and then for planning gates and artifact
-reviews; exact-event
+This goal delivers, one merged milestone at a time: a prose rule under which
+bookkeeping-only findings are fixed at receive with no re-review, no new review
+cycle and no gate relaunch, on every project review and gate path; exact-event
 consistency for every review row and gate receipt; convergence visibility for
 repeated gate attempts; and non-goal closeout freshness for every required
 receipt. Throughout, independent review keeps its authority: raw findings,
-severities, counts and verdicts are never rewritten, and a clerical settlement
-is never recorded as a reviewer pass.
+severities, counts and verdicts are never rewritten, and any finding that is
+not bookkeeping follows today's flow.
+
+**Amended 2026-11-02.** m01 was first approved as a verified clerical
+settlement backed by a read-only CLI verifier. After p01 and p02 were built, a
+complexity review found that design far larger than the pain it fixes, and its
+closed repair kinds would have settled about one of seven recorded incidents.
+The operator chose the prose-only rule recorded under Decisions. p02's verifier
+is reverted, the old m01 phases p03 to p05 and the old m02 phase p06 are
+removed, and planning gates and artifact reviews fold into m01.
 
 Verified starting facts: `references/research/current-main-facts.md`.
 
@@ -72,249 +74,108 @@ Verified starting facts: `references/research/current-main-facts.md`.
 
 <!-- Number each outcome and name the evidence that will show it holds. Completion is audited against this list. -->
 
-1. **Clerical settlement for project code-review and implementation paths (m01).** In the root phase review, phase gate, final review, implement exit gate, and goal milestone exit and integrated review, a code review (`oat_review_type: code`) or gate whose every finding is a verified clerical repair settles with zero further reviewer dispatch and no attempt debit. It is recorded as Reviews status `resolved` and carrier `status: allowed` with `disposition: clerical_resolved`, never `passed`, and the raw verdict and counts are unchanged. In goal delivery scopes, a repair settles only when the whole commit chain through the settlement-recording commits is also a permitted bookkeeping successor under the unchanged brief contract section 12.8; a repair that rule rejects (for example a Reviewed Head correction) is refused with a named reason. Artifact reviews, reviews of unknown or uncorroborated type, and planning-skill gates keep their existing behavior in m01 and never read `resolved` or `clerical_resolved` as `passed`. — Evidence: one end-to-end control through the built CLI and the real receive and carrier boundary, in which a goal-mode integrated review with blocking findings, whose only finding is a stale archived-artifact reference in a Reviews row Artifact cell, settles to deliverable with no reviewer dispatch, no review-cycle increment, and an unchanged exit-carrier attempt count.
-2. **Clerical settlement never hides substantive work (m01).** A substantive finding tagged as clerical, a commit-bearing but incomplete task, a forged `resolved` row, a forged `allowed`/`clerical_resolved` carrier without matching settlement proof, an edit that invents missing review evidence or promotes a Status, missing durable proof, and a resumed receive each fail to produce an acceptance or a repeated effect. A later substantive change stales the settled evidence exactly as it stales a reviewer pass. — Evidence: one distinct negative control per case through its owning public boundary (verifier CLI, receive, delivery check or closeout-check), each shown able to fail by neutralizing its guard, with the probe and expected outcome recorded in the journal.
+1. **Bookkeeping-only findings settle at receive (m01).** On every project review and gate path (`oat-project-review-receive`; implement's per-phase review, optional phase gate, final review, implement exit gate, and goal milestone exit gate and integrated review; the planning skills' artifact-review loops and lifecycle gates), when every finding of one review or gate result is bookkeeping, the receiver fixes them all in one commit with a one-line note per finding and records the review `passed` with the note "bookkeeping-only fixes applied at receive". No reviewer is dispatched, no review cycle is counted, and a blocking gate uses no attempt and is not relaunched: it counts as satisfied (carrier `status: allowed`, `disposition: passed`) while its raw verdict and counts stay in the gate receipt. A result with any non-bookkeeping finding follows today's flow unchanged. — Evidence: each changed path states the rule, pinned by contract tests; a walkthrough of at least two real recorded incidents (the #233 gate relaunch and one bookkeeping-only phase or final review rerun) shows the rule settles each without a rerun; the autonomy inventory and contract suites pass.
+2. **Bookkeeping is defined narrowly, once (m01).** One shared definition says a finding is bookkeeping when it only asks to correct a record of existing evidence or state: a stale Reviews row cell or status label, an archived-artifact path reference, a derived counter, a task-SHA list, a progress label, or provenance wording. It is never bookkeeping when it asks for a missing review, a requirement change, an approval, a new receipt, completion of unfinished work, or an edit to a `**Status:**` acceptance marker, a Reviews row's `Reviewed Head`, or a set-once delivery field (brief contract section 12.8). Reviewers may mark a finding `(bookkeeping)` inside its bold title; the mark is advisory, the receiver decides, and a doubtful finding is not bookkeeping. — Evidence: the definition and its exclusions are pinned by a contract test; `oat-reviewer.md` documents the marker; a parser test shows a marked finding yields the same counts, severities and verdict as its unmarked twin.
 3. **Verdict findings are identified, not tallied (m01).** The gate verdict parser accepts the captured #339 finding shape (an explicit bold finding-title marker followed by column-zero detail bullets with closed, exact labels) as one finding per title. It keeps genuinely distinct list-item findings as separate findings, refuses with a structured, receive-ineligible failure when ownership of a detail bullet is ambiguous rather than guessing, keeps the existing all-source refusal when declared and body counts disagree, and emits per-finding records (#339 parser slice). — Evidence: two fixtures with provenance headers, neither with invented content. The first is the issue #339 reproduction exactly as published; its header records that the issue text is abbreviated, so the original 2 Medium / 3 Low result cannot be reproduced from it. Its body tally changes from 6 Medium / 2 Low to 2 Medium / 1 Low, because detail bullets are no longer counted as findings. With its declared count line it is still refused for disagreement (3 Low declared against 1 in the abbreviated body), which is correct. The second is the reviewer's returned message from the backlog-wave-5 exit-gate r1 run, extracted from gate stderr with the JSONL events stripped. It yields the categorical outcome (counts or a structured refusal) recorded in its header before the grammar change, and serves as real-output evidence for the bold title marker and detail labels. A genuine disagreement is still refused. A body-only undercount control keeps a genuinely separate finding that follows a bold-title finding, even when its title starts with a detail-like word. An orphan detail item is refused, never ignored.
-4. **Clerical settlement for artifact reviews and planning-skill gates (m02, refined at re-alignment).** Artifact reviews on the receive artifact-review path (governed by `REVIEWRECEIVE-01/07`) and the plan, quick-start, import-plan, lite, brief and goal gate paths apply the same verified settlement through the same verifier and records. — Evidence: settled at re-alignment after m01; at minimum one artifact-review control and one planning-gate control per supported mode family.
-5. **Exact-event consistency (m03, refined at re-alignment).** Every review disposition and gate receipt binds to exactly one ledger event; duplicate rows are prevented and existing duplicates are repairable; the remaining source-qualified provenance fields that consumers need are emitted; and pull-request skills list pending required reviews before a PR is created. — Evidence: settled at re-alignment; at minimum the repeated-blocking-gate fixture from `BL-260820-bind-each-gate-review`.
-6. **Gate convergence visibility (m04, refined at re-alignment).** For every gate attempt after the first, each finding is marked new or carried over, the result reports new, carried-over and resolved counts per attempt, and findings carry the contract classification (accepted-requirement, regression, new-hardening) derived from m01's eligibility decision. These feed the existing exhaustion stop and complexity review. — Evidence: settled at re-alignment; at minimum a converging, a stuck and a reworded-carried-over attempt sequence.
-7. **Non-goal closeout freshness (m05, refined at re-alignment).** Outside goal mode, closeout refuses absent or stale evidence for every required review, check and gate receipt against the current head, through a documented bookkeeping rule rather than a broad exemption. — Evidence: settled at re-alignment; at minimum the RP-03 late-documentation case from `BL-260820-track-pr-closeout-evidence`.
+4. **Exact-event consistency (m02, refined at re-alignment).** Every review disposition and gate receipt binds to exactly one ledger event; duplicate rows are prevented and existing duplicates are repairable; the remaining source-qualified provenance fields that consumers need are emitted; and pull-request skills list pending required reviews before a PR is created. — Evidence: settled at re-alignment; at minimum the repeated-blocking-gate fixture from `BL-260820-bind-each-gate-review`.
+5. **Gate convergence visibility (m03, refined at re-alignment).** For every gate attempt after the first, each finding is marked new or carried over, the result reports new, carried-over and resolved counts per attempt, and findings carry the contract classification (accepted-requirement, regression, new-hardening), with bookkeeping findings reported as their own class under m01's definition. These feed the existing exhaustion stop and complexity review. — Evidence: settled at re-alignment; at minimum a converging, a stuck and a reworded-carried-over attempt sequence.
+6. **Non-goal closeout freshness (m04, refined at re-alignment).** Outside goal mode, closeout refuses absent or stale evidence for every required review, check and gate receipt against the current head, through a documented bookkeeping rule rather than a broad exemption. — Evidence: settled at re-alignment; at minimum the RP-03 late-documentation case from `BL-260820-track-pr-closeout-evidence`.
 
 ## Approach
 
-The work extends existing contracts and adds one read-only verifier. It does
-not introduce a new evidence store, a new event-ID column, or a second
-classifier.
+m01 is skill prose plus the p01 parser fix. It adds no verifier, no new Reviews
+status, no new carrier disposition, no evidence store and no event-ID column.
 
-- **Code reviews only in m01.** Settlement authority applies only to events
-  whose review type is corroborated as `code`. Artifact reviews and reviews of
-  unknown or uncorroborated type keep their existing edit, approval and
-  re-review behavior until m02.
-- **Eligibility is decided once.** A finding is clerical only when it asks to
-  correct a record of existing evidence or authority. It is never clerical when
-  it asks to obtain a missing review, change a requirement, invent a receipt,
-  grant approval, promote a status, or infer completion. Severity is a separate
-  dimension: a High finding can be clerical, and a Low content finding is still
-  content.
-- **Receiver authority.** Reviewers may tag a finding with a repair kind, but
-  the tag is advisory. The receiving owner decides, and only after verification.
-  The reviewer's verdict, counts and threshold result are preserved unchanged.
-- **Verify, then record, then route.** The receiving owner repairs the record,
-  commits the repair, runs the read-only verifier, and only then writes the
-  settlement record in a separate commit, before routing onward or applying any
-  attempt or failure policy. Mixed, unknown or unverifiable sets follow ordinary
-  review.
-- **Consumers ask their own question.** Routing, acceptance, delivery and
-  cleanup each accept "a reviewer pass, or a valid clerical resolution of this
-  required event" at their own boundary and then still apply every existing
-  freshness and coverage check. No reader replaces `passed` with membership in a
-  set.
-
-### Design
-
-**Closed repair kinds (m01).** Each kind names its authoritative source.
-Anything else is ordinary review.
-
-1. _Review-row metadata._ A `## Reviews` cell other than Status (Date, Artifact,
-   Reviewed Head, Invocation, Gate Target) that disagrees with its own review
-   artifact or retained gate proof. Status is never corrected by copying artifact
-   status or counts. A mis-transcribed Status may be restored only from an
-   independently existing, bound receive or acceptance receipt; otherwise the
-   event goes through the new resolution route. A genuinely reviewed head is
-   never changed to the repair head. When Reviewed Head is itself the wrong cell,
-   the actual reviewed revision is established independently, and the proposed
-   value is never its own oracle.
-2. _Archived-artifact reference._ A reference to a review artifact that now
-   lives under `reviews/archived/`, where the source and archived counterparts
-   are proven to be the same event and run. Filename coincidence is not
-   identity.
-3. _Descriptive prose._ Purely descriptive prose synchronized from a validated
-   event row, where the prose is not itself a task-completion, phase-acceptance,
-   gate or approval marker. A stale or forged row never authorizes another view.
-
-Routing and progress pointers, phase status and task completion are excluded:
-commits and anchors prove implementation history, not verification or
-acceptance.
-
-**Verifier (CLI, read-only).** It takes a structured proposal: the explicitly
-selected review event (scope, type, artifact; never "latest for this scope"),
-and for each finding its finding ID, repair kind, corrected field and
-authoritative source, plus the repair range. It checks, with per-check reasons
-in JSON:
-
-- exactly one ledger event matches the tuple;
-- the actual reviewed revision, and for gates the run and target, are
-  corroborated against the retained artifact and gate proof;
-- every finding of the event is covered by an eligible proposal entry;
-- the reviewed subject is unchanged between the reviewed revision and the
-  repair head;
-- every repair commit changes only the named fields of permitted records;
-- each corrected field now agrees with its authoritative source.
-
-Tags and a stored `verifier: success` are never proof. The verifier reuses
-`delivery/evidence.ts` judgments selectively, never as a finding-resolution
-oracle: that evaluator admits arbitrary review-artifact and `summary.md` edits,
-and its plan and journal rules follow brief grammar. The goal contract (brief
-contract section 12.8) is preserved, not broadened.
-
-**Goal delivery scopes.** A settlement must pass two tests: the findings are
-eligible clerical repairs, and the resulting evidence stays a permitted
-bookkeeping successor under the unchanged section 12.8 evaluator. The second
-test checks each intervening commit, including the settlement-recording and
-receive commits up to the published head, not only the net repair diff. A
-repair that the evaluator would reject (a Reviewed Head correction, a rewritten
-journal observation, an approved-plan edit) is refused with a named
-ineligibility reason. The prohibition is reported before repair when it is
-known, and final verification still inspects the committed result:
-first-settlement mode checks the chain through the repair head, and replay mode
-checks it through the settlement-recording and receive commits up to the
-published head. No separate simulation engine is built for this.
-
-**Replay without the local review file.** The first settlement may read the
-local review artifact and retained gate proof. Later consumers (delivery check
-and refresh, closeout-check) re-verify from committed evidence only: the journal
-`### Review Received:` receipt, the settlement entry that references it, and
-immutable revision bindings. Review files stay local-only. Missing durable proof
-refuses. The repair head is recorded separately from the commit that records the
-settlement, and a later substantive change never inherits a past verification.
-
-**Records.**
-
-- Reviews Status `resolved`: re-review not required, clerical resolution
-  verified. It is terminal for routing but never `passed`.
-- One bounded, machine-checkable entry in the journal's `## Reviews and Gates`
-  slot, bound to the event tuple, the referenced receipt, the findings, the
-  reviewed revision, the repair range and the corroborated proof. It need not be
-  a single line.
-- Gate carriers record `status: allowed` with `disposition: clerical_resolved`.
-  `allowed` means permission to proceed, not a reviewer pass, as with `warned`
-  and `prompt_approved`. The raw blocked verdict and counts stay in the bound
-  gate receipt and settlement entry, and the carrier keeps the head the gate
-  actually reviewed. The write rules in `.agents/docs/gate-approval-record.md`
-  and its vendored copies admit the pair only for the implement exit carrier
-  (`oat_implement_exit_gate`) and the milestone exit carrier
-  (`oat_milestone_gates[mNN].exit`). Planning carriers, including the goal
-  milestone `plan` carrier (`oat_milestone_gates[mNN].plan`), treat it as
-  malformed until m02, rejected before any plan-carrier freshness shortcut.
-- Writing the pair is not enough, because current readers accept an allowed,
-  fresh carrier without settlement proof (`delivery/evidence.ts:1079,1147-1171`;
-  `router.ts:667-684`). Every authoritative boundary that consumes a
-  `clerical_resolved` carrier (implement and milestone exit, delivery evidence,
-  closeout) verifies corroborated settlement for that exact gate run, artifact,
-  target, reviewed revision, configuration and subject, then applies the
-  unchanged freshness and coverage checks. Historical delivery bindings and
-  current working carriers stay separate. Missing, forged or other-event proof
-  unlocks neither. The pure router may display the stored pair and route to the
-  validation owner, but it never substitutes for executable acceptance. Older
-  installed readers may still accept `allowed`, so the docs name the supported
-  consuming toolchain rather than claiming old versions fail closed.
-- The integrated-review disposition union
-  (`passed | stale | failed | null`, `packages/control-plane/src/types.ts:372`)
-  is extended explicitly, never coerced to `passed`. The settlement-recording
-  commits never move set-once delivery fields (brief contract section 12.8)
-  themselves and never advance any reviewed head to the repair head. A settled
-  delivery-time review (`code mNN/dNN`) is a genuine new review, so it binds its
-  own new artifact and the head its reviewer actually reviewed, exactly as a
-  clean receive would; only its clerical findings are settled.
-
-**Purity and ordering.** The control-plane router stays pure. It reads
-persisted state, never runs Git, and never spawns the CLI. CLI orchestration
-validates before the authoritative transition. Settlement happens before
-failure policy: operational, correlation and validation failures still stop
-regardless of `onFailure: warn`, and an unresolved `prompt` gate still needs
-direction. No retrospective attempt refunds. An interrupted settlement is
-re-verified before any further transition, and a reviewer is never rerun to
-manufacture missing proof.
-
-**Autonomy.** Under `OAT_AUTONOMOUS=1`, verified clerical settlement may proceed
-without stopping once this policy is approved. Each delivery updates the shared
-resolution rules and the existing autonomy inventory rows whose behavior it
-changes, including `REVIEWRECEIVE-06/09`, `IMPLEMENT-06/10/12/18`, `PRFINAL-03` and `COMPLETE-03` in m01, and the
-planning rows in m02. In m01, `REVIEWRECEIVE-01/07` (artifact-review edit
-approval and next action) are edited only to state that clerical settlement
-does not apply to artifact reviews until m02; their behavior is unchanged. A settlement never infers completion, waives HiLL, grants
-approval, repairs an invalid reviewer artifact, accepts an unresolved Critical,
-changes policy or exceeds a budget.
+- **One definition, many call sites.** The bookkeeping definition (Outcome 2)
+  lives in one shared place. Each review and gate path names it and adds one
+  branch: "every finding is bookkeeping → fix in one commit, note each, record
+  `passed`, route onward." The branch sits next to today's sentences rather
+  than rewording them, so existing pins and behavior for every other case stay
+  intact.
+- **Receiver decides.** The receiving agent classifies each finding against the
+  definition. A reviewer's `(bookkeeping)` mark is a hint, never a count or
+  verdict change. A finding the receiver is unsure about is not bookkeeping.
+- **`passed` means "no substantive finding remains".** A bookkeeping-only review
+  is recorded `passed` with the note, so the router, pr-final, complete,
+  cleanup, delivery check and closeout-check need no change: they already
+  accept `passed`. The `review-receive` rule that `passed` is never written
+  for completed fixes gains one stated exception for this case.
+- **Gates.** A blocking gate whose findings are all bookkeeping is satisfied
+  once the fix commit lands: the carrier records `allowed`/`passed`, no attempt
+  is counted and the gate is not relaunched. The gate receipt keeps the raw
+  blocked verdict and counts. The effective-delta freshness rule already treats
+  project-tracking descendants as closeout-only, so the fix commit does not
+  stale the carrier; the goal bookkeeping-successor rule (brief contract
+  section 12.8) is unchanged, which is why set-once delivery fields and
+  `Reviewed Head` are excluded from the definition.
+- **Autonomy.** Under `OAT_AUTONOMOUS=1` the rule applies without a stop. The
+  autonomy rows that govern re-review and gate retry say so; a bookkeeping
+  repair never infers completion, waives HiLL, grants approval or accepts an
+  unresolved Critical.
 
 ## Constraints and Out of Scope
 
-- **Constraint:** Raw reviewer findings, severities, counts and verdicts are never rewritten; a clerical settlement is never recorded or reported as `passed`.
+- **Constraint:** Raw reviewer findings, severities, counts and verdicts are never rewritten; a bookkeeping-only review is recorded `passed` only with its note, and the gate receipt keeps the raw verdict.
 - **Constraint:** Each milestone PR bumps all five lockstep public package versions (bundled skills and agents count as shipped CLI functionality), the `metadata.version` of every changed canonical skill, and the top-level `version:` of `.agents/agents/oat-reviewer.md` when it changes.
 - **Constraint:** After any canonical skill or agent edit, run `oat sync --scope project` and commit the regenerated tracked provider views and `.oat/sync/manifest.json` with the change.
 - **Constraint:** Each milestone runs the AGENTS.md Definition of Done gates in CI order, with explicit exit-code capture and evidence-grade reruns where Turborepo may replay caches, plus the skill contract tests (`src/commands/init/tools/shared` and `src/validation`) whenever skill prose changes.
-- **Constraint:** Assurance-bearing changes carry reproduction-grade negative controls (bad state accepted before, rejected after, valid control still accepted), each shown able to fail by neutralizing its guard. Keep them distinct per failure; do not build a broad matrix at every layer.
+- **Constraint:** New skill prose avoids wording that the autonomy inventory scan treats as a decision point, or adds the matching coverage entries in the same commit.
 - **Constraint:** Parser fixtures derive from captured real reviewer output, with provenance recorded in the fixture header, and run against a real artifact before review is requested.
 - **Constraint:** Gate and review-provide behavior changes are probed with the branch build (`node packages/cli/dist/index.js --json gate review …`), not the `oat` on PATH.
 - **Constraint:** The control-plane router stays pure; review files stay local-only; no new evidence store or event-ID column; the goal bookkeeping-successor contract is preserved.
 - **Constraint:** Brief amendments stay local until the open delivery merges (pushing one stales that delivery, `DR-261011-bookkeeping-successors-keep`).
 - **Constraint:** Docs, autonomy-rule changes and decision records ship with the delivery whose behavior they describe (`README.md`, affected package READMEs, `apps/oat-docs/docs/`).
-- **Out of scope:** Planning-skill gate settlement and artifact-review settlement in m01 (both are m02); unsupported paths keep existing behavior.
+- **Out of scope:** A CLI verifier, replay checks, a `resolved` Reviews status or a `clerical_resolved` carrier disposition; the reverted p02 verifier stays recoverable from `7cb72f013` if a later incident shows the prose rule is abused.
 - **Out of scope:** A general tolerant Markdown-repair parser; p01 extends the grammar only for the captured finding-title shape.
 - **Out of scope:** Remote and ad-hoc non-project reviews (`oat-review-provide`, `packages/cli/src/review-remote/`).
 - **Out of scope:** Routing or progress pointer repair, phase-status promotion, and task or phase completion inferred from commits.
-- **Out of scope:** `BL-260927-derive-current-lifecycle-state` beyond m03's one-row-per-event slice; `BL-260711-add-activity-aware-gate`; `BL-260706-front-load-recurring-gate`; `BL-260902-file-deferred-repository`; `BL-261002-offer-a-strict-gate-reviewer`; `BL-261002-re-review-a-phase-only-after`; the #344 autonomous invalid-artifact recovery slice of `BL-260711-skip-re-review-for-bookkeeping`; the original-run rewrite and revalidation half of `BL-261003-diagnose-review-finding`; and the ReviewPlan-first redesign (`BL-260729-implement-reviewplan-first`, PR #190).
+- **Out of scope:** `BL-260927-derive-current-lifecycle-state` beyond m02's one-row-per-event slice; `BL-260711-add-activity-aware-gate`; `BL-260706-front-load-recurring-gate`; `BL-260902-file-deferred-repository`; `BL-261002-offer-a-strict-gate-reviewer`; `BL-261002-re-review-a-phase-only-after`; the #344 autonomous invalid-artifact recovery slice of `BL-260711-skip-re-review-for-bookkeeping`; the original-run rewrite and revalidation half of `BL-261003-diagnose-review-finding`; and the ReviewPlan-first redesign (`BL-260729-implement-reviewplan-first`, PR #190).
 - **Out of scope:** Extra cycles and proceed-with-override at exhaustion (`BL-260818-distinguish-operator-directed`), which stay open as a candidate for a later, optional, operator-selected delivery.
 
 ## Decisions
 
-- **Scope (Round 1 Q1).** The outcome areas are clerical settlement, exact-event consistency, convergence visibility and non-goal closeout freshness. m01 owns the minimal exact-event and eligibility guards its own settlement needs; m03 generalizes them. Rejected: folding closeout freshness into the binding milestone, because it mixes CLI closeout logic into binding work.
+- **Prose-only bookkeeping rule (amendment, 2026-11-02, operator).** After a complexity review of the built verifier, the operator chose a prose rule over verified settlement. Answers: (1b) a bookkeeping-only review is recorded `passed` with a note, not a new `resolved` status, so no reader changes; (2) a blocking gate whose findings are all bookkeeping is satisfied after the fix, with no relaunch and no attempt; (3) derived counters, task-SHA lists and progress labels are bookkeeping, `**Status:**` acceptance markers are not; (4a) this amendment takes one artifact-review attempt, then the `oat-project-goal` gate on a Sol model, then operator approval; (5) Claude Opus 5.5 implements the remaining m01 work, Opus 5.5 high self-reviews each phase, and Sol runs the gates. Rejected: (1a) a `resolved` status, which needs about nine reader and skill edits; finishing m01 as first designed, whose cost far exceeds the reruns it saves. Accepted cost: the rule is enforced by the receiving agent's judgment against the definition, not mechanically. Supersedes Round 2 Q6 (verifier), Q7 (closed repair kinds), Q8 (distinct records), Q9 (planning gates split out), R2, R3, R5's m02 clause, M3, and final review M3 and M4.
+- **Built work (amendment, 2026-11-02).** p01 is kept as accepted. p02's verifier code (`fcb556d4e`, `56bae738d`, `7cb72f013`) is reverted inside p02, which then closes. The never-started phases p03, p04, p05 and p06 are removed; their IDs are not reused. The optional phase gates are dropped. m02 folds into m01, and the later milestones are renumbered m02 to m04.
+- **Scope (Round 1 Q1).** The outcome areas are bookkeeping settlement, exact-event consistency, convergence visibility and non-goal closeout freshness. Rejected: folding closeout freshness into the binding milestone, because it mixes CLI closeout logic into binding work.
 - **Exclusions (Round 1 Q1).** The items listed under Out of scope stay open in the backlog. The ReviewPlan-first redesign stays parked.
 - **#339 parser slice only (Round 1 Q1).** From `BL-261003-diagnose-review-finding` only the verdict-parser slice ships: finding identification and count agreement, not trusting declared counts over body evidence or the reverse.
-- **BL-260818 out of the convergence milestone by default (Round 1 Q1).** m04 is visibility and classification reporting that feed the existing exhaustion stop and complexity review. Rejected: building the authorization record into m04, which adds authority, allowance accounting, resume and closeout obligations beyond visibility.
-- **One eligibility decision (Round 1 Q1).** m01 decides clerical eligibility once (see Approach). m04's accepted-requirement, regression and new-hardening reporting reuses it. Rejected: a second classifier with conflicting authority.
-- **Bookkeeping first (Round 1 Q2).** Clerical settlement ships before identity work, on condition that m01 selects the original event explicitly; requires exactly one matching ledger event corroborated by scope, type, artifact, the reviewed revision and, for gates, run and target; binds the settlement to that event and the exact repair revision, preserved through archival and idempotent on resume; and stops without acceptance on duplicate, missing or contradictory evidence. The existing (scope, type, artifact) tuple is the identity once its uniqueness and bindings are checked. Legacy duplicates may stay blocked until m03. Rejected: identity first, which delays the urgent pain by a milestone.
-- **Receiver authority with advisory tags (Round 1 Q3).** Reviewer tags advise and the receiving owner decides after verification. Every carrier, phase, final and PR consumer recognizes the verified settlement without relabeling it `passed`, and the blocked-but-resolved integration cost is accepted. Rejected: (a) letting reviewer tags remove findings from the blocking count, because a mis-tagged High would pass before any verification; (b) receiver-only with no tags, which loses useful reviewer input.
-- **No Medium/Low exemption (Round 1 Q4).** Severity and clerical eligibility are separate dimensions.
+- **BL-260818 out of the convergence milestone by default (Round 1 Q1).** m03 is visibility and classification reporting that feed the existing exhaustion stop and complexity review. Rejected: building the authorization record into m03, which adds authority, allowance accounting, resume and closeout obligations beyond visibility.
+- **One definition (Round 1 Q1, restated by the amendment).** m01 defines bookkeeping once. m03's classification reuses it. Rejected: a second classifier with conflicting authority.
+- **Bookkeeping first (Round 1 Q2).** Bookkeeping settlement ships before identity work, because it is the urgent pain. Rejected: identity first, which delays it by a milestone.
+- **No Medium/Low exemption (Round 1 Q4).** Severity and bookkeeping are separate dimensions: a High finding can be bookkeeping, and a Low content finding is still content.
 - **Merged endpoint (Round 1 Q5).** Each milestone's PR merges before the next activates, followed by re-alignment against the observed integration base. Rejected: `open`, which stacks branches on shared skill files and lockstep versions.
-- **Read-only CLI verifier (Round 2 Q6).** It takes structured per-finding input; it replays from committed receipt evidence without the local review file, referencing the existing `### Review Received:` receipt rather than a new store; it keeps the router pure; and it keeps the repair head separate from the recording commit. Rejected: skill-prose-only verification, whose controls cannot be repeated mechanically.
-- **Closed repair kinds (Round 2 Q7).** The three kinds under Design. Rejected: Status promotion copied from artifacts; Reviewed Head rewritten to the repair head; filename-only archive identity; commit-inferred pointer or completion repair (it could hide unfinished work); open receiver judgment over a diff check, which cannot prove resolution.
-- **Distinct records (Round 2 Q8).** Reviews Status `resolved`, carrier disposition `clerical_resolved`, and a bounded journal entry in `## Reviews and Gates`, accepted only with validated same-event proof. Each reader applies "a pass, or a valid clerical resolution of this required event" at its own acceptance boundary and keeps every freshness and coverage check. The integrated-review disposition union is extended explicitly. Rejected: replacing every `passed` check with membership in {passed, resolved}; overloading `fixes_completed`, which today means awaiting re-review.
-- **Split planning gates out of m01 (Round 2 Q9).** m01 is project code-review and implementation paths plus their real code consumers (verifier, receive, carrier, router, delivery and closeout must compose, including a blocked clerical integrated review in goal mode). Planning-skill gates are m02, and the later milestones are renumbered. Rejected: one milestone changing code-review acceptance and every planning gate's approval semantics in one PR.
-- **Autonomous settlement (Round 2 Q10).** Allowed after this policy is approved, only for verified clerical settlement, with the shared rules and existing inventory rows updated (see Approach). Rejected: an autonomous stop for every candidate settlement, because autonomous runs are where paperwork reruns cost most.
-- **Authority and decision record (Round 2 Q11).** As recorded under Delivery endpoint and authority. m01 records a decision stating the narrow exception and its exclusions, not a general power to repair lifecycle state.
-- **Narrow parser grammar (realignment R1).** Option (a), narrowed: support the captured explicit bold finding-title marker (for example `**M1 — title**` with its location suffix) and closed, exact detail labels taken from captured output. A distinct finding title or list-item finding wins over any detail-label heuristic. Ambiguous or orphaned detail blocks are refused, fenced examples are ignored, ownership never crosses a severity or section boundary, and no grouping is chosen because it matches declared counts. The all-source disagreement refusal stays. If the captured output cannot be parsed without broad prose inference, p01 stops and returns to the operator rather than switching to option (b) silently. Rejected: any bold paragraph as a title, and broad "starts with Fix/Issue" heuristics; (b) diagnosis only, which leaves #339 artifacts forcing reruns.
-- **Goal-scope §12.8 chain (realignment R2).** In goal delivery scopes, a settlement also requires the complete section 12.8 successor chain, settlement-recording commits included, with an up-front named refusal (see Design). A valid goal-scope settlement control is paired with the Reviewed Head correction refusal. Rejected: broadening the evaluator to accept clerical repairs.
-- **Carrier pair with reader enforcement (realignment R3).** `status: allowed` with `disposition: clerical_resolved`, raw blocked verdict and counts preserved, and reader-side settlement verification at every consuming boundary (see Design), proven by a forged-carrier control whose freshness otherwise passes. Rejected: write-rule changes alone (today's allowed-and-fresh readers would accept a forged carrier); a new carrier status value (every carrier reader branches on `allowed`/`blocked`).
-- **Code reviews only in m01 (realignment R4).** Artifact reviews keep existing behavior until m02; `REVIEWRECEIVE-01/07` are edited only to say so.
-- **No self-settlement (realignment R5).** See Delivery endpoint and authority. New behavior is demonstrated in scratch fixture projects with the branch build, while this project's own acceptance follows the existing ladder. Rejected: allowing the rule once m01 merges without a released, installed toolchain.
-- **Delivery-time settlement binds the new review (re-review M3).** A settled delivery-time review binds its own new artifact and its reviewer's actual reviewed head, exactly as a clean receive would; the settlement-recording commits never move set-once fields themselves or advance a reviewed head to the repair head. Rejected: deferring registered-delivery scopes, which would leave clerical-only findings on delivery-time reviews rerunning.
-- **#339 fixture sources (re-review M6, final review M1 and M2).** The original #339 reviewer artifact is unavailable. p01 uses the issue #339 reproduction exactly as published and asserts its own categorical outcomes (body tally 2 Medium / 1 Low after the change; still refused for disagreement with its declared count line). It also uses the reviewer's returned message from the backlog-wave-5 exit-gate r1 run, extracted from gate stderr, with an expected categorical outcome fixed before the grammar change, as real-output evidence for the title marker and detail labels. Rejected: reconstructing the elided Low findings to recover 2/3 and 6/6 (invented fixture content can encode the same wrong model as the code); capturing a fresh artifact first (the shape cannot be produced on demand).
-- **Records defined with the verifier (final review M3).** p02 defines the minimal settlement entry and the Reviews `resolved` semantics its replay reads; p03 adopts them. Rejected: swapping p02 and p03, which reorders m01.
-- **Artifact-review settlement is an m02 outcome (final review M4).** Outcome 4 and p06 cover artifact reviews as well as planning gates, so the terminal audit cannot pass without them. Rejected: filing artifact-review settlement as a separate backlog item.
-- **Planning setup (2026-11-01).** Dispatch policy High (recorded in `state.md`). Optional phase gate review runs after p02, p03 and p05; the phase gate selection for later milestones' phases is decided at each milestone's re-alignment. Both configured lifecycle gates (`oat-project-goal`, `oat-project-implement`) are kept.
-- **Goal workflow fit.** Several deliveries over time, each merged and re-aligned. The first milestone is concrete; later milestones depend on what m01 teaches about the verifier and records. One delivery would bundle four approval semantics into one PR; quick mode would require an approved up-front task plan the operator did not ask for.
+- **Narrow parser grammar (realignment R1).** Option (a), narrowed: support the captured explicit bold finding-title marker (for example `**M1 — title**` with its location suffix) and closed, exact detail labels taken from captured output. A distinct finding title or list-item finding wins over any detail-label heuristic. Ambiguous or orphaned detail blocks are refused, fenced examples are ignored, ownership never crosses a severity or section boundary, and no grouping is chosen because it matches declared counts. The all-source disagreement refusal stays. Rejected: any bold paragraph as a title, and broad "starts with Fix/Issue" heuristics; diagnosis only, which leaves #339 artifacts forcing reruns.
+- **No self-application in m01 (realignment R5, narrowed).** This project's own m01 reviews and gates follow the installed toolchain's existing ladder; the new rule governs this project only once it is released and installed.
+- **#339 fixture sources (re-review M6, final review M1 and M2).** The original #339 reviewer artifact is unavailable. p01 uses the issue #339 reproduction exactly as published and asserts its own categorical outcomes. It also uses the reviewer's returned message from the backlog-wave-5 exit-gate r1 run, extracted from gate stderr, with an expected categorical outcome fixed before the grammar change. Rejected: reconstructing the elided Low findings (invented fixture content can encode the same wrong model as the code); capturing a fresh artifact first (the shape cannot be produced on demand).
+- **Marker inside the bold title.** The optional `(bookkeeping)` mark goes inside the finding's bold title, because the parser's closed detail labels admit no new `Kind:` line and a mark after the bold would break location parsing.
+- **Planning setup (2026-11-01, amended 2026-11-02).** Dispatch policy High (recorded in `state.md`). No optional phase gates. Both configured lifecycle gates (`oat-project-goal`, `oat-project-implement`) are kept.
+- **Goal workflow fit.** Several deliveries over time, each merged and re-aligned. The first milestone is concrete; later milestones depend on what m01 teaches. Quick mode would require an approved up-front task plan the operator did not ask for.
 
 ## Known Unknowns
 
-- The exact title marker and closed detail-label set the captured reviewer output requires, and whether they can be recognized without prose inference — Settled by: p01
-- The settlement entry's shape and binding fields — Settled by: p02
-- The verifier's command name, its proposal input format (supplied or derived unambiguously), and its JSON shape — Settled by: p02
-- How far `delivery/evidence.ts` per-file judgments apply to task-plan modes (quick, spec-driven, import, lite), whose `plan.md` and journal grammar differ from brief grammar — Settled by: p02
-- How the pure router distinguishes a persisted `resolved` event that has a well-formed settlement entry from one that does not, without running Git; and which CLI boundaries must re-verify before a transition — Settled by: p03
-- The exact name and placement of the extended integrated-review disposition, and the migration of set-once delivery fields around it — Settled by: p03
-- Which `passed` checks in skill and contract prose (pr-final, complete, implement closeout, pr-progress, goal, and brief contract sections 12.3, 12.5, 12.6 and 12.7) need the acceptance-boundary rule, as opposed to leaving `resolved` unsupported — Settled by: p05
-- The planning-gate carriers' settlement shape (`oat_quick_start_gate`, `oat_brief_gate`, goal `plan` carriers) — Settled by: p06
-- The remaining provenance fields m03 and m05 actually consume, and the duplicate-row repair mechanism — Settled by: p07
+- Where the shared bookkeeping definition lives so that review-receive, implement and the planning skills can all reference it (a shared doc under `.agents/docs/` linked into each skill, or one owning skill named by the others) — Settled by: p10
+- Whether today's gate receipts already keep the raw blocked verdict and counts once the carrier records `allowed`/`passed`, or need one recorded line — Settled by: p10
+- Which planning skills restate the gate block-and-retry rule and the artifact-review retry loop, and need the branch (quick-start, plan, import-plan, brief, goal, lite, plan-writing) — Settled by: p11
+- The remaining provenance fields m02 and m04 actually consume, and the duplicate-row repair mechanism — Settled by: p07
 - The stable finding key rule for carried-over matching — Settled by: p08
 - Which non-goal receipt classes are required, and how self-advancing summary, document and PR outputs are bound — Settled by: p09
 
 ## Delivery endpoint and authority
 
 - **Endpoint:** merged — each milestone is delivered as its own pull request into `main`, and a milestone counts as delivered at its endpoint only when that PR is observed merged. The next milestone activates only after re-alignment against the observed integration base.
-- **Authority:** The operator approves this brief and each milestone amendment, and merges each milestone PR. The agent accepts phases only through the normal ladder (author self-check, a fresh per-phase review, the configured gates, and the milestone integrated review). There is no self-settlement in m01: its phases, gates and integrated review accept only through the existing ladder, without the clerical-settlement rule. From m02 activation onward, the approved rule may govern this project's reviews only through capabilities already released and installed in the actual execution toolchain (user-scope skills included), and m02's own amendment approval and plan gate cannot depend on the planning-gate settlement m02 has yet to ship. The agent never merges, never self-issues an approval or an exhaustion disposition, and never pushes a brief amendment onto an open delivery branch. Within the approved outcomes, constraints and evidence, the agent may split, add or reorder phases inside a milestone and make provisional phases concrete, logging each change.
+- **Authority:** The operator approves this brief and each milestone amendment, and merges each milestone PR. The agent accepts phases only through the normal ladder (author self-check, a per-phase review, the configured gates, and the milestone integrated review). m01's own reviews and gates do not use the bookkeeping rule m01 ships; from m02 onward the rule may govern this project only through capabilities already released and installed in the actual execution toolchain (user-scope skills included). The agent never merges, never self-issues an approval or an exhaustion disposition, and never pushes a brief amendment onto an open delivery branch. Within the approved outcomes, constraints and evidence, the agent may split, add or reorder phases inside a milestone and make provisional phases concrete, logging each change.
 - **Brief approved:** 2026-11-01 by user at cbc8836c7ca14d56742831a13fc0cd8e1fba2057
 
 ## Milestones
 
 <!-- One row per milestone: its id (m01, m02, …) and its ordered, comma-separated phase ids. Every phase, including revision phases, belongs to exactly one milestone. -->
 
-| Milestone | Phases                  |
-| --------- | ----------------------- |
-| m01       | p01, p02, p03, p04, p05 |
-| m02       | p06                     |
-| m03       | p07                     |
-| m04       | p08                     |
-| m05       | p09                     |
+| Milestone | Phases             |
+| --------- | ------------------ |
+| m01       | p01, p02, p10, p11 |
+| m02       | p07                |
+| m03       | p08                |
+| m04       | p09                |
 
 ## Phase p01: Verdict parser finding identification
 
@@ -333,51 +194,39 @@ changes policy or exceeds a budget.
 Neutralizing the ownership and title-precedence guard breaks the undercount assertion, and neutralizing the new title rule returns the #339 fixture's body tally to 6 Medium / 2 Low; both are recorded in the journal. Existing verdict and gate tests pass. The branch build parses one real artifact from `reviews/archived/` in this repository.
 **Provisional:** no
 
-## Phase p02: Read-only clerical-resolution verifier
+## Phase p02: Retire the clerical-resolution verifier
 
-**Intent:** Add a read-only CLI verifier that takes a structured proposal and checks the conditions listed under Design. The proposal names the explicitly selected review event, and for each finding its ID, repair kind (review-row metadata, archived-artifact reference or descriptive prose), corrected field and authoritative source, plus the repair range. The verifier returns JSON with per-check reasons. It supports both a first-settlement mode, which reads the local artifact and retained gate proof, and a replay mode, which reads committed evidence only. p02 defines the minimal settlement entry (in the journal's `## Reviews and Gates` slot) and the Reviews `resolved` semantics that replay reads; p03 adopts them. It reuses `delivery/evidence.ts` judgments selectively and leaves the goal contract unchanged. It grants settlement only to events whose review type is corroborated as `code`, and in goal delivery scopes it also checks the complete section 12.8 successor chain, through the repair head in first-settlement mode and through the settlement-recording and receive commits in replay mode, with named ineligibility reasons.
-**Exit evidence:** Built-CLI negative controls, each paired with a valid accepted control and shown able to fail by neutralizing its guard: a substantive finding proposed as clerical is refused; an artifact review or an event of uncorroborated type is refused; in a goal delivery scope, a Reviewed Head correction is refused with a named section 12.8 reason, while a valid goal-scope archived-reference settlement verifies; on replay, a settlement-recording commit that also rewrites a journal observation is refused; a Status promotion or invented review evidence in the repair range is refused; a duplicate or ambiguous matching event is refused; an archived counterpart from a different run is refused; a Reviewed Head proposed as its own oracle is refused; replay with the local review file deleted succeeds from committed evidence, and replay with the settlement's durable proof missing refuses. A genuine archived-reference repair verifies. The probes and their expected outcomes are recorded in the journal.
+**Intent:** p02 first built a read-only clerical-resolution verifier (`fcb556d4e`, `56bae738d`, `7cb72f013`), which passed code review at `9ef1fcb89`. The 2026-11-02 amendment retires it. Revert those three commits so that no verifier code, tests, help snapshot, CLI reference or README entry remains, and keep the journal history of the work. The code stays recoverable from `7cb72f013`.
+**Exit evidence:** `packages/cli/src/commands/project/clerical-settlement/` no longer exists, and `git diff 23c7d5ae9 HEAD` over every path the three commits touched is empty. The CLI type-check and test suites pass.
 **Provisional:** no
 
-## Phase p03: Records and code consumers
+## Phase p10: Bookkeeping definition and the receive rule
 
-**Intent:** Adopt the settlement records defined in p02, define the carrier pair, and teach the real code consumers to read them. Adopt the Reviews Status `resolved` and the settlement entry from p02, and define the gate-carrier pair `status: allowed` with `disposition: clerical_resolved`. Extend the write rules and malformed-combination rule in `.agents/docs/gate-approval-record.md` and its vendored copies for implement and milestone carriers only. Add reader-side settlement verification wherever a `clerical_resolved` carrier is consumed (implement and milestone exit, delivery evidence in `delivery/evidence.ts`, closeout), keeping historical delivery bindings separate from working carriers, and reject the pair on planning carriers (including `oat_milestone_gates[mNN].plan`) before the plan-carrier freshness shortcut. The write rules admit the pair only for `oat_implement_exit_gate` and `oat_milestone_gates[mNN].exit`. Extend the integrated-review disposition union (`packages/control-plane/src/types.ts:372`) and its parser normalization (`packages/control-plane/src/state/parser.ts`, which today maps an unknown disposition to null) explicitly. Teach the real code consumers to apply "a pass, or a valid clerical resolution of this required event" at their own boundary, then keep every freshness and coverage check: the control-plane router (pure: persisted state only), `oat project delivery check` and `refresh`, `oat project closeout-check`, `oat project journal check` (which validates the settlement entry's shape), and the cleanup readiness reader `projectPlanMarksComplete` (`packages/cli/src/commands/cleanup/project/project.utils.ts`). That reader is text-only, so p03 states whether it accepts a settled `final` row from persisted records or deliberately keeps treating `resolved` as not complete. Planning-gate carriers explicitly do not accept `resolved` or `clerical_resolved` in m01.
-**Exit evidence:** Controls through each owning public boundary, exercising the production scope builder and evaluator, each shown able to fail by neutralizing its guard: a forged `allowed`/`clerical_resolved` carrier with scope, configuration, reviewed head and published head otherwise valid is refused by delivery check and closeout-check for a settlement-proof failure, not a freshness failure, while a valid settlement is accepted and a proof from a different run is refused; a forged `resolved` row without a valid settlement entry is not accepted by delivery check or closeout-check; a settled event later followed by a substantive change is reported stale by delivery refresh and check; the settlement-recording commits leave set-once delivery fields and reviewed heads unchanged; a settled delivery-time review binds its own new artifact and its reviewer's actual reviewed head, as a clean receive would; a settlement that tries to bind the repair head is refused; the router routes a well-formed settled event as dispositioned and an unsettled `resolved` row to its verification owner; journal check refuses a malformed settlement entry; a planning-gate carrier, including `oat_milestone_gates[mNN].plan`, carrying `clerical_resolved` is not accepted; an artifact-type Reviews row (for example `plan`) with Status `resolved` and a well-formed settlement entry is not treated as passed by the router or goal activation. Each probe and its expected outcome is recorded in the journal. The cleanup reader's chosen behavior is pinned by a test. Control-plane, CLI and type-check suites pass. Brief contract sections 12.3, 12.5, 12.6 and 12.7 are aligned in p05 within the same milestone PR, so the p03 and p04 phase reviews judge against this brief's Design.
+**Intent:** Write the shared bookkeeping definition of Outcome 2, with its inclusions, its exclusions and the rule that a doubtful finding is not bookkeeping, in the one shared place this phase settles. In `oat-project-review-receive`, add the all-bookkeeping branch for code and artifact reviews, placed before fix-task creation and before any failure policy: fix every finding in one commit, note each in the receipt, record the Reviews row `passed` with the note "bookkeeping-only fixes applied at receive", skip re-review routing and the review-cycle count, and route onward. The goal integrated-review path takes its existing clean-receive transition (re-run `oat project delivery check`, and write `reviewing → delivering` only on `status: ok`). State the single exception to the rule that `passed` is never written for completed fixes. For a blocking gate result handled at receive, record that the gate is satisfied (carrier `allowed`/`passed`, no attempt counted) while its receipt keeps the raw verdict and counts, and add that write rule to `.agents/docs/gate-approval-record.md`. Document the optional `(bookkeeping)` mark inside the bold finding title in `.agents/agents/oat-reviewer.md`, advisory only, and bump its `version:`. Update the `REVIEWRECEIVE-01/02/06/07/09` autonomy rows and bump every changed skill's version.
+**Exit evidence:** Contract tests pin the definition and its exclusions, the receive branch, the `passed` exception and the gate write rule. A parser test shows a finding marked `(bookkeeping)` in both the list-item and the bold-title shape yields the same counts, severities and verdict as its unmarked twin. One recorded bookkeeping-only review rerun from project history is walked through the amended receive text and recorded in the journal, showing no reviewer dispatch and no cycle count. The skill contract suites (`src/commands/init/tools/shared`, `src/validation`) pass with updated pins, and `pnpm run check:skill-bumps` passes.
 **Provisional:** no
 
-## Phase p04: Receive settlement and the reviewer's advisory tag
+## Phase p11: Implement and planning paths, docs and release
 
-**Intent:** Settle verified clerical findings in the receive skill, and let reviewers advise. Add a clerical settlement step to `oat-project-review-receive`, run before fix-task creation and before failure policy: it builds the structured proposal, repairs the records, commits the repair, runs the verifier, then records `resolved` and the settlement entry (referencing the existing `### Review Received:` receipt) in a separate commit. After committing the settlement entry, and before any transition, it runs the verifier's replay mode and falls back to ordinary review on refusal; on resume it re-verifies the same way. Mixed, unknown or unverifiable sets follow ordinary review. Receive's goal integrated-review path treats a verified settlement like a clean receive: it records `resolved` and the extended integrated-review disposition (never `passed`), re-runs `oat project delivery check`, and writes `reviewing → delivering` (or advances the recovery stage) only on `status: ok`. The step applies only to code reviews: artifact reviews keep their existing receive behavior until m02, and no shared receive helper may enable artifact settlement. Add an optional per-finding repair-kind tag to `.agents/agents/oat-reviewer.md` that never affects counts or verdicts; its syntax lies inside p01's grammar, either inline in the finding title line or as a label added to p01's closed set with its pin. Update the shared resolution rules and the `REVIEWRECEIVE-06/09` autonomy inventory rows, edit `REVIEWRECEIVE-01/07` only to state that settlement does not apply to artifact reviews until m02, and bump skill and agent versions.
-**Exit evidence:** Receive-level controls run through mechanical boundaries over a fixture project, each shown able to fail by neutralizing its guard, with probe and expected outcome recorded in the journal: after a simulated resumed or duplicate receive, the verifier's replay and `oat project journal check` find exactly one settlement entry for the event tuple, and no attempt or counter changes; a falsely tagged substantive finding is refused by the verifier at receive's proposal step, so the event stays on the ordinary fix-and-re-review path; an artifact review with only clerical findings stays on its existing path; a fixture with tagged findings in both list-item and bold-title shapes parses with counts identical to its untagged twin. The skill contract suites (`src/commands/init/tools/shared`, `src/validation`) pass with updated pins, and `pnpm run check:skill-bumps` passes.
+**Intent:** Add the same branch, naming the shared definition, at every remaining place that re-dispatches a reviewer, counts a cycle or consumes a gate attempt after fixes. In `oat-project-implement`, that covers the per-phase review loop and optional phase gate (`references/phase-execution.md`) and the final review, the implement exit gate attempt rule and the goal milestone exit gate (`references/completion-and-closeout.md`). In the planning skills, it covers the artifact-review loop in `oat-project-plan-writing` and the Gate Execution sections of quick-start, plan, import-plan, brief, goal and lite. Each branch sits next to today's sentences rather than rewording them. Update the autonomy rows that govern these paths (`IMPLEMENT-12/18`, `QS-11/12`, `LITE-08/09`, `BRIEF-09/10`, `GOAL-09/10`, `PLAN-09/11`, and `PRFINAL-03` or `COMPLETE-03` only if their wording needs it), the brief contract wherever it restates the retry rules, and the workflow docs under `apps/oat-docs/docs/`. Bump every changed skill's version and the five lockstep public package versions, and record a decision with `oat decision new` stating the rule, its exclusions and why verified settlement was dropped.
+**Exit evidence:** Contract tests pin the branch on each changed path. A walkthrough of the #233 incident, a blocking gate whose only findings were bookkeeping, traces the amended gate text step by step and shows the gate satisfied with no attempt used and no relaunch; it is recorded in the journal. The full Definition of Done gate list passes with exit codes captured; the decision index is regenerated; and the docs build and docs-index freshness checks pass.
 **Provisional:** no
-
-## Phase p05: Implement paths, end-to-end composition, docs and decision record
-
-**Intent:** Settle verified clerical findings on every implement path, and ship the docs and decision record that describe it. Wire the settlement into `oat-project-implement` and its references for the root phase review, phase gate, final review, implement exit gate and goal milestone exit carrier: a verified clerical settlement routes onward with no reviewer redispatch and no attempt debit, the carrier keeps its raw blocked verdict and counts, and settlement precedes failure policy. Update the governing contract and the skills that restate integrated-review acceptance so it reads "passed, or a valid clerical resolution of this exact event": `oat-project-brief/references/brief-contract.md` sections 12.3, 12.5, 12.6 and 12.7, `oat-project-pr-progress`, `oat-project-goal`, the goal clean-receive restatement in `oat-project-review-receive` (whose transition p04 implements), and the skill-prose `passed` checks in pr-final, complete and implement closeout. Update `IMPLEMENT-06/10/12/18`, `PRFINAL-03`, `COMPLETE-03` and the workflow docs under `apps/oat-docs/docs/` (naming the supported consuming toolchain, since older installed readers may accept `allowed` without proof), bump every changed skill's version, and record a decision with `oat decision new` stating the narrow exception and its exclusions.
-**Exit evidence:** The Outcome 1 end-to-end control passes through the built CLI and the real receive and carrier boundary: a goal-mode integrated review with blocking findings, whose only finding is a stale archived-artifact reference in a Reviews row Artifact cell, settles to deliverable with zero reviewer dispatch: no new review artifact or review-cycle increment for the scope, and an unchanged exit-carrier `attempts_completed`. A commit-bearing incomplete task is refused by the verifier and not accepted by closeout-check. Both controls run in scratch fixture projects with the branch build, and both are shown able to fail by neutralizing their guards; this project's own m01 reviews are accepted only through the existing ladder. Each probe and its expected outcome is recorded in the journal. The full Definition of Done gate list passes with exit codes captured; the decision index is regenerated; and the docs build and docs-index freshness checks pass.
-**Provisional:** no
-
-## Phase p06: Planning-gate clerical settlement
-
-**Intent:** Extend the verified settlement to artifact reviews on the receive artifact-review path (`REVIEWRECEIVE-01/07`) and to the plan, quick-start, import-plan, lite, brief and goal gate paths and their carriers, updating the planning and artifact-review autonomy inventory rows, docs and contract pins. Refined at m02 re-alignment from what m01 taught.
-**Exit evidence:** At least one artifact-review control and one planning-gate control per supported mode family settle with no reviewer redispatch and no attempt debit, and the negative controls from p02 to p03 still refuse on the planning path. Refined at re-alignment.
-**Provisional:** yes
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
-**Intent:** Generalize m01's event guards to every review row and gate receipt. One row per event (the `plan` placeholder row in `.oat/templates/plan.md`, no unused `spec` and `design` rows in quick and lite scaffolds); duplicate prevention and repair; exact-event consumption in gate and root receive handoffs; the remaining source-qualified provenance fields consumers need (`BL-260820-emit-source-qualified`, gap-only); and the pending-required-review listing before a PR (`BL-261002-list-pending-required-reviews`). Refined at m03 re-alignment.
+**Intent:** Add exact-event guards to every review row and gate receipt. One row per event (the `plan` placeholder row in `.oat/templates/plan.md`, no unused `spec` and `design` rows in quick and lite scaffolds); duplicate prevention and repair; exact-event consumption in gate and root receive handoffs; the remaining source-qualified provenance fields consumers need (`BL-260820-emit-source-qualified`, gap-only); and the pending-required-review listing before a PR (`BL-261002-list-pending-required-reviews`). Refined at m02 re-alignment.
 **Exit evidence:** The repeated-blocking-gate fixture leaves no stale `received` event; a mismatched consumption fails closed with structured diagnostics; and pending required reviews are listed before PR creation. Refined at re-alignment.
 **Provisional:** yes
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
-**Intent:** Mark each finding new or carried over for every gate attempt after the first, using a documented stable finding key over p01's per-finding records. Report new, carried-over and resolved counts per attempt. Record the contract classification (accepted-requirement, regression, new-hardening) at receive, derived from m01's eligibility decision, so the existing exhaustion stop and complexity review start from recorded classes (`BL-260927-mark-gate-findings-as-new-or`, `BL-261013-classify-review-findings`). Refined at m04 re-alignment.
+**Intent:** Mark each finding new or carried over for every gate attempt after the first, using a documented stable finding key over p01's per-finding records. Report new, carried-over and resolved counts per attempt. Record the contract classification (accepted-requirement, regression, new-hardening) at receive, with bookkeeping findings classed under m01's definition, so the existing exhaustion stop and complexity review start from recorded classes (`BL-260927-mark-gate-findings-as-new-or`, `BL-261013-classify-review-findings`). Refined at m03 re-alignment.
 **Exit evidence:** Converging, stuck and reworded-carried-over attempt sequences are reported correctly; first attempts and single-attempt gates are unchanged; and a finding with no contract source reaches the operator rather than becoming a fix task. Refined at re-alignment.
 **Provisional:** yes
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
-**Intent:** Bind each required non-goal closeout receipt (final review, checks, exit gate, and summary, document and PR steps) to the head it covered, and make `oat project closeout-check` refuse absent or stale evidence through a documented bookkeeping rule (`BL-260820-track-pr-closeout-evidence`). Refined at m05 re-alignment.
+**Intent:** Bind each required non-goal closeout receipt (final review, checks, exit gate, and summary, document and PR steps) to the head it covered, and make `oat project closeout-check` refuse absent or stale evidence through a documented bookkeeping rule (`BL-260820-track-pr-closeout-evidence`). Refined at m04 re-alignment.
 **Exit evidence:** The RP-03 late-documentation case is reported stale and recovers after a rerun against the current head; current, stale and mixed receipts are covered. Refined at re-alignment.
 **Provisional:** yes
 
@@ -393,9 +242,8 @@ oat_plan_parallel_groups: [['p02', 'p03']]
 
 Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups may be declared whenever the phases become concrete.
 
-Default is `[]` (fully sequential, no worktrees). m01's phases are sequential:
-p02 consumes p01's per-finding records, p03 consumes p02's verifier, and p04
-and p05 consume p03's records.
+Default is `[]` (fully sequential, no worktrees). m01's remaining phases are
+sequential: p11 names the definition and mirrors the branch that p10 writes.
 
 ---
 
@@ -409,9 +257,8 @@ and p05 consume p03's records.
 | p02   | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T224642Z.md           | 09d8f57b55dbf2ab0b2d8f5c9183d212e86974ae | manual     | -           |
 | p02   | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T232603Z.md           | 4497d05f532e3d52984efaf7fde684c65f008b71 | manual     | -           |
 | p02   | code     | passed          | 2026-11-01 | reviews/archived/p02-review-2026-11-02T001304Z.md           | 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c | manual     | -           |
-| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
-| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
-| p05   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p10   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p11   | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan  | artifact | passed          | 2026-11-01 | reviews/archived/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -          | -           |
 
@@ -437,7 +284,7 @@ Writers must preserve every existing row and every unknown trailing cell.
 
 - Filled at terminal closeout.
 
-**Total: 9 phases**
+**Total: 7 phases**
 
 ---
 

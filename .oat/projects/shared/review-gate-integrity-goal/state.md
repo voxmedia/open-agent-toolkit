@@ -169,7 +169,8 @@ Plan - Authoring the goal Project Brief and its milestones
 - ✓ Brief and implementation artifacts scaffolded
 - ✓ Alignment interview (two rounds) complete; brief and milestones authored
 - ✓ Brief artifact review (three attempts), `oat-project-goal` gate passed, approved 2026-11-01
-- ⧗ m01 (p01-p05) implementation
+- ✓ p01 accepted; p02 verifier built and reviewed
+- ⧗ Brief amendment (2026-11-02): prose-only bookkeeping rule; m01 is now p01, p02 (retire the verifier), p10, p11
 
 ## Blockers
 

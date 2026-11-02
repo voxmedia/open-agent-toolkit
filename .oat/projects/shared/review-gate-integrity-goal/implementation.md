@@ -43,15 +43,13 @@ oat_template: false
 | ----- | --------- | ----- | -------- |
 | p01   | completed | 1     | 1/1      |
 | p02   | pending   | 1     | 0/1      |
-| p03   | pending   | 1     | 0/1      |
-| p04   | pending   | 1     | 0/1      |
-| p05   | pending   | 1     | 0/1      |
-| p06   | pending   | 1     | 0/1      |
+| p10   | pending   | 1     | 0/1      |
+| p11   | pending   | 1     | 0/1      |
 | p07   | pending   | 1     | 0/1      |
 | p08   | pending   | 1     | 0/1      |
 | p09   | pending   | 1     | 0/1      |
 
-**Total:** 1/9 phases accepted
+**Total:** 1/7 phases accepted
 
 ---
 
@@ -151,7 +149,7 @@ Reviewer request `rgi-p01-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`)
 
 p01 accepted 2026-11-01: per-phase review passed in round 2, every review disposition is settled, and no phase gate is selected for p01.
 
-## Phase p02: Read-only clerical-resolution verifier
+## Phase p02: Retire the clerical-resolution verifier
 
 **Status:** in_progress
 **Base:** c8a12f51dc6ee7a4f863a0fbb0c58290377e2292
@@ -344,19 +342,11 @@ Reviewer request `rgi-p02-rev-20261101-03` (`oat-reviewer-claude-opus-5-5-high`)
 
 **Outcome:** passed (per-phase review); the selected p02 phase gate follows.
 
-## Phase p03: Records and code consumers
+## Phase p10: Bookkeeping definition and the receive rule
 
 **Status:** pending
 
-## Phase p04: Receive settlement and the reviewer's advisory tag
-
-**Status:** pending
-
-## Phase p05: Implement paths, end-to-end composition, docs and decision record
-
-**Status:** pending
-
-## Phase p06: Planning-gate clerical settlement
+## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
 
@@ -422,12 +412,8 @@ Reviewer request `rgi-p02-rev-20261101-03` (`oat-reviewer-claude-opus-5-5-high`)
 - p01 review L2 (Low): `- **L1:** text` list items parse with title `L1:` and no explicit ID. Deferred to p08, which owns the stable finding key over p01's records. Trigger: p08 start.
 - p01 review round 2 L1 (Low): a wrapped or nested detail line under a bold finding title is refused as orphaned, and the reviewer contract does not warn about the shape. It fails closed. Deferred. Trigger: the first observed refusal of this shape in a real gate run, or p08.
 - p01 review round 2 L2 (Low): explicit-ID duplicate refusal is order-dependent (a plain list finding before `**M1 — …**` is refused as a duplicate). It fails closed. Deferred to p08, which owns finding identity and keys.
-- p02 review round 3 M1 (Medium): Reviews `Date` must equal the artifact's UTC date, which refuses genuine repairs across timezones. Fails closed. Deferred to p03's first record: drop Date from the settlement identity check. Trigger: p03 start.
-- p02 review round 3 L1 (Low): the p02-t01 task-plan applicability note is stale and lacks a task-plan-shaped control. Deferred to p03. Trigger: p03 start.
-- p02 review round 3 L2 (Low): phase-scope settlement staleness after later phases' code commits, and HEAD-equality replay. Handoff: p03 decides how consumers judge an older phase's settlement. Trigger: p03 start.
-- p02 review round 3 L3 (Low): fixture-only constraints (finding title names the field cell; placeholder receipt Outcome before settlement). Handoff to p04's receive proposal step. Trigger: p04 start.
-- p02 review round 3 L4 (Low): operational failures (Git or I/O) are reported as `refused` with exit 1. Deferred to p03: distinguish operational failure (exit 2) from verification refusal. Trigger: p03 start.
-- p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (p02 to p04 or m04) that needs the code without matching message text.
+- p02 review round 3 M1 and L1 to L4: closed without action by the 2026-11-02 brief amendment, which retires the verifier they concern (operator-approved scope change; see the brief's Decisions).
+- p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (m03 or later) that needs the code without matching message text.
 
 ## Deviations from Plan / Design
 
