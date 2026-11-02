@@ -620,9 +620,24 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 **Status:** in_progress
 **Base:** ba6405690aa0c5a980c5dac624dba4026c1560b8
+**Head:** 8a97fe85dbaa5d47f4450fa46703403097f71a88
 **Executor:** phase-implementer:rgi-p11-impl-20261102-01
 
 Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the implement, planning-skill and docs slices all edit `autonomy-contract.md`, the shared contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase repeats one shared branch across many skills plus a release. `origin/main` has not moved since the p10 base merge (checked at phase start).
+
+Phase verification at the head: pass. The code state is `47264c1bb`; only journal commits follow it. The DoD gate list ran in CI order and each command exited 0:
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: also forced uncached, 0 of 11 cached.
+3. `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached. CLI 438 test files passed.
+4. `pnpm build`: 5 of 5 cached (replayed). The forced `test:evidence` and `build:docs` runs executed all five package builds uncached.
+5. `pnpm run check:skill-bumps`: 17 changed skill and agent role bumps against `origin/main`.
+6. `pnpm release:check-versions`, after `git fetch origin main`.
+7. `pnpm release:validate`: 5 packages at 0.3.44.
+8. `pnpm build:docs`: also forced uncached, 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0: `pnpm lint`, `pnpm format`, `pnpm test:skills`, `pnpm oat:validate-skills` (68 skills) and the isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`, 1170/1170). `oat project journal check --at review --scope p11` is ok. No post-commit recovery was needed (0 of 10 used). Concern: #233 does not qualify (p11-t04).
 
 ### Task p11-t01: Bookkeeping-only branch on implement's review and gate paths
 
