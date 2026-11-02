@@ -105,6 +105,10 @@ oat gate review --target codex-6-sol-xhigh (installed CLI 0.3.42) ran the Sol re
 
 The gate CLI commits its review artifact right after each run. When a phase head is advanced past a fix commit that predates an earlier gate run, that earlier artifact commit lands after the new reviewed head; section 12.8 admits a gate artifact only when its row's Reviewed Head equals the carrier's, so the exit carrier reads stale until the head advances past every gate commit and the gate reruns. Advance a phase head before running the milestone exit gate. rgi-m01-gate-artifact-freshness
 
+### 2026-11-02 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/final-review-2026-11-02T235632Z.md run=f588e505-bf2e-4904-b833-d054ccee624a
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
