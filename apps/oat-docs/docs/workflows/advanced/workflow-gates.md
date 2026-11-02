@@ -103,6 +103,20 @@ in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
 
+### Goal recovery scope
+
+For a goal project's recovery exit, a gate prompt that explicitly asks to
+select review scope from project state can resolve the `final` hint to the
+committed recovery's exact phase or matching contiguous phase range. The
+recovery must be at `exit_gate` and its phases accepted. The command still
+runs unchanged; normal anchor validation, target selection and thresholds
+apply. The artifact records the original `final` hint, actual selected scope
+and exact phase set. This exit review precedes the separate integrated review.
+
+A prompt that explicitly requests a whole-project final review retains that
+meaning. Missing or invalid recovery state does not authorize narrowing, and
+an unsupported noncontiguous set is refused. Historical anchors are preserved.
+
 ### Per-project gate overrides
 
 Gate configuration is shared, but one project can opt out of a configured

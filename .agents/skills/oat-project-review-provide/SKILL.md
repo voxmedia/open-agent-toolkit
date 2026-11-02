@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.16
+  version: 1.5.17
 ---
 
 # Request Review
@@ -36,7 +36,7 @@ Before acting, verify that there is an active OAT project or a user-provided rev
 
 When the invocation is manual, summarize the inferred review type and scope, then ask before running the review.
 
-**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary, but it does not waive dispatch controls. Resolve the reviewer target and use the exact registered role or explicitly pinned fresh child. Inline gate review is allowed only with verified equivalent current-host model and effort controls or a documented base-role exception; otherwise fail closed.
+**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments except the state-selected goal recovery exit hint below, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary, but it does not waive dispatch controls. Resolve the reviewer target and use the exact registered role or explicitly pinned fresh child. Inline gate review is allowed only with verified equivalent current-host model and effort controls or a documented base-role exception; otherwise fail closed.
 
 ## Mode Assertion
 
@@ -157,6 +157,44 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`. Sum
 
 - Parse `$ARGUMENTS[0]` as review type: `code` or `artifact`
 - Parse `$ARGUMENTS[1]` as scope token
+
+**State-selected goal recovery exit hint (before normal inference or `final` expansion):**
+
+Resolve a supplied `final` hint to the persisted recovery scope only when all
+of these hold: invocation is a `code` gate; its prompt explicitly asks to use
+project state to determine the review scope; workflow mode is `goal`; and the
+committed `oat_goal_recovery` record is valid and at `stage: exit_gate`.
+The configured command and its argv remain unchanged. An explicit request for
+a whole-project final review, including a prompt asking for `code final`
+without state-based selection, retains the ordinary `final` meaning.
+
+- Read the committed recovery record, validate its exact ordered `phase_ids`
+  by requiring every phase to belong to its owning milestone in brief order,
+  and require those phases to be accepted. Do
+  not derive membership from the active pointer, first/last expansion, commit
+  labels or the newest delivery.
+- Select the existing single-phase token when the set has one phase (for
+  example `p-rev1`), or an existing contiguous phase-range token only when its
+  expansion equals the exact recovery set. A malformed record or a set with no
+  exact supported token refuses the review; never flatten a noncontiguous set
+  or widen it to the whole project.
+- This is the **exit review**, not an integrated milestone/delivery review.
+  Run the existing Step 3.0 phase-anchor resolver and re-review rules on that
+  selected token, unchanged. Invalid selected anchors still refuse. Do not
+  run Step 3.0g's integrated-review exit-first prerequisite against this gate;
+  the separate integrated review follows its received, fresh exit carrier.
+- Keep `oat_review_requested_scope: final` as the original hint, set
+  `oat_review_scope` to the selected token, and preserve the exact recovery
+  set in `oat_review_phase_ids`. Record the real resolved base, head, range and
+  scope source; disclose in Review Scope that the state-selection prompt
+  resolved the original `final` hint through the committed recovery record.
+  Preserve all gate invocation/correlation fields, configured target and
+  threshold. This does not claim a whole-project or integrated review.
+
+Absent a matching recovery record, at another stage, in another workflow,
+with an explicit range, or without the state-selection instruction, keep the
+normal scope rules below. Never repair historical anchors or history to make
+this resolution pass.
 
 **If no arguments — infer from project state:**
 

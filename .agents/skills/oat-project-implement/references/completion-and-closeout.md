@@ -62,9 +62,14 @@ oat-project-implement --project "$PROJECT_PATH" --json`, canonical
    `oat --json gate review`, receive eligibility, `onFailure`, `maxAttempts`).
    Run the configured command verbatim, including its
    `--review-scope final`; do not rewrite that argument to the milestone's
-   phase IDs. The carrier subject still records the milestone's ordered phase
-   set. The goal ladder exception applies: this gate precedes the integrated
-   delivery review, and queued fixes require it to run again. The gate's own
+   phase IDs. When that command's prompt explicitly delegates review scope to
+   project state and a committed goal recovery is at `exit_gate`,
+   `oat-project-review-provide` resolves the `final` hint through its
+   state-selected recovery-exit rule before anchor expansion; the launcher
+   still executes the same argv. A literal whole-project review request keeps
+   its meaning. The carrier subject records the exact ordered milestone or
+   recovery phase set actually reviewed. The goal ladder exception applies:
+   this gate precedes the integrated delivery review, and queued fixes require it to run again. The gate's own
    Reviews row is admitted as carrier bookkeeping only when it has Type
    `code`, Invocation `gate`, and a non-placeholder Reviewed Head equal to the
    carrier's `reviewed_head`; its non-placeholder artifact is admitted with
