@@ -73,7 +73,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m01
-oat_milestone_status: implementing
+oat_milestone_status: reviewing
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -95,13 +95,12 @@ oat_milestone_gates:
       disposition: passed
       resolution: configured
       config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
-      reviewed_head: 1a5a37684f05492470952fdc54359a082ac9cc58
+      reviewed_head: 5599af21d4927c7d39c668b9d1662509e5d3b403
       subject:
         kind: code
         scope: [p01, p02, p10, p11]
-      freshness: stale
-      freshness_reason: 'fixes queued from reviews/archived/m01-review-2026-11-02T234808Z.md'
-      decided_at: '2026-11-02T23:39:00Z'
+      freshness: fresh
+      decided_at: '2026-11-02T23:56:32Z'
 oat_deliveries: []
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration

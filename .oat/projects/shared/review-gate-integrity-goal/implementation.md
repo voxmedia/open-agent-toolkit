@@ -1031,6 +1031,21 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 
 **Outcome:** fixes queued: p11-t07 (late-fix rule: p11 is the last phase of the set and no later phase has a `**Base:**`)
 
+### Review Received: final (m01 exit gate, rerun after p11-t07)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-02T235632Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+The configured `oat-project-implement` exit gate (run `f588e505-bf2e-4904-b833-d054ccee624a`, target `claude-opus-5-5-high`, same-family warning) re-reviewed m01 (`p01, p02, p10, p11`) at the advanced p11 head `5599af21d4927c7d39c668b9d1662509e5d3b403`, narrowed to the delta from `1a5a37684`, after the m01 integrated-review fixes (p11-t07). It confirmed the new limit-1 pin can fail (negative control: one changed word, one failing test).
+
+- L1 (Low): limit 1's list of tracking files still names "the project's review artifacts" beside the new sentence saying receive never edits them; wording only, the limit already closes m01 M1 → deferred (see Deferred Findings).
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m01 exit, rerun `f588e505`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/1, received 2026-11-02. Carrier `oat_milestone_gates.m01.exit` rewritten `allowed`/`passed`/fresh at `5599af21d`; the m01 integrated-review row moves `fixes_added` → `fixes_completed`; `oat_milestone_status` moves `implementing` → `reviewing` for integrated review cycle 2.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -1041,6 +1056,7 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 - p02 review round 3 M1 and L1 to L4: closed without action by the 2026-11-02 brief amendment, which retires the verifier they concern (operator-approved scope change; see the brief's Decisions).
 - p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (m03 or later) that needs the code without matching message text.
 - p10 review L1 (Low): after a bookkeeping-only goal integrated-review receive whose delivery check then reports stale, the `passed` row and the receipt note stay on record and Step 8 keeps skipping that artifact. No re-review is skipped (the stale result forces a new integrated review), and no contract source requires the record to change; amending the receipt in place would itself be a journal rewrite. Deferred. Trigger: the first real stale fallback after a bookkeeping-only receive, or m03 (convergence).
+- m01 exit gate (rerun after p11-t07) L1 (Low): limit 1 of `.agents/docs/bookkeeping-findings.md` still lists review artifacts among the tracking files, next to the sentence saying receive only moves or archives them. Read together the two agree, and a fix breaking a limit is not bookkeeping. Deferred: wording only, and fixing it now would reopen the exit gate. Trigger: the next edit of the shared definition (m02 or later).
 
 ## Deviations from Plan / Design
 
