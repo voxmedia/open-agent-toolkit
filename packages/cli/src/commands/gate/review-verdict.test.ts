@@ -2135,6 +2135,85 @@ This artifact has no verdict fields and no findings sections.
       /recognizable review findings/,
     );
   });
+
+  it('parses a (bookkeeping)-marked finding exactly like its unmarked twin in both shapes', async () => {
+    // The advisory mark sits inside the bold title (oat-reviewer.md, Step 7).
+    // It must never change counts, severities, IDs, locations or the verdict.
+    const artifact = (mark: string) => `---
+oat_review_type: code
+oat_review_scope: p10
+oat_review_invocation: gate
+---
+
+# Review
+
+Findings by severity: 0 critical, 1 high, 1 medium, 1 low
+
+## Findings
+
+### Critical
+
+None
+
+### High
+
+- **Stale Reviews date cell${mark}** (\`plan.md:12\`)
+  - Issue: The p02 row still shows the earlier review date.
+  - Fix: Set the Date cell to the receive date.
+
+### Medium
+
+**M1 — Archived artifact path not updated${mark}** (\`implementation.md:40\`)
+
+- Issue: The receipt cites the pre-archive review path.
+- Fix: Point the receipt at reviews/archived/.
+
+### Low
+
+1. **Progress counter disagrees with the journal${mark}** (\`state.md:9\`)
+`;
+
+    const unmarked = await parseReviewGateVerdict(
+      await writeArtifact(artifact('')),
+    );
+    const marked = await parseReviewGateVerdict(
+      await writeArtifact(artifact(' (bookkeeping)')),
+    );
+
+    expect(unmarked.counts).toEqual({
+      critical: 0,
+      high: 1,
+      medium: 1,
+      low: 1,
+    });
+    expect(marked.counts).toEqual(unmarked.counts);
+    expect(marked.blocking).toBe(true);
+    expect(marked.blocking).toBe(unmarked.blocking);
+    expect(marked.findingsComplete).toBe(unmarked.findingsComplete);
+    expect(marked.findings).toHaveLength(3);
+    expect(
+      marked.findings.map(({ id, severity, location }) => ({
+        id,
+        severity,
+        location,
+      })),
+    ).toEqual(
+      unmarked.findings.map(({ id, severity, location }) => ({
+        id,
+        severity,
+        location,
+      })),
+    );
+    // Both shapes keep the mark inside the title and nowhere else.
+    expect(marked.findings.map((finding) => finding.title)).toEqual(
+      unmarked.findings.map((finding) => `${finding.title} (bookkeeping)`),
+    );
+    expect(marked.findings.map((finding) => finding.location)).toEqual([
+      'plan.md:12',
+      'implementation.md:40',
+      'state.md:9',
+    ]);
+  });
 });
 
 describe('parseReviewGateVerdict dispatch audit lines', () => {

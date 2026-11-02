@@ -399,6 +399,31 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('documents the advisory (bookkeeping) mark inside the bold finding title', () => {
+    const content = readRepoFile('.agents/agents/oat-reviewer.md');
+    const flat = content.replace(/\s+/g, ' ');
+    const categorize = content.indexOf('### Step 7: Categorize Findings');
+    const mark = content.indexOf('**Optional bookkeeping mark (advisory).**');
+
+    expect(mark).toBeGreaterThan(categorize);
+    expect(mark).toBeLessThan(
+      content.indexOf('### Step 8: Write Review Artifact'),
+    );
+    expect(flat).toContain(
+      '``- **Stale Reviews date cell (bookkeeping)** (`plan.md:12`)`` or `**M1 — Stale Reviews date cell (bookkeeping)**`',
+    );
+    expect(flat).toContain(
+      'The mark is advisory: severity is still chosen by impact, the mark never changes counts or the verdict, and the receiving agent classifies every finding itself against the shared bookkeeping definition.',
+    );
+    expect(flat).toContain(
+      'Never put the mark after the closing `**` or on a detail line; outside the bold it breaks location parsing, and no detail label exists for it.',
+    );
+    // The gate parsing contract names the mark as title text.
+    expect(flat).toContain(
+      'An optional advisory `(bookkeeping)` mark sits inside the bold finding title as part of the title text, in either shape, and never changes how the finding is counted.',
+    );
+  });
+
   it('keeps the model-invokable project workflow skills gated by explicit asks', () => {
     const skills = [
       {
