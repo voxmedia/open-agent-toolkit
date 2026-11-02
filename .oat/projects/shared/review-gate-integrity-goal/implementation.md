@@ -620,7 +620,7 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 **Status:** completed
 **Base:** ba6405690aa0c5a980c5dac624dba4026c1560b8
-**Head:** 8a97fe85dbaa5d47f4450fa46703403097f71a88
+**Head:** 395b90677db9487e42f01d31b045f4819f3d85ae
 **Executor:** phase-implementer:rgi-p11-impl-20261102-01
 
 Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the implement, planning-skill and docs slices all edit `autonomy-contract.md`, the shared contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase repeats one shared branch across many skills plus a release. `origin/main` has not moved since the p10 base merge (checked at phase start).
@@ -858,6 +858,19 @@ Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm 
 
 **Outcome:** passed (Lows addressed now)
 
+### Task p11-t06: Address p11 review Lows
+
+**Status:** completed
+**Executor:** root
+**Source review:** `reviews/archived/p11-review-2026-11-02T210607Z.md` (L1, L2, L3, L4)
+**Intent:** Fix the four Lows of the passing p11 review at receive: the docs exit-carrier cell, the plan-writing receive point beside limit 3, the decision record's inclusions and limit 3, and the exit-gate freshness qualifier for a non-default `projects.root`.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `.oat/repo/reference/decisions/DR-261102-bookkeeping-only-review.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 395b90677db9487e42f01d31b045f4819f3d85ae
+**Proof:** contract suites 1170/1170; negative controls for the two new pins each failed (exit 1) and were restored; `pnpm check`, `check:skill-bumps`, docs-index freshness, `pnpm lint`, `pnpm format` exit 0.
+
+Late-fix rule: the m01 exit gate (run `d434e7e7`, M1) found the p11 `**Head:**` still at `8a97fe85d`, which left this review-fix commit outside every anchored m01 range. No later phase has a `**Base:**`, so the head is advanced to `395b90677db9487e42f01d31b045f4819f3d85ae`, base unchanged.
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
@@ -897,6 +910,7 @@ Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm 
 - run/v1 · request=rgi-p10-rev-20261102-03 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p11-impl-20261102-01 · scope=p11 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p11-rev-20261102-01 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p11 review fix (p11-t06) · reason: four Lows of a passing review, fixed at receive · root model claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
@@ -936,6 +950,22 @@ Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm 
 - Gate `oat-project-goal` (plan, m01 amendment): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-02.
 - The 2026-11-02 amendment withdrew the pending p02 phase gate (run `c9c091b6-d051-428b-a998-a95b68b37d78`); it needs no rerun, and the optional phase gates are dropped.
 
+### Review Received: final (m01 exit gate)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-02T211656Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 1
+
+The configured `oat-project-implement` exit gate (run `d434e7e7-9a58-43f4-9e0c-e95a543e865d`, target `claude-opus-5-5-high`) reviewed m01 (`p01, p02, p10, p11`) at the anchored head `8a97fe85dbaa5d47f4450fa46703403097f71a88`. The gate reported `achieved: same-family - no diverse target available`: the producers span both families (p01 and p02 on `gpt-5.6-sol-high`, p10 and p11 on Opus 5.5), so no cross-family target existed.
+
+- M1 (Medium): the p11 `**Head:**` excluded the root review-fix commit `395b90677` → fixed: head advanced under the late-fix rule (p11-t06). The fix changes the anchored range, so the gate result is stale and the gate reruns over the new head.
+- L1 (Low): Outcome 2 omits the operator-approved resume-pointer inclusion → fixed: Deviations row added.
+
+**Outcome:** fixes_completed (gate passed its threshold; rerun required over the advanced head)
+
+- Gate `oat-project-implement` (code, m01 exit, attempt 1): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/1/1, receive-eligible, received 2026-11-02; no attempt consumed (not blocked); same-family warning recorded above.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -951,9 +981,10 @@ Root verification after the fix: isolated-HOME contract suites 1170/1170, `pnpm 
 
 Document any intentional deviations from the brief. Include accepted review findings where the shipped implementation is source of truth and the brief needs alignment.
 
-| Phase / Review                 | Source Artifact              | Planned / Documented                                                                                                                          | Actual / Accepted                                                                                                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                                                 | Source of Truth                                                              | Follow-up |
-| ------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | --------- |
-| p11 (exit evidence), Outcome 1 | plan.md Outcome 1, Phase p11 | A walkthrough of the #233 gate relaunch shows a blocking gate whose only findings were bookkeeping, satisfied with no attempt and no relaunch | #233 (executor-reminders-pilot plan gate attempt 1) is not bookkeeping-only (a missing-review finding plus plan content), so it is traced as a counter-example where today's flow correctly applies; the qualifying blocking-gate walkthrough is the wave-skills-promotion p05 phase gate (run 811c64e3, one stale state.md finding), traced end to end through implement's new gate branch (p11-t04) | The brief assumed #233 was bookkeeping-only; the trace showed otherwise. Operator chose "Accept the substitute" on 2026-11-02, with no brief amendment | This journal record; the milestone Outcome audit judges Outcome 1 against it | None      |
+| Phase / Review                     | Source Artifact                    | Planned / Documented                                                                                                                          | Actual / Accepted                                                                                                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                                                 | Source of Truth                                                              | Follow-up |
+| ---------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | --------- |
+| p10 (operator decision), Outcome 2 | plan.md Outcome 2 and Out of Scope | Six inclusions; "Routing or progress pointer repair" out of scope                                                                             | The shared definition, docs and `DR-261102-bookkeeping-only-review` also include a resume pointer corrected by copying journal-recorded state; a pointer or completion inferred from commits stays excluded                                                                                                                                                                                           | The p10 round-2 review found the Out of Scope line ambiguous; the operator decided on 2026-11-02 (p10 round-2 receipt)                                 | The shipped definition; the brief is not edited in place                     | None      |
+| p11 (exit evidence), Outcome 1     | plan.md Outcome 1, Phase p11       | A walkthrough of the #233 gate relaunch shows a blocking gate whose only findings were bookkeeping, satisfied with no attempt and no relaunch | #233 (executor-reminders-pilot plan gate attempt 1) is not bookkeeping-only (a missing-review finding plus plan content), so it is traced as a counter-example where today's flow correctly applies; the qualifying blocking-gate walkthrough is the wave-skills-promotion p05 phase gate (run 811c64e3, one stale state.md finding), traced end to end through implement's new gate branch (p11-t04) | The brief assumed #233 was bookkeeping-only; the trace showed otherwise. Operator chose "Accept the substitute" on 2026-11-02, with no brief amendment | This journal record; the milestone Outcome audit judges Outcome 1 against it | None      |
 
 ## Final Summary (for PR/docs)
 
