@@ -105,6 +105,28 @@ describe('shared bookkeeping definition', () => {
     );
   });
 
+  it('counts a pointer copied from recorded journal state, never one inferred from commits', () => {
+    const definition = normalize(section(doc, 'Definition'));
+
+    expect(definition).toContain(
+      'A pointer such as `oat_current_task` or another resume pointer is bookkeeping when the fix copies state the journal already records.',
+    );
+    expect(definition).toContain(
+      'A pointer or a completion inferred from commits is never bookkeeping.',
+    );
+  });
+
+  it('names the acceptance markers and treats the state.md summary Status line as a progress label', () => {
+    const exclusions = normalize(section(doc, 'Exclusions'));
+
+    expect(exclusions).toContain(
+      'The `**Status:**` acceptance markers are the phase and task `**Status:**` lines in `implementation.md`.',
+    );
+    expect(exclusions).toContain(
+      'The summary `**Status:**` line in `state.md` is a progress label.',
+    );
+  });
+
   it('states the three limits on the fix and voids a finding that would break one', () => {
     const limits = normalize(section(doc, 'Limits on the fix'));
 

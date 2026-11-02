@@ -21,6 +21,10 @@ evidence or state:
 - a progress label; or
 - provenance wording.
 
+A pointer such as `oat_current_task` or another resume pointer is bookkeeping
+when the fix copies state the journal already records. A pointer or a
+completion inferred from commits is never bookkeeping.
+
 ## Exclusions
 
 A finding is never bookkeeping when it asks for:
@@ -32,6 +36,10 @@ A finding is never bookkeeping when it asks for:
 - completion of unfinished work; or
 - an edit to a `**Status:**` acceptance marker, a Reviews row's
   `Reviewed Head`, or a set-once delivery field (brief contract section 12.8).
+
+The `**Status:**` acceptance markers are the phase and task `**Status:**` lines
+in `implementation.md`. The summary `**Status:**` line in `state.md` is a
+progress label.
 
 Severity and bookkeeping are separate dimensions. A High finding can be
 bookkeeping, and a Low finding about content is still content.
