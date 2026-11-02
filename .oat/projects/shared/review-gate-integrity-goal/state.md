@@ -79,12 +79,12 @@ oat_milestone_gates:
       disposition: passed
       resolution: configured
       config_fingerprint: 'sha256:66d63aff72cc37ed55e9cf802c28370207c4f944c86e7b7662eaa2eaf1c381eb'
-      reviewed_head: cbc8836c7ca14d56742831a13fc0cd8e1fba2057
+      reviewed_head: b2a38a09005e35818eccfa4191ad97444316e020
       subject:
         kind: plan
-        scope: [p01, p02, p03, p04, p05]
-        ref: cbc8836c7ca14d56742831a13fc0cd8e1fba2057
-      decided_at: '2026-11-01T21:45:51Z'
+        scope: [p01, p02, p10, p11]
+        ref: b2a38a09005e35818eccfa4191ad97444316e020
+      decided_at: '2026-11-02T16:13:30Z'
 oat_deliveries: []
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -143,19 +143,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-02T00:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-02T16:13:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-gate-integrity-goal
 
-**Status:** Implement (m01), brief amendment awaiting approval
+**Status:** Implement (m01)
 **Started:** 2026-11-01
 **Last Updated:** 2026-11-02
 
 ## Current Phase
 
-Brief amendment (2026-11-02): artifact review, `oat-project-goal` gate and operator approval for the prose-only m01 (p01, p02, p10, p11)
+Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
 
 ## Artifacts
 
@@ -167,7 +167,8 @@ Brief amendment (2026-11-02): artifact review, `oat-project-goal` gate and opera
 
 - ✓ Goal project scaffolded; brief reviewed, gated and approved 2026-11-01
 - ✓ p01 accepted; p02 verifier built and reviewed
-- ⧗ Brief amendment (2026-11-02): prose-only bookkeeping rule; m01 is now p01, p02 (retire the verifier), p10, p11
+- ✓ Brief amendment (2026-11-02): prose-only bookkeeping rule reviewed, gated and approved; m01 is now p01, p02 (retire the verifier), p10, p11
+- ⧗ m01 implementation, resuming at p02
 
 ## Blockers
 
@@ -175,4 +176,4 @@ None
 
 ## Next Milestone
 
-Approve the amendment, then resume `oat-project-implement` at p02
+Resume `oat-project-implement` at p02
