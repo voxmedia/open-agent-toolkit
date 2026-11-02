@@ -42,7 +42,11 @@ Three limits apply to the fix itself. A finding whose fix would break any of
 them is not bookkeeping.
 
 1. **Tracking files only.** The fix touches only the project's own tracking
-   files under `.oat/projects/<scope>/<project>/`.
+   files under `.oat/projects/<scope>/<project>/`: `state.md`, the tracking
+   sections of `plan.md` (its Reviews table and progress totals),
+   `implementation.md`, `project-log.md`, `summary.md`, and the project's
+   review artifacts. Requirement artifacts (`discovery.md`, `spec.md`,
+   `design.md`) are never tracking files.
 2. **Section 12.8 on goal paths.** On goal paths the fix is a change brief
    contract section 12.8 permits: a correcting journal line is appended rather
    than a recorded one rewritten, approved brief sections are never edited, and
@@ -50,7 +54,11 @@ them is not bookkeeping.
    archived counterpart artifact.
 3. **`passed` only from the receive branch.** A Reviews Status cell is set to
    `passed` only by the bookkeeping-only receive branch for the review being
-   received. A bookkeeping fix never promotes any other review event.
+   received. A bookkeeping fix never promotes any other review event. It may
+   correct another existing event's stale non-`passed` Status, Date or
+   Artifact cell, monotonically (never moving a status backward), but never
+   that event's `Reviewed Head`. A missing row is not a stale cell: adding a
+   row for another event is never bookkeeping.
 
 ## Who classifies
 

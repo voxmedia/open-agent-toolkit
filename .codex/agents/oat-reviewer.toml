@@ -427,9 +427,9 @@ progress label, or provenance wording) may end its bold finding title with
 `(bookkeeping)`, inside the bold: ``- **Stale Reviews date cell (bookkeeping)** (`plan.md:12`)``
 or `**M1 — Stale Reviews date cell (bookkeeping)**`. Leave the mark off a
 finding that asks for a missing review, a requirement change, an approval, a
-new receipt, unfinished work, or an edit to a `**Status:**` acceptance marker,
-a `Reviewed Head` or a set-once delivery field, and off any finding you are
-unsure about. The mark is advisory: severity is still chosen by impact, the mark
+new receipt, completion of unfinished work, or an edit to a `**Status:**`
+acceptance marker, a Reviews row's `Reviewed Head`, or a set-once delivery
+field (brief contract section 12.8), and off any finding you are unsure about. The mark is advisory: severity is still chosen by impact, the mark
 never changes counts or the verdict, and the receiving agent classifies every
 finding itself against the shared bookkeeping definition. Never put the mark
 after the closing `**` or on a detail line; outside the bold it breaks location

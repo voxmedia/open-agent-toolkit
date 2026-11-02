@@ -418,6 +418,33 @@ describe('review skill contracts', () => {
     expect(flat).toContain(
       'Never put the mark after the closing `**` or on a detail line; outside the bold it breaks location parsing, and no detail label exists for it.',
     );
+    // The restated inclusion and exclusion lists cannot drift from the
+    // shared definition: every bullet phrase must appear in the paragraph.
+    const markParagraph = content
+      .slice(mark, content.indexOf('\n\n', mark))
+      .replace(/\s+/g, ' ');
+    const sharedDoc = readRepoFile('.agents/docs/bookkeeping-findings.md');
+    for (const heading of ['Definition', 'Exclusions']) {
+      const start = sharedDoc.indexOf(`\n## ${heading}\n`);
+      expect(start, heading).toBeGreaterThan(-1);
+      const end = sharedDoc.indexOf('\n## ', start + 1);
+      const phrases = sharedDoc
+        .slice(start, end)
+        .split(/\n(?=- )/)
+        .slice(1)
+        .map((bullet) =>
+          bullet
+            .split('\n\n')[0]
+            .replace(/^- /, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/(?:; or|;|\.)$/, ''),
+        );
+      expect(phrases.length, heading).toBeGreaterThanOrEqual(6);
+      for (const phrase of phrases) {
+        expect(markParagraph, `${heading}: ${phrase}`).toContain(phrase);
+      }
+    }
     // The gate parsing contract names the mark as title text.
     expect(flat).toContain(
       'An optional advisory `(bookkeeping)` mark sits inside the bold finding title as part of the title text, in either shape, and never changes how the finding is counted.',

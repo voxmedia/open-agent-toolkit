@@ -369,7 +369,7 @@ least one finding and every finding is bookkeeping:
    `**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/$REVIEW_FILENAME)`.
 3. In Step 6, set the received review's Reviews event to `passed` (the single
    exception in Step 2's clean-pass note), with its Date, archived Artifact and
-   provenance cells written as usual. Never set any other event's Status. For
+   provenance cells written as usual. Never set any other event to `passed`. For
    `final` scope, Step 8.5's deferred-Medium resurfacing still completes before
    `passed` is written; the result's own findings are already fixed, so Step 9
    has nothing left to disposition.
@@ -715,13 +715,18 @@ moves to `passed`, citing the revision review in the implementation note.
   - Gate Target: exact `oat_gate_target` for gate code reviews; `-` otherwise
 ```
 
+Beside "update only that row": a bookkeeping-only fix (Step 2.6) may also
+correct another existing event's stale non-`passed` Status, Date or Artifact
+cell, monotonically (never moving a status backward), but it never changes that
+event's `Reviewed Head` and never adds a missing row.
+
 **Status semantics (v1):**
 
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review completed and recorded as passing (no unresolved Critical/High/Medium, and all final-scope gates satisfied: deferred-medium + low-severity disposition)
 - A bookkeeping-only result (Step 2.6) also writes `passed` for the review being received once its one fix commit lands, with the note `bookkeeping-only fixes applied at receive` in the receipt; this is the single exception to the re-review requirement above, and no other writer sets `passed` for bookkeeping fixes.
-- Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type.
+- Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type, except for the bookkeeping-only correction of an existing event's stale non-`passed` cells described above.
 
 ### Step 7: Update Implementation.md
 

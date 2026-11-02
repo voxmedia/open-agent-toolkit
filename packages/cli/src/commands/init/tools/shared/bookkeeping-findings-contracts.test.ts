@@ -109,7 +109,7 @@ describe('shared bookkeeping definition', () => {
     const limits = normalize(section(doc, 'Limits on the fix'));
 
     expect(limits).toContain(
-      "The fix touches only the project's own tracking files under `.oat/projects/<scope>/<project>/`.",
+      "The fix touches only the project's own tracking files under `.oat/projects/<scope>/<project>/`:",
     );
     expect(limits).toContain(
       'On goal paths the fix is a change brief contract section 12.8 permits: a correcting journal line is appended rather than a recorded one rewritten, approved brief sections are never edited, and Reviews-row edits are limited to status and date cells or a move to the archived counterpart artifact.',
@@ -122,6 +122,31 @@ describe('shared bookkeeping definition', () => {
     );
     // Exactly three numbered limits.
     expect([...limits.matchAll(/ \d\. \*\*/g)]).toHaveLength(3);
+  });
+
+  it('names the tracking files and never counts a requirement artifact as one', () => {
+    const limits = normalize(section(doc, 'Limits on the fix'));
+
+    expect(limits).toContain(
+      "The fix touches only the project's own tracking files under `.oat/projects/<scope>/<project>/`: `state.md`, the tracking sections of `plan.md` (its Reviews table and progress totals), `implementation.md`, `project-log.md`, `summary.md`, and the project's review artifacts.",
+    );
+    expect(limits).toContain(
+      'Requirement artifacts (`discovery.md`, `spec.md`, `design.md`) are never tracking files.',
+    );
+  });
+
+  it("lets a fix correct another event's stale non-`passed` cells but never promote it, move its head or add its row", () => {
+    const limits = normalize(section(doc, 'Limits on the fix'));
+
+    expect(limits).toContain(
+      'A bookkeeping fix never promotes any other review event.',
+    );
+    expect(limits).toContain(
+      "It may correct another existing event's stale non-`passed` Status, Date or Artifact cell, monotonically (never moving a status backward), but never that event's `Reviewed Head`.",
+    );
+    expect(limits).toContain(
+      'A missing row is not a stale cell: adding a row for another event is never bookkeeping.',
+    );
   });
 
   it('leaves classification to the receiver and keeps the reviewer mark advisory', () => {
@@ -234,11 +259,33 @@ describe('review-receive bookkeeping-only branch', () => {
     expect(branch).toContain(
       "set the received review's Reviews event to `passed`",
     );
-    expect(branch).toContain("Never set any other event's Status.");
+    expect(branch).toContain('Never set any other event to `passed`.');
+    expect(branch).not.toContain("Never set any other event's Status.");
     expect(branch).toContain('Create no fix tasks, queue no execution records');
     expect(branch).toContain('no reviewer is dispatched again for this result');
     expect(branch).toContain(
       'skip Step 8 (this result counts no review cycle)',
+    );
+  });
+
+  it("lets Step 6 correct another event's stale non-`passed` cells monotonically, beside 'update only that row'", () => {
+    const step6 = normalize(
+      sliceBetween(
+        skill,
+        '### Step 6: Update Plan.md',
+        '### Step 7: Update Implementation.md',
+      ),
+    );
+    const rowRule = step6.indexOf('then update only that row:');
+    const allowance = step6.indexOf(
+      'Beside "update only that row": a bookkeeping-only fix (Step 2.6) may also correct another existing event\'s stale non-`passed` Status, Date or Artifact cell, monotonically (never moving a status backward), but it never changes that event\'s `Reviewed Head` and never adds a missing row.',
+    );
+
+    expect(rowRule).toBeGreaterThan(-1);
+    expect(allowance).toBeGreaterThan(rowRule);
+    expect(allowance).toBeLessThan(step6.indexOf('**Status semantics (v1):**'));
+    expect(step6).toContain(
+      "or update a different event that happens to share the same scope/type, except for the bookkeeping-only correction of an existing event's stale non-`passed` cells described above.",
     );
   });
 
