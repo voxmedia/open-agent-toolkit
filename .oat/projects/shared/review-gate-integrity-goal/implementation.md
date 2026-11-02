@@ -39,15 +39,15 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p10   | pending   | 1     | 0/1      |
-| p11   | pending   | 1     | 0/1      |
-| p07   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | completed   | 1     | 1/1      |
+| p10   | in_progress | 1     | 0/1      |
+| p11   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 2/7 phases accepted
 
@@ -374,7 +374,11 @@ Reviewer request `rgi-p02-rev-20261102-04` (`oat-reviewer-claude-claude-opus-5-5
 
 ## Phase p10: Bookkeeping definition and the receive rule
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 234c9b281bf3e8c8bbf419cc9d44fbf28a462920
+**Executor:** phase-implementer:rgi-p10-impl-20261102-01
+
+Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply, because the shared definition, the receive branch, the gate write rule, the reviewer marker and their contract pins share the definition text and the contract test files, so slices fail the independence test. Rung 4 does not apply, because the phase adds a new shared rule across several skills. `origin/main` was merged at the phase base (#391, #394, #396, #397, #398, #399).
 
 ## Phase p11: Implement and planning paths, docs and release
 
