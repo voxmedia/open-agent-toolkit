@@ -175,6 +175,9 @@ describe('shared bookkeeping definition', () => {
     expect(limits).toContain(
       'Requirement artifacts (`discovery.md`, `spec.md`, `design.md`) are never tracking files.',
     );
+    expect(limits).toContain(
+      "Receive moves or archives a review artifact and never edits it: a bookkeeping fix never changes a review artifact's findings, frontmatter or provenance.",
+    );
   });
 
   it("lets a fix correct another event's stale non-`passed` cells but never promote it, move its head or add its row", () => {

@@ -54,7 +54,9 @@ them is not bookkeeping.
    sections of `plan.md` (its Reviews table and progress totals),
    `implementation.md`, `project-log.md`, `summary.md`, and the project's
    review artifacts. Requirement artifacts (`discovery.md`, `spec.md`,
-   `design.md`) are never tracking files.
+   `design.md`) are never tracking files. Receive moves or archives a review
+   artifact and never edits it: a bookkeeping fix never changes a review
+   artifact's findings, frontmatter or provenance.
 2. **Section 12.8 on goal paths.** On goal paths the fix is a change brief
    contract section 12.8 permits: a correcting journal line is appended rather
    than a recorded one rewritten, approved brief sections are never edited, and
