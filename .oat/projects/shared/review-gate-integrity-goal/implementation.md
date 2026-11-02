@@ -622,7 +622,7 @@ Correction (m01 integrated review L1): this receipt applied m01's unreleased boo
 
 **Status:** completed
 **Base:** ba6405690aa0c5a980c5dac624dba4026c1560b8
-**Head:** 1a5a37684f05492470952fdc54359a082ac9cc58
+**Head:** 5599af21d4927c7d39c668b9d1662509e5d3b403
 **Executor:** phase-implementer:rgi-p11-impl-20261102-01
 
 Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the implement, planning-skill and docs slices all edit `autonomy-contract.md`, the shared contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase repeats one shared branch across many skills plus a release. `origin/main` has not moved since the p10 base merge (checked at phase start).
@@ -887,6 +887,8 @@ Late-fix rule (third advance): the second advance commit rewrote a recorded jour
 **Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
 **Commit:** ea9f1d50db6b022068cc55ca731c31c2df79abf7
 **Proof:** contract suites 1170/1170 (exit 0); negative control: trimming the new sentence to "findings." failed the pin (exit 1), restored; `pnpm check`, `check:skill-bumps` and `pnpm lint` exit 0; no new skill bump (every vendoring skill carries its single PR-scoped bump). L1 and L2 are journal corrections in this record's bookkeeping commit.
+
+Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advance the p11 head to `5599af21d4927c7d39c668b9d1662509e5d3b403`, the record commit that also carries the L1 and L2 journal corrections; the exit gate reruns over it before a new integrated review.
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
