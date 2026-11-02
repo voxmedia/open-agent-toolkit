@@ -91,6 +91,11 @@ No gate is configured by default.
 | Gate (optional)           | 1 reviewer run per gate                                    | `maxAttempts`, 2 runs in total by default                                                                                                                              |
 | Budget exhausted          | 1 read-only complexity review                              | Runs once when a review cycle cap, the retry limit, or a gate's `maxAttempts` runs out, before the agent asks you how to proceed                                       |
 
+A review or gate result whose findings are all bookkeeping (stale ledger cells,
+archived paths, progress counters) uses none of these limits: it is fixed once
+and recorded `passed`, with no new run. See
+[Bookkeeping-only findings](projects/reviews/index.md#bookkeeping-only-findings).
+
 OAT does not estimate prices. Cost depends on your provider's pricing and on
 your _dispatch policy_: the highest model tier OAT may use for subagents.
 Implementers may run below that tier, but under a capped policy (Economy,

@@ -1030,3 +1030,129 @@ describe('plan-writing auto artifact-review loop (p11)', () => {
     expect(settled).toBeGreaterThan(plainRow);
   });
 });
+
+describe('brief contract bookkeeping-only settlement (p11)', () => {
+  const contract = readRepoFile(
+    '.agents/skills/oat-project-brief/references/brief-contract.md',
+  );
+
+  function contractSection(heading: string): string {
+    const start = contract.indexOf(`\n${heading}\n`);
+    if (start < 0) {
+      throw new Error(`Missing brief contract section: ${heading}`);
+    }
+    const next = contract.indexOf('\n#', start + heading.length + 1);
+    return normalize(contract.slice(start, next < 0 ? contract.length : next));
+  }
+
+  it('settles a bookkeeping-only result in the review ladder without a correction round', () => {
+    const ladder = contractSection('## 5. Review ladder');
+    const exhausted =
+      'Exhausted correction rounds never convert blocking findings into acceptance.';
+    const settled = ladder.indexOf(
+      'A review or gate result whose every finding is bookkeeping under the shared definition (`bookkeeping-findings.md`, vendored as `references/docs/bookkeeping-findings.md`) is settled at receive:',
+    );
+
+    expect(ladder).toContain(exhausted);
+    expect(settled).toBeGreaterThan(ladder.indexOf(exhausted));
+    expect(ladder).toContain(
+      `the review recorded \`passed\` with the note \`${NOTE}\`, no re-review and no review cycle, and for a gate no attempt and no rerun.`,
+    );
+    expect(ladder).toContain(
+      'That settlement is not a correction round and turns no other finding into acceptance.',
+    );
+    expect(ladder).toContain('(reruns bounded by its `maxAttempts`)');
+  });
+
+  it('keeps a bookkeeping-only result off the queued-fix route and behind the delivery check', () => {
+    const goalLadder = contractSection(
+      '### 12.5 Goal exception to the shared ladder',
+    );
+    const route =
+      '5. a received `passed` review with a fresh allowed carrier → delivery.';
+    const settled = goalLadder.indexOf(
+      'A bookkeeping-only result (section 5) queues no fixes, so it never takes the first route.',
+    );
+
+    expect(settled).toBeGreaterThan(goalLadder.indexOf(route));
+    expect(goalLadder).toContain(
+      'A blocking milestone exit gate settled that way records its `exit` carrier `allowed`/`passed` with no attempt and no rerun',
+    );
+    expect(goalLadder).toContain(
+      'Both stand only while `oat project delivery check` reads the evidence fresh after that commit; a stale result follows the routing above.',
+    );
+    expect(goalLadder).toContain(
+      'queued fixes invalidate both the integrated-review and the exit-gate evidence, so the gate runs again before the next integrated review.',
+    );
+  });
+
+  it('makes a goal-path bookkeeping fix a section 12.8 bookkeeping successor', () => {
+    const freshness = contractSection(
+      '### 12.8 Bookkeeping-successor freshness',
+    );
+
+    expect(freshness).toContain(
+      'A bookkeeping-only review or gate fix (section 5) on a goal path is a change this section permits, so its commit is a bookkeeping successor of the evidence it follows. A fix this section would call substantive is not bookkeeping.',
+    );
+  });
+});
+
+describe('autonomy rows for the implement and planning paths (p11)', () => {
+  const contract = readRepoFile(AUTONOMY);
+
+  function row(id: string): string {
+    const line = contract
+      .split('\n')
+      .find((entry) => entry.startsWith(`| ${id} `));
+    if (!line) {
+      throw new Error(`Missing autonomy row ${id}`);
+    }
+    return normalize(line);
+  }
+
+  const GATE =
+    'a `blocked` result whose every finding is bookkeeping (`bookkeeping-findings.md`) is settled at receive without a stop: the gate is satisfied, no attempt is counted and it is not relaunched';
+  const LOOP =
+    'a result whose every finding is bookkeeping (`bookkeeping-findings.md`) is fixed in one tracking-file commit and recorded `passed` with no re-review and no retry';
+  const GUARD =
+    'a bookkeeping repair never infers completion, waives HiLL, grants approval or accepts an unresolved Critical';
+
+  it.each([
+    'QS-12',
+    'LITE-09',
+    'BRIEF-10',
+    'GOAL-10',
+    'DISC-08',
+    'DES-08',
+    'PLAN-11',
+    'IMPORT-09',
+    'IMPLEMENT-18',
+  ])('%s satisfies an all-bookkeeping blocked gate with no attempt', (id) => {
+    expect(row(id)).toContain(GATE);
+  });
+
+  it.each(['QS-11', 'LITE-08', 'BRIEF-09', 'GOAL-09', 'PLAN-09', 'IMPORT-08'])(
+    '%s settles an all-bookkeeping artifact review with no re-review',
+    (id) => {
+      expect(row(id)).toContain(LOOP);
+    },
+  );
+
+  it('IMPLEMENT-12 and IMPLEMENT-18 keep the boundary guard', () => {
+    expect(row('IMPLEMENT-12')).toContain(
+      'a bookkeeping-only final review result (`bookkeeping-findings.md`) is recorded `passed` and continues to the exit gate with no re-review and no cycle counted',
+    );
+    expect(row('IMPLEMENT-12')).toContain(GUARD);
+    expect(row('IMPLEMENT-18')).toContain(
+      'persisting `allowed/passed` with `attempts_completed` unchanged',
+    );
+    expect(row('IMPLEMENT-18')).toContain(GUARD);
+    // The rows' existing stops are unchanged.
+    expect(row('IMPLEMENT-12')).toContain(
+      'a failed blocking review or no adequate route stops',
+    );
+    expect(row('IMPLEMENT-18')).toContain(
+      'all operational, validation, correlation, malformed/contradictory-envelope, launch, and receive failures stop regardless of `onFailure`',
+    );
+  });
+});

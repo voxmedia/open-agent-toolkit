@@ -1050,6 +1050,14 @@ failures, and receive failures are operational failures rather than validated
 blocking findings. They remain blocked regardless of `onFailure`; even `warn`
 cannot turn them into an allowed disposition.
 
+A validated `blocked` result whose every finding is bookkeeping (a stale
+ledger cell, an archived-path reference, a progress counter; see
+[Bookkeeping-only findings](../projects/reviews/index.md#bookkeeping-only-findings))
+never reaches `onFailure`. Receive fixes the findings in one commit confined to
+the project's tracking files and records the review `passed` with a note. The
+gate counts as satisfied (`allowed`/`passed`), no attempt is counted, and the
+gate is not relaunched. The receipt keeps the raw verdict and counts.
+
 When `block` still fails after `maxAttempts`, the implementation exit gate and
 the quick-start plan gate run a
 [complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
@@ -1288,7 +1296,8 @@ Every gate needs an explicit `onFailure`; there is no default.
 `maxAttempts` defaults to two runs in total: the first run plus one
 fix-and-rerun. A reviewer that fails to start, times out without producing a
 review, or produces an invalid result has not reviewed anything, so treat that
-as a failed gate, never as a pass.
+as a failed gate, never as a pass. A result settled as bookkeeping-only spends
+none of the attempts.
 
 How the skills handle that case differs:
 

@@ -511,6 +511,12 @@ or **simplify**. The choice and the report path are recorded in
 `implementation.md`. Agents never select the disposition; under
 `OAT_AUTONOMOUS=1` the run stops with the same content in its boundary report.
 
+A review round or gate result whose every finding is bookkeeping never spends
+these budgets. The root fixes it in one tracking-file commit, records the
+review `passed` with a note, and continues without a fix child, a new review
+round or a gate rerun
+([Bookkeeping-only findings](../reviews/index.md#bookkeeping-only-findings)).
+
 ## Parallel Phase Groups
 
 For a plan-declared parallel group, the root:

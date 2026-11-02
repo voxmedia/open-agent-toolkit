@@ -164,6 +164,7 @@ mismatched values produce `artifact_validation_failed` before finding severity
 is evaluated.
 
 - **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Low — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/High concern it escalates to the blocking path.
+- **Blocking gate, bookkeeping findings only**: receive fixes them in one commit and records the review `passed`; the gate has passed for the phase, with no fix loop, no rerun and no retry round ([Bookkeeping-only findings](#bookkeeping-only-findings)).
 - **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
 
 Gate-originated artifacts (`oat_review_invocation: gate`) and saved complexity reports are excluded from the same-scope review-cycle cap in `oat-project-review-receive`. The cap measures failed fix cycles of the standard review loop, so counting gate artifacts would trip it on artifact volume rather than real fix rounds.
@@ -176,7 +177,7 @@ This feature is opt-in and disabled by default (missing or `enabled: false`). Fo
 
 Generated planning and analysis artifacts have a separate review loop from code/phase reviews.
 
-For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, `oat-project-goal` (for the brief and each milestone amendment), and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
+For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, `oat-project-goal` (for the brief and each milestone amendment), and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`. A result whose every finding is bookkeeping is fixed in one commit and recorded `passed` with the note `bookkeeping-only fixes applied at receive`, with no new attempt and no retry spent.
 
 For analysis artifacts, `oat-docs-analyze` and `oat-agent-instructions-analyze` run a bounded accuracy review after writing their severity-rated artifacts. The reviewer checks cited evidence, severity, and recommendations before the matching apply workflow consumes the artifact. The analysis loop updates tracking metadata to mark the artifact verified.
 
@@ -277,6 +278,67 @@ mechanical pointer or projection refresh resolves (stale overview totals, a
 run line to re-render, a lagging resume pointer) is refresh-only and belongs to
 closeout's refresh, never a fix task.
 
+## Bookkeeping-only findings
+
+Some findings ask only to correct a project's own records: a stale
+`## Reviews` cell, an artifact path that should point at `reviews/archived/`,
+or a progress counter that disagrees with the journal. When **every** finding
+of one review or gate result is bookkeeping, the receiver settles the result at
+receive instead of starting another round:
+
+- it fixes all of them in one commit that touches only the project's tracking
+  files, with a one-line note per finding in the receipt;
+- it records the review `passed` with the note
+  `bookkeeping-only fixes applied at receive`;
+- it dispatches no reviewer and counts no review cycle; and
+- for a blocking gate, it uses no attempt and does not relaunch the gate. The
+  gate counts as satisfied (`allowed`/`passed` in the carriers that record
+  one), and the receipt keeps the gate's raw verdict and counts.
+
+A result with any finding that is not bookkeeping follows the normal flow for
+every finding in it, the bookkeeping ones included. Raw findings, severities,
+counts and verdicts are never rewritten.
+
+**What counts.** The shared definition lives in
+`.agents/docs/bookkeeping-findings.md` and is vendored into every skill that
+applies it. Bookkeeping covers a stale Reviews row cell or status label, an
+archived-artifact path reference, a derived counter, a task-SHA list, a
+progress label, provenance wording, and a resume pointer copied from state the
+journal already records. It never covers a missing review, a requirement
+change, an approval, a new receipt, completion of unfinished work, or an edit
+to a `**Status:**` acceptance marker, a Reviews row's `Reviewed Head`, or a
+set-once delivery field. Three limits apply to the fix itself: it touches only
+the project's tracking files; on goal paths it is a change the brief
+contract's bookkeeping-successor rule permits; and only the review being
+received becomes `passed`. The receiving agent classifies each finding, and a
+doubtful finding is not bookkeeping. Severity is a separate question: a High
+finding can be bookkeeping, and a Low finding about content is still content.
+Reviewers may mark a finding `(bookkeeping)` inside its bold title; the mark is
+advisory and changes no count, severity or verdict.
+
+**Where it applies.**
+
+| Path                                                                                      | What the settlement skips                                                                            |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Project review receive, code and artifact (`oat-project-review-receive`)                  | Fix tasks, the re-review and the three-cycle count                                                   |
+| Per-phase review fix loop (`oat-project-implement`)                                       | The fix child, the new review round and a retry round                                                |
+| Optional phase review gate (`oat-project-implement`)                                      | The bounded fix loop, re-running review and gate, and a gate retry round                             |
+| Final review (`oat-project-implement`)                                                    | Fix tasks, the re-review and a review cycle                                                          |
+| Implementation exit gate (`oat-project-implement`)                                        | `onFailure`, a counted attempt and the rerun; the carrier records `allowed/passed`                   |
+| Goal milestone exit gate and integrated review                                            | The rerun; the `exit` carrier records `allowed/passed` while `oat project delivery check` reads `ok` |
+| Plan artifact-review loop (plan, quick-start, lite, import-plan, brief, goal)             | A new review attempt and a retry                                                                     |
+| Lifecycle gates of discover, design, plan, quick-start, import-plan, brief, goal and lite | `onFailure`, a counted attempt and the rerun                                                         |
+
+**Freshness.** A tracking-only fix commit leaves the implementation exit
+gate's effective-delta fingerprint unchanged, because `effective-delta-v2`
+excludes `.oat/projects/`. On goal paths `oat project delivery check` judges
+the fix under the bookkeeping-successor rule; if it reads stale, the result
+follows the normal flow.
+
+Under `OAT_AUTONOMOUS=1` the rule applies without a stop. A bookkeeping repair
+never infers task or phase completion, waives a HiLL checkpoint, grants an
+approval, or accepts an unresolved Critical finding.
+
 ## Complexity review at budget exhaustion
 
 When a review or gate budget runs out, another round of the same review is
@@ -298,7 +360,9 @@ It runs at every budget-exhaustion point:
 | The quick-start plan gate ends in `block` at `maxAttempts`    | `oat-project-quick-start`    |
 
 A single `prompt` failure, a `warn` outcome, and launch or transport failures
-that consume no attempt are not budget exhaustions. The operator can ask for
+that consume no attempt are not budget exhaustions. Neither is a
+[bookkeeping-only result](#bookkeeping-only-findings), which spends no cycle,
+round or attempt. The operator can ask for
 the same review at any other time; there is no automatic early trigger.
 
 How it runs:

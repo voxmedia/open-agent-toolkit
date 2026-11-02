@@ -531,7 +531,10 @@ passing gate it may apply small, contained fixes directly and commit them with
 the bookkeeping. When the same scope has had 3 review cycles (not counting
 gate reviews), further automated cycles are blocked and the skill asks
 whether to review the findings manually, proceed to the PR, or explicitly
-override the limit.
+override the limit. When every finding is bookkeeping, receive fixes them in
+one commit, records the review `passed` with the note
+`bookkeeping-only fixes applied at receive`, and counts no review cycle (see
+[Bookkeeping-only findings](index.md#bookkeeping-only-findings)).
 
 **Example scenario:** The p02 reviewer found a missed caller and a stale plan
 statement. Project receive explains the findings before disposition. For a
