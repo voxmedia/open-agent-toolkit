@@ -1184,7 +1184,6 @@ describe('help output snapshots', () => {
 
       Commands:
         archive [options] [project-path]             Manage archived project data
-        clerical-settlement                          Verify a closed-kind clerical review repair from an explicit structured proposal (read-only)
         closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
@@ -1229,20 +1228,6 @@ describe('help output snapshots', () => {
     expect(help).toMatch(/line \(one\s+journal run line, run\/v1\)/);
     expect(help).toContain('--dispatch-stamp <line>');
     expect(help).not.toMatch(/launch/i);
-  });
-
-  it('project clerical-settlement verify documents its read-only JSON contract', () => {
-    const program = createRegisteredProgram();
-    const help = getCommandByPath(program, [
-      'project',
-      'clerical-settlement',
-      'verify',
-    ]).helpInformation();
-
-    expect(help).toContain('--project <path>');
-    expect(help).toContain('--proposal <json-file>');
-    expect(help).toMatch(/per-check\s+JSON reasons/);
-    expect(help).toContain('writes nothing');
   });
 
   it('project journal check --help documents the boundaries and read-only scope', () => {
