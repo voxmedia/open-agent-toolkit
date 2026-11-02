@@ -618,7 +618,11 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 ## Phase p11: Implement and planning paths, docs and release
 
-**Status:** pending
+**Status:** in_progress
+**Base:** ba6405690aa0c5a980c5dac624dba4026c1560b8
+**Executor:** phase-implementer:rgi-p11-impl-20261102-01
+
+Worktree: the project branch checkout. Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`, per the operator's 2026-11-02 routing). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the implement, planning-skill and docs slices all edit `autonomy-contract.md`, the shared contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase repeats one shared branch across many skills plus a release. `origin/main` has not moved since the p10 base merge (checked at phase start).
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
