@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-02
-oat_current_task_id: p11-t07
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -44,7 +44,7 @@ oat_template: false
 | p01   | completed | 1     | 1/1      |
 | p02   | completed | 1     | 1/1      |
 | p10   | completed | 1     | 1/1      |
-| p11   | pending   | 1     | 0/1      |
+| p11   | completed | 1     | 1/1      |
 | p07   | pending   | 1     | 0/1      |
 | p08   | pending   | 1     | 0/1      |
 | p09   | pending   | 1     | 0/1      |
@@ -616,6 +616,8 @@ Reviewer request `rgi-p10-rev-20261102-03` (`oat-reviewer-claude-claude-opus-5-5
 
 **Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/p10-review-2026-11-02T193214Z.md)
 
+Correction (m01 integrated review L1): this receipt applied m01's unreleased bookkeeping-only outcome to m01's own review, contrary to the brief's "No self-application in m01" decision. Under the installed ladder the result is the same: a 0/0/0/2 review passes (no Critical, High or Medium), and the root fixed the two Lows directly. Read the outcome as `passed (Lows addressed now)`; the bookkeeping-only note was applied ahead of release.
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** completed
@@ -877,12 +879,14 @@ Late-fix rule (third advance): the second advance commit rewrote a recorded jour
 
 ### Task p11-t07: Address m01 integrated review findings
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** root
 **Source review:** `reviews/archived/m01-review-2026-11-02T234808Z.md` (M1, L1, L2)
 **Intent:** Close limit 1's review-artifact gap (review artifacts are moved or archived by receive, never edited; no fix edits a review artifact's findings, frontmatter or provenance) with a pin and a negative control; append the self-application correction after the p10 round-3 receipt; correct the p11 Progress Overview row.
 **Files:** `.agents/docs/bookkeeping-findings.md`, `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `implementation.md`.
 **Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** ea9f1d50db6b022068cc55ca731c31c2df79abf7
+**Proof:** contract suites 1170/1170 (exit 0); negative control: trimming the new sentence to "findings." failed the pin (exit 1), restored; `pnpm check`, `check:skill-bumps` and `pnpm lint` exit 0; no new skill bump (every vendoring skill carries its single PR-scoped bump). L1 and L2 are journal corrections in this record's bookkeeping commit.
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
