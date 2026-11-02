@@ -477,6 +477,24 @@ The mark is documented in `oat-reviewer.md` Step 7 (advisory, inside the bold ti
 
 Outcome: the same tracking state is reached with one reviewer dispatch fewer and no review cycle counted.
 
+### Review Received: p10
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/p10-review-2026-11-02T170200Z.md
+
+**Findings:** Critical 0 · High 1 · Medium 2 · Low 3
+
+Reviewer request `rgi-p10-rev-20261102-01` (`oat-reviewer-claude-claude-opus-5-5-high`); reviewed range `e9c2b783654a954ac89962ec96d66e768e4ab1be..73b277434f24cb95f785ac4fa36618b09b6d20e7`; reconnaissance not attempted. Branch ordering, the single `passed` exception, the gate write rule, the autonomy rows, the marker documentation, the probe and the bumps all checked out. The reviewer re-ran the Step 8 negative control (2, 1, 2).
+
+- H1 (High): the walkthrough's incident adds a missing Reviews row for a prior event, which the amended branch ("Never set any other event's Status") and Step 6 forbid, and the journal itself calls it doubtful, so under the doubt rule it is not bookkeeping; the exit evidence is unmet → fix task p10-t04: replace it with a recorded rerun whose findings are unambiguously in the definition (keep this incident only as a counter-example if useful). The definition is not widened.
+- M1 (Medium): the shared definition (Outcome 2: "a stale Reviews row cell or status label"; limit 3 bars only `passed`) admits correcting another event's stale non-`passed` status, while the receive branch forbids touching any other event's Status → fix task p10-t04, aligned to the approved Outcome 2: the branch bars setting any other event to `passed`, and one sentence beside Step 6 lets a bookkeeping-only fix correct an existing event's stale non-`passed` Status, Date or Artifact cell, monotonically, never its `Reviewed Head` and never by adding a row. This follows the approved brief, so it is not an operator call.
+- M2 (Medium): the four `.codex/agents/oat-reviewer-gpt-6-1-terra-*.toml` views (merged from main at the p10 base) lack the p01 and p10 reviewer text; a branch-build `sync --dry-run` plans exactly those 4 updates → fix task p10-t04: regenerate with the branch build and confirm a second dry run plans 0.
+- L1 (Low): when the goal delivery check reports stale, the `passed` row and the receipt note stay on record and Step 8 keeps skipping that artifact; a new integrated review is still forced, so no re-review is skipped → deferred (see Deferred Findings).
+- L2 (Low): "tracking files" is undefined outside goal mode → fix task p10-t04: name them in the shared doc and state that requirement artifacts (`discovery.md`, `spec.md`, `design.md`) are never tracking files (a clarification of limit 1, not a new guarantee).
+- L3 (Low): the reviewer's restated inclusion and exclusion lists have no drift pin against the shared doc → fix task p10-t04: pin them.
+
+**Outcome:** fixes queued: p10-t04
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
@@ -561,6 +579,7 @@ Outcome: the same tracking state is reached with one reviewer dispatch fewer and
 - p01 review round 2 L2 (Low): explicit-ID duplicate refusal is order-dependent (a plain list finding before `**M1 — …**` is refused as a duplicate). It fails closed. Deferred to p08, which owns finding identity and keys.
 - p02 review round 3 M1 and L1 to L4: closed without action by the 2026-11-02 brief amendment, which retires the verifier they concern (operator-approved scope change; see the brief's Decisions).
 - p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (m03 or later) that needs the code without matching message text.
+- p10 review L1 (Low): after a bookkeeping-only goal integrated-review receive whose delivery check then reports stale, the `passed` row and the receipt note stay on record and Step 8 keeps skipping that artifact. No re-review is skipped (the stale result forces a new integrated review), and no contract source requires the record to change; amending the receipt in place would itself be a journal rewrite. Deferred. Trigger: the first real stale fallback after a bookkeeping-only receive, or m03 (convergence).
 
 ## Deviations from Plan / Design
 
