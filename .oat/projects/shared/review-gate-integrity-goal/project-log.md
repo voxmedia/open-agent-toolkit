@@ -71,6 +71,10 @@ Running the installed oat sync on a branch that merged a newer main deleted main
 
 p11 accepted at 395b90677: one review round (0/0/0/4), Lows addressed now by the root; #233 traced as a counter-example and the wave-skills-promotion p05 gate accepted as the qualifying walkthrough (operator, recorded as a deviation); release 0.3.44 and DR-261102-bookkeeping-only-review; no phase gate. rgi-p11-outcome-20261102
 
+### 2026-11-02 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/final-review-2026-11-02T211656Z.md run=d434e7e7-9a58-43f4-9e0c-e95a543e865d
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
