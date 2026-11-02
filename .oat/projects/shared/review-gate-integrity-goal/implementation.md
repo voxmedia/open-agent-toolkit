@@ -529,6 +529,22 @@ Reviewer request `rgi-p10-rev-20261102-01` (`oat-reviewer-claude-claude-opus-5-5
 
 **Outcome:** fixes queued: p10-t04
 
+### Review Received: p10 (round 2)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/p10-review-2026-11-02T172814Z.md
+
+**Findings:** Critical 0 · High 1 · Medium 1 · Low 2
+
+Reviewer request `rgi-p10-rev-20261102-02` (`oat-reviewer-claude-claude-opus-5-5-high`); reviewed range `e9c2b783654a954ac89962ec96d66e768e4ab1be..2eca1422aaee6e93a0b7be53e6b86aa5c2d34b9c` (fix range from `c2d6f096b`); reconnaissance not attempted. Round-1 M1, M2, L2 and L3 resolved; the L1 deferral accepted; no new bumps; journal check ok.
+
+- H1 (High): the replacement walkthrough's main fix moves `oat_current_task`, a machine-read routing pointer, while the approved brief lists "Routing or progress pointer repair" as out of scope, so the classification is doubtful. Operator decision (2026-11-02, asked by the root): a pointer corrected by copying state the journal already records is bookkeeping; a pointer or completion inferred from commits stays excluded (the Out of Scope line's original rationale). → fix task p10-t05: add that sentence to the shared definition and pin it; the walkthrough cites the decision and shows the `p06-t01` pointer is copied from recorded journal state.
+- M1 (Medium): the trace misstates Step 1.5 (the legacy artifact's `Important`/`Minor` tiers stop receive until renamed) and the Reviewed Head (no `oat_review_head_sha`, so the cell is `-`) → fix task p10-t05.
+- L1 (Low): the shared doc never says which `**Status:**` lines are acceptance markers → fix task p10-t05: name the `implementation.md` phase and task `**Status:**` lines as the markers and `state.md`'s summary `**Status:**` line as a progress label; pin it (a clarification).
+- L2 (Low): both m01 walkthroughs are gate reruns, so "no cycle count" is shown only vacuously → fix task p10-t05: one sentence on why a gate-invoked phase review satisfies Outcome 1's second incident and that the Step 8 skip is covered by the executed control.
+
+**Outcome:** fixes queued: p10-t05
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
