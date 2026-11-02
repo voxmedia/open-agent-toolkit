@@ -422,6 +422,23 @@ Worktree: the project branch checkout. Committing owner: the phase implementer (
 - Verification: pre-commit, the bump validator in a throwaway worktree commit and the contract suites (1112/1112) passed; at the committed head, `pnpm run check:skill-bumps` (exit 0) and the contract suites (1112/1112, exit 0) passed.
 - Reason: `oat-project-autonomous` vendors `autonomy-contract.md` through `references/gate-inventory.md`, so the REVIEWRECEIVE row edits required its version bump too. A one-line version bump, mechanically derived and in phase, with no behavior change. The validator diffs committed history only, which is why the pre-commit prevention run missed it.
 
+### Task p10-t02: Advisory reviewer marker and parser twin test
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p10-impl-20261102-01
+**Handle:** direct:rgi-p10-impl-20261102-01:p10-t02
+**Intent:** Document the optional `(bookkeeping)` mark inside the bold finding title in `oat-reviewer.md` as advisory, pin it, and prove with a parser test that a marked finding in the list-item and bold-title shapes yields the same counts, severities and verdict as its unmarked twin.
+**Files:** `.agents/agents/oat-reviewer.md`, its regenerated provider views, `packages/cli/src/commands/gate/review-verdict.test.ts`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts`
+**Commit:** da51950603655fe24c599e3ff11eda84a4af03d4
+**Proof:** verdict suite 74/74 exit 0; isolated-HOME contract plus gate suites 1575/1575 (36 files) exit 0; oxfmt check exit 0; `pnpm run check:skill-bumps` exit 0. `oat-reviewer.md` keeps its single branch bump (1.2.14 against `origin/main` 1.2.13).
+
+The mark is documented in `oat-reviewer.md` Step 7 (advisory, inside the bold title, never after the closing `**` or on a detail line) and named in the gate parsing contract. The parser test parses one artifact with a list-item High, a bold-title Medium with closed-label details, and a numbered Low, with and without ` (bookkeeping)` inside each bold title, under a declared count line: counts 0/1/1/1, `blocking: true`, `findingsComplete`, finding IDs, severities and locations are identical, and each marked title equals its unmarked twin plus the mark.
+
+**Negative control:** `parseExplicitFindingTitle` temporarily refused titles containing `(bookkeeping)`; the twin test failed with `finding_detail_orphaned` on the Medium (exit 1). Restored with no diff; the test passed again.
+
+**Provider views:** `oat sync --scope project` regenerated 65 tracked reviewer views (`.codex/agents/oat-reviewer*.toml`, `.cursor/agents/oat-reviewer*.md`), each changed by exactly the two reviewer edits (17 insertions, 1 deletion per file). Sync also deleted the eight `gpt-6-1-terra` Codex views, rewrote `.codex/config.toml` and bumped `oatVersion` in `.oat/sync/manifest.json` from the machine's installed CLI; all three were restored with `git checkout --`, so the manifest has no p10 change (it carries no per-view content hashes).
+
 ## Phase p11: Implement and planning paths, docs and release
 
 **Status:** pending
