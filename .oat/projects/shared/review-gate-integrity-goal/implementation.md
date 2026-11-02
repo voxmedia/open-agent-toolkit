@@ -969,6 +969,20 @@ The configured `oat-project-implement` exit gate (run `d434e7e7-9a58-43f4-9e0c-e
 - Gate `oat-project-implement` (code, m01 exit, rerun `48f5553c-f8fa-4f17-be77-7461789a416c`, `--target codex-6-sol-xhigh`): `review_failed`, `unexpected_post_selection_failure` at `target-dispatch` ("Branch-local gate route did not return JSON."). The Sol reviewer finished and the gate CLI committed its artifact `reviews/final-review-2026-11-02T213631Z.md` (0/0/0/0, reviewed head `395b90677`, Reviews row `received`), but the branch-local route receipt the gate reads after the child exits was missing or empty, so no valid envelope exists. Under Step 14 a matching artifact without a valid result envelope is `blocked/launch_result_reconciliation_required`: it cannot produce an allowed disposition and is not relaunched automatically. No attempt consumed. Carrier `m01.exit` stays at attempt 1 (`allowed`, `stale`).
 - Operator choice (2026-11-02): retire the failed Sol rerun `48f5553c` (its artifact stays a local-only citation; its `received` row is not a gate result and receives no further disposition) and rerun the configured command unchanged, which selects Opus 5.5 high (same-family warning). A backlog item tracks the Codex route-receipt failure.
 
+### Review Received: final (m01 exit gate, rerun)
+
+**Date:** 2026-11-02
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-02T233110Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+The configured `oat-project-implement` exit gate (run `0380f6e0-36ff-47cc-bf80-bc951388df6a`, target `claude-opus-5-5-high`, same-family warning as attempt 1) re-reviewed m01 (`p01, p02, p10, p11`) at the advanced head `395b90677db9487e42f01d31b045f4819f3d85ae`, narrowed by review-provide to the delta from the prior gate-reviewed head `8a97fe85d`. It re-evaluated attempt 1's M1 and L1 as resolved.
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m01 exit, rerun `0380f6e0`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-02. Carrier `oat_milestone_gates.m01.exit` rewritten `allowed`/`passed` at `395b90677`.
+- Freshness after the rerun (`oat project delivery check --subject m01`): `exit` stale, `disallowed-path` on `40e839667`. The gate CLI committed attempt 1's artifact after `395b90677`, and section 12.8 admits a gate artifact only when its row's Reviewed Head equals the carrier's, so that commit, the Sol rerun's artifact and their archive moves can never be bookkeeping successors of `395b90677`. Recovery: the p11 head advances again under the late-fix rule to this receive commit, which closes the exit-gate review fixes, and the configured gate reruns over it. Passing reruns consume no attempt.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

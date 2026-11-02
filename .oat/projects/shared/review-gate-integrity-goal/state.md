@@ -95,13 +95,13 @@ oat_milestone_gates:
       disposition: passed
       resolution: configured
       config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
-      reviewed_head: 8a97fe85dbaa5d47f4450fa46703403097f71a88
+      reviewed_head: 395b90677db9487e42f01d31b045f4819f3d85ae
       subject:
         kind: code
         scope: [p01, p02, p10, p11]
       freshness: stale
-      freshness_reason: 'disallowed-path: 395b90677db9487e42f01d31b045f4819f3d85ae changes .agents/docs/bookkeeping-findings.md, which is not permitted bookkeeping'
-      decided_at: '2026-11-02T21:19:49Z'
+      freshness_reason: 'disallowed-path: 40e839667653d71c1614536a7eec18c9618a0169 changes .oat/projects/shared/review-gate-integrity-goal/reviews/final-review-2026-11-02T211656Z.md, which is not permitted bookkeeping'
+      decided_at: '2026-11-02T23:32:47Z'
 oat_deliveries: []
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -160,7 +160,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-02T21:19:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-02T23:32:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

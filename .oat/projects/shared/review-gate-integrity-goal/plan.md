@@ -269,8 +269,8 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | plan  | artifact | passed          | 2026-11-01 | reviews/archived/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -          | -                    |
 | plan  | artifact | fixes_completed | 2026-11-02 | -                                                           | d09ac39c581ad4fe26b8c006a27266cd6c4a79e3 | -          | -                    |
 | plan  | artifact | passed          | 2026-11-02 | reviews/archived/artifact-plan-review-2026-11-02T155547Z.md | -                                        | -          | -                    |
-| final | code     | received        | 2026-11-02 | reviews/final-review-2026-11-02T213631Z.md                  | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | codex-6-sol-xhigh    |
-| final | code     | received        | 2026-11-02 | reviews/final-review-2026-11-02T233110Z.md                  | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | claude-opus-5-5-high |
+| final | code     | received        | 2026-11-02 | reviews/archived/final-review-2026-11-02T213631Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | codex-6-sol-xhigh    |
+| final | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233110Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | claude-opus-5-5-high |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
