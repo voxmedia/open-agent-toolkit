@@ -93,6 +93,15 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    `project_disabled` record `reviewed_head: null`. A blocked outcome records
    `status: blocked`, `disposition: null`, and no transition. This carrier is
    never `oat_implement_exit_gate`.
+   A blocking result that receive settled as bookkeeping-only (every finding
+   bookkeeping under `references/docs/bookkeeping-findings.md`) records
+   `status: allowed`, `disposition: passed` under the shared gate record's
+   bookkeeping-only write rule, uses no attempt and is not relaunched;
+   `reviewed_head` stays the head the gate reviewed. Its fix commit must be a
+   section 12.8 bookkeeping successor, so step 3 decides whether it stands:
+   when the `exit` result reads stale because of that commit, persist
+   `status: blocked`, `disposition: null` and handle the result under
+   `onFailure` and `maxAttempts` as before, the attempt included.
 3. **Read freshness before any transition.** Run
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
    and persist its `exit` result (`source: milestone-carrier`) as the
@@ -318,6 +327,11 @@ remembered review or receive outcome does not satisfy this step.
 
 - If receive creates fix tasks, return through the normal bounded implement and
   re-review loop.
+- A bookkeeping-only result (review-receive Step 2.6, under
+  `references/docs/bookkeeping-findings.md`) creates no fix tasks and records
+  the final Reviews row `passed` with the note
+  `bookkeeping-only fixes applied at receive`, so the run continues to Step 14
+  with no further reviewer dispatch and no review cycle counted.
 - Continue to Step 14 only when the final Reviews row is `passed`.
 - A failed blocking review, unresolved Critical finding, exhausted route, or
   missing credential with no adequate fallback is an autonomy boundary. Persist
@@ -414,6 +428,7 @@ To run in a separate session use: oat-project-review-provide code final
 - After review: User runs `oat-project-review-receive` to process findings
 - If Critical/High findings: Fix tasks added, re-run the `oat-project-implement` skill
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
+- If every finding is bookkeeping (`references/docs/bookkeeping-findings.md`): receive fixes them in one tracking-file commit, adds no fix tasks and records the final review `passed` with the note `bookkeeping-only fixes applied at receive`; continue to Step 14 with no re-review and no cycle counted
 
 **Final review cap.** When the final review reaches the three-cycle cap,
 dispatch the complexity review that
@@ -671,6 +686,20 @@ disposition.
 - After successful receive, `ok` persists `allowed/passed`. Apply the persisted
   `on_failure` policy only to a validated, receive-eligible `blocked` envelope
   after its eligible receive is durably completed.
+- After successful receive, a `blocked` envelope that review-receive settled in
+  its bookkeeping-only mode (every finding bookkeeping under
+  `references/docs/bookkeeping-findings.md`, fixed in one tracking-file
+  commit, receipt Outcome `passed — bookkeeping-only fixes applied at receive`)
+  persists `allowed/passed` under the shared gate record's bookkeeping-only
+  write rule. It skips `on_failure`, leaves `attempts_completed` unchanged,
+  starts no remediation or rerun, and keeps `reviewed_head` and
+  `implementation_fingerprint` at the gate-reviewed basis; `envelope_status`
+  stays `blocked`, and the gate's terminal line keeps the raw verdict and
+  counts. The fix commit lies between `receive_pre_head` and the receive
+  bookkeeping commit; reconciliation accepts it only when its diff stays inside
+  the project's tracking files. Under `effective-delta-v2` it changes only paths
+  inside the exclusion set (`.oat/projects`), so the allowed generation stays
+  fresh.
 - `block` outcomes consume remediation attempts only after a valid configured
   gate result and its eligible receive disposition are durably processed.
   Increment `attempts_completed` before remediation/rerun. Below
@@ -923,6 +952,12 @@ completion, or success output, run the configured gate:
      the human how to proceed. Continue only after an explicit persisted
      approval.
    - `warn`: persist the warned allowance and failure details before continuing.
+
+   A `blocked` envelope that receive settled as bookkeeping-only never reaches
+   these policies: once Step 4's receive is durable it persists
+   `allowed/passed` (**Structured outcomes, receive, and policy**) with no
+   remediation attempt consumed and no gate rerun. A result with any
+   finding that is not bookkeeping follows the policies above unchanged.
 
    Any nonzero result without that validated and durably received `blocked`
    envelope remains blocked and skips all three policies. In particular,

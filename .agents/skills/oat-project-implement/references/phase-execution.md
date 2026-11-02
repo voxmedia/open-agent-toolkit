@@ -938,6 +938,22 @@ recorded without blocking.
 
 #### Bounded Fix and Re-Review Loop
 
+**Bookkeeping-only round (checked first).** Before step 1 below, classify
+every finding of the round against the shared definition in
+`references/docs/bookkeeping-findings.md`: its inclusions, its exclusions, and
+the three limits on the fix. A doubtful finding is not bookkeeping. When the
+round has at least one finding and every finding is bookkeeping, this loop does
+not run. The root fixes them all in one commit confined to the project's
+tracking files and receives the artifact through review-receive's
+bookkeeping-only mode (its Step 2.6): one note line per finding, and the
+phase's Reviews event `passed` with the note
+`bookkeeping-only fixes applied at receive`. No phase implementer is resumed in
+`mode: fix`, no new reviewer round is dispatched, and no round of
+`oat_orchestration_retry_limit` is consumed. Continue to Step 7b as for a
+passing review. In brief modes the fix commit is bookkeeping and does not
+advance the phase's `**Head:**`. A round with any finding that is not
+bookkeeping runs the loop below unchanged, for every finding in it.
+
 On Critical/High findings:
 
 1. Read `oat_orchestration_retry_limit` from state (default `2`, range 0–5).
@@ -999,6 +1015,15 @@ and `handoff` is non-null.
 - `ok`: consume the artifact through non-pausing judgment-sweep mode.
 - `blocked`: consume blocking findings, route fixes to the original phase
   implementer under the bounded loop, then re-run root review and the gate.
+- `blocked` with only bookkeeping findings (checked before the bullet above):
+  when review-receive settles the result in its bookkeeping-only mode (every
+  finding bookkeeping under `references/docs/bookkeeping-findings.md`, fixed in
+  one tracking-file commit, the gate's Reviews event `passed` with the note
+  `bookkeeping-only fixes applied at receive`), the gate has passed for this
+  phase. Route no fixes to the phase implementer, re-run neither root review
+  nor the gate, and consume no gate retry round. The receipt and the gate's
+  terminal line under `## Reviews and Gates` keep the raw verdict and counts.
+  A phase gate writes no carrier.
 - target execution, artifact validation, or missing-artifact failure: stop.
 
 The phase row stays `in_progress` until this gate passes and every review
@@ -1199,6 +1224,10 @@ settled and every selected phase gate has passed, in whichever bookkeeping
 commit observes that last condition: this Step 7b commit when nothing is
 queued and no gate is selected, otherwise the commit that records the final
 review-fix task or the passing gate.
+
+A review round or a `blocked` gate settled as bookkeeping-only (Bounded Fix and
+Re-Review Loop, Optional External Phase Review Gate) queues nothing and counts
+as a passing review or a passed gate for these transitions.
 
 In brief modes the row is the phase's journal section and `complete` is the
 exact line `**Status:** completed` under its heading, written only by the root

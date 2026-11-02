@@ -4334,7 +4334,7 @@ describe('named-skill execution contract', () => {
 
     // One entry per shared doc, not per link: six links resolve onto
     // `autonomy-contract.md`, three onto `complexity-review-fallback.md`, six
-    // onto `gate-approval-record.md`, and one onto `bookkeeping-findings.md`,
+    // onto `gate-approval-record.md`, and two onto `bookkeeping-findings.md`,
     // and the realpath key collapses them.
     expect(
       live.filter((file) => file.startsWith('.agents/docs/')),

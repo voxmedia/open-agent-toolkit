@@ -31,7 +31,15 @@ const GATE_RECORD = '.agents/docs/gate-approval-record.md';
 const AUTONOMY = '.agents/docs/autonomy-contract.md';
 const NOTE = 'bookkeeping-only fixes applied at receive';
 
-const VENDORING_SKILLS = ['oat-project-review-receive'] as const;
+const PHASE_EXECUTION =
+  '.agents/skills/oat-project-implement/references/phase-execution.md';
+const CLOSEOUT =
+  '.agents/skills/oat-project-implement/references/completion-and-closeout.md';
+
+const VENDORING_SKILLS = [
+  'oat-project-review-receive',
+  'oat-project-implement',
+] as const;
 
 function readRepoFile(relativePath: string): string {
   return readFileSync(join(REPO_ROOT, relativePath), 'utf8');
@@ -515,5 +523,309 @@ describe('REVIEWRECEIVE autonomy rows', () => {
     expect(text).toContain(
       'a bookkeeping repair never infers completion, waives HiLL, grants approval or accepts an unresolved Critical',
     );
+  });
+});
+
+describe('implement phase review loop and phase gate (p11)', () => {
+  const doc = readRepoFile(PHASE_EXECUTION);
+  const loop = sliceBetween(
+    doc,
+    '#### Bounded Fix and Re-Review Loop',
+    '### Optional External Phase Review Gate',
+  );
+  const branch = normalize(
+    sliceBetween(
+      loop,
+      '**Bookkeeping-only round (checked first).**',
+      'On Critical/High findings:',
+    ),
+  );
+
+  it('settles an all-bookkeeping round before the bounded fix loop starts', () => {
+    expect(loop.indexOf('**Bookkeeping-only round (checked first).**')).toBe(
+      loop.indexOf('**Bookkeeping-only round'),
+    );
+    expect(loop.indexOf('**Bookkeeping-only round')).toBeLessThan(
+      loop.indexOf('On Critical/High findings:'),
+    );
+    expect(branch).toContain(VENDORED_DOC);
+    expect(branch).toContain('A doubtful finding is not bookkeeping.');
+    expect(branch).toContain(
+      'When the round has at least one finding and every finding is bookkeeping, this loop does not run.',
+    );
+    expect(branch).toContain(
+      "The root fixes them all in one commit confined to the project's tracking files",
+    );
+    expect(branch).toContain(`\`passed\` with the note \`${NOTE}\``);
+    expect(branch).toContain(
+      'No phase implementer is resumed in `mode: fix`, no new reviewer round is dispatched, and no round of `oat_orchestration_retry_limit` is consumed.',
+    );
+    expect(branch).toContain(
+      "In brief modes the fix commit is bookkeeping and does not advance the phase's `**Head:**`.",
+    );
+    expect(branch).toContain(
+      'A round with any finding that is not bookkeeping runs the loop below unchanged, for every finding in it.',
+    );
+    // Today's loop is untouched beside the branch.
+    expect(normalize(loop)).toContain(
+      '4. Dispatch one new root-owned reviewer round against the updated range. 5. Repeat until pass or retry exhaustion.',
+    );
+  });
+
+  it('treats a blocked phase gate with only bookkeeping findings as passed, with no retry and no relaunch', () => {
+    const gate = normalize(
+      sliceBetween(
+        doc,
+        '### Optional External Phase Review Gate',
+        '#### Reviews Ledger Mutation Contract',
+      ),
+    );
+    const blocked =
+      '- `blocked`: consume blocking findings, route fixes to the original phase implementer under the bounded loop, then re-run root review and the gate.';
+    const settled = gate.indexOf(
+      '- `blocked` with only bookkeeping findings (checked before the bullet above):',
+    );
+
+    expect(gate).toContain(blocked);
+    expect(settled).toBeGreaterThan(gate.indexOf(blocked));
+    const bullet = gate.slice(settled, gate.indexOf('- target execution'));
+    expect(bullet).toContain(VENDORED_DOC);
+    expect(bullet).toContain(`\`passed\` with the note \`${NOTE}\``);
+    expect(bullet).toContain('the gate has passed for this phase');
+    expect(bullet).toContain(
+      'Route no fixes to the phase implementer, re-run neither root review nor the gate, and consume no gate retry round.',
+    );
+    expect(bullet).toContain(
+      "The receipt and the gate's terminal line under `## Reviews and Gates` keep the raw verdict and counts.",
+    );
+    expect(bullet).toContain('A phase gate writes no carrier.');
+  });
+
+  it('lets a bookkeeping-only round or gate complete the phase row like a pass', () => {
+    const step7b = normalize(
+      sliceBetween(
+        doc,
+        '#### Step 7b: Post-Review Bookkeeping',
+        '### Step 8: Check Plan Phase Completion',
+      ),
+    );
+    const transitions = step7b.indexOf('Phase row transitions:');
+    const rule = step7b.indexOf(
+      'A review round or a `blocked` gate settled as bookkeeping-only (Bounded Fix and Re-Review Loop, Optional External Phase Review Gate) queues nothing and counts as a passing review or a passed gate for these transitions.',
+    );
+
+    expect(transitions).toBeGreaterThan(-1);
+    expect(rule).toBeGreaterThan(transitions);
+    expect(step7b).toContain(
+      'A `blocked` gate keeps the row `in_progress` through the bounded fix loop; gate retry exhaustion sets it `blocked`.',
+    );
+  });
+});
+
+describe('implement final review, exit gate and milestone exit gate (p11)', () => {
+  const doc = readRepoFile(CLOSEOUT);
+  const step13 = normalize(
+    sliceBetween(doc, '### Step 13: Trigger Final Review', '### Step 14:'),
+  );
+  const step14 = normalize(
+    sliceBetween(
+      doc,
+      '### Step 14: Gate Execution',
+      '### Step 15: Final HiLL Closeout Sequence',
+    ),
+  );
+
+  it('continues past an all-bookkeeping final review with no re-review, on both routes', () => {
+    const autonomousFixes =
+      '- If receive creates fix tasks, return through the normal bounded implement and re-review loop.';
+    const autonomous = step13.indexOf(
+      '- A bookkeeping-only result (review-receive Step 2.6, under `references/docs/bookkeeping-findings.md`) creates no fix tasks and records the final Reviews row `passed` with the note `bookkeeping-only fixes applied at receive`, so the run continues to Step 14 with no further reviewer dispatch and no review cycle counted.',
+    );
+    expect(autonomous).toBeGreaterThan(step13.indexOf(autonomousFixes));
+
+    const loopLine =
+      '- Loop until final review passes (max 3 cycles per oat-project-review-receive)';
+    const interactive = step13.indexOf(
+      '- If every finding is bookkeeping (`references/docs/bookkeeping-findings.md`): receive fixes them in one tracking-file commit, adds no fix tasks and records the final review `passed` with the note `bookkeeping-only fixes applied at receive`; continue to Step 14 with no re-review and no cycle counted',
+    );
+    expect(interactive).toBeGreaterThan(step13.indexOf(loopLine));
+  });
+
+  it('persists a bookkeeping-only exit gate result as allowed/passed with no attempt and no rerun', () => {
+    const okRule =
+      '- After successful receive, `ok` persists `allowed/passed`. Apply the persisted `on_failure` policy only to a validated, receive-eligible `blocked` envelope after its eligible receive is durably completed.';
+    const settled = step14.indexOf(
+      '- After successful receive, a `blocked` envelope that review-receive settled in its bookkeeping-only mode',
+    );
+
+    expect(step14).toContain(okRule);
+    expect(settled).toBeGreaterThan(step14.indexOf(okRule));
+    const bullet = step14.slice(
+      settled,
+      step14.indexOf('- `block` outcomes consume remediation attempts'),
+    );
+    expect(bullet).toContain(VENDORED_DOC);
+    expect(bullet).toContain(`receipt Outcome \`passed — ${NOTE}\``);
+    expect(bullet).toContain(
+      "persists `allowed/passed` under the shared gate record's bookkeeping-only write rule.",
+    );
+    expect(bullet).toContain(
+      'It skips `on_failure`, leaves `attempts_completed` unchanged, starts no remediation or rerun, and keeps `reviewed_head` and `implementation_fingerprint` at the gate-reviewed basis;',
+    );
+    expect(bullet).toContain(
+      "`envelope_status` stays `blocked`, and the gate's terminal line keeps the raw verdict and counts.",
+    );
+    expect(bullet).toContain(
+      "The fix commit lies between `receive_pre_head` and the receive bookkeeping commit; reconciliation accepts it only when its diff stays inside the project's tracking files.",
+    );
+    expect(bullet).toContain(
+      'Under `effective-delta-v2` it changes only paths inside the exclusion set (`.oat/projects`), so the allowed generation stays fresh.',
+    );
+    // The attempt rule it sits beside is unchanged.
+    expect(step14).toContain(
+      '- `block` outcomes consume remediation attempts only after a valid configured gate result and its eligible receive disposition are durably processed. Increment `attempts_completed` before remediation/rerun.',
+    );
+  });
+
+  it('keeps a bookkeeping-only exit gate result out of the onFailure policies', () => {
+    const policies = sliceBetween(
+      step14,
+      '5. Do not route policy from a generic nonzero exit.',
+      '**Complexity review at `maxAttempts`.**',
+    );
+    const warn = policies.indexOf(
+      '- `warn`: persist the warned allowance and failure details before continuing.',
+    );
+    const branch = policies.indexOf(
+      'A `blocked` envelope that receive settled as bookkeeping-only never reaches these policies:',
+    );
+
+    expect(warn).toBeGreaterThan(-1);
+    expect(branch).toBeGreaterThan(warn);
+    expect(policies).toContain(
+      'with no remediation attempt consumed and no gate rerun. A result with any finding that is not bookkeeping follows the policies above unchanged.',
+    );
+    expect(policies).toContain(
+      '- `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`).',
+    );
+  });
+
+  it('relies on the effective-delta v2 exclusion of project tracking paths', () => {
+    // The bookkeeping fix stays fresh only because v2 excludes these paths.
+    for (const pathspec of [
+      ':(exclude,literal)$PROJECT_PATH/state.md',
+      ':(exclude,literal).oat/projects',
+      ':(exclude,literal).oat/repo',
+    ]) {
+      expect(step14, pathspec).toContain(pathspec);
+    }
+  });
+
+  it('writes the milestone exit carrier allowed/passed for a bookkeeping-only result, with the stale fallback', () => {
+    const milestone = normalize(
+      sliceBetween(
+        doc,
+        '### Goal Milestone Closeout',
+        '**Terminal `pr` step.**',
+      ),
+    );
+    const blockedRule =
+      'A blocked outcome records `status: blocked`, `disposition: null`, and no transition. This carrier is never `oat_implement_exit_gate`.';
+    const settled = milestone.indexOf(
+      'A blocking result that receive settled as bookkeeping-only (every finding bookkeeping under `references/docs/bookkeeping-findings.md`) records `status: allowed`, `disposition: passed`',
+    );
+
+    expect(milestone).toContain(blockedRule);
+    expect(settled).toBeGreaterThan(milestone.indexOf(blockedRule));
+    expect(settled).toBeLessThan(
+      milestone.indexOf('3. **Read freshness before any transition.**'),
+    );
+    expect(milestone).toContain(
+      "under the shared gate record's bookkeeping-only write rule, uses no attempt and is not relaunched; `reviewed_head` stays the head the gate reviewed.",
+    );
+    expect(milestone).toContain(
+      'Its fix commit must be a section 12.8 bookkeeping successor, so step 3 decides whether it stands: when the `exit` result reads stale because of that commit, persist `status: blocked`, `disposition: null` and handle the result under `onFailure` and `maxAttempts` as before, the attempt included.',
+    );
+  });
+});
+
+describe('effective-delta v2 exclusions leave a tracking-only fix out of the delta (p11)', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(() => {
+    for (const dir of tempDirs.splice(0)) {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  function git(cwd: string, ...args: string[]): string {
+    return execFileSync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        LC_ALL: 'C',
+        GIT_CONFIG_NOSYSTEM: '1',
+        GIT_CONFIG_GLOBAL: '/dev/null',
+        GIT_AUTHOR_NAME: 'oat',
+        GIT_AUTHOR_EMAIL: 'oat@example.invalid',
+        GIT_COMMITTER_NAME: 'oat',
+        GIT_COMMITTER_EMAIL: 'oat@example.invalid',
+      },
+    });
+  }
+
+  function commitFile(cwd: string, path: string, body: string): void {
+    mkdirSync(join(cwd, path, '..'), { recursive: true });
+    writeFileSync(join(cwd, path), body);
+    git(cwd, 'add', '--', path);
+    git(cwd, 'commit', '-q', '--no-verify', '-m', path);
+  }
+
+  it('hashes the same delta before and after a tracking-only fix commit, and a different one after a code change', () => {
+    const closeout = readRepoFile(CLOSEOUT);
+    const project = '.oat/projects/shared/demo';
+    // The exact literal pathspecs the closeout contract names, read from it.
+    const pathspecs = [
+      ...closeout.matchAll(/`(:\(exclude,literal\)[^`]+)`/g),
+    ].map((match) => match[1]!.replace('$PROJECT_PATH', project));
+    expect(pathspecs).toEqual([
+      `:(exclude,literal)${project}/state.md`,
+      ':(exclude,literal).oat/projects',
+      ':(exclude,literal).oat/repo',
+    ]);
+
+    const repo = mkdtempSync(join(tmpdir(), 'oat-bookkeeping-delta-'));
+    tempDirs.push(repo);
+    git(repo, 'init', '-q', '-b', 'main');
+    commitFile(repo, 'README.md', 'base\n');
+    const base = git(repo, 'rev-parse', 'HEAD').trim();
+    commitFile(repo, 'src/feature.ts', 'export const x = 1;\n');
+    commitFile(repo, `${project}/plan.md`, '| p01 | code | received |\n');
+
+    const delta = () =>
+      git(
+        repo,
+        'diff',
+        '--raw',
+        '-z',
+        '--no-renames',
+        '--no-abbrev',
+        `${base}..HEAD`,
+        '--',
+        '.',
+        ...pathspecs,
+      );
+    const reviewed = delta();
+
+    // A bookkeeping-only fix: Reviews cell, journal note, state pointer.
+    commitFile(repo, `${project}/plan.md`, '| p01 | code | passed |\n');
+    commitFile(repo, `${project}/implementation.md`, '- note\n');
+    commitFile(repo, `${project}/state.md`, 'oat_current_task: p02\n');
+    expect(delta()).toBe(reviewed);
+
+    // Control: a code change after the review changes the delta.
+    commitFile(repo, 'src/feature.ts', 'export const x = 2;\n');
+    expect(delta()).not.toBe(reviewed);
   });
 });
