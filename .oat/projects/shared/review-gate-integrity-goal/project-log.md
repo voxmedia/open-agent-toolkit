@@ -38,6 +38,10 @@ Recommendation: children must use an inline HOME=$(mktemp -d) prefix, never expo
 
 p02 per-phase review passed in round 3 after two fix rounds (r1 0C/4H/5M/4L, r2 0C/3H/1M/2L, r3 0C/0H/1M/4L; Medium and Lows deferred or handed to p03/p04); head 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c; selected phase gate pending. rgi-p02-review-outcome-20261101
 
+### 2026-11-02 · structural · oat gate review · p02
+
+target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=c9c091b6-d051-428b-a998-a95b68b37d78
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
