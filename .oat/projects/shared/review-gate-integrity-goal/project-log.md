@@ -75,6 +75,10 @@ p11 accepted at 395b90677: one review round (0/0/0/4), Lows addressed now by the
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/final-review-2026-11-02T211656Z.md run=d434e7e7-9a58-43f4-9e0c-e95a543e865d
 
+### 2026-11-02 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high exit=1 status=review_failed run=48f5553c-f8fa-4f17-be77-7461789a416c
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
