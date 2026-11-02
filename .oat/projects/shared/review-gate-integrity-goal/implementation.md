@@ -690,6 +690,39 @@ Each branch sits beside today's text, which stays as it was:
 7. plan-writing step 6: "never report it as a clean review" changed to "report it as a clean review".
 8. design: the vendored link removed. The vendoring test failed.
 
+### Task p11-t03: Brief contract, autonomy rows and workflow docs
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p11-impl-20261102-01
+**Handle:** direct:rgi-p11-impl-20261102-01:p11-t03
+**Intent:** State the settlement where the brief contract restates the retry and attempt rules: section 5's review ladder, section 12.5's goal routing and section 12.8's successor rule. Update the autonomy rows that govern the changed paths. Document the rule, and where it applies, in the workflow docs. Pin the contract and rows.
+**Files:** `.agents/skills/oat-project-brief/references/brief-contract.md`, `.agents/docs/autonomy-contract.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/projects/reviews/review-flavors.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/advanced/autonomy.md`, `apps/oat-docs/docs/workflows/approvals-and-automation.md`, `apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md`, `apps/oat-docs/docs/workflows/projects/execution/execution-skills.md`, `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** e35bb85bb20b2888e8d0455e1757dd52d15cb1b6
+**Proof:** isolated-HOME contract suites 1170/1170 (27 files) exit 0; `pnpm --filter oat-docs docs:check` exit 0 (0 errors, no warnings on the new lines); markdownlint over the seven changed pages exit 0; `pnpm run check:skill-bumps` exit 0 after the commit (17 bumps; brief keeps its p10 bump).
+
+- **Brief contract.**
+  - Section 5 settles a bookkeeping-only result at receive. That settlement is not a correction round and turns no other finding into acceptance.
+  - Section 12.5: such a result queues no fixes and never takes the queued-fix route. A settled exit gate records `allowed`/`passed`, and both settlements stand only while `oat project delivery check` reads the evidence fresh.
+  - Section 12.8: a goal-path bookkeeping fix is a bookkeeping successor, and a fix the section would call substantive is not bookkeeping.
+- **Autonomy rows.**
+  - Gate rows QS-12, LITE-09, BRIEF-10, GOAL-10, DISC-08, DES-08, PLAN-11, IMPORT-09 and IMPLEMENT-18 now say an all-bookkeeping `blocked` result is settled without a stop, with no attempt and no relaunch.
+  - Review-loop rows QS-11, LITE-08, BRIEF-09, GOAL-09, PLAN-09 and IMPORT-08 record such a result `passed` with no re-review and no retry.
+  - IMPLEMENT-12 continues to the exit gate. IMPLEMENT-12 and IMPLEMENT-18 carry the guard: a bookkeeping repair never infers completion, waives HiLL, grants approval or accepts an unresolved Critical.
+  - PRFINAL-03 and COMPLETE-03 needed no change, because a settled final review is `passed`.
+  - The IMPLEMENT-18 cell grew past the table's widest cell, so oxfmt re-padded the gate inventory table: 144 lines changed, 17 with `git diff -w`.
+- **Docs.**
+  - `workflows/projects/reviews/index.md` gains a "Bookkeeping-only findings" section: the rule, what counts, a table of the paths it applies to, freshness and the autonomy guard. Its phase-gate, artifact-loop and complexity-review text points to that section.
+  - One paragraph or bullet points to it from each of `review-flavors.md`, `workflow-gates.md` (`onFailure` and `maxAttempts`), `autonomy.md`, `approvals-and-automation.md`, `implementation-execution.md` (budget exhaustion) and `execution-skills.md`.
+  - `README.md` and the package READMEs do not describe review or gate retry behavior, so they are unchanged.
+
+**Negative controls** (each neutralized in the working tree, the suite run, then restored byte-identical; 1 of 80 failed each time):
+
+1. DES-08: the bookkeeping clause removed.
+2. IMPLEMENT-12: "no adequate route stops" changed to "continues".
+3. Brief contract section 5: "not a correction round" changed to "a correction round".
+4. Brief contract section 12.5: "never takes the first route" changed to "takes the first route".
+
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
 **Status:** pending
