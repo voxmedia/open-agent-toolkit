@@ -3388,7 +3388,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.14'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.11'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.12'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.14'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.15'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.23'],
     ] as const;
 
@@ -5197,7 +5197,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-receive', '1.6.14'],
       ['oat-project-review-receive-remote', '1.5.5'],
       ['oat-project-implement', '2.3.25'],
-      ['oat-project-pr-final', '1.6.14'],
+      ['oat-project-pr-final', '1.6.15'],
       ['oat-project-pr-progress', '1.3.7'],
       ['oat-project-complete', '1.7.19'],
       ['oat-project-next', '1.1.7'],
@@ -5383,6 +5383,15 @@ describe('validateOatSkills', () => {
     // The `-` placeholder stays legal.
     expect(guardBlock).toContain(
       'if [ "$ROW_ARTIFACT" = "-" ]; then continue; fi',
+    );
+    // Only the historical plan/artifact structured annotation is non-file
+    // evidence; it is reported explicitly and does not migrate the ledger.
+    expect(guardBlock).toContain(
+      'if [ "$ROW_SCOPE" = "plan" ] && [ "$ROW_TYPE" = "artifact" ]; then',
+    );
+    expect(guardBlock).toContain('"structured (no artifact); "*)');
+    expect(guardBlock).toContain(
+      'structured planning review; no artifact file',
     );
     // A named gate code plus the offending row's identity.
     expect(guardBlock).toContain(
