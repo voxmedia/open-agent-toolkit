@@ -1618,6 +1618,39 @@ Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer; p-rev2 follows sequentially (no parallel group declared). Added at `efea9ac0a` by the m02 exit gate receive. `origin/main` has not moved since the p07 base merge.
 
+### Task p-rev1-t01: `oat review resolve` refuses a Reviewed Head that is neither a full SHA nor `-`
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev1-impl-20261103-01
+**Handle:** direct:rgi-prev1-impl-20261103-01:p-rev1-t01
+**Intent:** Fix M1 of the m02 exit gate. The resolver reads the raw Reviewed Head cell of the bound row instead of the parser's validated `reviewedHead`. A `-` cell, or a ledger without a Reviewed Head column, still reads `unavailable` and is accepted. Any other cell that is not a full SHA, such as an abbreviated SHA or `not-a-sha`, refuses with the new diagnostic `reviewed_head_invalid`, `checks.reviewedHead: mismatch` and exit 1. `parseReviewTable` keeps its default output; only the resolver opts in to the raw cell, so no other reader changes.
+**Files:** `packages/control-plane/src/{types,index}.ts`, `packages/control-plane/src/state/reviews.ts`, `packages/control-plane/src/state/reviews.test.ts`, `packages/control-plane/README.md`, `packages/cli/src/commands/review/resolve.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/reviews.test.ts && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/help-snapshots.test.ts`, then the gate artifact's M1 reproduction against the rebuilt branch CLI.
+**Commit:** c16a278abea0aa19891cb9b207d022c33b653f10
+**Proof:** control-plane `reviews.test.ts` 15/15 exit 0 (2 new tests); CLI `src/commands/review` plus `help-snapshots.test.ts` 142/142 (6 files) exit 0 (5 new resolver tests); control-plane and CLI `type-check` and `lint` exit 0; `docs:check` and `docs:lint` exit 0; `pnpm build` exit 0 (0 of 5 cached).
+
+**Changes.** `parseReviewTable(planContent, { rawReviewedHead: true })` also returns the unvalidated cell as `reviewedHeadCell` when the table has a Reviewed Head column (empty when a short row has no cell). The option is off by default, so `getProjectState`, `review latest`, `review check` and `review pending` get the same rows as before. The resolver opts in. A missing column or a `-` cell reads `unavailable`. A full SHA compares by exact equality as before. Anything else, including an empty cell, is `reviewed_head_invalid`, with `source: row`, `expected` set to the event head, `actual` set to the raw cell, `checks.reviewedHead: mismatch` and exit 1. The `ReviewStatus` type, the control-plane README and the CLI reference document the field and the new code. The CLI reference code list now names `reviewed_head_invalid`. The receive skill's Step 1 tells the reader to report each diagnostic's `code`, `expected` and `actual` and does not list codes, so it stays true and no skill changed. `reviews/index.md` still reads true: it says any difference other than `-` is a mismatch.
+
+**M1 reproduction** (the gate artifact's probe, verbatim, `python3 -I` from the repository root):
+
+| Case              | Pre-change branch build (390fb8391)         | Branch build (c16a278ab)                               |
+| ----------------- | ------------------------------------------- | ------------------------------------------------------ |
+| match             | exit 0, `ok`, `match`                       | exit 0, `ok`, `match`                                  |
+| wrong-full        | exit 1, `refused`, `reviewed_head_mismatch` | exit 1, `refused`, `reviewed_head_mismatch`            |
+| abbreviated       | exit 0, `ok`, `unavailable` (the M1 defect) | exit 1, `refused`, `mismatch`, `reviewed_head_invalid` |
+| malformed         | exit 0, `ok`, `unavailable` (the M1 defect) | exit 1, `refused`, `mismatch`, `reviewed_head_invalid` |
+| unavailable (`-`) | exit 0, `ok`, `unavailable`                 | exit 0, `ok`, `unavailable`                            |
+
+A legacy five-column ledger with no Reviewed Head column on the branch build gives exit 0, `ok`, `unavailable`, no diagnostics. The released `0.3.45` `oat` on PATH has no `review resolve`: it exits 1 with `unknown command 'resolve'`. The pre-change branch build is therefore the bad state that accepts the malformed cells.
+
+**Negative control.** In the bad state, the pre-change branch build at `390fb8391` accepted the abbreviated and the malformed cell as `unavailable` with exit 0. After the fix, the branch build refuses the same cells with `reviewed_head_invalid` and exit 1. The valid controls still pass: the matching full SHA and `-` are accepted, and a legacy column-less ledger reads `unavailable`.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and its suite run. The file was then restored and checked byte-identical with `cmp`.
+
+1. The resolver's `!FULL_SHA.test(rowHead)` branch was disabled. `resolve.test.ts` failed 4 of 27: the abbreviated, malformed and empty-cell refusals, and the CLI exit-1 test.
+2. The parser's `reviewedHeadCell` emission was disabled. `reviews.test.ts` failed 1 of 15: the raw-cell test.
+3. The resolver's `rawReviewedHead: true` opt-in was dropped, which restores the pre-change read. `resolve.test.ts` failed 11 of 27, the three invalid-cell refusals among them.
+
 ## Phase p-rev2: Resolve synced-project review ancestry in the source repository
 
 **Status:** pending
