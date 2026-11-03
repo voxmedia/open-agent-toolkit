@@ -14,6 +14,7 @@ import {
   milestonePhaseScope,
   normalizeMilestoneId,
   normalizePhaseId,
+  parseProvisionalPhaseIds,
   parseReviewTable,
   readJournalRecords,
   readMilestoneMembership,
@@ -22,7 +23,8 @@ import { Command } from 'commander';
 
 /**
  * `oat review pending`: list the required reviews of a PR scope whose latest
- * `## Reviews` row is still `pending`, and the ones a recorded waiver covers.
+ * `## Reviews` row is still `pending`, the required phase reviews that have no
+ * row at all, and the ones a recorded waiver covers.
  * Read-only and decision-free: it exits 0 whatever it lists, and the PR skills
  * decide what to do with the list.
  *
@@ -33,11 +35,16 @@ import { Command } from 'commander';
  * required here: `final` stays with pr-final Step 2, `mNN` with `oat project
  * delivery check`.
  *
+ * A required phase key with no `## Reviews` row is `missing` when its phase is
+ * concrete, and unlisted while the phase is `**Provisional:** yes`. The
+ * `plan | artifact` key has no phase and is listed only from its row.
+ *
  * A waiver is one line under the journal's `## Reviews and Gates`:
  * `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <date>
  * · **Reason:** <text>`. It moves a required key whose latest row is
- * `pending` from `pending` to `waived`; the row itself stays `pending`, and no
- * other reader treats the line as a review.
+ * `pending` from `pending` to `waived`, or a `missing` key from `missing` to
+ * `waived`; the ledger itself is unchanged, and no other reader treats the
+ * line as a review.
  */
 
 export interface RequiredReviewEntry {
@@ -89,6 +96,8 @@ export interface PendingReviewsResult {
   scope: PendingReviewScope;
   required: RequiredReviewEntry[];
   pending: RequiredReviewEntry[];
+  /** Required keys of concrete phases with no `## Reviews` row. */
+  missing: RequiredReviewEntry[];
   waived: WaivedReviewEntry[];
   waivers: ReviewWaiverRecord[];
 }
@@ -307,6 +316,12 @@ export async function listPendingReviews(
   const requiredByKey = new Map(
     required.map((entry) => [keyOf(entry.scope, entry.type), entry]),
   );
+  const provisional = parseProvisionalPhaseIds(planContent);
+  /** A key with no row the listing reports: a concrete phase's review. */
+  const isMissing = (entry: RequiredReviewEntry): boolean =>
+    entry.status === null &&
+    entry.type === 'code' &&
+    !provisional.has(normalizeScope(entry.scope));
 
   const waivers: ReviewWaiverRecord[] = readWaiverLines(
     implementationContent,
@@ -315,9 +330,9 @@ export async function listPendingReviews(
     const unapplied: WaiverUnappliedReason | null =
       entry === undefined
         ? 'not-required'
-        : entry.status === null
+        : entry.status === null && !isMissing(entry)
           ? 'no-row'
-          : entry.status !== 'pending'
+          : entry.status !== null && entry.status !== 'pending'
             ? 'review-recorded'
             : waiver.reason === null
               ? 'missing-reason'
@@ -326,9 +341,12 @@ export async function listPendingReviews(
   });
 
   const pending: RequiredReviewEntry[] = [];
+  const missing: RequiredReviewEntry[] = [];
   const waived: WaivedReviewEntry[] = [];
   for (const entry of required) {
-    if (entry.status !== 'pending') {
+    const listed =
+      entry.status === 'pending' ? pending : isMissing(entry) ? missing : null;
+    if (listed === null) {
       continue;
     }
     const waiver = waivers.find(
@@ -338,7 +356,7 @@ export async function listPendingReviews(
           keyOf(entry.scope, entry.type),
     );
     if (waiver === undefined) {
-      pending.push(entry);
+      listed.push(entry);
     } else {
       waived.push({
         ...entry,
@@ -362,6 +380,7 @@ export async function listPendingReviews(
     scope,
     required,
     pending,
+    missing,
     waived,
     waivers,
   };
@@ -398,14 +417,22 @@ async function runReviewPending(
       context.logger.json(result);
     } else {
       const label = (entry: RequiredReviewEntry): string =>
-        `${entry.scope} ${entry.type} (row ${entry.row})`;
-      if (result.pending.length === 0) {
+        entry.row === null
+          ? `${entry.scope} ${entry.type} (no row)`
+          : `${entry.scope} ${entry.type} (row ${entry.row})`;
+      if (result.pending.length === 0 && result.missing.length === 0) {
         context.logger.info(
           `No required review is pending for scope ${result.scope.requested}.`,
         );
-      } else {
+      }
+      if (result.pending.length > 0) {
         context.logger.info(
           `Pending required reviews for scope ${result.scope.requested}: ${result.pending.map(label).join(', ')}.`,
+        );
+      }
+      if (result.missing.length > 0) {
+        context.logger.info(
+          `Required reviews with no Reviews row for scope ${result.scope.requested}: ${result.missing.map(label).join(', ')}.`,
         );
       }
       for (const entry of result.waived) {

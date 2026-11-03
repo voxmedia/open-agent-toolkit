@@ -240,8 +240,8 @@ Do not block PR generation; this is a progress PR.
 
 ### Step 3.5: List Pending Required Reviews
 
-Before PR creation, list the required reviews still `pending` for the PR's
-scope. This step runs before Step 6 creates a pull request and, in goal mode,
+Before PR creation, list the required reviews still `pending` or `missing`
+for the PR's scope. This step runs before Step 6 creates a pull request and, in goal mode,
 before Step 5.5 item 4 writes its `registering` entry.
 
 ```bash
@@ -256,9 +256,13 @@ delivery's frozen phase ids as a comma list for a `dNN` or recovery target. A
 
 The command is read-only and exits 0 whatever it lists. Its `pending` list
 holds required review rows (each scope phase's `code` row) whose latest
-`## Reviews` event is still `pending`; its `waived` list holds the ones a
-recorded waiver covers. When `pending` is empty, continue. Otherwise report
-each pending row by scope, type and row number, then:
+`## Reviews` event is still `pending`; its `missing` list holds the required
+`code` keys of concrete phases (not `**Provisional:** yes`) that have no
+`## Reviews` row at all; its `waived` list holds the ones a recorded waiver
+covers. Treat a `missing` entry exactly like a `pending` one: below, the
+pending rows are both lists. When `pending` and `missing` are both empty,
+continue. Otherwise report each pending row by scope, type and row number
+(`no row` for a `missing` entry), then:
 
 - **Interactive run:** offer three options: run the pending reviews (route to
   `oat-project-review-provide` with `code <pNN>`, then
@@ -268,16 +272,18 @@ each pending row by scope, type and row number, then:
   gives, append one line per waived row under `## Reviews and Gates` in
   `implementation.md`:
   `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`.
-  Leave the `## Reviews` row `pending`. Commit only `implementation.md` as
-  bookkeeping (`chore(oat): record review waiver <scope> <type>`; a `synced`
-  project uses `oat project push` with that message), then re-run the listing:
-  the row must now appear under `waived`, not `pending`.
+  Leave the `## Reviews` table unchanged: a `pending` row stays `pending` and
+  a `missing` key gets no row. Commit only `implementation.md` as bookkeeping
+  (`chore(oat): record review waiver <scope> <type>`; a `synced` project uses
+  `oat project push` with that message), then re-run the listing: the key must
+  now appear under `waived`, not `pending` or `missing`.
 - **Non-interactive run** (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`):
-  stop at this boundary with required reviews pending and no waiver. Report
+  stop at this boundary with required reviews pending or missing and no
+  waiver. Report
   each pending row and the review command that would run it, write no waiver,
   and create, register or push nothing.
 
-A waiver is not a review. The row stays `pending`; pr-final's final-review
+A waiver is not a review. The `## Reviews` table is unchanged; pr-final's final-review
 check, `oat project closeout-check` and `oat project delivery check` never read
 the line; and a later recorded review of the same row makes the waiver inert.
 
@@ -568,7 +574,7 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 ## Success Criteria
 
 - Residual active review artifacts are archived before PR generation continues
-- Required reviews still `pending` for the scope were listed before PR creation and were run, waived with a recorded reason, or stopped the run
+- Required reviews still `pending` or `missing` for the scope were listed before PR creation and were run, waived with a recorded reason, or stopped the run
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
 - Goal mode: the delivery was registered only on a deliverable `delivery check`, idempotently, with its exit-gate result captured and one structural log entry per registration

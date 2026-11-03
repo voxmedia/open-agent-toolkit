@@ -53,8 +53,8 @@ The resolver binds the event's Reviews row by scope, type and artifact filename 
 
 Before a pull request is created, `oat-project-pr-progress` (Step 3.5) and
 `oat-project-pr-final` (Step 2.5, or inside goal Step 1.5 before a terminal
-delivery is registered) list the required reviews still `pending` for the PR's
-scope:
+delivery is registered) list the required reviews still `pending` or
+`missing` for the PR's scope:
 
 ```bash
 oat --json review pending --project .oat/projects/shared/example --scope p03
@@ -67,10 +67,14 @@ plus the `plan`/`artifact` row for a whole-project scope unless the plan-review
 skip line is recorded. `final` stays with pr-final's final-review check and a
 milestone row with `oat project delivery check`; `spec` and `design` rows are
 never required here. Each key is read from its latest Reviews row, so an
-earlier `passed` row never hides a later `pending` one. The command is
-read-only and decides nothing.
+earlier `passed` row never hides a later `pending` one. A concrete phase whose
+`code` review has no Reviews row at all is listed under `missing`; a phase the
+plan still marks `**Provisional:** yes` is not listed until it has a row. The
+command is read-only and decides nothing.
 
-When rows are pending, an interactive run offers to run them, waive them with a
+`missing` is handled exactly like `pending`.
+
+When rows are pending or missing, an interactive run offers to run them, waive them with a
 recorded reason, or stop. A non-interactive run stops at that boundary; in
 pr-final it is the autonomy gate `PRFINAL-06`. A waiver is written only on the
 user's explicit choice, as one line under `## Reviews and Gates` in
@@ -80,12 +84,12 @@ user's explicit choice, as one line under `## Reviews and Gates` in
 **Review waived:** p03 code · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** docs-only phase, covered by the final review
 ```
 
-The row stays `pending`: a waiver adds no Reviews status or column, never
+The Reviews table is unchanged: a waiver adds no Reviews row, status or column, never
 counts as `passed`, and is not read by pr-final's final-review check,
-`oat project closeout-check` or `oat project delivery check`. It moves the row
-from `pending` to `waived` in the listing only while that row's latest status
-is `pending` and the line carries a reason; once a later row records a review,
-the waiver is inert.
+`oat project closeout-check` or `oat project delivery check`. It moves a key
+from `pending` or `missing` to `waived` in the listing only while the key's
+latest status is `pending`, or it has no row and its phase is concrete, and the
+line carries a reason; once a later row records a review, the waiver is inert.
 
 ## Bookkeeping commits (required)
 

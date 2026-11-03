@@ -8,7 +8,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 /**
  * m02 p13: before PR creation, pr-progress and pr-final list the required
- * reviews still `pending` for the PR's scope (`oat review pending`), and the
+ * reviews still `pending` or `missing` for the PR's scope (`oat review
+ * pending`), and the
  * user runs them, waives them with a recorded reason, or stops; a
  * non-interactive run stops. These pins hold the listing's position, the stop
  * and the waiver line, and check that the waiver line the skills document is
@@ -38,6 +39,12 @@ const PROGRESS = '.agents/skills/oat-project-pr-progress/SKILL.md';
 const FINAL = '.agents/skills/oat-project-pr-final/SKILL.md';
 const LISTING =
   'oat --json review pending --project "$PROJECT_PATH" --scope "$PENDING_SCOPE"';
+const MISSING_LIKE_PENDING =
+  'Treat a `missing` entry exactly like a `pending` one: below, the pending rows are both lists. When `pending` and `missing` are both empty, continue.';
+const MISSING_LIST =
+  'its `missing` list holds the required `code` keys of concrete phases (not `**Provisional:** yes`) that have no `## Reviews` row at all;';
+const LEDGER_UNCHANGED =
+  'Leave the `## Reviews` table unchanged: a `pending` row stays `pending` and a `missing` key gets no row.';
 const WAIVER_TEMPLATE =
   '`**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`';
 
@@ -64,7 +71,7 @@ describe('pending required reviews before a pull request', () => {
       'This step runs before Step 6 creates a pull request and, in goal mode, before Step 5.5 item 4 writes its `registering` entry.',
     );
     expect(text).toContain(
-      '**Non-interactive run** (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`): stop at this boundary with required reviews pending and no waiver.',
+      '**Non-interactive run** (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`): stop at this boundary with required reviews pending or missing and no waiver.',
     );
     expect(text).toContain(
       'write no waiver, and create, register or push nothing.',
@@ -73,7 +80,10 @@ describe('pending required reviews before a pull request', () => {
       "only on the user's explicit choice and with the reason the user gives, append one line per waived row under `## Reviews and Gates` in `implementation.md`:",
     );
     expect(step).toContain(WAIVER_TEMPLATE);
-    expect(text).toContain('Leave the `## Reviews` row `pending`.');
+    expect(text).toContain(MISSING_LIST);
+    expect(text).toContain(MISSING_LIKE_PENDING);
+    expect(text).toContain(LEDGER_UNCHANGED);
+    expect(text).toContain('not `pending` or `missing`.');
     expect(normalize(progress)).toContain(
       "Step 3.5's pending-review listing runs before item 4 writes a `registering` entry; a stop there registers nothing.",
     );
@@ -97,7 +107,7 @@ describe('pending required reviews before a pull request', () => {
       'Outside goal mode the scope is the whole project (`PENDING_SCOPE=project`)',
     );
     expect(text).toContain(
-      '- If `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1`, gate `PRFINAL-06` is a boundary stop: required reviews are pending without a waiver. Never write a waiver and never proceed.',
+      '- If `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1`, gate `PRFINAL-06` is a boundary stop: required reviews are pending or missing without a waiver. Never write a waiver and never proceed.',
     );
     expect(text).toContain(
       'stop before writing the PR artifact, pushing, creating the PR or writing a `registering` entry.',
@@ -106,7 +116,10 @@ describe('pending required reviews before a pull request', () => {
       '- Otherwise ask the user to choose one option for the pending rows:',
     );
     expect(step).toContain(WAIVER_TEMPLATE);
-    expect(text).toContain('Leave the `## Reviews` row `pending`.');
+    expect(text).toContain(MISSING_LIST);
+    expect(text).toContain(MISSING_LIKE_PENDING);
+    expect(text).toContain(LEDGER_UNCHANGED);
+    expect(text).toContain('not `pending` or `missing`.');
 
     // Goal Step 1.5 replaces Steps 2-6, so it runs the listing itself,
     // between the terminal scope (item 3) and registration (item 4).
@@ -121,22 +134,23 @@ describe('pending required reviews before a pull request', () => {
 
     const contract = readRepoFile('.agents/docs/autonomy-contract.md');
     expect(contract).toMatch(
-      /\|\s*PRFINAL-06\s*\|\s*`oat-project-pr-final`\s*\|\s*Required reviews pending without a waiver\s*\|[^\n]*\|\s*`boundary:unresolved-critical-findings`\s*\|/,
+      /\|\s*PRFINAL-06\s*\|\s*`oat-project-pr-final`\s*\|\s*Required reviews pending or missing, unwaived\s*\|[^\n]*\|\s*`boundary:unresolved-critical-findings`\s*\|/,
     );
   });
 
-  it('documents a waiver line that oat review pending applies', async () => {
+  it('documents a waiver line that oat review pending applies to a pending row and a missing key', async () => {
     const lines = [readRepoFile(PROGRESS), readRepoFile(FINAL)].map(
       (content) =>
         /`(\*\*Review waived:\*\* [^`]+)`/.exec(content)?.[1] ?? null,
     );
     expect(lines[0]).not.toBeNull();
     expect(lines[1]).toBe(lines[0]);
-    const filled = (lines[0] as string)
-      .replace('<scope> <type>', 'p02 code')
-      .replace('<user>', 'operator')
-      .replace('<YYYY-MM-DD>', '2026-11-03')
-      .replace('<text>', 'covered by the final review');
+    const fill = (key: string): string =>
+      (lines[0] as string)
+        .replace('<scope> <type>', key)
+        .replace('<user>', 'operator')
+        .replace('<YYYY-MM-DD>', '2026-11-03')
+        .replace('<text>', 'covered by the final review');
 
     const root = await mkdtemp(join(tmpdir(), 'oat-pending-contract-'));
     tempDirs.push(root);
@@ -146,6 +160,8 @@ describe('pending required reviews before a pull request', () => {
       join(root, project, 'plan.md'),
       [
         '## Phase p02: Docs',
+        '',
+        '## Phase p03: More docs',
         '',
         '## Reviews',
         '',
@@ -158,17 +174,20 @@ describe('pending required reviews before a pull request', () => {
     );
     await writeFile(
       join(root, project, 'implementation.md'),
-      ['## Reviews and Gates', '', filled, ''].join('\n'),
+      ['## Reviews and Gates', '', fill('p02 code'), fill('p03 code'), ''].join(
+        '\n',
+      ),
       'utf8',
     );
 
     const result = await listPendingReviews({
       repoRoot: root,
       projectPath: project,
-      scope: 'p02',
+      scope: 'p02,p03',
     });
 
     expect(result.pending).toEqual([]);
+    expect(result.missing).toEqual([]);
     expect(result.waived).toMatchObject([
       {
         scope: 'p02',
@@ -180,6 +199,7 @@ describe('pending required reviews before a pull request', () => {
           reason: 'covered by the final review',
         },
       },
+      { scope: 'p03', type: 'code', status: null, row: null },
     ]);
   });
 });

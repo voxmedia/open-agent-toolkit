@@ -279,8 +279,8 @@ If `FINAL_ROW` is missing or does not contain `passed`:
 
 ### Step 2.5: List Pending Required Reviews
 
-Before PR creation, list the required reviews still `pending` for the PR's
-scope. Outside goal mode the scope is the whole project
+Before PR creation, list the required reviews still `pending` or `missing`
+for the PR's scope. Outside goal mode the scope is the whole project
 (`PENDING_SCOPE=project`); in goal mode Step 1.5 item 3 sets it to the
 terminal delivery's phase ids.
 
@@ -293,12 +293,16 @@ the required rows are every plan phase's `code` row plus the `plan`/`artifact`
 row unless the plan-review skip line is recorded; `final` stays with Step 2,
 and `spec`, `design` and milestone rows are never listed. Its `pending` list
 holds the required rows whose latest `## Reviews` event is still `pending`; its
-`waived` list holds the ones a recorded waiver covers. When `pending` is empty,
-continue. Otherwise report each pending row by scope, type and row number,
-then:
+`missing` list holds the required `code` keys of concrete phases (not
+`**Provisional:** yes`) that have no `## Reviews` row at all; its `waived` list
+holds the ones a recorded waiver covers. Treat a `missing` entry exactly like a
+`pending` one: below, the pending rows are both lists. When `pending` and
+`missing` are both empty, continue. Otherwise report each pending row by scope,
+type and row number (`no row` for a `missing` entry), then:
 
 - If `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1`, gate `PRFINAL-06` is a
-  boundary stop: required reviews are pending without a waiver. Never write a
+  boundary stop: required reviews are pending or missing without a waiver.
+  Never write a
   waiver and never proceed. Report each pending row, record the blocker in
   project provenance, and stop before writing the PR artifact, pushing,
   creating the PR or writing a `registering` entry. Route the resumable next
@@ -311,13 +315,15 @@ then:
     the user gives, append one line per waived row under
     `## Reviews and Gates` in `implementation.md`:
     `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`.
-    Leave the `## Reviews` row `pending`. Commit only `implementation.md` as
+    Leave the `## Reviews` table unchanged: a `pending` row stays `pending`
+    and a `missing` key gets no row. Commit only `implementation.md` as
     bookkeeping (`chore(oat): record review waiver <scope> <type>`; a `synced`
     project uses `oat project push` with that message), then re-run the
-    listing: the row must now appear under `waived`, not `pending`.
+    listing: the key must now appear under `waived`, not `pending` or
+    `missing`.
   - **Stop:** end this run without writing the PR artifact.
 
-A waiver is not a review. The row stays `pending`; Step 2, `oat project
+A waiver is not a review. The `## Reviews` table is unchanged; Step 2, `oat project
 closeout-check` and `oat project delivery check` never read the line; and a
 later recorded review of the same row makes the waiver inert.
 
@@ -896,7 +902,7 @@ If `state.md` is missing, skip with a warning.
 - Historical `plan` / `artifact` structured-review annotations with the exact `structured (no artifact); ` prefix are reported as non-file evidence without changing their ledger identity; every actual `## Reviews` artifact path is checked by the ledger-path guard before `gh pr create` runs
 - Final PR description artifact written to `{PROJECT_PATH}/pr/`
 - Final review status checked and referenced
-- Required reviews still `pending` for the scope were listed before PR creation (Step 2.5) and were run, waived with a recorded reason, or stopped the run; an autonomous or non-interactive run stopped at `PRFINAL-06`
+- Required reviews still `pending` or `missing` for the scope were listed before PR creation (Step 2.5) and were run, waived with a recorded reason, or stopped the run; an autonomous or non-interactive run stopped at `PRFINAL-06`
 - User has clear next step to open PR (manual or gh)
 - Project `state.md` shows `oat_phase_status: pr_open`
 - Next milestone references both `oat-project-revise` (for feedback) and both supported `oat-project-complete` orderings

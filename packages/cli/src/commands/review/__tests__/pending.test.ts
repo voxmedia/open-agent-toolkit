@@ -38,6 +38,8 @@ interface PlanParts {
   rows: string[];
   milestones?: string[];
   reviewsNote?: string[];
+  /** Phases declared `**Provisional:** yes`. */
+  provisional?: string[];
 }
 
 /** A goal-shaped brief: phase blocks, an optional Milestones table, a ledger. */
@@ -46,6 +48,7 @@ function plan({
   rows,
   milestones,
   reviewsNote = [],
+  provisional = [],
 }: PlanParts): string {
   return [
     '# Project Brief: demo',
@@ -65,7 +68,7 @@ function plan({
       '',
       '**Intent:** do it',
       '**Exit evidence:** it is done',
-      '**Provisional:** no',
+      `**Provisional:** ${provisional.includes(phase) ? 'yes' : 'no'}`,
       '',
     ]),
     '## Reviews',
@@ -301,10 +304,86 @@ describe('listPendingReviews', () => {
     );
   });
 
-  it('leaves a waiver unapplied for a non-required key, a recorded review, an absent row or a missing reason', async () => {
+  it('lists a concrete phase with no Reviews row as missing, and a provisional phase with no row nowhere', async () => {
     const root = await createProject(
       plan({
         phases: ['p01', 'p02', 'p03', 'p04'],
+        provisional: ['p04'],
+        rows: [row('p01', 'code', 'pending'), row('p02', 'code', 'passed')],
+      }),
+    );
+
+    const result = await list(root, 'project');
+
+    expect(keys(result.pending)).toEqual(['p01 code']);
+    expect(result.missing).toEqual([
+      { scope: 'p03', type: 'code', status: null, row: null },
+    ]);
+    expect(keys(result.required)).toEqual([
+      'p01 code',
+      'p02 code',
+      'p03 code',
+      'p04 code',
+      'plan artifact',
+    ]);
+    // The plan row has no phase: without a row it is not listed as missing.
+    expect(result.required.at(-1)).toMatchObject({ status: null });
+    expect(result.waived).toEqual([]);
+  });
+
+  it('moves a waived missing key to waived and leaves a provisional phase waiver unapplied', async () => {
+    const root = await createProject(
+      plan({
+        phases: ['p02', 'p03'],
+        provisional: ['p03'],
+        rows: [],
+      }),
+      journal([
+        WAIVER_P02,
+        '**Review waived:** p03 code · **Waived by:** tstang · **Date:** 2026-11-03 · **Reason:** not concrete yet',
+      ]),
+    );
+
+    const result = await list(root, 'p02,p03');
+
+    expect(result.missing).toEqual([]);
+    expect(result.pending).toEqual([]);
+    expect(result.waived).toMatchObject([
+      {
+        scope: 'p02',
+        type: 'code',
+        status: null,
+        row: null,
+        waiver: { reason: 'docs-only phase, reviewed in the final review' },
+      },
+    ]);
+    expect(
+      result.waivers.map((waiver) => [waiver.scope, waiver.unapplied]),
+    ).toEqual([
+      ['p02', null],
+      ['p03', 'no-row'],
+    ]);
+  });
+
+  it('keeps a missing key listed when its waiver has no reason', async () => {
+    const root = await createProject(
+      plan({ phases: ['p02'], rows: [] }),
+      journal([
+        '**Review waived:** p02 code · **Waived by:** tstang · **Date:** 2026-11-03',
+      ]),
+    );
+
+    const result = await list(root, 'p02');
+
+    expect(keys(result.missing)).toEqual(['p02 code']);
+    expect(result.waivers).toMatchObject([{ unapplied: 'missing-reason' }]);
+  });
+
+  it('leaves a waiver unapplied for a non-required key, a recorded review, a provisional phase with no row or a missing reason', async () => {
+    const root = await createProject(
+      plan({
+        phases: ['p01', 'p02', 'p03', 'p04'],
+        provisional: ['p02'],
         rows: [
           row('p01', 'code', 'pending'),
           row('p01', 'code', 'passed'),
@@ -325,6 +404,7 @@ describe('listPendingReviews', () => {
     const result = await list(root, 'p01,p02,p03');
 
     expect(keys(result.pending)).toEqual(['p03 code']);
+    expect(result.missing).toEqual([]);
     expect(result.waived).toEqual([]);
     expect(
       result.waivers.map((waiver) => [waiver.scope, waiver.unapplied]),
@@ -395,6 +475,26 @@ describe('oat review pending', () => {
       status: 'ok',
       project: PROJECT,
       pending: [{ scope: 'p01', type: 'code', status: 'pending' }],
+      missing: [],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a concrete phase with no row in the JSON missing list', async () => {
+    const root = await createProject(
+      plan({
+        phases: ['p01', 'p02', 'p03'],
+        provisional: ['p02'],
+        rows: [row('p01', 'code', 'passed')],
+      }),
+    );
+
+    const capture = await run(root, ['--scope', 'p01,p02,p03']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      pending: [],
+      missing: [{ scope: 'p03', type: 'code', status: null, row: null }],
     });
     expect(process.exitCode).toBe(0);
   });
