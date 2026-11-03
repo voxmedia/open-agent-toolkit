@@ -1550,7 +1550,10 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 ### Task p13-t06: (review) Route a pending plan row to an artifact plan review
 
-**Status:** pending
+**Status:** completed
+**Commit:** a653f1aa4fc0f6560eeec35a1248684743d419e1
+**Executor:** phase-implementer:rgi-p13-fix-20261103-01
+**Handle:** direct:rgi-p13-fix-20261103-01:p13-t06
 **Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (L1)
 
 Intent: pr-final's **Run them** option and its `PRFINAL-06` resume target send every listed row to `oat-project-review-provide` with `code <scope>`, which is invalid for the `plan | artifact` row. Say `code <pNN>` for a phase row and `artifact plan` for the plan row, and extend the pin.
