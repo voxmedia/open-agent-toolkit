@@ -51,7 +51,10 @@ import { Command } from 'commander';
  * `pending`, so a recorded review or a newly appended row retires it. A line
  * that names no row (`**Row:** -`, or no `**Row:**` label) applies only while
  * no row of its key records a review: ledger and journal dates cannot order a
- * waiver against a same-day review, so an unordered waiver never applies.
+ * waiver against a same-day review, so an unordered waiver never applies. A
+ * `## Reviews` data row that does not parse may hide such a review, and its
+ * key may be unreadable, so while one precedes a parsed row no line that
+ * names no row applies.
  */
 
 export interface RequiredReviewEntry {
@@ -70,6 +73,7 @@ export type WaiverUnappliedReason =
   | 'not-required'
   | 'review-recorded'
   | 'row-mismatch'
+  | 'unparsed-row'
   | 'no-row'
   | 'missing-reason';
 
@@ -295,6 +299,7 @@ function waiverUnapplied(
   waiver: ParsedWaiverLine,
   entry: RequiredReviewEntry | undefined,
   keyHasRecordedReview: boolean,
+  ledgerHasUnparsedRow: boolean,
   isMissing: (entry: RequiredReviewEntry) => boolean,
 ): WaiverUnappliedReason | null {
   if (entry === undefined) {
@@ -319,6 +324,11 @@ function waiverUnapplied(
   // it.
   if (waiver.row === null && keyHasRecordedReview) {
     return 'review-recorded';
+  }
+  // A data row that does not parse may record a review of this key that the
+  // check above cannot see, so it retires every line naming no row.
+  if (waiver.row === null && ledgerHasUnparsedRow) {
+    return 'unparsed-row';
   }
   return waiver.reason === null ? 'missing-reason' : null;
 }
@@ -354,7 +364,12 @@ export async function listPendingReviews(
   const reviewed = new Set<string>();
   // Rows are numbered by their physical data line, so a row that does not
   // parse keeps its number and never passes it to a later row.
-  parseReviewTable(planContent, { dataLine: true }).forEach((row, index) => {
+  const ledgerRows = parseReviewTable(planContent, { dataLine: true });
+  /** A gap in the data-line sequence is a data row that did not parse. */
+  const ledgerHasUnparsedRow = ledgerRows.some(
+    (row, index) => row.dataLine !== index + 1,
+  );
+  ledgerRows.forEach((row, index) => {
     const key = keyOf(row.scope, row.type);
     const status = row.status.trim();
     latest.set(key, { status, row: row.dataLine ?? index + 1 });
@@ -394,6 +409,7 @@ export async function listPendingReviews(
       waiver,
       requiredByKey.get(key),
       reviewed.has(key),
+      ledgerHasUnparsedRow,
       isMissing,
     );
     return { ...waiver, applied: unapplied === null, unapplied };

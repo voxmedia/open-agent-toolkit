@@ -541,6 +541,35 @@ describe('listPendingReviews', () => {
       expect(fresh.waived).toMatchObject([{ row: 2 }]);
     });
 
+    it('retires a line naming no row while a data row before a parsed row does not parse (p-rev3 review L1, second round)', async () => {
+      // Row 1 records a review but has a blank Date (or Scope) cell, so the
+      // parser drops it and its review is invisible; the new pending row 2
+      // must stay pending.
+      const rowless = waiver('');
+      for (const claimed of [
+        `| p01 | code | passed |  | reviews/archived/p01-review.md | ${HEAD} | manual | - |`,
+        `|  | code | passed | 2026-11-03 | reviews/archived/p01-review.md | ${HEAD} | manual | - |`,
+      ]) {
+        const result = await listP01(
+          [claimed, row('p01', 'code', 'pending')],
+          [rowless],
+        );
+        expect(result.pending).toMatchObject([{ scope: 'p01', row: 2 }]);
+        expect(result.waived).toEqual([]);
+        expect(result.waivers).toMatchObject([
+          { row: null, applied: false, unapplied: 'unparsed-row' },
+        ]);
+      }
+
+      // Control: the same rowless line over a well-formed ledger still applies.
+      const wellFormed = await listP01(
+        [row('p01', 'code', 'pending')],
+        [rowless],
+      );
+      expect(wellFormed.pending).toEqual([]);
+      expect(wellFormed.waived).toMatchObject([{ scope: 'p01', row: 1 }]);
+    });
+
     it('reads `**Row:** -` as naming no row and never reads a row from the reason', async () => {
       const missing = await listP01([], [waiver('**Row:** - · ')]);
       expect(missing.missing).toEqual([]);

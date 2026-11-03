@@ -98,7 +98,9 @@ the row records a review, or a later row is appended for the same key, the
 waiver is inert and the key is listed again, so an old waiver never hides newly
 pending work. A line that names no row applies only until any row of its key
 records a review, because ledger and journal dates cannot order a waiver
-against a review recorded the same day.
+against a review recorded the same day. It also stops applying while a Reviews row
+that does not parse (a blank required cell) sits above a parsed row, because
+that row may hide a recorded review; fix the row or name the row in the waiver.
 
 ## Bookkeeping commits (required)
 
