@@ -160,6 +160,8 @@ ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 
 Use this fallback only for active project reviews. It cannot discover ad-hoc reviews and its filesystem ordering is less reliable than `oat_generated_at`, so state that limitation if fallback is used.
 
+The fallback cannot apply supersession for you. Before processing a fallback candidate, read its `## Reviews` row (matched by Scope, Type and Artifact filename) and skip the candidate when a later row of the same Scope, Type and Invocation class records a review (any status except `pending`) at the same Reviewed Head. A later row at a different head leaves the candidate live, because only the CLI can resolve whether that head descends from the candidate's. A candidate row whose Invocation or Reviewed Head is `-` is never skipped.
+
 **If no active review files:** Block and ask user to run the `oat-project-review-provide` skill first.
 
 **If multiple candidates:**

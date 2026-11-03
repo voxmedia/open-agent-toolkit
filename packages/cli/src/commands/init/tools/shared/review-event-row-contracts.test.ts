@@ -76,6 +76,12 @@ describe('the writer and receiver sides', () => {
     );
   });
 
+  it('review-receive applies same-head supersession in its CLI-unavailable fallback', () => {
+    expect(flat(skill('oat-project-review-receive'))).toContain(
+      "The fallback cannot apply supersession for you. Before processing a fallback candidate, read its `## Reviews` row (matched by Scope, Type and Artifact filename) and skip the candidate when a later row of the same Scope, Type and Invocation class records a review (any status except `pending`) at the same Reviewed Head. A later row at a different head leaves the candidate live, because only the CLI can resolve whether that head descends from the candidate's. A candidate row whose Invocation or Reviewed Head is `-` is never skipped.",
+    );
+  });
+
   it.each(['oat-project-quick-start', 'oat-project-import-plan'])(
     '%s records the structured plan review on its own event row',
     (name) => {
