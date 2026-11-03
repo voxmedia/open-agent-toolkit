@@ -179,6 +179,10 @@ p13 review M1 (a concrete phase with no Reviews row escapes the pending listing)
 
 p13 accepted: review round 1 passed (0C/0H/1M/3L; M1 put to the operator, who chose the missing list; fixes p13-t05..t07; L3 deferred to the backlog item's closure), round 2 re-review of the fix range passed (0/0/0/1 bookkeeping, fixed at receive); 1 fix loop; head 2375b77bd. m02 phases p07, p12, p13 all accepted. rgi-p13-outcome-20261103
 
+### 2026-11-03 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=788ae91a-3479-436f-8d7d-08bfa2e064f8
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
