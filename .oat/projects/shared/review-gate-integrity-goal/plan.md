@@ -306,7 +306,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | m01   | code     | fixes_completed | 2026-11-02 | reviews/archived/m01-review-2026-11-02T234808Z.md           | 1a5a37684f05492470952fdc54359a082ac9cc58 | manual     | -                    |
 | final | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T235632Z.md         | 5599af21d4927c7d39c668b9d1662509e5d3b403 | gate       | claude-opus-5-5-high |
 | m01   | code     | passed          | 2026-11-03 | reviews/archived/m01-review-2026-11-03T000239Z.md           | 5599af21d4927c7d39c668b9d1662509e5d3b403 | manual     | -                    |
-| p07   | code     | fixes_added     | 2026-11-03 | reviews/archived/p07-review-2026-11-03T184519Z.md           | 6598a6e76555c884fdca27b3ee4f5b1e70cafdb8 | manual     | -                    |
+| p07   | code     | fixes_completed | 2026-11-03 | reviews/archived/p07-review-2026-11-03T184519Z.md           | 6598a6e76555c884fdca27b3ee4f5b1e70cafdb8 | manual     | -                    |
 | plan  | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -          | -                    |
 | plan  | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate       | codex-6-sol-xhigh    |
 
