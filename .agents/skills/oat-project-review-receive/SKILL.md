@@ -385,8 +385,8 @@ least one finding and every finding is bookkeeping:
 6. Goal integrated milestone or delivery reviews then take the Step 3
    clean-receive transition after the fix commit lands; a not-`ok` delivery check
    there follows the existing interpretations.
-7. Archive and commit as usual (Steps 7.5 and 7.6), then route onward
-   (Step 10 or 10A).
+7. Archive and commit as usual (Steps 7.5 and 7.6). For `final` scope, run
+   Step 8.5 next (item 3); then route onward (Step 10 or 10A).
 
 Interactive artifact reviews still show the proposed edits before applying
 them, as the artifact bullet below requires; the branch removes only the

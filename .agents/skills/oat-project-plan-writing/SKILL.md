@@ -548,8 +548,10 @@ Use this loop after an artifact has been written and before the calling skill ha
      bookkeeping. When the result has at least one finding and every finding is
      bookkeeping, apply them all in one commit confined to the project's
      tracking files (in an interactive run, offer the Medium and Low edits first
-     as this step requires) and proceed to outcome recording. This starts no new
-     review attempt and consumes no retry. A result with any finding that is
+     as this step requires) and proceed to outcome recording. A declined edit
+     leaves its finding unfixed: the result is then not bookkeeping-only, so
+     record that finding as residual and never record `passed`. This starts no
+     new review attempt and consumes no retry. A result with any finding that is
      not bookkeeping follows the bullets below unchanged.
    - Apply Critical and High fixes by default when they are local to the reviewed artifact and the fix is unambiguous.
    - Offer Medium and Low fixes to the user instead of applying them silently.
