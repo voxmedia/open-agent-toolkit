@@ -302,15 +302,16 @@ type and row number (`no row` for a `missing` entry), then:
 
 - If `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1`, gate `PRFINAL-06` is a
   boundary stop: required reviews are pending or missing without a waiver.
-  Never write a
-  waiver and never proceed. Report each pending row, record the blocker in
-  project provenance, and stop before writing the PR artifact, pushing,
-  creating the PR or writing a `registering` entry. Route the resumable next
-  step to `oat-project-review-provide` with `code <scope>` followed by
+  Never write a waiver and never proceed. Report each pending row, record the
+  blocker in project provenance, and stop before writing the PR artifact,
+  pushing, creating the PR or writing a `registering` entry. Route the
+  resumable next step to `oat-project-review-provide` with `code <pNN>` for a
+  phase row or `artifact plan` for the `plan`/`artifact` row, followed by
   `oat-project-review-receive`.
 - Otherwise ask the user to choose one option for the pending rows:
-  - **Run them:** route to `oat-project-review-provide` with `code <scope>`
-    followed by `oat-project-review-receive`, and end this run.
+  - **Run them:** route to `oat-project-review-provide` with `code <pNN>` for
+    a phase row or `artifact plan` for the `plan`/`artifact` row, followed by
+    `oat-project-review-receive`, and end this run.
   - **Waive them:** only on the user's explicit choice and with the reason
     the user gives, append one line per waived row under
     `## Reviews and Gates` in `implementation.md`:

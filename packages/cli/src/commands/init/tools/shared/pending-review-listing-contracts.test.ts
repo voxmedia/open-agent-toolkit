@@ -115,6 +115,15 @@ describe('pending required reviews before a pull request', () => {
     expect(text).toContain(
       '- Otherwise ask the user to choose one option for the pending rows:',
     );
+    // Each listed row routes to the review that records it: a phase row to a
+    // code review, the plan row to an artifact plan review.
+    const route =
+      '`oat-project-review-provide` with `code <pNN>` for a phase row or `artifact plan` for the `plan`/`artifact` row, followed by `oat-project-review-receive`';
+    expect(text).toContain(`Route the resumable next step to ${route}.`);
+    expect(text).toContain(
+      `**Run them:** route to ${route}, and end this run.`,
+    );
+    expect(text).not.toContain('`code <scope>`');
     expect(step).toContain(WAIVER_TEMPLATE);
     expect(text).toContain(MISSING_LIST);
     expect(text).toContain(MISSING_LIKE_PENDING);
