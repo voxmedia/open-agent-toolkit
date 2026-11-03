@@ -82,7 +82,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm run check:skill-bumps
         dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
         reservation_head: 5153af0205037484bd3f1f2e2517b32a14e17c80
-        status: pending
+        status: completed
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m02
