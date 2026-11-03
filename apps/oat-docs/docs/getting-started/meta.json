@@ -1,4 +1,10 @@
 {
   "title": "Getting Started",
-  "pages": ["quickstart", "concepts", "bootstrap", "tool-packs"]
+  "pages": [
+    "quickstart",
+    "concepts",
+    "bootstrap",
+    "tool-packs",
+    "stability-and-support"
+  ]
 }
