@@ -1538,7 +1538,10 @@ Also exited 0: `pnpm lint` and `pnpm format` (5 of 10 cached each); `pnpm test:s
 
 ### Task p13-t05: (review) List required phases that have no Reviews row
 
-**Status:** pending
+**Status:** completed
+**Commit:** 5809d88f5af73f6a15e492fd03780f06512c8b98
+**Executor:** phase-implementer:rgi-p13-fix-20261103-01
+**Handle:** direct:rgi-p13-fix-20261103-01:p13-t05
 **Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (M1)
 
 Intent: per the operator decision recorded in the p13 Intent (2026-11-03), `oat review pending` reports a required key whose phase is concrete (not `**Provisional:** yes`) but has no `## Reviews` row in a separate `missing` list, while a provisional phase with no row stays unlisted; a `**Review waived:**` line applies to a `missing` key (moving it to `waived`) instead of reporting `no-row`. pr-progress Step 3.5 and pr-final Step 2.5 (and the goal Step 1.5 paragraph) treat `missing` like `pending`: run, waive or stop, and a non-interactive run stops (`PRFINAL-06` for pr-final). Add unit tests, a guard-can-fail control and pins; update the CLI reference and the reviews and PR-flow docs.
