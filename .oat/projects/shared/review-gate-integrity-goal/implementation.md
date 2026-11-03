@@ -1060,6 +1060,19 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 
 - PR: d01 (m01: p01, p02, p10, p11) registered and opened at https://github.com/voxmedia/open-agent-toolkit/pull/400 on 2026-11-03 (base `892ecdc0a`, reviewed head `5599af21d`); milestone m01 `delivered`, endpoint merged.
 
+### Review Received: plan (m02 amendment, structured artifact review)
+
+**Date:** 2026-11-03
+**Review artifact:** none (structured mode, `oat-reviewer-claude-claude-opus-5-5-high`, Auto Artifact-Review Loop, retry bound 2)
+
+**Findings:** attempt 1 at `c1a653b97`: High 2 · Medium 3 · Low 7; attempt 2 at `248f3ba72`: Medium 1 · Low 3; attempt 3 at `f293a5877`: Medium 2 · Low 1.
+
+- Attempt 1 H1 (material): the stranded-row repair would promote another event to `passed`, against bookkeeping limit 3 and the 48f5553c ruling. The operator chose read-side supersession, replacing the earlier bookkeeping-receive repair choice. H2/M1: event key made precise (ledger cells; `-` artifact rows never form a duplicate key). M2 is moot after H1; M3: the check is advisory in m02. L1–L7 folded; L6 (`Total: 9 phases`) was bookkeeping.
+- Attempt 2 M1 (material): the "later round" definition was too loose across manual and gate lanes. The operator chose same lane, a recorded later round, at the same or a descendant head. L1–L3 folded.
+- Attempt 3 (retry bound exhausted): M1 defines the classes (gate with any target; lifecycle = `manual`/`auto`; `-` rows stay live) with a cross-target control; M2 adds the pure-router descendant-head question to p07's Known Unknown, with a descendant-head control; L1 aligns p13's waiver wording with its Known Unknown. These were folded as artifact-local precision of the operator decisions, unreviewed by the loop; the configured `oat-project-goal` gate reviews the result.
+
+**Outcome:** fixes_completed (residual attempt-3 findings folded; no further loop attempt)
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
