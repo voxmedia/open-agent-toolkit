@@ -59,7 +59,10 @@ export interface RequiredReviewEntry {
   type: string;
   /** Status of the key's latest `## Reviews` row, or `null` with no row. */
   status: string | null;
-  /** 1-based position of that row among the parsed ledger rows. */
+  /**
+   * 1-based position of that row among the `## Reviews` table's data lines,
+   * counting lines that do not parse as rows.
+   */
   row: number | null;
 }
 
@@ -349,10 +352,12 @@ export async function listPendingReviews(
   const latest = new Map<string, { status: string; row: number }>();
   /** Keys with any row that records a review (any status but `pending`). */
   const reviewed = new Set<string>();
-  parseReviewTable(planContent).forEach((row, index) => {
+  // Rows are numbered by their physical data line, so a row that does not
+  // parse keeps its number and never passes it to a later row.
+  parseReviewTable(planContent, { dataLine: true }).forEach((row, index) => {
     const key = keyOf(row.scope, row.type);
     const status = row.status.trim();
-    latest.set(key, { status, row: index + 1 });
+    latest.set(key, { status, row: row.dataLine ?? index + 1 });
     if (status !== 'pending') {
       reviewed.add(key);
     }

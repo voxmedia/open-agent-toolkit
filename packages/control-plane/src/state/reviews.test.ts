@@ -216,6 +216,29 @@ describe('parseReviewTable', () => {
     }
   });
 
+  it('returns each row its data-line position only when dataLine is requested', () => {
+    const planContent = `## Reviews
+
+| Scope | Type | Status   | Date       | Artifact     |
+| ----- | ---- | -------- | ---------- | ------------ |
+| p01   | code | passed   |            | reviews/a.md |
+| p01   | code | pending  | -          | -            |
+| p02   | code | received | 2026-11-03 | reviews/b.md |
+`;
+
+    expect(
+      parseReviewTable(planContent, { dataLine: true }).map(
+        ({ scope, status, dataLine }) => [scope, status, dataLine],
+      ),
+    ).toEqual([
+      ['p01', 'pending', 2],
+      ['p02', 'received', 3],
+    ]);
+    for (const row of parseReviewTable(planContent)) {
+      expect(row).not.toHaveProperty('dataLine');
+    }
+  });
+
   it('returns no raw Reviewed Head cell for a legacy table without the column', () => {
     const planContent = `## Reviews
 

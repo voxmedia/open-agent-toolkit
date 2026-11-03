@@ -519,6 +519,28 @@ describe('listPendingReviews', () => {
       expect(missing.waivers).toMatchObject([{ unapplied: 'row-mismatch' }]);
     });
 
+    it('numbers rows by table position, so a row that does not parse never passes its number on (p-rev3 review L1)', async () => {
+      // Row 1, claimed with a blank Date cell, does not parse; the new
+      // pending row is still row 2, so the waiver for row 1 stays retired.
+      const claimedBlank = `| p01 | code | passed |  | reviews/archived/p01-review.md | ${HEAD} | manual | - |`;
+      const result = await listP01(
+        [claimedBlank, row('p01', 'code', 'pending')],
+        [waiver('**Row:** 1 · ')],
+      );
+
+      expect(result.pending).toMatchObject([{ scope: 'p01', row: 2 }]);
+      expect(result.waived).toEqual([]);
+      expect(result.waivers).toMatchObject([{ unapplied: 'row-mismatch' }]);
+
+      // A fresh waiver naming the reported number applies.
+      const fresh = await listP01(
+        [claimedBlank, row('p01', 'code', 'pending')],
+        [waiver('**Row:** 2 · ')],
+      );
+      expect(fresh.pending).toEqual([]);
+      expect(fresh.waived).toMatchObject([{ row: 2 }]);
+    });
+
     it('reads `**Row:** -` as naming no row and never reads a row from the reason', async () => {
       const missing = await listP01([], [waiver('**Row:** - · ')]);
       expect(missing.missing).toEqual([]);

@@ -146,6 +146,12 @@ export interface ReviewStatus {
    * has a Reviewed Head column; never set on `ProjectState.reviews`.
    */
   reviewedHeadCell?: string;
+  /**
+   * 1-based position among the `## Reviews` table's data lines, counting rows
+   * that do not parse. Present only when `parseReviewTable` is called with
+   * `dataLine: true`; never set on `ProjectState.reviews`.
+   */
+  dataLine?: number;
   /** Review invocation kind used to qualify the review lineage. */
   invocation?: string;
   /** Configured gate target for gate-originated review lineage. */

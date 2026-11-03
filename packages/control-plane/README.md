@@ -109,6 +109,13 @@ that column, so a reader that needs exact equality can tell a `-` placeholder
 from an abbreviated or malformed head. `oat review resolve` is that reader. The
 option is off by default, and `ProjectState.reviews` never carries the field.
 
+`parseReviewTable(planContent, { dataLine: true })` also returns each row's
+1-based position among the table's data lines as `dataLine`, counted before
+rows with an empty required cell are dropped, so a dropped row keeps its slot
+and never shifts the number of a later row. `oat review pending` reports this
+number as a row's `row` and matches a waiver's `**Row:**` against it. The option
+is off by default, and `ProjectState.reviews` never carries the field.
+
 A row may also carry `superseded: true`, a read-side mark that is never a
 ledger cell: a `received` row is superseded by a later row of the same Scope,
 Type and Invocation class (gate, or lifecycle: `manual` and `auto`) that

@@ -27,6 +27,13 @@ export interface ParseReviewTableOptions {
    * omitted. Off by default, so other readers' rows are unchanged.
    */
   rawReviewedHead?: boolean;
+  /**
+   * Also return each row's 1-based position among the table's data lines (the
+   * lines after the header and separator) as `dataLine`, counted before rows
+   * with an empty required cell are dropped, so the number is stable whatever
+   * a row contains. Off by default, so other readers' rows are unchanged.
+   */
+  dataLine?: boolean;
 }
 
 export function parseReviewTable(
@@ -50,7 +57,10 @@ export function parseReviewTable(
 
   return rows
     .slice(2)
-    .map((line) => parseTableRow(line, columns, options))
+    .map((line, index) => {
+      const row = parseTableRow(line, columns, options);
+      return row && options.dataLine ? { ...row, dataLine: index + 1 } : row;
+    })
     .filter((row): row is ReviewStatus => row !== null);
 }
 
