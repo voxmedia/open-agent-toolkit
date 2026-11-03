@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.14
+  version: 1.6.15
 ---
 
 # Receive Review
@@ -85,6 +85,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Updating implementation.md
 - Routing to oat-project-implement
 - For `artifact` reviews: updating reviewed artifact files directly after user confirmation
+- For a bookkeeping-only result (Step 2.6): fixing every finding directly in one tracking-file commit, the one exception to "No fixing issues directly"
 
 ## Review Artifact Ownership
 
@@ -298,6 +299,7 @@ For each finding, build a structured register entry:
     2. Low findings disposition is explicitly confirmed by user (Step 9)
   - After both gates are complete, mark `passed` and route to PR/finalization
 - Note: `passed` means “review passed” (not merely “fixes completed”). If fixes exist, use `fixes_completed` until a re-review passes.
+- Single exception: a bookkeeping-only result (Step 2.6) is recorded `passed` after its fixes land, with the note `bookkeeping-only fixes applied at receive`. That is the only case where `passed` follows completed fixes without a re-review, and it applies only to the review being received.
 
 ### Step 2.5: Present Findings Overview + Analysis (Required Before Any Disposition Prompt)
 
@@ -347,7 +349,50 @@ Rules:
 
 ### Step 2.6: Select Review Handling Mode (Required)
 
-Read `oat_review_type` and `oat_review_invocation` from review artifact frontmatter:
+Read `oat_review_type` and `oat_review_invocation` from review artifact frontmatter.
+
+**Bookkeeping-only mode (checked first, for every review type and invocation).**
+Before any mode below, before fix-task creation, and before any gate failure
+policy, classify every finding against the shared definition in
+`references/docs/bookkeeping-findings.md`: its inclusions, its exclusions, and
+the three limits on the fix. A doubtful finding is not bookkeeping, and a
+reviewer's `(bookkeeping)` title mark is advisory only. When the result has at
+least one finding and every finding is bookkeeping:
+
+1. Fix every finding in one commit that touches only this project's tracking
+   files and stays within the definition's limits (on goal paths, a section 12.8
+   bookkeeping successor: append a correcting journal line rather than rewriting
+   a recorded one, and never edit approved brief sections).
+2. In the Step 7 receipt, write one note line per finding
+   (`- {finding_id} ({severity}): {one-line substance} → fixed at receive (bookkeeping): {what changed}`)
+   and the Outcome line
+   `**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/$REVIEW_FILENAME)`.
+3. In Step 6, set the received review's Reviews event to `passed` (the single
+   exception in Step 2's clean-pass note), with its Date, archived Artifact and
+   provenance cells written as usual. Never set any other event to `passed`. For
+   `final` scope, Step 8.5's deferred-Medium resurfacing still completes before
+   `passed` is written; the result's own findings are already fixed, so Step 9
+   has nothing left to disposition.
+4. Create no fix tasks, queue no execution records, and skip re-review
+   routing (no reviewer is dispatched again for this result), and skip Step 8
+   (this result counts no review cycle).
+5. For a gate-originated result (`oat_review_invocation: gate`), record in the
+   receipt and the Step 11 summary that the gate is satisfied by bookkeeping-only
+   fixes: the skill that ran the gate writes its carrier `allowed` / `passed`
+   under the shared gate carrier record's bookkeeping-only write rule, uses no
+   attempt and does not relaunch the gate. The receipt's `**Findings:**` line
+   keeps the gate's raw counts exactly as reported.
+6. Goal integrated milestone or delivery reviews then take the Step 3
+   clean-receive transition after the fix commit lands; a not-`ok` delivery check
+   there follows the existing interpretations.
+7. Archive and commit as usual (Steps 7.5 and 7.6). For `final` scope, run
+   Step 8.5 next (item 3); then route onward (Step 10 or 10A).
+
+Interactive artifact reviews still show the proposed edits before applying
+them, as the artifact bullet below requires; the branch removes only the
+re-review. A result with any finding that is not bookkeeping skips this mode
+entirely and follows the modes below for every finding, the bookkeeping ones
+included.
 
 - If `oat_review_type == artifact`:
   - Present findings and proposed artifact edits/dispositions to the user first.
@@ -494,6 +539,15 @@ reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
      the same explicit set.
 
    Commit the transition or invalidation as its own bookkeeping commit.
+
+   A bookkeeping-only result (Step 2.6) queues no fixes, so it takes this
+   clean-receive transition after its fix commit lands: the Reviews event moves
+   to `passed` with the note `bookkeeping-only fixes applied at receive`, the
+   evidence writes above are unchanged, and the delivery check runs against the
+   committed fix. Write `reviewing → delivering` (or advance the recovery
+   record) only on `status: ok`. A stale or otherwise not-`ok` result follows
+   the interpretations above unchanged; the branch never edits evidence to make
+   the check pass.
 
 ### Step 4: Determine Next Task IDs
 
@@ -653,6 +707,7 @@ moves to `passed`, citing the revision review in the implementation note.
 - Find the existing event by `{scope}`, review Type, and
   `$SOURCE_REVIEW_FILENAME`, then update only that row:
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/High/Medium and no unresolved final-scope gates)
+  - Status for a bookkeeping-only result (Step 2.6): `passed` once its fix commit lands
   - Date: `{today}`
   - Artifact: `reviews/archived/$REVIEW_FILENAME`
   - Reviewed Head: validated full `oat_review_head_sha` for code reviews
@@ -660,12 +715,18 @@ moves to `passed`, citing the revision review in the implementation note.
   - Gate Target: exact `oat_gate_target` for gate code reviews; `-` otherwise
 ```
 
+Beside "update only that row": a bookkeeping-only fix (Step 2.6) may also
+correct another existing event's stale non-`passed` Status, Date or Artifact
+cell, monotonically (never moving a status backward), but it never changes that
+event's `Reviewed Head` and never adds a missing row.
+
 **Status semantics (v1):**
 
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review completed and recorded as passing (no unresolved Critical/High/Medium, and all final-scope gates satisfied: deferred-medium + low-severity disposition)
-- Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type.
+- A bookkeeping-only result (Step 2.6) also writes `passed` for the review being received once its one fix commit lands, with the note `bookkeeping-only fixes applied at receive` in the receipt; this is the single exception to the re-review requirement above, and no other writer sets `passed` for bookkeeping fixes.
+- Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type, except for the bookkeeping-only correction of an existing event's stale non-`passed` cells described above.
 
 ### Step 7: Update Implementation.md
 
@@ -711,6 +772,10 @@ After the fix tasks are complete:
 - Update this same artifact-identified review event to `fixes_completed`
 - Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`
 - Update the receipt's **Outcome** line in place when the re-review passes
+
+A bookkeeping-only result (Step 2.6) has no fix tasks and never takes this
+route: it reaches `passed` at receive without `fixes_completed` and without a
+re-review.
 
 **Restart safety (required):**
 
@@ -789,7 +854,7 @@ If the project itself is still untracked because earlier lifecycle steps never c
 
 **Bounded loop protection:**
 
-Count how many review cycles have occurred for this scope. Exclude gate-originated artifacts (`oat_review_invocation: gate`): the cap measures failed fix cycles of the standard review loop, not artifact volume, and phase gate re-runs are governed by the phase review gate flow in `oat-project-implement`, not by this cap. Saved complexity reports (`complexity-<scope>-*.md` under `reviews/archived/`) name the scope but are not review cycles, so the count skips them too.
+Count how many review cycles have occurred for this scope. Exclude gate-originated artifacts (`oat_review_invocation: gate`): the cap measures failed fix cycles of the standard review loop, not artifact volume, and phase gate re-runs are governed by the phase review gate flow in `oat-project-implement`, not by this cap. Saved complexity reports (`complexity-<scope>-*.md` under `reviews/archived/`) name the scope but are not review cycles, so the count skips them too. A bookkeeping-only result (Step 2.6) skips this step and counts no cycle; the count also skips its archived artifact later, found by the receipt Outcome line that names it.
 
 ```bash
 {
@@ -797,7 +862,9 @@ Count how many review cycles have occurred for this scope. Exclude gate-originat
   find "$PROJECT_PATH/reviews/archived" -maxdepth 1 -type f -name "*$SCOPE_TOKEN*.md" 2>/dev/null
 } | while IFS= read -r artifact; do
   case "$(basename "$artifact")" in complexity-*) continue ;; esac
-  grep -q "oat_review_invocation: gate" "$artifact" || echo "$artifact"
+  grep -q "oat_review_invocation: gate" "$artifact" && continue
+  grep -qF "bookkeeping-only fixes applied at receive (reviews/archived/$(basename "$artifact"))" "$PROJECT_PATH/implementation.md" 2>/dev/null && continue
+  echo "$artifact"
 done | wc -l
 ```
 
@@ -917,6 +984,12 @@ instead of offering a task list when the receive wrote `delivering`, advanced a
 recovery record, or routed to review-provide or scoped closeout; older-target
 fixes resume through the recovery record, never through the active milestone.
 
+**Bookkeeping-only result (Step 2.6):** no fix tasks exist, so skip the menu
+below. Report the review `passed` with `bookkeeping-only fixes applied at
+receive` and route to the normal next action exactly as a clean pass does
+(the router's next skill in goal mode, or the caller's next lifecycle step,
+such as the gate owner resuming its closeout for a gate result).
+
 **Ask user:**
 
 ```
@@ -975,6 +1048,8 @@ fi
 
 **Then route:**
 
+- A bookkeeping-only result (Step 2.6) skips the re-review option below:
+  continue the phase flow with the review recorded `passed`.
 - If any finding is `needs_user_direction`, ask targeted follow-up question(s) and wait for decision.
 - If all findings are `resolve_in_artifact` or `rejected_with_rationale`, ask user:
   1. Re-run `oat-project-review-provide artifact {scope}`
@@ -1001,6 +1076,12 @@ Review cycle: {N} of 3
 
 Next: {recommended action based on user choice}
 ```
+
+For a bookkeeping-only result (Step 2.6), replace the fix-task line with
+`Fixed at receive (bookkeeping): {finding IDs} in {fix commit}`, replace the
+cycle line with `Review cycle: not counted (bookkeeping-only fixes applied at
+receive)`, and for a gate result add
+`Gate: satisfied by bookkeeping-only fixes; raw verdict {verdict} and counts kept in the receipt; no attempt used`.
 
 For `artifact` reviews, summarize instead:
 
@@ -1042,6 +1123,7 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Findings parsed and categorized
 - Findings overview + per-finding analysis presented to user before disposition choices
 - Fix tasks created for Critical/High/Medium findings by default
+- A bookkeeping-only result settled at receive instead: one fix commit, a note per finding, the review `passed` with `bookkeeping-only fixes applied at receive`, no reviewer dispatch, no review cycle, and no gate attempt
 - Plan.md updated with new tasks
 - Implementation.md updated with review notes
 - Consumed review artifact archived under `reviews/archived/`

@@ -10,6 +10,7 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261102-bookkeeping-only-review        | 2026-11-02 | accepted   | Bookkeeping-only review findings settle at receive without a rerun                                     | -       |
 | DR-261101-explicit-install-scope-writes  | 2026-11-01 | accepted   | Explicit install scope writes only that scope                                                          | -       |
 | DR-261101-force-stage-only-head-tracked  | 2026-11-01 | accepted   | Force-stage only HEAD-tracked exact paths                                                              | -       |
 | DR-261101-guided-setup-never-calls-gh    | 2026-11-01 | accepted   | Guided setup never calls gh                                                                            | -       |

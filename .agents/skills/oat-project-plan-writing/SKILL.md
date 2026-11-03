@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.38
+  version: 1.2.39
 ---
 
 # Plan Writing Contract
@@ -542,6 +542,17 @@ Use this loop after an artifact has been written and before the calling skill ha
 
 4. **Apply or offer fixes by severity**
    - If the structured review is clean, proceed to outcome recording.
+   - Bookkeeping-only result (`plan` target, checked before the bullets below):
+     classify every finding against `references/docs/bookkeeping-findings.md`,
+     its exclusions and its three limits; a doubtful finding is not
+     bookkeeping. When the result has at least one finding and every finding is
+     bookkeeping, apply them all in one commit confined to the project's
+     tracking files (in an interactive run, offer the Medium and Low edits first
+     as this step requires) and proceed to outcome recording. A declined edit
+     leaves its finding unfixed: the result is then not bookkeeping-only, so
+     record that finding as residual and never record `passed`. This starts no
+     new review attempt and consumes no retry. A result with any finding that is
+     not bookkeeping follows the bullets below unchanged.
    - Apply Critical and High fixes by default when they are local to the reviewed artifact and the fix is unambiguous.
    - Offer Medium and Low fixes to the user instead of applying them silently.
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
@@ -554,6 +565,7 @@ Use this loop after an artifact has been written and before the calling skill ha
 6. **Record the outcome**
    - Record a clean pass or residual findings in the calling skill's lifecycle output before handoff.
    - For `plan`, update the `plan` artifact row in the Reviews table without deleting any existing rows. Use `passed` when clean; if residual findings remain, preserve enough detail in the handoff for the next skill/user to act.
+   - For a bookkeeping-only `plan` result (step 4), use `passed` with the note `bookkeeping-only fixes applied at receive` and one line per finding in the lifecycle output; never report it as a clean review.
    - For `analysis`, mark the analysis artifact as reviewed/verified using the calling skill's analysis-tracking convention, and surface any residual findings before the corresponding apply skill consumes it.
 
 ## Canonical Plan Format

@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.21
+  version: 1.4.22
 ---
 
 # Import External Plan
@@ -589,6 +589,14 @@ Before reporting this skill as complete, run the configured gate as the final st
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
+
+   A receive-eligible `blocked` result that review-receive settled in its
+   bookkeeping-only mode (every finding bookkeeping under
+   `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit,
+   receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has
+   satisfied the gate: skip `onFailure`, count no attempt toward `maxAttempts`,
+   and do not re-run the gate. A result with any finding that is not bookkeeping
+   follows the policies above unchanged.
 
 7. Runtime selection note: the review-only declaration carries producer
    identity, not reviewer runtime identity. By default, `oat gate review` and

@@ -142,6 +142,8 @@ except for how to run the final code review (described after this list). It:
   after task commits and at every phase and review boundary;
 - sends a phase with blocking review findings back to its implementer for
   fixes and reviews it again, up to the retry limit;
+- settles a review or gate result whose findings are all bookkeeping in one
+  tracking-file commit, with no new review round and no gate attempt;
 - for phases the plan marks as a parallel group, creates one worktree per
   phase, runs them at the same time and merges the passing phases into your
   branch with `git merge --no-ff`;

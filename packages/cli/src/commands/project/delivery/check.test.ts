@@ -622,6 +622,75 @@ describe('oat project delivery check', () => {
     expect(await repo!.read('state.md')).toBe(state);
   });
 
+  // m01 p10: a bookkeeping-only review result is fixed at receive in one
+  // commit, then the clean-receive transition re-runs this check. On goal paths
+  // the fix must be a section 12.8 bookkeeping successor
+  // (`.agents/docs/bookkeeping-findings.md`, limit 2): the evidence stays
+  // fresh, while a fix that rewrites a recorded journal line goes stale. The
+  // milestone subject is the one receive transitions; a registered delivery is
+  // judged at its observed member heads, which a later fix commit never enters.
+  async function bookkeepingFix(rewriteRecordedLine: boolean) {
+    await receivedMilestone();
+    const journal = await repo!.read('implementation.md');
+    const corrected = rewriteRecordedLine
+      ? journal.replace(
+          'Build recorded.\n',
+          'Build recorded with the corrected head.\n',
+        )
+      : journal
+          // A derived counter in the Progress Overview table.
+          .replace(
+            '| p02   | completed | 1 | 0/1 |',
+            '| p02   | completed | 1 | 1/1 |',
+          )
+          // An appended correcting line instead of a rewritten one.
+          .replace(
+            'Build recorded.\n',
+            'Build recorded.\n\nCorrection (bookkeeping, m01 review M1): the Progress Overview counter now matches the accepted phase.\n',
+          );
+    expect(corrected).not.toBe(journal);
+    await repo!.write('implementation.md', corrected);
+    const plan = await repo!.read('plan.md');
+    // A Reviews row date cell.
+    const redated = plan.replace('| 2026-10-11 |', '| 2026-10-12 |');
+    expect(redated).not.toBe(plan);
+    await repo!.write('plan.md', redated);
+    return repo!.commitAll(
+      'chore(oat): apply bookkeeping-only review fixes at receive',
+    );
+  }
+
+  it('keeps a milestone deliverable across a section 12.8-permitted bookkeeping-only receive fix', async () => {
+    await bookkeepingFix(false);
+
+    const { payload, exitCode } = await check(repo!, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'ok',
+      review: { fresh: true, disposition: 'passed', reason: null },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(exitCode).toBe(0);
+  });
+
+  it('reports a milestone stale when a bookkeeping fix rewrites a recorded journal line', async () => {
+    const fix = await bookkeepingFix(true);
+
+    const { payload, exitCode } = await check(repo!, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'undeliverable',
+      review: { fresh: false },
+      deliverable: false,
+    });
+    expect(payload.review?.reason).toContain(fix);
+    expect(payload.review?.reason).toContain(
+      'recorded journal line "Build recorded." was removed or rewritten',
+    );
+    expect(exitCode).toBe(1);
+  });
+
   it('reports an Outcome change after review as stale', async () => {
     const chain = await receivedMilestone();
     const plan = await repo!.read('plan.md');

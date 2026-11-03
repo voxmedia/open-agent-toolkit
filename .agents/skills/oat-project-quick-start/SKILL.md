@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.23
+  version: 2.3.24
 ---
 
 # Quick Start Project
@@ -933,6 +933,15 @@ as the last check before plan and project completion:
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
+   A receive-eligible `blocked` result that review-receive settled in its
+   bookkeeping-only mode (every finding bookkeeping under
+   `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit,
+   receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has
+   satisfied the gate: skip `onFailure`, count no attempt toward `maxAttempts`,
+   and do not re-run the gate. Persist it as `allowed/passed` below. A result
+   with any finding that is not bookkeeping follows the policies above
+   unchanged.
+
    **Complexity review at `maxAttempts`.** When `block` attempts are exhausted,
    dispatch the complexity review that
    `references/docs/complexity-review-fallback.md` defines for the plan bundle
@@ -965,6 +974,8 @@ gate reaches its outcome, and commit it with the next quick-start bookkeeping
 commit or before stopping:
 
 - passed: `allowed/passed`;
+- `blocked` only by bookkeeping findings settled at receive: `allowed/passed`,
+  with no attempt counted and no relaunch;
 - `warn` failure: `allowed/warned`;
 - a `prompt` failure the operator explicitly continues past: `allowed/prompt_approved`;
 - a `prompt` failure declined or deferred (every `prompt` failure under

@@ -81,7 +81,10 @@ Capacity is not permission. A failed attempt is terminal even with remaining cap
 A continue-after-failure policy remains a separate future choice. Route retries,
 review-fix rounds, gate `maxAttempts`, recovery events and reserved recovery
 attempts are separate counters. An elevated warning at three recovery events
-changes no limit and grants no permission.
+changes no limit and grants no permission. A review or gate result whose every
+finding is bookkeeping spends no review-fix round and no gate attempt, and is
+settled without a stop
+([Bookkeeping-only findings](../projects/reviews/index.md#bookkeeping-only-findings)).
 
 Kickoff also names the applicable owning hard stops: recovery eligibility or
 proof failure, new-attempt budget exhaustion, malformed ledger or unresolved

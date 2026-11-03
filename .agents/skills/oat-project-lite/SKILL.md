@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.12
+  version: 1.1.13
 ---
 
 # Lite Project
@@ -443,6 +443,14 @@ review ...` without the global `--json` placement. Reusable declarations
    - `block`: remediate and retry up to the configured limit;
    - `prompt`: report an unresolved human boundary;
    - `warn`: record the validated gate failure and continue.
+
+   A receive-eligible `blocked` result that review-receive settled in its
+   bookkeeping-only mode (every finding bookkeeping under
+   `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit,
+   receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has
+   satisfied the gate: skip `onFailure`, count no attempt toward the configured
+   limit, and do not re-run the gate. A result with any finding that is not
+   bookkeeping follows the policies above unchanged.
 
 Operational, validation, targeting, launch, and receive failures never inherit
 `onFailure` continuation semantics.

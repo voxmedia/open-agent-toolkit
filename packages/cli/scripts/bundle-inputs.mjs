@@ -129,6 +129,7 @@ export const BUNDLE_INPUTS = Object.freeze({
   linkedFiles: Object.freeze([
     '.agents/docs/agent-instruction.md',
     '.agents/docs/autonomy-contract.md',
+    '.agents/docs/bookkeeping-findings.md',
     '.agents/docs/complexity-review-fallback.md',
     '.agents/docs/cursor-rules-files.md',
     '.agents/docs/gate-approval-record.md',

@@ -358,7 +358,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -369,23 +369,85 @@ describe('review skill contracts', () => {
     expect(nextStep).toBeLessThan(templateEnd);
   });
 
-  it('states the list-item finding contract in the template and the gate parsing contract', () => {
+  it('states the finding grammar in the template and the gate parsing contract', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');
     const templateEnd = content.indexOf('````', templateStart + 4);
     const findingsHeading = content.indexOf('\n## Findings\n', templateStart);
-    const listItemNote = content.indexOf(
-      'Every finding MUST be written as a markdown list item',
+    const findingGrammarNote = content.indexOf(
+      'Write every finding as a markdown list item',
     );
 
-    // The gate counts only list items, so this requirement is load-bearing:
-    // a reviewer that writes findings as prose has its whole artifact refused.
-    // The requirement has to sit where findings are written, not only in the
-    // parsing contract paragraph far below the template.
-    expect(listItemNote).toBeGreaterThan(findingsHeading);
-    expect(listItemNote).toBeLessThan(templateEnd);
+    // The narrow finding grammar is load-bearing: unsupported prose has its
+    // whole artifact refused. The requirement has to sit where findings are
+    // written, not only in the parsing contract paragraph far below.
+    expect(findingGrammarNote).toBeGreaterThan(findingsHeading);
+    expect(findingGrammarNote).toBeLessThan(templateEnd);
     expect(content).toContain(
-      'the gate counts only markdown list items (`- `, `* `, `+ `, or `1. `) as findings',
+      'The standard shape is one markdown list item (`- `, `* `, `+ `, or `1. `) per finding',
+    );
+    expect(content).toContain(
+      'The one accepted alternate shape is an explicit bold finding-title marker with a matching severity ID',
+    );
+    expect(content).toContain('the separator is exactly one em dash (`—`)');
+    expect(content).toContain(
+      'A top-level list item beginning with an exact closed label is treated as a detail',
+    );
+    expect(content).toContain('the first blank after a detail ends ownership');
+    expect(content).toContain(
+      '`Issue:`, `Fix:`, `Fix (optional):`, `Requirement:`, `Cause:`, `Impact:`, `Reproduction:`, or `Coverage gap:`',
+    );
+  });
+
+  it('documents the advisory (bookkeeping) mark inside the bold finding title', () => {
+    const content = readRepoFile('.agents/agents/oat-reviewer.md');
+    const flat = content.replace(/\s+/g, ' ');
+    const categorize = content.indexOf('### Step 7: Categorize Findings');
+    const mark = content.indexOf('**Optional bookkeeping mark (advisory).**');
+
+    expect(mark).toBeGreaterThan(categorize);
+    expect(mark).toBeLessThan(
+      content.indexOf('### Step 8: Write Review Artifact'),
+    );
+    expect(flat).toContain(
+      '``- **Stale Reviews date cell (bookkeeping)** (`plan.md:12`)`` or `**M1 — Stale Reviews date cell (bookkeeping)**`',
+    );
+    expect(flat).toContain(
+      'The mark is advisory: severity is still chosen by impact, the mark never changes counts or the verdict, and the receiving agent classifies every finding itself against the shared bookkeeping definition.',
+    );
+    expect(flat).toContain(
+      'Never put the mark after the closing `**` or on a detail line; outside the bold it breaks location parsing, and no detail label exists for it.',
+    );
+    // The restated inclusion and exclusion lists cannot drift from the
+    // shared definition: every bullet phrase must appear in the paragraph.
+    const markParagraph = content
+      .slice(mark, content.indexOf('\n\n', mark))
+      .replace(/\s+/g, ' ');
+    const sharedDoc = readRepoFile('.agents/docs/bookkeeping-findings.md');
+    for (const heading of ['Definition', 'Exclusions']) {
+      const start = sharedDoc.indexOf(`\n## ${heading}\n`);
+      expect(start, heading).toBeGreaterThan(-1);
+      const end = sharedDoc.indexOf('\n## ', start + 1);
+      const phrases = sharedDoc
+        .slice(start, end)
+        .split(/\n(?=- )/)
+        .slice(1)
+        .map((bullet) =>
+          bullet
+            .split('\n\n')[0]
+            .replace(/^- /, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/(?:; or|;|\.)$/, ''),
+        );
+      expect(phrases.length, heading).toBeGreaterThanOrEqual(6);
+      for (const phrase of phrases) {
+        expect(markParagraph, `${heading}: ${phrase}`).toContain(phrase);
+      }
+    }
+    // The gate parsing contract names the mark as title text.
+    expect(flat).toContain(
+      'An optional advisory `(bookkeeping)` mark sits inside the bold finding title as part of the title text, in either shape, and never changes how the finding is counted.',
     );
   });
 

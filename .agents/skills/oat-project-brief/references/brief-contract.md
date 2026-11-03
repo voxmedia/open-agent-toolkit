@@ -145,6 +145,14 @@ During implementation:
 
 Exhausted correction rounds never convert blocking findings into acceptance.
 
+A review or gate result whose every finding is bookkeeping under the shared
+definition (`bookkeeping-findings.md`, vendored as
+`references/docs/bookkeeping-findings.md`) is settled at receive: one
+tracking-file commit, a note per finding, the review recorded `passed` with
+the note `bookkeeping-only fixes applied at receive`, no re-review and no
+review cycle, and for a gate no attempt and no rerun. That settlement is not a
+correction round and turns no other finding into acceptance.
+
 Goal mode runs this ladder once for the brief and once for each amendment, and
 reorders the end of the implementation ladder for milestone delivery (section
 12.5).
@@ -475,6 +483,13 @@ next integrated review. Routing follows the missing evidence:
 4. a produced, unreceived review → `oat-project-review-receive`;
 5. a received `passed` review with a fresh allowed carrier → delivery.
 
+A bookkeeping-only result (section 5) queues no fixes, so it never takes the
+first route. A blocking milestone exit gate settled that way records its
+`exit` carrier `allowed`/`passed` with no attempt and no rerun, and a
+bookkeeping-only integrated review takes the clean-receive transition after its
+fix commit. Both stand only while `oat project delivery check` reads the
+evidence fresh after that commit; a stale result follows the routing above.
+
 Per-phase reviews, the optional phase gate and the author self-check are
 unchanged. Terminal closeout runs the ordinary post-implement sequence, with
 one goal deferral: while `oat project closeout-check` still reports
@@ -637,6 +652,10 @@ changes only permitted bookkeeping:
   evidence must refer to the unchanged subject it records. Executable code,
   tests, configuration, templates, skills and product documentation are never
   bookkeeping.
+
+A bookkeeping-only review or gate fix (section 5) on a goal path is a change
+this section permits, so its commit is a bookkeeping successor of the evidence
+it follows. A fix this section would call substantive is not bookkeeping.
 
 A substantive change followed by its revert is not a bookkeeping successor.
 Missing Git objects, failed inspection, unknown paths or disallowed edits fail

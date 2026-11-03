@@ -23,6 +23,13 @@ export interface ReviewGateVerdict {
     medium: number;
     low: number;
   };
+  findings: ReviewFindingRecord[];
+  /**
+   * True only when all four severity sections are present and the records for
+   * each severity exactly cover `counts`. Consumers that require per-finding
+   * coverage must refuse a verdict when this is false.
+   */
+  findingsComplete: boolean;
   blocking: boolean;
   normalization?: {
     insertedSeverities: Severity[];
@@ -50,6 +57,35 @@ export interface ReviewDispatchAudit {
 }
 
 export type Severity = keyof ReviewGateVerdict['counts'];
+
+export interface ReviewFindingRecord {
+  id: string;
+  severity: Severity;
+  title: string;
+  location: string | null;
+}
+
+export type ReviewVerdictValidationCode =
+  | 'finding_count_disagreement'
+  | 'finding_detail_ambiguous'
+  | 'finding_detail_orphaned'
+  | 'finding_id_duplicate'
+  | 'finding_title_severity_mismatch'
+  | 'findings_unrecognizable';
+
+export class ReviewVerdictValidationError extends Error {
+  override readonly name = 'ReviewVerdictValidationError';
+  readonly kind = 'review-verdict-validation';
+  readonly status = 'artifact_validation_failed';
+  readonly receiveEligible = false;
+
+  constructor(
+    readonly code: ReviewVerdictValidationCode,
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 export interface ReviewGateArtifactSnapshot {
   readonly content: string;
@@ -268,27 +304,6 @@ function sectionContentIsEmpty(content: string): boolean {
   return cleaned.length === 0 || /^none\.?$/i.test(cleaned);
 }
 
-/**
- * Count the findings a severity section declares.
- *
- * Only top-level markdown list items count. Prose shapes are deliberately not
- * counted — a bold lead-in paragraph, a wrapped continuation line, and a nested
- * detail bullet are indistinguishable from a finding title without parsing the
- * prose, so counting them would miscount and double-count. The cost of that
- * choice is that a reviewer who writes findings as paragraphs gets a zero
- * tally, so every diagnostic built on this count must name the list-item
- * requirement (see `FINDING_LIST_ITEM_CONTRACT_HINT`).
- */
-function countFindingsInSection(content: string): number {
-  if (sectionContentIsEmpty(content)) {
-    return 0;
-  }
-
-  return content
-    .split('\n')
-    .filter((line) => /^([-*+]\s+\S|\d+\.\s+\S)/.test(line)).length;
-}
-
 function normalizeHeading(value: string): Severity | null {
   const normalized = value.trim().toLowerCase();
   if ((SEVERITIES as readonly string[]).includes(normalized)) {
@@ -374,6 +389,19 @@ const FINDINGS_SECTION_HEADING = /^##\s+Findings\b/i;
 const SEVERITY_SECTION_HEADING =
   /^#{3,6}\s+(?:Critical|High|Medium|Low)\s*#*\s*$/i;
 const LIST_MARKER = /^(?:[-*+]|\d+[.)])\s+/;
+const FINDING_LIST_MARKER = /^(?:[-*+]|\d+\.)\s+/;
+const EXPLICIT_FINDING_TITLE =
+  /^\*\*([CHML]\d+)\s+—\s+(.+?)\*\*(?:\s+\((?:`([^`]+)`|([^()]+))\)[.,]?)?\s*$/;
+const DETAIL_LABELS = [
+  'Issue:',
+  'Fix:',
+  'Fix (optional):',
+  'Requirement:',
+  'Cause:',
+  'Impact:',
+  'Reproduction:',
+  'Coverage gap:',
+] as const;
 const DISPATCH_TOKEN = /(^|[\s`])Dispatch:/;
 const POLICY_VIEW_LABEL = /policy\s+view/i;
 /** After a closing backtick: nothing, punctuation, or one parenthetical. */
@@ -537,6 +565,205 @@ function findSeverityHeadings(content: string): SeverityHeading[] {
     .filter((heading): heading is SeverityHeading => heading.severity !== null);
 }
 
+interface ParsedFindingTitle {
+  id: string | null;
+  title: string;
+  location: string | null;
+}
+
+interface SeveritySectionAnalysis {
+  counts: ReviewGateVerdict['counts'];
+  findings: ReviewFindingRecord[];
+}
+
+function parseExplicitFindingTitle(text: string): ParsedFindingTitle | null {
+  const match = EXPLICIT_FINDING_TITLE.exec(text);
+  if (!match?.[1] || !match[2]) {
+    return null;
+  }
+  return {
+    id: match[1],
+    title: match[2].trim(),
+    location: (match[3] ?? match[4] ?? '').trim() || null,
+  };
+}
+
+function parseListFindingTitle(text: string): ParsedFindingTitle {
+  const bold = /^\*\*(.+?)\*\*(.*)$/.exec(text);
+  if (bold?.[1]) {
+    const explicit = parseExplicitFindingTitle(
+      `**${bold[1]}**${bold[2] ?? ''}`,
+    );
+    if (explicit) {
+      return explicit;
+    }
+    const suffix = (bold[2] ?? '').trim();
+    const location = /^\((?:`([^`]+)`|([^()]+))\)[.,]?$/.exec(suffix) ?? null;
+    return {
+      id: null,
+      title: bold[1].trim(),
+      location: (location?.[1] ?? location?.[2] ?? '').trim() || null,
+    };
+  }
+
+  const location = /\s+\((?:`([^`]+)`|([^()]+))\)[.,]?\s*$/.exec(text);
+  return {
+    id: null,
+    title: location ? text.slice(0, location.index).trim() : text.trim(),
+    location: (location?.[1] ?? location?.[2] ?? '').trim() || null,
+  };
+}
+
+function detailLabel(text: string): (typeof DETAIL_LABELS)[number] | null {
+  const plain = DETAIL_LABELS.find(
+    (label) => text === label || text.startsWith(`${label} `),
+  );
+  if (plain) {
+    return plain;
+  }
+  return (
+    DETAIL_LABELS.find((label) => {
+      const boldLabel = `**${label}**`;
+      return text === boldLabel || text.startsWith(`${boldLabel} `);
+    }) ?? null
+  );
+}
+
+function findingPrefix(severity: Severity): string {
+  return severity === 'critical'
+    ? 'C'
+    : severity === 'high'
+      ? 'H'
+      : severity === 'medium'
+        ? 'M'
+        : 'L';
+}
+
+function identifyFindingsInSection(
+  content: string,
+  severity: Severity,
+  artifactPath: string,
+  priorFindingCount: number,
+  usedFindingIds: Set<string>,
+): ReviewFindingRecord[] {
+  if (sectionContentIsEmpty(content)) {
+    return [];
+  }
+
+  const findings: ReviewFindingRecord[] = [];
+  let detailOwnerState: 'none' | 'awaiting' | 'active' | 'ended' = 'none';
+  let ownedDetailLabels = new Set<(typeof DETAIL_LABELS)[number]>();
+  let activeFence: ReturnType<typeof fenceMarker> = null;
+
+  const addFinding = (parsed: ParsedFindingTitle): void => {
+    const expectedPrefix = findingPrefix(severity);
+    if (parsed.id && !parsed.id.startsWith(expectedPrefix)) {
+      throw new ReviewVerdictValidationError(
+        'finding_title_severity_mismatch',
+        `Review artifact at ${artifactPath} has finding ${parsed.id} under ${severityDisplayName(severity)}; the explicit finding ID must use the ${expectedPrefix} prefix for its severity.`,
+      );
+    }
+    let id =
+      parsed.id ??
+      `${expectedPrefix}${priorFindingCount + findings.length + 1}`;
+    if (!parsed.id) {
+      let ordinal = priorFindingCount + findings.length + 1;
+      while (usedFindingIds.has(id)) {
+        ordinal += 1;
+        id = `${expectedPrefix}${ordinal}`;
+      }
+    }
+    if (usedFindingIds.has(id)) {
+      throw new ReviewVerdictValidationError(
+        'finding_id_duplicate',
+        `Review artifact at ${artifactPath} declares duplicate finding ID ${id}; every per-finding record must have a unique ID.`,
+      );
+    }
+    usedFindingIds.add(id);
+    findings.push({
+      id,
+      severity,
+      title: parsed.title,
+      location: parsed.location,
+    });
+  };
+
+  for (const line of markdownLines(content)) {
+    const marker = fenceMarker(line.text);
+    if (marker) {
+      detailOwnerState = 'none';
+      ownedDetailLabels.clear();
+      if (!activeFence) {
+        activeFence = marker;
+      } else if (
+        marker.marker === activeFence.marker &&
+        marker.length >= activeFence.length &&
+        marker.trailing.trim() === ''
+      ) {
+        activeFence = null;
+      }
+      continue;
+    }
+    if (activeFence) {
+      continue;
+    }
+
+    const explicitTitle = parseExplicitFindingTitle(line.text);
+    if (explicitTitle) {
+      addFinding(explicitTitle);
+      detailOwnerState = 'awaiting';
+      ownedDetailLabels = new Set();
+      continue;
+    }
+
+    if (line.text.trim().length === 0) {
+      if (detailOwnerState === 'active') {
+        detailOwnerState = 'ended';
+      }
+      continue;
+    }
+
+    const listMatch = FINDING_LIST_MARKER.exec(line.text);
+    if (listMatch) {
+      const listText = line.text.slice(listMatch[0].length);
+      const label = detailLabel(listText);
+      if (label) {
+        if (detailOwnerState === 'none') {
+          throw new ReviewVerdictValidationError(
+            'finding_detail_orphaned',
+            `Review artifact at ${artifactPath} has an orphaned ${label} detail bullet in ${severityDisplayName(severity)}; closed-label column-zero details require an immediately preceding explicit bold finding title in the same severity section.`,
+          );
+        }
+        if (detailOwnerState === 'ended' || ownedDetailLabels.has(label)) {
+          const reason =
+            detailOwnerState === 'ended'
+              ? 'starts a second detail run after ownership ended'
+              : 'repeats a label already used by the same finding';
+          throw new ReviewVerdictValidationError(
+            'finding_detail_ambiguous',
+            `Review artifact at ${artifactPath} has an ambiguous ${label} detail bullet in ${severityDisplayName(severity)} because it ${reason}; use one contiguous run with each closed label at most once.`,
+          );
+        }
+        ownedDetailLabels.add(label);
+        detailOwnerState = 'active';
+        continue;
+      }
+
+      addFinding(parseListFindingTitle(listText));
+      detailOwnerState = 'none';
+      ownedDetailLabels.clear();
+      continue;
+    }
+
+    if (!/^<!--.*-->$/.test(line.text.trim())) {
+      detailOwnerState = 'none';
+      ownedDetailLabels.clear();
+    }
+  }
+
+  return findings;
+}
+
 function missingSeverityHeadings(
   severityHeadings: readonly SeverityHeading[],
 ): Severity[] {
@@ -653,9 +880,10 @@ function legacySeverityError(
  * canonical heading set, so it can cross-check explicit counts without changing
  * how a body-only artifact is validated.
  */
-function tallySeveritySections(
+function analyzeSeveritySections(
   content: string,
-): ReviewGateVerdict['counts'] | null {
+  artifactPath: string,
+): SeveritySectionAnalysis | null {
   const findingsSection = findFindingsSection(content);
   const severityHeadings = findSeverityHeadings(content);
 
@@ -669,6 +897,8 @@ function tallySeveritySections(
     medium: 0,
     low: 0,
   };
+  const findings: ReviewFindingRecord[] = [];
+  const usedFindingIds = new Set<string>();
 
   for (const [offset, heading] of severityHeadings.entries()) {
     const nextHeading = severityHeadings[offset + 1];
@@ -677,20 +907,46 @@ function tallySeveritySections(
       nextHeading?.index ?? findingsSection?.end ?? content.length;
     // Accumulate rather than assign: a repeated heading for one tier must not
     // erase findings already counted under an earlier occurrence.
-    counts[heading.severity] += countFindingsInSection(
+    const sectionFindings = identifyFindingsInSection(
       content.slice(sectionStart, sectionEnd),
+      heading.severity,
+      artifactPath,
+      counts[heading.severity],
+      usedFindingIds,
     );
+    counts[heading.severity] += sectionFindings.length;
+    findings.push(...sectionFindings);
   }
 
-  return counts;
+  return { counts, findings };
+}
+
+function findingRecordsAreComplete(
+  content: string,
+  counts: ReviewGateVerdict['counts'],
+  analysis: SeveritySectionAnalysis | null,
+): boolean {
+  if (!analysis) {
+    return false;
+  }
+  const presentSeverities = new Set(
+    findSeverityHeadings(content).map((heading) => heading.severity),
+  );
+  return SEVERITIES.every(
+    (severity) =>
+      presentSeverities.has(severity) &&
+      analysis.counts[severity] === counts[severity] &&
+      analysis.findings.filter((finding) => finding.severity === severity)
+        .length === counts[severity],
+  );
 }
 
 function parseFindingsSectionCounts(
   content: string,
   artifactPath: string,
+  analysis: SeveritySectionAnalysis | null,
 ): ReviewGateVerdict['counts'] | null {
-  const counts = tallySeveritySections(content);
-  if (counts === null) {
+  if (analysis === null) {
     return null;
   }
 
@@ -703,7 +959,7 @@ function parseFindingsSectionCounts(
     );
   }
 
-  return counts;
+  return analysis.counts;
 }
 
 function parseFrontmatterObject(
@@ -829,7 +1085,7 @@ interface CountSource {
  * the arithmetic, is what the parser objected to.
  */
 const FINDING_LIST_ITEM_CONTRACT_HINT =
-  'Only markdown list items count as findings in a Findings section: a line starting with `- `, `* `, `+ `, or `1. `. A finding written as a bold paragraph, a heading, or any other prose shape counts as zero, which is the usual reason a section tallies lower than the declared counts. Rewrite each finding as a list item, or correct the declared counts to match.';
+  'Findings in a Findings severity section must be either markdown list items (a line starting with `- `, `* `, `+ `, or `1. `) or an explicit bold title marker such as `**M1 — title**` with an optional location suffix; the title separator is exactly one em dash (`—`). An explicit title may own one contiguous run of following column-zero detail bullets only for the exact labels Issue:, Fix:, Fix (optional):, Requirement:, Cause:, Impact:, Reproduction:, and Coverage gap: (plain or with the label itself bold). A top-level list item beginning with an exact closed label is treated as a detail, so a standalone finding must not start with one. Orphaned or ambiguous detail bullets are refused. Rewrite unsupported prose findings or correct the declared counts to match.';
 
 function formatCounts(counts: ReviewGateVerdict['counts']): string {
   return SEVERITIES.map((severity) => `${counts[severity]} ${severity}`).join(
@@ -860,7 +1116,8 @@ function assertAgreeingCounts(
   const sectionsInvolved =
     left.fromSections === true || right.fromSections === true;
 
-  throw new Error(
+  throw new ReviewVerdictValidationError(
+    'finding_count_disagreement',
     `Review artifact at ${artifactPath} contradicts itself about finding counts (${differing.join(', ')}): declared counts are ${formatCounts(left.counts)} (${left.name}) but ${formatCounts(right.counts)} (${right.name}). Reconcile them before the gate can evaluate the review.${sectionsInvolved ? ` ${FINDING_LIST_ITEM_CONTRACT_HINT}` : ''}`,
   );
 }
@@ -875,6 +1132,7 @@ function resolveCounts(
   content: string,
   frontmatter: Record<string, unknown>,
   artifactPath: string,
+  bodyAnalysis: SeveritySectionAnalysis | null,
 ): ReviewGateVerdict['counts'] | null {
   const explicitSources: CountSource[] = [];
 
@@ -904,8 +1162,7 @@ function resolveCounts(
     assertAgreeingCounts(artifactPath, primarySource!, source, comparableTiers);
   }
 
-  const bodyCounts = tallySeveritySections(content);
-  if (bodyCounts) {
+  if (bodyAnalysis) {
     // Only tiers the body actually has a heading for are comparable. A missing
     // heading is not a claim of zero findings, it is a malformed body, and the
     // completeness and normalization checks own that diagnosis.
@@ -916,7 +1173,7 @@ function resolveCounts(
     ];
     const bodySource: CountSource = {
       name: 'the Findings sections',
-      counts: bodyCounts,
+      counts: bodyAnalysis.counts,
       tiers: bodyTiers,
       fromSections: true,
     };
@@ -978,7 +1235,8 @@ export async function parseReviewGateVerdict(
     throw retiredTierError;
   }
 
-  let counts = resolveCounts(content, frontmatter, artifactPath);
+  let bodyAnalysis = analyzeSeveritySections(content, artifactPath);
+  let counts = resolveCounts(content, frontmatter, artifactPath, bodyAnalysis);
   let insertedSeverities: Severity[] = [];
   let normalizationPersisted = false;
 
@@ -992,14 +1250,16 @@ export async function parseReviewGateVerdict(
     content = normalized.content;
     insertedSeverities = normalized.insertedSeverities;
     normalizationPersisted = normalized.persisted;
+    bodyAnalysis = analyzeSeveritySections(content, artifactPath);
   }
 
   if (!counts) {
-    counts = parseFindingsSectionCounts(content, artifactPath);
+    counts = parseFindingsSectionCounts(content, artifactPath, bodyAnalysis);
   }
 
   if (!counts) {
-    throw new Error(
+    throw new ReviewVerdictValidationError(
+      'findings_unrecognizable',
       `Review artifact at ${artifactPath} does not contain recognizable review findings or explicit verdict counts.`,
     );
   }
@@ -1025,6 +1285,8 @@ export async function parseReviewGateVerdict(
     ...(gateInvocation ? { gateInvocation } : {}),
     ...(hasDispatchAudit ? { dispatchAudit } : {}),
     counts,
+    findings: bodyAnalysis?.findings ?? [],
+    findingsComplete: findingRecordsAreComplete(content, counts, bodyAnalysis),
     blocking: hasBlockingFindings(counts),
     ...(insertedSeverities.length > 0
       ? {

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.8
+  version: 2.3.9
 ---
 
 # Design Phase
@@ -729,6 +729,14 @@ gate as the last check before the completion boundary:
      runtime as escalation-biased and do not spend it as a remediation attempt.
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
+
+   A receive-eligible `blocked` result that review-receive settled in its
+   bookkeeping-only mode (every finding bookkeeping under
+   `references/docs/bookkeeping-findings.md`, fixed in one tracking-file commit,
+   receipt Outcome `passed — bookkeeping-only fixes applied at receive`) has
+   satisfied the gate: skip `onFailure`, count no attempt toward `maxAttempts`,
+   and do not re-run the gate. A result with any finding that is not bookkeeping
+   follows the policies above unchanged.
 
 6. Runtime selection note (V1): the step runs the gate `command` as-is and reads
    no OAT runtime env var. By default, `oat gate review` and

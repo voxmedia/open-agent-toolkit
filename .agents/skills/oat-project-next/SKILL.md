@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 metadata:
-  version: 1.1.7
+  version: 1.1.8
 ---
 
 # Project Next
