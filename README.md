@@ -43,6 +43,7 @@ The [documentation](https://voxmedia.github.io/open-agent-toolkit/) owns the ful
 - [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync) — validate nested `AGENTS.md` files and configure optional `CLAUDE.md` shims; no shims are created by default.
 - [CLI Reference](https://voxmedia.github.io/open-agent-toolkit/reference/cli-reference) and [Configuration](https://voxmedia.github.io/open-agent-toolkit/reference/config-and-local-state) — find commands, options, and local-state behavior.
 - [Project status and known limits](https://voxmedia.github.io/open-agent-toolkit/getting-started#project-status) — OAT is versioned 0.x; read what is not yet supported before you adopt it.
+- [Stability and support](https://voxmedia.github.io/open-agent-toolkit/getting-started/stability-and-support) — how stable OAT is, best-effort support through GitHub issues, and non-goals.
 
 ## Contributing
 

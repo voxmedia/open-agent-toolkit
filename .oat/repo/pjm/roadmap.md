@@ -5,25 +5,41 @@ layer). To reduce cross-worktree conflicts, prefer adding or moving single
 bullet lines over rewriting whole sections. Backlog references include the ID
 and title so this map remains readable without a board lookup.
 
+**Last rewritten:** 2026-11-02, after a full backlog triage with the operator.
+That triage closed 35 items, merged 3 into other items, narrowed 7 to their
+core, and recorded operator decisions on 13. It took the open backlog from 122
+items to 84. It replaces the wave numbering proposed by the
+[2026-10-31 backlog and roadmap review](backlog/reviews/backlog-and-roadmap-review.md),
+whose Waves 0 and 1 shipped (#393, #395). The remaining waves are folded into
+the named tracks below. [priority-alignment.md](backlog/reviews/priority-alignment.md)
+is the compact execution guide. Shipped and closed history lives in
+[backlog/completed.md](backlog/completed.md) and
+[project summaries](../reference/project-summaries/).
+
 ## Now (Active / Committed)
 
 <!-- Add active work here. Format:
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **`wave-1-correctness` (quick project, implementation complete, final PR pending):** Wave 1 of the [backlog and roadmap review](backlog/reviews/backlog-and-roadmap-review.md) — stale provider view and Codex role cleanup after agent delete, rename or pack removal, kept Codex user values, requested-scope installs, corrected CLI messages, aligned lifecycle skill contracts, exact-path commits under ignored directories and a self-cleaning isolated test HOME. Shipped at lockstep 0.3.39; closes BL-261002-clean-up-stale-provider-views (Clean up stale provider views and Codex entries when a canonical agent is deleted or renamed), BL-261002-stop-oat-sync-from-changing (Stop oat sync from changing user values in .codex/config.toml), BL-261002-honor-the-requested-scope (Honor the requested scope for every pack in tools install and init --setup), BL-261002-correct-misleading-init-status (Correct misleading init, status, and doctor messages and stop scripts from defaulting to user-scope sync), BL-261002-align-implement-complete (Align implement, complete, and pr-final skill contracts with their actual behavior), BL-261012-commit-paths-should-accept (commit-paths should accept tracked files under ignored directories) and BL-261011-clean-up-the-isolated-home (Clean up the isolated HOME directories that evidence-grade test runs leave under TMPDIR); records in the [backlog archive](backlog/archived/). Project: wave-1-correctness.
-
-- **`artifact-cleanup` (quick project, implementation complete, [PR #365](https://github.com/voxmedia/open-agent-toolkit/pull/365) open):** lifecycle artifacts readable for newly archived projects — bounded observations digest, canonical journal format with `oat project journal check` at three boundaries, fixed journal slots, learnings in `project-log.md`, archive retry identity and explicit generations. Shipped at lockstep 0.3.22 with ten decision records (`DR-261012-*`); follow-ups `BL-261012-read-only-journal-lint`, `-convert-legacy-journals`, `-rename-the-project-retro`, `-commit-paths-should-accept`, `-oat-wave-execute-writes-into`, `-complete-state-json-refusals`, and from the post-PR fix round `-wrap-up-pr-cross-reference`, `-regenerate-the-archive-aware`, `-archive-metadata-reads-map`. Project: artifact-cleanup.
-
-- **Docs front door (2026-10-24):** [BL-260911-make-docs-bootstrap-a-front — Make docs bootstrap a front door for existing docs and support the docs-directory convention](backlog/archived/BL-260911-make-docs-bootstrap-a-front.md) is transfer-qualified closed: prior [Markdown delivery](../reference/project-summaries/20261002-markdown-docs-bootstrap.md) plus #367's merged OAT capability PRs. Unperformed consumer adoption, automation approval/path controls and framework drift/approved-upgrade acceptance remain open in [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](backlog/items/BL-261024-roll-out-the-shipped-oat-docs.md). Framework consumer selection is a future owner choice; no consumer acceptance/publication is claimed.
-
-- **2026-08-31 execution program (31 external plans, W1–W7)** — W1 merged as PR #262 (CLI 0.2.56); W2 merged as PR #267 (CLI 0.2.57); W3 (workflow durability and containment) merged as PR #269 (CLI 0.2.58); W4 (delivered-project follow-ups) merged as PR #271 (CLI 0.2.59); the Lite workflow merged as PR #264 (CLI 0.2.62); W5 (program-intake follow-ups, ten of eleven lanes; p09 parked) merged as PR #275 (CLI 0.2.63); W6 (truthfulness residue and skill versioning, five lanes) merged as PR #278 (CLI 0.2.64); the bulk `metadata.version` migration (`BL-260904-migrate-bundled-skills-from`) merged as PR #280 (CLI 0.2.65); and W7 (post-program corrective lanes, nineteen of twenty lanes; p16 parked) merged as PR #286 (CLI 0.2.67). The program's composed waves are complete, and `agent-authored-recap` generated its validated program recap at `.oat/repo/reference/explainers/2026-08-31-execution-program-recap/`. Program: `.oat/repo/reference/external-plans/2026-08-31-execution-program.md`.
-- **BL-260708-verify-cursor-gpt-5-6-subagent: Verify Cursor GPT-5.6 subagent model slugs** — Re-run structured controls after a Cursor client rollout exposes Task in headless mode or support confirms the private requests; review by 2026-08-08. Current recommended candidates remain configured but unvalidated.
-- **BL-260711-add-root-owned-dispatch-broker: Add root-owned dispatch broker for exact OAT subagent launches** — Preserve phase coordination and exact target provenance without nested provider initialization or broad coordinator permissions.
-- **BL-260711-add-activity-aware-gate: Add activity-aware gate timeouts** — Build adaptive idle-kill and early-artifact semantics on the shipped scope-aware hard budgets, transcript liveness evidence, and correlated timeout recovery. Backlog wave 4 shipped the 30-minute artifact gate default and duplicate-gate rejection but left this item at its plan-gate escalation: the idle kill first needs Codex transcript activity attributable to the gate child.
-- **BL-260729-implement-reviewplan-first: Implement ReviewPlan-first reviewer workflow** — Finish QA/dogfood and reconcile draft PR #190 before opening another broad review implementation lane. Project: review-plan-workflow.
-- **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** — Highest-priority review-efficiency safety net; repair ledger-only findings without spending another quality-review cycle. Project: review-gate-integrity.
-- **BL-260829-make-tool-pack-scope-selection: Make tool-pack scope, provider reachability, and dispatch state truthful** — Revalidate the active project against shipped PRs #227, #240, and #242, then advance its layered scope/provider state model without reopening the shipped provider-root contract. Project: tool-pack-scope-provider-truthfulness.
+- **`review-gate-integrity-goal` (goal project; m01 merged in #400, m02 re-alignment next):** one integrity model for reviews and gates, delivered as five milestones, each its own PR. Later milestones are re-aligned after each delivery. Project: review-gate-integrity-goal.
+  - m01: **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** (urgent) and the #339 parser slice of **BL-261003-diagnose-review-finding: Diagnose review finding overcounts and revalidate format-only repairs**.
+  - m02: settles artifact reviews and planning-skill gates (plan, quick-start, import-plan, lite, brief, goal).
+  - m03: **BL-260820-emit-source-qualified: Emit source-qualified provenance envelopes for review and gate receipts**, **BL-260820-bind-each-gate-review: Bind each gate review disposition to its exact received ledger event** and **BL-261002-list-pending-required-reviews: List pending required reviews when a project reaches a pull request**.
+  - m04: **BL-260927-mark-gate-findings-as-new-or: Mark gate findings as new or carried over between attempts** and **BL-261013-classify-review-findings: Classify review findings against the contract at every receive**.
+  - m05: **BL-260820-track-pr-closeout-evidence: Track PR-closeout evidence freshness against the current head**. It now also owns the post-closeout docs-sync staleness merged in from BL-261013-documentation-sync-after.
+- **Config and dispatch policy (beside the goal; touches no goal files):**
+  - **BL-261002-settle-dispatch-policy: Settle dispatch policy precedence and stop legacy presets overwriting ladder columns** and **BL-261002-make-the-copy-sync-strategy: Make the copy sync strategy checkout-independent and settable from the CLI**, in parallel.
+  - **BL-261002-fix-oat-config-describe-gaps: Fix oat config describe gaps and make config unset reach the layer that holds the key**, after both.
+  - **BL-260726-validate-cursor-pin-effort: Validate Cursor pin effort rungs at sync time**, independent.
+- **Small adopter-facing fixes (single-lane PRs, any time):**
+  - **BL-261102-quote-the-oat-project-pause: Quote the oat project pause reason so YAML parses it intact**
+  - **BL-261102-let-pr-skills-fall-back: Let PR skills fall back to origin/HEAD when git.defaultBranch is unset**
+  - **BL-261002-provide-a-complete-oat: Fix oat tools remove --all at project scope and drop stale requiredBy entries**
+  - **BL-260927-give-gate-receipts-portable: Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative**
+  - **BL-261002-decide-first-run-defaults: Decide first-run defaults for project scope without origin and non-interactive pack install**: decided to fall back to local scope and install core only.
+  - **BL-261030-decide-whether-a-no-op-sync: Decide whether a no-op sync should restamp the manifest oatVersion**: decided no restamp.
+- **In review:** the pntr slice of **BL-261024-roll-out-the-shipped-oat-docs: Roll out the shipped OAT docs front door and approval policy to consumer repositories** (voxmedia/pntr#87), and **BL-261002-publish-an-owner-statement: Publish an owner statement on project stability, support, and non-goals** (docs PR; the operator still has to confirm the non-goals).
 
 ## Next (Planned)
 
@@ -31,15 +47,17 @@ and title so this map remains readable without a board lookup.
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **BL-260724-support-provider-directory: Support provider directory symlinks as full collection sync** — Prefer collection-level links until real divergence, then fall back safely to per-entry sync. Project: tool-pack-scope-provider-truthfulness.
-- **BL-260828-add-project-level-oat-guidance: Add project-level OAT guidance prompt during init and workflow installation** — Add the explicit project-adoption prompt and managed AGENTS.md section without coupling it to user-scope pack placement. Project: tool-pack-scope-provider-truthfulness.
-- **BL-260806-fail-closed-when-configured: Fail closed when configured closeout snapshot is absent** — Persist the normalized closeout sequence before child dispatch and prevent terminal completion until every configured child is durably recorded.
-- **BL-260820-bind-each-gate-review: Bind each gate review disposition to its exact received ledger event** — Establish event identity before provenance and no-re-review behavior. Project: review-gate-integrity.
-- **BL-260820-emit-source-qualified: Emit source-qualified provenance envelopes for review and gate receipts** — Make review, gate, and fallback outcomes auditable after event identity is stable. Project: review-gate-integrity.
-- **BL-260718-mandatory-skill-load-clause: Mandatory skill-load clause for lifecycle steps that name skills** — High-priority workflow-integrity fix: lifecycle text naming a skill as a step must require loading it; evidence from the wave-skills-promotion closeout. Project: wave-skills-promotion follow-up.
-- **Wave-workflow follow-ups (grouped)** — **BL-260718-add-oat-wave-lifecycle-cli** + **BL-260718-document-execution-program** (CLI family + stable artifact contract, trigger: second consumer / post-W6 prioritization); the tested TS bootstrap-group port was merged into the CLI item as an optional sub-slice on 2026-11-01, and the CLI item is deferred. Project: wave-skills-promotion.
-- **BL-260912-evaluate-replacing-explainer: Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset** — Prototype and measure only the authoring-layer replacement while preserving the shipped OAT wrapper, source binding, recipes, verification, immutable package recording, lifecycle outcomes, and strict project-recap archive boundary.
-- **BL-260712-per-project-override: Per-project override to disable configured external gates** — Skip configured gates for one project without mutating shared user configuration.
+- **Planning guardrails (now, in the window after goal m01 merged and before m02 starts):** these edit the discover, quick-start, plan, brief, goal and implement skills that m01 and m02 also edit.
+  - **BL-260830-make-documentation-aware: Make the knowledge index optional by default for discovery and planning** and **BL-261003-reconcile-oat-tracking-commit: Reconcile OAT tracking commit cadence with resumable phase/group batching**, in parallel.
+  - **BL-261002-warn-when-the-default-branch: Warn when the default branch has changed planned paths since the branch base** and **BL-261002-add-an-explicit-plan-approval: Add an explicit plan-approval step to quick and spec-driven projects**, together after the first two.
+  - **BL-261002-offer-a-strict-gate-reviewer: Keep failed planning gates blocking and align gate wording and decision records**: coordinate with m02, which settles gates in the same planning skills. Close it against m02 if m02 delivers the blocking rule.
+- **Proportionate proof across all modes:** **BL-260906-re-evaluate-universal-plan: Re-evaluate universal plan proof strategy and test-first guidance**. The operator decided to replace test-first as the default because current guidance produces overkill testing. Record the universal decision first, extending `DR-260906-use-proportionate-proof`. Then run the skill and template sweep after the planning guardrails, since it touches the same skills.
+- **Quick as the default mode:** **BL-260904-make-quick-the-default-oat: Make quick the default OAT workflow mode and spec-driven the explicit larger mode**. Decided; same skill surface, so sequence it with or after the proof sweep.
+- **Docs tooling:**
+  - **BL-261025-make-oat-docs-generators: Make OAT docs generators and writers predictable** (the `generate-index --check` and stdout slice first) and **BL-261025-tighten-oat-docs-check-rules: Tighten oat docs check rules and diagnostics**. Both are disjoint from the goal.
+  - **BL-261025-close-docs-skill-workflow-gaps: Close docs skill workflow gaps found in the consumer rollout**, after the generator slice.
+- **BL-260906-harden-dispatch-launch: Harden dispatch launch baselines and terminal reconciliation**: after config and dispatch policy settles. #265 first needs a decision on where the git seam may live; #266 needs an outcome matrix.
+- **BL-261002-enforce-remote-planning: Enforce remote planning approval caps, storage scope, and binding locations**: its own PR with negative controls.
 
 ## Later (Directional Intent)
 
@@ -47,135 +65,43 @@ and title so this map remains readable without a board lookup.
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **BL-260706-front-load-recurring-gate: Front-load recurring gate-finding classes into implementer briefs** — Reduce repeated review/fix loops by carrying stable gate expectations into implementation prompts.
+- **After goal m02:** revisit **BL-261002-re-review-a-phase-only-after: Re-review a phase only after Critical or High findings**, measuring the remaining re-review rounds first.
+- **After goal m03:** **BL-261002-gitignore-project-review: Gitignore project review artifacts instead of committing them**.
+- **After goal m04:** **BL-260706-front-load-recurring-gate: Front-load recurring gate-finding classes into implementer briefs**, narrowed to the ledger, phase-brief injection and the #354 repair-brief block.
+- **After the goal completes:**
+  - **BL-260927-derive-current-lifecycle-state: Derive current lifecycle state from one authority for review, phase, and publication status**. Now includes reconciling state on driver takeover. The goal ships only its one-row-per-event slice.
+  - **BL-260711-add-activity-aware-gate: Add activity-aware gate timeouts**, narrowed to the idle-kill core.
+  - **BL-260818-distinguish-operator-directed: Design the budget-exhausted decision point for reviews and gates**.
+- **Fill-in sweep (single-lane PRs whenever a lane is idle):** contract-test and CI hygiene; goal and brief polish, including **BL-261011-re-project-oat-pr-status-from: Re-project oat_pr_status from goal delivery observations at terminal closeout**; lifecycle follow-ups **BL-261102-provide-a-supported-closeout: Provide a supported closeout path for legacy-shaped projects** (now also covering the legacy-journal converter idea), **BL-261102-align-oat-project-complete: Align oat-project-complete recap skip guidance with the terminal-outcome guard** and **BL-260927-detect-unfilled-placeholders: Detect unfilled placeholders and frontmatter-body drift at PR-final and completion**; provider-folder sync messaging from **BL-261002-decide-whether-an-existing: Decide whether an existing provider folder should activate sync without opt-in** (decided: keep auto-detection, improve the message and docs).
 
-## Sequencing map (2026-08-30)
+## Deferred / Parked
 
-This is the current execution model after PRs #240, #242, and #243 merged. It separates project
-boundaries from implementation order: discovery and design can overlap, while
-shared skill, ratchet, and review-artifact files should not be changed by
-parallel implementation lanes.
+- **`oat-plugin` project**: paused 2026-10-31; the native-plugin approach is not worth pursuing now.
+- **BL-260718-add-oat-wave-lifecycle-cli: Add oat wave lifecycle CLI command family** and **BL-260718-document-execution-program: Document execution-program artifact as stable OAT contract**: trigger-gated on a second consumer.
+- **BL-261002-decide-a-supported-permission: Decide a supported permission setup for unattended cross-runtime review**: low priority. Reproduce the stall first, then document a tested allowlist.
+- Closed on 2026-11-02 and refile-on-recurrence: ReviewPlan (BL-260729-implement-reviewplan-first, PR #190 closed and the `review-plan-workflow` project archived), the root-owned dispatch broker, provider directory symlinks, same-target gate execution, recon across analysis workflows, durable-reference reads, Claude runtime lineage, the retro rename, the Explainer Kit evaluation, and the digest-bridge sunset. See [backlog/completed.md](backlog/completed.md) for each reason.
 
-### Recommended sequence
-
-1. Finish/dogfood **BL-260729-implement-reviewplan-first** (Implement
-   ReviewPlan-first reviewer workflow) and reconcile PR #190 with current main.
-2. Merge the completed **BL-260827-correct-scope-and-adoption** diagnostics
-   slice, then rebase **BL-260829-make-tool-pack-scope-selection** (Make
-   tool-pack scope, provider reachability, and dispatch state truthful) onto its
-   active-adapter and inventory/rendering seams plus PR #242's provider-root
-   contract. Preserve umbrella ownership of the broader provider-by-scope
-   model, catalog/picker visibility, restart guidance, collection symlinks,
-   `AGENTS.md` behavior, and dispatch provenance.
-3. Within the review/gate lane, implement **BL-260829-order-phase-bookkeeping-before**
-   (Order phase bookkeeping before per-phase review dispatch) before
-   **BL-260711-skip-re-review-for-bookkeeping** (Skip re-review for
-   bookkeeping-only review findings). The former prevents avoidable findings;
-   the latter remains the highest-priority safety net for unavoidable ledger
-   repairs and other lifecycle-only findings.
-4. After the scope/provider state model is stable, run
-   **BL-260724-support-provider-directory** (Support provider directory
-   symlinks as full collection sync) and **BL-260828-add-project-level-oat-guidance**
-   (Add project-level OAT guidance prompt during init and workflow installation)
-   as parallel subtracks where file ownership permits.
-5. After ReviewPlan/event identity, sequence
-   **BL-260820-emit-source-qualified** (Emit source-qualified provenance
-   envelopes for review and gate receipts), then
-   **BL-260820-track-pr-closeout-evidence** (Track PR-closeout evidence
-   freshness against the current head) and
-   **BL-260806-fail-closed-when-configured** (Fail closed when configured
-   closeout snapshot is absent). Only then advance the autonomous-completion
-   and broader gate-expansion work.
-
-### Visual dependency tree
+## Sequencing (2026-11-02)
 
 ```mermaid
 flowchart TD
-  RP["review-plan-workflow\nBL-260729"] --> EI["exact review-event identity\nBL-260820-bind-each-gate-review"]
-  EI --> PE["receipt provenance\nBL-260820-emit-source-qualified"]
-  PE --> CF["closeout freshness / fail-closed\nBL-260820-track-pr-closeout-evidence + BL-260806"]
-  PB["prevent stale phase bookkeeping\nBL-260829-order-phase-bookkeeping-before"] --> NR["no re-review for bookkeeping\nBL-260711-skip-re-review-for-bookkeeping"]
-  EI --> NR
-  AR["shipped provider-root contract\nPR #242 / archived BL-260829"] -. "canonical fallback contract" .-> SP["scope/provider truthfulness\nBL-260829-make-tool-pack-scope-selection"]
-  SP --> SY["collection symlink adoption\nBL-260724-support-provider-directory"]
-  SP --> AG["project OAT guidance\nBL-260828-add-project-level-oat-guidance"]
-  RP -. "shared review surfaces" .-> HG["completed gate-execution-contract-hardening\ncombined quick project"]
-  CF --> AC["autonomous completion\nBL-260720-add-oat-project-complete-auto"]
+  M01["goal m01\nclerical settlement + #339 parser"] --> PG["planning guardrails\n+ failed planning gates block"]
+  PG --> M02["goal m02\nartifact + planning-gate settlement"]
+  PG --> PP["proportionate proof\n(decision, then skill sweep)"]
+  PP --> QD["quick as default mode"]
+  M02 --> M03["goal m03\nexact-event identity + pending reviews"]
+  M02 --> RR["revisit re-review rule"]
+  M03 --> M04["goal m04\nnew vs carried findings"]
+  M04 --> M05["goal m05\ncloseout freshness"]
+  M03 --> GI["gitignore review artifacts"]
+  M04 --> FL["front-load recurring gate classes"]
+  M05 --> LC["derive lifecycle state\nactivity-aware gates"]
+  CD["config + dispatch policy"] --> DL["harden dispatch launch\n#265 #266"]
+  DG["docs generators + check rules"] --> DS["docs skill gaps"]
 ```
 
-Legend: **BL-260729** is **BL-260729-implement-reviewplan-first — Implement
-ReviewPlan-first reviewer workflow**; **BL-260820-bind-each-gate-review** is
-**Bind each gate review disposition to its exact received ledger event**;
-**BL-260820-emit-source-qualified** is **Emit source-qualified provenance
-envelopes for review and gate receipts**; **BL-260820-track-pr-closeout-evidence**
-is **Track PR-closeout evidence freshness against the current head**;
-**BL-260806** is **BL-260806-fail-closed-when-configured — Fail closed when
-configured closeout snapshot is absent**; **BL-260829-order-phase-bookkeeping-before**
-is **Order phase bookkeeping before per-phase review dispatch**; **BL-260711**
-is **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for
-bookkeeping-only review findings**; the archived
-**BL-260829-unified-agent-provider-root** shipped the **Unified
-AGENT_PROVIDER_ROOT binding for portable skill and agent references** in PR #242;
-**BL-260829-make-tool-pack-scope-selection** is **Make tool-pack scope,
-provider reachability, and dispatch state truthful**; **BL-260724** is **BL-260724-support-provider-directory — Support provider directory symlinks as full collection sync**; **BL-260828** is **BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance prompt during init and workflow installation**; and **BL-260720** is **BL-260720-add-oat-project-complete-auto — Add oat-project-complete-auto companion skill for autonomous closeouts**.
-
-## Project grouping and workflow modes (2026-08-30)
-
-This is a current planning view of the OAT reliability and distribution cluster,
-not an exhaustive project catalog. Revalidate the grouping, ownership, and mode
-recommendations after PR #190 is reconciled and the active scope/provider
-project absorbs the completed diagnostics slice. A solid edge below
-means primary backlog ownership. A dashed edge means a supporting relationship
-or shared surface; it does not transfer ownership.
-
-| Project                                 | Current / recommended mode                                          | Primary backlog items                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Why this mode and boundary                                                                                                                                                                                                                                                    |
-| --------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` | **Spec-driven**                                                     | **BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**; **BL-260724-support-provider-directory — Support provider directory symlinks as full collection sync**; **BL-260826-populate-native-subagent — Populate native subagent runtime identity from provider transcript metadata**; **BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance prompt during init and workflow installation**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Cross-cutting scope/provider/content-type state, collection symlink adoption, AGENTS.md behavior, restart visibility, picker truthfulness, and fallback provenance. The umbrella owns integration; diagnostics remain a separate bounded project.                             |
-| `scope-adoption-diagnostics`            | **Quick start** (implementation complete; closeout)                 | **BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | The bounded diagnostic slice is complete and feeds active-adapter and inventory/rendering seams into the umbrella without absorbing broader provider materialization or agent-root implementation.                                                                            |
-| `review-plan-workflow`                  | **Spec-driven recommended; currently quick-origin and in progress** | **BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | The implementation is already tied to PR #190, so do not reset it midstream. Its cross-cutting review artifact and dispatch contract merits spec-driven treatment if it is resumed as a new project or promoted at a safe reconciliation boundary.                            |
-| `review-gate-integrity`                 | **Spec-driven**                                                     | **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**; **BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**; **BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**; **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts**; **BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness against the current head**; **BL-260806-fail-closed-when-configured — Fail closed when configured closeout snapshot is absent**; **BL-260718-harden-full-surface-gate — Harden full-surface gate reviews against budget and recursive dispatch**; **BL-260711-add-activity-aware-gate — Add activity-aware gate timeouts**; **BL-260720-add-oat-project-complete-auto — Add oat-project-complete-auto companion skill for autonomous closeouts** | These items share review ledgers, lifecycle state, provenance, closeout freshness, dispatch budgets, and gate policy. They should be designed as one integrity model, with bookkeeping-before-review and exact event identity ordered ahead of no-re-review and receipt work. |
-| `gate-execution-contract-hardening`     | **Quick start** (completed)                                         | **BL-260826-gate-targets-must-not-yield — Gate targets must not yield on background work in headless mode**; **BL-260726-validate-structured-output — Validate structured-output contract in gate skill commands** (both closed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Delivered the bounded end-to-end contract spanning configured structured commands, headless no-yield execution, cause-specific terminal diagnosis, and an integration proof without absorbing the broader review lifecycle redesign.                                          |
-
-### Grouping tree
-
-```mermaid
-flowchart TD
-  ROOT["OAT reliability and distribution cluster"]
-
-  ROOT --> SP["tool-pack-scope-provider-truthfulness\nSPEC-DRIVEN"]
-  SP --> B55["BL-260829-make-tool-pack-scope-selection"]
-  SP --> B20["BL-260724-support-provider-directory"]
-  SP --> B44["BL-260826-populate-native-subagent"]
-  SP --> B54["BL-260828-add-project-level-oat-guidance"]
-  AR["PR #242\nSHIPPED PROVIDER-ROOT CONTRACT"] -. "canonical reference contract" .-> SP
-
-  SP -. "bounded diagnostic input" .-> SAD["scope-adoption-diagnostics\nQUICK START"]
-  SAD --> B47["BL-260827-correct-scope-and-adoption"]
-
-  ROOT --> RP["review-plan-workflow\nSPEC-DRIVEN RECOMMENDED\nquick-origin in progress"]
-  RP --> B26["BL-260729-implement-reviewplan-first"]
-
-  ROOT --> RG["review-gate-integrity\nSPEC-DRIVEN"]
-  RG --> B57["BL-260829-order-phase-bookkeeping-before"]
-  RG --> B37["BL-260820-bind-each-gate-review"]
-  RG --> B38["BL-260820-emit-source-qualified"]
-  RG --> B05["BL-260711-skip-re-review-for-bookkeeping"]
-  RG --> B39["BL-260820-track-pr-closeout-evidence"]
-  RG --> B27["BL-260806-fail-closed-when-configured"]
-  RG --> B13["BL-260718-harden-full-surface-gate"]
-  RG --> B03["BL-260711-add-activity-aware-gate"]
-  RG --> B19["BL-260720-add-oat-project-complete-auto"]
-  RP -. "shared review surfaces" .-> RG
-
-  RG -. "supporting execution contract" .-> GE["gate-execution-contract-hardening\nCOMPLETED"]
-  GE --> B43["BL-260826-gate-targets-must-not-yield"]
-  GE --> B23["BL-260726-validate-structured-output"]
-```
-
-The intended implementation shape is therefore three substantial active tracks
-without an active bounded companion: (1) the scope/provider truth umbrella, (2)
-the review-plan workflow, and (3) review/gate integrity. Diagnostics is a
-completed input that merges before umbrella implementation, and the combined
-gate-execution-contract project is complete. PR #242 is a shipped prerequisite,
-not another active track. The active tracks can proceed in parallel when they
-do not touch shared artifacts.
+The goal is the spine. Config and dispatch policy, small adopter fixes and docs
+tooling run beside it now. The planning guardrails go into the m01-to-m02
+window because they edit the planning and implement skills. The proof-policy
+and quick-default sweeps follow on the same skill surface. Fill-in PRs go
+wherever a lane is idle.

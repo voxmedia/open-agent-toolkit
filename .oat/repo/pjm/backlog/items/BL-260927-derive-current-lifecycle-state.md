@@ -12,7 +12,7 @@ labels:
   - state
 assignee: null
 created: 2026-09-27T03:35:36.887Z
-updated: 2026-11-01T16:05:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/305
@@ -63,3 +63,7 @@ frontmatter, keep review rows contiguous, preserve unknown columns and historica
 cells, and retain immutable completed sequence state. A failed edit or validation
 must preserve prior state and must not record a successful transition. This
 strengthens the existing atomic-transition and provenance criteria.
+
+## Driver takeover (folded from BL-261002-let-plans-declare-an-evidence, 2026-11-02 triage)
+
+When the driving agent changed mid-run in docs-improvement-overhaul (Codex hit a usage limit and Claude took over), no step refreshed `state.md` and `implementation.md`, which stayed stale until close. Whatever single authority this item establishes should also cover resume under a new driver: reconcile `state.md`, `implementation.md` and the plan's Reviews table with git history before continuing. The per-phase evidence-tier half of the source item was closed.

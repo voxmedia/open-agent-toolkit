@@ -12,7 +12,7 @@ labels:
   - gates
 assignee: null
 created: 2026-08-20T00:51:34.444Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -62,3 +62,17 @@ completed sequence instead of resetting or reordering it. Public bundled docs
 must not inherit the project/reference bookkeeping exemption. This strengthens
 the existing freshness contract; it does not establish that current resume
 incorrectly approves stale work.
+
+## Merged from BL-261013-documentation-sync-after (2026-11-02 triage)
+
+Same head-freshness problem: documentation written after the closeout snapshot leaves the passed exit gate not covering HEAD, silently. Its acceptance criteria apply here.
+
+#### Description
+
+OAT workflow feedback from the artifact-cleanup retrospective (UP-03). Running oat-project-document after the closeout snapshot is complete writes documentation outside the effective-delta exclusion set, so the passed implementation exit gate no longer covers HEAD. oat project closeout-check still reports complete and oat-project-complete does not re-check gate freshness, so the drift is silent unless the operator notices. In artifact-cleanup a two-sentence CLI-reference update needed an operator waiver to keep the gate's pass valid. Related: BL-260820-track-pr-closeout-evidence (closeout evidence vs current head) and BL-260903-project-document-should-prompt (re-running document after contract changes).
+
+#### Acceptance Criteria
+
+- Documentation written by `oat-project-document` after the closeout snapshot is complete either counts as a closeout-only descendant when a corroborating transition owns it, or the skill detects a passed exit gate whose freshness it would break and offers the operator waiver before committing
+- `oat-project-complete` (or `closeout-check`) reports a passed gate that no longer covers HEAD instead of passing silently
+- A fixture covers a docs-only commit after a passed gate: the stale state is reported, and a recorded waiver clears it

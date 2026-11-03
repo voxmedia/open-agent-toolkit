@@ -2,7 +2,7 @@
 id: BL-261002-decide-a-supported-permission
 title: Decide a supported permission setup for unattended cross-runtime review
 status: open
-priority: medium
+priority: low
 scope: idea
 scope_estimate: M
 labels:
@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:13.673Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -46,3 +46,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   records why that is not possible.
 - `apps/oat-docs/docs/workflows/advanced/workflow-gates.md` documents the
   supported setup.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: keep at low priority. First reproduce the stall with a real unattended cross-runtime gate, then document and test a narrow per-provider allowlist instead of a bypass flag.

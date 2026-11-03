@@ -8,6 +8,7 @@
   - [Core Concepts](docs/getting-started/concepts.md) — Mental model for canonical assets, provider views, scopes, skills, and the optional workflow layer.
   - [CLI Bootstrap](docs/getting-started/bootstrap.md) — Foundational setup via oat init for canonical directories, provider adoption, and configuration.
   - [Tool Packs and Installed Assets](docs/getting-started/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
+  - [Stability and Support](docs/getting-started/stability-and-support.md) — How stable OAT is, how to get support, and what OAT does not set out to do.
 - Skills
   - [Skills](docs/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
   - [Research and Evaluate a Decision](docs/skills/research.md) — Choose a research skill, challenge its conclusions, and combine evidence without confusing research with implementation.

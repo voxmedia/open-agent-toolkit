@@ -14,7 +14,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:12.309Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -52,3 +52,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`
   (`:55-59` and `:161-162`) and `apps/oat-docs/docs/reference/what-oat-writes.md:139`
   describe it.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: (F1) with no `origin` remote, `oat project new` falls back to local scope with a clear message instead of failing; (F2) a non-interactive install defaults to the core pack only. Size and implement as a small task.
