@@ -58,7 +58,9 @@ export type ReviewEventDiagnosticCode =
   | 'duplicate_event_key'
   | 'row_not_received'
   | 'row_superseded'
+  | 'scope_missing'
   | 'scope_mismatch'
+  | 'type_missing'
   | 'type_mismatch'
   | 'artifact_mismatch'
   | 'reviewed_head_mismatch'
@@ -230,7 +232,21 @@ export async function resolveReviewEvent(
     const artifactScope = getFrontmatterField(frontmatter, 'oat_review_scope');
     const artifactType = getFrontmatterField(frontmatter, 'oat_review_type');
     const runId = getFrontmatterField(frontmatter, 'oat_gate_run_id');
-    if (artifactScope && !sameCell(artifactScope, event.scope)) {
+    // Every gate review artifact carries both fields (the reviewer's
+    // frontmatter contract writes them), so an absent one fails closed like
+    // an absent run ID rather than skipping the comparison.
+    if (!artifactScope) {
+      artifactScopeAgrees = false;
+      diagnostics.push(
+        diagnostic(
+          'scope_missing',
+          'artifact',
+          event.scope,
+          null,
+          `The artifact carries no oat_review_scope, so it cannot be the event of scope ${event.scope}.`,
+        ),
+      );
+    } else if (!sameCell(artifactScope, event.scope)) {
       artifactScopeAgrees = false;
       diagnostics.push(
         diagnostic(
@@ -242,7 +258,18 @@ export async function resolveReviewEvent(
         ),
       );
     }
-    if (artifactType && !sameCell(artifactType, event.type)) {
+    if (!artifactType) {
+      artifactTypeAgrees = false;
+      diagnostics.push(
+        diagnostic(
+          'type_missing',
+          'artifact',
+          event.type,
+          null,
+          `The artifact carries no oat_review_type, so it cannot be the event of type ${event.type}.`,
+        ),
+      );
+    } else if (!sameCell(artifactType, event.type)) {
       artifactTypeAgrees = false;
       diagnostics.push(
         diagnostic(

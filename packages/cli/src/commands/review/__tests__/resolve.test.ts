@@ -390,6 +390,44 @@ describe('resolveReviewEvent', () => {
     ]);
   });
 
+  it('refuses an artifact that carries no oat_review_scope or oat_review_type', async () => {
+    const { root, child } = await createRepo();
+    await writeArtifact(root, GATE_ARTIFACT, {
+      oat_generated_at: '2026-11-03T12:00:00Z',
+      oat_review_invocation: 'gate',
+      oat_review_head_sha: child,
+      oat_gate_run_id: RUN_ID,
+      oat_gate_target: 'claude-opus-5-5-high',
+    });
+    await writePlan(root, [gateRow(child)]);
+
+    const result = await resolveReviewEvent({
+      repoRoot: root,
+      projectPath: PROJECT,
+      event: gateEvent(child),
+    });
+
+    expect(result.status).toBe('refused');
+    expect(result.checks).toMatchObject({
+      scope: 'mismatch',
+      type: 'mismatch',
+    });
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'scope_missing',
+        source: 'artifact',
+        expected: 'p01',
+        actual: null,
+      }),
+      expect.objectContaining({
+        code: 'type_missing',
+        source: 'artifact',
+        expected: 'code',
+        actual: null,
+      }),
+    ]);
+  });
+
   it('refuses an event with no bound row', async () => {
     const { root, child } = await createRepo();
     await writeGateArtifact(root, child);
