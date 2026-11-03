@@ -1209,6 +1209,29 @@ The gate event names the 12:00 artifact with dispatch head P2.
 3. review-provide's Gate Target line reverted to "for gate code reviews".
 4. The L1 `received` clause removed from the fallback.
 
+### Task p12-t04: Document `reviewedHead`, `oat review resolve` and the gate-event hand-off
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t04
+**Intent:** Document the gate result's `reviewedHead` and its head corroboration, the `oat review resolve` command, receive's gate-event consumption, and the Gate Target rule for artifact-gate rows. Confirm the generated docs index is unchanged.
+**Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+**Commit:** 7b22eb1f001e34a45d918c367712baf6018a2a44
+**Proof:** every part of the proof command exited 0.
+
+- `docs:check`: 0 errors. The new lines add two `provenance` warnings, on the reviews page's new `.oat/projects/shared/example` resolve example. That class already appears on the page's existing `oat review latest` examples. The page-length warnings predate this change.
+- `docs:lint`: 91 files, 0 errors.
+- Docs-index regeneration and `git diff --exit-code -- apps/oat-docs/index.md`: no reader page was added or renamed.
+
+**Documentation and instructions.**
+
+- The CLI reference gains an `oat review resolve` entry, and its `oat gate review` entry now names `reviewedHead`, `corroboration.reviewedHead` and the gate-event hand-off.
+- Workflow Gates describes the same fields and the hand-off.
+- The Reviews page gains "Consuming a gate's review event" and the Gate Target rule for artifact-gate rows.
+
+`packages/cli/README.md` and the root `README.md` list no review subcommands, so they need no change. No `AGENTS.md` fact changed: no command, directory, version pin, workflow or footgun named in an instruction file moved. The lockstep packages stay at 0.3.46 (bumped once for m02 by p07).
+
 ## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
