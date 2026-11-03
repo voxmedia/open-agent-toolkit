@@ -1683,10 +1683,25 @@ Scope: `efea9ac0a..2c341cff5` (p-rev1-t01, corrects p12), fresh `oat-reviewer-cl
 
 **Status:** in_progress
 **Base:** 33d1edfef88633cfeab8a28c3441b09bb2922bf1
+**Head:** d128a41181d86d258be802500c4129bf45ed0fa0
 **Executor:** phase-implementer:rgi-prev2-impl-20261103-01
 **Corrects:** p07
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer, after p-rev1 was accepted at `33d1edfef`. `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `564d91470`; only the journal commit follows it. `git fetch origin main` showed that `origin/main` has not moved past the merge base. The DoD gates ran in CI order and each exited 0:
+
+- `pnpm check` (9 of 11 cached);
+- `pnpm type-check` (9 of 11 cached);
+- `pnpm test` (9 of 12 cached) and `pnpm test:evidence` (0 of 12 cached);
+- `pnpm build` (a FULL TURBO replay of the build of the same source run before the task commit, in which the CLI task was rebuilt);
+- `pnpm run check:skill-bumps` (16 checks; no skill or agent role changed in this phase);
+- `release:check-versions`;
+- `release:validate` (five packages at 0.3.46);
+- `pnpm build:docs` (a cache replay, then forced with 0 of 6 cached);
+- the docs index regeneration, with `git diff --exit-code -- apps/oat-docs/index.md` exiting 0.
+
+`pnpm lint`, `pnpm format`, the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205) and the p-rev2 journal check at review also exited 0. No version bump was needed: the lockstep packages are already at 0.3.46 and no skill or agent changed.
 
 ### Task p-rev2-t01: `oat project status` resolves review head ancestry in the repository that contains the project
 
