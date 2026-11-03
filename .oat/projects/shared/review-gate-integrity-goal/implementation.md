@@ -1331,12 +1331,33 @@ The gate event names the 12:00 artifact with dispatch head P2.
 
 ### Task p12-t06: (review) The resolver refuses a superseded or already-processed row
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-fix-20261103-01
+**Handle:** direct:rgi-p12-fix-20261103-01:p12-t06
+**Commit:** 4e644183055ab537467788fcf5de44b4c090ff6f
 **Source review:** reviews/archived/p12-review-2026-11-03T200007Z.md (M1)
 
 Intent: `oat review resolve` binds the row but never checks supersession or status, so it accepted a superseded `received` row (one `oat review check` reports and `oat review latest` skips) and a `passed` row. Outcome 4 says readers ignore a superseded row. Run p07's supersession evaluation (exported from `check.ts`, with the same git ancestry helper `check` uses for the descendant-head clause) for the bound row and refuse with a structured diagnostic naming the superseding row (e.g. `row_superseded`); refuse a bound row whose status is not `received` (review-provide Step 9 writes `received`; a processed row means the event was already consumed), e.g. `row_not_received`. Add resolver tests and a branch-build probe (superseded, passed, valid control); update the CLI reference code list and receive Step 1's bullet.
 Files: `packages/cli/src/commands/review/{resolve,check}.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `.agents/skills/oat-project-review-receive/SKILL.md` (already bumped on this branch).
 Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review` plus the isolated-HOME contract suites.
+
+**Proof:** review suites plus help snapshots 119/119 exit 0; isolated-HOME contract suites 1202/1202 exit 0; CLI `type-check` and `lint`, `oxlint .agents/skills`, `oat:validate-skills`, `docs:lint` and `oxfmt --check` on the changed files exit 0. `oat sync --scope project` (branch build): no changes required.
+
+**Changes.** `check.ts` exports `evaluateReviewSupersession(git, repoRoot, rows)`, p07's evaluation (`reviewSupersessionHeadPairs`, `resolveGitReviewHeadAncestry`, `findSupersededReviews`), and `describeReviewLedgerRow`; `oat review check` now calls the same function, so the two commands share one rule. After binding a row, `oat review resolve` refuses a Status other than `received` (`row_not_received`, expected `received`) and, for a `received` row, a p07 supersession (`row_superseded`, expected `current`, actual `row N`, with the superseding row's report as `supersededBy`). `checks` gains `rowStatus` and `supersession` (`current`, `superseded`, `unavailable`). The resolver takes a `git` option and command dependency. A head pair git cannot answer counts as not descending, as in every other p07 reader. The CLI reference lists both codes and the new checks; receive's superseded-row bullet says the resolver applies the same rule on the gate-event path. The existing "different artifact path" test now uses a `received` row, so it keeps a single cause.
+
+**Branch-build probes** (rebuilt CLI, the p12-t02 scratch repository; event: the gate artifact `…T120000Z.md`, head P1, run `0f6c7a10-…`):
+
+| Probe                                                    | Exit | Result                                                                                                          |
+| -------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------- |
+| Valid control: gate row at P1, later manual row at P2    | 0    | `ok`, `rowStatus: match`, `supersession: current` (lifecycle rows never supersede gate rows)                    |
+| Superseded: a later `received` gate row at descendant P2 | 1    | `refused`, `row_superseded` naming row 3 (`…T140000Z.md`); `oat review check` reports row 1 superseded by row 3 |
+| Processed: the gate row's Status set to `passed`         | 1    | `refused`, `row_not_received`, `supersession: unavailable`                                                      |
+| Ledger restored (`cmp`), same event                      | 0    | `ok`                                                                                                            |
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and `resolve.test.ts` run, then restored byte-identical (`cmp`):
+
+1. The supersession lookup never matching the bound row: the superseded-row test fails (1 of 21).
+2. The `received` status check disabled: the processed-row test fails (1 of 21).
 
 ### Task p12-t07: (review) Artifact scope and type absent from frontmatter
 
