@@ -1066,10 +1066,12 @@ Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `
 
 **Status:** in_progress
 **Base:** f3a9603f74ee358b80eeb6572085b46975801302
-**Head:** c92b11dfbf631e16ab9be77999555669fdbef8d2
+**Head:** 8016d7d98f8799010d40ff497aa526b180508dbf
 **Executor:** phase-implementer:rgi-p12-impl-20261103-01
 
 Head advanced from `d99e598dd` to the p12-t05 record commit after the reviewedHead amendment; at that code state `pnpm check`, `pnpm type-check`, `pnpm test:evidence` (0 of 12 cached), the isolated-HOME contract suites, `pnpm lint`, `pnpm format`, `check:skill-bumps`, the forced docs build with the index diff and the p12 journal check all exit 0.
+
+Head advanced from `c92b11dfb` to the p12-t07 record commit after the review fixes p12-t06 and p12-t07 (code state `e67f07e0d`); the contract suites, `pnpm test:evidence` (0 of 12 cached), `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`, `check:skill-bumps`, `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate`, the forced docs build with the index diff and the p12 journal check all exit 0.
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a gate result field captured at dispatch, a new fail-closed event resolver, receive Step 1 and eleven adopting gate paths whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the gate, resolver and skill slices share the event contract, the contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and changes gate output. p12 was made concrete at `f3a9603f7` before this start (project log). `origin/main` has not moved since the p07 base merge.
 
