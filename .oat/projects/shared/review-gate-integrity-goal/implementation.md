@@ -1863,12 +1863,32 @@ Scope: `91d2e491f..8ce9e2a54` (p-rev3-t01, corrects p13), fresh `oat-reviewer-cl
 
 ### Task p-rev3-t03: (review) Retire rowless waivers when a Reviews data row does not parse
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-fix-20261103-02 (continuation of rgi-prev3-impl-20261103-01)
+**Handle:** direct:rgi-prev3-fix-20261103-02:p-rev3-t03
 **Source review:** reviews/archived/p-rev3-review-2026-11-03T233325Z.md (L1)
 
 Intent: a rowless (p13-form) waiver cannot see a review recorded in a row `parseReviewTable` drops (a blank required cell), so it still applies to a later pending row of its key (reproduced on the branch build, `pending.ts:320`). Fail closed: in `listPendingReviews`, treat any gap in the `dataLine` sequence as an unparseable data row and retire every rowless waiver while one exists (the key may be unreadable from the malformed line). Add the regression and a guard-can-fail control; keep docs true.
 Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, docs only if wording changes.
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+**Files:** `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Commit:** ee5d306c84a79cd483801d01eb30dc5e98b00395
+**Proof:** the proof command plus `src/commands/init/tools/shared` and `src/validation` under the isolated HOME exited 0 (34 files, 1287 tests); CLI `type-check` and `lint` exit 0; `docs:check` (0 errors) and `docs:lint` exit 0; `oxfmt --check` on the four files exit 0.
+
+**Change.** `listPendingReviews` sets `ledgerHasUnparsedRow` when the parsed rows' `dataLine` values are not exactly `1..n`, which means a data line before the last parsed row did not parse. While it is set, every waiver line naming no row is unapplied with the new reason `unparsed-row` (checked after `review-recorded`, so a visible review still reports that reason). The key is not recovered from the malformed line. Named-row waivers keep their rules (`row-mismatch`). A dropped line after the last parsed row is not a gap: no `pending` row follows it to be hidden. The CLI reference adds `unparsed-row` to the reason list and one clause to the rowless rule; the Reviews page adds one sentence.
+
+**Negative control** (branch build, `/tmp/prev3-scripts/l1b.py`, five-column ledger, scope `p01`, every run exit 0):
+
+| Case                                                                 | Pre-fix build at `21c67c4c0` | Post-fix build at `ee5d306c8`     |
+| -------------------------------------------------------------------- | ---------------------------- | --------------------------------- |
+| Rowless waiver, row 1 claimed with a blank Date, new `pending` row 2 | **waived (row 2)**           | **pending row 2**, `unparsed-row` |
+| Same with a blank Scope cell                                         | **waived (row 2)**           | **pending row 2**, `unparsed-row` |
+| Well-formed claimed row 1, new `pending` row (control)               | pending 2, `review-recorded` | pending 2, `review-recorded`      |
+| Rowless waiver over a well-formed pending row (active control)       | waived 1                     | waived 1                          |
+| `**Row:** 2` after the blank-Date row (named control)                | waived 2                     | waived 2                          |
+| Dropped line after the only pending row (trailing control)           | waived 1                     | waived 1                          |
+
+**Guard can fail:** G6, the `unparsed-row` check neutralized (`false &&`): the new regression fails (1 of 24); restored and checked byte-identical with `cmp`.
 
 ### Review Received: p-rev3 (re-review of p-rev3-t02)
 
