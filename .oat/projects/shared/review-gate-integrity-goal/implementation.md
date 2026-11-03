@@ -961,12 +961,16 @@ Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`
 
 ### Task p07-t04: Docs, instructions and the lockstep 0.3.46 release bump
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p07-impl-20261103-01
 **Handle:** direct:rgi-p07-impl-20261103-01:p07-t04
 **Intent:** Document `oat review check`, the `oat review latest` supersession rule, the one-row-per-event scaffolds and the control-plane `ProjectReadOptions` API; record the control-plane "never run git" convention in its `AGENTS.md`; bump the five lockstep public packages from 0.3.45 to 0.3.46 once for m02; confirm the generated docs index is unchanged.
 **Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/control-plane/README.md`, `packages/control-plane/AGENTS.md`, `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`.
 **Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+**Commit:** defaf818a50b7001e3999d083bef6f2c6a7b92b5
+**Proof:** `docs:check` exit 0 (0 errors; the new lines add only the page-wide `provenance` warning class the existing `--project .oat/projects/shared/example` examples already carry); `docs:lint` exit 0 (91 files, 0 errors); docs-index regeneration exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0 (no reader page added or renamed). The first commit attempt was refused by commitlint (header over 100 characters) with nothing committed; the retry used the same identity and a shorter header.
+
+Instruction files: `packages/control-plane/AGENTS.md` gains one convention (never run git in the package; take commit ancestry from the caller, as Reviews supersession does). No other instruction fact changed: no command, directory, version pin or workflow named in an `AGENTS.md` moved. Lockstep packages `cli`, `control-plane`, `docs-config`, `docs-theme` and `docs-transforms` and `packages/cli/assets/public-package-versions.json` are at 0.3.46 (`origin/main` is at 0.3.45).
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
