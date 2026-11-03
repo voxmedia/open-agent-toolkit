@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p07
+oat_current_task_id: p12
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | completed   | 1     | 1/1      |
-| p10   | completed   | 1     | 1/1      |
-| p11   | completed   | 1     | 1/1      |
-| p07   | in_progress | 1     | 0/1      |
-| p12   | pending     | 1     | 0/1      |
-| p13   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
+| p10   | completed | 1     | 1/1      |
+| p11   | completed | 1     | 1/1      |
+| p07   | completed | 1     | 1/1      |
+| p12   | pending   | 1     | 0/1      |
+| p13   | pending   | 1     | 0/1      |
+| p08   | pending   | 1     | 0/1      |
+| p09   | pending   | 1     | 0/1      |
 
-**Total:** 4/9 phases accepted
+**Total:** 5/9 phases accepted
 
 ---
 
@@ -894,7 +894,7 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
-**Status:** in_progress
+**Status:** completed
 **Base:** eba04d813a4d342523a6235009019a0c31f880a3
 **Head:** 34ebd3ef9c02d90a6797ece84d69b6ab7b54d201
 **Executor:** phase-implementer:rgi-p07-impl-20261103-01
@@ -1045,7 +1045,20 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev-20261103-01`, reconnaissance not attempted). It reproduced the pinned Sol row, the archived descendant-head case, the released-CLI negative control and a six-case agreement probe across status, list, latest and check.
 
-**Outcome:** fixes queued: p07-t05, p07-t06, p07-t07
+**Outcome:** fixes queued: p07-t05, p07-t06, p07-t07; all three completed (head `34ebd3ef9`) and passed re-review (reviews/archived/p07-review-2026-11-03T190319Z.md)
+
+### Review Received: p07 (re-review of the fix records)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p07-review-2026-11-03T190319Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev-20261103-02`, reconnaissance not attempted). It confirmed M1, L1 and L2 resolved; for M1 it removed each of the three ancestry bindings in turn and the new test failed on that command's assertion each time, then restored a clean tree.
+
+- L1 (Low): the review-receive fallback clause added by p07-t07 (`.agents/skills/oat-project-review-receive/SKILL.md:163`) does not say the candidate's own row must be `received`, nor name the two Invocation classes → approved deferral to p12 (see Deferred Findings); p12 rewrites this same receive artifact-selection step to consume the gate-named event, and fixing it now would open a third review cycle for a one-clause clarification. The fallback candidates are top-level artifacts, whose rows are not yet `passed` or `fixes_completed`, so the omission does not misroute a processed event.
+
+**Outcome:** passed (deferred items only)
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
@@ -1096,6 +1109,7 @@ Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev
 - run/v1 · request=rgi-p07-impl-20261103-01 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p07-rev-20261103-01 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p07-fix-20261103-01 · scope=p07-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p07-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p07-rev-20261103-02 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1266,6 +1280,7 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 - PR #400 self-review (testing and complexity lenses, fresh Opus reviewer, 0 blocking) C1 (non-blocking): the verdict parser's `findingsComplete` flag, duplicate-ID refusal and ID-prefix/severity mismatch refusal (`packages/cli/src/commands/gate/review-verdict.ts`) served only the reverted p02 verifier; no code reads them, and they can refuse a review whose counts agree. Deferred to p08 by operator decision on 2026-11-03 (removing them now would reopen m01's exit gate and integrated review). Trigger: p08 start, which owns stable finding keys. Bundled with it: T2 (the closed-label test asserts no negative), T3/C3 (two effective-delta tests in `bookkeeping-findings-contracts.test.ts` repeat `post-implement-sequence-contracts.test.ts` coverage), and T4/C2 (`ReviewVerdictValidationError`'s unused `kind`, `status` and `receiveEligible` fields and the tests asserting them). T1 (a wrapped detail line refuses as orphaned) is the existing p01 review round 2 L1 deferral.
 
 - PR #400 Cursor Bugbot (review of 2fd06ff2b), fixed in the branch on 2026-11-03 by operator decision, with no re-review or gate: (High) review-receive Step 2.6 item 7 routed a bookkeeping-only final receive from Step 7.6 to Step 10, past the Step 8.5 deferred-Medium resurfacing that item 3 requires; item 7 now runs Step 8.5 first for `final` scope. (Medium) plan-writing step 4's bookkeeping-only `plan` branch could record `passed` after an interactive decline; a declined edit now leaves the finding residual and never `passed`. Both are post-gate skill-prose changes after reviewed head 5599af21d, so d01's bound revisions and the m01 exit gate predate them; the operator chose to merge without re-gating. Contract tests (`src/commands/init/tools/shared`, `src/validation`) and `oat:validate-skills` pass.
+- p07 re-review L1 (Low): the review-receive CLI-unavailable fallback clause (`.agents/skills/oat-project-review-receive/SKILL.md:163`) omits that the candidate's own row must be `received` and does not name the gate and lifecycle Invocation classes. Deferred by the root under review-receive Step 9 (Low, concrete rationale): p12 rewrites this receive artifact-selection step, and fixing it now would open a third p07 review cycle. Trigger: p12 start; fold the clarification into p12's receive change and its pin test.
 
 ## Deviations from Plan / Design
 
