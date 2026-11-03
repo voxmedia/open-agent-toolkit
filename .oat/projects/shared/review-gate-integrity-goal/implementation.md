@@ -1361,12 +1361,23 @@ Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/revie
 
 ### Task p12-t07: (review) Artifact scope and type absent from frontmatter
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-fix-20261103-01
+**Handle:** direct:rgi-p12-fix-20261103-01:p12-t07
+**Commit:** e67f07e0d81a26ed1d5f5cdf76721ead9cca64f8
 **Source review:** reviews/archived/p12-review-2026-11-03T200007Z.md (L1)
 
 Intent: the resolver skips the artifact's `oat_review_scope`/`oat_review_type` comparison when the field is absent, while the CLI reference says both are validated (the run ID fails closed when absent). Refuse an absent field with `scope_missing`/`type_missing`, mirroring `gate_run_id_missing`, or, if a real gate artifact can lack them, report them unavailable and document it; pick the option consistent with what gate artifacts actually carry and say which in the record.
 Files: `packages/cli/src/commands/review/resolve.ts`, its test, `apps/oat-docs/docs/reference/cli-reference.md`.
 Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+
+**Proof:** review suites plus help snapshots 120/120 exit 0; CLI `type-check`, `lint` and `docs:lint` exit 0.
+
+**Which case applies: refuse.** Real gate artifacts carry both fields. The reviewer's artifact frontmatter contract writes `oat_review_scope` and `oat_review_type` (`packages/cli/assets/agents/oat-reviewer.md`, the frontmatter block), and every gate review artifact found on this machine (9 under a `reviews/` directory carrying `oat_gate_run_id`, in this checkout, the main checkout and the p12 real-gate scratch repository) has both. So an absent field is refused like an absent run ID: `scope_missing` and `type_missing` (source `artifact`, expected the event value, actual `null`), and `checks.scope` or `checks.type` reads `mismatch`. The CLI reference now says all three artifact fields fail closed when absent and lists both codes.
+
+**Branch-build probe** (rebuilt CLI, the p12-t02 scratch repository, the matching P1 event): with both fields removed from the gate artifact, exit 1, `refused`, `scope_missing` and `type_missing`; with the artifact restored (`cmp`), exit 0, `ok`.
+
+**Can-fail proof.** Both absent-field guards disabled in the working tree: the new test fails (1 of 22); the file was restored byte-identical (`cmp`).
 
 ### Review Received: p12
 
