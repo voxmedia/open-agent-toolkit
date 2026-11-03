@@ -896,9 +896,24 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 
 **Status:** in_progress
 **Base:** eba04d813a4d342523a6235009019a0c31f880a3
+**Head:** 6598a6e76555c884fdca27b3ee4f5b1e70cafdb8
 **Executor:** phase-implementer:rgi-p07-impl-20261103-01
 
 The heading keeps its original m01-era name because the journal is append-only; the phase's current name and scope are the brief's `## Phase p07: One row per review event and stranded-row detection`. Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning, because the phase spans templates, several lifecycle skills, the router and `oat review latest` readers, and a new read-only check whose supersession semantics are subtle). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the template, skill and CLI-reader slices share the supersession definition, the contract tests, the skill version pins and the lockstep release bump, so they fail the independence test. Rung 4 does not apply, because the phase adds a new CLI surface. At phase start `origin/main` had moved (#401 docs, #402 backlog triage and the 0.3.45 release bump); it was merged into the branch at the base (`eba04d813`, clean merge), so this phase's lockstep bump must exceed 0.3.45.
+
+Phase verification at the head: pass. The code state is `defaf818a`; only journal commits follow it. `origin/main` has not moved since the base merge (`c42fd95bd`, checked before the version gate). The DoD gate list ran in CI order and each command exited 0:
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: 5 of 11 cached, then forced, 0 of 11 cached.
+3. `pnpm test`: 5 of 12 cached; `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached, CLI 440 files and 9451 tests, control-plane 14 files.
+4. `pnpm build`: 5 of 5 cached (replayed); the forced `test:evidence` executed all five package builds uncached.
+5. `pnpm run check:skill-bumps`: 9 changed skills against `origin/main`.
+6. `pnpm release:check-versions`, after `git fetch origin main`.
+7. `pnpm release:validate`: 5 packages at 0.3.46.
+8. `pnpm build:docs`: 6 of 6 cached, then forced, 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0: `pnpm lint`, `pnpm format`, `pnpm test:skills`, `pnpm oat:validate-skills` (68 skills) and the isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`, 1185/1185). `oat project journal check --project <this project> --at review --scope p07` is `ok` with no reasons or warnings on both the installed 0.3.45 CLI and the branch build. On this project and on `delivery-evidence-and-knowledge-preflight` the installed and branch `oat project status` recommend the same skill (`oat-project-implement`, `oat-project-complete`), so the check and the reader change block no existing flow there. Exit evidence and controls are in p07-t01 and p07-t02 (scaffold rows, pinned Sol row, duplicate key, clean control, class, `-`, pending and descendant controls, corroboration unavailable, the stranded-row negative control) and p07-t03 (one-writer and reader pins, the one-`design`-row case). No post-commit recovery was needed (0 of 10 used).
 
 ### Task p07-t01: One placeholder row per review event in the scaffolds
 
