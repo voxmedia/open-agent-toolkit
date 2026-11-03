@@ -959,6 +959,15 @@ Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`
 
 **Pins can fail** (each neutralized in the working tree, the new test file run, then restored byte-identical; 1 of 15 failed each time): plan-writing "never appends a second row" changed to "may append a second row"; plan-writing "Readers that select a review event ignore a superseded row" changed to "still select a superseded row"; review-receive "never receives it or edits its row" changed to "receives it".
 
+### Task p07-t04: Docs, instructions and the lockstep 0.3.46 release bump
+
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t04
+**Intent:** Document `oat review check`, the `oat review latest` supersession rule, the one-row-per-event scaffolds and the control-plane `ProjectReadOptions` API; record the control-plane "never run git" convention in its `AGENTS.md`; bump the five lockstep public packages from 0.3.45 to 0.3.46 once for m02; confirm the generated docs index is unchanged.
+**Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/control-plane/README.md`, `packages/control-plane/AGENTS.md`, `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`.
+**Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+
 ## Phase p12: Exact-event consumption for gate handoffs
 
 **Status:** pending
