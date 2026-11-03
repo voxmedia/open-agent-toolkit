@@ -1083,6 +1083,20 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 
 **Outcome:** fixes_completed (residual attempt-3 findings folded; no further loop attempt)
 
+### Review Received: plan (m02 amendment, gate)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-11-03T023206Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- The `oat-project-goal` lifecycle gate (run `6cf18b35-39f7-4103-9625-ad09950fd3c7`, target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, different family from the declared `claude-opus-5-5` producer; installed CLI 0.3.45, Codex route receipt persisted) reviewed the m02 amendment bundle at `ee377dd7bcbedec4e0c66cc8d12a754c45c1587d` for m02 (`p07, p12, p13`).
+- L1 (low): `state.md` descriptive prose still directed work to m01 → fixed at receive (bookkeeping): Status, Current Phase, Progress and Next Milestone prose copied from the recorded state (m01 merged at its endpoint, m02 aligning); no frontmatter, acceptance marker or gate binding changed.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/artifact-plan-review-2026-11-03T023206Z.md)
+
+- Gate `oat-project-goal` (plan, m02 amendment): `ok`, `review_completed_gate_passed`, threshold `high`, raw counts 0/0/0/1, receive-eligible, received 2026-11-03. First use of the released m01 bookkeeping rule on this project.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

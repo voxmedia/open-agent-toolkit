@@ -215,13 +215,13 @@ oat_generated: false
 
 # Project State: review-gate-integrity-goal
 
-**Status:** Implement (m01)
+**Status:** Plan (m02 aligning)
 **Started:** 2026-11-01
-**Last Updated:** 2026-11-02
+**Last Updated:** 2026-11-03
 
 ## Current Phase
 
-Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
+m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its integrated review and exit gate are stale by the operator-accepted post-gate Bugbot fixes. m02 (p07, p12, p13) is aligning: its amendment is reviewed and gated, awaiting approval.
 
 ## Artifacts
 
@@ -238,7 +238,9 @@ Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
 - ✓ p10 accepted (bookkeeping definition and the receive rule)
 - ✓ p11 accepted (implement and planning paths, docs, release 0.3.44, DR-261102-bookkeeping-only-review)
 - ✓ m01 exit gate passed (fresh at 1a5a37684)
-- ⧗ m01 integrated review fixes (p11-t07), then exit gate and a new integrated review
+- ✓ m01 integrated review cycle 2 passed; exit gate rerun passed; d01 registered and PR #400 merged 2026-11-03 (post-gate Bugbot fixes accepted without re-gating)
+- ✓ m02 amendment (p07, p12, p13) reviewed and gated
+- ⧗ m02 amendment approval, then activation
 
 ## Blockers
 
@@ -246,4 +248,4 @@ None
 
 ## Next Milestone
 
-Continue `oat-project-implement` at m01 milestone closeout
+Approve the m02 amendment in `oat-project-goal`, then activate m02 and continue with `oat-project-implement`

@@ -307,7 +307,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | m01   | code     | passed          | 2026-11-03 | reviews/archived/m01-review-2026-11-03T000239Z.md           | 5599af21d4927c7d39c668b9d1662509e5d3b403 | manual     | -                    |
 | p07   | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | plan  | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -          | -                    |
-| plan  | artifact | received        | 2026-11-03 | reviews/artifact-plan-review-2026-11-03T023206Z.md          | -                                        | -          | -                    |
+| plan  | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate       | codex-6-sol-xhigh    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
