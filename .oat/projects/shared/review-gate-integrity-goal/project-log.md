@@ -171,6 +171,10 @@ p12 accepted: review round 1 passed (0C/0H/1M/4L, fixes p12-t06..t07; L2 deferre
 
 Made p13 concrete before dispatch (plan-and-resume Step 2.2), within Outcome 4: a read-only oat review pending command lists required pending rows per PR scope (phase code rows in scope, plan artifact for project scope unless skip-lined; never spec, design, final or mNN); the Known Unknown settles on the journal slot (row stays pending, one appended **Review waived:** line in ## Reviews and Gates, user-written only), because a Reviews cell would break the Outcome 4 event key or be overwritten; pr-progress and pr-final list before PR creation with run, waive or stop, non-interactive stop, new PRFINAL-06 row. Departs from the backlog item's 'recorded in the Reviews table' wording, as the Known Unknown permits. Seeded the p13 code Reviews row. rgi-p13-concrete-20261103
 
+### 2026-11-03 · structural · oat-project-implement · p13
+
+p13 review M1 (a concrete phase with no Reviews row escapes the pending listing) extended the literal Intent, so it went to the operator before any fix task; the operator chose a separate missing list that both PR skills treat like pending (2026-11-03). Recorded in the p13 Intent and Exit evidence; fix tasks p13-t05..t07. rgi-p13-m1-decision-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

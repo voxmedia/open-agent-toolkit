@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p13
+oat_current_task_id: p13-t05
 oat_generated: false
 oat_template: false
 ---
@@ -1536,6 +1536,49 @@ Also exited 0: `pnpm lint` and `pnpm format` (5 of 10 cached each); `pnpm test:s
 
 `packages/cli/README.md` and the root `README.md` list no review subcommands, so they need no change. No `AGENTS.md` fact changed: no command, directory, version pin, workflow or footgun named in an instruction file moved (`git grep` over `*AGENTS.md` and `.agents/rules/` finds only the control-plane "never run git" convention, which still holds). The lockstep packages stay at 0.3.46.
 
+### Task p13-t05: (review) List required phases that have no Reviews row
+
+**Status:** pending
+**Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (M1)
+
+Intent: per the operator decision recorded in the p13 Intent (2026-11-03), `oat review pending` reports a required key whose phase is concrete (not `**Provisional:** yes`) but has no `## Reviews` row in a separate `missing` list, while a provisional phase with no row stays unlisted; a `**Review waived:**` line applies to a `missing` key (moving it to `waived`) instead of reporting `no-row`. pr-progress Step 3.5 and pr-final Step 2.5 (and the goal Step 1.5 paragraph) treat `missing` like `pending`: run, waive or stop, and a non-interactive run stops (`PRFINAL-06` for pr-final). Add unit tests, a guard-can-fail control and pins; update the CLI reference and the reviews and PR-flow docs.
+Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md` (both already bumped on this branch), `.agents/docs/autonomy-contract.md` if the row text changes, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/init/tools/shared src/validation`
+
+### Task p13-t06: (review) Route a pending plan row to an artifact plan review
+
+**Status:** pending
+**Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (L1)
+
+Intent: pr-final's **Run them** option and its `PRFINAL-06` resume target send every listed row to `oat-project-review-provide` with `code <scope>`, which is invalid for the `plan | artifact` row. Say `code <pNN>` for a phase row and `artifact plan` for the plan row, and extend the pin.
+Files: `.agents/skills/oat-project-pr-final/SKILL.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`.
+Proof: the isolated-HOME contract suites.
+
+### Task p13-t07: (review) Scope pr-progress Step 3's do-not-block sentence
+
+**Status:** pending
+**Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (L2)
+
+Intent: pr-progress Step 3 ends "Do not block PR generation; this is a progress PR." directly before Step 3.5, which can stop. Scope it to Step 3's warning, for example "Do not block PR generation on this warning; Step 3.5 governs pending required reviews." Check existing Step 3 pins first.
+Files: `.agents/skills/oat-project-pr-progress/SKILL.md`, the pinning contract test if one covers the sentence.
+Proof: the isolated-HOME contract suites.
+
+### Review Received: p13
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p13-review-2026-11-03T210640Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 3
+
+- M1 (Medium): a required concrete phase with no `## Reviews` row is never listed as pending, so a PR (autonomous included) proceeds; real on this project (p12's row first appeared with its review event) → put to the operator first, because it extends the literal Intent (AGENTS.md); the operator chose the `missing` list on 2026-11-03 → fix task p13-t05, and the p13 Intent and Exit evidence record the decision.
+- L1 (Low): pr-final's run option and `PRFINAL-06` resume target route a pending `plan | artifact` row to `code <scope>` → fix task p13-t06.
+- L2 (Low): pr-progress Step 3's unscoped "Do not block PR generation" sits before Step 3.5, which can stop → fix task p13-t07.
+- L3 (Low): `BL-261002-list-pending-required-reviews` still says the waiver is recorded in the Reviews table; the journal-slot departure is authorized by the Known Unknown and logged → approved deferral to the backlog item's closure at m02 delivery (see Deferred Findings).
+
+Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p13-rev-20261103-01`, reconnaissance not attempted); re-ran the branch-build probes and proved three guards can fail.
+
+**Outcome:** fixes queued: p13-t05, p13-t06, p13-t07
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1584,6 +1627,7 @@ Also exited 0: `pnpm lint` and `pnpm format` (5 of 10 cached each); `pnpm test:s
 - run/v1 · request=rgi-p12-fix-20261103-01 · scope=p12-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p12-impl-20261103-01 · observed=~ · match=~
 - run/v1 · request=rgi-p12-rev-20261103-02 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p13-impl-20261103-01 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p13-rev-20261103-01 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1756,6 +1800,7 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 - PR #400 Cursor Bugbot (review of 2fd06ff2b), fixed in the branch on 2026-11-03 by operator decision, with no re-review or gate: (High) review-receive Step 2.6 item 7 routed a bookkeeping-only final receive from Step 7.6 to Step 10, past the Step 8.5 deferred-Medium resurfacing that item 3 requires; item 7 now runs Step 8.5 first for `final` scope. (Medium) plan-writing step 4's bookkeeping-only `plan` branch could record `passed` after an interactive decline; a declined edit now leaves the finding residual and never `passed`. Both are post-gate skill-prose changes after reviewed head 5599af21d, so d01's bound revisions and the m01 exit gate predate them; the operator chose to merge without re-gating. Contract tests (`src/commands/init/tools/shared`, `src/validation`) and `oat:validate-skills` pass.
 - p07 re-review L1 (Low): the review-receive CLI-unavailable fallback clause (`.agents/skills/oat-project-review-receive/SKILL.md:163`) omits that the candidate's own row must be `received` and does not name the gate and lifecycle Invocation classes. Deferred by the root under review-receive Step 9 (Low, concrete rationale): p12 rewrites this receive artifact-selection step, and fixing it now would open a third p07 review cycle. Trigger: p12 start; fold the clarification into p12's receive change and its pin test.
 - p12 review L2 (Low): the optional phase gate and the eight planning gates (goal, brief, lite, discover, design, quick-start, plan, import-plan) hand the gate event to receive only in-session; after an interruption the router's receive route has no event and falls back to newest-artifact selection, protected only by p07 supersession. Implement Step 14 persists its event. Deferred by the root (Feature Planning Triage: a new persistence requirement outside p12's adopting-path Intent). Trigger: the first observed interrupted gate→receive handoff, or p13/m03 if they touch these gate paths.
+- p13 review L3 (Low): `BL-261002-list-pending-required-reviews` acceptance criteria still say the waiver is recorded in the Reviews table; p13 records it as a `**Review waived:**` line under `## Reviews and Gates` with the row left `pending`, authorized by the p13 Known Unknown (`rgi-p13-concrete-20261103`). Deferred by the root to the item's closure. Trigger: m02 delivery, when the item is closed with that note.
 
 ## Deviations from Plan / Design
 
