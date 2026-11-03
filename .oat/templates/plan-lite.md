@@ -143,12 +143,11 @@ git commit -m "feat(p01-t02): [description]"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
+| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
+| p01   | code     | pending | -    | -        | -             | -          | -           |
+| final | code     | pending | -    | -        | -             | -          | -           |
+| plan  | artifact | pending | -    | -        | -             | -          | -           |
 
 ## Implementation Complete
 
