@@ -1,8 +1,6 @@
 ---
 id: BL-260927-give-gate-receipts-portable
-title:
-  Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative
-  shipped ignore rule
+title: Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative
 status: open
 priority: medium
 scope: feature

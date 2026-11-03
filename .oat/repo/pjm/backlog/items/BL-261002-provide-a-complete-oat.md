@@ -1,8 +1,6 @@
 ---
 id: BL-261002-provide-a-complete-oat
-title:
-  Fix oat tools remove --all at project scope and drop stale requiredBy entries
-  after itself
+title: Fix oat tools remove --all at project scope and drop stale requiredBy entries
 status: open
 priority: medium
 scope: feature

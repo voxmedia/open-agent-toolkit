@@ -1,8 +1,6 @@
 ---
 id: BL-261002-offer-a-strict-gate-reviewer
-title:
-  Keep failed planning gates blocking and align gate wording and decision records
-  wording and decision records
+title: Keep failed planning gates blocking and align gate wording and decision records
 status: open
 priority: medium
 scope: feature
