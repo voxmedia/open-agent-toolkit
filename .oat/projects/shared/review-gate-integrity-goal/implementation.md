@@ -1501,6 +1501,26 @@ Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Commit
 - Verification: focused `pnpm run check:skill-bumps` exit 0 (16 changed skills and agent roles against `origin/main`) before and after the commit; phase isolated-HOME contract suites 1205/1205 exit 0 before and after; `pnpm oat:validate-skills` exit 0.
 - Reason: `.agents/docs/autonomy-contract.md` (the new `PRFINAL-06` row and its coverage key) is vendored by symlink into seven skills. Five already carried their single m02 bump; `oat-project-document` (1.8.13) and `oat-project-autonomous` (1.0.24, through `references/gate-inventory.md`) did not, so the gate failed. The correction is mechanical, in-phase and behavior-free: one patch bump each (1.8.14, 1.0.25) and the two `skills.test.ts` document pins. Reservation committed at `fdfb2e97f` before editing; the ledger entry is `completed` in the recovery commit.
 
+### Task p13-t04: Document `oat review pending`, the waiver line and the pre-PR listing
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t04
+**Intent:** Document the `oat review pending` command (CLI reference), the pending-review listing and the waiver line on the Reviews page, and the pre-PR listing and `PRFINAL-06` stop in the PR flow; confirm the generated docs index is unchanged and that no `AGENTS.md` fact changed.
+**Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`.
+**Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+**Commit:** 6a5a4b806da49761b78dd1dc15b979b3982c0c6c
+**Proof:** every part of the proof command exited 0. `docs:check`: 0 errors; the new lines add three `provenance` warnings, on the Reviews page's new `--project .oat/projects/shared/example` examples, the class the page's existing `oat review latest` and `oat review resolve` examples already carry. `docs:lint`: 91 files, 0 errors. The docs-index regeneration and `git diff --exit-code -- apps/oat-docs/index.md`: no reader page was added or renamed.
+
+**Documentation and instructions.**
+
+- The CLI reference gains an `oat review pending` entry: scope forms, required rows, the waiver line and when it applies, the JSON shape, and the exit codes.
+- The Reviews page gains "Pending required reviews before a PR": the listing, the run/waive/stop choice, `PRFINAL-06`, the waiver line example, and why a waiver is never a review.
+- The PR Flow page states the pre-PR listing and links to that section.
+- `packages/control-plane/README.md` already documents `hasPlanReviewSkipLine` (p13-t01).
+
+`packages/cli/README.md` and the root `README.md` list no review subcommands, so they need no change. No `AGENTS.md` fact changed: no command, directory, version pin, workflow or footgun named in an instruction file moved (`git grep` over `*AGENTS.md` and `.agents/rules/` finds only the control-plane "never run git" convention, which still holds). The lockstep packages stay at 0.3.46.
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
