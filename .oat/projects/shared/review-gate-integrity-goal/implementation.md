@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-02
+oat_last_updated: 2026-11-03
 oat_current_task_id: p07
 oat_generated: false
 oat_template: false
@@ -894,7 +894,11 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
-**Status:** pending
+**Status:** in_progress
+**Base:** eba04d813a4d342523a6235009019a0c31f880a3
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+
+The heading keeps its original m01-era name because the journal is append-only; the phase's current name and scope are the brief's `## Phase p07: One row per review event and stranded-row detection`. Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning, because the phase spans templates, several lifecycle skills, the router and `oat review latest` readers, and a new read-only check whose supersession semantics are subtle). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the template, skill and CLI-reader slices share the supersession definition, the contract tests, the skill version pins and the lockstep release bump, so they fail the independence test. Rung 4 does not apply, because the phase adds a new CLI surface. At phase start `origin/main` had moved (#401 docs, #402 backlog triage and the 0.3.45 release bump); it was merged into the branch at the base (`eba04d813`, clean merge), so this phase's lockstep bump must exceed 0.3.45.
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
