@@ -113,6 +113,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 rgi-m01-closeout-c2: m01 closeout. Exit gate attempt 5 passed at 5599af21d (0/0/0/1, Low deferred); integrated review cycle 2 passed 0/0/0/0 (reviews/archived/m01-review-2026-11-03T000239Z.md); delivery check ok; milestone moves to delivering. Fix loops: one integrated-review fix task (p11-t07).
 
+### 2026-11-03 · structural · oat-project-pr-progress · d01
+
+Registered d01 for m01 (p01, p02, p10, p11) at https://github.com/voxmedia/open-agent-toolkit/pull/400; review-gate-integrity-goal-register-d01
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
