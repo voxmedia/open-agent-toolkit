@@ -155,6 +155,10 @@ Activated m02 (p07, p12, p13); review-gate-integrity-goal-activate-m02
 
 p07 accepted: review round 1 passed (0C/0H/1M/3L, fixes p07-t05..t07), round 2 re-review of the fix range passed (0/0/0/1, Low deferred to p12); 1 fix loop; head 34ebd3ef9. rgi-p07-outcome-20261103
 
+### 2026-11-03 · structural · oat-project-implement · p12
+
+Made p12 concrete before dispatch (plan-and-resume Step 2.2), within Outcome 4 and Decision (3) gap-only provenance: the gate captures and emits reviewedHead; a read-only resolver binds and validates the gate-named Reviews event and fails closed; receive Step 1 accepts the gate event; adopting paths settled as every gate-then-receive path (implement exit gate, phase gate, eight planning gates); artifact-gate rows record Invocation gate and the gate target; folds in the p07 re-review L1 deferral. No Outcome, Constraint, Decision, endpoint or Approach changed. rgi-p12-concrete-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
