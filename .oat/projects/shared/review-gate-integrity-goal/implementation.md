@@ -1768,6 +1768,38 @@ Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-cl
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer. Added at `91d2e491f` by the m02 exit gate rerun receive. `origin/main` has not moved since the p07 base merge.
 
+### Task p-rev3-t01: A review waiver applies only to the pending row it names
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-impl-20261103-01
+**Handle:** direct:rgi-prev3-impl-20261103-01:p-rev3-t01
+**Intent:** Correct p13 for the m02 exit gate rerun finding M1. `oat review pending` decides waiver applicability from the latest Scope + Type row only, so a waiver retired by a later recorded review applies again to a new `pending` row of the same key. Bind a waiver to the pending obligation it was written for: the waiver line names the listed row (`**Row:** <n>`), and applies only while that row is the key's latest row and still `pending`; a line that names no row (`-` or no `**Row:**` label, the p13 form) applies only while no row of its key records a review. Any order that cannot be established lists the key as pending. Update the waiver template in pr-progress Step 3.5 and pr-final Step 2.5, the CLI reference and the Reviews docs.
+**Files:** `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`, `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review` and `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, plus the branch-build probe `/tmp/prev3-scripts/probe.py` before and after the change.
+**Commit:** f29800f5a51175dc6fcdd233ea73762faac2e90e
+**Proof:** `src/commands/review` plus help snapshots and `src/commands/project/delivery`: 9 files, 276 tests, exit 0 (`pending.test.ts` 22, six new). The isolated-HOME contract suites `src/commands/init/tools/shared` and `src/validation`: 29 files, 1205 tests, exit 0. CLI `type-check` and `lint` exit 0. `check:skill-bumps` exit 0 (16 checks; pr-progress and pr-final already carry their single m02 bump, so no further bump). `oat sync --scope project`: no changes. `docs:check` (0 errors) and `docs:lint` (91 files, 0 errors) exit 0. `oxfmt --check` on the seven files exit 0.
+
+**Ordering rule chosen.** Dates cannot order a waiver against a review: the ledger Date and the waiver Date are days, and same-day events are the norm (every event of this project's m02 is dated 2026-11-03), so a date rule would either reapply a same-day retired waiver or, failing closed, refuse every fresh same-day waiver. The Intent's fallback applies instead: the waiver line names what it waives, backward-compatibly. The template gains `**Row:** <row>`, the 1-based row number the listing already reports for each pending entry (`-` for a `missing` entry). A line naming a row applies only while that row is the key's latest row and still `pending`; a recorded review in place, a later recorded row, or any later appended row (`row-mismatch`) retires it. A line naming no row (`-` or the p13 form without the field) applies only while no row of its key records a review (`review-recorded` otherwise), because it cannot be ordered against one. A malformed row (for example `03`) and a named row on a key with no row are `row-mismatch`; a `**Row:**` inside the reason is never read. Every unordered case lists the key as pending. No Reviews column, status or ledger edit is added; JSON `waivers` entries gain `row` (as written, `null` when none) and the `unapplied` set gains `row-mismatch`. Both PR skills state the rule and the field; the CLI reference and the Reviews page document it.
+
+**Negative control** (branch build, `/tmp/prev3-scripts/probe.py`, one temporary goal project per case, scope `p01`; rows 1 `pending`, 2 `passed` 2026-11-02, 3 `pending` where shown; every run exit 0):
+
+| Case                                                                         | Pre-change build at `7c844c203` | Post-change build at `f29800f5a`                     |
+| ---------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------- |
+| 1 rowless waiver over the only pending row (active control)                  | waived                          | waived                                               |
+| 2 rowless waiver, then a recorded review                                     | `review-recorded`               | `review-recorded`                                    |
+| 3 rowless waiver (2026-11-01), recorded review, new pending row (gate M1)    | **waived by the old line**      | **pending row 3**, `review-recorded`                 |
+| 4 same rows, no waiver                                                       | pending row 3                   | pending row 3                                        |
+| 5 `**Row:** 1` over the only pending row (active control)                    | waived                          | waived                                               |
+| 6 old line plus fresh `**Row:** 3` after the new pending row (fresh control) | waived (by the old line)        | waived by the fresh line; old line `review-recorded` |
+| 7 stale `**Row:** 1` with rows 1 to 3                                        | **waived**                      | **pending row 3**, `row-mismatch`                    |
+| 8 fresh rowless line (2026-11-03) after the review                           | **waived**                      | **pending row 3**, `review-recorded` (fails closed)  |
+
+The gate artifact's M1 script, extracted verbatim from `range-review-2026-11-03T224623Z.md` and run against the post-change build, now matches every expected outcome: `valid-waiver` waived, `recorded-review` inactive, `new-pending-after-review` lists row 3 as pending with the waiver `review-recorded`, `new-pending-no-waiver` lists row 3.
+
+**Journal check accepts the new field:** in a scratch clone of this branch, a `**Review waived:** p13 code · **Row:** 26 · …` line appended under `## Reviews and Gates` leaves `oat project journal check --at review --scope p13` at `ok` with no reasons or warnings (branch build), and `review pending --scope m02` reports that line `row-mismatch` (row 26 is no longer the latest `p13` row).
+
+**Guard can fail** (each neutralized in the working tree, `pending.test.ts` and `pending-review-listing-contracts.test.ts` run, then restored and checked byte-identical with `cmp`): G1, the rowless retirement guard disabled: 3 of 25 fail, the gate reproduction among them; G2, the named-row binding guard disabled: 4 of 25 fail, including the skills' documented-line cross-check; G3, `**Row:** <row>` removed from pr-final's template: 2 of 3 contract tests fail.
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
