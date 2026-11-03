@@ -1155,6 +1155,60 @@ The gate event names the 12:00 artifact with dispatch head P2.
 2. The run-ID comparison disabled: the wrong-run-ID test and the CLI exit-1 test fail (2 failed).
 3. The row and artifact scope comparisons disabled: the wrong-scope test fails (1 failed).
 
+### Task p12-t03: Receive consumes the gate-named event on every adopting path
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t03
+**Intent:** Several prose changes, plus pins that fail when the text is reverted:
+
+- review-receive Step 1 accepts a gate event and consumes it through `oat review resolve`, failing closed. Without an event, Step 1 is unchanged.
+- Every path that runs `oat gate review` and then receive passes the event to receive.
+- review-provide Step 9 and receive's ledger rule record `Invocation: gate` and the exact `oat_gate_target` for every gate review, artifact reviews included.
+- The p07 re-review L1 deferral is folded into receive's CLI-unavailable fallback clause.
+
+**Files:** `.agents/skills/oat-project-{review-receive,review-provide,goal,brief,lite,discover,design,quick-start,plan,import-plan}/SKILL.md`, `.agents/skills/oat-project-implement/SKILL.md` (version only), `.agents/skills/oat-project-implement/references/{completion-and-closeout,phase-execution}.md`, `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins).
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 19fb8190dc3fd3e03c9ef0c559d9ee8ab90b68e0
+**Proof:** isolated-HOME contract suites 1202/1202 (28 files) exit 0, the autonomy inventory included. Also exit 0:
+
+- `pnpm oat:validate-skills` (68 skills);
+- `pnpm exec oxlint .agents/skills`;
+- `oxfmt --check` on the changed files;
+- `pnpm run check:skill-bumps` after the commit (12 changed skills and agent roles against `origin/main`).
+
+`oat sync --scope project` (branch build) reported no changes, because the provider views are links.
+
+**Known Unknown settled (how receive is given the gate's event, and which paths adopt it).**
+
+- **Input.** Explicit fields, not the gate JSON. The caller passes the ok or blocked result's `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead` as receive's Step 1 gate event. Receive runs `oat --json review resolve --project "$PROJECT_PATH" --artifact … --scope … --type … --run-id … --reviewed-head …`.
+- **On exit 0,** `REVIEW_PATH` is the result's `path`, and the `oat review latest` selection and its `ls -t` fallback do not run.
+- **On a nonzero exit,** receive stops and reports each diagnostic. It receives, archives and edits nothing, and never falls back.
+- **A missing `reviewedHead`.** A gate result from a CLI older than 0.3.46 has no full-SHA `reviewedHead`. It cannot name its event and stops the same way.
+- **Adopting paths.** The ten paths that run `oat gate review` and then receive:
+  - implement Step 14 (`completion-and-closeout.md`), which on resume reads the event from the persisted `launch_result_receipt` and which the goal milestone exit gate delegates to;
+  - the optional phase gate (`phase-execution.md`);
+  - the Gate Execution sections of goal, brief, lite, discover, design, quick-start, plan and import-plan.
+
+  Each carries one identical sentence, pinned once per path.
+
+- **Manual and auto reviews** pass no event, and Step 1 is unchanged for them (its existing `--actionable-project` pin and the p07 supersession pins still pass).
+
+**Gate Target rule.** review-provide Step 9 and receive's Step 6 ledger rule now write `Invocation: gate` and the exact `oat_gate_target` for every gate review, artifact reviews included. An artifact review keeps `Reviewed Head` at `-`. Receive also reads `oat_review_invocation` and `oat_gate_target` from an artifact review's frontmatter. The code-only phrasings are pinned absent.
+
+**p07 re-review L1 folded.** Receive's CLI-unavailable fallback clause now skips a candidate only when its own row is `received`. It names the two Invocation classes, gate (`gate`, any Gate Target) and lifecycle (`manual` or `auto`), and says rows of different classes never supersede each other. The p07 pin was updated to the new text.
+
+**Version bumps.** Three skills had no bump on this branch: `oat-project-discover` 2.2.12 → 2.2.13, `oat-project-design` 2.3.9 → 2.3.10, and `oat-project-implement` 2.3.26 → 2.3.27. Their `skills.test.ts` pins were updated mechanically (eight `implement` pins, two `design` pins and one `discover` pin). The other eight skills changed here already carry their single PR-scoped p07 bump.
+
+**Autonomy inventory.** The new lines avoid the scan's trigger words. No line the scan already maps was edited, so the inventory needed no coverage entries and passes unchanged.
+
+**Pins can fail.** Each change was made in the working tree and `review-event-row-contracts.test.ts` run, then the file was restored byte-identical (`cmp`). Each failed 1 of 32:
+
+1. The hand-off sentence removed from `phase-execution.md`.
+2. Receive's "never fall back to" changed to "may fall back to".
+3. review-provide's Gate Target line reverted to "for gate code reviews".
+4. The L1 `received` clause removed from the fallback.
+
 ## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
