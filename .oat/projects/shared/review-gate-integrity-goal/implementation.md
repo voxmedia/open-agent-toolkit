@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p10   | completed | 1     | 1/1      |
-| p11   | completed | 1     | 1/1      |
-| p07   | completed | 1     | 1/1      |
-| p12   | pending   | 1     | 0/1      |
-| p13   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | completed   | 1     | 1/1      |
+| p10   | completed   | 1     | 1/1      |
+| p11   | completed   | 1     | 1/1      |
+| p07   | completed   | 1     | 1/1      |
+| p12   | in_progress | 1     | 0/1      |
+| p13   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 5/9 phases accepted
 
@@ -1064,7 +1064,11 @@ Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
-**Status:** pending
+**Status:** in_progress
+**Base:** f3a9603f74ee358b80eeb6572085b46975801302
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a gate result field captured at dispatch, a new fail-closed event resolver, receive Step 1 and eleven adopting gate paths whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the gate, resolver and skill slices share the event contract, the contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and changes gate output. p12 was made concrete at `f3a9603f7` before this start (project log). `origin/main` has not moved since the p07 base merge.
 
 ## Phase p13: Pending required reviews before a pull request
 
