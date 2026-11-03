@@ -1045,6 +1045,8 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev-20261103-01`, reconnaissance not attempted). It reproduced the pinned Sol row, the archived descendant-head case, the released-CLI negative control and a six-case agreement probe across status, list, latest and check.
 
+**Outcome:** fixes queued: p07-t05, p07-t06, p07-t07
+
 **Outcome:** fixes queued: p07-t05, p07-t06, p07-t07; all three completed (head `34ebd3ef9`) and passed re-review (reviews/archived/p07-review-2026-11-03T190319Z.md)
 
 ### Review Received: p07 (re-review of the fix records)
