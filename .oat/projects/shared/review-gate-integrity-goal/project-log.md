@@ -117,6 +117,32 @@ rgi-m01-closeout-c2: m01 closeout. Exit gate attempt 5 passed at 5599af21d (0/0/
 
 Registered d01 for m01 (p01, p02, p10, p11) at https://github.com/voxmedia/open-agent-toolkit/pull/400; review-gate-integrity-goal-register-d01
 
+### 2026-11-03 · structural · oat-project-goal · m01
+
+Re-alignment entry for m01: d01 (PR 400) observed merged at its endpoint (squash c7cd3b715); integrated review and exit gate stale by operator-directed post-gate Bugbot fixes (4a870d471); review-gate-integrity-goal-realign-m01
+
+### 2026-11-03 · project · friction · PR bots review after the milestone gates and can force post-gate fixes
+
+**Category:** gotcha
+**Source:** review-gate-integrity-goal-learning-m01-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-03T02:05:12Z
+
+Observation: Cursor Bugbot reviewed PR 400 after the m01 exit gate and cycle-2 integrated review had passed with no findings, and raised two valid skill-prose findings (one High). The operator had them fixed on the delivery branch without re-gating, which staled d01's integrated review and the m01 exit carrier at the merge.
+Impact: The goal's evidence chain ends stale for m01 even though the merged code is better than what was gated; each later milestone can repeat this.
+Recommendation: For m02 onward, open the delivery PR (draft) before the integrated review so PR-bot findings fold into the reviewed head, or agree up front that post-gate bot fixes merge without re-gating and record them as operator-accepted staleness.
+
+### 2026-11-03 · project · friction · Squash merge requires a fresh branch for the next milestone
+
+**Category:** gotcha
+**Source:** review-gate-integrity-goal-learning-m01-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-03T02:05:12Z
+
+Observation: PR 400 was squash-merged, so the 126 goal-branch commits are not ancestors of main even though the trees match. Continuing on goal/review-gate-integrity would carry duplicate history into the m02 PR.
+Impact: Each milestone after a squash merge needs a new head branch cut from the observed integration base.
+Recommendation: Cut goal/review-gate-integrity-m02 (and later mNN branches) from origin/main after each endpoint observation; d01's lookup keys keep the old head branch, which refresh resolves by PR URL.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
