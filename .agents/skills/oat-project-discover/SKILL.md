@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.2.12
+  version: 2.2.13
 ---
 
 # Discovery Phase
@@ -492,6 +492,10 @@ gate as the last check before the completion boundary:
    - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still
      requires durable receive disposition. Route by structured status and
      eligibility, not by exit code.
+   - Pass review-receive the gate result's event (`artifactPath`, `scope`,
+     `reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so
+     receive consumes exactly that artifact through `oat review resolve` and
+     stops on a mismatch instead of selecting the newest review.
 
 5. If the command exits nonzero, use `description` to orient the next steps and
    handle `onFailure`:

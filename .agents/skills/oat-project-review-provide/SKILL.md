@@ -1599,9 +1599,10 @@ Record this artifact as one append-ordered review event:
   `git rev-parse <authoritative-range-head>^{commit}`; `-` for non-code reviews.
   Never record an abbreviation, symbolic ref, or range string.
 - `Invocation`: for code reviews, the artifact's `oat_review_invocation`
-  (`manual`, `auto`, or `gate`); `-` for non-code reviews.
-- `Gate Target`: for gate code reviews, the exact gate-context
-  `oat_gate_target`; `-` otherwise.
+  (`manual`, `auto`, or `gate`); `gate` for every gate review, artifact
+  reviews included; `-` for other non-code reviews.
+- `Gate Target`: for every gate review, artifact reviews included, the exact
+  gate-context `oat_gate_target`; `-` otherwise.
 
 For the first event with this Scope + Type, claim an unbound `pending`
 placeholder only when its Artifact is `-`. Otherwise append a new row for the

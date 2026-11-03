@@ -76,9 +76,9 @@ describe('the writer and receiver sides', () => {
     );
   });
 
-  it('review-receive applies same-head supersession in its CLI-unavailable fallback', () => {
+  it('review-receive applies same-head supersession in its CLI-unavailable fallback, to a `received` row only, within one of the two Invocation classes', () => {
     expect(flat(skill('oat-project-review-receive'))).toContain(
-      "The fallback cannot apply supersession for you. Before processing a fallback candidate, read its `## Reviews` row (matched by Scope, Type and Artifact filename) and skip the candidate when a later row of the same Scope, Type and Invocation class records a review (any status except `pending`) at the same Reviewed Head. A later row at a different head leaves the candidate live, because only the CLI can resolve whether that head descends from the candidate's. A candidate row whose Invocation or Reviewed Head is `-` is never skipped.",
+      "The fallback cannot apply supersession for you. Before processing a fallback candidate, read its `## Reviews` row (matched by Scope, Type and Artifact filename) and skip the candidate only when that row is `received` and a later row of the same Scope, Type and Invocation class records a review (any status except `pending`) at the same Reviewed Head. The two Invocation classes are gate (`gate`, any Gate Target) and lifecycle (`manual` or `auto`); rows of different classes never supersede each other. A later row at a different head leaves the candidate live, because only the CLI can resolve whether that head descends from the candidate's. A candidate row whose Invocation or Reviewed Head is `-` is never skipped.",
     );
   });
 
@@ -195,4 +195,95 @@ describe('a lightweight-design review records exactly one design row', () => {
       ]);
     },
   );
+});
+
+/**
+ * Exact-event consumption for gate handoffs (m02, p12). Every path that runs
+ * `oat gate review` and then review-receive hands receive the gate result's
+ * event; receive Step 1 consumes that event through `oat review resolve` and
+ * fails closed, and artifact-gate rows record their gate target.
+ */
+const GATE_EVENT_HANDOFF =
+  "Pass review-receive the gate result's event (`artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so receive consumes exactly that artifact through `oat review resolve` and stops on a mismatch instead of selecting the newest review.";
+
+describe('exact-event consumption for gate handoffs', () => {
+  const receive = flat(skill('oat-project-review-receive'));
+
+  it('review-receive Step 1 consumes a supplied gate event through the resolver', () => {
+    expect(receive).toContain(
+      "**Gate event (gate paths only).** A caller that ran `oat gate review` hands receive the gate result's event: its `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`. With a gate event, receive consumes exactly that event instead of selecting the newest artifact:",
+    );
+    expect(receive).toContain(
+      'oat --json review resolve --project "$PROJECT_PATH" \\ --artifact "$GATE_ARTIFACT_PATH" --scope "$GATE_SCOPE" \\ --type "$GATE_REVIEW_TYPE" --run-id "$GATE_RUN_ID" \\ --reviewed-head "$GATE_REVIEWED_HEAD"',
+    );
+    expect(receive).toContain(
+      'Exit 0 (`status: ok`): set `REVIEW_PATH` to the result\'s `path` and continue at "Read the selected review file completely" below. The `oat review latest` selection and its CLI-unavailable fallback do not run.',
+    );
+  });
+
+  it('review-receive fails closed on a refused gate event and never falls back to the newest artifact', () => {
+    expect(receive).toContain(
+      "Nonzero exit: stop and report each diagnostic's `code`, `expected` and `actual`. Do not receive, archive or edit any row, and never fall back to `oat review latest` or the `ls -t` listing for a gate event.",
+    );
+    expect(receive).toContain(
+      'A gate result with no full-SHA `reviewedHead` (from a CLI older than 0.3.46) cannot name its event and stops the same way.',
+    );
+  });
+
+  it('review-receive Step 1 is unchanged for manual and auto reviews', () => {
+    expect(receive).toContain(
+      'Without a gate event (manual and auto reviews), this step is unchanged: select the artifact as below.',
+    );
+    expect(receive).toContain(
+      'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
+    );
+  });
+
+  it.each([
+    'oat-project-implement/references/completion-and-closeout.md',
+    'oat-project-implement/references/phase-execution.md',
+    'oat-project-goal/SKILL.md',
+    'oat-project-brief/SKILL.md',
+    'oat-project-lite/SKILL.md',
+    'oat-project-discover/SKILL.md',
+    'oat-project-design/SKILL.md',
+    'oat-project-quick-start/SKILL.md',
+    'oat-project-plan/SKILL.md',
+    'oat-project-import-plan/SKILL.md',
+  ])('%s hands receive the gate result event', (path) => {
+    expect(flat(read(`.agents/skills/${path}`))).toContain(GATE_EVENT_HANDOFF);
+  });
+
+  it('implement Step 14 reads the event from the persisted result receipt on resume, for the goal milestone exit gate too', () => {
+    expect(
+      flat(
+        read(
+          '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+        ),
+      ),
+    ).toContain(
+      'On resume, read the event from the persisted `launch_result_receipt`; the goal milestone exit gate, which delegates to this step, passes it the same way.',
+    );
+  });
+
+  it('review-provide Step 9 records Invocation gate and the gate target for every gate review, artifact reviews included', () => {
+    const provide = flat(skill('oat-project-review-provide'));
+    expect(provide).toContain(
+      "`Invocation`: for code reviews, the artifact's `oat_review_invocation` (`manual`, `auto`, or `gate`); `gate` for every gate review, artifact reviews included; `-` for other non-code reviews.",
+    );
+    expect(provide).toContain(
+      '`Gate Target`: for every gate review, artifact reviews included, the exact gate-context `oat_gate_target`; `-` otherwise.',
+    );
+    expect(provide).not.toContain('for gate code reviews, the exact');
+  });
+
+  it("review-receive's ledger rule records the gate target for every gate review, artifact reviews included", () => {
+    expect(receive).toContain(
+      'For every gate review, artifact reviews included, populate or preserve `Invocation: gate` and the exact `oat_gate_target` in `Gate Target`; an artifact review keeps `Reviewed Head` at `-`.',
+    );
+    expect(receive).toContain(
+      '- Gate Target: exact `oat_gate_target` for every gate review, artifact reviews included; `-` otherwise',
+    );
+    expect(receive).not.toContain('for gate code reviews; `-` otherwise');
+  });
 });

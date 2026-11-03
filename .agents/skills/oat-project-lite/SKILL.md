@@ -441,6 +441,12 @@ review ...` without the global `--json` placement. Reusable declarations
    `targeting_correlation_failed` is never receivable. Correct and revalidate
    `artifact_validation_failed` before receipt. Unknown, contradictory, or
    malformed results stop.
+
+   Pass review-receive the gate result's event (`artifactPath`, `scope`,
+   `reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so
+   receive consumes exactly that artifact through `oat review resolve` and stops
+   on a mismatch instead of selecting the newest review.
+
 6. For a validated, receive-eligible `blocked` result, apply `LITE-09`:
    - `block`: remediate and retry up to the configured limit;
    - `prompt`: report an unresolved human boundary;

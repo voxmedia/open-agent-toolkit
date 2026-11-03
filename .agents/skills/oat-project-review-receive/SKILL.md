@@ -130,6 +130,29 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 ### Step 1: Locate Latest Review Artifact
 
+**Gate event (gate paths only).** A caller that ran `oat gate review` hands
+receive the gate result's event: its `artifactPath`, `scope`, `reviewType`,
+`runId` and `reviewedHead`. With a gate event, receive consumes exactly that
+event instead of selecting the newest artifact:
+
+```bash
+oat --json review resolve --project "$PROJECT_PATH" \
+  --artifact "$GATE_ARTIFACT_PATH" --scope "$GATE_SCOPE" \
+  --type "$GATE_REVIEW_TYPE" --run-id "$GATE_RUN_ID" \
+  --reviewed-head "$GATE_REVIEWED_HEAD"
+```
+
+- Exit 0 (`status: ok`): set `REVIEW_PATH` to the result's `path` and continue
+  at "Read the selected review file completely" below. The `oat review latest`
+  selection and its CLI-unavailable fallback do not run.
+- Nonzero exit: stop and report each diagnostic's `code`, `expected` and
+  `actual`. Do not receive, archive or edit any row, and never fall back to
+  `oat review latest` or the `ls -t` listing for a gate event. A gate result
+  with no full-SHA `reviewedHead` (from a CLI older than 0.3.46) cannot name its
+  event and stops the same way.
+- Without a gate event (manual and auto reviews), this step is unchanged:
+  select the artifact as below.
+
 ```bash
 if [ -n "${PROJECT_PATH:-}" ] && [ -d "$PROJECT_PATH" ]; then
   oat review latest --project "$PROJECT_PATH" --actionable-project --json
@@ -160,7 +183,7 @@ ls -t "$PROJECT_PATH/reviews/"*.md 2>/dev/null | head -10
 
 Use this fallback only for active project reviews. It cannot discover ad-hoc reviews and its filesystem ordering is less reliable than `oat_generated_at`, so state that limitation if fallback is used.
 
-The fallback cannot apply supersession for you. Before processing a fallback candidate, read its `## Reviews` row (matched by Scope, Type and Artifact filename) and skip the candidate when a later row of the same Scope, Type and Invocation class records a review (any status except `pending`) at the same Reviewed Head. A later row at a different head leaves the candidate live, because only the CLI can resolve whether that head descends from the candidate's. A candidate row whose Invocation or Reviewed Head is `-` is never skipped.
+The fallback cannot apply supersession for you. Before processing a fallback candidate, read its `## Reviews` row (matched by Scope, Type and Artifact filename) and skip the candidate only when that row is `received` and a later row of the same Scope, Type and Invocation class records a review (any status except `pending`) at the same Reviewed Head. The two Invocation classes are gate (`gate`, any Gate Target) and lifecycle (`manual` or `auto`); rows of different classes never supersede each other. A later row at a different head leaves the candidate live, because only the CLI can resolve whether that head descends from the candidate's. A candidate row whose Invocation or Reviewed Head is `-` is never skipped.
 
 **If no active review files:** Block and ask user to run the `oat-project-review-provide` skill first.
 
@@ -178,7 +201,9 @@ full 40-character hexadecimal SHA; never expand or infer an abbreviated,
 symbolic, or range value during receive. A missing invocation remains unknown;
 do not assume a legacy artifact was manual. Write `-` for absent provenance
 rather than borrowing values from another review event. `oat_gate_target` is
-meaningful only when the invocation is `gate`.
+meaningful only when the invocation is `gate`. For an artifact review, read
+`oat_review_invocation` and `oat_gate_target` the same way; an artifact review
+has no reviewed head.
 
 Derive archive bookkeeping before making lifecycle edits:
 
@@ -667,6 +692,9 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
     `Gate Target` from the selected artifact's validated frontmatter. Never
     replace known provenance with `-`; if the artifact is legacy or a value is
     invalid, preserve existing cells and otherwise leave the value unknown.
+  - For every gate review, artifact reviews included, populate or preserve
+    `Invocation: gate` and the exact `oat_gate_target` in `Gate Target`; an
+    artifact review keeps `Reviewed Head` at `-`.
   - The written `REVIEW_FILENAME` becomes the event's artifact filename and identity for every later mutation; use the already-resolved final basename in every plan and implementation reference.
   - Never select a row by scope alone or move an event status backward. If the exact bound event is missing, stop and reconcile the ledger instead of mutating another event.
   - Mutate cells by header name. If the table is still the legacy five-column
@@ -714,8 +742,8 @@ moves to `passed`, citing the revision review in the implementation note.
   - Date: `{today}`
   - Artifact: `reviews/archived/$REVIEW_FILENAME`
   - Reviewed Head: validated full `oat_review_head_sha` for code reviews
-  - Invocation: `oat_review_invocation` for code reviews
-  - Gate Target: exact `oat_gate_target` for gate code reviews; `-` otherwise
+  - Invocation: `oat_review_invocation` for code reviews; `gate` for every gate review, artifact reviews included
+  - Gate Target: exact `oat_gate_target` for every gate review, artifact reviews included; `-` otherwise
 ```
 
 Beside "update only that row": a bookkeeping-only fix (Step 2.6) may also

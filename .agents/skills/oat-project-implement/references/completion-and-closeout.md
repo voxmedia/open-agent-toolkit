@@ -656,6 +656,12 @@ artifact, scope, type, and source filename; set `receive_state:
 intent_persisted` and commit it before calling `oat-project-review-receive`.
 Calling receive means loading the current `oat-project-review-receive/SKILL.md`
 and following it, or dispatching a child that carries it.
+Pass review-receive the gate result's event (`artifactPath`, `scope`,
+`reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so receive
+consumes exactly that artifact through `oat review resolve` and stops on a
+mismatch instead of selecting the newest review. On resume, read the event from
+the persisted `launch_result_receipt`; the goal milestone exit gate, which
+delegates to this step, passes it the same way.
 
 On normal return or resume from `intent_persisted`, reconcile all three durable
 receipt components:
