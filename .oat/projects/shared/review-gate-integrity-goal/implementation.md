@@ -1066,9 +1066,60 @@ Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `
 
 **Status:** in_progress
 **Base:** f3a9603f74ee358b80eeb6572085b46975801302
+**Head:** d99e598dd3d357d04667c03f48e3bcbca6fc5d89
 **Executor:** phase-implementer:rgi-p12-impl-20261103-01
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a gate result field captured at dispatch, a new fail-closed event resolver, receive Step 1 and eleven adopting gate paths whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the gate, resolver and skill slices share the event contract, the contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and changes gate output. p12 was made concrete at `f3a9603f7` before this start (project log). `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `7b22eb1f0`; only journal commits follow it. `origin/main` is still `c42fd95bd`, checked by `git fetch origin main` before the version gate. The DoD gate list ran in CI order and each command exited 0:
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: 5 of 11 cached.
+3. `pnpm test`: 5 of 12 cached. `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached; CLI 442 files and 9495 tests, control-plane 14 files and 312 tests.
+4. `pnpm build`: 5 of 5 cached (replayed). The forced `test:evidence` built all five packages uncached.
+5. `pnpm run check:skill-bumps`: 12 changed skills and agent roles against `origin/main`.
+6. `pnpm release:check-versions`.
+7. `pnpm release:validate`: 5 packages at 0.3.46.
+8. `pnpm build:docs`: 6 of 6 cached, then forced (`turbo run build --filter=oat-docs... --force`), 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0:
+
+- `pnpm lint` and `pnpm format` (5 of 10 cached each);
+- `pnpm test:skills` (721 tests);
+- `pnpm oat:validate-skills` (68 skills);
+- the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1202/1202).
+
+`oat project journal check --project <this project> --at review --scope p12` is `ok`, with no reasons or warnings, on both the installed 0.3.45 CLI and the branch build. No post-commit recovery was needed (0 of 10 used).
+
+Exit evidence:
+
+- p12-t01: `reviewedHead` and its corroboration, with can-fail proofs.
+- p12-t02: resolver probes, the released-CLI negative control and can-fail proofs.
+- p12-t03: the receive Step 1 event input, the ten hand-offs, the Gate Target rule, the L1 fold and pin can-fail proofs.
+- p12-t04: docs.
+
+**Real branch-build gate run.** The command was:
+
+```bash
+node packages/cli/dist/index.js --json gate review \
+  --project .oat/projects/shared/tiny --target claude-opus-5-5-high \
+  --review-type code --review-scope base_sha=df83ac6… --exit-nonzero-on high …
+```
+
+It ran in the scratch repository `/tmp/p12-gate-G1dj`: a lite project `tiny` and one two-line code commit, `a9878b266`. The gate exited 0. The result:
+
+- `status: ok`, `receiveEligible: true`, counts 0/0/1/1;
+- run `05d374ed-9e46-4851-b311-0be2ef9d08a7`;
+- `reviewedHead: a9878b266bf6836885b9b721ccf30d2b64a811f2`, the HEAD at dispatch;
+- `corroboration.reviewedHead`: `match` against the artifact's `oat_review_head_sha`;
+- run and invocation corroboration `matched`.
+
+The installed review-provide then wrote a `received` row with Invocation `gate` and Gate Target `claude-opus-5-5-high`, followed by two bookkeeping commits. The branch `oat review resolve`, given that real result's `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`, exited 0 with every check `match`.
+
+**Single-round manual and auto flows** keep their selection. Receive Step 1 without an event is unchanged, and the existing `oat review latest` (15), check (12) and ancestry-wiring (2) tests pass, as do the p07 supersession pins.
+
+**Observation.** In that scratch repository `oat project new --mode lite` rendered no `plan` placeholder row. The scratch repository has no `.oat/templates/`, so template resolution used the maintainer's user-tier `~/.oat/templates/plan-lite.md`, which is from 0.3.45. This is the known repository → user → bundle resolution order (root `AGENTS.md`), not a p12 change.
 
 ### Task p12-t01: Capture the reviewed head at gate dispatch
 
