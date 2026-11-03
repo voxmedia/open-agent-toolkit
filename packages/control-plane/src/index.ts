@@ -1,5 +1,22 @@
 export * from './types';
 export { getProjectState, listProjects } from './project';
+export type { ProjectReadOptions } from './project';
+export { parseReviewTable } from './state/reviews';
+export {
+  findSupersededReviews,
+  markSupersededReviews,
+  resolveReviewHeadAncestry,
+  reviewHeadPairKey,
+  reviewInvocationClass,
+  reviewSupersessionHeadPairs,
+} from './state/review-supersession';
+export type {
+  ReviewHeadAncestry,
+  ReviewHeadAncestryResolver,
+  ReviewHeadPair,
+  ReviewInvocationClass,
+  ReviewSupersession,
+} from './state/review-supersession';
 export { quickPlanNotReadyReason, recommendSkill } from './recommender/router';
 export {
   evaluateQuickPlanReadiness,

@@ -31,6 +31,7 @@
     // one would silently break the provenance its header records.
     "packages/cli/src/commands/init/tools/shared/__fixtures__/**",
     "packages/cli/src/commands/project/log/__tests__/fixtures/**",
+    "packages/cli/src/commands/review/__tests__/fixtures/**",
     // Explainer-kit run packages are immutable, hash-attested artifacts; a
     // formatter rewrite on commit breaks their durability attestation.
     ".oat/**/explainers/**",

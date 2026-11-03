@@ -143,6 +143,13 @@ export interface ReviewStatus {
   invocation?: string;
   /** Configured gate target for gate-originated review lineage. */
   gateTarget?: string;
+  /**
+   * Read-side only, never a ledger cell: `true` when this `received` row is
+   * superseded by a later row of the same Scope, Type and Invocation class
+   * that records a review at the same or a descendant Reviewed Head. Readers
+   * that select a review event ignore it.
+   */
+  superseded?: boolean;
 }
 
 export interface ReviewArtifactStatus {

@@ -717,7 +717,33 @@ describe('help output snapshots', () => {
 
       Commands:
         latest [options]  Find the most recent OAT review artifact
+        check [options]   Report superseded and duplicate Reviews ledger rows
+                          (advisory)
         help [command]    display help for command
+      "
+    `);
+  });
+
+  it('review check --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'check',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat review check [options]
+
+      Report superseded and duplicate Reviews ledger rows (advisory)
+
+      Options:
+        --project <path>  Project path to check (defaults to the active project)
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
       "
     `);
   });

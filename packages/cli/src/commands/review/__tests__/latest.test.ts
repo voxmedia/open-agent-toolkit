@@ -388,6 +388,104 @@ describe('oat review latest', () => {
     });
   });
 
+  describe('a stranded received gate round', () => {
+    const wideHeaders = [
+      'Scope',
+      'Type',
+      'Status',
+      'Date',
+      'Artifact',
+      'Reviewed Head',
+      'Invocation',
+      'Gate Target',
+    ];
+    const strandedHead = 'a'.repeat(40);
+    const laterHead = 'b'.repeat(40);
+
+    async function writeStranded(supersedingHead: string): Promise<{
+      root: string;
+      projectPath: string;
+    }> {
+      const root = await createRepoRoot();
+      const projectPath = '.oat/projects/shared/demo';
+      await writeReview(root, `${projectPath}/reviews/final-review-r1.md`, {
+        generatedAt: '2026-06-01T10:00:00Z',
+        scope: 'final',
+        project: projectPath,
+      });
+      await writePlan(
+        root,
+        projectPath,
+        [
+          `| final | code | received | 2026-06-01 | reviews/final-review-r1.md | ${strandedHead} | gate | codex-6-sol-xhigh |`,
+          `| final | code | passed | 2026-06-02 | reviews/archived/final-review-r2.md | ${supersedingHead} | gate | claude-opus-5-5-high |`,
+        ],
+        wideHeaders,
+      );
+      return { root, projectPath };
+    }
+
+    it('is not actionable once a later same-class round recorded a review at the same head', async () => {
+      const { root, projectPath } = await writeStranded(strandedHead);
+
+      await expect(
+        findLatestReview({
+          repoRoot: root,
+          projectPath,
+          actionableProjectOnly: true,
+        }),
+      ).resolves.toBeNull();
+    });
+
+    it('is not actionable at a descendant head only when the ancestry resolves', async () => {
+      const { root, projectPath } = await writeStranded(laterHead);
+
+      await expect(
+        findLatestReview({
+          repoRoot: root,
+          projectPath,
+          actionableProjectOnly: true,
+        }),
+      ).resolves.toMatchObject({ actionable: true });
+      await expect(
+        findLatestReview({
+          repoRoot: root,
+          projectPath,
+          actionableProjectOnly: true,
+          resolveReviewHeadAncestry: async () =>
+            new Set([`${strandedHead}..${laterHead}`]),
+        }),
+      ).resolves.toBeNull();
+    });
+
+    it('stays actionable when only a manual round follows', async () => {
+      const root = await createRepoRoot();
+      const projectPath = '.oat/projects/shared/demo';
+      await writeReview(root, `${projectPath}/reviews/final-review-r1.md`, {
+        generatedAt: '2026-06-01T10:00:00Z',
+        scope: 'final',
+        project: projectPath,
+      });
+      await writePlan(
+        root,
+        projectPath,
+        [
+          `| final | code | received | 2026-06-01 | reviews/final-review-r1.md | ${strandedHead} | gate | codex-6-sol-xhigh |`,
+          `| final | code | passed | 2026-06-02 | reviews/archived/final-review-m.md | ${strandedHead} | manual | - |`,
+        ],
+        wideHeaders,
+      );
+
+      await expect(
+        findLatestReview({
+          repoRoot: root,
+          projectPath,
+          actionableProjectOnly: true,
+        }),
+      ).resolves.toMatchObject({ actionable: true });
+    });
+  });
+
   it('prefers final review scope when active project reviews share a generated time', async () => {
     const root = await createRepoRoot();
     const projectPath = '.oat/projects/shared/demo';

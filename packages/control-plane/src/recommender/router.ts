@@ -1022,6 +1022,12 @@ function hasIncompleteRevisionPhase(
   );
 }
 
+/**
+ * True when an active review artifact is bound to a live `received` row. A
+ * row the project reader marked `superseded` (a later recorded round of the
+ * same Scope, Type and Invocation class at the same or a descendant head) is
+ * ignored, so a stranded round never routes to receive.
+ */
 function hasActionableReviewArtifacts(
   state: Omit<ProjectState, 'recommendation'>,
 ): boolean {
@@ -1032,7 +1038,8 @@ function hasActionableReviewArtifacts(
       state.reviews.some(
         (review) =>
           review.artifact === reviewArtifact.path &&
-          review.status.toLowerCase() === 'received',
+          review.status.toLowerCase() === 'received' &&
+          review.superseded !== true,
       ),
   );
 }
