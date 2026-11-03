@@ -34,6 +34,7 @@ import {
   type GateProjectLogReceipt,
   type ProjectLogCommitResult,
 } from '@commands/project/log/append';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
@@ -174,6 +175,8 @@ interface GateCommandDependencies {
   ) => Promise<boolean>;
   sleep: (ms: number) => Promise<void>;
   writeDiagnostic: (message: string) => void;
+  /** Reads the dispatch HEAD and answers artifact-head ancestry; read-only. */
+  git: GitRunner;
 }
 
 interface GateSetOptions {
@@ -399,6 +402,27 @@ interface ResolvedReviewProject {
 type CorroborationStatus = 'matched' | 'missing' | 'mismatched';
 type ProjectCorroborationStatus = CorroborationStatus | 'ambient';
 
+/**
+ * How the artifact's `oat_review_head_sha` relates to the HEAD the gate
+ * dispatched the reviewer against. `ancestor` is the normal anchored case: the
+ * reviewed range ends at a commit the dispatch HEAD contains (bookkeeping
+ * commits follow it). `unavailable` means either head is absent, never a
+ * mismatch. Reporting only: it never changes receive eligibility.
+ */
+type ReviewedHeadCorroborationStatus =
+  | 'match'
+  | 'ancestor'
+  | 'mismatch'
+  | 'unavailable';
+
+interface ReviewedHeadCorroboration {
+  status: ReviewedHeadCorroborationStatus;
+  /** The dispatch HEAD (`reviewedHead` in the result), or `null`. */
+  expected: string | null;
+  /** The artifact's full-SHA `oat_review_head_sha`, or `null`. */
+  actual: string | null;
+}
+
 interface GateTargetCorroboration {
   run: CorroborationStatus;
   project: ProjectCorroborationStatus;
@@ -426,6 +450,8 @@ interface GateInvocationCorroboration {
     matchingArtifactPaths: string[];
     invocation: ReviewArtifactGateInvocation | null;
   };
+  /** Present on ok and blocked results only. */
+  reviewedHead?: ReviewedHeadCorroboration;
 }
 
 interface ReviewGateArtifactCandidate extends Omit<
@@ -469,6 +495,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
     await new Promise((settle) => setTimeout(settle, ms));
   },
   writeDiagnostic: (message) => process.stderr.write(message),
+  git: defaultGitRunner,
 };
 
 const VALID_ON_FAILURE: readonly GateOnFailure[] = ['block', 'prompt', 'warn'];
@@ -2775,6 +2802,69 @@ function corroborateReviewTarget(options: {
   };
 }
 
+const FULL_SHA_PATTERN = /^[0-9a-f]{40}$/i;
+
+/**
+ * The commit the gate dispatches its reviewer against, as a full SHA, or
+ * `null` when git cannot answer. Never throws.
+ */
+async function captureReviewedHead(
+  git: GitRunner,
+  repoRoot: string,
+): Promise<string | null> {
+  try {
+    const result = await git.run(['rev-parse', '--verify', 'HEAD^{commit}'], {
+      cwd: repoRoot,
+      allowFailure: true,
+    });
+    const head = result.stdout.trim().toLowerCase();
+    return result.code === 0 && FULL_SHA_PATTERN.test(head) ? head : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Compare the artifact's full-SHA `oat_review_head_sha` with the dispatch
+ * HEAD. Never throws: a git failure reads as `mismatch` only when both heads
+ * exist and differ, because the artifact then names a commit the dispatch
+ * HEAD does not provably contain.
+ */
+async function corroborateReviewedHead(
+  git: GitRunner,
+  repoRoot: string,
+  reviewedHead: string | null,
+  artifactContent: string,
+): Promise<ReviewedHeadCorroboration> {
+  const frontmatter = getFrontmatterBlock(artifactContent);
+  const raw = frontmatter
+    ? parseFrontmatterScalarFields(frontmatter, ['oat_review_head_sha']).values
+        .oat_review_head_sha
+    : undefined;
+  const actual = raw && FULL_SHA_PATTERN.test(raw) ? raw.toLowerCase() : null;
+  if (!reviewedHead || !actual) {
+    return { status: 'unavailable', expected: reviewedHead, actual };
+  }
+  if (actual === reviewedHead) {
+    return { status: 'match', expected: reviewedHead, actual };
+  }
+  let isAncestor = false;
+  try {
+    const result = await git.run(
+      ['merge-base', '--is-ancestor', actual, reviewedHead],
+      { cwd: repoRoot, allowFailure: true },
+    );
+    isAncestor = result.code === 0;
+  } catch {
+    isAncestor = false;
+  }
+  return {
+    status: isAncestor ? 'ancestor' : 'mismatch',
+    expected: reviewedHead,
+    actual,
+  };
+}
+
 function reviewBlocksAtThreshold(
   verdict: ReviewGateVerdict,
   threshold: ReviewGateThreshold,
@@ -2863,6 +2953,8 @@ function writeReviewGateResult(
     invocation: string | null;
     normalization?: ReviewGateVerdict['normalization'];
     handoff: string;
+    /** The HEAD the reviewer was dispatched against, or `null`. */
+    reviewedHead: string | null;
     diversity?: GateDiversityMetadata;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
@@ -2893,6 +2985,9 @@ function writeReviewGateResult(
     `Run: ${payload.runId} (generated ${payload.generatedAt})`,
   );
   context.logger.info(`Review artifact: ${payload.artifactPath}`);
+  context.logger.info(
+    `Reviewed head: ${payload.reviewedHead ?? 'unavailable'} (artifact head ${payload.corroboration.reviewedHead?.status ?? 'unavailable'})`,
+  );
   if (payload.normalization) {
     context.logger.info(
       `${payload.normalization.persisted ? 'Artifact normalized' : 'Artifact snapshot normalized in memory; source file unchanged'}: inserted ${payload.normalization.insertedSeverities.map((severity) => severityDisplayName(severity)).join(', ')} empty Findings section(s).`,
@@ -4338,6 +4433,7 @@ async function runReviewGate(
         dispositionIdentity?: ReviewArtifactDispositionIdentity;
         diversity?: GateDiversityMetadata;
         lateCompletion?: true;
+        reviewedHead?: string | null;
       }
     | undefined;
   try {
@@ -4542,6 +4638,12 @@ async function runReviewGate(
       runId,
       launch: dependencies.currentGateCliLaunch(),
     });
+    // The event's reviewed head: the commit the reviewer is dispatched
+    // against, read immediately before launch.
+    const reviewedHead = await captureReviewedHead(dependencies.git, repoRoot);
+    if (postSelectionContext) {
+      postSelectionContext.reviewedHead = reviewedHead;
+    }
     const childResult = await executeTarget(
       selected,
       [reviewPrompt],
@@ -4794,7 +4896,16 @@ async function runReviewGate(
       process.exitCode = 1;
       return;
     }
-    const { verdict, blocking, corroboration, generatedAt } = disposition;
+    const { verdict, blocking, generatedAt } = disposition;
+    const corroboration: GateInvocationCorroboration = {
+      ...disposition.corroboration,
+      reviewedHead: await corroborateReviewedHead(
+        dependencies.git,
+        repoRoot,
+        reviewedHead,
+        producedArtifact.content,
+      ),
+    };
     const handoff = buildReviewGateHandoff({
       artifactPath: producedArtifact.path,
       verdict,
@@ -4817,6 +4928,7 @@ async function runReviewGate(
       invocation: verdict.invocation,
       normalization: verdict.normalization,
       handoff,
+      reviewedHead,
       diversity: selected.diversity,
       gateInvocation,
       dispatchReport,
@@ -4891,6 +5003,14 @@ async function runReviewGate(
               threshold: identity.threshold,
               blocking: disposition.blocking,
             });
+            const recoveredReviewedHead =
+              postSelectionContext.reviewedHead ?? null;
+            const recoveredHeadCorroboration = await corroborateReviewedHead(
+              dependencies.git,
+              identity.repoRoot,
+              recoveredReviewedHead,
+              snapshot.content,
+            );
             const buffered = createBufferedResultContext(context);
             writeReviewGateResult(buffered.context, {
               status: disposition.blocking ? 'blocked' : 'ok',
@@ -4908,10 +5028,14 @@ async function runReviewGate(
               invocation: disposition.verdict.invocation,
               normalization: disposition.verdict.normalization,
               handoff: recoveredHandoff,
+              reviewedHead: recoveredReviewedHead,
               diversity: postSelectionContext.diversity,
               gateInvocation: identity.gateInvocation,
               dispatchReport: identity.dispatchReport,
-              corroboration: disposition.corroboration,
+              corroboration: {
+                ...disposition.corroboration,
+                reviewedHead: recoveredHeadCorroboration,
+              },
               ...(postSelectionContext.lateCompletion
                 ? { lateCompletion: true }
                 : {}),
