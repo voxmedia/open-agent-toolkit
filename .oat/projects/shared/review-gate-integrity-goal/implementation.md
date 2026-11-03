@@ -1017,13 +1017,17 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 ### Task p07-t07: (review) Filter superseded rows in review-receive's CLI-unavailable fallback
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p07-fix-20261103-01
+**Commit:** d7549e7db1d95379940abe282be7eb67743e9cda
 **Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L2)
 
 Intent: the `ls -t "$PROJECT_PATH/reviews/"*.md` fallback in review-receive Step 1 can still pick a superseded `received` round. Add one clause: before processing a fallback candidate, read its `## Reviews` row and skip it when a later row of the same Scope, Type and Invocation class records a review at the same head; a descendant-head case cannot be decided without the CLI, so it stays live.
 Files: `.agents/skills/oat-project-review-receive/SKILL.md` (already bumped to 1.6.16 on this branch; sync provider views).
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+
+**Result:** review-receive Step 1 now follows the `ls -t` fallback with one paragraph: read the candidate's `## Reviews` row and skip it when a later row of the same Scope, Type and Invocation class records a review at the same Reviewed Head; a later row at a different head leaves it live, since only the CLI resolves descent; a row whose Invocation or Reviewed Head is `-` is never skipped. `review-event-row-contracts.test.ts` pins the paragraph. `oat sync --scope project` reported no changes (provider views are links).
+**Proof result:** the isolated-HOME proof suites passed (28 files, 1186 tests). Can-fail: with the skill restored to its pre-fix text the new pin failed (1 of 16 in that file); the fix text was restored.
 
 ### Review Received: p07
 
