@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p10    | completed | 1     | 1/1      |
-| p11    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p12    | completed | 1     | 1/1      |
-| p13    | completed | 1     | 1/1      |
-| p-rev1 | pending   | 1     | 0/1      |
-| p-rev2 | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p10    | completed   | 1     | 1/1      |
+| p11    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p12    | completed   | 1     | 1/1      |
+| p13    | completed   | 1     | 1/1      |
+| p-rev1 | in_progress | 1     | 0/1      |
+| p-rev2 | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 7/11 phases accepted
 
@@ -1611,8 +1611,12 @@ Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `
 
 ## Phase p-rev1: Refuse a malformed Reviewed Head in review resolve
 
-**Status:** pending
+**Status:** in_progress
+**Base:** efea9ac0a6923fe62af1abbcc78180df7312d3ec
+**Executor:** phase-implementer:rgi-prev1-impl-20261103-01
 **Corrects:** p12
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer; p-rev2 follows sequentially (no parallel group declared). Added at `efea9ac0a` by the m02 exit gate receive. `origin/main` has not moved since the p07 base merge.
 
 ## Phase p-rev2: Resolve synced-project review ancestry in the source repository
 
