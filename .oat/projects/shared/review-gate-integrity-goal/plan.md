@@ -326,7 +326,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p13     | code     | passed          | 2026-11-03 | reviews/archived/p13-review-2026-11-03T213802Z.md           | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | manual     | -                    |
 | plan    | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -          | -                    |
 | plan    | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate       | codex-6-sol-xhigh    |
-| p07-p13 | code     | fixes_added     | 2026-11-03 | reviews/archived/range-review-2026-11-03T215601Z.md         | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate       | codex-6-sol-xhigh    |
+| p07-p13 | code     | fixes_completed | 2026-11-03 | reviews/archived/range-review-2026-11-03T215601Z.md         | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate       | codex-6-sol-xhigh    |
 | p-rev1  | code     | passed          | 2026-11-03 | reviews/archived/p-rev1-review-2026-11-03T221746Z.md        | 2c341cff58b74a8cb13ff9e80c4e27690ea27210 | manual     | -                    |
 | p-rev2  | code     | passed          | 2026-11-03 | reviews/archived/p-rev2-review-2026-11-03T223853Z.md        | d128a41181d86d258be802500c4129bf45ed0fa0 | manual     | -                    |
 
