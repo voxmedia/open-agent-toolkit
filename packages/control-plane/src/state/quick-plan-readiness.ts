@@ -351,12 +351,29 @@ function measureIndent(line: string): { columns: number; rest: string } {
   return { columns, rest: line.slice(index) };
 }
 
+/**
+ * Whether `plan.md` records the plan-review skip disposition, `Plan artifact
+ * review: skipped (workflow.autoArtifactReview.plan=false)`, as its own record
+ * line inside `## Reviews`. A quotation in prose, a fenced example or a line
+ * outside the section does not count. The quick readiness guard and `oat
+ * review pending` share this one rule.
+ */
+export function hasPlanReviewSkipLine(planContent: string): boolean {
+  return hasReviewSkipLine(
+    readReviewsSection(readRecordLines(planContent.split('\n'))),
+  );
+}
+
+function hasReviewSkipLine(reviews: readonly string[]): boolean {
+  // The skip disposition counts only as its own recorded line, never as a
+  // substring of prose that merely quotes it.
+  return reviews.some((line) => REVIEW_SKIP_LINE.test(line));
+}
+
 function hasReviewDisposition(recordLines: string[]): boolean {
   const reviews = readReviewsSection(recordLines);
 
-  // The skip disposition counts only as its own recorded line, never as a
-  // substring of prose that merely quotes it.
-  if (reviews.some((line) => REVIEW_SKIP_LINE.test(line))) {
+  if (hasReviewSkipLine(reviews)) {
     return true;
   }
 

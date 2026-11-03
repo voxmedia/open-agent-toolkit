@@ -2,6 +2,7 @@ import { Command } from 'commander';
 
 import { createReviewCheckCommand } from './check';
 import { createReviewLatestCommand } from './latest';
+import { createReviewPendingCommand } from './pending';
 import { createReviewResolveCommand } from './resolve';
 
 export function createReviewCommand(): Command {
@@ -9,5 +10,6 @@ export function createReviewCommand(): Command {
     .description('OAT review artifact commands')
     .addCommand(createReviewLatestCommand())
     .addCommand(createReviewCheckCommand())
-    .addCommand(createReviewResolveCommand());
+    .addCommand(createReviewResolveCommand())
+    .addCommand(createReviewPendingCommand());
 }

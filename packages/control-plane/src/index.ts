@@ -20,6 +20,7 @@ export type {
 export { quickPlanNotReadyReason, recommendSkill } from './recommender/router';
 export {
   evaluateQuickPlanReadiness,
+  hasPlanReviewSkipLine,
   recordLineMask,
 } from './state/quick-plan-readiness';
 export {

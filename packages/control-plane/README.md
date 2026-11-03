@@ -173,6 +173,12 @@ against `plan.md` content (`null` when the file is missing) and returns the same
 plan is not ready. The CLI dashboard (`oat state refresh`) routes a quick plan in
 progress through both, so it reports the router's route and wording.
 
+`hasPlanReviewSkipLine(planContent)` reports whether `plan.md` records the
+plan-review skip disposition (`Plan artifact review: skipped
+(workflow.autoArtifactReview.plan=false)`) as its own record line inside
+`## Reviews`, the rule the readiness predicate applies. `oat review pending`
+uses it to leave `plan | artifact` out of a project scope's required reviews.
+
 ## Current Consumers
 
 - `packages/cli/src/commands/project/status.ts`

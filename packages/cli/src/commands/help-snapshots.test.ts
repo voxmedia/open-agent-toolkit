@@ -721,6 +721,8 @@ describe('help output snapshots', () => {
                            (advisory)
         resolve [options]  Bind a gate result event to its Reviews row and validate
                            it (fails closed)
+        pending [options]  List required reviews still pending for a PR scope
+                           (read-only)
         help [command]     display help for command
       "
     `);
@@ -775,6 +777,32 @@ describe('help output snapshots', () => {
         --json                 Output a single JSON document
         --verbose              Enable verbose debug output
         --cwd <path>           Override working directory
+      "
+    `);
+  });
+
+  it('review pending --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'pending',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat review pending [options]
+
+      List required reviews still pending for a PR scope (read-only)
+
+      Options:
+        --project <path>  Project path (defaults to the active project)
+        --scope <scope>   project, one milestone (mNN), or a comma list of phase ids
+                          (pNN)
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
       "
     `);
   });
