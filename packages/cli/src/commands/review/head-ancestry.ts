@@ -1,3 +1,5 @@
+import { dirname, resolve } from 'node:path';
+
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   getProjectState,
@@ -57,12 +59,23 @@ export function createGitReviewHeadAncestryResolver(
     (await resolveGitReviewHeadAncestry(git, cwd, pairs)).ancestry;
 }
 
-/** `getProjectState` with descendant-head supersession resolved through git. */
+/**
+ * `getProjectState` with descendant-head supersession resolved through git.
+ *
+ * Git runs from the project's parent directory, not the project itself: a
+ * synced project can be its own nested checkout whose history lacks the source
+ * commits its Reviewed Heads name. From the parent, git finds the repository
+ * that contains the project, as `listProjectsWithReviewAncestry` does from the
+ * scope root and `oat review latest` and `oat review check` do from the
+ * repository root, so every reader answers the same pairs.
+ */
 export function getProjectStateWithReviewAncestry(
   projectPath: string,
 ): Promise<ProjectState> {
   return getProjectState(projectPath, {
-    resolveReviewHeadAncestry: createGitReviewHeadAncestryResolver(projectPath),
+    resolveReviewHeadAncestry: createGitReviewHeadAncestryResolver(
+      dirname(resolve(projectPath)),
+    ),
   });
 }
 

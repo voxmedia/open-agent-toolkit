@@ -7,16 +7,25 @@ import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { createProjectListCommand } from '@commands/project/list';
 import { createProjectStatusCommand } from '@commands/project/status';
+import { createReviewCheckCommand } from '@commands/review/check';
 import { createReviewLatestCommand } from '@commands/review/latest';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 
 // Pins the default-dependency wiring that hands `oat project status`,
-// `oat project list` and `oat review latest` the git ancestry resolver. Only
-// presentation dependencies are overridden; every project reader and the
-// ancestry resolver run as shipped, against a real git repository.
+// `oat project list`, `oat review latest` and `oat review check` the git
+// ancestry resolver. Only presentation dependencies are overridden; every
+// project reader and the ancestry resolver run as shipped, against a real git
+// repository. The synced layout makes the project directory its own nested
+// repository whose history lacks the source commits its Reviewed Heads name,
+// so a reader that asks git from inside the project cannot answer the pairs.
 
-const PROJECT = '.oat/projects/shared/demo';
+type Layout = 'shared' | 'synced-nested';
+
+const PROJECTS: Record<Layout, string> = {
+  shared: '.oat/projects/shared/demo',
+  'synced-nested': '.oat/projects/synced/demo',
+};
 const RECEIVE = 'oat-project-review-receive';
 const UNRESOLVABLE_HEAD = 'f'.repeat(40);
 
@@ -44,15 +53,21 @@ function git(cwd: string, args: string[]): string {
 }
 
 /**
- * A two-commit repository whose project ledger holds a `received` gate round
- * at the parent commit, with its artifact still active, and a later `passed`
- * gate round at `laterHead`.
+ * A two-commit source repository whose project ledger holds a `received` gate
+ * round at the parent commit, with its artifact still active, and a later
+ * `passed` gate round at `laterHead`. In the `synced-nested` layout the
+ * project directory is then committed into its own repository, and the source
+ * repository gets an `origin` so `oat project list --scope synced` can probe
+ * the completed ref.
  */
 async function createProject(
+  layout: Layout,
   laterHead: (child: string) => string,
 ): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'oat-review-ancestry-wiring-'));
-  tempDirs.push(root);
+  const base = await mkdtemp(join(tmpdir(), 'oat-review-ancestry-wiring-'));
+  tempDirs.push(base);
+  const root = join(base, 'repo');
+  await mkdir(root);
   git(root, ['init', '-q']);
   await writeFile(join(root, 'a.txt'), 'a\n', 'utf8');
   git(root, ['add', 'a.txt']);
@@ -62,7 +77,7 @@ async function createProject(
   git(root, ['commit', '-q', '-am', 'two']);
   const child = git(root, ['rev-parse', 'HEAD']);
 
-  const projectDir = join(root, PROJECT);
+  const projectDir = join(root, PROJECTS[layout]);
   await mkdir(join(projectDir, 'reviews'), { recursive: true });
   await writeFile(
     join(projectDir, 'state.md'),
@@ -124,6 +139,13 @@ oat_template: false
 `,
     'utf8',
   );
+  if (layout === 'synced-nested') {
+    git(base, ['init', '-q', '--bare', 'origin.git']);
+    git(root, ['remote', 'add', 'origin', join(base, 'origin.git')]);
+    git(projectDir, ['init', '-q']);
+    git(projectDir, ['add', '.']);
+    git(projectDir, ['commit', '-q', '-m', 'project tracking']);
+  }
   return root;
 }
 
@@ -153,10 +175,12 @@ interface Readings {
   status: string;
   list: string;
   latest: string | null;
+  check: string[];
 }
 
-/** Runs status, list and latest through their default readers. */
-async function readAll(root: string): Promise<Readings> {
+/** Runs status, list, latest and check through their default readers. */
+async function readAll(root: string, layout: Layout): Promise<Readings> {
+  const project = PROJECTS[layout];
   const statusCapture = createLoggerCapture();
   await run(
     new Command('project').addCommand(
@@ -164,7 +188,7 @@ async function readAll(root: string): Promise<Readings> {
         buildCommandContext: context(root, statusCapture),
       }),
     ),
-    ['project', 'status', '--project-path', PROJECT],
+    ['project', 'status', '--project-path', project],
   );
   const listCapture = createLoggerCapture();
   await run(
@@ -174,7 +198,7 @@ async function readAll(root: string): Promise<Readings> {
         processEnv: {},
       }),
     ),
-    ['project', 'list', '--scope', 'shared'],
+    ['project', 'list', '--scope', layout === 'shared' ? 'shared' : 'synced'],
   );
   const latestCapture = createLoggerCapture();
   await run(
@@ -183,7 +207,16 @@ async function readAll(root: string): Promise<Readings> {
         buildCommandContext: context(root, latestCapture),
       }),
     ),
-    ['review', 'latest', '--project', PROJECT, '--actionable-project'],
+    ['review', 'latest', '--project', project, '--actionable-project'],
+  );
+  const checkCapture = createLoggerCapture();
+  await run(
+    new Command('review').addCommand(
+      createReviewCheckCommand({
+        buildCommandContext: context(root, checkCapture),
+      }),
+    ),
+    ['review', 'check', '--project', project],
   );
 
   const status = statusCapture.jsonPayloads[0] as {
@@ -193,32 +226,43 @@ async function readAll(root: string): Promise<Readings> {
     projects: Array<{ name: string; recommendation: { skill: string } }>;
   };
   const latest = latestCapture.jsonPayloads[0] as { path: string | null };
-  const listed = list.projects.find((project) => project.name === 'demo');
+  const check = checkCapture.jsonPayloads[0] as {
+    diagnostics: Array<{ code: string }>;
+  };
+  const listed = list.projects.find((entry) => entry.name === 'demo');
   return {
     status: status.project.recommendation.skill,
     list: listed?.recommendation.skill ?? 'missing',
     latest: latest.path,
+    check: check.diagnostics.map((diagnostic) => diagnostic.code),
   };
 }
 
-describe('review supersession through the default command readers', () => {
-  it('keeps the received round live when the later head is not a resolvable descendant', async () => {
-    const root = await createProject(() => UNRESOLVABLE_HEAD);
+describe.each<Layout>(['shared', 'synced-nested'])(
+  'review supersession through the default command readers (%s)',
+  (layout) => {
+    it('keeps the received round live when the later head is not a resolvable descendant', async () => {
+      const root = await createProject(layout, () => UNRESOLVABLE_HEAD);
 
-    const readings = await readAll(root);
+      const readings = await readAll(root, layout);
 
-    expect(readings.status).toBe(RECEIVE);
-    expect(readings.list).toBe(RECEIVE);
-    expect(readings.latest).toBe(`${PROJECT}/reviews/final-review-r1.md`);
-  });
+      expect(readings).toEqual({
+        status: RECEIVE,
+        list: RECEIVE,
+        latest: `${PROJECTS[layout]}/reviews/final-review-r1.md`,
+        check: [],
+      });
+    });
 
-  it('retires the received round at a descendant head in status, list and latest', async () => {
-    const root = await createProject((child) => child);
+    it('retires the received round at a descendant head in status, list, latest and check', async () => {
+      const root = await createProject(layout, (child) => child);
 
-    const readings = await readAll(root);
+      const readings = await readAll(root, layout);
 
-    expect(readings.status).not.toBe(RECEIVE);
-    expect(readings.list).not.toBe(RECEIVE);
-    expect(readings.latest).toBeNull();
-  });
-});
+      expect(readings.status).not.toBe(RECEIVE);
+      expect(readings.list).not.toBe(RECEIVE);
+      expect(readings.latest).toBeNull();
+      expect(readings.check).toEqual(['superseded_received_row']);
+    });
+  },
+);
