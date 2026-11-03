@@ -1075,6 +1075,8 @@ Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Commit
 
 Phase verification at the head: pass. The code state is `7b22eb1f0`; only journal commits follow it. `origin/main` is still `c42fd95bd`, checked by `git fetch origin main` before the version gate. The DoD gate list ran in CI order and each command exited 0:
 
+Correction (p12 review L4, 2026-11-03): the code state at the head is `a7c50a2df` (p12-t05), not `7b22eb1f0`; the numbered DoD list below is the pre-t05 run, and the post-t05 rerun is recorded in the head-advance note. `pnpm release:check-versions` and `pnpm release:validate` were not re-run after t05, which changed no version.
+
 1. `pnpm check`: 0 of 11 cached.
 2. `pnpm type-check`: 5 of 11 cached.
 3. `pnpm test`: 5 of 12 cached. `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached; CLI 442 files and 9495 tests, control-plane 14 files and 312 tests.
@@ -1327,6 +1329,41 @@ The gate event names the 12:00 artifact with dispatch head P2.
 1. The resolver's exact-equality test replaced with `true`: `resolve.test.ts` fails 3 of 19 (the ancestor, descendant and unknown-head refusals).
 2. `eventReviewedHead` reverted to the dispatch head: `gate/index.test.ts` fails 3 of 284 (the anchored, unrelated-head and non-git cases).
 
+### Task p12-t06: (review) The resolver refuses a superseded or already-processed row
+
+**Status:** pending
+**Source review:** reviews/archived/p12-review-2026-11-03T200007Z.md (M1)
+
+Intent: `oat review resolve` binds the row but never checks supersession or status, so it accepted a superseded `received` row (one `oat review check` reports and `oat review latest` skips) and a `passed` row. Outcome 4 says readers ignore a superseded row. Run p07's supersession evaluation (exported from `check.ts`, with the same git ancestry helper `check` uses for the descendant-head clause) for the bound row and refuse with a structured diagnostic naming the superseding row (e.g. `row_superseded`); refuse a bound row whose status is not `received` (review-provide Step 9 writes `received`; a processed row means the event was already consumed), e.g. `row_not_received`. Add resolver tests and a branch-build probe (superseded, passed, valid control); update the CLI reference code list and receive Step 1's bullet.
+Files: `packages/cli/src/commands/review/{resolve,check}.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `.agents/skills/oat-project-review-receive/SKILL.md` (already bumped on this branch).
+Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review` plus the isolated-HOME contract suites.
+
+### Task p12-t07: (review) Artifact scope and type absent from frontmatter
+
+**Status:** pending
+**Source review:** reviews/archived/p12-review-2026-11-03T200007Z.md (L1)
+
+Intent: the resolver skips the artifact's `oat_review_scope`/`oat_review_type` comparison when the field is absent, while the CLI reference says both are validated (the run ID fails closed when absent). Refuse an absent field with `scope_missing`/`type_missing`, mirroring `gate_run_id_missing`, or, if a real gate artifact can lack them, report them unavailable and document it; pick the option consistent with what gate artifacts actually carry and say which in the record.
+Files: `packages/cli/src/commands/review/resolve.ts`, its test, `apps/oat-docs/docs/reference/cli-reference.md`.
+Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+
+### Review Received: p12
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p12-review-2026-11-03T200007Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 4
+
+- M1 (Medium): `oat review resolve` accepts a superseded `received` row and a `passed` row, contradicting Outcome 4 and receive Step 1 → fix task p12-t06; agreed, a stale persisted or retried event is realistic.
+- L1 (Low): artifact scope and type are validated only when present in frontmatter, contrary to the CLI reference → fix task p12-t07.
+- L2 (Low): the optional phase gate and the eight planning gates pass the gate event only in-session, so an interruption between gate and receive leaves receive with newest-artifact selection (Step 14 persists it) → approved deferral (see Deferred Findings); persisting those gate results is a new robustness requirement outside p12's adopting-path Intent (Feature Planning Triage), and p07 supersession still protects that path.
+- L3 (Low): the mid-phase amendment `9775df23a` of p12's Intent and Exit evidence records no operator acknowledgement → accepted; the root made p12 concrete at `f3a9603f7` under the brief's authority to make provisional phases concrete and corrected that concrete text before any review, tightening the guarantee to exact equality, within Outcome 4. The amendment and its reason were reported to the operator in the run report on 2026-11-03; any operator objection reopens it.
+- L4 (Low, bookkeeping): the phase paragraph's stale code-state sentence → corrected by an appended line in this receive's bookkeeping commit.
+
+Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p12-rev-20261103-01`, reconnaissance not attempted); reproduced the negative control and proved two guards can fail.
+
+**Outcome:** fixes queued: p12-t06, p12-t07
+
 ## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
@@ -1545,6 +1582,7 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 
 - PR #400 Cursor Bugbot (review of 2fd06ff2b), fixed in the branch on 2026-11-03 by operator decision, with no re-review or gate: (High) review-receive Step 2.6 item 7 routed a bookkeeping-only final receive from Step 7.6 to Step 10, past the Step 8.5 deferred-Medium resurfacing that item 3 requires; item 7 now runs Step 8.5 first for `final` scope. (Medium) plan-writing step 4's bookkeeping-only `plan` branch could record `passed` after an interactive decline; a declined edit now leaves the finding residual and never `passed`. Both are post-gate skill-prose changes after reviewed head 5599af21d, so d01's bound revisions and the m01 exit gate predate them; the operator chose to merge without re-gating. Contract tests (`src/commands/init/tools/shared`, `src/validation`) and `oat:validate-skills` pass.
 - p07 re-review L1 (Low): the review-receive CLI-unavailable fallback clause (`.agents/skills/oat-project-review-receive/SKILL.md:163`) omits that the candidate's own row must be `received` and does not name the gate and lifecycle Invocation classes. Deferred by the root under review-receive Step 9 (Low, concrete rationale): p12 rewrites this receive artifact-selection step, and fixing it now would open a third p07 review cycle. Trigger: p12 start; fold the clarification into p12's receive change and its pin test.
+- p12 review L2 (Low): the optional phase gate and the eight planning gates (goal, brief, lite, discover, design, quick-start, plan, import-plan) hand the gate event to receive only in-session; after an interruption the router's receive route has no event and falls back to newest-artifact selection, protected only by p07 supersession. Implement Step 14 persists its event. Deferred by the root (Feature Planning Triage: a new persistence requirement outside p12's adopting-path Intent). Trigger: the first observed interrupted gate→receive handoff, or p13/m03 if they touch these gate paths.
 
 ## Deviations from Plan / Design
 
