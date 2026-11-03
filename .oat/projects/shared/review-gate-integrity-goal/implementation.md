@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: review-gate-integrity-goal
 
 **Started:** 2026-11-01
-**Last Updated:** 2026-11-02
+**Last Updated:** 2026-11-03
 
 > This journal records execution of the Project Brief in `plan.md` and is used
 > to resume interrupted sessions.
@@ -986,6 +986,49 @@ Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`
 **Proof:** `docs:check` exit 0 (0 errors; the new lines add only the page-wide `provenance` warning class the existing `--project .oat/projects/shared/example` examples already carry); `docs:lint` exit 0 (91 files, 0 errors); docs-index regeneration exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0 (no reader page added or renamed). The first commit attempt was refused by commitlint (header over 100 characters) with nothing committed; the retry used the same identity and a shorter header.
 
 Instruction files: `packages/control-plane/AGENTS.md` gains one convention (never run git in the package; take commit ancestry from the caller, as Reviews supersession does). No other instruction fact changed: no command, directory, version pin or workflow named in an `AGENTS.md` moved. Lockstep packages `cli`, `control-plane`, `docs-config`, `docs-theme` and `docs-transforms` and `packages/cli/assets/public-package-versions.json` are at 0.3.46 (`origin/main` is at 0.3.45).
+
+### Task p07-t05: (review) Pin the git-ancestry wiring of status, list and latest
+
+**Status:** pending
+**Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (M1)
+
+Intent: no test exercises the default-dependency bindings that give `oat project status` (`status.ts:35`, `getProjectStateWithReviewAncestry`), `oat project list` (`list.ts:81`, `listProjectsWithReviewAncestry`) and `oat review latest` (`latest.ts:472`, `createGitReviewHeadAncestryResolver`) the git ancestry resolver, so a revert to the plain reader would leave the suites green while those readers diverge from `oat review check` on descendant-head rows. Add a real-git test (reuse the `createRepoWithHistory` helper from `check.test.ts`) that runs the three commands through their default dependencies over a `received` gate row at a parent commit and a later gate row at a child commit: status and list do not recommend `oat-project-review-receive`, and latest with `--actionable-project` returns `path: null`. Prove it can fail by swapping one binding back to the plain reader.
+Files: `packages/cli/src/commands/project/` and `packages/cli/src/commands/review/` test files (test-only).
+Proof: the new test plus `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/review`
+
+### Task p07-t06: (review) Correct the stated reason quick, import and lite seed no spec/design rows
+
+**Status:** pending
+**Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L1)
+
+Intent: four places say those modes "never review" `spec`/`design`, but quick's lightweight design can be reviewed (the p07 Exit evidence requires its single `design` row). Reword to: those modes seed no `spec`/`design` placeholder; a review of those artifacts, such as a quick lightweight-design review, appends its own row under review-provide Step 9. Behavior is unchanged.
+Files: `.oat/templates/plan.md` (and its tracked CLI asset copy if one exists), `.agents/skills/oat-project-plan/SKILL.md` (already bumped to 1.4.21 on this branch; sync provider views), `packages/cli/src/commands/project/new/scaffold.ts` comments, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new` and `pnpm --filter oat-docs docs:lint`
+
+### Task p07-t07: (review) Filter superseded rows in review-receive's CLI-unavailable fallback
+
+**Status:** pending
+**Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L2)
+
+Intent: the `ls -t "$PROJECT_PATH/reviews/"*.md` fallback in review-receive Step 1 can still pick a superseded `received` round. Add one clause: before processing a fallback candidate, read its `## Reviews` row and skip it when a later row of the same Scope, Type and Invocation class records a review at the same head; a descendant-head case cannot be decided without the CLI, so it stays live.
+Files: `.agents/skills/oat-project-review-receive/SKILL.md` (already bumped to 1.6.16 on this branch; sync provider views).
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+
+### Review Received: p07
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p07-review-2026-11-03T184519Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 3
+
+- M1 (Medium): no test pins the git-ancestry default-dependency wiring of `oat project status`, `oat project list` and `oat review latest`, so a revert would pass the suites while those readers diverge from `oat review check` on descendant-head rows → fix task p07-t05; agreed, the Known Unknown required the readers not to diverge and only a one-off probe shows it today.
+- L1 (Low): four places say quick, import and lite "never review" `spec`/`design`, which overstates quick (its lightweight design is reviewable) → fix task p07-t06; the wording could mislead an agent, the behavior is right.
+- L2 (Low): review-receive's CLI-unavailable `ls -t` fallback can still select a superseded `received` artifact → fix task p07-t07; one clause closes it for the same-head case.
+- L3 (Low, bookkeeping): the journal header `**Last Updated:**` read 2026-11-02 → fixed in this receive's bookkeeping commit (set to 2026-11-03).
+
+Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev-20261103-01`, reconnaissance not attempted). It reproduced the pinned Sol row, the archived descendant-head case, the released-CLI negative control and a six-case agreement probe across status, list, latest and check.
+
+**Outcome:** fixes queued: p07-t05, p07-t06, p07-t07
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
