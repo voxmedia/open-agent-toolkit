@@ -1486,6 +1486,21 @@ Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Commit
 
 **Pins can fail** (each made in the working tree, the new test file run, then both skills restored byte-identical with `cmp`): C1 pr-progress "stop at this boundary" changed to "continue" (1 of 3 failed); C2 pr-final's "Never write a waiver and never proceed." removed (1 of 3); C3 pr-final's goal paragraph removed from Step 1.5 (1 of 3); C4 pr-final's waiver label changed to `**Waiver:**` (2 of 3: the pin and the parser cross-check).
 
+### Recovery Event rgi-p13-rec-01
+
+- Phase/task: p13 / p13-t03
+- Original request: rgi-p13-impl-20261103-01
+- Original commit: 43817937d42a0ffc6e5db20c9c01b46cd188ca19
+- Defect class: lint
+- Discovered by: pnpm run check:skill-bumps
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 0d17557c73d5a3bdcf2b3981f531af72b39bf901
+- Verification: focused `pnpm run check:skill-bumps` exit 0 (16 changed skills and agent roles against `origin/main`) before and after the commit; phase isolated-HOME contract suites 1205/1205 exit 0 before and after; `pnpm oat:validate-skills` exit 0.
+- Reason: `.agents/docs/autonomy-contract.md` (the new `PRFINAL-06` row and its coverage key) is vendored by symlink into seven skills. Five already carried their single m02 bump; `oat-project-document` (1.8.13) and `oat-project-autonomous` (1.0.24, through `references/gate-inventory.md`) did not, so the gate failed. The correction is mechanical, in-phase and behavior-free: one patch bump each (1.8.14, 1.0.25) and the two `skills.test.ts` document pins. Reservation committed at `fdfb2e97f` before editing; the ledger entry is `completed` in the recovery commit.
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
