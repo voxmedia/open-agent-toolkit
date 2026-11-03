@@ -1415,8 +1415,10 @@ Scope: the fix range `c92b11dfb..8016d7d98` (p12-t06, p12-t07), fresh `oat-revie
 
 **Status:** in_progress
 **Base:** 579379cf27b6e3ceddc9a7c731200c6c53b2d82d
-**Head:** 2f1dae7a099dc37d5196f7cc008712d8681249f1
+**Head:** 2375b77bd1b1326b5feec60ae7258f3bbeb7556a
 **Executor:** phase-implementer:rgi-p13-impl-20261103-01
+
+Head advanced from `2f1dae7a0` to the p13-t07 record commit after the review fixes p13-t05, p13-t06 and p13-t07 (code state `890aa4879`); each exited 0: `pnpm check` (0 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 444 files and 9520 tests, control-plane 314 tests), `pnpm build` (5 of 5 cached), `check:skill-bumps` (16 skills and agent roles), `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate` (0.3.46), the forced docs build (0 of 6 cached) with the index diff, `pnpm lint`, `pnpm format`, the isolated-HOME contract suites (34 files, 1272 tests), `pnpm test:smoke`, `pnpm test:skills`, `oat:validate-skills` and `oat project journal check --at review --scope p13`. Branch-build probe `review pending --scope project` on this project: `missing` empty with p08 and p09 provisional and rowless; a scratch copy with p08 made concrete lists `p08 code` under `missing`.
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a new read-only review command whose required-row rules must agree with pr-final Step 2, delivery check and Outcome 4, plus a new autonomy row and two PR skills whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the command, the skill prose and the autonomy row share the required-row and waiver contract and the contract tests, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and an autonomy boundary. p13 was made concrete at `579379cf2` before this start (project log). `origin/main` has not moved since the p07 base merge.
 
