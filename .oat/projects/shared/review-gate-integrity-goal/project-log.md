@@ -163,6 +163,10 @@ Made p12 concrete before dispatch (plan-and-resume Step 2.2), within Outcome 4 a
 
 Amended p12's concrete Intent after the implementer showed the dispatch HEAD differs from the Reviews row's Reviewed Head (the reviewed range end) on every anchored gate: reviewedHead is the artifact's oat_review_head_sha when present, else the dispatch HEAD; the gate's corroboration reports match/ancestor/mismatch/unavailable against the dispatch HEAD; the resolver keeps exact equality. Within Outcome 4; no Outcome, Constraint or Decision changed. rgi-p12-head-amend-20261103
 
+### 2026-11-03 · structural · oat-project-implement · p12
+
+p12 accepted: review round 1 passed (0C/0H/1M/4L, fixes p12-t06..t07; L2 deferred, L3 accepted and reported, L4 corrected), round 2 re-review of the fix range passed (0/0/0/0); 1 fix loop; head 8016d7d98. rgi-p12-outcome-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

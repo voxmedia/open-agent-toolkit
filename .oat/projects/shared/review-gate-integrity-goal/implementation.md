@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p12
+oat_current_task_id: p13
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | completed   | 1     | 1/1      |
-| p10   | completed   | 1     | 1/1      |
-| p11   | completed   | 1     | 1/1      |
-| p07   | completed   | 1     | 1/1      |
-| p12   | in_progress | 1     | 0/1      |
-| p13   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
+| p10   | completed | 1     | 1/1      |
+| p11   | completed | 1     | 1/1      |
+| p07   | completed | 1     | 1/1      |
+| p12   | completed | 1     | 1/1      |
+| p13   | pending   | 1     | 0/1      |
+| p08   | pending   | 1     | 0/1      |
+| p09   | pending   | 1     | 0/1      |
 
-**Total:** 5/9 phases accepted
+**Total:** 6/9 phases accepted
 
 ---
 
@@ -1064,7 +1064,7 @@ Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
-**Status:** in_progress
+**Status:** completed
 **Base:** f3a9603f74ee358b80eeb6572085b46975801302
 **Head:** 8016d7d98f8799010d40ff497aa526b180508dbf
 **Executor:** phase-implementer:rgi-p12-impl-20261103-01
@@ -1398,6 +1398,19 @@ Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p12-rev
 
 **Outcome:** fixes queued: p12-t06, p12-t07
 
+**Outcome:** fixes queued: p12-t06, p12-t07; both completed (head `8016d7d98`) and passed re-review (reviews/archived/p12-review-2026-11-03T201925Z.md)
+
+### Review Received: p12 (re-review of the fix records)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p12-review-2026-11-03T201925Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: the fix range `c92b11dfb..8016d7d98` (p12-t06, p12-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p12-rev-20261103-02`, reconnaissance not attempted). It confirmed M1 and L1 resolved: `oat review resolve` and `oat review check` share `evaluateReviewSupersession`; the round-1 probe (run-1 event, run-2 at a descendant head) now refuses with `row_superseded` naming row 2 and exits 1, and nine further supersession cases follow the p07 rule. It neutralized each new guard in turn, saw exactly its test fail, and restored a clean tree. `row_not_received` cannot block a legitimate resumed receive, because a partial Step 6 write was already refused by `artifact_mismatch` or `artifact_not_active`. The unpinned receive Step 1 sentence is explanatory; the operative stop-on-refusal rule is pinned at `review-event-row-contracts.test.ts:224-227`.
+
+**Outcome:** passed
+
 ## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
@@ -1448,6 +1461,7 @@ Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p12-rev
 - run/v1 · request=rgi-p12-rev-20261103-01 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 -
 - run/v1 · request=rgi-p12-fix-20261103-01 · scope=p12-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p12-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p12-rev-20261103-02 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
