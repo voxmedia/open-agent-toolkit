@@ -989,13 +989,17 @@ Instruction files: `packages/control-plane/AGENTS.md` gains one convention (neve
 
 ### Task p07-t05: (review) Pin the git-ancestry wiring of status, list and latest
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p07-fix-20261103-01
+**Commit:** 07a00505b17d9baff5d58ecaacded3e02b4a1009
 **Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (M1)
 
 Intent: no test exercises the default-dependency bindings that give `oat project status` (`status.ts:35`, `getProjectStateWithReviewAncestry`), `oat project list` (`list.ts:81`, `listProjectsWithReviewAncestry`) and `oat review latest` (`latest.ts:472`, `createGitReviewHeadAncestryResolver`) the git ancestry resolver, so a revert to the plain reader would leave the suites green while those readers diverge from `oat review check` on descendant-head rows. Add a real-git test (reuse the `createRepoWithHistory` helper from `check.test.ts`) that runs the three commands through their default dependencies over a `received` gate row at a parent commit and a later gate row at a child commit: status and list do not recommend `oat-project-review-receive`, and latest with `--actionable-project` returns `path: null`. Prove it can fail by swapping one binding back to the plain reader.
 Files: `packages/cli/src/commands/project/` and `packages/cli/src/commands/review/` test files (test-only).
 Proof: the new test plus `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/review`
+
+**Result:** `packages/cli/src/commands/review/__tests__/ancestry-wiring.test.ts` builds a real two-commit repo and runs `oat project status --project-path`, `oat project list --scope shared` and `oat review latest --actionable-project` with only `buildCommandContext` (and list's `processEnv`) overridden. Control: with the later gate row at an unresolvable head all three still surface the `received` round; at the child head status and list stop recommending `oat-project-review-receive` and latest returns `path: null`.
+**Proof result:** the proof command passed (66 files, 1837 tests). Can-fail: swapping each binding back to the plain reader in turn (`status.ts` `getProjectState`, `list.ts` `listProjects`, `latest.ts` resolver set to `undefined`) failed the descendant-head test on that command's assertion; each source file was restored and the test passes again.
 
 ### Task p07-t06: (review) Correct the stated reason quick, import and lite seed no spec/design rows
 
