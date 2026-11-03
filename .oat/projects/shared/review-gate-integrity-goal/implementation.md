@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p-rev3-t02
+oat_current_task_id: p-rev3-t03
 oat_generated: false
 oat_template: false
 ---
@@ -1859,6 +1859,30 @@ Scope: `91d2e491f..8ce9e2a54` (p-rev3-t01, corrects p13), fresh `oat-reviewer-cl
 
 **Outcome:** fixes queued: p-rev3-t02
 
+**Outcome:** fixes queued: p-rev3-t02; completed (head `08a2dc6d5`); its re-review queued p-rev3-t03
+
+### Task p-rev3-t03: (review) Retire rowless waivers when a Reviews data row does not parse
+
+**Status:** pending
+**Source review:** reviews/archived/p-rev3-review-2026-11-03T233325Z.md (L1)
+
+Intent: a rowless (p13-form) waiver cannot see a review recorded in a row `parseReviewTable` drops (a blank required cell), so it still applies to a later pending row of its key (reproduced on the branch build, `pending.ts:320`). Fail closed: in `listPendingReviews`, treat any gap in the `dataLine` sequence as an unparseable data row and retire every rowless waiver while one exists (the key may be unreadable from the malformed line). Add the regression and a guard-can-fail control; keep docs true.
+Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, docs only if wording changes.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+
+### Review Received: p-rev3 (re-review of p-rev3-t02)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-11-03T233325Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `8ce9e2a54..08a2dc6d5` (p-rev3-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev3-rev-20261103-02`, reconnaissance not attempted). L1 resolved (the prior reproduction lists row 2 pending and the stale `**Row:** 1` reads `row-mismatch`); other readers unchanged; two guards proved able to fail; second-table numbering adds no fail-open.
+
+- L1 (Low): a rowless waiver still applies after a recorded review whose row does not parse → fix task p-rev3-t03 (review cycle 2 of 3; a fail-open path in an assurance guard with a small fail-closed fix).
+
+**Outcome:** fixes queued: p-rev3-t03
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1917,6 +1941,7 @@ Scope: `91d2e491f..8ce9e2a54` (p-rev3-t01, corrects p13), fresh `oat-reviewer-cl
 - run/v1 · request=rgi-prev3-impl-20261103-01 · scope=p-rev3 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev3-rev-20261103-01 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev3-fix-20261103-01 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-prev3-rev-20261103-02 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
