@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.16
+  version: 1.6.17
 ---
 
 # Project PR (Final)
@@ -208,6 +208,12 @@ registration owner, not a second project PR (brief contract sections 12.7 and
    created, and that shared member is expected, not a duplicate
    (`oat-project-brief/references/brief-contract.md` section 12.7, Shared
    members). Coverage judges each delivery's own scope and bound evidence.
+
+   Before item 4 writes a terminal delivery's `registering` entry, run Step
+   2.5 with `PENDING_SCOPE` set to that delivery's terminal phase ids as a
+   comma list. A `PRFINAL-06` stop or a user's stop registers nothing and
+   creates no pull request.
+
 4. **Same registration contract.** Load the current
    `oat-project-pr-progress/SKILL.md` and, for each terminal delivery, run its
    Step 5.5 steps 1–3 and 4–7 as written (never step 3a, which
@@ -270,6 +276,50 @@ If `FINAL_ROW` is missing or does not contain `passed`:
       re-review hasn't been run/recorded yet; re-run the
       `oat-project-review-provide` skill with `code final` then the
       `oat-project-review-receive` skill to reach `passed`.
+
+### Step 2.5: List Pending Required Reviews
+
+Before PR creation, list the required reviews still `pending` for the PR's
+scope. Outside goal mode the scope is the whole project
+(`PENDING_SCOPE=project`); in goal mode Step 1.5 item 3 sets it to the
+terminal delivery's phase ids.
+
+```bash
+oat --json review pending --project "$PROJECT_PATH" --scope "$PENDING_SCOPE"
+```
+
+The command is read-only and exits 0 whatever it lists. For a `project` scope
+the required rows are every plan phase's `code` row plus the `plan`/`artifact`
+row unless the plan-review skip line is recorded; `final` stays with Step 2,
+and `spec`, `design` and milestone rows are never listed. Its `pending` list
+holds the required rows whose latest `## Reviews` event is still `pending`; its
+`waived` list holds the ones a recorded waiver covers. When `pending` is empty,
+continue. Otherwise report each pending row by scope, type and row number,
+then:
+
+- If `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1`, gate `PRFINAL-06` is a
+  boundary stop: required reviews are pending without a waiver. Never write a
+  waiver and never proceed. Report each pending row, record the blocker in
+  project provenance, and stop before writing the PR artifact, pushing,
+  creating the PR or writing a `registering` entry. Route the resumable next
+  step to `oat-project-review-provide` with `code <scope>` followed by
+  `oat-project-review-receive`.
+- Otherwise ask the user to choose one option for the pending rows:
+  - **Run them:** route to `oat-project-review-provide` with `code <scope>`
+    followed by `oat-project-review-receive`, and end this run.
+  - **Waive them:** only on the user's explicit choice and with the reason
+    the user gives, append one line per waived row under
+    `## Reviews and Gates` in `implementation.md`:
+    `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`.
+    Leave the `## Reviews` row `pending`. Commit only `implementation.md` as
+    bookkeeping (`chore(oat): record review waiver <scope> <type>`; a `synced`
+    project uses `oat project push` with that message), then re-run the
+    listing: the row must now appear under `waived`, not `pending`.
+  - **Stop:** end this run without writing the PR artifact.
+
+A waiver is not a review. The row stays `pending`; Step 2, `oat project
+closeout-check` and `oat project delivery check` never read the line; and a
+later recorded review of the same row makes the waiver inert.
 
 ### Step 3: Collect Project Summary
 
@@ -846,6 +896,7 @@ If `state.md` is missing, skip with a warning.
 - Historical `plan` / `artifact` structured-review annotations with the exact `structured (no artifact); ` prefix are reported as non-file evidence without changing their ledger identity; every actual `## Reviews` artifact path is checked by the ledger-path guard before `gh pr create` runs
 - Final PR description artifact written to `{PROJECT_PATH}/pr/`
 - Final review status checked and referenced
+- Required reviews still `pending` for the scope were listed before PR creation (Step 2.5) and were run, waived with a recorded reason, or stopped the run; an autonomous or non-interactive run stopped at `PRFINAL-06`
 - User has clear next step to open PR (manual or gh)
 - Project `state.md` shows `oat_phase_status: pr_open`
 - Next milestone references both `oat-project-revise` (for feedback) and both supported `oat-project-complete` orderings

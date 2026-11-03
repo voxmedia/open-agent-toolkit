@@ -2858,6 +2858,33 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-pr-final/SKILL.md',
+    anchor: 'Step 2.5: List Pending Required Reviews',
+    match: 'Route the resumable next step to',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide', 'oat-project-review-receive'],
+    reason:
+      'PRFINAL-06 boundary stop records the resume target; this skill stops before executing it.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-final/SKILL.md',
+    anchor: 'Step 2.5: List Pending Required Reviews',
+    match: '**Run them:** route to',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide', 'oat-project-review-receive'],
+    reason:
+      'Terminal handoff: the run option ends this skill and names the review skills the user runs next.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-progress/SKILL.md',
+    anchor: 'Step 3.5: List Pending Required Reviews',
+    match: 'run the pending reviews (route to',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide', 'oat-project-review-receive'],
+    reason:
+      'Terminal handoff: the run option ends this skill and names the review skills the user runs next.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-final/SKILL.md',
     anchor: 'Step 3: Collect Project Summary',
     match:
       'When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md`',
