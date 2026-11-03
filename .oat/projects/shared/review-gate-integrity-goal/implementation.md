@@ -1102,6 +1102,59 @@ The post-selection recovery test now also pins `reviewedHead` and a `match` head
 2. The ancestor branch forced to `mismatch`: the ancestor test fails (1 failed).
 3. The recovery path's head set to `null`: the recovery test fails (1 failed).
 
+### Task p12-t02: `oat review resolve`, a fail-closed resolver for a gate event
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t02
+**Intent:** Add a read-only `oat review resolve` that takes a gate event (`--artifact`, `--scope`, `--type`, `--run-id`, `--reviewed-head`). It binds the `## Reviews` row by the p07 event key and validates the row's Scope, Type, Artifact and Reviewed Head and the artifact's `oat_gate_run_id` against the event. Any mismatch, a missing or duplicate row, or a missing artifact gets a structured diagnostic and a nonzero exit. A `-` Reviewed Head cell reads `unavailable` and is accepted.
+**Files:** `packages/cli/src/commands/review/{resolve,check,index}.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `packages/cli/src/commands/help-snapshots.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/help-snapshots.test.ts`
+**Commit:** c432cc04164c4eb3924783e0608916709fe4dbef
+**Proof:** 116/116 (5 files) exit 0, including 18 new resolver tests and the `review --help` and `review resolve --help` snapshots; CLI `type-check` and `lint` exit 0.
+
+**Shape.** `oat review resolve [--project <path>] --artifact <path> --scope <scope> --type <code|artifact> --run-id <id> --reviewed-head <sha> [--json]`. Each flag carries the same-named field of the gate result (`artifactPath`, `scope`, `reviewType`, `runId`, `reviewedHead`).
+
+- It binds the row by the p07 key. `check.ts` now exports `reviewEventKey` and `buildReviewLedgerRowReport`, so the key and the row report are one definition for `check` and `resolve`.
+- When no row binds and exactly one row claims the artifact filename under another Scope or Type, that row is reported with the disagreement instead of a bare `row_not_bound`.
+- It reads the Reviewed Head relation with `resolveGitReviewHeadAncestry` from `head-ancestry.ts`. The row's head may equal the event's head (`match`) or be an ancestor of it (`ancestor`, the anchored case; see p12-t01). A `-` cell reads `unavailable` and is accepted. A head that is neither is `reviewed_head_mismatch`, and a pair git cannot answer is `reviewed_head_unresolved`; both are refused.
+- Output: `status` is `ok` or `refused`, with `path` (the artifact receive consumes), the bound `row`, per-field `checks` and `diagnostics`. Each diagnostic has `code`, `severity: error`, `source` (`event`, `artifact`, `ledger` or `row`), `expected`, `actual` and `message`. Exit 0 only for `ok`. A refusal, an incomplete event or an abbreviated head exits 1.
+- Codes: `artifact_not_active`, `artifact_not_found`, `ledger_unavailable`, `row_not_bound`, `duplicate_event_key`, `scope_mismatch`, `type_mismatch`, `artifact_mismatch`, `reviewed_head_mismatch`, `reviewed_head_unresolved`, `gate_run_id_missing` and `gate_run_id_mismatch`. It never writes.
+
+**Branch-build probes** (`node packages/cli/dist/index.js`, build at `c432cc041`). The scratch repository `/tmp/p12-probe-kjNb` has two commits, P1 → P2, and a quick project `demo`.
+
+Its ledger has two `received` p01 rows:
+
+- the gate row: artifact `reviews/p01-review-2026-11-03T120000Z.md`, Reviewed Head P1, `gate`, `claude-opus-5-5-high`, `oat_gate_run_id` `0f6c7a10-…`;
+- a newer manual row: artifact `…T130000Z.md`, Reviewed Head P2, `manual`, `oat_generated_at` one hour later, no run ID.
+
+The gate event names the 12:00 artifact with dispatch head P2.
+
+| #   | Probe                                   | Exit | Result                                                                         |
+| --- | --------------------------------------- | ---- | ------------------------------------------------------------------------------ |
+| 1   | The gate event                          | 0    | `ok`; checks scope, type, artifact and run ID `match`; reviewedHead `ancestor` |
+| 2   | Wrong artifact (the newer manual one)   | 1    | `refused`, `gate_run_id_missing`                                               |
+| 3   | Wrong head (an unrelated root commit)   | 1    | `refused`, `reviewed_head_mismatch` from the row                               |
+| 4   | Wrong scope (`p02`)                     | 1    | `refused`, `scope_mismatch` from the artifact and the row                      |
+| 5   | Wrong type (`artifact`)                 | 1    | `refused`, `type_mismatch` from the artifact and the row                       |
+| 6   | Wrong run ID                            | 1    | `refused`, `gate_run_id_mismatch`                                              |
+| 7   | No bound row (gate row removed)         | 1    | `refused`, `row_not_bound`                                                     |
+| 8   | The gate row's Reviewed Head set to `-` | 0    | `ok`; reviewedHead `unavailable`                                               |
+| 9   | Ledger restored, gate event again       | 0    | `ok`                                                                           |
+| 10  | Abbreviated `--reviewed-head abc1234`   | 1    | `status: error`                                                                |
+
+**Negative control.**
+
+- **Pre-change state.** On the same scratch project, the released `oat` 0.3.45 runs `oat --json review latest --project … --actionable-project`. It returns the newer manual artifact (`…T130000Z.md`, `actionable: true`), not the gate-named one. The released CLI has no `review resolve` (`error: unknown command 'resolve'`).
+- **Post-change state.** The branch resolver, given the gate event, consumes the named artifact (probe 1, exit 0) and refuses the other (probe 2, exit 1).
+- **Valid control.** Probe 9 passes after the ledger is restored.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and `resolve.test.ts` run, then the file was restored byte-identical (`cmp`):
+
+1. Ancestry forced true: the wrong-head and unresolved-head tests fail (2 failed).
+2. The run-ID comparison disabled: the wrong-run-ID test and the CLI exit-1 test fail (2 failed).
+3. The row and artifact scope comparisons disabled: the wrong-scope test fails (1 failed).
+
 ## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
