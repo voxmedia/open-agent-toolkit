@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p10   | completed | 1     | 1/1      |
-| p11   | completed | 1     | 1/1      |
-| p07   | pending   | 1     | 0/1      |
-| p12   | pending   | 1     | 0/1      |
-| p13   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | completed   | 1     | 1/1      |
+| p10   | completed   | 1     | 1/1      |
+| p11   | completed   | 1     | 1/1      |
+| p07   | in_progress | 1     | 0/1      |
+| p12   | pending     | 1     | 0/1      |
+| p13   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 4/9 phases accepted
 
@@ -1033,6 +1033,7 @@ Instruction files: `packages/control-plane/AGENTS.md` gains one convention (neve
 - Root-inline phase: p11 review fix (p11-t06) · reason: four Lows of a passing review, fixed at receive · root model claude-opus-5-5
 - Root-inline phase: p11 m01-integrated-review fix (p11-t07) · reason: one Medium and two Lows, a one-sentence definition change plus journal corrections · root model claude-opus-5-5
 - run/v1 · request=rgi-m01-rev-20261102-02 · scope=m01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=m01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p07-impl-20261103-01 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
