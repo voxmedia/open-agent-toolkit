@@ -989,7 +989,8 @@ Instruction files: `packages/control-plane/AGENTS.md` gains one convention (neve
 
 ### Task p07-t05: (review) Pin the git-ancestry wiring of status, list and latest
 
-**Status:** pending
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-fix-20261103-01
 **Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (M1)
 
 Intent: no test exercises the default-dependency bindings that give `oat project status` (`status.ts:35`, `getProjectStateWithReviewAncestry`), `oat project list` (`list.ts:81`, `listProjectsWithReviewAncestry`) and `oat review latest` (`latest.ts:472`, `createGitReviewHeadAncestryResolver`) the git ancestry resolver, so a revert to the plain reader would leave the suites green while those readers diverge from `oat review check` on descendant-head rows. Add a real-git test (reuse the `createRepoWithHistory` helper from `check.test.ts`) that runs the three commands through their default dependencies over a `received` gate row at a parent commit and a later gate row at a child commit: status and list do not recommend `oat-project-review-receive`, and latest with `--actionable-project` returns `path: null`. Prove it can fail by swapping one binding back to the plain reader.
@@ -998,7 +999,8 @@ Proof: the new test plus `pnpm --filter @open-agent-toolkit/cli exec vitest run 
 
 ### Task p07-t06: (review) Correct the stated reason quick, import and lite seed no spec/design rows
 
-**Status:** pending
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-fix-20261103-01
 **Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L1)
 
 Intent: four places say those modes "never review" `spec`/`design`, but quick's lightweight design can be reviewed (the p07 Exit evidence requires its single `design` row). Reword to: those modes seed no `spec`/`design` placeholder; a review of those artifacts, such as a quick lightweight-design review, appends its own row under review-provide Step 9. Behavior is unchanged.
@@ -1007,7 +1009,8 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 ### Task p07-t07: (review) Filter superseded rows in review-receive's CLI-unavailable fallback
 
-**Status:** pending
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-fix-20261103-01
 **Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L2)
 
 Intent: the `ls -t "$PROJECT_PATH/reviews/"*.md` fallback in review-receive Step 1 can still pick a superseded `received` round. Add one clause: before processing a fallback candidate, read its `## Reviews` row and skip it when a later row of the same Scope, Type and Invocation class records a review at the same head; a descendant-head case cannot be decided without the CLI, so it stays live.
