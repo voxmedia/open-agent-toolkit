@@ -147,6 +147,10 @@ Recommendation: Cut goal/review-gate-integrity-m02 (and later mNN branches) from
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/artifact-plan-review-2026-11-03T023206Z.md run=6cf18b35-39f7-4103-9625-ad09950fd3c7
 
+### 2026-11-03 · structural · oat-project-goal · m02
+
+Activated m02 (p07, p12, p13); review-gate-integrity-goal-activate-m02
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

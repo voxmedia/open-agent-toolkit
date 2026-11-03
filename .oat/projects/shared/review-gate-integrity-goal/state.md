@@ -36,8 +36,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval; [] = none for brief modes
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -74,7 +74,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m02
-oat_milestone_status: aligning
+oat_milestone_status: implementing
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -221,19 +221,19 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/400' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-03T03:17:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-03T03:18:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-gate-integrity-goal
 
-**Status:** Plan (m02 aligning)
+**Status:** Implement (m02)
 **Started:** 2026-11-01
 **Last Updated:** 2026-11-03
 
 ## Current Phase
 
-m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its integrated review and exit gate are stale by the operator-accepted post-gate Bugbot fixes. m02 (p07, p12, p13) is aligning: its amendment is reviewed and gated, awaiting approval.
+m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its integrated review and exit gate are stale by the operator-accepted post-gate Bugbot fixes. m02 (p07, p12, p13) approved and activated 2026-11-03.
 
 ## Artifacts
 
@@ -252,7 +252,8 @@ m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its int
 - ✓ m01 exit gate passed (fresh at 1a5a37684)
 - ✓ m01 integrated review cycle 2 passed; exit gate rerun passed; d01 registered and PR #400 merged 2026-11-03 (post-gate Bugbot fixes accepted without re-gating)
 - ✓ m02 amendment (p07, p12, p13) reviewed and gated
-- ⧗ m02 amendment approval, then activation
+- ✓ m02 amendment approved and m02 activated (2026-11-03)
+- ⧗ p07 implementation
 
 ## Blockers
 
@@ -260,4 +261,4 @@ None
 
 ## Next Milestone
 
-Approve the m02 amendment in `oat-project-goal`, then activate m02 and continue with `oat-project-implement`
+Continue `oat-project-implement` at p07
