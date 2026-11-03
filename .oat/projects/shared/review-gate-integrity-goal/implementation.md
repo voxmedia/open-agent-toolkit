@@ -1763,7 +1763,7 @@ Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-cl
 
 **Status:** in_progress
 **Base:** 91d2e491f289528577d23d832584c2cda10b44a6
-**Head:** 08a2dc6d5bb1aa43dcec48c32ca72ffd8acc5f39
+**Head:** edc4b4eee83e0ebd9cfa41d94808da559699fd85
 **Executor:** phase-implementer:rgi-prev3-impl-20261103-01
 **Corrects:** p13
 
@@ -1784,6 +1784,8 @@ Phase verification at the head: pass. The code state is `f29800f5a` (p-rev3-t01)
 `pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205), `pnpm test:skills`, `pnpm oat:validate-skills` (68 skills) and the p-rev3 journal check at review (branch build) also exited 0. Exit evidence: p-rev3-t01 (the gate's M1 reproduction lists the new row pending; active, inert-after-review and fresh-waiver controls; pre/post branch-build negative control; guard-can-fail G1 to G3; skills, CLI reference and Reviews page state the rule). No version bump was needed and no recovery attempt was used (0 of 10).
 
 Head advanced from `8ce9e2a54` to the p-rev3-t02 record commit `08a2dc6d5` after the review fix p-rev3-t02 (request `rgi-prev3-fix-20261103-01`, code state `bc77d8025`); no later phase has a Base. Each gate exited 0, in CI order: `pnpm check` (5 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 9534 tests, control-plane 317), `pnpm build` (5 of 5 cached, a replay; an uncached 0-of-5 build of the same source ran before the probes, and the forced evidence run rebuilt), `check:skill-bumps` (16 checks), `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate` (0.3.46), `pnpm build:docs` (cached, then forced with 0 of 6 cached) and the docs index regeneration with an empty diff. `pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (1205/1205) and the p-rev3 journal check at review also exited 0. No version bump was needed (the lockstep packages are at 0.3.46 and no skill changed); recovery attempts 0 of 10.
+
+Head advanced from `08a2dc6d5` to the p-rev3-t03 record commit `edc4b4eee` after the review fix p-rev3-t03 (request `rgi-prev3-fix-20261103-02`, code state `ee5d306c8`); no later phase has a Base. Each gate exited 0, in CI order: `pnpm check` (5 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 9535 tests, control-plane 317), `pnpm build` (5 of 5 cached, a replay; an uncached 0-of-5 build of the same source ran before the probes, and the forced evidence run rebuilt), `check:skill-bumps`, `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate` (0.3.46), `pnpm build:docs` (cached, then forced with 0 of 6 cached) and the docs index regeneration with an empty diff. `pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (1205/1205) and the p-rev3 journal check at review also exited 0. No version bump was needed; recovery attempts 0 of 10.
 
 ### Task p-rev3-t01: A review waiver applies only to the pending row it names
 
