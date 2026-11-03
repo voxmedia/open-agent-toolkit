@@ -1096,6 +1096,7 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 **Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/artifact-plan-review-2026-11-03T023206Z.md)
 
 - Gate `oat-project-goal` (plan, m02 amendment): `ok`, `review_completed_gate_passed`, threshold `high`, raw counts 0/0/0/1, receive-eligible, received 2026-11-03. First use of the released m01 bookkeeping rule on this project.
+- Approval (m02 amendment): approved 2026-11-03 by user at `ee377dd7bcbedec4e0c66cc8d12a754c45c1587d` (the gate-reviewed bundle). `oat_milestone_gates.m02.plan` written `allowed`/`passed`, `config_fingerprint` `sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75` = sha256 of the compact JSON of `oat gate resolve oat-project-goal` `effectiveGate` (no CLI emits a canonical fingerprint; m01's value used an unrecorded method).
 
 ## Deferred Findings
 

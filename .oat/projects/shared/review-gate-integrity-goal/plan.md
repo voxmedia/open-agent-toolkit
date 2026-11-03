@@ -186,6 +186,7 @@ own reviews and gates.
 - **Authority:** The operator approves this brief and each milestone amendment, and merges each milestone PR. The agent accepts phases only through the normal ladder (author self-check, a per-phase review, the configured gates, and the milestone integrated review). m01's own reviews and gates do not use the bookkeeping rule m01 ships; from m02 onward the rule may govern this project only through capabilities already released and installed in the actual execution toolchain (user-scope skills included). The agent never merges, never self-issues an approval or an exhaustion disposition, and never pushes a brief amendment onto an open delivery branch. Within the approved outcomes, constraints and evidence, the agent may split, add or reorder phases inside a milestone and make provisional phases concrete, logging each change.
 - **Brief approved:** 2026-11-01 by user at cbc8836c7ca14d56742831a13fc0cd8e1fba2057
 - **Milestone m01 approved:** 2026-11-02 by user at b2a38a09005e35818eccfa4191ad97444316e020
+- **Milestone m02 approved:** 2026-11-03 by user at ee377dd7bcbedec4e0c66cc8d12a754c45c1587d
 
 ## Milestones
 

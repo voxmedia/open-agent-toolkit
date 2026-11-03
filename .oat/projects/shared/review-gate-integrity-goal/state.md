@@ -37,7 +37,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -103,6 +103,18 @@ oat_milestone_gates:
       freshness: stale
       decided_at: '2026-11-02T23:56:32Z'
       freshness_reason: 'delivery refresh (d01): disallowed-path: 4a870d471b88068a8dbc598cfa9612ce46958b59 changes .agents/skills/oat-project-plan-writing/SKILL.md, which is not permitted bookkeeping'
+  m02:
+    plan:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75'
+      reviewed_head: ee377dd7bcbedec4e0c66cc8d12a754c45c1587d
+      subject:
+        kind: plan
+        scope: [p07, p12, p13]
+        ref: ee377dd7bcbedec4e0c66cc8d12a754c45c1587d
+      decided_at: '2026-11-03T03:17:46Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
@@ -209,7 +221,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/400' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-03T02:27:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-03T03:17:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
