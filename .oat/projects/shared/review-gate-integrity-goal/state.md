@@ -101,7 +101,42 @@ oat_milestone_gates:
         scope: [p01, p02, p10, p11]
       freshness: fresh
       decided_at: '2026-11-02T23:56:32Z'
-oat_deliveries: []
+oat_deliveries:
+  - delivery_id: d01
+    milestone: m01
+    scope: [p01, p02, p10, p11]
+    endpoint: merged
+    kind: pr
+    status: registering
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: goal/review-gate-integrity
+      head_sha_at_registration: 'b3c93606632c5069839a09effc5c4d7283f22790'
+    members: []
+    integrated_review:
+      artifact: reviews/archived/m01-review-2026-11-03T000239Z.md
+      scope: [p01, p02, p10, p11]
+      bound_revisions:
+        [
+          {
+            member: 0,
+            base: '892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3',
+            head: '5599af21d4927c7d39c668b9d1662509e5d3b403',
+          },
+        ]
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
+      reviewed_head: 5599af21d4927c7d39c668b9d1662509e5d3b403
+      subject: { kind: code, scope: [p01, p02, p10, p11] }
+      freshness: fresh
+      decided_at: '2026-11-02T23:56:32Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
