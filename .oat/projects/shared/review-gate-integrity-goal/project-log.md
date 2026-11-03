@@ -183,6 +183,10 @@ p13 accepted: review round 1 passed (0C/0H/1M/3L; M1 put to the operator, who ch
 
 target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=788ae91a-3479-436f-8d7d-08bfa2e064f8
 
+### 2026-11-03 · structural · oat gate review · p07-p13
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T215601Z.md run=93e1b0a1-9b04-4c31-9aa2-e032b9820a9d
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
