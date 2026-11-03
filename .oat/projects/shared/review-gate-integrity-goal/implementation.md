@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p-rev3
+oat_current_task_id: p-rev3-t02
 oat_generated: false
 oat_template: false
 ---
@@ -1815,6 +1815,28 @@ The gate artifact's M1 script, extracted verbatim from `range-review-2026-11-03T
 
 **Guard can fail** (each neutralized in the working tree, `pending.test.ts` and `pending-review-listing-contracts.test.ts` run, then restored and checked byte-identical with `cmp`): G1, the rowless retirement guard disabled: 3 of 25 fail, the gate reproduction among them; G2, the named-row binding guard disabled: 4 of 25 fail, including the skills' documented-line cross-check; G3, `**Row:** <row>` removed from pr-final's template: 2 of 3 contract tests fail.
 
+### Task p-rev3-t02: (review) Number waiver rows by physical table position
+
+**Status:** pending
+**Source review:** reviews/archived/p-rev3-review-2026-11-03T231519Z.md (L1)
+
+Intent: the waiver `**Row:**` number counts only rows `parseReviewTable` accepts, which drops a row with a blank required cell, so after such a row the numbering shifts and a retired waiver can bind to a newly appended `pending` row (reproduced on the branch build, `pending.ts:352`, `reviews.ts:124-126`). Number rows by their physical position among the `## Reviews` table's data rows, so the number the listing reports and the user writes is stable whatever a row contains; a named row that does not parse is `row-mismatch`. Add the regression and a guard-can-fail control; keep the docs and skill wording true.
+Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, and the docs or skills only if their wording changes.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/init/tools/shared src/validation`
+
+### Review Received: p-rev3
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-11-03T231519Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `91d2e491f..8ce9e2a54` (p-rev3-t01, corrects p13), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev3-rev-20261103-01`, reconnaissance not attempted). The gate rerun's M1 reproduction passes; fail-closed cases (missing key, pending after review, several waivers, cross-key row, malformed or empty row, `**Row:**` in the reason) hold; numbering is stable under oxfmt; both skills carry the same template; journal check accepts old and new lines; two guards proved able to fail.
+
+- L1 (Low): row numbers skip rows `parseReviewTable` drops (a blank required cell), so a retired waiver can bind to a later pending row → fix task p-rev3-t02; a fail-open path in an assurance guard, and p-rev3 is still the latest phase, so its head may advance.
+
+**Outcome:** fixes queued: p-rev3-t02
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1871,6 +1893,7 @@ The gate artifact's M1 script, extracted verbatim from `range-review-2026-11-03T
 - run/v1 · request=rgi-prev2-impl-20261103-01 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev2-rev-20261103-01 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev3-impl-20261103-01 · scope=p-rev3 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev3-rev-20261103-01 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
