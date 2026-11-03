@@ -944,12 +944,20 @@ Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`
 
 ### Task p07-t03: One-writer rule and reader supersession in the lifecycle skills
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p07-impl-20261103-01
 **Handle:** direct:rgi-p07-impl-20261103-01:p07-t03
 **Intent:** State the event key, the one-writer rule and read-side supersession once in `oat-project-plan-writing`'s Review Table Preservation Rules; have review-provide Step 9 state the one-writer rule from the writer's side and review-receive Step 1 state that a superseded row is never received; have the planning skills (quick-start, plan, import-plan, brief, goal, lite) record a structured plan review on its own event row; pin all of it and show a quick lightweight-design review still records exactly one `design` row.
 **Files:** the nine `SKILL.md` files of `oat-project-{plan-writing,review-provide,review-receive,quick-start,plan,import-plan,brief,goal,lite}` (one patch bump each), `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins), `.oat/sync/manifest.json`.
 **Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 67d8296fc4d9a2bedb53e1f73827748ed1f2d98e
+**Proof:** isolated-HOME contract suites 1185/1185 exit 0 (the autonomy inventory and named-skill execution contracts included); `pnpm run check:skill-bumps` exit 0 after the commit (9 changed skills, each one patch bump against `origin/main`: plan-writing 1.2.40, review-provide 1.5.18, review-receive 1.6.16, quick-start 2.3.25, plan 1.4.21, import-plan 1.4.23, brief 1.0.8, goal 1.0.4, lite 1.1.14); `oat sync --scope project` (branch build) refreshed only `.oat/sync/manifest.json` (`oatVersion` 0.3.43 → 0.3.45); provider views are links, so no view content changed.
+
+**Shape.** The rules live once, in plan-writing's Review Table Preservation Rules, beside the existing event-identity bullets: the key from ledger cells alone with `-` artifacts never keying; one writer per event (update the row a gate child or Step 9 wrote; a structured review claims the unbound placeholder and appends only when none remains); and supersession, read-side only, with the class, head and `-` limits and no edit, promotion or deletion. Plan-writing step 6 adds one bullet: the structured `plan` review records on its own row, never on the gate's. The other skills add one sentence each beside today's text. Two pins forced wording choices: p11's pin of step 6's original sentence kept the addition in its own bullet, and the named-skill execution contract classified a backticked `oat-project-review-receive` in Step 9 as a call site, so Step 9 names the skills in plain words.
+
+**Lightweight design.** On the real `plan.md` template rendered for quick (no `design` placeholder), Step 9's documented placeholder-or-append rule records exactly one `design` row; spec-driven claims its placeholder and also ends with exactly one (`review-event-row-contracts.test.ts`, which pins the Step 9 sentence it simulates).
+
+**Pins can fail** (each neutralized in the working tree, the new test file run, then restored byte-identical; 1 of 15 failed each time): plan-writing "never appends a second row" changed to "may append a second row"; plan-writing "Readers that select a review event ignore a superseded row" changed to "still select a superseded row"; review-receive "never receives it or edits its row" changed to "receives it".
 
 ## Phase p12: Exact-event consumption for gate handoffs
 
