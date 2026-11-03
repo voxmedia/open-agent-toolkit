@@ -1058,6 +1058,8 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 
 **Outcome:** passed
 
+- PR: d01 (m01: p01, p02, p10, p11) registered and opened at https://github.com/voxmedia/open-agent-toolkit/pull/400 on 2026-11-03 (base `892ecdc0a`, reviewed head `5599af21d`); milestone m01 `delivered`, endpoint merged.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

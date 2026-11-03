@@ -36,7 +36,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -73,7 +73,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m01
-oat_milestone_status: delivering
+oat_milestone_status: delivered
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -107,7 +107,7 @@ oat_deliveries:
     scope: [p01, p02, p10, p11]
     endpoint: merged
     kind: pr
-    status: registering
+    status: open
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -115,7 +115,13 @@ oat_deliveries:
       repository: voxmedia/open-agent-toolkit
       head_branch: goal/review-gate-integrity
       head_sha_at_registration: 'b3c93606632c5069839a09effc5c4d7283f22790'
-    members: []
+    members:
+      - url: https://github.com/voxmedia/open-agent-toolkit/pull/400
+        base: '892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3'
+        reviewed_head: '5599af21d4927c7d39c668b9d1662509e5d3b403'
+        observed_head: null
+        observed_base: null
+        status: open
     integrated_review:
       artifact: reviews/archived/m01-review-2026-11-03T000239Z.md
       scope: [p01, p02, p10, p11]
@@ -190,11 +196,11 @@ oat_deliveries:
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/400' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-02T23:50:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-03T00:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
