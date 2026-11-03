@@ -1688,6 +1688,48 @@ Scope: `efea9ac0a..2c341cff5` (p-rev1-t01, corrects p12), fresh `oat-reviewer-cl
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer, after p-rev1 was accepted at `33d1edfef`. `origin/main` has not moved since the p07 base merge.
 
+### Task p-rev2-t01: `oat project status` resolves review head ancestry in the repository that contains the project
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev2-impl-20261103-01
+**Handle:** direct:rgi-prev2-impl-20261103-01:p-rev2-t01
+**Intent:** Fix M2 of the m02 exit gate. `getProjectStateWithReviewAncestry` runs `git merge-base --is-ancestor` with `cwd` at the project directory, so when that directory is its own nested repository the source commits a Reviewed Head names do not resolve and `oat project status` keeps a superseded `received` event live. Run its ancestry queries from the project's parent directory instead, the boundary `oat project list` already uses (its `cwd` is the scope root), so git discovers the source repository that `review latest` and `review check` query. The control-plane reader stays pure.
+**Files:** `packages/cli/src/commands/review/head-ancestry.ts`, `packages/cli/src/commands/review/__tests__/ancestry-wiring.test.ts`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/project/status.test.ts src/commands/project/list.test.ts`, then the gate artifact's M2 reproduction against the rebuilt branch CLI.
+**Commit:** 564d91470973a83f66564f511270eea7acfa8b74
+**Proof:** the proof command passed 121/121 tests in 7 files, exit 0. `ancestry-wiring.test.ts` now runs each case in both the `shared` and the `synced-nested` layout, 4 tests in all. CLI `type-check` and `lint` exited 0, and so did `oxfmt --check` on both files. `pnpm build` exited 0, with 4 of 5 tasks cached; the CLI task was rebuilt.
+
+**Which readers diverged.** The pre-change branch build ran over a supplementary reader probe: the M2 ledger in three layouts, read by `project status`, `project list --scope synced`, `review latest --actionable-project` and `review check`, all with cwd at the source repository root. Only `project status` diverged, and only when the project directory was an independent nested repository.
+
+- `project list` already agreed: `listProjectsWithReviewAncestry` runs git from the scope root, the project's parent directory.
+- `review latest` and `review check` already agreed: they run git from `resolveProjectRoot(cwd)`.
+- A linked-worktree synced checkout already agreed under every reader. `oat project new` and `oat project pull` create synced checkouts this way, and a linked worktree shares the source object store, so the source heads resolve in it.
+
+**Fix.** `getProjectStateWithReviewAncestry` now runs git from `dirname(resolve(projectPath))`, the boundary `project list` uses for the same project. From there git discovers the repository that contains the project. Nothing else changed:
+
+- the status command and its dependency signature are unchanged;
+- an absolute `--project-path` still reads without resolving a repository from cwd (the existing `status.test.ts` control passes);
+- the control-plane reader still takes precomputed ancestry and runs no git.
+
+No doc describes the git working directory, so none changed. The CLI reference and the reviews page say only that ancestry is answered with `git merge-base --is-ancestor`. The control-plane `AGENTS.md` and README say the CLI supplies the resolver. All of these remain true.
+
+**M2 reproduction.** The gate artifact's probe was extracted verbatim (sha256 `a669787d…e30be`) and run with `python3 -I` from the repository root:
+
+| Layout          | Pre-change branch build (78eae1e55)                                                               | Branch build (564d91470)                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| no nested git   | status `oat-project-summary`, latest null, check `superseded_received_row`                        | status `oat-project-summary`, latest null, check `superseded_received_row` |
+| nested git (M2) | status `oat-project-review-receive` (the M2 defect), latest null, check `superseded_received_row` | status `oat-project-summary`, latest null, check `superseded_received_row` |
+
+**Supplementary reader probe** (branch build). The descendant later head retires the event in every reader in every layout: ordinary, nested and linked worktree; status, list, latest and check. The unresolvable later head (`f`×40) keeps the event live in every reader in every layout: status and list route to receive, latest returns `reviews/r1.md`, and check reports nothing.
+
+**Negative control.**
+
+- Bad state: the pre-change branch build routed `project status` to `oat-project-review-receive` for the nested layout, while latest and check treated the event as superseded.
+- After the fix: the branch build retires the event in status, so all four readers agree.
+- Valid controls still pass. The ordinary layout gives the same results before and after the fix. The unresolvable, non-descendant head stays live in every reader.
+
+**Can-fail proof.** The fix was neutralized in the working tree by restoring `projectPath` as git's cwd, and the wiring test was run. `ancestry-wiring.test.ts` failed 1 of 4: the `synced-nested` descendant case, at the status assertion (`expected 'oat-project-review-receive' not to be 'oat-project-review-receive'`). The file was then restored and checked byte-identical with `cmp`.
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
