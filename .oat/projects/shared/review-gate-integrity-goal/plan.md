@@ -192,12 +192,12 @@ own reviews and gates.
 
 <!-- One row per milestone: its id (m01, m02, …) and its ordered, comma-separated phase ids. Every phase, including revision phases, belongs to exactly one milestone. -->
 
-| Milestone | Phases             |
-| --------- | ------------------ |
-| m01       | p01, p02, p10, p11 |
-| m02       | p07, p12, p13      |
-| m03       | p08                |
-| m04       | p09                |
+| Milestone | Phases                        |
+| --------- | ----------------------------- |
+| m01       | p01, p02, p10, p11            |
+| m02       | p07, p12, p13, p-rev1, p-rev2 |
+| m03       | p08                           |
+| m04       | p09                           |
 
 ## Phase p01: Verdict parser finding identification
 
@@ -250,6 +250,18 @@ Neutralizing the ownership and title-precedence guard breaks the undercount asse
 
 **Intent:** Before PR creation, `oat-project-pr-progress` and `oat-project-pr-final` list the required reviews still `pending` for the PR's scope (`BL-261002-list-pending-required-reviews`), and the user runs them, waives them with a recorded reason, or stops. A new read-only command `oat review pending --project <path> --scope <pNN[,pNN…]|mNN|project> [--json]` computes the list from the latest `## Reviews` row per Scope + Type: required rows are the `code` rows of the scope's phases that exist in the plan (an `mNN` scope expands through the Milestones table; `project` covers every phase), plus `plan | artifact` for a `project` scope unless the plan-review skip line is recorded; `spec`, `design`, `final` and `mNN` rows are never required (`final` stays with pr-final Step 2 and `PRFINAL-03`, `mNN` with `oat project delivery check`). It reports `pending` and `waived` lists separately, always exits 0 on a readable project, and decides nothing. The p13 Known Unknown settles on the journal slot: the row stays `pending`, and a waiver is one line appended under `## Reviews and Gates` in `implementation.md`, `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <date> · **Reason:** <text>`, written only on the user's explicit choice; a Reviews cell would break Outcome 4's event key or be overwritten when a review claims the row. A waiver applies only to a required key, moves it from `pending` to `waived`, and is inert once a later row records a review. No reader treats a waiver as `passed`: the row stays `pending`, and pr-final Step 2, closeout-check and delivery check do not read the line. pr-progress runs the listing before PR creation (in goal mode before Step 5.5 writes its `registering` entry) and pr-final before PR creation (in goal mode inside Step 1.5 before registration); with pending rows and no waiver, an interactive run offers run, waive or stop, and a non-interactive run stops. pr-final's stop is the new autonomy row `PRFINAL-06` (required reviews pending without a waiver); pr-progress, which is not an autonomy-inventory root, states the same non-interactive stop in prose. Operator decision (2026-11-03, p13 review M1): a required key whose phase is concrete (not `**Provisional:** yes`) but which has no `## Reviews` row is reported in a separate `missing` list; both PR skills treat `missing` like `pending` (run, waive or stop; a non-interactive run stops, `PRFINAL-06` for pr-final), and a waiver applies to a `missing` key.
 **Exit evidence:** Unit tests of `oat review pending` on fixtures: pending phase and `plan` rows are listed and a fully reviewed fixture lists none; `spec`, `design`, `final`, `mNN`, a skip-lined `plan` row and a row of a phase not in the plan are never listed; an `mNN` scope follows the Milestones table; a waiver line moves its row to `waived` and it is not listed as pending on the next run, while a waiver for a non-required key or a later recorded review leaves the waiver unapplied. A negative control proves the waiver guard can fail. Branch-build probes on a scratch project show a waived row still `pending` in the table and `oat project closeout-check` and `oat project delivery check` results unchanged by the waiver line. Contract tests pin the pr-progress and pr-final listing and stop sentences, and `autonomy-gate-inventory.test.ts` passes with `PRFINAL-06`. `oat project journal check` accepts a waiver line. The CLI reference, the reviews and PR-flow docs, and the pr-progress and pr-final skill version bumps ship in the phase. Added by the M1 decision: a concrete phase with no row is listed in `missing` and stops a non-interactive run, a provisional phase with no row is not listed, and a waiver moves a `missing` key to `waived`; a guard-can-fail control covers it.
+**Provisional:** no
+
+## Phase p-rev1: Refuse a malformed Reviewed Head in review resolve
+
+**Intent:** Correct p12 for the m02 exit gate finding M1 (`reviews/archived/range-review-2026-11-03T215601Z.md`). `parseReviewTable` drops any Reviewed Head that is not a full SHA, so `oat review resolve` reads an abbreviated or malformed cell as the permitted `-` placeholder and accepts the event as `unavailable`, contradicting p12's exact equality. The resolver keeps the raw cell at its boundary: `-` (and a legacy absent column) still reads `unavailable`, while any other non-full-SHA value refuses with a structured diagnostic. No other reader changes.
+**Exit evidence:** Resolver tests and a branch-build probe (the gate artifact's M1 reproduction) show a matching full SHA accepted, a wrong full SHA refused with `reviewed_head_mismatch`, an abbreviated and a malformed cell refused with the new diagnostic, and `-` accepted as unavailable; a guard-can-fail control; the CLI reference code list matches the code.
+**Provisional:** no
+
+## Phase p-rev2: Resolve synced-project review ancestry in the source repository
+
+**Intent:** Correct p07 for the m02 exit gate finding M2 (`reviews/archived/range-review-2026-11-03T215601Z.md`). `getProjectStateWithReviewAncestry` runs git with `cwd` at the project path, so in a synced project (a nested tracking checkout) the source commits a Reviewed Head names are unresolvable, the older `received` event stays live, and `project status` routes to receive while `review latest --actionable-project` and `review check` treat it as superseded. The ancestry queries of `project status`, `project list`, `review latest` and `review check` resolve against the source repository root, so all readers agree; the control-plane reader stays pure.
+**Exit evidence:** The real-git ancestry wiring test gains a nested synced checkout with source-repository head SHAs, and status, latest and check agree on supersession there, with the ordinary layout and an unresolved or non-descendant head as controls; the gate artifact's M2 reproduction passes on the branch build; a guard-can-fail control.
 **Provisional:** no
 
 ## Phase p08: Gate convergence visibility and classification reporting
@@ -314,7 +326,9 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p13     | code     | passed          | 2026-11-03 | reviews/archived/p13-review-2026-11-03T213802Z.md           | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | manual     | -                    |
 | plan    | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -          | -                    |
 | plan    | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate       | codex-6-sol-xhigh    |
-| p07-p13 | code     | received        | 2026-11-03 | reviews/range-review-2026-11-03T215601Z.md                  | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate       | codex-6-sol-xhigh    |
+| p07-p13 | code     | fixes_added     | 2026-11-03 | reviews/archived/range-review-2026-11-03T215601Z.md         | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate       | codex-6-sol-xhigh    |
+| p-rev1  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p-rev2  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 

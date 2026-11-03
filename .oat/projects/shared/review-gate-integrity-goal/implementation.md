@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: null
+oat_current_task_id: p-rev1
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p10   | completed | 1     | 1/1      |
-| p11   | completed | 1     | 1/1      |
-| p07   | completed | 1     | 1/1      |
-| p12   | completed | 1     | 1/1      |
-| p13   | completed | 1     | 1/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | pending   | 1     | 0/1      |
+| p-rev2 | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 7/9 phases accepted
+**Total:** 7/11 phases accepted
 
 ---
 
@@ -1607,6 +1609,16 @@ Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `
 
 **Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/p13-review-2026-11-03T213802Z.md)
 
+## Phase p-rev1: Refuse a malformed Reviewed Head in review resolve
+
+**Status:** pending
+**Corrects:** p12
+
+## Phase p-rev2: Resolve synced-project review ancestry in the source repository
+
+**Status:** pending
+**Corrects:** p07
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1815,6 +1827,22 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 - Approval (m02 amendment): approved 2026-11-03 by user at `ee377dd7bcbedec4e0c66cc8d12a754c45c1587d` (the gate-reviewed bundle). `oat_milestone_gates.m02.plan` written `allowed`/`passed`, `config_fingerprint` `sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75` = sha256 of the compact JSON of `oat gate resolve oat-project-goal` `effectiveGate` (no CLI emits a canonical fingerprint; m01's value used an unrecorded method).
 - Gate `oat-project-implement` (code, m02 exit, run `788ae91a-3479-436f-8d7d-08bfa2e064f8`, configured command unchanged, default selection `claude-opus-5-5-high`, released 0.3.45): `review_failed`, `review_did_not_complete`. The reviewer refused before reviewing: `--review-scope final` expands to every accepted phase (p01, p02, p10, p11, p07, p12, p13), and m01's phase heads are not ancestors of this branch after PR #400's squash merge (`c7cd3b715`), so sequential continuity fails (p07's base does not descend from p11's head `5599af21d`). No artifact, no Reviews row, no carrier written. No attempt consumed: the refusal is deterministic and the review never ran, like m01's launch-reconciliation case.
 - Operator routing (m02 exit gate, 2026-11-03): run the configured gate once with `--review-scope p07-p13` (target, threshold and prompt unchanged), which resolves to exactly m02's phases p07, p12, p13 over `eba04d813..2375b77bd`, the scope `oat project delivery check --subject m02` expects. One-off routing for this run only, not a configuration change. A backlog item tracks the contract gap: in goal mode a configured `final` exit gate cannot resolve after an earlier milestone ships by squash merge.
+
+### Review Received: p07-p13 (m02 exit gate)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-03T215601Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 0
+
+The configured `oat-project-implement` exit gate (run `93e1b0a1-9b04-4c31-9aa2-e032b9820a9d`, scope `p07-p13` under the operator's routing, default selection `codex-6-sol-xhigh`, cross-family: m02 was produced by Opus 5.5) reviewed m02 (`p07, p12, p13`) over `eba04d813..2375b77bd`. The event was validated with the branch-build `oat review resolve` (every check `match`, supersession `current`).
+
+- M1 (Medium): `oat review resolve` reads an abbreviated or malformed Reviewed Head as the `-` placeholder and accepts it as `unavailable`, contradicting p12's exact equality → revision phase p-rev1 (`**Corrects:** p12`); a later phase has a `**Base:**`, so the late-fix rule requires a revision phase.
+- M2 (Medium): in a synced project the review ancestry runs git in the nested tracking checkout, so `project status` keeps a superseded `received` event live while `review latest` and `review check` do not, contradicting Outcome 4's reader agreement → revision phase p-rev2 (`**Corrects:** p07`).
+
+**Outcome:** fixes queued: p-rev1, p-rev2 (gate passed its threshold; the exit gate reruns over the milestone set `p07-p-rev2` after both are accepted)
+
+- Gate `oat-project-implement` (code, m02 exit, run `93e1b0a1-9b04-4c31-9aa2-e032b9820a9d`, `--review-scope p07-p13`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/2/0, receive-eligible, received 2026-11-03; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m02.exit`.
 
 ## Deferred Findings
 

@@ -187,6 +187,10 @@ target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=788ae
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T215601Z.md run=93e1b0a1-9b04-4c31-9aa2-e032b9820a9d
 
+### 2026-11-03 · structural · oat-project-implement · m02
+
+m02 exit gate (run 93e1b0a1, scope p07-p13, Sol xhigh cross-family) passed its threshold with M1 (resolve accepts a malformed Reviewed Head) and M2 (synced-project ancestry runs in the nested checkout). Later phases have bases, so per the late-fix rule both go to appended revision phases inside m02: p-rev1 corrects p12, p-rev2 corrects p07; milestone row now p07, p12, p13, p-rev1, p-rev2. The gate reruns over p07-p-rev2 after both are accepted. rgi-m02-exit1-revisions-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
