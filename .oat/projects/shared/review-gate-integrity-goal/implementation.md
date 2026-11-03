@@ -1450,6 +1450,19 @@ Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Commit
 
 **Guard can fail** (each neutralized in the working tree, `pending.test.ts` run, then restored byte-identical with `cmp`; 1 of 12 failed each time): N1 the waiver applicability guard forced to `applied: true` (the unapplied-waiver test fails); N2 the `## Reviews and Gates` section filter removed (the placement test fails); N3 the skip line ignored (the never-listed test fails); N4 requested phases not intersected with the plan (the never-listed test fails); N5 the milestone scope replaced by every plan phase (the `mNN` test fails).
 
+### Task p13-t02: Pin delivery check unchanged by an appended review waiver
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t02
+**Intent:** Keep the exit evidence that a waiver line leaves `oat project delivery check` unchanged as an automated test, not only a one-off probe: on the `goal-repo` received-milestone scenario, appending a `**Review waived:**` line under `## Reviews and Gates` and committing it leaves the `m01` check `status: ok`, deliverable, with the same exit code and JSON apart from `publishedHeads`. Test-only.
+**Files:** `packages/cli/src/commands/project/delivery/check.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery`
+**Commit:** 4e5d062fa38e4e50fe3a578085e0b57590e5349b
+**Proof:** delivery suites 126/126 (3 files) exit 0; CLI `lint` exit 0. The record was written after the commit rather than opened before it; the commit is the record's one implementation commit.
+
+**Test can fail.** With `judgeJournalChange` (`delivery/evidence.ts`) made to refuse any journal that contains `**Review waived:**`, the new test fails (1 failed); the file was restored byte-identical (`cmp`). The branch-build counterpart is p13-t01 probe 4.
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
