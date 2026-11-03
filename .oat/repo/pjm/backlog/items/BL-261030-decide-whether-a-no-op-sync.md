@@ -10,7 +10,7 @@ labels:
   - configuration
 assignee: null
 created: 2026-10-30T22:27:35.200Z
-updated: 2026-10-30T22:27:35.200Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/360
@@ -28,3 +28,7 @@ oat sync restamps .oat/sync/manifest.json oatVersion on a successful zero-operat
 - Otherwise, worktree setup documentation states the expected version-only manifest change.
 - Tracked sync records and ownership/removal safety are preserved; behavior is demonstrated for a fresh worktree, a repeated no-op sync, and a CLI version change.
 - No storage migration, untracking, or manifest split.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: `oatVersion` means the CLI version that last wrote manifest content. A zero-operation sync does not restamp it. Implement as a small fix and update the pinned tests and docs.

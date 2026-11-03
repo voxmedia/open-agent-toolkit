@@ -11,7 +11,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-24T18:59:55.490Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -120,3 +120,12 @@ criterion (the archived source records keep their original wording):
 - [BL-261025-close-docs-skill-workflow-gaps — Close docs skill workflow gaps found in the consumer rollout](BL-261025-close-docs-skill-workflow-gaps.md)
   (includes the pilot's analyze tracking, analyze IA candidates and pre-0.3.31
   nav-sync adoption follow-ups)
+
+## Scope narrowed (2026-11-02 triage)
+
+Only these criteria remain tracked; the eight checkboxes above are kept for reference.
+
+- In pntr, `scripts/github-actions/oat-docs-update/config.ts` no longer treats the workflow configuration as approval for every recommendation: `approval: explicit` recommendations are skipped and reported by ID and reason, while eligible default repairs still apply, and the existing documentation-only path gate is unchanged.
+- pntr has OAT documentation config for its existing docs (adopted as Markdown with consumer-approved roots, preserving authored content).
+
+personal-skills was re-checked on 2026-11-02: `.oat/config.json` already declares `documentation.root: docs`, `tooling: markdown` and an index, so it needs no change. The remaining evidence checkboxes and framework-consumer drift verification were dropped, not refiled.

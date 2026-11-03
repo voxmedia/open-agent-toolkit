@@ -1,11 +1,10 @@
 ---
 id: BL-261002-offer-a-strict-gate-reviewer
-title: Offer a strict gate-reviewer independence mode and align gate skill
-  wording and decision records
+title: Keep failed planning gates blocking and align gate wording and decision records
 status: open
 priority: medium
 scope: feature
-scope_estimate: M
+scope_estimate: S
 labels:
   - gates
   - reviews
@@ -13,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:59.560Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -60,6 +59,16 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - The planning skills (`oat-project-plan`, `oat-project-quick-start`, `oat-project-import-plan`) apply `onFailure` to any failed gate run, so with `onFailure: warn` planning finishes and marks the plan ready even when no review ran at all (reviewer did not start, timed out, or returned an invalid artifact). Implement and lite keep such operational failures blocked. Align the planning skills so a gate that did not produce a review is never treated as an advisory finding. Read in the skill contracts (plan `SKILL.md:649-656` and the matching lines in the other two).
 
 ## Acceptance Criteria
+
+- The plan, quick-start and import-plan skills keep launch failures, timeouts and invalid artifacts blocked regardless of `onFailure`, matching implement and lite; tests fail if they regress. Coordinate with review-gate-integrity-goal m02, which settles planning gates in the same skills; if m02 delivers this, close the criterion against it.
+- Skill wording and the independence caveat in `apps/oat-docs/docs/workflows/advanced/workflow-gates.md` describe the actual `--avoid` fallback behavior; changed skills get `metadata.version` bumps.
+- DR-260621 and DR-260706 are superseded or amended through `oat-pjm-decision` / `oat decision new`, and the decision index is regenerated.
+
+## Scope narrowed (2026-11-02 triage)
+
+Kept: the correctness hole (a gate that produced no review passing as advisory) and the stale wording and decision records. Dropped, not refiled: the strict independence option and in-skill surfacing of the fallback. Refile if a team needs enforced reviewer independence.
+
+Original acceptance criteria, kept for reference (only the list above is tracked):
 
 - A strict independence option (config and `--avoid` value) makes a gate fail
   with a clear message when no reviewer meeting the requested independence is

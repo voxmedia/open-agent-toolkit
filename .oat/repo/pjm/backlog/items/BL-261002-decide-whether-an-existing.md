@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:55.303Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -48,3 +48,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   a migration note for repositories that relied on detection, and tests cover
   both scopes.
 - `apps/oat-docs/docs/provider-sync/config.md:161` matches the decision.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: keep auto-detecting providers from existing folders (requiring opt-in would break current installs). Remaining work: a clearer mismatch message that says what will be written and how to opt out, plus docs.

@@ -13,7 +13,7 @@ labels:
   - docs
 assignee: null
 created: 2026-09-04T20:35:55.819Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -36,3 +36,7 @@ decision differs.
 - Existing `state.md` files with `oat_workflow_mode: quick` or `spec-driven` continue to load without migration errors; any renamed value has a documented migration path exercised by a test.
 - Templates, scaffold fixtures, and CLI tests assert the new default; `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, and `pnpm release:validate` pass.
 - The lockstep public package versions are bumped together in the same PR, since bundled skills, templates, and docs are shipped CLI functionality.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: quick is the default mode; spec-driven is the explicit escalation. The acceptance criteria above stand as written.

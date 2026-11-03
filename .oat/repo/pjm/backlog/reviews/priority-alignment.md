@@ -2,163 +2,90 @@
 
 <!-- markdownlint-disable MD013 -->
 
-**Date:** 2026-08-30 (America/Chicago)
-**Status:** Active — Post-PR #244 alignment. The provider-root contract shipped;
-the scope/provider umbrella and scope-adoption diagnostics are active in
-separate worktrees; ReviewPlan remains an existing project; and the two bounded
-gate projects remain independent launch candidates.
+**Date:** 2026-11-02 (America/Chicago)
+**Status:** Active. Rebuilt after the 2026-11-02 operator triage of all 122 open
+items: 35 closed, 3 merged, 7 narrowed to their core, 13 decided. 84 remain
+open. `review-gate-integrity-goal` m01 merged in #400.
 
-This is the compact execution guide. For the full catalog and historical
-value/effort review, see
-[backlog-and-roadmap-review.md](./backlog-and-roadmap-review.md) and
-[roadmap.md](../../roadmap.md).
+This is the compact execution guide. Direction and sequencing live in
+[roadmap.md](../../roadmap.md). The [2026-10-31 backlog and roadmap
+review](./backlog-and-roadmap-review.md) keeps its catalog and ratings as
+history; its wave numbers are retired in favor of the named tracks below.
 
 ## Current ownership
 
-| Lane                    | Owned work                                                                                                                                                                                                                                                                                                                                                                         | Current disposition                                                                                              |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Scope/provider umbrella | [BL-260829-make-tool-pack-scope-selection](../items/BL-260829-make-tool-pack-scope-selection.md), [BL-260724-support-provider-directory](../items/BL-260724-support-provider-directory.md), [BL-260826-populate-native-subagent](../items/BL-260826-populate-native-subagent.md), [BL-260828-add-project-level-oat-guidance](../items/BL-260828-add-project-level-oat-guidance.md) | Active tool-pack-scope-provider-truthfulness project. Revalidate against PRs #227, #240, and #242 before design. |
-| Scope diagnostics       | [BL-260827-correct-scope-and-adoption](../items/BL-260827-correct-scope-and-adoption.md)                                                                                                                                                                                                                                                                                           | Active scope-adoption-diagnostics project. Keep its diagnostics slice bounded.                                   |
-| ReviewPlan              | [BL-260729-implement-reviewplan-first](../items/BL-260729-implement-reviewplan-first.md)                                                                                                                                                                                                                                                                                           | Existing review-plan-workflow project; reconcile PR #190 against current main.                                   |
-| Review/gate integrity   | [BL-260829-order-phase-bookkeeping-before](../archived/BL-260829-order-phase-bookkeeping-before.md) and dependent review-receipt work                                                                                                                                                                                                                                              | Preserve shared lifecycle ordering; do not replace the cluster with isolated plans.                              |
-| Headless gate           | [BL-260826-gate-targets-must-not-yield](../items/BL-260826-gate-targets-must-not-yield.md)                                                                                                                                                                                                                                                                                         | Existing gate-headless-no-yield project; independent bounded launch candidate.                                   |
-| Structured output       | [BL-260726-validate-structured-output](../items/BL-260726-validate-structured-output.md)                                                                                                                                                                                                                                                                                           | Existing gate-structured-output-contract project; independent bounded launch candidate.                          |
-
-The archived
-[BL-260829-unified-agent-provider-root](../archived/BL-260829-unified-agent-provider-root.md)
-shipped in PR #242 as CLI 0.2.47. It is now a prerequisite consumed by the
-scope/provider umbrella, not an active lane.
+| Track                        | Owned work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Current disposition                                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Review/gate integrity (goal) | m01: [BL-260711-skip-re-review-for-bookkeeping](../items/BL-260711-skip-re-review-for-bookkeeping.md) — Skip re-review for bookkeeping-only review findings; the #339 slice of [BL-261003-diagnose-review-finding](../items/BL-261003-diagnose-review-finding.md) — Diagnose review finding overcounts and revalidate format-only repairs. m03: [BL-260820-emit-source-qualified](../items/BL-260820-emit-source-qualified.md) — Emit source-qualified provenance envelopes for review and gate receipts; [BL-260820-bind-each-gate-review](../items/BL-260820-bind-each-gate-review.md) — Bind each gate review disposition to its exact received ledger event; [BL-261002-list-pending-required-reviews](../items/BL-261002-list-pending-required-reviews.md) — List pending required reviews when a project reaches a pull request. m04: [BL-260927-mark-gate-findings-as-new-or](../items/BL-260927-mark-gate-findings-as-new-or.md) — Mark gate findings as new or carried over between attempts; [BL-261013-classify-review-findings](../items/BL-261013-classify-review-findings.md) — Classify review findings against the contract at every receive. m05: [BL-260820-track-pr-closeout-evidence](../items/BL-260820-track-pr-closeout-evidence.md) — Track PR-closeout evidence freshness against the current head | m01 merged in #400; m02 re-alignment next. Later milestones are re-aligned at each delivery. |
+| Config and dispatch policy   | [BL-261002-settle-dispatch-policy](../items/BL-261002-settle-dispatch-policy.md) — Settle dispatch policy precedence and stop legacy presets overwriting ladder columns; [BL-261002-make-the-copy-sync-strategy](../items/BL-261002-make-the-copy-sync-strategy.md) — Make the copy sync strategy checkout-independent and settable from the CLI; [BL-261002-fix-oat-config-describe-gaps](../items/BL-261002-fix-oat-config-describe-gaps.md) — Fix oat config describe gaps and make config unset reach the layer that holds the key; [BL-260726-validate-cursor-pin-effort](../items/BL-260726-validate-cursor-pin-effort.md) — Validate Cursor pin effort rungs at sync time                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Ready beside the goal; no shared files.                                                      |
+| Small adopter fixes          | [BL-261102-quote-the-oat-project-pause](../items/BL-261102-quote-the-oat-project-pause.md) — Quote the oat project pause reason so YAML parses it intact; [BL-261102-let-pr-skills-fall-back](../items/BL-261102-let-pr-skills-fall-back.md) — Let PR skills fall back to origin/HEAD when git.defaultBranch is unset; [BL-261002-provide-a-complete-oat](../items/BL-261002-provide-a-complete-oat.md) — Fix oat tools remove --all at project scope and drop stale requiredBy entries; [BL-260927-give-gate-receipts-portable](../items/BL-260927-give-gate-receipts-portable.md) — Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative; [BL-261002-decide-first-run-defaults](../items/BL-261002-decide-first-run-defaults.md) — Decide first-run defaults for project scope without origin and non-interactive pack install; [BL-261030-decide-whether-a-no-op-sync](../items/BL-261030-decide-whether-a-no-op-sync.md) — Decide whether a no-op sync should restamp the manifest oatVersion                                                                                                                                                                                                                                                                               | Single-lane PRs, any time. Decisions recorded in each item.                                  |
+| Docs tooling                 | [BL-261025-make-oat-docs-generators](../items/BL-261025-make-oat-docs-generators.md) — Make OAT docs generators and writers predictable; [BL-261025-tighten-oat-docs-check-rules](../items/BL-261025-tighten-oat-docs-check-rules.md) — Tighten oat docs check rules and diagnostics; [BL-261025-close-docs-skill-workflow-gaps](../items/BL-261025-close-docs-skill-workflow-gaps.md) — Close docs skill workflow gaps found in the consumer rollout                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Generators and check rules ready; skill gaps after the generator slice.                      |
+| Planning guardrails          | [BL-260830-make-documentation-aware](../items/BL-260830-make-documentation-aware.md) — Make the knowledge index optional by default for discovery and planning; [BL-261003-reconcile-oat-tracking-commit](../items/BL-261003-reconcile-oat-tracking-commit.md) — Reconcile OAT tracking commit cadence with resumable phase/group batching; [BL-261002-warn-when-the-default-branch](../items/BL-261002-warn-when-the-default-branch.md) — Warn when the default branch has changed planned paths since the branch base; [BL-261002-add-an-explicit-plan-approval](../items/BL-261002-add-an-explicit-plan-approval.md) — Add an explicit plan-approval step to quick and spec-driven projects; [BL-261002-offer-a-strict-gate-reviewer](../items/BL-261002-offer-a-strict-gate-reviewer.md) — Keep failed planning gates blocking and align gate wording and decision records                                                                                                                                                                                                                                                                                                                                                                                                                                              | Ready now that m01 has merged; runs before m02 starts.                                       |
+| Planning skill sweeps        | [BL-260906-re-evaluate-universal-plan](../items/BL-260906-re-evaluate-universal-plan.md) — Re-evaluate universal plan proof strategy and test-first guidance; [BL-260904-make-quick-the-default-oat](../items/BL-260904-make-quick-the-default-oat.md) — Make quick the default OAT workflow mode and spec-driven the explicit larger mode                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Decided. Record the proof decision first; sweeps follow the planning guardrails.             |
+| In review                    | [BL-261024-roll-out-the-shipped-oat-docs](../items/BL-261024-roll-out-the-shipped-oat-docs.md) — Roll out the shipped OAT docs front door and approval policy to consumer repositories (voxmedia/pntr#87); [BL-261002-publish-an-owner-statement](../items/BL-261002-publish-an-owner-statement.md) — Publish an owner statement on project stability, support, and non-goals                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Close out when the PRs merge.                                                                |
+| Parked                       | `oat-plugin`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Paused by the operator on 2026-10-31.                                                        |
 
 ## Dependency interpretation
 
-- PR #242's provider-root contract precedes scope/provider implementation; that
-  dependency is satisfied.
-- The active scope/provider and diagnostics worktrees may proceed concurrently,
-  but must coordinate changes to inventory, diagnostics, sync, and shared
-  provider-state surfaces.
-- ReviewPlan must establish the current review artifact/event baseline before
-  exact received-event identity and later receipt-provenance work.
-- [BL-260829-order-phase-bookkeeping-before](../archived/BL-260829-order-phase-bookkeeping-before.md)
-  should precede
-  [BL-260711-skip-re-review-for-bookkeeping](../items/BL-260711-skip-re-review-for-bookkeeping.md).
-- The headless and structured-output projects remain independent probes. They
-  support review/gate integrity without taking ownership of its lifecycle model.
-
-## External-plan readiness
-
-Plan readiness and execution readiness are separate decisions. A coherent,
-well-scoped backlog item may receive an external plan even when execution is
-blocked by an unshipped hard dependency. Dependency state alone is not a reason
-to exclude an item from the next `oat-repo-improve` pass.
-
-For every dependency-aware external plan:
-
-- reverse-link the source backlog item and plan;
-- link related backlog items, projects, pull requests, and external plans by
-  stable ID, title, repository path, or URL;
-- classify each dependency as hard or soft;
-- mark execution `BLOCKED` for unsatisfied hard dependencies and name the exact
-  state that unblocks execution;
-- use a dated filename and record the exact current `origin/main` commit; and
-- revalidate before import or execution when the freshness window expires,
-  `origin/main` advances, cited surfaces change, backlog or issue intent
-  changes, or a dependency lands after planning.
-
-[BL-260830-distinguish-external-plan](../items/BL-260830-distinguish-external-plan.md)
-owns the missing `oat-repo-improve` skill and plan-template enforcement. Until
-that item ships, apply this section as the operator rule for candidate
-selection and plan review.
+- **The goal is the spine.** It owns the review and gate files: verdict
+  parsing, receive, gate carriers, closeout checks and the review-related
+  skill prose. Nothing else edits those surfaces while a milestone is in
+  flight.
+- **Planning guardrails wait for m01 and go before m02.** m01 changes the
+  implement paths and m02 changes the planning-skill gate paths (plan,
+  quick-start, import-plan, lite, brief and goal), which are the same skills
+  the guardrails edit. The re-alignment pause after m01 is the natural window.
+  The failed-planning-gate rule is closed against m02 if m02 delivers it.
+- **The proof-policy and quick-default sweeps touch the same planning skills**,
+  so they follow the guardrails instead of running beside them.
+- **Config/dispatch policy, small adopter fixes and docs tooling are
+  independent of the goal** and of each other.
+- **Dispatch launch hardening follows config and dispatch policy.** #265 first
+  needs a decision on where the git seam may live.
+- **Items the goal excludes stay open** and follow the milestone whose surfaces
+  they share: gitignored review artifacts after m03, front-loaded gate classes
+  after m04, lifecycle state derivation and activity-aware gate timeouts after
+  the goal. The re-review rule is revisited after m02.
 
 ## Recommended concurrent stack
 
-These lanes are peers except where the dependencies above say otherwise:
+1. Goal m02 re-alignment (m01 merged in #400).
+2. Config and dispatch policy: dispatch policy and copy sync strategy in
+   parallel, then config describe and unset; the Cursor pin check whenever
+   convenient.
+3. Small adopter fixes, one lane, one PR each.
+4. Docs generators and check rules, if a fourth lane is wanted.
+5. Now, before m02 starts: the planning guardrails. Record the
+   proportionate-proof decision in the same window.
 
-1. Merge the completed PJM cleanup and migration PR.
-2. Continue the active scope/provider umbrella and diagnostics projects with
-   explicit shared-file coordination.
-3. Reconcile the existing ReviewPlan project and PR #190.
-4. Launch the existing headless and structured-output projects when capacity
-   allows.
-5. Use oat-repo-improve for remaining well-scoped backlog items that do not
-   already belong to one of these projects and do not require deeper discovery.
-   Include plan-ready items whose execution is dependency-blocked, with the
-   dependency and revalidation controls above.
+## Human-only decisions
 
-## Priority clusters
+All 13 decision items were settled on 2026-11-02. The decisions are recorded in
+each item's `## Operator decision` section, or in `completed.md` for closed
+items. Open owner input: confirm the drafted non-goals in the owner-statement
+docs PR.
 
-### Truthful distribution and adoption
+## External-plan readiness
 
-The active umbrella owns provider × scope × content-type truth, restart
-visibility, picker state, collection-level symlink adoption, project guidance,
-and native/fallback provenance. The diagnostics project owns only its bounded
-eligibility, attribution, materialization, and failure-rendering slice. PR #240
-closed the tool-pack lifecycle/config cleanup; PR #242 closed provider-root
-portability.
-
-### Review and gate integrity
-
-Keep the shared review lifecycle model intact:
-
-1. Prevent stale phase bookkeeping before review dispatch.
-2. Establish exact received-event identity.
-3. Apply bookkeeping-only re-review suppression.
-4. Add source-qualified receipt provenance.
-5. Add closeout freshness and configured fail-closed behavior.
-6. Advance autonomous completion and broader gate hardening only after those
-   contracts are stable.
-
-### Standalone gate contracts
-
-gate-headless-no-yield and gate-structured-output-contract are existing bounded
-projects. Improve their backlog links or estimates when needed, but do not
-create replacement projects or external plans.
-
-### Promoted legacy residuals
-
-The legacy tree has been retired. Eighteen reviewed records now have canonical
-`BL-260830-*` identities:
-
-- Ready for bounded `oat-repo-improve` verification and planning when unowned:
-  quick-mode resume routing, config unset, live brainstorm dogfood,
-  persisted instruction-sync strategy, strict YAML skill validation, remote
-  respond/summarize skills, and the provide-remote helper CLI wiring. (The
-  project-split dogfood item was closed on 2026-09-02 after the operator ran
-  both entry paths repeatedly with no defects.)
-- Plan now when scope is coherent, even if execution is dependency-blocked:
-  per-CLAUDE adoption opt-out (soft-depends on persisted strategy) and the
-  documentation-aware discovery policy from #205. Record dependency links,
-  readiness state, named unblock conditions, and revalidation triggers.
-- Revalidate scope before plan generation where the work itself may have
-  drifted: residual CLI P2/P3 cleanup and control-plane-backed
-  plan/implementation reads. Unshipped dependencies alone do not make these
-  items plan-ineligible.
-- Exclude from implementation planning while labeled `needs-discussion`:
-  bounded durable-reference reads, generic Jira refinement ownership,
-  listProjects fast-path approval, dependency-intelligence ownership,
-  same-target gate execution, and OAT memory-subsystem ownership.
-
-## Shared-file coordination
-
-- PR #244 owns the completed `.oat/repo/pjm/` and legacy reference-layout
-  migration, removal of obsolete native-read Cursor skill mirrors, and the
-  verifying issue-triage record.
-- Active implementation projects own their project artifacts and implementation
-  files. Avoid editing those project records here unless a broken repository
-  link requires a minimal correction.
-- The scope/provider and diagnostics projects should coordinate before changing
-  pack-inventory, provider sync, or shared diagnostics surfaces.
+[BL-260830-distinguish-external-plan](../archived/BL-260830-distinguish-external-plan.md) — Distinguish external-plan readiness from execution readiness
+shipped, so `oat-repo-improve` and its plan template now enforce the readiness
+rules this page used to carry as an operator rule: plan readiness is separate
+from execution readiness, hard dependencies mark execution `BLOCKED` with a
+named unblock condition, and plans revalidate when `origin/main` or a cited
+surface changes.
 
 ## Changelog
 
-| Date       | Update                                                                                                                                                                                                                                                                                                                                                  |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-04 | Planned `BL-260901-make-terminal-project-status` (W5 group 4) and `BL-260904-diagnose-canonical-skills` (W6 group 2); the program now schedules 31 plans across W1–W6. The completion-format class the status recon surfaced (projects that never write per-task `**Status:** completed`) is a candidate follow-up item, not planned.                   |
-| 2026-09-04 | Issue #258 (skill versioning against the Agent Skills spec) triaged into `BL-260904-honor-metadata-version` with a plan in W6 group 2, plus `BL-260904-migrate-bundled-skills-from` for the bulk migration outside the program.                                                                                                                         |
-| 2026-09-03 | PR #253 merged; post-merge triage resume applied (twenty issues labeled, #204 and #228 closed). Wave 5 index adds three `BL-260903-*` plans as W6; the program now schedules 28 plans across W1–W6. `BL-260904-stabilize-the-collection` filed for a CI flake in the collection-detach path.                                                            |
-| 2026-09-03 | PR #255 (truthfulness) and #256 landed; the two blocked W4 plans were refreshed to READY and every intake plan's landing-event row marked landed. The eight `BL-260903-*` items from PR #255 are unplanned; `BL-260903-populate-provider-reachability` (medium/M) and `BL-260903-pr-final-archives-reviews` (medium/S) are the next improve candidates. |
-| 2026-09-02 | Program-intake triage created twelve `BL-260902-*` items and a Wave 4 plan index (12 plans, every plan with a landing-event table for the truthfulness merge and PR #190); the execution program now schedules 25 plans across W1–W5.                                                                                                                   |
-| 2026-09-02 | Archived `BL-260830-live-dogfood-oat-project-split` as closed without implementation; the operator already exercised both split entry paths.                                                                                                                                                                                                            |
-| 2026-08-30 | Separated plan readiness from execution readiness for the upcoming improve pass and captured the missing skill/template enforcement in `BL-260830-distinguish-external-plan`.                                                                                                                                                                           |
-| 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.                                                                                                                                 |
-| 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items.                                                                                                                              |
-| 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                                                                                                                                               |
+| Date       | Update                                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-02 | Operator triage of all 122 open items. 35 were closed as won't-do with a refile-on-recurrence reason each, including ReviewPlan (PR #190 closed, `review-plan-workflow` archived). 3 were merged into other items, 7 narrowed to their core and 13 decided. 84 remain open. Wave numbering from the 2026-10-31 review is retired in favor of named tracks. |
+| 2026-09-04 | Planned `BL-260901-make-terminal-project-status` (W5 group 4) and `BL-260904-diagnose-canonical-skills` (W6 group 2); the program now schedules 31 plans across W1–W6. The completion-format class the status recon surfaced (projects that never write per-task `**Status:** completed`) is a candidate follow-up item, not planned.                      |
+| 2026-09-04 | Issue #258 (skill versioning against the Agent Skills spec) triaged into `BL-260904-honor-metadata-version` with a plan in W6 group 2, plus `BL-260904-migrate-bundled-skills-from` for the bulk migration outside the program.                                                                                                                            |
+| 2026-09-03 | PR #253 merged; post-merge triage resume applied (twenty issues labeled, #204 and #228 closed). Wave 5 index adds three `BL-260903-*` plans as W6; the program now schedules 28 plans across W1–W6. `BL-260904-stabilize-the-collection` filed for a CI flake in the collection-detach path.                                                               |
+| 2026-09-03 | PR #255 (truthfulness) and #256 landed; the two blocked W4 plans were refreshed to READY and every intake plan's landing-event row marked landed. The eight `BL-260903-*` items from PR #255 are unplanned; `BL-260903-populate-provider-reachability` (medium/M) and `BL-260903-pr-final-archives-reviews` (medium/S) are the next improve candidates.    |
+| 2026-09-02 | Program-intake triage created twelve `BL-260902-*` items and a Wave 4 plan index (12 plans, every plan with a landing-event table for the truthfulness merge and PR #190); the execution program now schedules 25 plans across W1–W5.                                                                                                                      |
+| 2026-09-02 | Archived `BL-260830-live-dogfood-oat-project-split` as closed without implementation; the operator already exercised both split entry paths.                                                                                                                                                                                                               |
+| 2026-08-30 | Separated plan readiness from execution readiness for the upcoming improve pass and captured the missing skill/template enforcement in `BL-260830-distinguish-external-plan`.                                                                                                                                                                              |
+| 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.                                                                                                                                    |
+| 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items.                                                                                                                                 |
+| 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                                                                                                                                                  |

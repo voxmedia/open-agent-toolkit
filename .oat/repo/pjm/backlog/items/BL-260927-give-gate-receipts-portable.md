@@ -1,18 +1,17 @@
 ---
 id: BL-260927-give-gate-receipts-portable
-title: Give gate receipts portable ownership, path-neutral identities, and a
-  shipped ignore rule
+title: Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative
 status: open
 priority: medium
 scope: feature
-scope_estimate: M
+scope_estimate: S
 labels:
   - gates
   - receipts
   - portability
 assignee: null
 created: 2026-09-27T03:35:37.500Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/307
@@ -33,6 +32,16 @@ gate receipt path is not ignored (`warnWhenReceiptIsTracked`,
 absolute `worktreeRoot` (`gate/index.ts:3433`).
 
 ## Acceptance Criteria
+
+- `oat init` installs the managed `**/gate-receipts/` ignore entry (`packages/cli/src/commands/init/gitignore.ts`).
+- Gate project-log receipts record repository-relative identities instead of absolute `projectPath` / `worktreeRoot`, and older absolute receipts are still accepted for recovery.
+- Tests cover the ignore entry and a relative receipt.
+
+## Scope narrowed (2026-11-02 triage)
+
+Kept: the two adopter-visible leaks (#312). Dropped, not refiled: the single ownership model and fresh-clone reconcile of a pending configured gate (#307). Refile if a fresh-clone recovery is actually needed.
+
+Original acceptance criteria, kept for reference (only the list above is tracked):
 
 - One ownership model covers configured-gate result receipts and gate project-log receipts: sanitized durable storage, or ignored runtime storage plus portable correlation data in tracked state.
 - A fresh clone can reconcile a received or pending configured gate without the original machine-local file.

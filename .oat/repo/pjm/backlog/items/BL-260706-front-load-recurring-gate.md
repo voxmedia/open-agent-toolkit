@@ -4,11 +4,11 @@ title: 'Front-load recurring gate-finding classes into implementer briefs'
 status: open # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: feature # idea | task | feature | initiative
-scope_estimate: L # XS | S | M | L | XL | XXL
+scope_estimate: M
 labels: [oat-project-implement, reviews]
 assignee: null
 created: '2026-07-06T14:39:33Z'
-updated: '2026-10-30T22:30:00Z'
+updated: 2026-11-02T00:00:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/354
@@ -34,6 +34,18 @@ Source: field feedback from an autonomous run using the phase review gate (PR #1
 Within-loop variant (GitHub #354, triaged 2026-10-30): successive bounded repairs inside one review loop can close one lifecycle-role failure and expose an equivalent failure in another role at the same owner. Today the fix loop passes only the current round's findings, and recurring families surface only at budget exhaustion through the complexity review. The same recurring-class idea should therefore reach the next repair brief, not only the next phase's brief.
 
 ## Acceptance Criteria
+
+- `oat-project-review-receive` classifies each finding as one-off vs. recurring-invariant and appends recurring classes (rule + where it bit) to a per-project ledger.
+- `oat-project-implement` injects the ledger into each subsequent phase's implementer brief as a "proactively design against these" block.
+- When a received Critical or High finding shares an owner and invariant with an earlier finding in the same scope, the next repair brief carries a short failure-family summary and affected-role matrix: the invariant, roles already exercised, adjacent roles the repair must consider, and earlier closed findings cited as history without reopening them (#354).
+- Fix mode may address roles named in that block within the accepted contract; attempt budgets, operator choices at exhaustion and complexity-review authority are unchanged.
+- A fixture or contract pin shows the first-case-to-recurring-family transition and guards against invented requirements; behavior is documented in the implement/review skills.
+
+## Scope narrowed (2026-11-02 triage)
+
+Kept: the ledger, phase-brief injection and the #354 within-loop repair-brief block. Dropped, not refiled: promoting the ledger to AGENTS.md at completion and the final-scope whole-app sweep. Sequence after review-gate-integrity-goal m04 lands new-vs-carried-over finding marking.
+
+Original acceptance criteria, kept for reference (only the list above is tracked):
 
 - `oat-project-review-receive` classifies each finding as one-off vs. recurring-invariant and appends recurring classes (rule + where it bit) to a per-project ledger.
 - `oat-project-implement` injects the ledger into each subsequent phase's implementer brief as a "proactively design against these" block.

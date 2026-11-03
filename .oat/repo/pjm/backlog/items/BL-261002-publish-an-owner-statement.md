@@ -10,7 +10,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:16.046Z
-updated: 2026-10-02T18:41:16.046Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -32,3 +32,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - The owner writes a short stability, support and non-goals statement.
 - It is published on a docs page linked from the docs front door (and the
   README if appropriate), and `pnpm build:docs` passes.
+
+## Operator decision (2026-11-02 triage)
+
+Operator input: OAT is fairly stable; breaking changes remain possible, but until there are many users breaking changes are kept to a minimum. Support is best effort through GitHub issues. Non-goals still to be confirmed by the owner in the docs PR.

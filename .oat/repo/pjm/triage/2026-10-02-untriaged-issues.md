@@ -86,7 +86,7 @@ Proposed post-merge comment:
 - Priority and size rationale: Growing execution can defeat the single-sitting promise; initial promotion already limits impact. L because mid-execution promotion must preserve tasks, completed history, identities, review protections and resume routing across modes.
 - Implementation readiness: Policy settled; focused technical design remains for conservation-safe mid-execution promotion and resume routing.
 - Approval: approved by the user on 2026-10-03; repository changes and the exact deferred post-merge GitHub actions are authorized.
-- Applied backlog reference: [BL-261003-reassess-lite-execution-scope — Reassess Lite execution scope and preserve completed work on promotion](../backlog/items/BL-261003-reassess-lite-execution-scope.md).
+- Applied backlog reference: [BL-261003-reassess-lite-execution-scope — Reassess Lite execution scope and preserve completed work on promotion](../backlog/archived/BL-261003-reassess-lite-execution-scope.md).
 - Post-merge result: not started; issue mutations remain deferred until merge.
 
 Proposed post-merge comment:
