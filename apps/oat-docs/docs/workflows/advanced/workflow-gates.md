@@ -628,6 +628,18 @@ diagnostics include the declared project, containing project, artifact
 invocation. Treat any status other than `ok`/`blocked` as an operational failure,
 not a passing gate.
 
+`ok` and `blocked` also carry `reviewedHead`: the full SHA of the `HEAD` the
+gate dispatched its reviewer against, or `null` when git cannot read it.
+`corroboration.reviewedHead` compares it with the artifact's full-SHA
+`oat_review_head_sha` and reports `match`, `ancestor` (the reviewed range ends
+at a commit the dispatch head contains, the usual case for an anchored review
+followed by bookkeeping commits), `mismatch`, or `unavailable` when either head
+is absent. It is reporting only and never changes `receiveEligible`. Hand
+review-receive the result's event (`artifactPath`, `scope`, `reviewType`,
+`runId` and `reviewedHead`): it consumes exactly that artifact through
+`oat review resolve` and stops on a mismatch instead of selecting the newest
+review.
+
 `targeting_correlation_failed` is non-remediable by review-fix retries. Its JSON
 sets `receiveEligible: false`, `remediable: false`, and `handoff: null`; do not
 run review-receive for that artifact even when `artifactPath` is present.

@@ -35,6 +35,20 @@ Use `--actionable-project` when project review-receive needs work waiting for di
 
 `oat-project-review-receive` uses this resolver when it is invoked from natural language and needs to offer the latest project review, or route an ad-hoc result to `oat-review-receive`.
 
+### Consuming a gate's review event
+
+A gate path does not ask for the newest review. Every lifecycle path that runs `oat gate review` and then review-receive (implement's exit gate and optional phase gate, and the planning gates) passes receive the event the gate result names: its `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`. Receive resolves that event before reading the artifact:
+
+```bash
+oat --json review resolve --project .oat/projects/shared/example \
+  --artifact .oat/projects/shared/example/reviews/final-review-2026-11-03T120000Z.md \
+  --scope final --type code \
+  --run-id 0f6c7a10-3c1e-4c55-9a43-8b1d2c3e4f50 \
+  --reviewed-head <full SHA from the gate result>
+```
+
+The resolver binds the event's Reviews row by scope, type and artifact filename and checks the row's scope, type, artifact path and reviewed head, and the artifact's `oat_gate_run_id`, against the event. The row's reviewed head may equal the event's or be an ancestor of it, because an anchored review ends before the bookkeeping commits the gate was dispatched over; a `-` reviewed head (an artifact review) is accepted as unavailable. Any mismatch, a missing or duplicate row, or a missing artifact exits nonzero with structured diagnostics, and receive stops without falling back to the newest artifact. Manual and auto reviews pass no event and keep the `oat review latest` selection above.
+
 ## Bookkeeping commits (required)
 
 Both `oat-project-review-receive` and `oat-project-review-receive-remote` conclude with a required atomic commit of `plan.md`, `implementation.md`, `state.md`, and the archived review artifact (when tracked). This is the safety net that prevents cross-agent bookkeeping drift: when a subagent runs a receive skill in isolation, the commit ensures the original agent sees a clean checkout on return.
@@ -120,6 +134,10 @@ the outcome updates that row, matched by scope, type and artifact filename,
 and never appends a second one. A structured review that writes no artifact
 claims the unbound placeholder for its scope and type. A row whose artifact is
 `-` never shares an event key with another row.
+
+A gate-originated event records `gate` in the invocation column and the exact
+gate target, for artifact reviews as well as code reviews; an artifact review's
+reviewed head stays `-`.
 
 A `received` row is superseded when a later row of the same scope, type and
 invocation class records a review (any status but `pending`) at the same or a
