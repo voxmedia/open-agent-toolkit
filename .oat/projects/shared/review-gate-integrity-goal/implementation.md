@@ -39,20 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p10    | completed | 1     | 1/1      |
-| p11    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p12    | completed | 1     | 1/1      |
-| p13    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p10    | completed   | 1     | 1/1      |
+| p11    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p12    | completed   | 1     | 1/1      |
+| p13    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | in_progress | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 9/12 phases accepted
 
@@ -1761,8 +1761,12 @@ Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-cl
 
 ## Phase p-rev3: Keep a retired waiver from hiding a later pending review
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 91d2e491f289528577d23d832584c2cda10b44a6
+**Executor:** phase-implementer:rgi-prev3-impl-20261103-01
 **Corrects:** p13
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer. Added at `91d2e491f` by the m02 exit gate rerun receive. `origin/main` has not moved since the p07 base merge.
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
