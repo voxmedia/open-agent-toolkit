@@ -1415,9 +1415,24 @@ Scope: the fix range `c92b11dfb..8016d7d98` (p12-t06, p12-t07), fresh `oat-revie
 
 **Status:** in_progress
 **Base:** 579379cf27b6e3ceddc9a7c731200c6c53b2d82d
+**Head:** 2f1dae7a099dc37d5196f7cc008712d8681249f1
 **Executor:** phase-implementer:rgi-p13-impl-20261103-01
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a new read-only review command whose required-row rules must agree with pr-final Step 2, delivery check and Outcome 4, plus a new autonomy row and two PR skills whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the command, the skill prose and the autonomy row share the required-row and waiver contract and the contract tests, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and an autonomy boundary. p13 was made concrete at `579379cf2` before this start (project log). `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `6a5a4b806` (p13-t04); only journal commits follow it. `origin/main` is still `c42fd95bd`, checked by `git fetch origin main` before the version gate. The DoD gate list ran in CI order and each command exited 0:
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: 5 of 11 cached.
+3. `pnpm test`: 5 of 12 cached. `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached; CLI 444 files and 9516 tests, control-plane 14 files and 314 tests.
+4. `pnpm build`: 5 of 5 cached (replayed). The forced `test:evidence` built all five packages uncached.
+5. `pnpm run check:skill-bumps`: 16 changed skills and agent roles against `origin/main`.
+6. `pnpm release:check-versions`.
+7. `pnpm release:validate`: 5 packages at 0.3.46.
+8. `pnpm build:docs`: 6 of 6 cached, then forced (`turbo run build --filter=oat-docs... --force`), 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0: `pnpm lint` and `pnpm format` (5 of 10 cached each); `pnpm test:skills` (721 tests); `pnpm oat:validate-skills` (68 skills); the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205). `oat project journal check --project <this project> --at review --scope p13` is `ok`, with no reasons or warnings, on both the installed 0.3.45 CLI and the branch build. One post-commit recovery (rgi-p13-rec-01, 1 of 10 used). Exit evidence: p13-t01 (unit fixtures, guard-can-fail N1 to N5, branch-build probes 1 to 5 with the released-CLI negative control, the waived row still `pending`, closeout-check and delivery check unchanged, journal check accepting a waiver line), p13-t02 (delivery check pinned unchanged by a waiver), p13-t03 (listing and stop pins with C1 to C4, `PRFINAL-06` in the autonomy inventory, version bumps) and p13-t04 (docs).
 
 ### Task p13-t01: `oat review pending`, a read-only listing of pending required reviews
 
