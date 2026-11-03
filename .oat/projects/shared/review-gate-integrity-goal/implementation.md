@@ -1003,13 +1003,17 @@ Proof: the new test plus `pnpm --filter @open-agent-toolkit/cli exec vitest run 
 
 ### Task p07-t06: (review) Correct the stated reason quick, import and lite seed no spec/design rows
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p07-fix-20261103-01
+**Commit:** ca7f4183a759b6053b96069253b4b6e2684b4aae
 **Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L1)
 
 Intent: four places say those modes "never review" `spec`/`design`, but quick's lightweight design can be reviewed (the p07 Exit evidence requires its single `design` row). Reword to: those modes seed no `spec`/`design` placeholder; a review of those artifacts, such as a quick lightweight-design review, appends its own row under review-provide Step 9. Behavior is unchanged.
 Files: `.oat/templates/plan.md` (and its tracked CLI asset copy if one exists), `.agents/skills/oat-project-plan/SKILL.md` (already bumped to 1.4.21 on this branch; sync provider views), `packages/cli/src/commands/project/new/scaffold.ts` comments, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new` and `pnpm --filter oat-docs docs:lint`
+
+**Result:** the four named places now say those modes seed no `spec`/`design` placeholder and that a review of either artifact, such as a quick lightweight-design review, appends its own row under review-provide Step 9. The same overstatement in the `scaffold.test.ts` case comment was corrected as mechanical propagation. `.oat/templates/plan.md` has no tracked CLI asset copy (`packages/cli/assets/templates/plan.md` is gitignored). `oat sync --scope project` changed only `.oat/sync/manifest.json` (`oatVersion` 0.3.46), which is included. Behavior is unchanged.
+**Proof result:** the isolated-HOME proof suites passed (30 files, 1298 tests) after a CLI build refreshed the bundled assets; `docs:lint` exit 0 (91 files, 0 errors).
 
 ### Task p07-t07: (review) Filter superseded rows in review-receive's CLI-unavailable fallback
 
