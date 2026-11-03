@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p-rev1
+oat_current_task_id: p-rev2
 oat_generated: false
 oat_template: false
 ---
@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | in_progress | 1     | 0/1      |
-| p-rev2 | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 7/11 phases accepted
+**Total:** 8/11 phases accepted
 
 ---
 
@@ -1611,7 +1611,7 @@ Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `
 
 ## Phase p-rev1: Refuse a malformed Reviewed Head in review resolve
 
-**Status:** in_progress
+**Status:** completed
 **Base:** efea9ac0a6923fe62af1abbcc78180df7312d3ec
 **Head:** 2c341cff58b74a8cb13ff9e80c4e27690ea27210
 **Executor:** phase-implementer:rgi-prev1-impl-20261103-01
@@ -1665,6 +1665,19 @@ A legacy five-column ledger with no Reviewed Head column on the branch build giv
 1. The resolver's `!FULL_SHA.test(rowHead)` branch was disabled. `resolve.test.ts` failed 4 of 27: the abbreviated, malformed and empty-cell refusals, and the CLI exit-1 test.
 2. The parser's `reviewedHeadCell` emission was disabled. `reviews.test.ts` failed 1 of 15: the raw-cell test.
 3. The resolver's `rawReviewedHead: true` opt-in was dropped, which restores the pre-change read. `resolve.test.ts` failed 11 of 27, the three invalid-cell refusals among them.
+
+### Review Received: p-rev1
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev1-review-2026-11-03T221746Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `efea9ac0a..2c341cff5` (p-rev1-t01, corrects p12), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev1-rev-20261103-01`, reconnaissance not attempted). It re-ran the gate's M1 reproduction plus uppercase-SHA, empty-cell and legacy-table cases on the branch build (match, uppercase, `-` and legacy accepted; wrong full SHA `reviewed_head_mismatch`; abbreviated, malformed and empty `reviewed_head_invalid`), confirmed every other reader sees unchanged rows, scanned 514 local `plan.md` files for empty cells (none), and proved two guards can fail. The m02 exit gate's M1 is resolved.
+
+- L1 (Low, optional): the resolver's JSON `row` report shows `reviewedHead: null` for an invalid cell as for `-`, while the `reviewed_head_invalid` diagnostic carries the raw cell → approved deferral (see Deferred Findings); no consumer reads the row field to tell the two apart, and the refusal already reports the raw value.
+
+**Outcome:** passed (deferred items only)
 
 ## Phase p-rev2: Resolve synced-project review ancestry in the source repository
 
@@ -1723,6 +1736,7 @@ A legacy five-column ledger with no Reviewed Head column on the branch build giv
 - run/v1 · request=rgi-p13-fix-20261103-01 · scope=p13-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p13-impl-20261103-01 · observed=~ · match=~
 - run/v1 · request=rgi-p13-rev-20261103-02 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev1-impl-20261103-01 · scope=p-rev1 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev1-rev-20261103-01 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1914,6 +1928,7 @@ The configured `oat-project-implement` exit gate (run `93e1b0a1-9b04-4c31-9aa2-e
 - p07 re-review L1 (Low): the review-receive CLI-unavailable fallback clause (`.agents/skills/oat-project-review-receive/SKILL.md:163`) omits that the candidate's own row must be `received` and does not name the gate and lifecycle Invocation classes. Deferred by the root under review-receive Step 9 (Low, concrete rationale): p12 rewrites this receive artifact-selection step, and fixing it now would open a third p07 review cycle. Trigger: p12 start; fold the clarification into p12's receive change and its pin test.
 - p12 review L2 (Low): the optional phase gate and the eight planning gates (goal, brief, lite, discover, design, quick-start, plan, import-plan) hand the gate event to receive only in-session; after an interruption the router's receive route has no event and falls back to newest-artifact selection, protected only by p07 supersession. Implement Step 14 persists its event. Deferred by the root (Feature Planning Triage: a new persistence requirement outside p12's adopting-path Intent). Trigger: the first observed interrupted gate→receive handoff, or p13/m03 if they touch these gate paths.
 - p13 review L3 (Low): `BL-261002-list-pending-required-reviews` acceptance criteria still say the waiver is recorded in the Reviews table; p13 records it as a `**Review waived:**` line under `## Reviews and Gates` with the row left `pending`, authorized by the p13 Known Unknown (`rgi-p13-concrete-20261103`). Deferred by the root to the item's closure. Trigger: m02 delivery, when the item is closed with that note.
+- p-rev1 review L1 (Low): `oat review resolve`'s JSON `row` report shows `reviewedHead: null` for both an invalid cell and `-`; the `reviewed_head_invalid` diagnostic carries the raw cell. Deferred by the root: no consumer distinguishes them through the row field (Feature Planning Triage). Trigger: the first consumer that reads the row report's head.
 
 ## Deviations from Plan / Design
 
