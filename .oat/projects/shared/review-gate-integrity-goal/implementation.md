@@ -931,6 +931,7 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 - run/v1 · request=rgi-p11-rev-20261102-01 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p11 review fix (p11-t06) · reason: four Lows of a passing review, fixed at receive · root model claude-opus-5-5
 - Root-inline phase: p11 m01-integrated-review fix (p11-t07) · reason: one Medium and two Lows, a one-sentence definition change plus journal corrections · root model claude-opus-5-5
+- run/v1 · request=rgi-m01-rev-20261102-02 · scope=m01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=m01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1045,6 +1046,17 @@ The configured `oat-project-implement` exit gate (run `f588e505-bf2e-4904-b833-d
 **Outcome:** passed
 
 - Gate `oat-project-implement` (code, m01 exit, rerun `f588e505`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/1, received 2026-11-02. Carrier `oat_milestone_gates.m01.exit` rewritten `allowed`/`passed`/fresh at `5599af21d`; the m01 integrated-review row moves `fixes_added` → `fixes_completed`; `oat_milestone_status` moves `implementing` → `reviewing` for integrated review cycle 2.
+
+### Review Received: m01 (integrated review, cycle 2)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/m01-review-2026-11-03T000239Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35dc3e67dc1437f9ca864477728..5599af21d4927c7d39c668b9d1662509e5d3b403`, integration commit `234c9b281`), reviewer `oat-reviewer-claude-claude-opus-5-5-high`, manual invocation, reconnaissance not attempted, re-review of the delta since cycle 1 (`1a5a37684..5599af21d4927c7d39c668b9d1662509e5d3b403`) with unchanged coverage inherited from cycle 1. Cycle-1 M1, L1 and L2 confirmed resolved by p11-t07 (the new limit-1 pin fails under a trimmed sentence); the new wording composes with every branch that names the shared definition; `check:skill-bumps` and `release:check-versions` pass (lockstep 0.3.44); docs index fresh; 1282 contract, verdict and delivery tests pass; all seven deferrals remain acceptable. Review cycle 2 for m01.
+
+**Outcome:** passed
 
 ## Deferred Findings
 
