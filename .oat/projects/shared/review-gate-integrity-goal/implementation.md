@@ -1817,12 +1817,32 @@ The gate artifact's M1 script, extracted verbatim from `range-review-2026-11-03T
 
 ### Task p-rev3-t02: (review) Number waiver rows by physical table position
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-fix-20261103-01 (continuation of rgi-prev3-impl-20261103-01)
+**Handle:** direct:rgi-prev3-fix-20261103-01:p-rev3-t02
 **Source review:** reviews/archived/p-rev3-review-2026-11-03T231519Z.md (L1)
 
 Intent: the waiver `**Row:**` number counts only rows `parseReviewTable` accepts, which drops a row with a blank required cell, so after such a row the numbering shifts and a retired waiver can bind to a newly appended `pending` row (reproduced on the branch build, `pending.ts:352`, `reviews.ts:124-126`). Number rows by their physical position among the `## Reviews` table's data rows, so the number the listing reports and the user writes is stable whatever a row contains; a named row that does not parse is `row-mismatch`. Add the regression and a guard-can-fail control; keep the docs and skill wording true.
 Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, and the docs or skills only if their wording changes.
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/init/tools/shared src/validation`
+**Files:** `packages/control-plane/src/state/reviews.ts` (+ `reviews.test.ts`), `packages/control-plane/src/types.ts`, `packages/control-plane/README.md`, `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`. The control-plane files widen the declared list mechanically: the reviewer's suggested fix, an opt-in `parseReviewTable` option beside `rawReviewedHead`, is the only place the physical data-line index exists.
+**Commit:** bc77d8025b1c32c7c6743cbcf579c18ea15976e2
+**Proof:** the proof command exited 0 (34 files, 1286 tests); control-plane 317/317; CLI and control-plane `type-check` and `lint` exit 0; `docs:lint` 0 errors; `oxfmt --check` on the seven files exit 0.
+
+**Change.** `parseReviewTable(planContent, { dataLine: true })` adds `dataLine`, each row's 1-based position among the table's data lines, counted before rows with an empty required cell are dropped (off by default; `ProjectState.reviews` never carries it). `oat review pending` numbers rows with it, so the `row` it reports, and the `**Row:**` the skills tell users to copy from it, are the same physical number; a named row whose line does not parse can never equal a key's latest row, so it is `row-mismatch`. The skills' wording ("the row number the listing reports") stays true and is unchanged; the CLI reference and the control-plane README state the numbering.
+
+**Negative control** (branch build, `/tmp/prev3-scripts/l1.py`, five-column ledger, scope `p01`, every run exit 0):
+
+| Case                                                                             | Pre-fix build at `6936c2fed`     | Post-fix build at `bc77d8025`     |
+| -------------------------------------------------------------------------------- | -------------------------------- | --------------------------------- |
+| L1: `**Row:** 1` waiver, row 1 claimed with a blank Date cell, new `pending` row | **waived (row 1)**, applied      | **pending row 2**, `row-mismatch` |
+| Well-formed claimed row 1, new `pending` row (control)                           | pending row 2, `row-mismatch`    | pending row 2, `row-mismatch`     |
+| Fresh `**Row:** 2` after the malformed row                                       | waived by the stale line (row 1) | waived by the fresh line (row 2)  |
+| Active `**Row:** 1` over the only pending row                                    | waived                           | waived                            |
+
+**Second table inside `## Reviews`:** not fixed, as directed. Physical numbering counts every table line after the first separator, so a second table's header and separator still take row numbers; a narrow second table (no Date or Artifact column), whose lines the old numbering dropped, now also takes numbers (probe: `p01` row 1, a trailing `p02` row 5 after a two-column table, previously 2). The listing and the user-written number still agree.
+
+**Guard can fail** (each neutralized in the working tree, the test run, then restored and checked byte-identical with `cmp`): G4, `pending.ts` calling `parseReviewTable(planContent)` without `dataLine`: the L1 regression fails (1 of 23); G5, `reviews.ts` returning `dataLine: 0 + 1` for every row: the control-plane `dataLine` test fails (1 of 16).
 
 ### Review Received: p-rev3
 
