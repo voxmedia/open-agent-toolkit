@@ -5,7 +5,7 @@ title: Detect unfilled placeholders and frontmatter-body drift at PR-final and
 status: open
 priority: medium
 scope: task
-scope_estimate: M
+scope_estimate: S
 labels:
   - lifecycle
   - pr-final
@@ -13,7 +13,7 @@ labels:
   - templates
 assignee: null
 created: 2026-09-27T03:35:37.105Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/328
@@ -34,6 +34,16 @@ including inline-code slots (`packages/cli/src/commands/project/journal-check/ru
 (`**Status:**`) is not compared with its frontmatter.
 
 ## Acceptance Criteria
+
+- `oat-project-pr-final` runs `oat project journal check` before generating the PR body.
+- The check reports a `state.md` body (`**Status:**`) that disagrees with its frontmatter.
+- Fixtures cover the drift case and a clean project.
+
+## Scope narrowed (2026-11-02 triage)
+
+Kept: wiring the existing journal check into pr-final and the state.md body-vs-frontmatter comparison. Dropped, not refiled: placeholder scanning of the other core artifacts and the any-lifecycle-command guarantee.
+
+Original acceptance criteria, kept for reference (only the list above is tracked):
 
 - The shared journal check also reports unreplaced template placeholders in the other core project artifacts and `state.md` frontmatter-body disagreement.
 - `oat-project-pr-final` runs the check before generating the PR body.

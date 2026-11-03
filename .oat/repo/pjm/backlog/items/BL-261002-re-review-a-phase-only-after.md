@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T20:01:29.159Z
-updated: 2026-10-02T20:01:29.159Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -29,3 +29,7 @@ Phase code reviews and artifact reviews run until a round comes back clean. In t
   number of rounds is capped by configuration.
 - Skill text and the review ledger record which findings were fixed without
   re-review.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: park until review-gate-integrity-goal m02 lands, then measure the remaining re-review rounds before changing the rule.

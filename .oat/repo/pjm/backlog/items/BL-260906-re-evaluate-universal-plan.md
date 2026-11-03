@@ -2,7 +2,7 @@
 id: BL-260906-re-evaluate-universal-plan
 title: Re-evaluate universal plan proof strategy and test-first guidance
 status: open
-priority: medium
+priority: high
 scope: feature
 scope_estimate: L
 labels:
@@ -12,7 +12,7 @@ labels:
   - guidance
 assignee: null
 created: 2026-09-06T13:28:16.084Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -53,3 +53,7 @@ still say "TDD discipline".
   refactor, user-interface, bug-fix, and assurance-sensitive tasks. Document
   why each example's proof strategy is proportionate and confirm that no
   example requires ceremonial tests.
+
+## Operator decision (2026-11-02 triage)
+
+Decided: do it. Extend the Lite proportionate-proof rule (DR-260906-use-proportionate-proof) to every mode and shared contract, replacing test-first as the default. Record the universal decision first, then size the skill/template sweep. Operator rationale: current guidance produces overkill testing.

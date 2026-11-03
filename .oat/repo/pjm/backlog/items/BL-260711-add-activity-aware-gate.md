@@ -8,7 +8,7 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 ---
 
@@ -69,6 +69,18 @@ early correlated artifact-template creation, and distinct structured
 idle-kill versus hard-cap outcomes.
 
 ## Acceptance Criteria
+
+- Codex transcript activity can be attributed to the gate child (`project-dir`-scoped, not `ambient-runtime`) before the idle mechanism serves Codex gates.
+- A gate child producing output activity is not killed by the idle mechanism, even when total duration exceeds the legacy fixed timeout.
+- A silent/hung child is terminated within the idle window while the existing configurable hard cap still bounds total runtime.
+- Structured gate output distinguishes idle-kill, hard-cap-kill, and recovered-after-timeout outcomes.
+- Gate command tests cover idle reset, idle kill and cap kill.
+
+## Scope narrowed (2026-11-02 triage)
+
+Kept: the idle-kill core. Dropped, not refiled: the early artifact-template write, the non-mutating operational preflight and the structured `blocked` envelope for a target lost after selection. Refile the preflight or envelope if #197's second failure mode recurs.
+
+Original acceptance criteria, kept for reference (only the list above is tracked):
 
 - Codex transcript activity can be attributed to the gate child
   (`project-dir`-scoped, not `ambient-runtime`) before the idle mechanism

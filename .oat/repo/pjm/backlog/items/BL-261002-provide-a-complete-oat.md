@@ -1,11 +1,12 @@
 ---
 id: BL-261002-provide-a-complete-oat
-title: Provide a complete OAT uninstall path and make pack removal clean up
+title:
+  Fix oat tools remove --all at project scope and drop stale requiredBy entries
   after itself
 status: open
 priority: medium
 scope: feature
-scope_estimate: L
+scope_estimate: S
 labels:
   - tools
   - tool-packs
@@ -14,7 +15,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:53.219Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-11-02T00:00:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -53,6 +54,16 @@ in the project when this item was filed). Related: BL-260911-support-per-tool-sc
 Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/references/product-defects-found.md` (docs-improvement-overhaul project, 2026-10-02), entry B1.
 
 ## Acceptance Criteria
+
+- `oat tools remove --all` works at project scope and at the default scope (core is skipped or handled at its own scope, not a fatal error), with a truthful `--dry-run`.
+- Removing a pack drops the `tools.requiredBy` entries that referenced it, so `oat status` reports no missing pack afterwards.
+- Tests cover both cases.
+
+## Scope narrowed (2026-11-02 triage)
+
+Kept: the fatal `remove --all` error and the stale `requiredBy` false report. Dropped, not refiled: full per-pack file cleanup, an `oat uninstall` command and the docs replacement; the verified manual procedure in `what-oat-writes.md` stays the supported route. Refile if adopters ask for an uninstall command.
+
+Original acceptance criteria, kept for reference (only the list above is tracked):
 
 - `oat tools remove --all` works at project scope and at the default scope
   (core is skipped or handled at its own scope, not a fatal error), with a
