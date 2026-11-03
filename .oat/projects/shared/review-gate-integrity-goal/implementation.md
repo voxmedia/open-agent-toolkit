@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: null
+oat_current_task_id: p-rev3
 oat_generated: false
 oat_template: false
 ---
@@ -50,10 +50,11 @@ oat_template: false
 | p13    | completed | 1     | 1/1      |
 | p-rev1 | completed | 1     | 1/1      |
 | p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | pending   | 1     | 0/1      |
 | p08    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 9/11 phases accepted
+**Total:** 9/12 phases accepted
 
 ---
 
@@ -1758,6 +1759,11 @@ Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-cl
 
 **Outcome:** passed (deferred items only)
 
+## Phase p-rev3: Keep a retired waiver from hiding a later pending review
+
+**Status:** pending
+**Corrects:** p13
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1987,6 +1993,21 @@ The configured `oat-project-implement` exit gate (run `93e1b0a1-9b04-4c31-9aa2-e
 
 - Gate `oat-project-implement` (code, m02 exit, run `93e1b0a1-9b04-4c31-9aa2-e032b9820a9d`, `--review-scope p07-p13`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/2/0, receive-eligible, received 2026-11-03; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m02.exit`.
 - Operator routing applied to the rerun (m02 exit gate, 2026-11-03): the fixes queued by run `93e1b0a1` require the exit gate to rerun over the milestone set, so the rerun uses the same m02-phases scope the operator chose, now `--review-scope p07-p-rev2` (p07, p12, p13, p-rev1, p-rev2), with target, threshold and prompt unchanged.
+
+### Review Received: p07-p-rev2 (m02 exit gate rerun)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-03T224623Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 0
+
+The exit gate rerun (run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, scope `p07-p-rev2`, default selection `codex-6-sol-xhigh`, cross-family) reviewed m02 (`p07, p12, p13, p-rev1, p-rev2`) over `eba04d813..d128a4118`. It found the first run's M1 and M2 resolved.
+
+- M1 (Medium): `oat review pending` judges a waiver against the latest Scope + Type row only, so a waiver retired by a later recorded review applies again to a newly appended `pending` row and a PR proceeds without a review or a fresh waiver, contradicting p13's "inert once a later row records a review" → revision phase p-rev3 (`**Corrects:** p13`).
+
+**Outcome:** fixes queued: p-rev3 (gate passed its threshold; the exit gate reruns over `p07-p-rev3` after p-rev3 is accepted)
+
+- Gate `oat-project-implement` (code, m02 exit rerun, run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, `--review-scope p07-p-rev2`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/1/0, receive-eligible, received 2026-11-03; no attempt consumed. No carrier written: queued fixes require another rerun.
 
 ## Deferred Findings
 

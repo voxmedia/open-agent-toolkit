@@ -207,6 +207,10 @@ Completed one read-only reconnaissance wave with two native gpt-6.1-terra medium
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T224623Z.md run=d738cd0e-5795-48ef-a387-e3ec184f90e5
 
+### 2026-11-03 · structural · oat-project-implement · m02
+
+m02 exit gate rerun (run d738cd0e, scope p07-p-rev2, Sol xhigh) passed its threshold; the first run's M1 and M2 are resolved; new M1: a retired waiver reapplies to a later pending row. Appended revision phase p-rev3 (corrects p13); the gate reruns over p07-p-rev3. rgi-m02-exit2-revision-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

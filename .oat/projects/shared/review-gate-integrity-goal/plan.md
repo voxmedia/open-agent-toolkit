@@ -192,12 +192,12 @@ own reviews and gates.
 
 <!-- One row per milestone: its id (m01, m02, …) and its ordered, comma-separated phase ids. Every phase, including revision phases, belongs to exactly one milestone. -->
 
-| Milestone | Phases                        |
-| --------- | ----------------------------- |
-| m01       | p01, p02, p10, p11            |
-| m02       | p07, p12, p13, p-rev1, p-rev2 |
-| m03       | p08                           |
-| m04       | p09                           |
+| Milestone | Phases                                |
+| --------- | ------------------------------------- |
+| m01       | p01, p02, p10, p11                    |
+| m02       | p07, p12, p13, p-rev1, p-rev2, p-rev3 |
+| m03       | p08                                   |
+| m04       | p09                                   |
 
 ## Phase p01: Verdict parser finding identification
 
@@ -262,6 +262,12 @@ Neutralizing the ownership and title-precedence guard breaks the undercount asse
 
 **Intent:** Correct p07 for the m02 exit gate finding M2 (`reviews/archived/range-review-2026-11-03T215601Z.md`). `getProjectStateWithReviewAncestry` runs git with `cwd` at the project path, so in a synced project (a nested tracking checkout) the source commits a Reviewed Head names are unresolvable, the older `received` event stays live, and `project status` routes to receive while `review latest --actionable-project` and `review check` treat it as superseded. The ancestry queries of `project status`, `project list`, `review latest` and `review check` resolve against the source repository root, so all readers agree; the control-plane reader stays pure.
 **Exit evidence:** The real-git ancestry wiring test gains a nested synced checkout with source-repository head SHAs, and status, latest and check agree on supersession there, with the ordinary layout and an unresolved or non-descendant head as controls; the gate artifact's M2 reproduction passes on the branch build; a guard-can-fail control.
+**Provisional:** no
+
+## Phase p-rev3: Keep a retired waiver from hiding a later pending review
+
+**Intent:** Correct p13 for the m02 exit gate rerun finding M1 (`reviews/archived/range-review-2026-11-03T224623Z.md`). `oat review pending` decides waiver applicability from the latest Scope + Type row only, so a waiver retired by a later recorded review applies again when a new `pending` row for the same key is appended, and both PR skills proceed without a review or a fresh waiver. A waiver applies only to the pending obligation it was written for: once any row for its key records a review after the waiver, that waiver stays inert for every later row of the key, while a waiver written after the newest recorded review still applies. No Reviews column, status or ledger edit is added; if the ordering cannot be established from existing ledger cells and the waiver line, the waiver line may name what it waives in a backward-compatible way, documented in both PR skills.
+**Exit evidence:** Unit tests at the pending-listing boundary: waiver, then a recorded review, then a new `pending` row lists the key as pending (the gate's reproduction); an active waiver over a pending row still reads `waived`; a waiver after a recorded review with no later row is inert; a fresh waiver written after the new pending row applies. A guard-can-fail control. The PR skills, CLI reference and reviews docs match the rule.
 **Provisional:** no
 
 ## Phase p08: Gate convergence visibility and classification reporting
@@ -329,7 +335,8 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p07-p13    | code     | fixes_completed | 2026-11-03 | reviews/archived/range-review-2026-11-03T215601Z.md         | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate       | codex-6-sol-xhigh    |
 | p-rev1     | code     | passed          | 2026-11-03 | reviews/archived/p-rev1-review-2026-11-03T221746Z.md        | 2c341cff58b74a8cb13ff9e80c4e27690ea27210 | manual     | -                    |
 | p-rev2     | code     | passed          | 2026-11-03 | reviews/archived/p-rev2-review-2026-11-03T223853Z.md        | d128a41181d86d258be802500c4129bf45ed0fa0 | manual     | -                    |
-| p07-p-rev2 | code     | received        | 2026-11-03 | reviews/range-review-2026-11-03T224623Z.md                  | d128a41181d86d258be802500c4129bf45ed0fa0 | gate       | codex-6-sol-xhigh    |
+| p07-p-rev2 | code     | fixes_added     | 2026-11-03 | reviews/archived/range-review-2026-11-03T224623Z.md         | d128a41181d86d258be802500c4129bf45ed0fa0 | gate       | codex-6-sol-xhigh    |
+| p-rev3     | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
