@@ -272,7 +272,9 @@ continue. Otherwise report each pending row by scope, type and row number
 - **Waive:** only on the user's explicit choice and with the reason the user
   gives, append one line per waived row under `## Reviews and Gates` in
   `implementation.md`:
-  `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`.
+  `**Review waived:** <scope> <type> · **Row:** <row> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`,
+  where `<row>` is the row number the listing reports (`-` for a `missing`
+  entry).
   Leave the `## Reviews` table unchanged: a `pending` row stays `pending` and
   a `missing` key gets no row. Commit only `implementation.md` as bookkeeping
   (`chore(oat): record review waiver <scope> <type>`; a `synced` project uses
@@ -286,7 +288,11 @@ continue. Otherwise report each pending row by scope, type and row number
 
 A waiver is not a review. The `## Reviews` table is unchanged; pr-final's final-review
 check, `oat project closeout-check` and `oat project delivery check` never read
-the line; and a later recorded review of the same row makes the waiver inert.
+the line.
+A waiver covers only the row it names: once that row records a review, or a
+later row is appended for its key, the waiver is inert and the key is listed
+again. A line naming no row stops applying once any row of its key records a
+review.
 
 ### Step 4: Collect Scope Data
 

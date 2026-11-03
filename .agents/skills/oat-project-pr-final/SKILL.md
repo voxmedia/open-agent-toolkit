@@ -315,7 +315,9 @@ type and row number (`no row` for a `missing` entry), then:
   - **Waive them:** only on the user's explicit choice and with the reason
     the user gives, append one line per waived row under
     `## Reviews and Gates` in `implementation.md`:
-    `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`.
+    `**Review waived:** <scope> <type> · **Row:** <row> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`,
+    where `<row>` is the row number the listing reports (`-` for a `missing`
+    entry).
     Leave the `## Reviews` table unchanged: a `pending` row stays `pending`
     and a `missing` key gets no row. Commit only `implementation.md` as
     bookkeeping (`chore(oat): record review waiver <scope> <type>`; a `synced`
@@ -325,8 +327,11 @@ type and row number (`no row` for a `missing` entry), then:
   - **Stop:** end this run without writing the PR artifact.
 
 A waiver is not a review. The `## Reviews` table is unchanged; Step 2, `oat project
-closeout-check` and `oat project delivery check` never read the line; and a
-later recorded review of the same row makes the waiver inert.
+closeout-check` and `oat project delivery check` never read the line.
+A waiver covers only the row it names: once that row records a review, or a
+later row is appended for its key, the waiver is inert and the key is listed
+again. A line naming no row stops applying once any row of its key records a
+review.
 
 ### Step 3: Collect Project Summary
 

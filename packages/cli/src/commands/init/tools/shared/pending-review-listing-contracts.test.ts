@@ -46,7 +46,11 @@ const MISSING_LIST =
 const LEDGER_UNCHANGED =
   'Leave the `## Reviews` table unchanged: a `pending` row stays `pending` and a `missing` key gets no row.';
 const WAIVER_TEMPLATE =
-  '`**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`';
+  '`**Review waived:** <scope> <type> · **Row:** <row> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`';
+const WAIVER_ROW =
+  'where `<row>` is the row number the listing reports (`-` for a `missing` entry).';
+const WAIVER_RETIRED =
+  'A waiver covers only the row it names: once that row records a review, or a later row is appended for its key, the waiver is inert and the key is listed again. A line naming no row stops applying once any row of its key records a review.';
 
 const tempDirs: string[] = [];
 
@@ -80,6 +84,8 @@ describe('pending required reviews before a pull request', () => {
       "only on the user's explicit choice and with the reason the user gives, append one line per waived row under `## Reviews and Gates` in `implementation.md`:",
     );
     expect(step).toContain(WAIVER_TEMPLATE);
+    expect(text).toContain(WAIVER_ROW);
+    expect(text).toContain(WAIVER_RETIRED);
     expect(text).toContain(MISSING_LIST);
     expect(text).toContain(MISSING_LIKE_PENDING);
     expect(text).toContain(LEDGER_UNCHANGED);
@@ -140,6 +146,8 @@ describe('pending required reviews before a pull request', () => {
     );
     expect(text).not.toContain('`code <scope>`');
     expect(step).toContain(WAIVER_TEMPLATE);
+    expect(text).toContain(WAIVER_ROW);
+    expect(text).toContain(WAIVER_RETIRED);
     expect(text).toContain(MISSING_LIST);
     expect(text).toContain(MISSING_LIKE_PENDING);
     expect(text).toContain(LEDGER_UNCHANGED);
@@ -162,16 +170,17 @@ describe('pending required reviews before a pull request', () => {
     );
   });
 
-  it('documents a waiver line that oat review pending applies to a pending row and a missing key', async () => {
+  it('documents a waiver line that oat review pending applies to a pending row and a missing key, and not to a retired row', async () => {
     const lines = [readRepoFile(PROGRESS), readRepoFile(FINAL)].map(
       (content) =>
         /`(\*\*Review waived:\*\* [^`]+)`/.exec(content)?.[1] ?? null,
     );
     expect(lines[0]).not.toBeNull();
     expect(lines[1]).toBe(lines[0]);
-    const fill = (key: string): string =>
+    const fill = (key: string, row: string): string =>
       (lines[0] as string)
         .replace('<scope> <type>', key)
+        .replace('<row>', row)
         .replace('<user>', 'operator')
         .replace('<YYYY-MM-DD>', '2026-11-03')
         .replace('<text>', 'covered by the final review');
@@ -187,30 +196,41 @@ describe('pending required reviews before a pull request', () => {
         '',
         '## Phase p03: More docs',
         '',
+        '## Phase p04: Reviewed docs',
+        '',
         '## Reviews',
         '',
         '| Scope | Type | Status | Date | Artifact |',
         '| ----- | ---- | ------ | ---- | -------- |',
         '| p02 | code | pending | - | - |',
+        '| p04 | code | pending | - | - |',
+        '| p04 | code | passed | 2026-11-03 | reviews/archived/p04.md |',
+        '| p04 | code | pending | - | - |',
         '',
       ].join('\n'),
       'utf8',
     );
     await writeFile(
       join(root, project, 'implementation.md'),
-      ['## Reviews and Gates', '', fill('p02 code'), fill('p03 code'), ''].join(
-        '\n',
-      ),
+      [
+        '## Reviews and Gates',
+        '',
+        fill('p02 code', '1'),
+        fill('p03 code', '-'),
+        // Written for row 2, which a recorded review (row 3) retired.
+        fill('p04 code', '2'),
+        '',
+      ].join('\n'),
       'utf8',
     );
 
     const result = await listPendingReviews({
       repoRoot: root,
       projectPath: project,
-      scope: 'p02,p03',
+      scope: 'p02,p03,p04',
     });
 
-    expect(result.pending).toEqual([]);
+    expect(result.pending).toMatchObject([{ scope: 'p04', row: 4 }]);
     expect(result.missing).toEqual([]);
     expect(result.waived).toMatchObject([
       {

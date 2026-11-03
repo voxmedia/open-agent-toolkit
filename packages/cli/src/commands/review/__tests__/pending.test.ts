@@ -417,6 +417,124 @@ describe('listPendingReviews', () => {
     ]);
   });
 
+  describe('a waiver covers only the pending row it was written for', () => {
+    // Rows 1 to 3 of the m02 exit gate rerun's M1 reproduction: the waived
+    // pending row, a later recorded review, then a new pending row.
+    const REVIEWED_THEN_PENDING = [
+      row('p01', 'code', 'pending'),
+      row('p01', 'code', 'passed'),
+      row('p01', 'code', 'pending'),
+    ];
+    const waiver = (fields: string): string =>
+      `**Review waived:** p01 code · ${fields}**Waived by:** operator · **Date:** 2026-11-03 · **Reason:** covered elsewhere`;
+
+    async function listP01(rows: string[], waivers: string[]) {
+      const root = await createProject(
+        plan({ phases: ['p01'], rows }),
+        journal(waivers),
+      );
+      return list(root, 'p01');
+    }
+
+    it('keeps a new pending row pending after a recorded review retired the waiver (gate M1 reproduction)', async () => {
+      const result = await listP01(REVIEWED_THEN_PENDING, [
+        '**Review waived:** p01 code · **Waived by:** operator · **Date:** 2026-11-01 · **Reason:** prior scope covered elsewhere',
+      ]);
+
+      expect(result.pending).toMatchObject([
+        { scope: 'p01', type: 'code', status: 'pending', row: 3 },
+      ]);
+      expect(result.waived).toEqual([]);
+      expect(result.waivers).toMatchObject([
+        { row: null, applied: false, unapplied: 'review-recorded' },
+      ]);
+    });
+
+    it('applies a waiver naming the pending row it covers', async () => {
+      const result = await listP01(
+        [row('p01', 'code', 'pending')],
+        [waiver('**Row:** 1 · ')],
+      );
+
+      expect(result.pending).toEqual([]);
+      expect(result.waived).toMatchObject([{ scope: 'p01', row: 1 }]);
+      expect(result.waivers).toMatchObject([
+        { row: '1', applied: true, unapplied: null },
+      ]);
+    });
+
+    it('leaves a waiver inert once its row records a review and no later row exists', async () => {
+      const result = await listP01(
+        [row('p01', 'code', 'pending'), row('p01', 'code', 'passed')],
+        [waiver('**Row:** 2 · '), waiver('**Row:** 1 · ')],
+      );
+
+      expect(result.pending).toEqual([]);
+      expect(result.waived).toEqual([]);
+      expect(result.waivers.map((entry) => entry.unapplied)).toEqual([
+        'review-recorded',
+        'row-mismatch',
+      ]);
+    });
+
+    it('applies a fresh waiver naming the new pending row while the retired one stays inert', async () => {
+      const result = await listP01(REVIEWED_THEN_PENDING, [
+        waiver('**Row:** 1 · '),
+        waiver('**Row:** 3 · '),
+      ]);
+
+      expect(result.pending).toEqual([]);
+      expect(result.waived).toMatchObject([
+        { row: 3, waiver: { line: result.waivers[1]?.line } },
+      ]);
+      expect(result.waivers.map((entry) => entry.unapplied)).toEqual([
+        'row-mismatch',
+        null,
+      ]);
+    });
+
+    it('fails closed for a waiver it cannot bind to the latest pending row', async () => {
+      // A rowless line written after a recorded review cannot be ordered
+      // against it; a named row that a later placeholder replaced, a
+      // malformed row and a row named for a key with no row do not bind.
+      const reviewed = await listP01(REVIEWED_THEN_PENDING, [
+        waiver(''),
+        waiver('**Row:** 03 · '),
+      ]);
+      expect(keys(reviewed.pending)).toEqual(['p01 code']);
+      expect(reviewed.waivers.map((entry) => entry.unapplied)).toEqual([
+        'review-recorded',
+        'row-mismatch',
+      ]);
+
+      const replaced = await listP01(
+        [row('p01', 'code', 'pending'), row('p01', 'code', 'pending')],
+        [waiver('**Row:** 1 · ')],
+      );
+      expect(keys(replaced.pending)).toEqual(['p01 code']);
+      expect(replaced.waivers).toMatchObject([{ unapplied: 'row-mismatch' }]);
+
+      const missing = await listP01([], [waiver('**Row:** 1 · ')]);
+      expect(keys(missing.missing)).toEqual(['p01 code']);
+      expect(missing.waivers).toMatchObject([{ unapplied: 'row-mismatch' }]);
+    });
+
+    it('reads `**Row:** -` as naming no row and never reads a row from the reason', async () => {
+      const missing = await listP01([], [waiver('**Row:** - · ')]);
+      expect(missing.missing).toEqual([]);
+      expect(missing.waived).toMatchObject([{ scope: 'p01', row: null }]);
+      expect(missing.waivers).toMatchObject([{ row: null, applied: true }]);
+
+      const result = await listP01(REVIEWED_THEN_PENDING, [
+        '**Review waived:** p01 code · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** see **Row:** 3',
+      ]);
+      expect(keys(result.pending)).toEqual(['p01 code']);
+      expect(result.waivers).toMatchObject([
+        { row: null, unapplied: 'review-recorded' },
+      ]);
+    });
+  });
+
   it('applies only waiver lines recorded under ## Reviews and Gates', async () => {
     const root = await createProject(
       plan({ phases: ['p02'], rows: [row('p02', 'code', 'pending')] }),

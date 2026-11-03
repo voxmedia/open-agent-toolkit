@@ -40,11 +40,18 @@ import { Command } from 'commander';
  * `plan | artifact` key has no phase and is listed only from its row.
  *
  * A waiver is one line under the journal's `## Reviews and Gates`:
- * `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <date>
- * · **Reason:** <text>`. It moves a required key whose latest row is
- * `pending` from `pending` to `waived`, or a `missing` key from `missing` to
- * `waived`; the ledger itself is unchanged, and no other reader treats the
- * line as a review.
+ * `**Review waived:** <scope> <type> · **Row:** <row> · **Waived by:** <user>
+ * · **Date:** <date> · **Reason:** <text>`. It moves a required key whose
+ * latest row is `pending` from `pending` to `waived`, or a `missing` key from
+ * `missing` to `waived`; the ledger itself is unchanged, and no other reader
+ * treats the line as a review.
+ *
+ * A waiver covers only the pending obligation it was written for. A line that
+ * names a row applies only while that row is still the key's latest row and
+ * `pending`, so a recorded review or a newly appended row retires it. A line
+ * that names no row (`**Row:** -`, or no `**Row:**` label) applies only while
+ * no row of its key records a review: ledger and journal dates cannot order a
+ * waiver against a same-day review, so an unordered waiver never applies.
  */
 
 export interface RequiredReviewEntry {
@@ -59,6 +66,7 @@ export interface RequiredReviewEntry {
 export type WaiverUnappliedReason =
   | 'not-required'
   | 'review-recorded'
+  | 'row-mismatch'
   | 'no-row'
   | 'missing-reason';
 
@@ -67,6 +75,11 @@ export interface ReviewWaiverRecord {
   line: number;
   scope: string;
   type: string;
+  /**
+   * The `**Row:**` value the line names, as written, or `null` when it names
+   * none (`-` or no label).
+   */
+  row: string | null;
   waivedBy: string | null;
   date: string | null;
   reason: string | null;
@@ -231,6 +244,7 @@ interface ParsedWaiverLine {
   line: number;
   scope: string;
   type: string;
+  row: string | null;
   waivedBy: string | null;
   date: string | null;
   reason: string | null;
@@ -253,10 +267,14 @@ function readWaiverLines(implementationContent: string): ParsedWaiverLine[] {
       if (body === undefined || !key?.[1] || !key[2]) {
         continue;
       }
+      // `**Reason:**` runs to the end of the line, so the row is read only
+      // from the fields before it.
+      const row = labelValue(body.split('**Reason:**')[0] ?? '', 'Row');
       waivers.push({
         line,
         scope: normalizeScope(key[1]),
         type: key[2].trim().toLowerCase(),
+        row: row === '-' ? null : row,
         waivedBy: labelValue(body, 'Waived by'),
         date: labelValue(body, 'Date'),
         reason: reasonValue(body),
@@ -264,6 +282,42 @@ function readWaiverLines(implementationContent: string): ParsedWaiverLine[] {
     }
   }
   return waivers;
+}
+
+/**
+ * Why a waiver does not apply, or `null` when it does. Fails closed: a waiver
+ * applies only to the pending obligation it can be shown to cover.
+ */
+function waiverUnapplied(
+  waiver: ParsedWaiverLine,
+  entry: RequiredReviewEntry | undefined,
+  keyHasRecordedReview: boolean,
+  isMissing: (entry: RequiredReviewEntry) => boolean,
+): WaiverUnappliedReason | null {
+  if (entry === undefined) {
+    return 'not-required';
+  }
+  if (entry.status === null && !isMissing(entry)) {
+    return 'no-row';
+  }
+  // A named row must still be the key's latest row: a later row is a new
+  // obligation the waiver was not written for.
+  if (
+    waiver.row !== null &&
+    (entry.row === null || waiver.row !== String(entry.row))
+  ) {
+    return 'row-mismatch';
+  }
+  if (entry.status !== null && entry.status !== 'pending') {
+    return 'review-recorded';
+  }
+  // A line naming no row cannot be ordered against a recorded review (dates
+  // do not order same-day events), so any recorded review of its key retires
+  // it.
+  if (waiver.row === null && keyHasRecordedReview) {
+    return 'review-recorded';
+  }
+  return waiver.reason === null ? 'missing-reason' : null;
 }
 
 /**
@@ -293,11 +347,15 @@ export async function listPendingReviews(
   const scope = resolveScope(options.scope, planContent, implementationContent);
 
   const latest = new Map<string, { status: string; row: number }>();
+  /** Keys with any row that records a review (any status but `pending`). */
+  const reviewed = new Set<string>();
   parseReviewTable(planContent).forEach((row, index) => {
-    latest.set(keyOf(row.scope, row.type), {
-      status: row.status.trim(),
-      row: index + 1,
-    });
+    const key = keyOf(row.scope, row.type);
+    const status = row.status.trim();
+    latest.set(key, { status, row: index + 1 });
+    if (status !== 'pending') {
+      reviewed.add(key);
+    }
   });
 
   const requiredKeys = [
@@ -326,17 +384,13 @@ export async function listPendingReviews(
   const waivers: ReviewWaiverRecord[] = readWaiverLines(
     implementationContent,
   ).map((waiver) => {
-    const entry = requiredByKey.get(keyOf(waiver.scope, waiver.type));
-    const unapplied: WaiverUnappliedReason | null =
-      entry === undefined
-        ? 'not-required'
-        : entry.status === null && !isMissing(entry)
-          ? 'no-row'
-          : entry.status !== null && entry.status !== 'pending'
-            ? 'review-recorded'
-            : waiver.reason === null
-              ? 'missing-reason'
-              : null;
+    const key = keyOf(waiver.scope, waiver.type);
+    const unapplied = waiverUnapplied(
+      waiver,
+      requiredByKey.get(key),
+      reviewed.has(key),
+      isMissing,
+    );
     return { ...waiver, applied: unapplied === null, unapplied };
   });
 

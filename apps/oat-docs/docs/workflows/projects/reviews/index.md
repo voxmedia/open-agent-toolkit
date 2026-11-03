@@ -81,7 +81,7 @@ user's explicit choice, as one line under `## Reviews and Gates` in
 `implementation.md`:
 
 ```markdown
-**Review waived:** p03 code · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** docs-only phase, covered by the final review
+**Review waived:** p03 code · **Row:** 7 · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** docs-only phase, covered by the final review
 ```
 
 The Reviews table is unchanged: a waiver adds no Reviews row, status or column, never
@@ -89,7 +89,16 @@ counts as `passed`, and is not read by pr-final's final-review check,
 `oat project closeout-check` or `oat project delivery check`. It moves a key
 from `pending` or `missing` to `waived` in the listing only while the key's
 latest status is `pending`, or it has no row and its phase is concrete, and the
-line carries a reason; once a later row records a review, the waiver is inert.
+line carries a reason.
+
+A waiver covers only the pending row it was written for. `**Row:**` names the
+row number the listing reports (`-` for a `missing` key). The waiver applies
+only while that row is still the key's latest row and still `pending`: once
+the row records a review, or a later row is appended for the same key, the
+waiver is inert and the key is listed again, so an old waiver never hides newly
+pending work. A line that names no row applies only until any row of its key
+records a review, because ledger and journal dates cannot order a waiver
+against a review recorded the same day.
 
 ## Bookkeeping commits (required)
 
