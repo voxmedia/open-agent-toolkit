@@ -31,7 +31,7 @@ oat review latest --project .oat/projects/shared/example --actionable-project --
 
 The default resolver is an all-history lookup. It orders candidates by `oat_generated_at` frontmatter, not filesystem mtime. With an active or explicit project, it scans the project's `reviews/` directory first, then `reviews/archived/`, then ad-hoc review locations (`.oat/repo/reviews/` and `.oat/projects/local/orphan-reviews/`). When candidates share the same generated time, active project reviews outrank archived and ad-hoc reviews, then lifecycle recency breaks remaining ties (`final` > higher phase/task scope > lower phase/task scope).
 
-Use `--actionable-project` when project review-receive needs work waiting for disposition. A top-level artifact is actionable only when its scope, type, and artifact path identify a `received` event in the plan's Reviews ledger. Top-level placement alone is insufficient: passed, `fixes_added`, `fixes_completed`, mismatched, and archived events return `actionable: false`. The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. If no matching review exists, those fields are `null`.
+Use `--actionable-project` when project review-receive needs work waiting for disposition. A top-level artifact is actionable only when its scope, type, and artifact path identify a `received` event in the plan's Reviews ledger. Top-level placement alone is insufficient: passed, `fixes_added`, `fixes_completed`, mismatched, and archived events return `actionable: false`. A superseded `received` event (see the status model below) also returns `actionable: false`. The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. If no matching review exists, those fields are `null`.
 
 `oat-project-review-receive` uses this resolver when it is invoked from natural language and needs to offer the latest project review, or route an ad-hoc result to `oat-review-receive`.
 
@@ -108,6 +108,32 @@ artifact filename identify an event:
 
 Readers that need current lifecycle state use the latest appended event matching
 the relevant scope and type.
+
+Each event has one row and one writer. Scaffolds seed one `pending`
+placeholder per review a mode runs: every mode carries a `plan` artifact row,
+and only spec-driven projects carry `spec` and `design` rows, because quick,
+import and lite never review those artifacts. When a gate child or
+`oat-project-review-provide` has written an event's row, the skill that records
+the outcome updates that row, matched by scope, type and artifact filename,
+and never appends a second one. A structured review that writes no artifact
+claims the unbound placeholder for its scope and type. A row whose artifact is
+`-` never shares an event key with another row.
+
+A `received` row is superseded when a later row of the same scope, type and
+invocation class records a review (any status but `pending`) at the same or a
+descendant reviewed head. The classes are gate (any gate target) and lifecycle
+(`manual` or `auto`); rows of different classes never supersede each other,
+and a row whose invocation or reviewed head is `-` is never superseded.
+Supersession is read-side only: the router and `oat review latest` ignore a
+superseded row, so a stranded gate round never routes to review-receive, and
+nothing edits, promotes or deletes the row. To list superseded rows and
+duplicate event keys, run the read-only, advisory check:
+
+```bash
+oat review check --project .oat/projects/shared/example --json
+```
+
+It never changes the ledger and blocks no lifecycle step.
 
 ## Current policy
 

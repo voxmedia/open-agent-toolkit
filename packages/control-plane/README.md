@@ -72,7 +72,7 @@ mode omits them. `recommendSkill` routes goal projects through a goal priority
 block (terminal declaration, review feedback and recovery records, membership,
 then the milestone status table) that reads only this persisted state.
 
-### `getProjectState(projectPath)`
+### `getProjectState(projectPath, options?)`
 
 Reads one OAT project directory and returns a full `ProjectState` snapshot, including:
 
@@ -103,7 +103,28 @@ provenance:
 Legacy five-column review rows remain supported. Missing, empty, placeholder,
 or invalid provenance is omitted from the parsed object.
 
-### `listProjects(projectsRoot)`
+A row may also carry `superseded: true`, a read-side mark that is never a
+ledger cell: a `received` row is superseded by a later row of the same Scope,
+Type and Invocation class (gate, or lifecycle: `manual` and `auto`) that
+records a review (any status but `pending`) at the same or a descendant
+Reviewed Head. A row whose Invocation or Reviewed Head is absent is never
+superseded. The router ignores a superseded row when it decides whether review
+feedback is waiting, so a stranded round never routes to
+`oat-project-review-receive`. Superseded rows stay in `reviews` in ledger
+order.
+
+`getProjectState(projectPath, options?)` and `listProjects(projectsRoot,
+options?)` accept `ProjectReadOptions`. This package never runs git, so
+descendant-head supersession needs the caller's
+`resolveReviewHeadAncestry(pairs)`, which returns the `ancestor..descendant`
+keys (`reviewHeadPairKey`) that hold. Without it only same-head supersession
+applies and a distinct head counts as not descending. The OAT CLI supplies a
+resolver backed by `git merge-base --is-ancestor`. The pure rule is exported
+for other readers: `parseReviewTable`, `reviewSupersessionHeadPairs`,
+`findSupersededReviews`, `markSupersededReviews`, `resolveReviewHeadAncestry`
+and `reviewInvocationClass`.
+
+### `listProjects(projectsRoot, options?)`
 
 Reads all projects under a configured projects root and returns lightweight `ProjectSummary` records suitable for list or dashboard surfaces.
 
