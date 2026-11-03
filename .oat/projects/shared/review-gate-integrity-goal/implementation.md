@@ -1562,7 +1562,10 @@ Proof: the isolated-HOME contract suites.
 
 ### Task p13-t07: (review) Scope pr-progress Step 3's do-not-block sentence
 
-**Status:** pending
+**Status:** completed
+**Commit:** 890aa4879a148c2f6a509ac2f8cdc812fcd8224b
+**Executor:** phase-implementer:rgi-p13-fix-20261103-01
+**Handle:** direct:rgi-p13-fix-20261103-01:p13-t07
 **Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (L2)
 
 Intent: pr-progress Step 3 ends "Do not block PR generation; this is a progress PR." directly before Step 3.5, which can stop. Scope it to Step 3's warning, for example "Do not block PR generation on this warning; Step 3.5 governs pending required reviews." Check existing Step 3 pins first.
