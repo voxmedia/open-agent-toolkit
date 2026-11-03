@@ -367,7 +367,11 @@ export function applyTemplateReplacements(
   return omitUnusedArtifactReviewRows(rendered, mode);
 }
 
-/** Modes that never review a `spec` or `design` artifact. */
+/**
+ * Modes whose scaffold seeds no `spec` or `design` review placeholder. A
+ * review of those artifacts, such as a quick lightweight-design review,
+ * appends its own row under review-provide Step 9.
+ */
 const MODES_WITHOUT_SPEC_DESIGN_REVIEWS: ReadonlySet<WorkflowMode> = new Set([
   'quick',
   'import',
@@ -377,9 +381,10 @@ const UNUSED_ARTIFACT_REVIEW_SCOPES = new Set(['spec', 'design']);
 
 /**
  * Drop the unclaimed `spec` and `design` artifact placeholder rows from a
- * rendered `## Reviews` table in modes that never review those artifacts
- * (quick, import and lite), so no scaffold carries a review row that never
- * resolves. Spec-driven keeps them. Only a placeholder is dropped: Type
+ * rendered `## Reviews` table in quick, import and lite, which seed no
+ * placeholder for those artifacts, so no scaffold carries a review row that
+ * may never resolve; a review of either artifact in those modes appends its
+ * own row. Spec-driven keeps them. Only a placeholder is dropped: Type
  * `artifact`, Status `pending` and Artifact `-`; a bound row, any other scope
  * and every other line survive. Content with no recognizable Reviews table is
  * returned unchanged, so this applies to every rendered template.

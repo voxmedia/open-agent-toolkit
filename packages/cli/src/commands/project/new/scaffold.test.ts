@@ -1518,8 +1518,8 @@ describe('scaffoldProject', () => {
     'seeds exactly the $mode artifact review placeholders the mode reviews',
     async ({ mode, artifactScopes }) => {
       // One row per review event: every mode carries a `plan` placeholder the
-      // plan review claims, and only spec-driven carries `spec`/`design` rows,
-      // because the other modes never review those artifacts.
+      // plan review claims, and only spec-driven seeds `spec`/`design` rows;
+      // in the other modes a review of those artifacts appends its own row.
       const repoRoot = await createRepoRootWithRealTemplates();
       tempDirs.push(repoRoot);
 

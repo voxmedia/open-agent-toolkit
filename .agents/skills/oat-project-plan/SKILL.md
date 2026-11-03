@@ -401,7 +401,7 @@ This creates traceability: Requirement → Tasks → Implementation
 
 Load the current `oat-project-plan-writing/SKILL.md` and follow its review table preservation rules:
 
-- Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`, `plan`); quick and import scaffolds carry only the `plan` artifact row, because those modes never review `spec` or `design`
+- Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`, `plan`); quick and import scaffolds seed only the `plan` artifact placeholder; a review of `spec` or `design` in those modes, such as a quick lightweight-design review, appends its own row under review-provide Step 9
 - Add additional rows as needed (e.g., p03), but never delete existing rows
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.

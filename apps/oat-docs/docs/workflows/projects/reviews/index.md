@@ -111,8 +111,10 @@ the relevant scope and type.
 
 Each event has one row and one writer. Scaffolds seed one `pending`
 placeholder per review a mode runs: every mode carries a `plan` artifact row,
-and only spec-driven projects carry `spec` and `design` rows, because quick,
-import and lite never review those artifacts. When a gate child or
+and only spec-driven projects carry `spec` and `design` rows. Quick, import
+and lite seed no placeholder for those artifacts; a review of one, such as a
+quick lightweight-design review, appends its own row under
+`oat-project-review-provide` Step 9. When a gate child or
 `oat-project-review-provide` has written an event's row, the skill that records
 the outcome updates that row, matched by scope, type and artifact filename,
 and never appends a second one. A structured review that writes no artifact

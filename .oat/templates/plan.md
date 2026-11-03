@@ -166,7 +166,7 @@ git commit -m "feat(p01-t02): {description}"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed. Spec-driven projects keep `spec`/`design`; quick and import scaffolds omit them because those modes never review them.}
+{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed. Spec-driven projects keep `spec`/`design`; quick and import scaffolds seed no `spec`/`design` placeholder, and a review of those artifacts, such as a quick lightweight-design review, appends its own row under review-provide Step 9.}
 
 | Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
