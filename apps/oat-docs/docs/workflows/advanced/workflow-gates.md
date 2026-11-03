@@ -628,13 +628,14 @@ diagnostics include the declared project, containing project, artifact
 invocation. Treat any status other than `ok`/`blocked` as an operational failure,
 not a passing gate.
 
-`ok` and `blocked` also carry `reviewedHead`: the full SHA of the `HEAD` the
-gate dispatched its reviewer against, or `null` when git cannot read it.
-`corroboration.reviewedHead` compares it with the artifact's full-SHA
-`oat_review_head_sha` and reports `match`, `ancestor` (the reviewed range ends
-at a commit the dispatch head contains, the usual case for an anchored review
-followed by bookkeeping commits), `mismatch`, or `unavailable` when either head
-is absent. It is reporting only and never changes `receiveEligible`. Hand
+`ok` and `blocked` also carry `reviewedHead`: the artifact's full-SHA
+`oat_review_head_sha` when present, otherwise the full SHA of the `HEAD` the
+gate captured at dispatch, or `null` when neither is available.
+`corroboration.reviewedHead` compares the artifact head with the dispatch
+`HEAD` and reports `match`, `ancestor` (the reviewed range ends at a commit the
+dispatch head contains, the usual case for an anchored review followed by
+bookkeeping commits), `mismatch`, or `unavailable` when either head is absent.
+It is reporting only and never changes `receiveEligible`. Hand
 review-receive the result's event (`artifactPath`, `scope`, `reviewType`,
 `runId` and `reviewedHead`): it consumes exactly that artifact through
 `oat review resolve` and stops on a mismatch instead of selecting the newest

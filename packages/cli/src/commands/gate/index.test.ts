@@ -4531,7 +4531,7 @@ describe('oat gate', () => {
       return { root, home, projectPath, parent, child };
     }
 
-    it('adds the dispatch HEAD to an ok result and reports a matching artifact head', async () => {
+    it('reports the artifact head as reviewedHead and a match against the dispatch HEAD', async () => {
       const { root, home, projectPath, child } = await setupRepo();
       const runner = createProcessRunner({
         onExecute: async () => {
@@ -4562,7 +4562,7 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('adds the dispatch HEAD to a blocked result and reports an ancestor artifact head', async () => {
+    it('reports an anchored artifact head as reviewedHead, never the dispatch HEAD, on a blocked result', async () => {
       const { root, home, projectPath, parent, child } = await setupRepo();
       const runner = createProcessRunner({
         onExecute: async () => {
@@ -4585,7 +4585,7 @@ describe('oat gate', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'blocked',
         receiveEligible: true,
-        reviewedHead: child,
+        reviewedHead: parent,
         corroboration: {
           reviewedHead: { status: 'ancestor', expected: child, actual: parent },
         },
@@ -4593,16 +4593,11 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     });
 
-    it('captures HEAD before dispatch, not after the reviewer commits', async () => {
+    it('falls back to the HEAD captured at dispatch, not after the reviewer commits, when the artifact has no head', async () => {
       const { root, home, projectPath, child } = await setupRepo();
       const runner = createProcessRunner({
         onExecute: async () => {
-          await writeReviewArtifact({
-            root,
-            projectPath,
-            finding: 'clean',
-            reviewHeadSha: child,
-          });
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
           // The reviewer's own bookkeeping commit lands after dispatch.
           await writeFile(join(root, 'a.txt'), 'c\n', 'utf8');
           git(root, ['commit', '-q', '-am', 'reviewer bookkeeping']);
@@ -4620,7 +4615,13 @@ describe('oat gate', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'ok',
         reviewedHead: child,
-        corroboration: { reviewedHead: { status: 'match' } },
+        corroboration: {
+          reviewedHead: {
+            status: 'unavailable',
+            expected: child,
+            actual: null,
+          },
+        },
       });
     });
 
@@ -4648,7 +4649,7 @@ describe('oat gate', () => {
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'ok',
         receiveEligible: true,
-        reviewedHead: child,
+        reviewedHead: unrelated,
         corroboration: {
           reviewedHead: {
             status: 'mismatch',
@@ -4660,35 +4661,7 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(0);
     });
 
-    it('reports unavailable, never a mismatch, when the artifact has no full-SHA head', async () => {
-      const { root, home, projectPath, child } = await setupRepo();
-      const runner = createProcessRunner({
-        onExecute: async () => {
-          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
-        },
-      });
-
-      const capture = await runReviewGate({
-        root,
-        home,
-        runProcess: runner.runProcess,
-        args: GATE_ARGS,
-      });
-
-      expect(capture.jsonPayloads[0]).toMatchObject({
-        status: 'ok',
-        reviewedHead: child,
-        corroboration: {
-          reviewedHead: {
-            status: 'unavailable',
-            expected: child,
-            actual: null,
-          },
-        },
-      });
-    });
-
-    it('reports a null reviewedHead and unavailable corroboration outside a git repository', async () => {
+    it('keeps the artifact head and reports unavailable corroboration outside a git repository', async () => {
       const { root, home } = await setup();
       const projectPath = await writeProject(root);
       await writeActiveProject(root, projectPath);
@@ -4712,13 +4685,39 @@ describe('oat gate', () => {
 
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'ok',
-        reviewedHead: null,
+        reviewedHead: 'b'.repeat(40),
         corroboration: {
           reviewedHead: {
             status: 'unavailable',
             expected: null,
             actual: 'b'.repeat(40),
           },
+        },
+      });
+    });
+
+    it('reports a null reviewedHead when neither head is available', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        reviewedHead: null,
+        corroboration: {
+          reviewedHead: { status: 'unavailable', expected: null, actual: null },
         },
       });
     });

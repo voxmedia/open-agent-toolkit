@@ -141,7 +141,7 @@ function codes(result: { diagnostics: Array<{ code: string }> }): string[] {
 }
 
 describe('resolveReviewEvent', () => {
-  it('consumes a matching gate event whose row head is the dispatch head', async () => {
+  it('consumes a matching gate event whose row head equals the event head', async () => {
     const { root, child } = await createRepo();
     await writeGateArtifact(root, child);
     await writePlan(root, [gateRow(child)]);
@@ -168,7 +168,22 @@ describe('resolveReviewEvent', () => {
     });
   });
 
-  it('accepts a row head the dispatch head descends from (anchored review)', async () => {
+  it('consumes an anchored event whose reviewedHead is the row head', async () => {
+    const { root, parent } = await createRepo();
+    await writeGateArtifact(root, parent);
+    await writePlan(root, [gateRow(parent)]);
+
+    const result = await resolveReviewEvent({
+      repoRoot: root,
+      projectPath: PROJECT,
+      event: gateEvent(parent),
+    });
+
+    expect(result.status).toBe('ok');
+    expect(result.checks.reviewedHead).toBe('match');
+  });
+
+  it('refuses an event head the row head is only an ancestor of (exact equality)', async () => {
     const { root, parent, child } = await createRepo();
     await writeGateArtifact(root, parent);
     await writePlan(root, [gateRow(parent)]);
@@ -179,8 +194,16 @@ describe('resolveReviewEvent', () => {
       event: gateEvent(child),
     });
 
-    expect(result.status).toBe('ok');
-    expect(result.checks.reviewedHead).toBe('ancestor');
+    expect(result.status).toBe('refused');
+    expect(result.checks.reviewedHead).toBe('mismatch');
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'reviewed_head_mismatch',
+        source: 'row',
+        expected: child,
+        actual: parent,
+      }),
+    ]);
   });
 
   it('accepts a `-` Reviewed Head as unavailable (an artifact gate row)', async () => {
@@ -265,7 +288,7 @@ describe('resolveReviewEvent', () => {
     expect(codes(other)).toEqual(['gate_run_id_missing']);
   });
 
-  it('refuses a row head that is not the dispatch head or an ancestor of it', async () => {
+  it('refuses a row head that descends from the event head', async () => {
     const { root, parent, child } = await createRepo();
     await writeGateArtifact(root, child);
     await writePlan(root, [gateRow(child)]);
@@ -288,7 +311,7 @@ describe('resolveReviewEvent', () => {
     ]);
   });
 
-  it('refuses a head git cannot place as unresolved', async () => {
+  it('refuses an unknown event head as a mismatch', async () => {
     const { root, child } = await createRepo();
     await writeGateArtifact(root, child);
     await writePlan(root, [gateRow(child)]);
@@ -300,7 +323,7 @@ describe('resolveReviewEvent', () => {
     });
 
     expect(result.status).toBe('refused');
-    expect(codes(result)).toEqual(['reviewed_head_unresolved']);
+    expect(codes(result)).toEqual(['reviewed_head_mismatch']);
   });
 
   it('refuses the wrong scope from both the row and the artifact', async () => {

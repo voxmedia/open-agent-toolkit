@@ -6,7 +6,6 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
@@ -16,7 +15,6 @@ import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
 import { normalizeToPosixPath, resolveProjectRoot } from '@fs/paths';
 import {
   parseReviewTable,
-  reviewHeadPairKey,
   type ReviewStatus,
 } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
@@ -26,7 +24,6 @@ import {
   reviewEventKey,
   type ReviewLedgerRowReport,
 } from './check';
-import { resolveGitReviewHeadAncestry } from './head-ancestry';
 
 /**
  * `oat review resolve`: bind the review event a gate result names to its one
@@ -46,7 +43,7 @@ export interface ReviewGateEvent {
   type: string;
   /** The result's `runId`. */
   runId: string;
-  /** The result's `reviewedHead`: the HEAD the reviewer was dispatched against. */
+  /** The result's `reviewedHead`: the artifact head when present, else the dispatch HEAD. */
   reviewedHead: string;
 }
 
@@ -60,7 +57,6 @@ export type ReviewEventDiagnosticCode =
   | 'type_mismatch'
   | 'artifact_mismatch'
   | 'reviewed_head_mismatch'
-  | 'reviewed_head_unresolved'
   | 'gate_run_id_missing'
   | 'gate_run_id_mismatch';
 
@@ -81,16 +77,11 @@ export interface ReviewEventChecks {
   type: FieldCheck;
   artifact: FieldCheck;
   /**
-   * The row's Reviewed Head against the event's: `match` (equal), `ancestor`
-   * (the reviewed range ends at a commit the dispatch HEAD contains),
-   * `unavailable` (the cell is `-`, accepted), `mismatch` or `unresolved`.
+   * The row's Reviewed Head against the event's `reviewedHead`, by exact
+   * equality: `match`, `mismatch` (any other head, an ancestor included), or
+   * `unavailable` when the cell is `-` (accepted).
    */
-  reviewedHead:
-    | 'match'
-    | 'ancestor'
-    | 'unavailable'
-    | 'mismatch'
-    | 'unresolved';
+  reviewedHead: FieldCheck;
   gateRunId: FieldCheck;
 }
 
@@ -109,21 +100,18 @@ export interface ResolveReviewEventOptions {
   repoRoot: string;
   projectPath: string;
   event: ReviewGateEvent;
-  git?: GitRunner;
 }
 
 interface ReviewResolveDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
-  git: GitRunner;
 }
 
 const DEFAULT_DEPENDENCIES: ReviewResolveDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   readOatLocalConfig,
-  git: defaultGitRunner,
 };
 
 const FULL_SHA = /^[0-9a-f]{40}$/i;
@@ -153,13 +141,12 @@ function diagnostic(
 
 /**
  * Resolve one gate event against a project's `## Reviews` ledger and the
- * artifact it names. Read-only: git is used only to answer whether the row's
- * Reviewed Head is an ancestor of the event's reviewed head.
+ * artifact it names. Read-only. The row's Reviewed Head must equal the event's
+ * `reviewedHead` exactly; only a `-` cell is accepted as unavailable.
  */
 export async function resolveReviewEvent(
   options: ResolveReviewEventOptions,
 ): Promise<ReviewEventResolution> {
-  const git = options.git ?? defaultGitRunner;
   const { event } = options;
   const absoluteProjectPath = isAbsolute(options.projectPath)
     ? options.projectPath
@@ -399,36 +386,16 @@ export async function resolveReviewEvent(
       } else if (rowHead === eventHead) {
         checks.reviewedHead = 'match';
       } else {
-        const { ancestry, unresolved } = await resolveGitReviewHeadAncestry(
-          git,
-          options.repoRoot,
-          [{ ancestor: rowHead, descendant: eventHead }],
+        checks.reviewedHead = 'mismatch';
+        diagnostics.push(
+          diagnostic(
+            'reviewed_head_mismatch',
+            'row',
+            eventHead,
+            rowHead,
+            `Reviews row ${target.index + 1}'s Reviewed Head ${rowHead} is not the event's reviewed head ${eventHead}.`,
+          ),
         );
-        if (ancestry.has(reviewHeadPairKey(rowHead, eventHead))) {
-          checks.reviewedHead = 'ancestor';
-        } else if (unresolved.length > 0) {
-          checks.reviewedHead = 'unresolved';
-          diagnostics.push(
-            diagnostic(
-              'reviewed_head_unresolved',
-              'row',
-              eventHead,
-              rowHead,
-              `Git could not decide whether Reviews row ${target.index + 1}'s Reviewed Head ${rowHead} is contained in the event's reviewed head ${eventHead}.`,
-            ),
-          );
-        } else {
-          checks.reviewedHead = 'mismatch';
-          diagnostics.push(
-            diagnostic(
-              'reviewed_head_mismatch',
-              'row',
-              eventHead,
-              rowHead,
-              `Reviews row ${target.index + 1}'s Reviewed Head ${rowHead} is neither the event's reviewed head ${eventHead} nor an ancestor of it.`,
-            ),
-          );
-        }
       }
     }
   }
@@ -512,7 +479,6 @@ async function runReviewResolve(
       repoRoot,
       projectPath,
       event,
-      git: dependencies.git,
     });
 
     if (context.json) {

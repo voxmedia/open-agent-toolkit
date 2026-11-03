@@ -47,7 +47,7 @@ oat --json review resolve --project .oat/projects/shared/example \
   --reviewed-head <full SHA from the gate result>
 ```
 
-The resolver binds the event's Reviews row by scope, type and artifact filename and checks the row's scope, type, artifact path and reviewed head, and the artifact's `oat_gate_run_id`, against the event. The row's reviewed head may equal the event's or be an ancestor of it, because an anchored review ends before the bookkeeping commits the gate was dispatched over; a `-` reviewed head (an artifact review) is accepted as unavailable. Any mismatch, a missing or duplicate row, or a missing artifact exits nonzero with structured diagnostics, and receive stops without falling back to the newest artifact. Manual and auto reviews pass no event and keep the `oat review latest` selection above.
+The resolver binds the event's Reviews row by scope, type and artifact filename and checks the row's scope, type, artifact path and reviewed head, and the artifact's `oat_gate_run_id`, against the event. The row's reviewed head must equal the event's `reviewedHead` exactly, which the gate takes from the artifact's `oat_review_head_sha`; a `-` reviewed head (an artifact review) is accepted as unavailable, and any other difference, an ancestor included, is a mismatch. Any mismatch, a missing or duplicate row, or a missing artifact exits nonzero with structured diagnostics, and receive stops without falling back to the newest artifact. Manual and auto reviews pass no event and keep the `oat review latest` selection above.
 
 ## Bookkeeping commits (required)
 
