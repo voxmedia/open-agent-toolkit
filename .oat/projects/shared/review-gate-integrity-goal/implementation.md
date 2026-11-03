@@ -942,6 +942,15 @@ Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`
 
 **Guard can fail.** With `markSupersededReviews` neutralized (never sets `superseded`), 10 of 312 control-plane tests fail: five repeated-gate steps, the regression case, two resolver cases and both stranded-row project-reader cases (which then route to `oat-project-review-receive`). Restored byte-identical; 312/312.
 
+### Task p07-t03: One-writer rule and reader supersession in the lifecycle skills
+
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t03
+**Intent:** State the event key, the one-writer rule and read-side supersession once in `oat-project-plan-writing`'s Review Table Preservation Rules; have review-provide Step 9 state the one-writer rule from the writer's side and review-receive Step 1 state that a superseded row is never received; have the planning skills (quick-start, plan, import-plan, brief, goal, lite) record a structured plan review on its own event row; pin all of it and show a quick lightweight-design review still records exactly one `design` row.
+**Files:** the nine `SKILL.md` files of `oat-project-{plan-writing,review-provide,review-receive,quick-start,plan,import-plan,brief,goal,lite}` (one patch bump each), `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins), `.oat/sync/manifest.json`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+
 ## Phase p12: Exact-event consumption for gate handoffs
 
 **Status:** pending
