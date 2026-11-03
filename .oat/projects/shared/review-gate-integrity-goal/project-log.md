@@ -109,6 +109,10 @@ The gate CLI commits its review artifact right after each run. When a phase head
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/final-review-2026-11-02T235632Z.md run=f588e505-bf2e-4904-b833-d054ccee624a
 
+### 2026-11-03 · structural · oat-project-implement · m01
+
+rgi-m01-closeout-c2: m01 closeout. Exit gate attempt 5 passed at 5599af21d (0/0/0/1, Low deferred); integrated review cycle 2 passed 0/0/0/0 (reviews/archived/m01-review-2026-11-03T000239Z.md); delivery check ok; milestone moves to delivering. Fix loops: one integrated-review fix task (p11-t07).
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
