@@ -1463,6 +1463,29 @@ Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Commit
 
 **Test can fail.** With `judgeJournalChange` (`delivery/evidence.ts`) made to refuse any journal that contains `**Review waived:**`, the new test fails (1 failed); the file was restored byte-identical (`cmp`). The branch-build counterpart is p13-t01 probe 4.
 
+### Task p13-t03: pr-progress and pr-final list pending required reviews before a PR
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t03
+**Intent:** Before PR creation, `oat-project-pr-progress` (new Step 3.5; in goal mode before Step 5.5 item 4 writes `registering`) and `oat-project-pr-final` (new Step 2.5; in goal mode inside Step 1.5 before registration item 4) run `oat review pending` for the PR's scope. With pending rows and no waiver, an interactive run offers run, waive with a recorded reason, or stop; a non-interactive run stops. pr-final's stop is the new autonomy row `PRFINAL-06` with its prompt-site coverage keys; pr-progress states the same stop in prose. Pin the listing and stop sentences; bump pr-progress to 1.3.8 and pr-final to 1.6.17.
+**Files:** `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `.agents/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins), `.oat/sync/manifest.json` (if sync changes it).
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 43817937d42a0ffc6e5db20c9c01b46cd188ca19
+**Proof:** isolated-HOME contract suites 1205/1205 (29 files) exit 0, the autonomy inventory and the named-skill execution contract included; `pnpm oat:validate-skills` (68 skills), `pnpm exec oxlint .agents/skills` and `oxfmt --check` on the changed files exit 0. `oat sync --scope project` (branch build) reported no changes, because the provider views are links; `.oat/sync/manifest.json` is unchanged. `pnpm run check:skill-bumps` after the commit failed on two skills that vendor the autonomy contract; see Recovery Event rgi-p13-rec-01 below.
+
+**Shape.**
+
+- **pr-progress Step 3.5** (new, between Step 3 and Step 4) runs `oat --json review pending --project "$PROJECT_PATH" --scope "$PENDING_SCOPE"` before Step 6 creates a pull request and, in goal mode, before Step 5.5 item 4 writes `registering` (Step 5.5's intro says so too). `PENDING_SCOPE` is `pNN`, a contiguous run's phase ids as a comma list, the active milestone's `mNN`, or a registered delivery's frozen phase ids; a `range=`/`base_sha=` scope runs no listing. Interactive: run (route to review-provide `code <pNN>` then review-receive, and end the run), waive with a recorded reason, or stop. Non-interactive (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`): stop at the boundary, report each pending row, write no waiver, create, register or push nothing. pr-progress is not an autonomy-inventory root, so the stop is prose only.
+- **pr-final Step 2.5** (new, between Step 2 and Step 3) lists `--scope project` outside goal mode. Goal Step 1.5 replaces Steps 2–6, so item 3 gains a paragraph: before item 4 writes a terminal delivery's `registering` entry, run Step 2.5 with that delivery's terminal phase ids. `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1` stops at `PRFINAL-06`: never waive, never proceed, record the blocker, and stop before the PR artifact, push, PR or `registering` entry. Otherwise the user chooses run, waive or stop.
+- **Waiver line** (both skills, identical): `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`, appended under `## Reviews and Gates` only on the user's explicit choice; the `## Reviews` row stays `pending`; the line is committed alone as bookkeeping (`oat project push` for a synced project), and the listing is re-run to confirm the row reads `waived`.
+- **Autonomy contract.** New row `PRFINAL-06` (Required reviews pending without a waiver; `boundary:unresolved-critical-findings`, like `PRFINAL-03`), and the one new prompt-scan site (`- Otherwise ask the user to choose one option for the pending rows:`) is mapped `db86a9d44b48 -> PRFINAL-06`. No mapped line was edited.
+- **Named-skill contract.** The run options and the `PRFINAL-06` resume target name review-provide and review-receive in backticks, so three `non-executing` `CALL_SITE_MATRIX` rows classify them, matching the existing Step 2 rows (terminal handoff or boundary resume target; the skill stops before either runs).
+- **Pins** (`pending-review-listing-contracts.test.ts`): each step's position (pr-progress Step 3.5 before Step 5.5; pr-final Step 2.5 before Step 3 and its goal paragraph between items 3 and 4), the listing command, the non-interactive and `PRFINAL-06` stop sentences, the interactive choice, the waiver template and "Leave the `## Reviews` row `pending`.", the `PRFINAL-06` contract row, and a cross-check that the documented waiver line, filled in, is applied by `listPendingReviews`. Step 2.5 avoids the words the existing Step 2 slice pins as absent (`archived`, `PRFINAL-05`).
+- **Versions.** pr-progress 1.3.7 → 1.3.8 and pr-final 1.6.16 → 1.6.17 (one bump each against `origin/main`); `skills.test.ts` pins updated (three).
+
+**Pins can fail** (each made in the working tree, the new test file run, then both skills restored byte-identical with `cmp`): C1 pr-progress "stop at this boundary" changed to "continue" (1 of 3 failed); C2 pr-final's "Never write a waiver and never proceed." removed (1 of 3); C3 pr-final's goal paragraph removed from Step 1.5 (1 of 3); C4 pr-final's waiver label changed to `**Waiver:**` (2 of 3: the pin and the parser cross-check).
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
