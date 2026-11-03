@@ -245,6 +245,64 @@ describe('resolveReviewEvent', () => {
     expect(result.checks.reviewedHead).toBe('unavailable');
   });
 
+  it.each([
+    ['an abbreviated SHA', (head: string) => head.slice(0, 8)],
+    ['a malformed value', () => 'not-a-sha'],
+    ['an empty cell', () => ''],
+  ])(
+    'refuses %s in the Reviewed Head cell instead of reading it as `-`',
+    async (_label, cellFor) => {
+      const { root, child } = await createRepo();
+      await writeGateArtifact(root, child);
+      const cell = cellFor(child);
+      await writePlan(root, [gateRow(cell)]);
+
+      const result = await resolveReviewEvent({
+        repoRoot: root,
+        projectPath: PROJECT,
+        event: gateEvent(child),
+      });
+
+      expect(result.status).toBe('refused');
+      expect(result.checks.reviewedHead).toBe('mismatch');
+      expect(result.diagnostics).toEqual([
+        expect.objectContaining({
+          code: 'reviewed_head_invalid',
+          source: 'row',
+          expected: child,
+          actual: cell,
+        }),
+      ]);
+    },
+  );
+
+  it('accepts a legacy ledger with no Reviewed Head column as unavailable', async () => {
+    const { root, child } = await createRepo();
+    await writeGateArtifact(root, child);
+    await writeFile(
+      join(root, PROJECT, 'plan.md'),
+      [
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| ----- | ---- | ------ | ---- | -------- |',
+        row(['p01', 'code', 'received', '2026-11-03', GATE_ARTIFACT]),
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const result = await resolveReviewEvent({
+      repoRoot: root,
+      projectPath: PROJECT,
+      event: gateEvent(child),
+    });
+
+    expect(result.status).toBe('ok');
+    expect(result.checks.reviewedHead).toBe('unavailable');
+    expect(result.diagnostics).toEqual([]);
+  });
+
   it('refuses the wrong artifact: a newer non-gate artifact is not the gate event', async () => {
     const { root, child } = await createRepo();
     await writeGateArtifact(root, child);
@@ -699,6 +757,21 @@ describe('oat review resolve', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'refused',
       diagnostics: [{ code: 'gate_run_id_mismatch', severity: 'error' }],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('exits 1 when the bound row records an abbreviated Reviewed Head', async () => {
+    const { root, child } = await createRepo();
+    await writeGateArtifact(root, child);
+    await writePlan(root, [gateRow(child.slice(0, 8))]);
+
+    const capture = await run(root, eventArgs(child));
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'refused',
+      checks: { reviewedHead: 'mismatch' },
+      diagnostics: [{ code: 'reviewed_head_invalid', severity: 'error' }],
     });
     expect(process.exitCode).toBe(1);
   });

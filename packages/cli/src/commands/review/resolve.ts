@@ -64,6 +64,7 @@ export type ReviewEventDiagnosticCode =
   | 'type_mismatch'
   | 'artifact_mismatch'
   | 'reviewed_head_mismatch'
+  | 'reviewed_head_invalid'
   | 'gate_run_id_missing'
   | 'gate_run_id_mismatch';
 
@@ -87,8 +88,9 @@ export interface ReviewEventChecks {
   artifact: FieldCheck;
   /**
    * The row's Reviewed Head against the event's `reviewedHead`, by exact
-   * equality: `match`, `mismatch` (any other head, an ancestor included), or
-   * `unavailable` when the cell is `-` (accepted).
+   * equality: `match`, `mismatch` (any other full SHA, an ancestor included,
+   * or a cell that is not a full SHA), or `unavailable` when the cell is `-`
+   * or the ledger has no Reviewed Head column (accepted).
    */
   reviewedHead: FieldCheck;
   gateRunId: FieldCheck;
@@ -162,7 +164,9 @@ function diagnostic(
 /**
  * Resolve one gate event against a project's `## Reviews` ledger and the
  * artifact it names. Read-only. The row's Reviewed Head must equal the event's
- * `reviewedHead` exactly; only a `-` cell is accepted as unavailable. The
+ * `reviewedHead` exactly; only a `-` cell (or a ledger with no Reviewed Head
+ * column) is accepted as unavailable, and a cell that is not a full SHA is
+ * refused, never read as `-`. The
  * bound row must be `received` and not superseded under p07's rule.
  */
 export async function resolveReviewEvent(
@@ -321,7 +325,9 @@ export async function resolveReviewEvent(
       ),
     );
   } else {
-    const rows = parseReviewTable(planContent);
+    // The raw Reviewed Head cell: the parser's `reviewedHead` omits a `-`
+    // placeholder and an abbreviated or malformed head alike.
+    const rows = parseReviewTable(planContent, { rawReviewedHead: true });
     const eventKey = reviewEventKey(
       event.scope,
       event.type,
@@ -427,10 +433,22 @@ export async function resolveReviewEvent(
         );
       }
 
-      const rowHead = target.row.reviewedHead?.toLowerCase();
+      const rowHeadCell = target.row.reviewedHeadCell;
+      const rowHead = rowHeadCell?.toLowerCase();
       const eventHead = event.reviewedHead.toLowerCase();
-      if (!rowHead) {
+      if (rowHead === undefined || rowHead === '-') {
         checks.reviewedHead = 'unavailable';
+      } else if (!FULL_SHA.test(rowHead)) {
+        checks.reviewedHead = 'mismatch';
+        diagnostics.push(
+          diagnostic(
+            'reviewed_head_invalid',
+            'row',
+            eventHead,
+            rowHeadCell ?? null,
+            `Reviews row ${target.index + 1}'s Reviewed Head "${rowHeadCell}" is neither a full 40-character commit SHA nor \`-\`, so it cannot equal the event's reviewed head ${eventHead}.`,
+          ),
+        );
       } else if (rowHead === eventHead) {
         checks.reviewedHead = 'match';
       } else {

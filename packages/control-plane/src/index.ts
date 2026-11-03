@@ -2,6 +2,7 @@ export * from './types';
 export { getProjectState, listProjects } from './project';
 export type { ProjectReadOptions } from './project';
 export { parseReviewTable } from './state/reviews';
+export type { ParseReviewTableOptions } from './state/reviews';
 export {
   findSupersededReviews,
   markSupersededReviews,

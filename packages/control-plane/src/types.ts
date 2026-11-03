@@ -139,6 +139,13 @@ export interface ReviewStatus {
   artifact: string;
   /** Full 40-character commit SHA at the head of the reviewed range. */
   reviewedHead?: string;
+  /**
+   * The raw Reviewed Head cell, unvalidated (`-`, a full SHA, or anything
+   * else; empty when the row has no cell for the column). Present only when
+   * `parseReviewTable` is called with `rawReviewedHead: true` and the table
+   * has a Reviewed Head column; never set on `ProjectState.reviews`.
+   */
+  reviewedHeadCell?: string;
   /** Review invocation kind used to qualify the review lineage. */
   invocation?: string;
   /** Configured gate target for gate-originated review lineage. */

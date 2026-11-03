@@ -183,6 +183,52 @@ describe('parseReviewTable', () => {
     ]);
   });
 
+  it('returns the raw Reviewed Head cell only when rawReviewedHead is requested', () => {
+    const fullHead = 'c'.repeat(40);
+    const planContent = `## Reviews
+
+| Scope | Type | Status   | Date       | Artifact        | Reviewed Head | Invocation | Gate Target |
+| ----- | ---- | -------- | ---------- | --------------- | ------------- | ---------- | ----------- |
+| p01   | code | received | 2026-11-03 | reviews/a.md    | ${fullHead} | gate       | t           |
+| p02   | code | received | 2026-11-03 | reviews/b.md    | abc1234       | gate       | t           |
+| p03   | code | received | 2026-11-03 | reviews/c.md    | not-a-sha     | gate       | t           |
+| p04   | code | received | 2026-11-03 | reviews/d.md    | -             | gate       | t           |
+| p05   | code | received | 2026-11-03 | reviews/e.md    |
+`;
+
+    const raw = parseReviewTable(planContent, { rawReviewedHead: true });
+    expect(
+      raw.map(({ reviewedHead, reviewedHeadCell }) => ({
+        reviewedHead,
+        reviewedHeadCell,
+      })),
+    ).toEqual([
+      { reviewedHead: fullHead, reviewedHeadCell: fullHead },
+      { reviewedHead: undefined, reviewedHeadCell: 'abc1234' },
+      { reviewedHead: undefined, reviewedHeadCell: 'not-a-sha' },
+      { reviewedHead: undefined, reviewedHeadCell: '-' },
+      { reviewedHead: undefined, reviewedHeadCell: '' },
+    ]);
+
+    // The default output carries no raw cell, so other readers are unchanged.
+    for (const row of parseReviewTable(planContent)) {
+      expect(row).not.toHaveProperty('reviewedHeadCell');
+    }
+  });
+
+  it('returns no raw Reviewed Head cell for a legacy table without the column', () => {
+    const planContent = `## Reviews
+
+| Scope | Type | Status   | Date       | Artifact     |
+| ----- | ---- | -------- | ---------- | ------------ |
+| p01   | code | received | 2026-11-03 | reviews/a.md |
+`;
+
+    const [row] = parseReviewTable(planContent, { rawReviewedHead: true });
+    expect(row).not.toHaveProperty('reviewedHeadCell');
+    expect(row).not.toHaveProperty('reviewedHead');
+  });
+
   it('preserves row count and ordering in a mixed legacy and widened table', () => {
     const reviewedHead = 'b'.repeat(40);
     const planContent = `## Reviews

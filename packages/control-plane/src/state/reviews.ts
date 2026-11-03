@@ -19,7 +19,20 @@ interface ReviewColumnIndices {
   gateTarget?: number;
 }
 
-export function parseReviewTable(planContent: string): ReviewStatus[] {
+export interface ParseReviewTableOptions {
+  /**
+   * Also return each row's raw Reviewed Head cell as `reviewedHeadCell`, for
+   * a reader that must compare it exactly: `reviewedHead` alone cannot tell a
+   * `-` placeholder from an abbreviated or malformed head, because both are
+   * omitted. Off by default, so other readers' rows are unchanged.
+   */
+  rawReviewedHead?: boolean;
+}
+
+export function parseReviewTable(
+  planContent: string,
+  options: ParseReviewTableOptions = {},
+): ReviewStatus[] {
   const reviewsSection = extractReviewsSection(planContent);
   if (reviewsSection == null) {
     return [];
@@ -37,7 +50,7 @@ export function parseReviewTable(planContent: string): ReviewStatus[] {
 
   return rows
     .slice(2)
-    .map((line) => parseTableRow(line, columns))
+    .map((line) => parseTableRow(line, columns, options))
     .filter((row): row is ReviewStatus => row !== null);
 }
 
@@ -100,6 +113,7 @@ function extractReviewsSection(planContent: string): string | null {
 function parseTableRow(
   line: string,
   columns: ReviewColumnIndices,
+  options: ParseReviewTableOptions,
 ): ReviewStatus | null {
   const cells = parseTableCells(line);
   const scope = cells[columns.scope];
@@ -128,6 +142,9 @@ function parseTableRow(
     date,
     artifact,
     ...(reviewedHead ? { reviewedHead } : {}),
+    ...(options.rawReviewedHead && columns.reviewedHead != null
+      ? { reviewedHeadCell: reviewedHeadCell ?? '' }
+      : {}),
     ...(invocation ? { invocation } : {}),
     ...(gateTarget ? { gateTarget } : {}),
   };

@@ -103,6 +103,12 @@ provenance:
 Legacy five-column review rows remain supported. Missing, empty, placeholder,
 or invalid provenance is omitted from the parsed object.
 
+`parseReviewTable(planContent, { rawReviewedHead: true })` also returns each
+row's unvalidated Reviewed Head cell as `reviewedHeadCell` when the table has
+that column, so a reader that needs exact equality can tell a `-` placeholder
+from an abbreviated or malformed head. `oat review resolve` is that reader. The
+option is off by default, and `ProjectState.reviews` never carries the field.
+
 A row may also carry `superseded: true`, a read-side mark that is never a
 ledger cell: a `received` row is superseded by a later row of the same Scope,
 Type and Invocation class (gate, or lifecycle: `manual` and `auto`) that
