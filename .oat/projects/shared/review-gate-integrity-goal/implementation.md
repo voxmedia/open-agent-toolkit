@@ -1613,10 +1613,25 @@ Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `
 
 **Status:** in_progress
 **Base:** efea9ac0a6923fe62af1abbcc78180df7312d3ec
+**Head:** 2c341cff58b74a8cb13ff9e80c4e27690ea27210
 **Executor:** phase-implementer:rgi-prev1-impl-20261103-01
 **Corrects:** p12
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer; p-rev2 follows sequentially (no parallel group declared). Added at `efea9ac0a` by the m02 exit gate receive. `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `c16a278ab`, and only the journal commit follows it. `git fetch origin main` showed that `origin/main` has not moved past the merge base. The DoD gates ran in CI order and each exited 0:
+
+- `pnpm check` (5 of 11 cached);
+- `pnpm type-check` (5 of 11 cached);
+- `pnpm test` (5 of 12 cached) and `pnpm test:evidence` (0 of 12 cached);
+- `pnpm build` (a FULL TURBO replay of the uncached 0-of-5 build of the same source run before the task commit);
+- `pnpm run check:skill-bumps` (16 checks; no skill changed in this phase);
+- `release:check-versions`;
+- `release:validate` (five packages at 0.3.46);
+- `pnpm build:docs` (cache replay, then forced with 0 of 6 cached);
+- the docs index regeneration, with `git diff --exit-code -- apps/oat-docs/index.md` exiting 0.
+
+`pnpm lint`, `pnpm format`, the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205) and the p-rev1 journal check at review also exited 0. No version bump was needed: the lockstep packages are already at 0.3.46 and no skill or agent changed.
 
 ### Task p-rev1-t01: `oat review resolve` refuses a Reviewed Head that is neither a full SHA nor `-`
 
