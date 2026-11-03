@@ -6,6 +6,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
@@ -21,6 +22,8 @@ import { Command } from 'commander';
 
 import {
   buildReviewLedgerRowReport,
+  describeReviewLedgerRow,
+  evaluateReviewSupersession,
   reviewEventKey,
   type ReviewLedgerRowReport,
 } from './check';
@@ -29,8 +32,8 @@ import {
  * `oat review resolve`: bind the review event a gate result names to its one
  * `## Reviews` row and validate it, so `oat-project-review-receive` consumes
  * exactly that event instead of the newest artifact. Read-only. It fails
- * closed: any mismatch, a missing or duplicate row, or a missing artifact
- * exits nonzero with structured diagnostics.
+ * closed: any mismatch, a missing, duplicate, superseded or already-processed
+ * row, or a missing artifact exits nonzero with structured diagnostics.
  */
 
 /** The event an `oat gate review` ok or blocked result names. */
@@ -53,6 +56,8 @@ export type ReviewEventDiagnosticCode =
   | 'ledger_unavailable'
   | 'row_not_bound'
   | 'duplicate_event_key'
+  | 'row_not_received'
+  | 'row_superseded'
   | 'scope_mismatch'
   | 'type_mismatch'
   | 'artifact_mismatch'
@@ -68,6 +73,8 @@ export interface ReviewEventDiagnostic {
   expected: string | null;
   actual: string | null;
   message: string;
+  /** For `row_superseded`: the later row that supersedes the bound row. */
+  supersededBy?: ReviewLedgerRowReport;
 }
 
 type FieldCheck = 'match' | 'mismatch' | 'unavailable';
@@ -83,6 +90,13 @@ export interface ReviewEventChecks {
    */
   reviewedHead: FieldCheck;
   gateRunId: FieldCheck;
+  /** The bound row's Status: `match` only for `received`. */
+  rowStatus: FieldCheck;
+  /**
+   * p07 supersession of the bound `received` row: `current`, `superseded`
+   * (refused), or `unavailable` when no `received` row is bound.
+   */
+  supersession: 'current' | 'superseded' | 'unavailable';
 }
 
 export interface ReviewEventResolution {
@@ -100,18 +114,22 @@ export interface ResolveReviewEventOptions {
   repoRoot: string;
   projectPath: string;
   event: ReviewGateEvent;
+  /** Answers head ancestry for p07's descendant-head supersession clause. */
+  git?: GitRunner;
 }
 
 interface ReviewResolveDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
+  git: GitRunner;
 }
 
 const DEFAULT_DEPENDENCIES: ReviewResolveDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   readOatLocalConfig,
+  git: defaultGitRunner,
 };
 
 const FULL_SHA = /^[0-9a-f]{40}$/i;
@@ -142,7 +160,8 @@ function diagnostic(
 /**
  * Resolve one gate event against a project's `## Reviews` ledger and the
  * artifact it names. Read-only. The row's Reviewed Head must equal the event's
- * `reviewedHead` exactly; only a `-` cell is accepted as unavailable.
+ * `reviewedHead` exactly; only a `-` cell is accepted as unavailable. The
+ * bound row must be `received` and not superseded under p07's rule.
  */
 export async function resolveReviewEvent(
   options: ResolveReviewEventOptions,
@@ -168,6 +187,8 @@ export async function resolveReviewEvent(
     artifact: 'unavailable',
     reviewedHead: 'unavailable',
     gateRunId: 'unavailable',
+    rowStatus: 'unavailable',
+    supersession: 'unavailable',
   };
 
   // The event names an active artifact: a top-level file of the project's
@@ -397,6 +418,52 @@ export async function resolveReviewEvent(
           ),
         );
       }
+
+      // Review-provide Step 9 records the event as `received`; any other
+      // status means it was already processed (or never recorded), and a
+      // superseded `received` row is one every other reader ignores (p07).
+      if (target.row.status.trim().toLowerCase() !== 'received') {
+        checks.rowStatus = 'mismatch';
+        diagnostics.push(
+          diagnostic(
+            'row_not_received',
+            'row',
+            'received',
+            target.row.status,
+            `Reviews row ${target.index + 1} is ${target.row.status}, not received: the event was already processed or never recorded.`,
+          ),
+        );
+      } else {
+        checks.rowStatus = 'match';
+        const evaluation = await evaluateReviewSupersession(
+          options.git ?? defaultGitRunner,
+          options.repoRoot,
+          rows,
+        );
+        const entry = evaluation.supersessions.find(
+          (candidate) => candidate.row === target.index,
+        );
+        if (!entry) {
+          checks.supersession = 'current';
+        } else {
+          checks.supersession = 'superseded';
+          const supersededBy = await buildReviewLedgerRowReport(
+            absoluteProjectPath,
+            rows[entry.supersededBy] as ReviewStatus,
+            entry.supersededBy,
+          );
+          diagnostics.push({
+            ...diagnostic(
+              'row_superseded',
+              'row',
+              'current',
+              `row ${supersededBy.row}`,
+              `Reviews row ${target.index + 1} is superseded by ${describeReviewLedgerRow(supersededBy)} at ${entry.relation === 'same-head' ? 'the same' : 'a descendant'} head; readers ignore it, so receive must not consume this event.`,
+            ),
+            supersededBy,
+          });
+        }
+      }
     }
   }
 
@@ -479,6 +546,7 @@ async function runReviewResolve(
       repoRoot,
       projectPath,
       event,
+      git: dependencies.git,
     });
 
     if (context.json) {

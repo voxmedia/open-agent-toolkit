@@ -163,6 +163,8 @@ describe('resolveReviewEvent', () => {
         artifact: 'match',
         reviewedHead: 'match',
         gateRunId: 'match',
+        rowStatus: 'match',
+        supersession: 'current',
       },
       diagnostics: [],
     });
@@ -427,7 +429,7 @@ describe('resolveReviewEvent', () => {
       row([
         'p01',
         'code',
-        'passed',
+        'received',
         '2026-11-03',
         `reviews/archived/${GATE_ARTIFACT.slice('reviews/'.length)}`,
         child,
@@ -444,6 +446,98 @@ describe('resolveReviewEvent', () => {
 
     expect(result.status).toBe('refused');
     expect(codes(result)).toEqual(['artifact_mismatch']);
+  });
+
+  it('refuses a received row a later gate round supersedes at a descendant head (p07)', async () => {
+    const { root, parent, child } = await createRepo();
+    const laterArtifact = 'reviews/p01-review-2026-11-03T140000Z.md';
+    await writeGateArtifact(root, parent);
+    await writeArtifact(root, laterArtifact, {
+      oat_generated_at: '2026-11-03T14:00:00Z',
+      oat_review_scope: 'p01',
+      oat_review_type: 'code',
+      oat_review_invocation: 'gate',
+      oat_review_head_sha: child,
+      oat_gate_run_id: '9a1b2c3d-0000-4000-8000-000000000002',
+      oat_gate_target: 'other-target',
+    });
+    await writePlan(root, [
+      gateRow(parent),
+      row([
+        'p01',
+        'code',
+        'received',
+        '2026-11-03',
+        laterArtifact,
+        child,
+        'gate',
+        'other-target',
+      ]),
+    ]);
+
+    const result = await resolveReviewEvent({
+      repoRoot: root,
+      projectPath: PROJECT,
+      event: gateEvent(parent),
+    });
+
+    expect(result.status).toBe('refused');
+    expect(result.checks).toMatchObject({
+      reviewedHead: 'match',
+      rowStatus: 'match',
+      supersession: 'superseded',
+    });
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'row_superseded',
+        source: 'row',
+        expected: 'current',
+        actual: 'row 2',
+        supersededBy: expect.objectContaining({
+          row: 2,
+          artifact: laterArtifact,
+          gateTarget: 'other-target',
+        }),
+      }),
+    ]);
+  });
+
+  it('refuses a bound row that is no longer received', async () => {
+    const { root, child } = await createRepo();
+    await writeGateArtifact(root, child);
+    await writePlan(root, [
+      row([
+        'p01',
+        'code',
+        'passed',
+        '2026-11-03',
+        GATE_ARTIFACT,
+        child,
+        'gate',
+        'claude-opus-5-5-high',
+      ]),
+    ]);
+
+    const result = await resolveReviewEvent({
+      repoRoot: root,
+      projectPath: PROJECT,
+      event: gateEvent(child),
+    });
+
+    expect(result.status).toBe('refused');
+    expect(result.checks).toMatchObject({
+      reviewedHead: 'match',
+      rowStatus: 'mismatch',
+      supersession: 'unavailable',
+    });
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'row_not_received',
+        source: 'row',
+        expected: 'received',
+        actual: 'passed',
+      }),
+    ]);
   });
 
   it('refuses an archived or missing event artifact', async () => {

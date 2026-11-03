@@ -197,7 +197,40 @@ export async function buildReviewLedgerRowReport(
   };
 }
 
-function describeRow(report: ReviewLedgerRowReport): string {
+/** The p07 supersessions of a ledger, with descendant heads answered by git. */
+export interface ReviewSupersessionEvaluation {
+  supersessions: ReturnType<typeof findSupersededReviews>;
+  /** Head pairs asked of git and the pairs it could not answer. */
+  asked: number;
+  unresolved: number;
+}
+
+/**
+ * Evaluate p07's read-side supersession over parsed ledger rows. Head
+ * ancestry for the descendant-head clause comes from `git merge-base
+ * --is-ancestor`; an unresolved pair leaves the older row live. `oat review
+ * check` and `oat review resolve` share this one evaluation.
+ */
+export async function evaluateReviewSupersession(
+  git: GitRunner,
+  repoRoot: string,
+  rows: readonly ReviewStatus[],
+): Promise<ReviewSupersessionEvaluation> {
+  const pairs = reviewSupersessionHeadPairs(rows);
+  const { ancestry, unresolved } = await resolveGitReviewHeadAncestry(
+    git,
+    repoRoot,
+    pairs,
+  );
+  return {
+    supersessions: findSupersededReviews(rows, ancestry),
+    asked: pairs.length,
+    unresolved: unresolved.length,
+  };
+}
+
+/** A one-line description of a ledger row for diagnostics. */
+export function describeReviewLedgerRow(report: ReviewLedgerRowReport): string {
   const lane = report.invocation
     ? `${report.invocation}${report.gateTarget ? `:${report.gateTarget}` : ''}`
     : '-';
@@ -227,21 +260,20 @@ export async function checkReviewLedger(
     ),
   );
 
-  const pairs = reviewSupersessionHeadPairs(rows);
-  const { ancestry, unresolved } = await resolveGitReviewHeadAncestry(
+  const evaluation = await evaluateReviewSupersession(
     git,
     options.repoRoot,
-    pairs,
+    rows,
   );
 
   const diagnostics: ReviewLedgerDiagnostic[] = [];
-  for (const entry of findSupersededReviews(rows, ancestry)) {
+  for (const entry of evaluation.supersessions) {
     const row = reports[entry.row] as ReviewLedgerRowReport;
     const supersededBy = reports[entry.supersededBy] as ReviewLedgerRowReport;
     diagnostics.push({
       code: 'superseded_received_row',
       severity: 'advisory',
-      message: `${describeRow(row)} is superseded by ${describeRow(supersededBy)} at the ${entry.relation === 'same-head' ? 'same' : 'a descendant'} head; readers ignore it and the ledger is unchanged.`,
+      message: `${describeReviewLedgerRow(row)} is superseded by ${describeReviewLedgerRow(supersededBy)} at the ${entry.relation === 'same-head' ? 'same' : 'a descendant'} head; readers ignore it and the ledger is unchanged.`,
       row,
       supersededBy,
       relation: entry.relation,
@@ -281,7 +313,10 @@ export async function checkReviewLedger(
     ),
     rows: rows.length,
     diagnostics,
-    headAncestry: { asked: pairs.length, unresolved: unresolved.length },
+    headAncestry: {
+      asked: evaluation.asked,
+      unresolved: evaluation.unresolved,
+    },
   };
 }
 
