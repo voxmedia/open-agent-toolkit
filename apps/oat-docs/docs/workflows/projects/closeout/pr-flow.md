@@ -33,6 +33,16 @@ Expected artifacts:
 - Goal source row: a progress PR is a milestone delivery. Its scope is the milestone's ordered phase set, or a registered delivery's frozen scope; its Git range runs from the set's first anchored base to its last anchored head and discloses other milestones' phases inside it. The PR is created only after `oat project delivery check` reports `status: ok` and a `registering` entry is committed to `oat_deliveries`. pr-final registers terminal deliveries for uncovered accepted phases instead of opening a separate final PR
 - Required gate for final PR: review table final row should be `passed` (goal: pr-final does not read the final row; each delivery it registers needs a passed, fresh integrated review and an allowed, fresh exit carrier instead)
 
+Before PR creation both skills list the required reviews still `pending` for
+the PR's scope with `oat review pending` (pr-progress Step 3.5, before a goal
+delivery's `registering` entry; pr-final Step 2.5 with the whole-project scope,
+or inside goal Step 1.5 with each terminal delivery's phases). With rows
+pending, an interactive run offers to run them, waive them with a recorded
+reason, or stop; a non-interactive run stops, which in pr-final is the autonomy
+gate `PRFINAL-06`. A waiver is one `**Review waived:**` line under the
+journal's `## Reviews and Gates`; the Reviews row stays `pending`. See
+[Reviews](../reviews/index.md#pending-required-reviews-before-a-pr).
+
 Final-PR preflight checks every review-ledger artifact path. Historical `plan` / `artifact` entries beginning with `structured (no artifact);` followed by a space are reported as annotations without files; preserve these entries rather than inventing artifacts. The exception does not apply to code reviews, satisfy delivery review gates, or excuse missing named files.
 
 ## Output

@@ -49,6 +49,44 @@ oat --json review resolve --project .oat/projects/shared/example \
 
 The resolver binds the event's Reviews row by scope, type and artifact filename and checks the row's scope, type, artifact path and reviewed head, and the artifact's `oat_gate_run_id`, against the event. The row's reviewed head must equal the event's `reviewedHead` exactly, which the gate takes from the artifact's `oat_review_head_sha`; a `-` reviewed head (an artifact review) is accepted as unavailable, and any other difference, an ancestor included, is a mismatch. Any mismatch, a missing or duplicate row, or a missing artifact exits nonzero with structured diagnostics, and receive stops without falling back to the newest artifact. Manual and auto reviews pass no event and keep the `oat review latest` selection above.
 
+## Pending required reviews before a PR
+
+Before a pull request is created, `oat-project-pr-progress` (Step 3.5) and
+`oat-project-pr-final` (Step 2.5, or inside goal Step 1.5 before a terminal
+delivery is registered) list the required reviews still `pending` for the PR's
+scope:
+
+```bash
+oat --json review pending --project .oat/projects/shared/example --scope p03
+oat --json review pending --project .oat/projects/shared/example --scope m02
+oat --json review pending --project .oat/projects/shared/example --scope project
+```
+
+A required review is the `code` row of each scope phase the plan declares,
+plus the `plan`/`artifact` row for a whole-project scope unless the plan-review
+skip line is recorded. `final` stays with pr-final's final-review check and a
+milestone row with `oat project delivery check`; `spec` and `design` rows are
+never required here. Each key is read from its latest Reviews row, so an
+earlier `passed` row never hides a later `pending` one. The command is
+read-only and decides nothing.
+
+When rows are pending, an interactive run offers to run them, waive them with a
+recorded reason, or stop. A non-interactive run stops at that boundary; in
+pr-final it is the autonomy gate `PRFINAL-06`. A waiver is written only on the
+user's explicit choice, as one line under `## Reviews and Gates` in
+`implementation.md`:
+
+```markdown
+**Review waived:** p03 code · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** docs-only phase, covered by the final review
+```
+
+The row stays `pending`: a waiver adds no Reviews status or column, never
+counts as `passed`, and is not read by pr-final's final-review check,
+`oat project closeout-check` or `oat project delivery check`. It moves the row
+from `pending` to `waived` in the listing only while that row's latest status
+is `pending` and the line carries a reason; once a later row records a review,
+the waiver is inert.
+
 ## Bookkeeping commits (required)
 
 Both `oat-project-review-receive` and `oat-project-review-receive-remote` conclude with a required atomic commit of `plan.md`, `implementation.md`, `state.md`, and the archived review artifact (when tracked). This is the safety net that prevents cross-agent bookkeeping drift: when a subagent runs a receive skill in isolation, the commit ensures the original agent sees a clean checkout on return.
