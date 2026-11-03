@@ -46,10 +46,12 @@ oat_template: false
 | p10   | completed | 1     | 1/1      |
 | p11   | completed | 1     | 1/1      |
 | p07   | pending   | 1     | 0/1      |
+| p12   | pending   | 1     | 0/1      |
+| p13   | pending   | 1     | 0/1      |
 | p08   | pending   | 1     | 0/1      |
 | p09   | pending   | 1     | 0/1      |
 
-**Total:** 4/7 phases accepted
+**Total:** 4/9 phases accepted
 
 ---
 
@@ -891,6 +893,14 @@ Late-fix rule (third advance): the second advance commit rewrote a recorded jour
 Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advance the p11 head to `5599af21d4927c7d39c668b9d1662509e5d3b403`, the record commit that also carries the L1 and L2 journal corrections; the exit gate reruns over it before a new integrated review.
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
+
+**Status:** pending
+
+## Phase p12: Exact-event consumption for gate handoffs
+
+**Status:** pending
+
+## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
 
