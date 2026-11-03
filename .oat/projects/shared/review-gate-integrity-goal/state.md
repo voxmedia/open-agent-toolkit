@@ -100,15 +100,16 @@ oat_milestone_gates:
       subject:
         kind: code
         scope: [p01, p02, p10, p11]
-      freshness: fresh
+      freshness: stale
       decided_at: '2026-11-02T23:56:32Z'
+      freshness_reason: 'delivery refresh (d01): disallowed-path: 4a870d471b88068a8dbc598cfa9612ce46958b59 changes .agents/skills/oat-project-plan-writing/SKILL.md, which is not permitted bookkeeping'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
     scope: [p01, p02, p10, p11]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -120,9 +121,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/400
         base: '892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3'
         reviewed_head: '5599af21d4927c7d39c668b9d1662509e5d3b403'
-        observed_head: 94d2f23b4b80d639a650bbc25ab828fb44556ef2
+        observed_head: 4a870d471b88068a8dbc598cfa9612ce46958b59
         observed_base: 892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/m01-review-2026-11-03T000239Z.md
       scope: [p01, p02, p10, p11]
@@ -134,7 +135,7 @@ oat_deliveries:
             head: '5599af21d4927c7d39c668b9d1662509e5d3b403',
           },
         ]
-      disposition: passed
+      disposition: stale
     exit_gate:
       status: allowed
       disposition: passed
@@ -144,6 +145,13 @@ oat_deliveries:
       subject: { kind: code, scope: [p01, p02, p10, p11] }
       freshness: fresh
       decided_at: '2026-11-02T23:56:32Z'
+    endpoint_attainment:
+      observed_at: 2026-11-03T01:47:59.352Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/400
+          head: 4a870d471b88068a8dbc598cfa9612ce46958b59
+          base: 892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3
+          status: merged
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
