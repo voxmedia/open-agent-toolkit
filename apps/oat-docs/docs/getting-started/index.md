@@ -20,6 +20,7 @@ that changes files only inside one repository.
 - [Core Concepts](concepts.md) - The ideas the rest of the docs rely on: canonical assets, provider views, scopes, skills and the workflow lifecycle.
 - [CLI Bootstrap](bootstrap.md) - What `oat init` sets up in a repository, and the guided setup it offers.
 - [Tool Packs and Installed Assets](tool-packs.md) - The bundled tool packs, where they install, and how to update or remove them.
+- [Stability and Support](stability-and-support.md) - How stable OAT is, where to get support, and what it does not set out to do.
 
 ## Project status
 

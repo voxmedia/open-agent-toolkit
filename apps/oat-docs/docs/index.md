@@ -37,7 +37,9 @@ later.
 
 New to OAT? [Quickstart](getting-started/quickstart.md) installs the CLI, gives
 you a first result in an existing repository that changes files only inside
-that repository, and helps you choose what to add next.
+that repository, and helps you choose what to add next. For how stable OAT is
+and what support to expect, read
+[Stability and Support](getting-started/stability-and-support.md).
 
 ## Why OAT exists
 
@@ -53,7 +55,7 @@ coding agents you already use.
 
 ## Contents
 
-- [Getting Started](getting-started/index.md) - How to install OAT, get a first result, and learn the core ideas, plus project status and known limits.
+- [Getting Started](getting-started/index.md) - How to install OAT, get a first result, and learn the core ideas, plus project status, stability, support and known limits.
 - [Skills](skills/index.md) - Which skill to use for a task, and how to run it.
 - [Workflows](workflows/index.md) - Tracked projects from plan to pull request, plus ideas, backlog planning and running a batch of existing plans as a wave.
 - [Provider Sync](provider-sync/index.md) - How to keep one set of skills, agents and rules in step across coding tools.
