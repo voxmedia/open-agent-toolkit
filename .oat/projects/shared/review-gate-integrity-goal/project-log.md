@@ -195,6 +195,10 @@ m02 exit gate (run 93e1b0a1, scope p07-p13, Sol xhigh cross-family) passed its t
 
 p-rev1 accepted (corrects p12, m02 exit gate M1): review passed 0/0/0/1, Low deferred; 0 fix loops; head 2c341cff5. rgi-prev1-outcome-20261103
 
+### 2026-11-03 · structural · oat-project-implement · p-rev2
+
+p-rev2 accepted (corrects p07, m02 exit gate M2): review passed 0/0/0/1, Low deferred; 0 fix loops; head d128a4118. All m02 phase-units accepted; the exit gate reruns over p07-p-rev2. rgi-prev2-outcome-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

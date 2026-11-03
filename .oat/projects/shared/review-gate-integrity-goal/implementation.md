@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p-rev2
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p-rev2 | in_progress | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 8/11 phases accepted
+**Total:** 9/11 phases accepted
 
 ---
 
@@ -1681,7 +1681,7 @@ Scope: `efea9ac0a..2c341cff5` (p-rev1-t01, corrects p12), fresh `oat-reviewer-cl
 
 ## Phase p-rev2: Resolve synced-project review ancestry in the source repository
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 33d1edfef88633cfeab8a28c3441b09bb2922bf1
 **Head:** d128a41181d86d258be802500c4129bf45ed0fa0
 **Executor:** phase-implementer:rgi-prev2-impl-20261103-01
@@ -1745,6 +1745,19 @@ No doc describes the git working directory, so none changed. The CLI reference a
 
 **Can-fail proof.** The fix was neutralized in the working tree by restoring `projectPath` as git's cwd, and the wiring test was run. `ancestry-wiring.test.ts` failed 1 of 4: the `synced-nested` descendant case, at the status assertion (`expected 'oat-project-review-receive' not to be 'oat-project-review-receive'`). The file was then restored and checked byte-identical with `cmp`.
 
+### Review Received: p-rev2
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev2-review-2026-11-03T223853Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev2-rev-20261103-01`, reconnaissance not attempted). It confirmed every implementer claim (only `project status` diverged; `project list` already used the scope root; linked-worktree synced checkouts never diverged), re-ran the gate's M2 reproduction verbatim (all readers agree in both layouts), proved the new wiring's test can fail, and found no regression for shared or local projects or the absolute `--project-path` contract. The m02 exit gate's M2 is resolved.
+
+- L1 (Low): `review latest` and `review check` still resolve the repository from the caller's cwd (`latest.ts:462`, `check.ts:329`), so run from inside a nested independent project repository, or with a separate-repository synced scope root, they can disagree with `project status` → approved deferral (see Deferred Findings); pre-existing, and only in layouts OAT never creates (`oat project new` and `pull` make linked worktrees).
+
+**Outcome:** passed (deferred items only)
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1799,6 +1812,7 @@ No doc describes the git working directory, so none changed. The CLI reference a
 - run/v1 · request=rgi-prev1-impl-20261103-01 · scope=p-rev1 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev1-rev-20261103-01 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev2-impl-20261103-01 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev2-rev-20261103-01 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1972,6 +1986,7 @@ The configured `oat-project-implement` exit gate (run `93e1b0a1-9b04-4c31-9aa2-e
 **Outcome:** fixes queued: p-rev1, p-rev2 (gate passed its threshold; the exit gate reruns over the milestone set `p07-p-rev2` after both are accepted)
 
 - Gate `oat-project-implement` (code, m02 exit, run `93e1b0a1-9b04-4c31-9aa2-e032b9820a9d`, `--review-scope p07-p13`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/2/0, receive-eligible, received 2026-11-03; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m02.exit`.
+- Operator routing applied to the rerun (m02 exit gate, 2026-11-03): the fixes queued by run `93e1b0a1` require the exit gate to rerun over the milestone set, so the rerun uses the same m02-phases scope the operator chose, now `--review-scope p07-p-rev2` (p07, p12, p13, p-rev1, p-rev2), with target, threshold and prompt unchanged.
 
 ## Deferred Findings
 
@@ -1991,6 +2006,7 @@ The configured `oat-project-implement` exit gate (run `93e1b0a1-9b04-4c31-9aa2-e
 - p12 review L2 (Low): the optional phase gate and the eight planning gates (goal, brief, lite, discover, design, quick-start, plan, import-plan) hand the gate event to receive only in-session; after an interruption the router's receive route has no event and falls back to newest-artifact selection, protected only by p07 supersession. Implement Step 14 persists its event. Deferred by the root (Feature Planning Triage: a new persistence requirement outside p12's adopting-path Intent). Trigger: the first observed interrupted gate→receive handoff, or p13/m03 if they touch these gate paths.
 - p13 review L3 (Low): `BL-261002-list-pending-required-reviews` acceptance criteria still say the waiver is recorded in the Reviews table; p13 records it as a `**Review waived:**` line under `## Reviews and Gates` with the row left `pending`, authorized by the p13 Known Unknown (`rgi-p13-concrete-20261103`). Deferred by the root to the item's closure. Trigger: m02 delivery, when the item is closed with that note.
 - p-rev1 review L1 (Low): `oat review resolve`'s JSON `row` report shows `reviewedHead: null` for both an invalid cell and `-`; the `reviewed_head_invalid` diagnostic carries the raw cell. Deferred by the root: no consumer distinguishes them through the row field (Feature Planning Triage). Trigger: the first consumer that reads the row report's head.
+- p-rev2 review L1 (Low): `review latest` and `review check` resolve the git repository from the caller's cwd, so in a nested independent project repository (run from inside it) or under a separate-repository synced scope root they can disagree with `project status` on supersession. Pre-existing; OAT never creates either layout. Deferred by the root. Trigger: OAT creating or supporting an independent nested project repository, or an observed disagreement.
 
 ## Deviations from Plan / Design
 
