@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p13-t05
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | completed   | 1     | 1/1      |
-| p10   | completed   | 1     | 1/1      |
-| p11   | completed   | 1     | 1/1      |
-| p07   | completed   | 1     | 1/1      |
-| p12   | completed   | 1     | 1/1      |
-| p13   | in_progress | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
+| p10   | completed | 1     | 1/1      |
+| p11   | completed | 1     | 1/1      |
+| p07   | completed | 1     | 1/1      |
+| p12   | completed | 1     | 1/1      |
+| p13   | completed | 1     | 1/1      |
+| p08   | pending   | 1     | 0/1      |
+| p09   | pending   | 1     | 0/1      |
 
-**Total:** 6/9 phases accepted
+**Total:** 7/9 phases accepted
 
 ---
 
@@ -1413,7 +1413,7 @@ Scope: the fix range `c92b11dfb..8016d7d98` (p12-t06, p12-t07), fresh `oat-revie
 
 ## Phase p13: Pending required reviews before a pull request
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 579379cf27b6e3ceddc9a7c731200c6c53b2d82d
 **Head:** 2375b77bd1b1326b5feec60ae7258f3bbeb7556a
 **Executor:** phase-implementer:rgi-p13-impl-20261103-01
@@ -1550,6 +1550,8 @@ Intent: per the operator decision recorded in the p13 Intent (2026-11-03), `oat 
 Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md` (both already bumped on this branch), `.agents/docs/autonomy-contract.md` if the row text changes, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`.
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/init/tools/shared src/validation`
 
+Correction (p13 re-review L1, bookkeeping, 2026-11-03): the p13-t05 missing-list guard can fail. The implementer's fix report recorded these controls: `isMissing` forced false failed 4 tests; the provisional exclusion removed failed 4. The re-reviewer reproduced them independently: the missing list failed 5 tests, the provisional exclusion 4 and the missing-key waiver rule 3, each restored byte-identical with a clean tree (reviews/archived/p13-review-2026-11-03T213802Z.md).
+
 ### Task p13-t06: (review) Route a pending plan row to an artifact plan review
 
 **Status:** completed
@@ -1589,6 +1591,21 @@ Proof: the isolated-HOME contract suites.
 Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p13-rev-20261103-01`, reconnaissance not attempted); re-ran the branch-build probes and proved three guards can fail.
 
 **Outcome:** fixes queued: p13-t05, p13-t06, p13-t07
+
+**Outcome:** fixes queued: p13-t05, p13-t06, p13-t07; all three completed (head `2375b77bd`) and passed re-review (reviews/archived/p13-review-2026-11-03T213802Z.md)
+
+### Review Received: p13 (re-review of the fix records)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p13-review-2026-11-03T213802Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p13-rev-20261103-02`, reconnaissance not attempted). It confirmed M1, L1 and L2 resolved, neutralized the missing-list, provisional and missing-key waiver guards in turn (5, 4 and 3 tests failed), restored a clean tree, and probed `--scope project` on this project (`missing: []`, provisional p08 and p09 excluded) and a scratch task-mode project. The implementer's plan-row concern is not a gap: every template, the brief and goal skills seed `plan | artifact`, and a disabled plan review records the skip line.
+
+- L1 (Low, bookkeeping): the p13-t05 record does not cite the guard-can-fail control the amended Exit evidence requires → fixed at receive (bookkeeping): an appended correction line after the p13-t05 record cites the implementer's and the re-reviewer's controls.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/p13-review-2026-11-03T213802Z.md)
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
@@ -1640,6 +1657,7 @@ Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p13-rev
 - run/v1 · request=rgi-p13-impl-20261103-01 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p13-rev-20261103-01 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p13-fix-20261103-01 · scope=p13-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p13-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p13-rev-20261103-02 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
