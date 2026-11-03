@@ -143,6 +143,10 @@ Observation: PR 400 was squash-merged, so the 126 goal-branch commits are not an
 Impact: Each milestone after a squash merge needs a new head branch cut from the observed integration base.
 Recommendation: Cut goal/review-gate-integrity-m02 (and later mNN branches) from origin/main after each endpoint observation; d01's lookup keys keep the old head branch, which refresh resolves by PR URL.
 
+### 2026-11-03 · structural · oat gate review · plan
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/artifact-plan-review-2026-11-03T023206Z.md run=6cf18b35-39f7-4103-9625-ad09950fd3c7
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
