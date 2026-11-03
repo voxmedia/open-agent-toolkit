@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p10   | completed | 1     | 1/1      |
-| p11   | completed | 1     | 1/1      |
-| p07   | completed | 1     | 1/1      |
-| p12   | completed | 1     | 1/1      |
-| p13   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | completed   | 1     | 1/1      |
+| p10   | completed   | 1     | 1/1      |
+| p11   | completed   | 1     | 1/1      |
+| p07   | completed   | 1     | 1/1      |
+| p12   | completed   | 1     | 1/1      |
+| p13   | in_progress | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 6/9 phases accepted
 
@@ -1413,7 +1413,11 @@ Scope: the fix range `c92b11dfb..8016d7d98` (p12-t06, p12-t07), fresh `oat-revie
 
 ## Phase p13: Pending required reviews before a pull request
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 579379cf27b6e3ceddc9a7c731200c6c53b2d82d
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a new read-only review command whose required-row rules must agree with pr-final Step 2, delivery check and Outcome 4, plus a new autonomy row and two PR skills whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the command, the skill prose and the autonomy row share the required-row and waiver contract and the contract tests, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and an autonomy boundary. p13 was made concrete at `579379cf2` before this start (project log). `origin/main` has not moved since the p07 base merge.
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
