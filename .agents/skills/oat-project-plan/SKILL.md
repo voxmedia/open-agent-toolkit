@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.20
+  version: 1.4.21
 ---
 
 # Planning Phase
@@ -401,7 +401,7 @@ This creates traceability: Requirement → Tasks → Implementation
 
 Load the current `oat-project-plan-writing/SKILL.md` and follow its review table preservation rules:
 
-- Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`, `plan`)
+- Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`, `plan`); quick and import scaffolds carry only the `plan` artifact row, because those modes never review `spec` or `design`
 - Add additional rows as needed (e.g., p03), but never delete existing rows
 
 **Why stable IDs:** Using `p01-t03` instead of "Task 3" prevents broken references when tasks are inserted or reordered.
@@ -623,7 +623,7 @@ Apply the shared loop exactly:
   neither route applies, fail closed before artifact review.
 - Apply Critical and High artifact-local fixes when unambiguous; offer Medium and Low fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
-- Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
+- Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff. The row is this review's own event row under the plan-writing one-writer rule; never append a second row for it.
 
 ### Gate Execution
 

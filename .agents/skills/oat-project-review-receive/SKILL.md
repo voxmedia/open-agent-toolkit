@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.15
+  version: 1.6.16
 ---
 
 # Receive Review
@@ -141,6 +141,7 @@ fi
 Selection rules:
 
 - With a valid project, use the `--actionable-project` path first. It resolves only an active/actionable project review from the top-level `reviews/` directory, so newer historical artifacts in `reviews/archived/` cannot strand an older active event.
+- A superseded `received` row is never actionable: a later row of the same Scope, Type and Invocation class recorded a review at the same or a descendant Reviewed Head (`oat-project-plan-writing` Review Table Preservation Rules). The resolver skips its artifact, and this skill never receives it or edits its row. `oat review check --project "$PROJECT_PATH" --json` lists such rows; it is read-only and advisory.
 - If the actionable-project result has `path: null`, run `oat review latest --json` without `--actionable-project` to discover the latest ad-hoc target or report project history. The default resolver intentionally preserves all-history ordering across project (`reviews/` and `reviews/archived/`) and ad-hoc locations.
 - Both resolver paths order candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
 - Read the JSON result:

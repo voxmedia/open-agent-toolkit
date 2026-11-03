@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.22
+  version: 1.4.23
 ---
 
 # Import External Plan
@@ -442,14 +442,17 @@ Apply the shared loop exactly:
   neither route applies, fail closed before artifact review.
 - Apply Critical and High artifact-local fixes when unambiguous and limited to canonical conformance/completeness; offer Medium and Low fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
-- Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
+- Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff. The row is this review's own event row under the plan-writing one-writer rule; never append a second row for it.
 
 ### Step 4.6: Record Review Disposition and Mark Plan Complete
 
 Before changing readiness, durably record the review outcome in `plan.md`:
 
 - When review ran, update the `plan` review row in the `## Reviews` section to
-  the outcome reached by Step 4.5. Use `passed` only for a clean result. If
+  the outcome reached by Step 4.5. That row is the structured review's own
+  event row under the one-writer rule in `oat-project-plan-writing` (the
+  claimed `plan` placeholder), never a row the gate child wrote and never a
+  second row. Use `passed` only for a clean result. If
   residual findings remain, retain their actual non-passed status and add a
   concise residual-finding disposition in the same section.
 - When `workflow.autoArtifactReview.plan` is explicitly `false`, record the

@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.13
+  version: 1.1.14
 ---
 
 # Lite Project
@@ -390,7 +390,9 @@ proves the exception route is required. Accepted handles are never replaced.
 Apply `LITE-08`, using the same shape as `IMPORT-08`: apply only unambiguous
 artifact-local canonicalization fixes, never rewrite source intent, and stop
 on unresolved Critical findings or material ambiguity. Record the actual plan
-review row or explicit skip in `plan.md`.
+review row or explicit skip in `plan.md`. The row is the review's own event row
+under the plan-writing one-writer rule: the template's `plan | artifact`
+placeholder, never a second row.
 
 Format and validate the artifacts again. Resolve scope and create the required
 post-review scoped commit before Gate Execution. Do not mark the plan complete

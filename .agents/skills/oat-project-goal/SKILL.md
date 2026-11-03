@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # Goal Project
@@ -463,6 +463,8 @@ re-run.
 
 Record the review row in `## Reviews` (or the explicit skip
 `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`).
+The row is the review's own event row under the plan-writing one-writer rule:
+the seeded `plan | artifact` placeholder, never a second row.
 Format and validate again, then create the post-review scoped commit before
 Gate Execution.
 
