@@ -87,6 +87,21 @@ describe('pending required reviews before a pull request', () => {
     expect(normalize(progress)).toContain(
       "Step 3.5's pending-review listing runs before item 4 writes a `registering` entry; a stop there registers nothing.",
     );
+    // Step 3's review-status warning never blocks, but its sentence is scoped
+    // to that warning so it does not contradict Step 3.5's stop.
+    const step3 = normalize(
+      section(
+        progress,
+        '### Step 3:',
+        '### Step 3.5: List Pending Required Reviews',
+      ),
+    );
+    expect(step3).toContain(
+      'Do not block PR generation on this warning; Step 3.5 governs pending required reviews.',
+    );
+    expect(normalize(progress)).not.toContain(
+      'Do not block PR generation; this is a progress PR.',
+    );
     // The listing precedes the Step 5.5 registration it guards.
     expect(progress.indexOf('### Step 3.5:')).toBeLessThan(
       progress.indexOf('### Step 5.5: Goal Delivery Registration'),

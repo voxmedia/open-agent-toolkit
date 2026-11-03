@@ -236,7 +236,8 @@ Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
 
 Do not let an earlier passed event hide a later event for the same phase.
 
-Do not block PR generation; this is a progress PR.
+Do not block PR generation on this warning; Step 3.5 governs pending
+required reviews.
 
 ### Step 3.5: List Pending Required Reviews
 
