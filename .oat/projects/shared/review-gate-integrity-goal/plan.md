@@ -310,7 +310,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p07   | code     | passed          | 2026-11-03 | reviews/archived/p07-review-2026-11-03T190319Z.md           | 34ebd3ef9c02d90a6797ece84d69b6ab7b54d201 | manual     | -                    |
 | p12   | code     | fixes_completed | 2026-11-03 | reviews/archived/p12-review-2026-11-03T200007Z.md           | c92b11dfbf631e16ab9be77999555669fdbef8d2 | manual     | -                    |
 | p12   | code     | passed          | 2026-11-03 | reviews/archived/p12-review-2026-11-03T201925Z.md           | 8016d7d98f8799010d40ff497aa526b180508dbf | manual     | -                    |
-| p13   | code     | fixes_added     | 2026-11-03 | reviews/archived/p13-review-2026-11-03T210640Z.md           | 2f1dae7a099dc37d5196f7cc008712d8681249f1 | manual     | -                    |
+| p13   | code     | fixes_completed | 2026-11-03 | reviews/archived/p13-review-2026-11-03T210640Z.md           | 2f1dae7a099dc37d5196f7cc008712d8681249f1 | manual     | -                    |
 | plan  | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -          | -                    |
 | plan  | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate       | codex-6-sol-xhigh    |
 
