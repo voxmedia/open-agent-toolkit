@@ -1153,6 +1153,8 @@ The post-selection recovery test now also pins `reviewedHead` and a `match` head
 2. The ancestor branch forced to `mismatch`: the ancestor test fails (1 failed).
 3. The recovery path's head set to `null`: the recovery test fails (1 failed).
 
+**Correction (p12-t05, after the Intent amendment at `9775df23a`).** The rationale above is superseded in part. `reviewedHead` is no longer the dispatch HEAD: it is the artifact's full-SHA `oat_review_head_sha` when present, otherwise the HEAD captured at dispatch. `ancestor` stays a corroboration value (the artifact head against the dispatch HEAD, reporting only), but it no longer justifies anything at receive: the resolver compares the row head with the event head by exact equality. The table's `reviewedHead` column now reads the artifact head for the parent, unrelated-SHA and non-git rows (the non-git test now gives its artifact a head); see p12-t05.
+
 ### Task p12-t02: `oat review resolve`, a fail-closed resolver for a gate event
 
 **Status:** completed
@@ -1205,6 +1207,8 @@ The gate event names the 12:00 artifact with dispatch head P2.
 1. Ancestry forced true: the wrong-head and unresolved-head tests fail (2 failed).
 2. The run-ID comparison disabled: the wrong-run-ID test and the CLI exit-1 test fail (2 failed).
 3. The row and artifact scope comparisons disabled: the wrong-scope test fails (1 failed).
+
+**Correction (p12-t05, after the Intent amendment at `9775df23a`).** The ancestor acceptance described above is removed. The resolver now requires the row's Reviewed Head to equal the event's `reviewedHead` exactly; an ancestor is `reviewed_head_mismatch`, and `reviewed_head_unresolved` and the git dependency are gone. Probe 1's event used dispatch head P2 and passed as `ancestor`; under the amendment that event is refused, and the matching event carries P1. The re-run probes and can-fail proofs are in p12-t05.
 
 ### Task p12-t03: Receive consumes the gate-named event on every adopting path
 
@@ -1282,6 +1286,44 @@ The gate event names the 12:00 artifact with dispatch head P2.
 - The Reviews page gains "Consuming a gate's review event" and the Gate Target rule for artifact-gate rows.
 
 `packages/cli/README.md` and the root `README.md` list no review subcommands, so they need no change. No `AGENTS.md` fact changed: no command, directory, version pin, workflow or footgun named in an instruction file moved. The lockstep packages stay at 0.3.46 (bumped once for m02 by p07).
+
+### Task p12-t05: The event's reviewedHead is the artifact head; the resolver uses exact equality
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t05
+**Intent:** Apply the p12 Intent amendment at `9775df23a`. The gate result's `reviewedHead` is the artifact's validated full-SHA `oat_review_head_sha` when present, otherwise the HEAD captured at dispatch. `corroboration.reviewedHead` keeps `match`, `ancestor`, `mismatch` and `unavailable`, now comparing the artifact head with the dispatch HEAD, reporting only. `oat review resolve` compares the row's Reviewed Head with the event's `reviewedHead` by exact equality: a `-` row head is `unavailable` and accepted, and any other difference, an ancestor included, is `reviewed_head_mismatch` with exit 1. Ancestor acceptance and `reviewed_head_unresolved` are removed. Tests, docs and the code comments follow.
+**Files:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/src/commands/review/resolve.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate src/commands/review src/commands/help-snapshots.test.ts`
+**Commit:** a7c50a2dfe7587bc9a9a8678d68a462a5fc0d258
+**Proof:** 585/585 (14 files) exit 0; CLI `type-check` and `lint`, `docs:check` and `docs:lint` exit 0.
+
+**Changes.** The gate's `eventReviewedHead` returns the artifact head, else the dispatch head, on the normal and the post-selection recovery paths. The resolver's head check is `-` → `unavailable`, equal → `match`, anything else → `reviewed_head_mismatch`; its `git` option and `head-ancestry` import are removed. The gate tests now pin `reviewedHead` as the anchored artifact head (`parent`, corroboration `ancestor`), the unrelated head (`mismatch`), the non-git root's artifact head (`unavailable`), and the dispatch-head fallback when the artifact has none. The resolver tests add an anchored event whose head is the row head (accepted), and refuse an event the row head is only an ancestor of, a row head that descends from the event head, and an unknown head. No skill prose described ancestor acceptance, so no skill changed and no version bump is needed.
+
+**Branch-build probes** (`node packages/cli/dist/index.js`, rebuilt uncached at `a7c50a2df`; the p12-t02 scratch repository and ledger):
+
+| #   | Probe                                   | Exit | Result                                                     |
+| --- | --------------------------------------- | ---- | ---------------------------------------------------------- |
+| 1   | Matching event, head P1                 | 0    | `ok`, every check `match`                                  |
+| 2   | Ancestor-head event, head P2            | 1    | `refused`, `reviewed_head_mismatch` from the row           |
+| 3   | Wrong artifact (the newer manual one)   | 1    | `refused`, `gate_run_id_missing`, `reviewed_head_mismatch` |
+| 4   | Wrong head (an unrelated root commit)   | 1    | `refused`, `reviewed_head_mismatch`                        |
+| 5   | Wrong scope (`p02`)                     | 1    | `refused`, `scope_mismatch` from the artifact and the row  |
+| 6   | Wrong type (`artifact`)                 | 1    | `refused`, `type_mismatch` from the artifact and the row   |
+| 7   | Wrong run ID                            | 1    | `refused`, `gate_run_id_mismatch`                          |
+| 8   | No bound row                            | 1    | `refused`, `row_not_bound`                                 |
+| 9   | Row head `-`, event head P2             | 0    | `ok`, reviewedHead `unavailable`                           |
+| 10  | Ledger restored (`cmp`), matching event | 0    | `ok`                                                       |
+| 11  | Abbreviated `--reviewed-head abc1234`   | 1    | `status: error`                                            |
+
+**Negative control.** Pre-change: the released 0.3.45 `oat --json review latest --project … --actionable-project` still returns the newer manual artifact (`…T130000Z.md`, `actionable: true`), and 0.3.45 has no `review resolve`. Post-change: the resolver consumes the gate-named artifact (probe 1) and refuses the other (probe 3) and the ancestor-head event (probe 2). Valid control: probe 10.
+
+**Real gate fields.** The real branch-build gate result from p12 (run `05d374ed-…`) has `reviewedHead` `a9878b266…`, equal to its artifact's `oat_review_head_sha` and its row's Reviewed Head (corroboration `match`). Passed through the rebuilt resolver, it exits 0 with every check `match` and no diagnostics.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and its suite run, then the file was restored byte-identical (`cmp`):
+
+1. The resolver's exact-equality test replaced with `true`: `resolve.test.ts` fails 3 of 19 (the ancestor, descendant and unknown-head refusals).
+2. `eventReviewedHead` reverted to the dispatch head: `gate/index.test.ts` fails 3 of 284 (the anchored, unrelated-head and non-git cases).
 
 ## Phase p13: Pending required reviews before a pull request
 
