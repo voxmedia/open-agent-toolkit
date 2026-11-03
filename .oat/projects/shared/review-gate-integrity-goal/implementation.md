@@ -1070,6 +1070,38 @@ Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a gate result field captured at dispatch, a new fail-closed event resolver, receive Step 1 and eleven adopting gate paths whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the gate, resolver and skill slices share the event contract, the contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and changes gate output. p12 was made concrete at `f3a9603f7` before this start (project log). `origin/main` has not moved since the p07 base merge.
 
+### Task p12-t01: Capture the reviewed head at gate dispatch
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t01
+**Intent:** `oat gate review` reads `HEAD` immediately before it dispatches the reviewer child and adds it to the ok and blocked results as `reviewedHead`. The corroboration then compares it with the artifact's full-SHA `oat_review_head_sha`, reporting `match`, `ancestor`, `mismatch` or `unavailable`. The comparison is reporting only and never changes receive eligibility. Failure envelopes are unchanged.
+**Files:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+**Commit:** 5b92ce575c765650ce45df0db2c15136b3681787
+**Proof:** gate suites 468/468 (9 files) exit 0; CLI `type-check` and `lint` exit 0.
+
+**Why `ancestor`.** The Intent names `match`, `mismatch` and `unavailable`. In practice the dispatch HEAD is usually a bookkeeping commit after the reviewed range head. This project's m01 exit-gate reruns show it. The 23:31Z run was dispatched at `38c6d11f9`, and its artifact and row record `395b90677`. The 23:56Z run was dispatched at `a6ea16e0c` and records `5599af21d`. In both cases the recorded head is an ancestor of the dispatch HEAD. With only three values, every anchored brief or goal review would report `mismatch`, so a fourth value, `ancestor`, separates the normal anchored case. A git failure on the ancestry question reads as `mismatch`, because the dispatch HEAD then does not provably contain the artifact's head. The corroboration is reporting only and leaves `receiveEligible` unchanged.
+
+**Tests pinned (`index.test.ts`, describe `reviewedHead`, on a real git root).**
+
+| Case                               | Result                            | `reviewedHead`                          | Corroboration |
+| ---------------------------------- | --------------------------------- | --------------------------------------- | ------------- |
+| Artifact head is the dispatch HEAD | ok                                | the dispatch HEAD                       | `match`       |
+| Artifact head is the parent commit | blocked                           | the dispatch HEAD                       | `ancestor`    |
+| Reviewer commits after dispatch    | ok                                | the pre-dispatch head, not the new HEAD | `match`       |
+| Unrelated full SHA                 | ok, still `receiveEligible: true` | the dispatch HEAD                       | `mismatch`    |
+| Artifact has no head               | ok                                | the dispatch HEAD                       | `unavailable` |
+| Root is not a git repository       | ok                                | `null`                                  | `unavailable` |
+
+The post-selection recovery test now also pins `reviewedHead` and a `match` head corroboration.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and the named test run, then the file was restored byte-identical (`cmp`):
+
+1. Capture moved after `executeTarget`: the "captures HEAD before dispatch" test fails (1 failed).
+2. The ancestor branch forced to `mismatch`: the ancestor test fails (1 failed).
+3. The recovery path's head set to `null`: the recovery test fails (1 failed).
+
 ## Phase p13: Pending required reviews before a pull request
 
 **Status:** pending
