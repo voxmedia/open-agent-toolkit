@@ -2,7 +2,8 @@
 oat_current_task: null
 oat_last_commit: 395b90677db9487e42f01d31b045f4819f3d85ae
 oat_blockers: []
-associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues:
+  # [{type: backlog|project|jira|linear, ref: "identifier"}]
   - type: backlog
     ref: BL-260711-skip-re-review-for-bookkeeping
   - type: backlog
@@ -119,8 +120,8 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/400
         base: '892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3'
         reviewed_head: '5599af21d4927c7d39c668b9d1662509e5d3b403'
-        observed_head: null
-        observed_base: null
+        observed_head: 94d2f23b4b80d639a650bbc25ab828fb44556ef2
+        observed_base: 892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3
         status: open
     integrated_review:
       artifact: reviews/archived/m01-review-2026-11-03T000239Z.md
