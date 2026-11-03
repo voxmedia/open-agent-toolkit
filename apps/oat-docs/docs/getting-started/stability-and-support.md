@@ -5,15 +5,15 @@ description: 'How stable OAT is, how to get support, and what OAT does not set o
 
 # Stability and Support
 
-This page is the owner's statement on how stable Open Agent Toolkit (OAT) is,
+This page is the core maintainers' statement on how stable Open Agent Toolkit (OAT) is,
 what support to expect, and what it does not try to do. For the version
 number, license and release notes, see
 [Project status](index.md#project-status).
 
 ## Stability
 
-OAT is pretty stable at this point. Breaking changes are possible, though
-until there are many users the owner would limit breaking changes.
+OAT is pretty stable at this point. Breaking changes are still possible, but
+the core maintainers limit them relative to the number of active users.
 
 Before you update, read
 [Upgrading from an earlier CLI](tool-packs.md#upgrading-from-an-earlier-cli),
