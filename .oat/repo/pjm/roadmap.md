@@ -22,7 +22,7 @@ is the compact execution guide. Shipped and closed history lives in
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **`review-gate-integrity-goal` (goal project, m01 in implementation):** one integrity model for reviews and gates, delivered as five milestones, each its own PR. Later milestones are re-aligned after each delivery. Project: review-gate-integrity-goal.
+- **`review-gate-integrity-goal` (goal project; m01 merged in #400, m02 re-alignment next):** one integrity model for reviews and gates, delivered as five milestones, each its own PR. Later milestones are re-aligned after each delivery. Project: review-gate-integrity-goal.
   - m01: **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** (urgent) and the #339 parser slice of **BL-261003-diagnose-review-finding: Diagnose review finding overcounts and revalidate format-only repairs**.
   - m02: settles artifact reviews and planning-skill gates (plan, quick-start, import-plan, lite, brief, goal).
   - m03: **BL-260820-emit-source-qualified: Emit source-qualified provenance envelopes for review and gate receipts**, **BL-260820-bind-each-gate-review: Bind each gate review disposition to its exact received ledger event** and **BL-261002-list-pending-required-reviews: List pending required reviews when a project reaches a pull request**.
@@ -47,7 +47,7 @@ is the compact execution guide. Shipped and closed history lives in
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **Planning guardrails (in the window after goal m01 merges and before m02 starts):** these edit the discover, quick-start, plan, brief, goal and implement skills that m01 and m02 also edit.
+- **Planning guardrails (now, in the window after goal m01 merged and before m02 starts):** these edit the discover, quick-start, plan, brief, goal and implement skills that m01 and m02 also edit.
   - **BL-260830-make-documentation-aware: Make the knowledge index optional by default for discovery and planning** and **BL-261003-reconcile-oat-tracking-commit: Reconcile OAT tracking commit cadence with resumable phase/group batching**, in parallel.
   - **BL-261002-warn-when-the-default-branch: Warn when the default branch has changed planned paths since the branch base** and **BL-261002-add-an-explicit-plan-approval: Add an explicit plan-approval step to quick and spec-driven projects**, together after the first two.
   - **BL-261002-offer-a-strict-gate-reviewer: Keep failed planning gates blocking and align gate wording and decision records**: coordinate with m02, which settles gates in the same planning skills. Close it against m02 if m02 delivers the blocking rule.
