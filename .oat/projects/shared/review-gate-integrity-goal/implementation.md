@@ -900,6 +900,24 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 
 The heading keeps its original m01-era name because the journal is append-only; the phase's current name and scope are the brief's `## Phase p07: One row per review event and stranded-row detection`. Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning, because the phase spans templates, several lifecycle skills, the router and `oat review latest` readers, and a new read-only check whose supersession semantics are subtle). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the template, skill and CLI-reader slices share the supersession definition, the contract tests, the skill version pins and the lockstep release bump, so they fail the independence test. Rung 4 does not apply, because the phase adds a new CLI surface. At phase start `origin/main` had moved (#401 docs, #402 backlog triage and the 0.3.45 release bump); it was merged into the branch at the base (`eba04d813`, clean merge), so this phase's lockstep bump must exceed 0.3.45.
 
+### Task p07-t01: One placeholder row per review event in the scaffolds
+
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t01
+**Intent:** Add a `plan` artifact placeholder row to `.oat/templates/plan.md` and `.oat/templates/plan-lite.md`, and stop quick, import and lite scaffolds from carrying the unused `spec`/`design` rows while spec-driven keeps them.
+**Files:** `.oat/templates/plan.md`, `.oat/templates/plan-lite.md`, `packages/cli/assets/templates/plan-lite.md` (tracked bundled copy), `packages/cli/src/commands/project/new/scaffold.ts`, `packages/cli/src/commands/project/new/scaffold.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new src/commands/project/promote`
+
+### Task p07-t02: Read-side supersession in the review readers and a read-only ledger check
+
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t02
+**Intent:** Treat a `received` row as superseded (same Scope, Type and Invocation class, a later recorded round, same or descendant head; `-` rows stay live) in the router's actionability and `oat review latest`, with descendancy precomputed by the CLI caller so the control-plane stays git-free; add `oat review check`, a read-only advisory check that reports superseded rows and duplicate event keys with structured diagnostics.
+**Files:** `packages/control-plane/src/state/review-supersession.ts` (+ test), `packages/control-plane/src/{project,types,index}.ts`, `packages/control-plane/src/recommender/router.ts`, `packages/control-plane/src/project.test.ts`, `packages/cli/src/commands/review/{check,head-ancestry,latest,index}.ts`, `packages/cli/src/commands/review/__tests__/{check,latest}.test.ts`, `packages/cli/src/commands/review/__tests__/fixtures/review-gate-integrity-plan-c1a653b97.md`, `packages/cli/src/commands/project/{status,list}.ts`, `packages/cli/src/commands/help-snapshots.test.ts`, `.oxfmtrc.jsonc` (fixture formatter exclusion).
+**Proof command:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/project/status.test.ts src/commands/project/list.test.ts src/commands/help-snapshots.test.ts`
+
 ## Phase p12: Exact-event consumption for gate handoffs
 
 **Status:** pending
