@@ -158,6 +158,45 @@ async function corroborate(
   };
 }
 
+/**
+ * The p07 event key: Scope + Type + Artifact filename, from ledger cells
+ * alone. A row whose Artifact is `-` (a placeholder or a structured review that
+ * writes no artifact) has no key and never forms a duplicate.
+ */
+export function reviewEventKey(
+  scope: string,
+  type: string,
+  artifact: string,
+): string | null {
+  if (artifact === '-' || artifact.trim() === '') {
+    return null;
+  }
+  return [
+    scope.trim().toLowerCase(),
+    type.trim().toLowerCase(),
+    basename(normalizeToPosixPath(artifact.trim())),
+  ].join('\u0000');
+}
+
+/** One ledger row as `oat review check` and `oat review resolve` report it. */
+export async function buildReviewLedgerRowReport(
+  absoluteProjectPath: string,
+  row: ReviewStatus,
+  index: number,
+): Promise<ReviewLedgerRowReport> {
+  return {
+    row: index + 1,
+    scope: row.scope,
+    type: row.type,
+    status: row.status,
+    artifact: row.artifact,
+    reviewedHead: row.reviewedHead ?? null,
+    invocation: cellOrNull(row.invocation),
+    gateTarget: cellOrNull(row.gateTarget),
+    corroboration: await corroborate(absoluteProjectPath, row),
+  };
+}
+
 function describeRow(report: ReviewLedgerRowReport): string {
   const lane = report.invocation
     ? `${report.invocation}${report.gateTarget ? `:${report.gateTarget}` : ''}`
@@ -183,18 +222,8 @@ export async function checkReviewLedger(
   const rows = parseReviewTable(planContent);
 
   const reports = await Promise.all(
-    rows.map(
-      async (row, index): Promise<ReviewLedgerRowReport> => ({
-        row: index + 1,
-        scope: row.scope,
-        type: row.type,
-        status: row.status,
-        artifact: row.artifact,
-        reviewedHead: row.reviewedHead ?? null,
-        invocation: cellOrNull(row.invocation),
-        gateTarget: cellOrNull(row.gateTarget),
-        corroboration: await corroborate(absoluteProjectPath, row),
-      }),
+    rows.map((row, index) =>
+      buildReviewLedgerRowReport(absoluteProjectPath, row, index),
     ),
   );
 
@@ -221,14 +250,10 @@ export async function checkReviewLedger(
 
   const byKey = new Map<string, ReviewLedgerRowReport[]>();
   for (const report of reports) {
-    if (report.artifact === '-' || report.artifact.trim() === '') {
+    const key = reviewEventKey(report.scope, report.type, report.artifact);
+    if (key === null) {
       continue;
     }
-    const key = [
-      report.scope.trim().toLowerCase(),
-      report.type.trim().toLowerCase(),
-      basename(normalizeToPosixPath(report.artifact.trim())),
-    ].join('\u0000');
     byKey.set(key, [...(byKey.get(key) ?? []), report]);
   }
   for (const group of byKey.values()) {

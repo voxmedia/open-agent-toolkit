@@ -707,19 +707,21 @@ describe('help output snapshots', () => {
       OAT review artifact commands
 
       Options:
-        -h, --help        display help for command
+        -h, --help         display help for command
 
       Global Options:
-        -V, --version     output the version number
-        --json            Output a single JSON document
-        --verbose         Enable verbose debug output
-        --cwd <path>      Override working directory
+        -V, --version      output the version number
+        --json             Output a single JSON document
+        --verbose          Enable verbose debug output
+        --cwd <path>       Override working directory
 
       Commands:
-        latest [options]  Find the most recent OAT review artifact
-        check [options]   Report superseded and duplicate Reviews ledger rows
-                          (advisory)
-        help [command]    display help for command
+        latest [options]   Find the most recent OAT review artifact
+        check [options]    Report superseded and duplicate Reviews ledger rows
+                           (advisory)
+        resolve [options]  Bind a gate result event to its Reviews row and validate
+                           it (fails closed)
+        help [command]     display help for command
       "
     `);
   });
@@ -744,6 +746,35 @@ describe('help output snapshots', () => {
         --json            Output a single JSON document
         --verbose         Enable verbose debug output
         --cwd <path>      Override working directory
+      "
+    `);
+  });
+
+  it('review resolve --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'resolve',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat review resolve [options]
+
+      Bind a gate result event to its Reviews row and validate it (fails closed)
+
+      Options:
+        --project <path>       Project path (defaults to the active project)
+        --artifact <path>      The gate result's artifactPath
+        --scope <scope>        The gate result's scope
+        --type <type>          The gate result's reviewType (code or artifact)
+        --run-id <id>          The gate result's runId
+        --reviewed-head <sha>  The gate result's reviewedHead (full SHA)
+        -h, --help             display help for command
+
+      Global Options:
+        -V, --version          output the version number
+        --json                 Output a single JSON document
+        --verbose              Enable verbose debug output
+        --cwd <path>           Override working directory
       "
     `);
   });
