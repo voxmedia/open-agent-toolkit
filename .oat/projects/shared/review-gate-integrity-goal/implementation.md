@@ -1763,10 +1763,25 @@ Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-cl
 
 **Status:** in_progress
 **Base:** 91d2e491f289528577d23d832584c2cda10b44a6
+**Head:** 8ce9e2a540bded95953b383ff9d81032690ee4b3
 **Executor:** phase-implementer:rgi-prev3-impl-20261103-01
 **Corrects:** p13
 
 Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer. Added at `91d2e491f` by the m02 exit gate rerun receive. `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `f29800f5a` (p-rev3-t01), and only the journal record commit follows it. `git fetch origin main` showed `origin/main` still at the merge base `c42fd95bd`. The DoD gates ran in CI order and each exited 0:
+
+- `pnpm check` (5 of 11 cached);
+- `pnpm type-check` (5 of 11 cached);
+- `pnpm test` (5 of 12 cached) and `pnpm test:evidence` (0 of 12 cached; CLI 444 files and 9533 tests, control-plane 14 files and 316 tests);
+- `pnpm build` (5 of 5 cached, a replay; the forced `test:evidence` built all five packages uncached, and an uncached 0-of-5 build of the same source ran before the probes);
+- `pnpm run check:skill-bumps` (16 checks; pr-progress and pr-final already carry their m02 bump);
+- `release:check-versions`;
+- `release:validate` (five packages at 0.3.46);
+- `pnpm build:docs` (6 of 6 cached, then forced with 0 of 6 cached);
+- the docs index regeneration, with `git diff --exit-code -- apps/oat-docs/index.md` exiting 0.
+
+`pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205), `pnpm test:skills`, `pnpm oat:validate-skills` (68 skills) and the p-rev3 journal check at review (branch build) also exited 0. Exit evidence: p-rev3-t01 (the gate's M1 reproduction lists the new row pending; active, inert-after-review and fresh-waiver controls; pre/post branch-build negative control; guard-can-fail G1 to G3; skills, CLI reference and Reviews page state the rule). No version bump was needed and no recovery attempt was used (0 of 10).
 
 ### Task p-rev3-t01: A review waiver applies only to the pending row it names
 
