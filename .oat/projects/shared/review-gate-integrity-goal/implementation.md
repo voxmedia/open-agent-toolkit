@@ -902,12 +902,18 @@ The heading keeps its original m01-era name because the journal is append-only; 
 
 ### Task p07-t01: One placeholder row per review event in the scaffolds
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p07-impl-20261103-01
 **Handle:** direct:rgi-p07-impl-20261103-01:p07-t01
 **Intent:** Add a `plan` artifact placeholder row to `.oat/templates/plan.md` and `.oat/templates/plan-lite.md`, and stop quick, import and lite scaffolds from carrying the unused `spec`/`design` rows while spec-driven keeps them.
 **Files:** `.oat/templates/plan.md`, `.oat/templates/plan-lite.md`, `packages/cli/assets/templates/plan-lite.md` (tracked bundled copy), `packages/cli/src/commands/project/new/scaffold.ts`, `packages/cli/src/commands/project/new/scaffold.test.ts`.
 **Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new src/commands/project/promote`
+**Commit:** cd5750fa5de1f4000f0f975d047c7f95f57a2da9
+**Proof:** 167/167 (5 files) exit 0 after `pnpm build` refreshed the bundled assets (the first run failed 24 tests on a stale `assets 0.3.44` bundle from before the base merge, not on this change); CLI type-check and lint exit 0.
+
+**Known Unknown settled (how quick, import and lite drop the `spec`/`design` rows).** A post-copy edit, not a separate template. `applyTemplateReplacements` (`scaffold.ts`) ends with `omitUnusedArtifactReviewRows`, which in quick, import and lite drops only an unclaimed placeholder (Scope `spec` or `design`, Type `artifact`, Status `pending`, Artifact `-`) from the `## Reviews` section; a bound row, any other scope and anything outside the section survive. Spec-driven, brief and goal are untouched. Quick and import share `plan.md` with spec-driven, so one template serves all three; `plan-lite.md` is lite-only, so its rows are removed at the source. The filter also covers `oat project promote` (lite → quick renders `plan.md` through the same function).
+
+Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`; quick, import, lite, brief and goal `plan` only. Negative control: with the filter call neutralized (`return rendered;`), the quick and import cases of the new scaffold test fail (2 of 6), and pass again once restored.
 
 ### Task p07-t02: Read-side supersession in the review readers and a read-only ledger check
 
