@@ -215,6 +215,10 @@ m02 exit gate rerun (run d738cd0e, scope p07-p-rev2, Sol xhigh) passed its thres
 
 p-rev3 reached the 3-cycle review cap with one Low (the PR skills omit the unparsed-row waiver case). The operator chose to fix it as p-rev3-t04 and let the m02 exit gate rerun over p07-p-rev3 review it, with no fourth p-rev3 cycle. rgi-prev3-cap-20261103
 
+### 2026-11-04 · structural · oat-project-implement · p-rev3
+
+p-rev3 accepted (corrects p13, m02 exit gate rerun M1): review cycles 1-3 passed 0/0/0/1 each with fixes t02, t03, t04; t04 accepted at the cycle cap by operator decision and reviewed by the next exit gate rerun; head c08b2c054. All m02 phase-units accepted; the exit gate reruns over p07-p-rev3. rgi-prev3-outcome-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
