@@ -1909,12 +1909,21 @@ Scope: `8ce9e2a54..08a2dc6d5` (p-rev3-t02), fresh `oat-reviewer-claude-claude-op
 
 ### Task p-rev3-t04: (review) Name the unparsed-row case in the PR skills' waiver rule
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-fix-20261103-03 (continuation of rgi-prev3-impl-20261103-01)
+**Handle:** direct:rgi-prev3-fix-20261103-03:p-rev3-t04
 **Source review:** reviews/archived/p-rev3-review-2026-11-03T234849Z.md (L1)
 
 Intent: pr-progress Step 3.5 and pr-final Step 2.5 describe the rowless-waiver rule without the `unparsed-row` case, so with an unparseable Reviews row a `**Row:** -` waiver for a missing key stays `missing` with no next step; the Reviews page's advice to name the row cannot work for a missing key. Add one clause to each skill (an `unparsed-row` waiver means fix the malformed Reviews row, then re-run the listing) and correct the Reviews page wording; update any pin that covers the rule. Both skills are already bumped on this branch.
 Files: `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts` if a pin covers it.
 Proof: the isolated-HOME contract suites.
+**Files:** `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`.
+**Commit:** c5e3d2ee54d2b3ca4366a8395efcfc55b382f666
+**Proof:** the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`) exited 0, 1205/1205. `check:skill-bumps` exit 0 (16 checks; both skills already carry their m02 bump, so none added), `oat sync --scope project` no changes, `oat:validate-skills` exit 0, `docs:lint` exit 0, `oxfmt --check` on the four files exit 0.
+
+**Change.** Both skills' rowless sentence now reads, identically: "A line naming no row stops applying once any row of its key records a review, and while a `## Reviews` row that does not parse sits above a parsed row (`unapplied: unparsed-row`); fix that row, then re-run the listing." The Reviews page names `unparsed-row`, says to fix the row and re-run the listing, and states that a waiver naming its row also applies but a `missing` key has no row to name, so fixing the row is its only remedy. The existing `WAIVER_RETIRED` pin, asserted in both skills' step sections, carries the full sentence.
+
+**Pin can fail:** G7, the clause removed from pr-progress: the pr-progress pin fails (1 of 3); G8, the clause removed from pr-final: the pr-final pin fails (1 of 3). Each skill was restored and checked byte-identical with `cmp`.
 
 ### Review Received: p-rev3 (re-review of p-rev3-t03, cycle 3 of 3)
 
