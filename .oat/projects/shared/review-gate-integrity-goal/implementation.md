@@ -2222,6 +2222,8 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 
 **Outcome:** passed
 
+- m02 delivery check after receive (2026-11-04): `status: ok`, exit carrier and integrated review fresh at `c08b2c054`; m02 moved `reviewing → delivering`. A first check reported both stale because the backlog commit filing `BL-261104-goal-mode-exit-gate-resolve` (after the reviewed head, under `.oat/repo/pjm/backlog/`) is not permitted bookkeeping; by operator decision that unpushed commit was dropped from the branch and the item will be refiled on a separate branch off main.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

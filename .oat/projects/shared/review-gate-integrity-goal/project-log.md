@@ -231,6 +231,18 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 m02 exit gate rerun 81c12aac (p07-p-rev3, codex-6-sol-xhigh) passed 0/0/0/0 after three runs; exit carrier allowed and fresh at c08b2c054; m02 moved to reviewing. rgi-m02-exit-allowed-20261104
 
+### 2026-11-04 · project · friction · Repo records after a reviewed head stale goal milestone evidence
+
+**Category:** gotcha
+**Source:** rgi-learning-m02-01
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-04T16:05:36Z
+
+Observation: a commit filing a backlog item (.oat/repo/pjm/backlog/) after m02's reviewed head made oat project delivery check report the exit carrier and integrated review stale (disallowed-path), although the implementation fingerprint excludes .oat/repo.
+Impact: a goal milestone can lose fresh gate and review evidence from a repo-record write unrelated to its code.
+Recommendation: file backlog items and decision records for a milestone on a separate branch, or after delivery; consider admitting .oat/repo paths as section 12.8 bookkeeping successors.
+Uncertainty: whether excluding .oat/repo from the successor rule is intended.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
