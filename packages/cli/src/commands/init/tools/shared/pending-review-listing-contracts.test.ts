@@ -50,7 +50,7 @@ const WAIVER_TEMPLATE =
 const WAIVER_ROW =
   'where `<row>` is the row number the listing reports (`-` for a `missing` entry).';
 const WAIVER_RETIRED =
-  'A waiver covers only the row it names: once that row records a review, or a later row is appended for its key, the waiver is inert and the key is listed again. A line naming no row stops applying once any row of its key records a review.';
+  'A waiver covers only the row it names: once that row records a review, or a later row is appended for its key, the waiver is inert and the key is listed again. A line naming no row stops applying once any row of its key records a review, and while a `## Reviews` row that does not parse sits above a parsed row (`unapplied: unparsed-row`); fix that row, then re-run the listing.';
 
 const tempDirs: string[] = [];
 

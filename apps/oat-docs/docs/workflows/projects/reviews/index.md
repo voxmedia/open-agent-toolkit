@@ -100,7 +100,9 @@ pending work. A line that names no row applies only until any row of its key
 records a review, because ledger and journal dates cannot order a waiver
 against a review recorded the same day. It also stops applying while a Reviews row
 that does not parse (a blank required cell) sits above a parsed row, because
-that row may hide a recorded review; fix the row or name the row in the waiver.
+that row may hide a recorded review (`unapplied: unparsed-row`). Fix that
+row, then re-run the listing; a waiver that names its row also applies, but a
+`missing` key has no row to name, so fixing the row is its only remedy.
 
 ## Bookkeeping commits (required)
 

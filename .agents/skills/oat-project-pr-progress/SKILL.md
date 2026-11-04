@@ -292,7 +292,8 @@ the line.
 A waiver covers only the row it names: once that row records a review, or a
 later row is appended for its key, the waiver is inert and the key is listed
 again. A line naming no row stops applying once any row of its key records a
-review.
+review, and while a `## Reviews` row that does not parse sits above a parsed
+row (`unapplied: unparsed-row`); fix that row, then re-run the listing.
 
 ### Step 4: Collect Scope Data
 
