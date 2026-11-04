@@ -2193,6 +2193,7 @@ The exit gate rerun (run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, scope `p07-p-re
 **Outcome:** fixes queued: p-rev3 (gate passed its threshold; the exit gate reruns over `p07-p-rev3` after p-rev3 is accepted)
 
 - Gate `oat-project-implement` (code, m02 exit rerun, run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, `--review-scope p07-p-rev2`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/1/0, receive-eligible, received 2026-11-03; no attempt consumed. No carrier written: queued fixes require another rerun.
+- Operator routing applied to the rerun (m02 exit gate, 2026-11-03): p-rev3 is accepted, so the rerun uses the same m02-phases scope, now `--review-scope p07-p-rev3` (p07, p12, p13, p-rev1, p-rev2, p-rev3), with target, threshold and prompt unchanged. By operator decision at the p-rev3 cycle cap, this run is also the review of p-rev3-t04 (`c5e3d2ee5`).
 
 ## Deferred Findings
 
