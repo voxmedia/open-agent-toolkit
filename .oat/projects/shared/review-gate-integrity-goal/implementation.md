@@ -2208,6 +2208,20 @@ The exit gate rerun (run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, scope `p07-p-re
 
 - Gate `oat-project-implement` (code, m02 exit rerun, run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, `--review-scope p07-p-rev3`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/0/0, receive-eligible, received 2026-11-04; no attempt consumed. `oat_milestone_gates.m02.exit` written `allowed`/`passed`, `resolution: configured`, `reviewed_head` `c08b2c054d95dda0691fc3a247b70c5acdaa8007`, subject `code` [p07, p12, p13, p-rev1, p-rev2, p-rev3]. `config_fingerprint` `sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2` = sha256 of the compact JSON of `oat gate resolve oat-project-implement` `effectiveGate` (the m02 plan carrier's method). That declaration's `--review-scope final` was replaced by the m02 phase range under the operator routing above, because `final` refuses on m01's squash-merged anchors.
 
+### Review Received: m02 (integrated milestone review)
+
+**Date:** 2026-11-04
+**Review artifact (local-only):** reviews/archived/m02-review-2026-11-04T020725Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-high`) covered `p07, p12, p13, p-rev1, p-rev2, p-rev3` over `eba04d813..c08b2c054` (116 commits, 75 paths). It found the six phases compose into Outcome 4, the lockstep versions at 0.3.46 against `origin/main` 0.3.45, one bump per changed skill (16), and a fresh docs index, with branch-build probes matching the CLI reference except L1.
+
+- L1 (Low): `oat review check` (`check.ts:188`) and `oat review resolve` (`resolve.ts:370`–`:478`) number Reviews rows among parsed rows, while `oat review pending` numbers physical data lines (p-rev3-t02), so a row below an unparsed row reads as two numbers; waivers copy the row from `pending`, so nothing fails open → approved deferral (see Deferred Findings); operator decision 2026-11-04, because fixing it queues a fix under p-rev3 and reruns the exit gate and this review.
+- L2 (Low, bookkeeping): the p07 re-review L1 deferral line reads open although p12-t03 (`19fb8190d`) folded it → closed at receive by an appended Deferred Findings line; no other change.
+
+**Outcome:** passed
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -2227,6 +2241,8 @@ The exit gate rerun (run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, scope `p07-p-re
 - p13 review L3 (Low): `BL-261002-list-pending-required-reviews` acceptance criteria still say the waiver is recorded in the Reviews table; p13 records it as a `**Review waived:**` line under `## Reviews and Gates` with the row left `pending`, authorized by the p13 Known Unknown (`rgi-p13-concrete-20261103`). Deferred by the root to the item's closure. Trigger: m02 delivery, when the item is closed with that note.
 - p-rev1 review L1 (Low): `oat review resolve`'s JSON `row` report shows `reviewedHead: null` for both an invalid cell and `-`; the `reviewed_head_invalid` diagnostic carries the raw cell. Deferred by the root: no consumer distinguishes them through the row field (Feature Planning Triage). Trigger: the first consumer that reads the row report's head.
 - p-rev2 review L1 (Low): `review latest` and `review check` resolve the git repository from the caller's cwd, so in a nested independent project repository (run from inside it) or under a separate-repository synced scope root they can disagree with `project status` on supersession. Pre-existing; OAT never creates either layout. Deferred by the root. Trigger: OAT creating or supporting an independent nested project repository, or an observed disagreement.
+- p07 re-review L1 (Low) closure: resolved by p12-t03 (`19fb8190d`), which rewrote the receive CLI-unavailable fallback to skip a candidate only when its own row is `received` and to name the gate and lifecycle Invocation classes, pinned in `review-event-row-contracts.test.ts`. Recorded at the m02 integrated review receive (finding L2), 2026-11-04.
+- m02 integrated review L1 (Low): `oat review check` and `oat review resolve` number Reviews rows by position among parsed rows, while `oat review pending` numbers physical data lines, so one row can read as two numbers when an unparsed row sits above it. Nothing fails open: waiver `**Row:**` values are copied from `pending`. Deferred by operator decision on 2026-11-04 (fixing it now would reopen m02's exit gate and integrated review). Trigger: p08 start (m03), which owns review-table identity; number all three commands by physical data line, or document the difference in the CLI reference.
 
 ## Deviations from Plan / Design
 
