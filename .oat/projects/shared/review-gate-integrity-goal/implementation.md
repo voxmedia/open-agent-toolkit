@@ -2195,6 +2195,19 @@ The exit gate rerun (run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, scope `p07-p-re
 - Gate `oat-project-implement` (code, m02 exit rerun, run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, `--review-scope p07-p-rev2`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/1/0, receive-eligible, received 2026-11-03; no attempt consumed. No carrier written: queued fixes require another rerun.
 - Operator routing applied to the rerun (m02 exit gate, 2026-11-03): p-rev3 is accepted, so the rerun uses the same m02-phases scope, now `--review-scope p07-p-rev3` (p07, p12, p13, p-rev1, p-rev2, p-rev3), with target, threshold and prompt unchanged. By operator decision at the p-rev3 cycle cap, this run is also the review of p-rev3-t04 (`c5e3d2ee5`).
 
+### Review Received: p07-p-rev3 (m02 exit gate rerun)
+
+**Date:** 2026-11-04
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-04T015726Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+The exit gate rerun (run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, scope `p07-p-rev3`, default selection `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family) reviewed m02 (`p07, p12, p13, p-rev1, p-rev2, p-rev3`) over `eba04d813..c08b2c054`. No blocking findings; it confirmed the p-rev3-t04 wording matches the unparsed-row behavior and states the remedy in both PR skills, which settles t04's review under the operator's cycle-cap decision.
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m02 exit rerun, run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, `--review-scope p07-p-rev3`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/0/0, receive-eligible, received 2026-11-04; no attempt consumed. `oat_milestone_gates.m02.exit` written `allowed`/`passed`, `resolution: configured`, `reviewed_head` `c08b2c054d95dda0691fc3a247b70c5acdaa8007`, subject `code` [p07, p12, p13, p-rev1, p-rev2, p-rev3]. `config_fingerprint` `sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2` = sha256 of the compact JSON of `oat gate resolve oat-project-implement` `effectiveGate` (the m02 plan carrier's method). That declaration's `--review-scope final` was replaced by the m02 phase range under the operator routing above, because `final` refuses on m01's squash-merged anchors.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

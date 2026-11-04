@@ -227,6 +227,10 @@ Completed read-only mechanical test reconnaissance for reviews/range-review-2026
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-04T015726Z.md run=81c12aac-482e-4ffd-93f3-b796e9c4ae76
 
+### 2026-11-04 · structural · oat-project-implement · m02
+
+m02 exit gate rerun 81c12aac (p07-p-rev3, codex-6-sol-xhigh) passed 0/0/0/0 after three runs; exit carrier allowed and fresh at c08b2c054; m02 moved to reviewing. rgi-m02-exit-allowed-20261104
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
