@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-03
-oat_current_task_id: p-rev3-t03
+oat_current_task_id: p-rev3-t04
 oat_generated: false
 oat_template: false
 ---
@@ -1905,6 +1905,30 @@ Scope: `8ce9e2a54..08a2dc6d5` (p-rev3-t02), fresh `oat-reviewer-claude-claude-op
 
 **Outcome:** fixes queued: p-rev3-t03
 
+**Outcome:** fixes queued: p-rev3-t03; completed (head `edc4b4eee`); its re-review (cycle 3) queued p-rev3-t04
+
+### Task p-rev3-t04: (review) Name the unparsed-row case in the PR skills' waiver rule
+
+**Status:** pending
+**Source review:** reviews/archived/p-rev3-review-2026-11-03T234849Z.md (L1)
+
+Intent: pr-progress Step 3.5 and pr-final Step 2.5 describe the rowless-waiver rule without the `unparsed-row` case, so with an unparseable Reviews row a `**Row:** -` waiver for a missing key stays `missing` with no next step; the Reviews page's advice to name the row cannot work for a missing key. Add one clause to each skill (an `unparsed-row` waiver means fix the malformed Reviews row, then re-run the listing) and correct the Reviews page wording; update any pin that covers the rule. Both skills are already bumped on this branch.
+Files: `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts` if a pin covers it.
+Proof: the isolated-HOME contract suites.
+
+### Review Received: p-rev3 (re-review of p-rev3-t03, cycle 3 of 3)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-11-03T234849Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev3-rev-20261103-03`, reconnaissance not attempted). L1 resolved (blank Date and blank Scope reproductions list the new row pending with `unparsed-row`; controls hold); the trailing-line exception is caught once a pending row follows; the ledger-wide trade-off is documented; no other reader changed; two guards proved able to fail.
+
+- L1 (Low): the PR skills omit the `unparsed-row` case from the rowless-waiver rule → the review-cycle cap is reached, so the root put it to the operator, who chose (2026-11-03) to fix it as p-rev3-t04 with the m02 exit gate rerun over `p07-p-rev3` as its review, instead of a fourth p-rev3 cycle.
+
+**Outcome:** fixes queued: p-rev3-t04 (operator decision at the cycle cap; reviewed by the exit gate rerun)
+
 ## Phase p08: Gate convergence visibility and classification reporting
 
 **Status:** pending
@@ -1965,6 +1989,7 @@ Scope: `8ce9e2a54..08a2dc6d5` (p-rev3-t02), fresh `oat-reviewer-claude-claude-op
 - run/v1 · request=rgi-prev3-fix-20261103-01 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
 - run/v1 · request=rgi-prev3-rev-20261103-02 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev3-fix-20261103-02 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-prev3-rev-20261103-03 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

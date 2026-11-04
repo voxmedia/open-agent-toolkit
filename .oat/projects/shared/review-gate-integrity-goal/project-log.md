@@ -211,6 +211,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 m02 exit gate rerun (run d738cd0e, scope p07-p-rev2, Sol xhigh) passed its threshold; the first run's M1 and M2 are resolved; new M1: a retired waiver reapplies to a later pending row. Appended revision phase p-rev3 (corrects p13); the gate reruns over p07-p-rev3. rgi-m02-exit2-revision-20261103
 
+### 2026-11-04 · structural · oat-project-implement · p-rev3
+
+p-rev3 reached the 3-cycle review cap with one Low (the PR skills omit the unparsed-row waiver case). The operator chose to fix it as p-rev3-t04 and let the m02 exit gate rerun over p07-p-rev3 review it, with no fourth p-rev3 cycle. rgi-prev3-cap-20261103
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
