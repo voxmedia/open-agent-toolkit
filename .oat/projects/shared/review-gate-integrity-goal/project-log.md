@@ -243,6 +243,10 @@ Impact: a goal milestone can lose fresh gate and review evidence from a repo-rec
 Recommendation: file backlog items and decision records for a milestone on a separate branch, or after delivery; consider admitting .oat/repo paths as section 12.8 bookkeeping successors.
 Uncertainty: whether excluding .oat/repo from the successor rule is intended.
 
+### 2026-11-05 · structural · oat-project-pr-progress · d02
+
+Registered d02 for m02 (p07, p12, p13, p-rev1, p-rev2, p-rev3) at https://github.com/voxmedia/open-agent-toolkit/pull/403; rgi-register-d02
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
