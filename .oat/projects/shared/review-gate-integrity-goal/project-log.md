@@ -247,6 +247,33 @@ Uncertainty: whether excluding .oat/repo from the successor rule is intended.
 
 Registered d02 for m02 (p07, p12, p13, p-rev1, p-rev2, p-rev3) at https://github.com/voxmedia/open-agent-toolkit/pull/403; rgi-register-d02
 
+### 2026-11-06 · structural · oat-project-goal · m02
+
+Re-alignment entry for m02: d02 (PR 403) observed merged at its endpoint (squash 9da04ef1c); integrated review and exit gate still fresh at the merged head 247bdb3db (only a journal deferral followed the reviewed head); review-gate-integrity-goal-realign-m02
+
+### 2026-11-06 · project · worked-well · Deferring nonblocking PR-bot findings keeps delivery evidence fresh through merge
+
+**Category:** efficiency
+**Source:** rgi-learning-m02-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-06T20:53:34Z
+
+Observation: PR 403's only post-gate bot finding (a nonblocking Warp test-hygiene suggestion) was deferred to p08 by the operator and recorded in a journal-only commit; oat project delivery check stayed ok and d02 merged with its exit gate and integrated review fresh, unlike d01, where post-gate Bugbot fixes staled both.
+Impact: a milestone delivery keeps its review evidence when late PR-bot findings are dispositioned as approved deferrals rather than fixed on the delivery branch.
+Recommendation: at land time, fix only blocking PR-bot findings on the delivery branch; route nonblocking ones to the next milestone as journal deferrals, and run oat project delivery check after the bookkeeping commit before merging.
+
+### 2026-11-06 · project · friction · The configured exit gate's final scope refuses after a squash-merged milestone
+
+**Category:** gotcha
+**Source:** rgi-learning-m02-03
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-06T20:53:35Z
+
+Observation: m02's configured implement exit gate (--review-scope final with the state-selection prompt) expanded to the whole project and refused on m01's squash-merged phase anchors (run 788ae91a); each m02 exit run had to be routed to an explicit phase range (p07-p13, p07-p-rev2, p07-p-rev3).
+Impact: every goal milestone after the first needs operator scope routing at its exit gate, which the closeout contract discourages.
+Recommendation: resolve a state-selected final hint to the active milestone's ordered accepted phases (BL-261104-goal-mode-exit-gate-resolve). Until a released CLI ships the fix, route each exit run to the milestone's phase range and record the routing.
+Uncertainty: a fix in m03 only helps gates from the release that carries it, because gates run the installed CLI.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
