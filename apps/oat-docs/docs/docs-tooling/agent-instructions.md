@@ -52,7 +52,10 @@ config key, or glob. They favor design intent and invariants over
 inventories, and intent is included only when the repository evidences it;
 otherwise the recommendation asks you. Security and auth boundaries are
 phrased as pointers to where they are enforced, and rules about where files
-go must match the test runner or tool configuration.
+go must match the test runner or tool configuration. A generated root
+`AGENTS.md` also gets a Definition of Done item that keeps its instructions
+current: a change that invalidates or adds a durable convention updates the
+affected instruction files in the same PR.
 
 Provider recommendations follow configured policy. For example, a Claude
 shim (a `CLAUDE.md` file whose job is to import `AGENTS.md` with

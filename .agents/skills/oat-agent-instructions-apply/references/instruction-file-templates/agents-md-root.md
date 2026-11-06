@@ -42,7 +42,7 @@ and reasoning over a directory inventory; an agent can list directories itself.}
 
 ### Technology Stack
 
-- **Runtime:** {e.g., Node.js 22, Python 3.12 — include concrete versions when the repo evidence provides them}
+- **Runtime:** {e.g., Node.js 22 (pinned in `.nvmrc`), Python 3.12 — include concrete versions when the repo evidence provides them, and name the file that pins them}
 - **Framework:** {e.g., Next.js 15, FastAPI}
 - **Infrastructure:** {e.g., Docker Compose, local DB, cloud/service environment, wrapper scripts}
 - **Build:** {e.g., Turborepo, Webpack}
@@ -85,7 +85,8 @@ and reasoning over a directory inventory; an agent can list directories itself.}
 
 - Target: <300 lines (hard max 500)
 - Canonical commands should appear in the first screenful
-- When version numbers are available in repo evidence, include them instead of generic stack names
+- When version numbers are available in repo evidence, include them instead of generic stack names, and name the
+  config file that pins them
 - Call out local infrastructure or wrapper scripts when they materially affect how the project runs
 - If commit format is enforced by repo config, mention it explicitly
 - Prefer noting the canonical command source of truth (`package.json`, `composer.json`, Makefile, etc.) so static command lists do not drift
@@ -95,11 +96,12 @@ and reasoning over a directory inventory; an agent can list directories itself.}
 - Only include conventions that are backed by repo evidence
 - If formatter/linter config already enforces a style rule, prefer commands or links over restating the rule
 - Use progressive disclosure: keep essentials inline and link to deeper docs/config/examples
-- Inline only what is non-obvious, spread across many files, or costly to get wrong; omit anything one grep or `ls`
-  finds
+- Inline what is non-obvious, spread across many files, or costly to get wrong. The essential commands, entry
+  points, and boundaries this template requires always stay inline. Omit a fact only when one grep or `ls` finds it
+  and an agent is unlikely to get it wrong without the instruction
 - No line numbers (name the symbol, function, or config key), no counts or ratios, and no exhaustive catalogs of
   routes, hooks, consumers, or files
 - Staleness test for every line: "Would a normal merge in this directory make this line false?" If yes, omit it or
-  point to a stable anchor (symbol, config key, glob)
-- Any rule about where files go must match the runner or tool config that picks them up (for example Playwright
-  `testDir`/`testMatch`, Jest `roots`, `tsconfig.json` `include`)
+  point to a stable anchor (symbol, config key, glob). Versions are allowed when the line names the config file that
+  pins them (for example "Node 22, pinned in `.nvmrc`")
+- Any rule about where files go must match the runner or tool config that picks them up

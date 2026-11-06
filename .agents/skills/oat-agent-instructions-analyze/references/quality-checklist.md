@@ -89,10 +89,10 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
       repo-wide counts, not samples; an instruction file that carries one fails Criterion 9 even when the count is
       accurate today
 - [ ] Security, auth, deploy, and data-boundary claims are phrased as pointers to where the boundary is enforced
-      ("auth is enforced in `middleware.ts`; read it before changing routes"), never as negative absolutes ("there is no
-      server-side auth gate"), and are backed by high-confidence evidence
+      ("auth is enforced in `middleware.ts`; read it before changing routes"), never as claims that something is
+      absent (e.g. "there is no server-side auth gate"), and are backed by high-confidence evidence
 - [ ] Rules about where files go (test layout, spec directories, globs) match the runner or tool config that picks
-      those files up (Playwright `projects`/`testDir`/`testMatch`, Jest `roots`/`testMatch`, `tsconfig.json` `include`)
+      those files up (see "Verify Placement Rules Against Tool Config" in `file-type-discovery-checklist.md`)
 - [ ] Recommendations that remove or contradict an existing rule cite the verification evidence that justifies the correction
 - [ ] Formatting/style claims are omitted unless supported by repo evidence
 - [ ] If a formatter or linter enforces the rule, the file prefers commands/links over prose restatement

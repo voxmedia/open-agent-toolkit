@@ -355,6 +355,8 @@ For each approved recommendation, in the order from Step 2:
    - `Must Not Include` is prohibited content
    - `Preferred Default for New Files` determines which sub-pattern new files should follow
    - `Claim Corrections` replaces stale claims in updated files
+   - `Design Intent and Constraints` fills the template section of the same name; when it is `none` or `ask_user`,
+     leave the section out unless the user confirms its content
 6. Recheck every claim you carry into the file at HEAD before writing it, including `Must Include` items and `Claim
 Corrections` replacements: open the cited source and confirm the claim still holds. Recheck security, auth,
    deploy, and data-boundary claims with particular care. If a claim no longer holds, stop that recommendation and
@@ -387,9 +389,11 @@ Corrections` replacements: open the cited source and confirm the claim still hol
   instead), no counts or ratios, and no exhaustive lists or catalogs of routes, hooks, consumers, or files. Evidence
   refs such as `path:line` stay in the analysis; never transcribe them. Before keeping a line, ask "Would a normal
   merge in this directory make this line false?" If yes, omit it or point to a stable anchor (symbol, config key,
-  glob).
+  glob). Versions are allowed when the line names the config file that pins them (for example "Node 22, pinned in
+  `.nvmrc`").
 - Phrase security, auth, deploy, and data boundaries as pointers to where they are enforced ("auth is enforced in
-  `middleware.ts`; read it before changing routes"), never as negative absolutes ("there is no X").
+  `middleware.ts`; read it before changing routes"), never as claims that something is absent (e.g. "there is no
+  server-side auth gate").
 - Do not write a rule about where files go (test layout, globs) unless the artifact cites the runner or tool config
   key that picks those files up; if that config no longer matches at HEAD, drop the rule and report it.
 - Do not invent design intent. Write only intent the artifact evidences; anything else is `ask_user`.

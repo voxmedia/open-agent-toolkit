@@ -61,6 +61,7 @@ describe('agent instructions bundle contract', () => {
     );
 
     expect(packTemplate).toContain('## Evidence');
+    expect(packTemplate).toContain('## Design Intent and Constraints');
     expect(packTemplate).toContain('## Structural Conventions');
     expect(packTemplate).toContain('## Behavioral Conventions');
     expect(packTemplate).toContain('## Counter-Examples');

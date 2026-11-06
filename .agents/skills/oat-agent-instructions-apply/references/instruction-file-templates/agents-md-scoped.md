@@ -70,7 +70,8 @@ project. Favor purpose and reasoning over an inventory of files.}
 - Inherits from root AGENTS.md by default; this file adds or overrides
 - Keep only directory-specific essentials inline; link to deeper module docs/config when helpful
 - Only include conventions backed by repo evidence for this subtree
-- Each scoped file is ongoing maintenance; when the delta is thin, fold it into the parent file instead
+- Each scoped file is ongoing maintenance; if the pack's delta looks thin, raise it with the user rather than
+  reshaping the recommendation
 - No line numbers, counts or ratios, or exhaustive catalogs of routes, hooks, consumers, or files; apply the
   staleness test ("Would a normal merge in this directory make this line false?") to every line
 - Any test-layout or file-placement rule must match the runner or tool config that picks those files up

@@ -242,7 +242,7 @@ not from repo-root `.agents/docs/`.
   line false?" and, if yes, omit it or point to a stable anchor (a symbol, function, config key, or glob).
 - Security, auth, deploy, and data-boundary claims require high confidence; otherwise mark them `ask_user`. Phrase
   them as pointers to where the boundary is enforced ("auth is enforced in `middleware.ts`; read it before changing
-  routes"), never as negative absolutes ("there is no server-side auth gate").
+  routes"), never as claims that something is absent (e.g. "there is no server-side auth gate").
 - Design intent (why it is built this way, invariants that must hold, what not to change without asking) is the
   highest-value content for instruction files, but only when evidenced by docs, decision records, comments, or
   existing instructions. Unevidenced intent is `ask_user`, never inferred.
@@ -264,8 +264,10 @@ documentation inventory from Step 2 to:
 3. Check each applicable criterion from the quality checklist.
 4. Note findings with severity ratings, exact source refs, and a confidence rating.
 5. Record a disclosure decision for each recommendation: `inline`, `link_only`, `omit`, or `ask_user`. Use the
-   discovery-cost bar: `inline` only what is non-obvious, spread across many files, or costly to get wrong; anything
-   an agent finds with one grep or `ls` is `omit`. Record the reason in the pack's `Disclosure Reason`.
+   discovery-cost bar: `inline` what is non-obvious, spread across many files, or costly to get wrong. The essential
+   commands, entry points, and boundaries the templates require always stay inline. `omit` a fact only when an agent
+   finds it with one grep or `ls` and is unlikely to get it wrong without the instruction. Record the reason in the
+   pack's `Disclosure Reason`.
 6. Record line count and quality assessment (pass / minor issues / significant issues / major issues).
 
 **Provider-specific validation:**
@@ -277,9 +279,9 @@ documentation inventory from Step 2 to:
 - **Copilot instructions** (`.github/instructions/*.instructions.md`): Validate `applyTo` frontmatter.
 - **Placement rules (any provider):** Frontmatter shape is not enough. For any rule about where files go (test
   layout, spec directories) and for a rule's own `globs`/`paths`/`applyTo`, verify the location against the runner or
-  tool config that consumes those files: Playwright `projects`/`testDir`/`testMatch`, Jest `roots`/`testMatch`, Vitest
-  `include`, `tsconfig.json` `include`. Cite the config key as evidence. On a mismatch, record a finding and drop the
-  placement rule rather than recommending it.
+  tool config that consumes those files, as described in `references/file-type-discovery-checklist.md` ("Verify
+  Placement Rules Against Tool Config"). Cite the config key as evidence. On a mismatch, record a finding and drop
+  the placement rule rather than recommending it.
 - **Copilot shim** (`.github/copilot-instructions.md`): Verify it's a minimal pointer, not content duplication.
 
 **Instruction load budget assessment:**

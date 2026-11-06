@@ -6,7 +6,7 @@
 - Path: `{path}`
 - Provider / Format: {provider / format}
 - Disclosure: {inline / link_only / omit / ask_user}
-- Disclosure Reason: {why this disclosure: non-obvious, spread across many files, or costly to get wrong -> inline; findable with one grep or `ls` -> omit}
+- Disclosure Reason: {why this disclosure: non-obvious, spread across many files, or costly to get wrong, or an essential command, entry point, or boundary the template requires -> inline; findable with one grep or `ls` and unlikely to be gotten wrong without the instruction -> omit}
 
 ## Evidence
 
