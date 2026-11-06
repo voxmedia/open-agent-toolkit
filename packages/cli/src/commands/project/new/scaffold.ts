@@ -351,7 +351,7 @@ export function applyTemplateReplacements(
     OAT_PROGRESS: stateContent.progress.join('\n'),
     OAT_NEXT_MILESTONE: stateContent.nextMilestone,
   };
-  return replaceOatPlaceholders(template, oatReplacements)
+  const rendered = replaceOatPlaceholders(template, oatReplacements)
     .replaceAll('{Project Name}', projectName)
     .replaceAll('YYYY-MM-DD', today)
     .replaceAll(
@@ -364,6 +364,83 @@ export function applyTemplateReplacements(
     )
     .replaceAll(/\n?oat_template:\s*true\s*\n/gi, '\n')
     .replaceAll(/\n?oat_template_name:\s*[^\n]*\n/gi, '\n');
+  return omitUnusedArtifactReviewRows(rendered, mode);
+}
+
+/**
+ * Modes whose scaffold seeds no `spec` or `design` review placeholder. A
+ * review of those artifacts, such as a quick lightweight-design review,
+ * appends its own row under review-provide Step 9.
+ */
+const MODES_WITHOUT_SPEC_DESIGN_REVIEWS: ReadonlySet<WorkflowMode> = new Set([
+  'quick',
+  'import',
+  'lite',
+]);
+const UNUSED_ARTIFACT_REVIEW_SCOPES = new Set(['spec', 'design']);
+
+/**
+ * Drop the unclaimed `spec` and `design` artifact placeholder rows from a
+ * rendered `## Reviews` table in quick, import and lite, which seed no
+ * placeholder for those artifacts, so no scaffold carries a review row that
+ * may never resolve; a review of either artifact in those modes appends its
+ * own row. Spec-driven keeps them. Only a placeholder is dropped: Type
+ * `artifact`, Status `pending` and Artifact `-`; a bound row, any other scope
+ * and every other line survive. Content with no recognizable Reviews table is
+ * returned unchanged, so this applies to every rendered template.
+ */
+export function omitUnusedArtifactReviewRows(
+  content: string,
+  mode: WorkflowMode,
+): string {
+  if (!MODES_WITHOUT_SPEC_DESIGN_REVIEWS.has(mode)) {
+    return content;
+  }
+  const heading = /^## Reviews[ \t]*$/m.exec(content);
+  if (!heading) {
+    return content;
+  }
+  const sectionStart = heading.index + heading[0].length;
+  const rest = content.slice(sectionStart);
+  const nextHeading = rest.search(/^##(?!#)[ \t]+\S/m);
+  const sectionEnd =
+    nextHeading === -1 ? content.length : sectionStart + nextHeading;
+  const lines = content.slice(sectionStart, sectionEnd).split('\n');
+
+  const splitCells = (line: string): string[] =>
+    line
+      .trim()
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim().toLowerCase());
+  const headerLine = lines.find((line) => line.trim().startsWith('|'));
+  if (!headerLine) {
+    return content;
+  }
+  const header = splitCells(headerLine);
+  const scope = header.indexOf('scope');
+  const type = header.indexOf('type');
+  const status = header.indexOf('status');
+  const artifact = header.indexOf('artifact');
+  if ([scope, type, status, artifact].includes(-1)) {
+    return content;
+  }
+
+  const kept = lines.filter((line) => {
+    if (!line.trim().startsWith('|') || line === headerLine) {
+      return true;
+    }
+    const cells = splitCells(line);
+    const isUnusedPlaceholder =
+      UNUSED_ARTIFACT_REVIEW_SCOPES.has(cells[scope] ?? '') &&
+      cells[type] === 'artifact' &&
+      cells[status] === 'pending' &&
+      cells[artifact] === '-';
+    return !isUnusedPlaceholder;
+  });
+  return (
+    content.slice(0, sectionStart) + kept.join('\n') + content.slice(sectionEnd)
+  );
 }
 
 async function defaultRefreshDashboard(repoRoot: string): Promise<void> {

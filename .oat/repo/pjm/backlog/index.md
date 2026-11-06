@@ -480,6 +480,7 @@
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                            | open   | high     | feature | L        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                 | open   | high     | task    | M        |
 | BL-261025-close-docs-skill-workflow-gaps | Close docs skill workflow gaps found in the consumer rollout                                         | open   | high     | feature | L        |
+| BL-261103-codex-gate-target-loses        | Codex gate target loses the branch-local route receipt                                               | open   | high     | task    | S        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                              | open   | high     | feature | M        |
 | BL-261002-enforce-remote-planning        | Enforce remote planning approval caps, storage scope, and binding locations                          | open   | high     | task    | M        |
 | BL-261002-gitignore-project-review       | Gitignore project review artifacts instead of committing them                                        | open   | high     | task    | M        |

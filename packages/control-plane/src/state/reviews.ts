@@ -19,7 +19,27 @@ interface ReviewColumnIndices {
   gateTarget?: number;
 }
 
-export function parseReviewTable(planContent: string): ReviewStatus[] {
+export interface ParseReviewTableOptions {
+  /**
+   * Also return each row's raw Reviewed Head cell as `reviewedHeadCell`, for
+   * a reader that must compare it exactly: `reviewedHead` alone cannot tell a
+   * `-` placeholder from an abbreviated or malformed head, because both are
+   * omitted. Off by default, so other readers' rows are unchanged.
+   */
+  rawReviewedHead?: boolean;
+  /**
+   * Also return each row's 1-based position among the table's data lines (the
+   * lines after the header and separator) as `dataLine`, counted before rows
+   * with an empty required cell are dropped, so the number is stable whatever
+   * a row contains. Off by default, so other readers' rows are unchanged.
+   */
+  dataLine?: boolean;
+}
+
+export function parseReviewTable(
+  planContent: string,
+  options: ParseReviewTableOptions = {},
+): ReviewStatus[] {
   const reviewsSection = extractReviewsSection(planContent);
   if (reviewsSection == null) {
     return [];
@@ -37,7 +57,10 @@ export function parseReviewTable(planContent: string): ReviewStatus[] {
 
   return rows
     .slice(2)
-    .map((line) => parseTableRow(line, columns))
+    .map((line, index) => {
+      const row = parseTableRow(line, columns, options);
+      return row && options.dataLine ? { ...row, dataLine: index + 1 } : row;
+    })
     .filter((row): row is ReviewStatus => row !== null);
 }
 
@@ -100,6 +123,7 @@ function extractReviewsSection(planContent: string): string | null {
 function parseTableRow(
   line: string,
   columns: ReviewColumnIndices,
+  options: ParseReviewTableOptions,
 ): ReviewStatus | null {
   const cells = parseTableCells(line);
   const scope = cells[columns.scope];
@@ -128,6 +152,9 @@ function parseTableRow(
     date,
     artifact,
     ...(reviewedHead ? { reviewedHead } : {}),
+    ...(options.rawReviewedHead && columns.reviewedHead != null
+      ? { reviewedHeadCell: reviewedHeadCell ?? '' }
+      : {}),
     ...(invocation ? { invocation } : {}),
     ...(gateTarget ? { gateTarget } : {}),
   };

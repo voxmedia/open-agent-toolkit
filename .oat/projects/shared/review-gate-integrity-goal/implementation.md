@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-02
+oat_last_updated: 2026-11-03
 oat_current_task_id: null
 oat_generated: false
 oat_template: false
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: review-gate-integrity-goal
 
 **Started:** 2026-11-01
-**Last Updated:** 2026-11-02
+**Last Updated:** 2026-11-03
 
 > This journal records execution of the Project Brief in `plan.md` and is used
 > to resume interrupted sessions.
@@ -39,17 +39,22 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p10   | completed | 1     | 1/1      |
-| p11   | completed | 1     | 1/1      |
-| p07   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 4/7 phases accepted
+**Total:** 10/12 phases accepted
 
 ---
 
@@ -892,7 +897,1050 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 
 ## Phase p07: Exact-event consistency, provenance and pending reviews
 
-**Status:** pending
+**Status:** completed
+**Base:** eba04d813a4d342523a6235009019a0c31f880a3
+**Head:** 34ebd3ef9c02d90a6797ece84d69b6ab7b54d201
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+
+The heading keeps its original m01-era name because the journal is append-only; the phase's current name and scope are the brief's `## Phase p07: One row per review event and stranded-row detection`. Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning, because the phase spans templates, several lifecycle skills, the router and `oat review latest` readers, and a new read-only check whose supersession semantics are subtle). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the template, skill and CLI-reader slices share the supersession definition, the contract tests, the skill version pins and the lockstep release bump, so they fail the independence test. Rung 4 does not apply, because the phase adds a new CLI surface. At phase start `origin/main` had moved (#401 docs, #402 backlog triage and the 0.3.45 release bump); it was merged into the branch at the base (`eba04d813`, clean merge), so this phase's lockstep bump must exceed 0.3.45.
+
+Phase verification at the head: pass. The code state is `defaf818a`; only journal commits follow it. `origin/main` has not moved since the base merge (`c42fd95bd`, checked before the version gate). The DoD gate list ran in CI order and each command exited 0:
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: 5 of 11 cached, then forced, 0 of 11 cached.
+3. `pnpm test`: 5 of 12 cached; `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached, CLI 440 files and 9451 tests, control-plane 14 files.
+4. `pnpm build`: 5 of 5 cached (replayed); the forced `test:evidence` executed all five package builds uncached.
+5. `pnpm run check:skill-bumps`: 9 changed skills against `origin/main`.
+6. `pnpm release:check-versions`, after `git fetch origin main`.
+7. `pnpm release:validate`: 5 packages at 0.3.46.
+8. `pnpm build:docs`: 6 of 6 cached, then forced, 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0: `pnpm lint`, `pnpm format`, `pnpm test:skills`, `pnpm oat:validate-skills` (68 skills) and the isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`, 1185/1185). `oat project journal check --project <this project> --at review --scope p07` is `ok` with no reasons or warnings on both the installed 0.3.45 CLI and the branch build. On this project and on `delivery-evidence-and-knowledge-preflight` the installed and branch `oat project status` recommend the same skill (`oat-project-implement`, `oat-project-complete`), so the check and the reader change block no existing flow there. Exit evidence and controls are in p07-t01 and p07-t02 (scaffold rows, pinned Sol row, duplicate key, clean control, class, `-`, pending and descendant controls, corroboration unavailable, the stranded-row negative control) and p07-t03 (one-writer and reader pins, the one-`design`-row case). No post-commit recovery was needed (0 of 10 used).
+
+Fix verification (rgi-p07-fix-20261103-01, p07-t05..t07; Head advanced from `6598a6e76` under the late-fix rule): each exited 0: isolated-HOME contract suites (28 files, 1186 tests), isolated-HOME CLI `test` (441 files, 9454 tests), `pnpm check` (0 cached), `pnpm type-check` and `pnpm lint` (package tasks uncached; only build dependencies replayed), `pnpm format`, `pnpm run check:skill-bumps` (9 skills), the docs-index regeneration diff, and `oat project journal check --at review --scope p07`.
+
+### Task p07-t01: One placeholder row per review event in the scaffolds
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t01
+**Intent:** Add a `plan` artifact placeholder row to `.oat/templates/plan.md` and `.oat/templates/plan-lite.md`, and stop quick, import and lite scaffolds from carrying the unused `spec`/`design` rows while spec-driven keeps them.
+**Files:** `.oat/templates/plan.md`, `.oat/templates/plan-lite.md`, `packages/cli/assets/templates/plan-lite.md` (tracked bundled copy), `packages/cli/src/commands/project/new/scaffold.ts`, `packages/cli/src/commands/project/new/scaffold.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new src/commands/project/promote`
+**Commit:** cd5750fa5de1f4000f0f975d047c7f95f57a2da9
+**Proof:** 167/167 (5 files) exit 0 after `pnpm build` refreshed the bundled assets (the first run failed 24 tests on a stale `assets 0.3.44` bundle from before the base merge, not on this change); CLI type-check and lint exit 0.
+
+**Known Unknown settled (how quick, import and lite drop the `spec`/`design` rows).** A post-copy edit, not a separate template. `applyTemplateReplacements` (`scaffold.ts`) ends with `omitUnusedArtifactReviewRows`, which in quick, import and lite drops only an unclaimed placeholder (Scope `spec` or `design`, Type `artifact`, Status `pending`, Artifact `-`) from the `## Reviews` section; a bound row, any other scope and anything outside the section survive. Spec-driven, brief and goal are untouched. Quick and import share `plan.md` with spec-driven, so one template serves all three; `plan-lite.md` is lite-only, so its rows are removed at the source. The filter also covers `oat project promote` (lite → quick renders `plan.md` through the same function).
+
+Scaffold placeholders now (real templates): spec-driven `spec`, `design`, `plan`; quick, import, lite, brief and goal `plan` only. Negative control: with the filter call neutralized (`return rendered;`), the quick and import cases of the new scaffold test fail (2 of 6), and pass again once restored.
+
+### Task p07-t02: Read-side supersession in the review readers and a read-only ledger check
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t02
+**Intent:** Treat a `received` row as superseded (same Scope, Type and Invocation class, a later recorded round, same or descendant head; `-` rows stay live) in the router's actionability and `oat review latest`, with descendancy precomputed by the CLI caller so the control-plane stays git-free; add `oat review check`, a read-only advisory check that reports superseded rows and duplicate event keys with structured diagnostics.
+**Files:** `packages/control-plane/src/state/review-supersession.ts` (+ test), `packages/control-plane/src/{project,types,index}.ts`, `packages/control-plane/src/recommender/router.ts`, `packages/control-plane/src/project.test.ts`, `packages/cli/src/commands/review/{check,head-ancestry,latest,index}.ts`, `packages/cli/src/commands/review/__tests__/{check,latest}.test.ts`, `packages/cli/src/commands/review/__tests__/fixtures/review-gate-integrity-plan-c1a653b97.md`, `packages/cli/src/commands/project/{status,list}.ts`, `packages/cli/src/commands/help-snapshots.test.ts`, `.oxfmtrc.jsonc` (fixture formatter exclusion).
+**Proof command:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/project/status.test.ts src/commands/project/list.test.ts src/commands/help-snapshots.test.ts`
+**Commit:** 9de8d8e235537c3019bb5b15f6976679350cd86a
+**Proof:** control-plane 312/312 (14 files) exit 0; CLI review, status, list and help-snapshot suites 147/147 exit 0; CLI and control-plane type-check and lint exit 0. The pinned fixture is byte-identical to `git show c1a653b97:<plan.md>` below its 9-line provenance comment, and `.oxfmtrc.jsonc` excludes the fixtures directory so the commit hook cannot reformat it.
+
+**Known Unknown settled (where the check lives, which readers apply supersession, how the pure router evaluates descendancy).**
+
+- **Where.** Its own command, `oat review check [--project <path>] [--json]`, beside `oat review latest`. It is read-only and advisory: exit 0 whenever it ran, whatever it reports; exit 1 only when no project resolves or `plan.md` cannot be read. Diagnostics: `superseded_received_row` (the row, its superseding row, `same-head` or `descendant-head`) and `duplicate_event_key` (Scope + Type + Artifact filename claimed by more than one row). Each row report carries `corroboration` (`artifact`, `reviewedHead` match/mismatch/unavailable, `gateRunId`), which never feeds the key. No lifecycle point runs it in m02; readers apply supersession themselves, so routing never depends on running it.
+- **Which readers.** One pure rule in `packages/control-plane/src/state/review-supersession.ts`, used by: the project readers (`getProjectState`, `listProjects`), which mark `superseded: true` on a row, a read-side field, never a ledger cell; the router's review-receive actionability (`hasActionableReviewArtifacts`) and `toActiveReviewArtifacts`; `oat review latest` (actionability, so review-receive Step 1's `--actionable-project` resolver skips a superseded event); and `oat review check`. Newest-row readers (final review, integrated review, pr-final Step 2, cleanup) need no change: a superseded row always has a later row of the same Scope and Type.
+- **Descendancy in the pure router.** The control-plane never runs git. `reviewSupersessionHeadPairs` lists the distinct-head pairs a ledger needs; the caller answers them. `getProjectState` and `listProjects` take an optional `resolveReviewHeadAncestry`; the CLI supplies one backed by `git merge-base --is-ancestor` (`packages/cli/src/commands/review/head-ancestry.ts`) for `oat project status`, `oat project list`, `oat review latest` and `oat review check`, so every CLI reader answers the same pairs the same way. With no resolver, or a pair git cannot answer, a distinct head counts as not descending and the older row stays live, which is today's behavior (`oat review check` reports the unresolved count under `headAncestry`).
+
+**Probes (branch build, `node packages/cli/dist/index.js`).**
+
+1. This project: `review check --project .oat/projects/shared/review-gate-integrity-goal --json` → exit 0, 24 rows, one diagnostic: `superseded_received_row`, row 16 (final, received, gate `codex-6-sol-xhigh`, `reviews/archived/final-review-2026-11-02T213631Z.md`) superseded by row 17 (final, passed, gate `claude-opus-5-5-high`) at the same head; corroboration `present`/`match`, `gateRunId` `48f5553c-f8fa-4f17-be77-7461789a416c`. No duplicate key: the three artifact-less `plan` rows and the `p07` placeholder form none.
+2. Archived project `delivery-evidence-and-knowledge-preflight` → exit 0, 15 rows, one diagnostic: row 9 (p04, received, auto, `a03cecd1`) superseded by row 10 (p04, passed, auto, `90311a40`) at a descendant head, resolved by git (1 pair asked, 0 unresolved). Archived `backlog-wave-5` → one `duplicate_event_key` (rows 6 and 12, `plan/artifact/implementation.md`), a genuine pre-existing double row. The other six archived and shared projects report nothing. No run changed a file (`git status` clean after each).
+3. Negative control, scratch repository `/tmp/p07-probe-4jAo` (two commits H1 → H2; a quick project at `pr_open`; `final | received | reviews/final-review-r1.md | H1 | gate | codex-6-sol-xhigh` with the artifact active in `reviews/`, followed by `final | passed | reviews/archived/final-review-r2.md | H2 | gate | claude-opus-5-5-high`). Before the change (released `oat` 0.3.45): `project status` recommends `oat-project-review-receive` ("Unprocessed review feedback exists") and `review latest --actionable-project` returns the stranded artifact, `actionable: true`. After (branch build): `project status` recommends `oat-project-complete`, `review latest --actionable-project` returns `path: null`, and `review check` reports `superseded_received_row`, `descendant-head`, row 2 by row 3, corroboration `present`/`match`. Valid control: with the later row's Invocation changed to `manual`, the branch build still recommends `oat-project-review-receive`, `review latest` returns `actionable: true` and `review check` reports nothing.
+
+**Fixed-outcome controls in the tests.** Pinned Sol row superseded and nothing else reported (`check.test.ts`); duplicate-key fixture (#305 shape, synthetic, labelled so) reported; clean ledger reports nothing; a gate row followed only by a manual round, a `-` Invocation row, and a row followed only by a `pending` placeholder all stay live; a descendant head supersedes through real git ancestry and an ancestor head never does; an unresolvable pair stays live; absent artifact files report `unavailable`, never `mismatch`; the check never edits `plan.md`. The repeated-blocking-gate fixture (`review-supersession.test.ts`, six ledger states after each disposition) leaves only the newest row as a live `received` event; the single-round path is unchanged; the same ledger read without supersession strands round 1.
+
+**Guard can fail.** With `markSupersededReviews` neutralized (never sets `superseded`), 10 of 312 control-plane tests fail: five repeated-gate steps, the regression case, two resolver cases and both stranded-row project-reader cases (which then route to `oat-project-review-receive`). Restored byte-identical; 312/312.
+
+### Task p07-t03: One-writer rule and reader supersession in the lifecycle skills
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t03
+**Intent:** State the event key, the one-writer rule and read-side supersession once in `oat-project-plan-writing`'s Review Table Preservation Rules; have review-provide Step 9 state the one-writer rule from the writer's side and review-receive Step 1 state that a superseded row is never received; have the planning skills (quick-start, plan, import-plan, brief, goal, lite) record a structured plan review on its own event row; pin all of it and show a quick lightweight-design review still records exactly one `design` row.
+**Files:** the nine `SKILL.md` files of `oat-project-{plan-writing,review-provide,review-receive,quick-start,plan,import-plan,brief,goal,lite}` (one patch bump each), `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins), `.oat/sync/manifest.json`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 67d8296fc4d9a2bedb53e1f73827748ed1f2d98e
+**Proof:** isolated-HOME contract suites 1185/1185 exit 0 (the autonomy inventory and named-skill execution contracts included); `pnpm run check:skill-bumps` exit 0 after the commit (9 changed skills, each one patch bump against `origin/main`: plan-writing 1.2.40, review-provide 1.5.18, review-receive 1.6.16, quick-start 2.3.25, plan 1.4.21, import-plan 1.4.23, brief 1.0.8, goal 1.0.4, lite 1.1.14); `oat sync --scope project` (branch build) refreshed only `.oat/sync/manifest.json` (`oatVersion` 0.3.43 → 0.3.45); provider views are links, so no view content changed.
+
+**Shape.** The rules live once, in plan-writing's Review Table Preservation Rules, beside the existing event-identity bullets: the key from ledger cells alone with `-` artifacts never keying; one writer per event (update the row a gate child or Step 9 wrote; a structured review claims the unbound placeholder and appends only when none remains); and supersession, read-side only, with the class, head and `-` limits and no edit, promotion or deletion. Plan-writing step 6 adds one bullet: the structured `plan` review records on its own row, never on the gate's. The other skills add one sentence each beside today's text. Two pins forced wording choices: p11's pin of step 6's original sentence kept the addition in its own bullet, and the named-skill execution contract classified a backticked `oat-project-review-receive` in Step 9 as a call site, so Step 9 names the skills in plain words.
+
+**Lightweight design.** On the real `plan.md` template rendered for quick (no `design` placeholder), Step 9's documented placeholder-or-append rule records exactly one `design` row; spec-driven claims its placeholder and also ends with exactly one (`review-event-row-contracts.test.ts`, which pins the Step 9 sentence it simulates).
+
+**Pins can fail** (each neutralized in the working tree, the new test file run, then restored byte-identical; 1 of 15 failed each time): plan-writing "never appends a second row" changed to "may append a second row"; plan-writing "Readers that select a review event ignore a superseded row" changed to "still select a superseded row"; review-receive "never receives it or edits its row" changed to "receives it".
+
+### Task p07-t04: Docs, instructions and the lockstep 0.3.46 release bump
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-impl-20261103-01
+**Handle:** direct:rgi-p07-impl-20261103-01:p07-t04
+**Intent:** Document `oat review check`, the `oat review latest` supersession rule, the one-row-per-event scaffolds and the control-plane `ProjectReadOptions` API; record the control-plane "never run git" convention in its `AGENTS.md`; bump the five lockstep public packages from 0.3.45 to 0.3.46 once for m02; confirm the generated docs index is unchanged.
+**Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/control-plane/README.md`, `packages/control-plane/AGENTS.md`, `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`.
+**Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+**Commit:** defaf818a50b7001e3999d083bef6f2c6a7b92b5
+**Proof:** `docs:check` exit 0 (0 errors; the new lines add only the page-wide `provenance` warning class the existing `--project .oat/projects/shared/example` examples already carry); `docs:lint` exit 0 (91 files, 0 errors); docs-index regeneration exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0 (no reader page added or renamed). The first commit attempt was refused by commitlint (header over 100 characters) with nothing committed; the retry used the same identity and a shorter header.
+
+Instruction files: `packages/control-plane/AGENTS.md` gains one convention (never run git in the package; take commit ancestry from the caller, as Reviews supersession does). No other instruction fact changed: no command, directory, version pin or workflow named in an `AGENTS.md` moved. Lockstep packages `cli`, `control-plane`, `docs-config`, `docs-theme` and `docs-transforms` and `packages/cli/assets/public-package-versions.json` are at 0.3.46 (`origin/main` is at 0.3.45).
+
+### Task p07-t05: (review) Pin the git-ancestry wiring of status, list and latest
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-fix-20261103-01
+**Commit:** 07a00505b17d9baff5d58ecaacded3e02b4a1009
+**Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (M1)
+
+Intent: no test exercises the default-dependency bindings that give `oat project status` (`status.ts:35`, `getProjectStateWithReviewAncestry`), `oat project list` (`list.ts:81`, `listProjectsWithReviewAncestry`) and `oat review latest` (`latest.ts:472`, `createGitReviewHeadAncestryResolver`) the git ancestry resolver, so a revert to the plain reader would leave the suites green while those readers diverge from `oat review check` on descendant-head rows. Add a real-git test (reuse the `createRepoWithHistory` helper from `check.test.ts`) that runs the three commands through their default dependencies over a `received` gate row at a parent commit and a later gate row at a child commit: status and list do not recommend `oat-project-review-receive`, and latest with `--actionable-project` returns `path: null`. Prove it can fail by swapping one binding back to the plain reader.
+Files: `packages/cli/src/commands/project/` and `packages/cli/src/commands/review/` test files (test-only).
+Proof: the new test plus `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/review`
+
+**Result:** `packages/cli/src/commands/review/__tests__/ancestry-wiring.test.ts` builds a real two-commit repo and runs `oat project status --project-path`, `oat project list --scope shared` and `oat review latest --actionable-project` with only `buildCommandContext` (and list's `processEnv`) overridden. Control: with the later gate row at an unresolvable head all three still surface the `received` round; at the child head status and list stop recommending `oat-project-review-receive` and latest returns `path: null`.
+**Proof result:** the proof command passed (66 files, 1837 tests). Can-fail: swapping each binding back to the plain reader in turn (`status.ts` `getProjectState`, `list.ts` `listProjects`, `latest.ts` resolver set to `undefined`) failed the descendant-head test on that command's assertion; each source file was restored and the test passes again.
+
+### Task p07-t06: (review) Correct the stated reason quick, import and lite seed no spec/design rows
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-fix-20261103-01
+**Commit:** ca7f4183a759b6053b96069253b4b6e2684b4aae
+**Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L1)
+
+Intent: four places say those modes "never review" `spec`/`design`, but quick's lightweight design can be reviewed (the p07 Exit evidence requires its single `design` row). Reword to: those modes seed no `spec`/`design` placeholder; a review of those artifacts, such as a quick lightweight-design review, appends its own row under review-provide Step 9. Behavior is unchanged.
+Files: `.oat/templates/plan.md` (and its tracked CLI asset copy if one exists), `.agents/skills/oat-project-plan/SKILL.md` (already bumped to 1.4.21 on this branch; sync provider views), `packages/cli/src/commands/project/new/scaffold.ts` comments, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new` and `pnpm --filter oat-docs docs:lint`
+
+**Result:** the four named places now say those modes seed no `spec`/`design` placeholder and that a review of either artifact, such as a quick lightweight-design review, appends its own row under review-provide Step 9. The same overstatement in the `scaffold.test.ts` case comment was corrected as mechanical propagation. `.oat/templates/plan.md` has no tracked CLI asset copy (`packages/cli/assets/templates/plan.md` is gitignored). `oat sync --scope project` changed only `.oat/sync/manifest.json` (`oatVersion` 0.3.46), which is included. Behavior is unchanged.
+**Proof result:** the isolated-HOME proof suites passed (30 files, 1298 tests) after a CLI build refreshed the bundled assets; `docs:lint` exit 0 (91 files, 0 errors).
+
+### Task p07-t07: (review) Filter superseded rows in review-receive's CLI-unavailable fallback
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p07-fix-20261103-01
+**Commit:** d7549e7db1d95379940abe282be7eb67743e9cda
+**Source review:** reviews/archived/p07-review-2026-11-03T184519Z.md (L2)
+
+Intent: the `ls -t "$PROJECT_PATH/reviews/"*.md` fallback in review-receive Step 1 can still pick a superseded `received` round. Add one clause: before processing a fallback candidate, read its `## Reviews` row and skip it when a later row of the same Scope, Type and Invocation class records a review at the same head; a descendant-head case cannot be decided without the CLI, so it stays live.
+Files: `.agents/skills/oat-project-review-receive/SKILL.md` (already bumped to 1.6.16 on this branch; sync provider views).
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+
+**Result:** review-receive Step 1 now follows the `ls -t` fallback with one paragraph: read the candidate's `## Reviews` row and skip it when a later row of the same Scope, Type and Invocation class records a review at the same Reviewed Head; a later row at a different head leaves it live, since only the CLI resolves descent; a row whose Invocation or Reviewed Head is `-` is never skipped. `review-event-row-contracts.test.ts` pins the paragraph. `oat sync --scope project` reported no changes (provider views are links).
+**Proof result:** the isolated-HOME proof suites passed (28 files, 1186 tests). Can-fail: with the skill restored to its pre-fix text the new pin failed (1 of 16 in that file); the fix text was restored.
+
+### Review Received: p07
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p07-review-2026-11-03T184519Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 3
+
+- M1 (Medium): no test pins the git-ancestry default-dependency wiring of `oat project status`, `oat project list` and `oat review latest`, so a revert would pass the suites while those readers diverge from `oat review check` on descendant-head rows → fix task p07-t05; agreed, the Known Unknown required the readers not to diverge and only a one-off probe shows it today.
+- L1 (Low): four places say quick, import and lite "never review" `spec`/`design`, which overstates quick (its lightweight design is reviewable) → fix task p07-t06; the wording could mislead an agent, the behavior is right.
+- L2 (Low): review-receive's CLI-unavailable `ls -t` fallback can still select a superseded `received` artifact → fix task p07-t07; one clause closes it for the same-head case.
+- L3 (Low, bookkeeping): the journal header `**Last Updated:**` read 2026-11-02 → fixed in this receive's bookkeeping commit (set to 2026-11-03).
+
+Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev-20261103-01`, reconnaissance not attempted). It reproduced the pinned Sol row, the archived descendant-head case, the released-CLI negative control and a six-case agreement probe across status, list, latest and check.
+
+**Outcome:** fixes queued: p07-t05, p07-t06, p07-t07
+
+**Outcome:** fixes queued: p07-t05, p07-t06, p07-t07; all three completed (head `34ebd3ef9`) and passed re-review (reviews/archived/p07-review-2026-11-03T190319Z.md)
+
+### Review Received: p07 (re-review of the fix records)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p07-review-2026-11-03T190319Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: the fix range `6598a6e76..34ebd3ef9` (p07-t05, p07-t06, p07-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p07-rev-20261103-02`, reconnaissance not attempted). It confirmed M1, L1 and L2 resolved; for M1 it removed each of the three ancestry bindings in turn and the new test failed on that command's assertion each time, then restored a clean tree.
+
+- L1 (Low): the review-receive fallback clause added by p07-t07 (`.agents/skills/oat-project-review-receive/SKILL.md:163`) does not say the candidate's own row must be `received`, nor name the two Invocation classes → approved deferral to p12 (see Deferred Findings); p12 rewrites this same receive artifact-selection step to consume the gate-named event, and fixing it now would open a third review cycle for a one-clause clarification. The fallback candidates are top-level artifacts, whose rows are not yet `passed` or `fixes_completed`, so the omission does not misroute a processed event.
+
+**Outcome:** passed (deferred items only)
+
+## Phase p12: Exact-event consumption for gate handoffs
+
+**Status:** completed
+**Base:** f3a9603f74ee358b80eeb6572085b46975801302
+**Head:** 8016d7d98f8799010d40ff497aa526b180508dbf
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+
+Head advanced from `d99e598dd` to the p12-t05 record commit after the reviewedHead amendment; at that code state `pnpm check`, `pnpm type-check`, `pnpm test:evidence` (0 of 12 cached), the isolated-HOME contract suites, `pnpm lint`, `pnpm format`, `check:skill-bumps`, the forced docs build with the index diff and the p12 journal check all exit 0.
+
+Head advanced from `c92b11dfb` to the p12-t07 record commit after the review fixes p12-t06 and p12-t07 (code state `e67f07e0d`); the contract suites, `pnpm test:evidence` (0 of 12 cached), `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`, `check:skill-bumps`, `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate`, the forced docs build with the index diff and the p12 journal check all exit 0.
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a gate result field captured at dispatch, a new fail-closed event resolver, receive Step 1 and eleven adopting gate paths whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the gate, resolver and skill slices share the event contract, the contract tests and the skill version pins, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and changes gate output. p12 was made concrete at `f3a9603f7` before this start (project log). `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `7b22eb1f0`; only journal commits follow it. `origin/main` is still `c42fd95bd`, checked by `git fetch origin main` before the version gate. The DoD gate list ran in CI order and each command exited 0:
+
+Correction (p12 review L4, 2026-11-03): the code state at the head is `a7c50a2df` (p12-t05), not `7b22eb1f0`; the numbered DoD list below is the pre-t05 run, and the post-t05 rerun is recorded in the head-advance note. `pnpm release:check-versions` and `pnpm release:validate` were not re-run after t05, which changed no version.
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: 5 of 11 cached.
+3. `pnpm test`: 5 of 12 cached. `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached; CLI 442 files and 9495 tests, control-plane 14 files and 312 tests.
+4. `pnpm build`: 5 of 5 cached (replayed). The forced `test:evidence` built all five packages uncached.
+5. `pnpm run check:skill-bumps`: 12 changed skills and agent roles against `origin/main`.
+6. `pnpm release:check-versions`.
+7. `pnpm release:validate`: 5 packages at 0.3.46.
+8. `pnpm build:docs`: 6 of 6 cached, then forced (`turbo run build --filter=oat-docs... --force`), 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0:
+
+- `pnpm lint` and `pnpm format` (5 of 10 cached each);
+- `pnpm test:skills` (721 tests);
+- `pnpm oat:validate-skills` (68 skills);
+- the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1202/1202).
+
+`oat project journal check --project <this project> --at review --scope p12` is `ok`, with no reasons or warnings, on both the installed 0.3.45 CLI and the branch build. No post-commit recovery was needed (0 of 10 used).
+
+Exit evidence:
+
+- p12-t01: `reviewedHead` and its corroboration, with can-fail proofs.
+- p12-t02: resolver probes, the released-CLI negative control and can-fail proofs.
+- p12-t03: the receive Step 1 event input, the ten hand-offs, the Gate Target rule, the L1 fold and pin can-fail proofs.
+- p12-t04: docs.
+
+**Real branch-build gate run.** The command was:
+
+```bash
+node packages/cli/dist/index.js --json gate review \
+  --project .oat/projects/shared/tiny --target claude-opus-5-5-high \
+  --review-type code --review-scope base_sha=df83ac6… --exit-nonzero-on high …
+```
+
+It ran in the scratch repository `/tmp/p12-gate-G1dj`: a lite project `tiny` and one two-line code commit, `a9878b266`. The gate exited 0. The result:
+
+- `status: ok`, `receiveEligible: true`, counts 0/0/1/1;
+- run `05d374ed-9e46-4851-b311-0be2ef9d08a7`;
+- `reviewedHead: a9878b266bf6836885b9b721ccf30d2b64a811f2`, the HEAD at dispatch;
+- `corroboration.reviewedHead`: `match` against the artifact's `oat_review_head_sha`;
+- run and invocation corroboration `matched`.
+
+The installed review-provide then wrote a `received` row with Invocation `gate` and Gate Target `claude-opus-5-5-high`, followed by two bookkeeping commits. The branch `oat review resolve`, given that real result's `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`, exited 0 with every check `match`.
+
+**Single-round manual and auto flows** keep their selection. Receive Step 1 without an event is unchanged, and the existing `oat review latest` (15), check (12) and ancestry-wiring (2) tests pass, as do the p07 supersession pins.
+
+**Observation.** In that scratch repository `oat project new --mode lite` rendered no `plan` placeholder row. The scratch repository has no `.oat/templates/`, so template resolution used the maintainer's user-tier `~/.oat/templates/plan-lite.md`, which is from 0.3.45. This is the known repository → user → bundle resolution order (root `AGENTS.md`), not a p12 change.
+
+### Task p12-t01: Capture the reviewed head at gate dispatch
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t01
+**Intent:** `oat gate review` reads `HEAD` immediately before it dispatches the reviewer child and adds it to the ok and blocked results as `reviewedHead`. The corroboration then compares it with the artifact's full-SHA `oat_review_head_sha`, reporting `match`, `ancestor`, `mismatch` or `unavailable`. The comparison is reporting only and never changes receive eligibility. Failure envelopes are unchanged.
+**Files:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+**Commit:** 5b92ce575c765650ce45df0db2c15136b3681787
+**Proof:** gate suites 468/468 (9 files) exit 0; CLI `type-check` and `lint` exit 0.
+
+**Why `ancestor`.** The Intent names `match`, `mismatch` and `unavailable`. In practice the dispatch HEAD is usually a bookkeeping commit after the reviewed range head. This project's m01 exit-gate reruns show it. The 23:31Z run was dispatched at `38c6d11f9`, and its artifact and row record `395b90677`. The 23:56Z run was dispatched at `a6ea16e0c` and records `5599af21d`. In both cases the recorded head is an ancestor of the dispatch HEAD. With only three values, every anchored brief or goal review would report `mismatch`, so a fourth value, `ancestor`, separates the normal anchored case. A git failure on the ancestry question reads as `mismatch`, because the dispatch HEAD then does not provably contain the artifact's head. The corroboration is reporting only and leaves `receiveEligible` unchanged.
+
+**Tests pinned (`index.test.ts`, describe `reviewedHead`, on a real git root).**
+
+| Case                               | Result                            | `reviewedHead`                          | Corroboration |
+| ---------------------------------- | --------------------------------- | --------------------------------------- | ------------- |
+| Artifact head is the dispatch HEAD | ok                                | the dispatch HEAD                       | `match`       |
+| Artifact head is the parent commit | blocked                           | the dispatch HEAD                       | `ancestor`    |
+| Reviewer commits after dispatch    | ok                                | the pre-dispatch head, not the new HEAD | `match`       |
+| Unrelated full SHA                 | ok, still `receiveEligible: true` | the dispatch HEAD                       | `mismatch`    |
+| Artifact has no head               | ok                                | the dispatch HEAD                       | `unavailable` |
+| Root is not a git repository       | ok                                | `null`                                  | `unavailable` |
+
+The post-selection recovery test now also pins `reviewedHead` and a `match` head corroboration.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and the named test run, then the file was restored byte-identical (`cmp`):
+
+1. Capture moved after `executeTarget`: the "captures HEAD before dispatch" test fails (1 failed).
+2. The ancestor branch forced to `mismatch`: the ancestor test fails (1 failed).
+3. The recovery path's head set to `null`: the recovery test fails (1 failed).
+
+**Correction (p12-t05, after the Intent amendment at `9775df23a`).** The rationale above is superseded in part. `reviewedHead` is no longer the dispatch HEAD: it is the artifact's full-SHA `oat_review_head_sha` when present, otherwise the HEAD captured at dispatch. `ancestor` stays a corroboration value (the artifact head against the dispatch HEAD, reporting only), but it no longer justifies anything at receive: the resolver compares the row head with the event head by exact equality. The table's `reviewedHead` column now reads the artifact head for the parent, unrelated-SHA and non-git rows (the non-git test now gives its artifact a head); see p12-t05.
+
+### Task p12-t02: `oat review resolve`, a fail-closed resolver for a gate event
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t02
+**Intent:** Add a read-only `oat review resolve` that takes a gate event (`--artifact`, `--scope`, `--type`, `--run-id`, `--reviewed-head`). It binds the `## Reviews` row by the p07 event key and validates the row's Scope, Type, Artifact and Reviewed Head and the artifact's `oat_gate_run_id` against the event. Any mismatch, a missing or duplicate row, or a missing artifact gets a structured diagnostic and a nonzero exit. A `-` Reviewed Head cell reads `unavailable` and is accepted.
+**Files:** `packages/cli/src/commands/review/{resolve,check,index}.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `packages/cli/src/commands/help-snapshots.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/help-snapshots.test.ts`
+**Commit:** c432cc04164c4eb3924783e0608916709fe4dbef
+**Proof:** 116/116 (5 files) exit 0, including 18 new resolver tests and the `review --help` and `review resolve --help` snapshots; CLI `type-check` and `lint` exit 0.
+
+**Shape.** `oat review resolve [--project <path>] --artifact <path> --scope <scope> --type <code|artifact> --run-id <id> --reviewed-head <sha> [--json]`. Each flag carries the same-named field of the gate result (`artifactPath`, `scope`, `reviewType`, `runId`, `reviewedHead`).
+
+- It binds the row by the p07 key. `check.ts` now exports `reviewEventKey` and `buildReviewLedgerRowReport`, so the key and the row report are one definition for `check` and `resolve`.
+- When no row binds and exactly one row claims the artifact filename under another Scope or Type, that row is reported with the disagreement instead of a bare `row_not_bound`.
+- It reads the Reviewed Head relation with `resolveGitReviewHeadAncestry` from `head-ancestry.ts`. The row's head may equal the event's head (`match`) or be an ancestor of it (`ancestor`, the anchored case; see p12-t01). A `-` cell reads `unavailable` and is accepted. A head that is neither is `reviewed_head_mismatch`, and a pair git cannot answer is `reviewed_head_unresolved`; both are refused.
+- Output: `status` is `ok` or `refused`, with `path` (the artifact receive consumes), the bound `row`, per-field `checks` and `diagnostics`. Each diagnostic has `code`, `severity: error`, `source` (`event`, `artifact`, `ledger` or `row`), `expected`, `actual` and `message`. Exit 0 only for `ok`. A refusal, an incomplete event or an abbreviated head exits 1.
+- Codes: `artifact_not_active`, `artifact_not_found`, `ledger_unavailable`, `row_not_bound`, `duplicate_event_key`, `scope_mismatch`, `type_mismatch`, `artifact_mismatch`, `reviewed_head_mismatch`, `reviewed_head_unresolved`, `gate_run_id_missing` and `gate_run_id_mismatch`. It never writes.
+
+**Branch-build probes** (`node packages/cli/dist/index.js`, build at `c432cc041`). The scratch repository `/tmp/p12-probe-kjNb` has two commits, P1 → P2, and a quick project `demo`.
+
+Its ledger has two `received` p01 rows:
+
+- the gate row: artifact `reviews/p01-review-2026-11-03T120000Z.md`, Reviewed Head P1, `gate`, `claude-opus-5-5-high`, `oat_gate_run_id` `0f6c7a10-…`;
+- a newer manual row: artifact `…T130000Z.md`, Reviewed Head P2, `manual`, `oat_generated_at` one hour later, no run ID.
+
+The gate event names the 12:00 artifact with dispatch head P2.
+
+| #   | Probe                                   | Exit | Result                                                                         |
+| --- | --------------------------------------- | ---- | ------------------------------------------------------------------------------ |
+| 1   | The gate event                          | 0    | `ok`; checks scope, type, artifact and run ID `match`; reviewedHead `ancestor` |
+| 2   | Wrong artifact (the newer manual one)   | 1    | `refused`, `gate_run_id_missing`                                               |
+| 3   | Wrong head (an unrelated root commit)   | 1    | `refused`, `reviewed_head_mismatch` from the row                               |
+| 4   | Wrong scope (`p02`)                     | 1    | `refused`, `scope_mismatch` from the artifact and the row                      |
+| 5   | Wrong type (`artifact`)                 | 1    | `refused`, `type_mismatch` from the artifact and the row                       |
+| 6   | Wrong run ID                            | 1    | `refused`, `gate_run_id_mismatch`                                              |
+| 7   | No bound row (gate row removed)         | 1    | `refused`, `row_not_bound`                                                     |
+| 8   | The gate row's Reviewed Head set to `-` | 0    | `ok`; reviewedHead `unavailable`                                               |
+| 9   | Ledger restored, gate event again       | 0    | `ok`                                                                           |
+| 10  | Abbreviated `--reviewed-head abc1234`   | 1    | `status: error`                                                                |
+
+**Negative control.**
+
+- **Pre-change state.** On the same scratch project, the released `oat` 0.3.45 runs `oat --json review latest --project … --actionable-project`. It returns the newer manual artifact (`…T130000Z.md`, `actionable: true`), not the gate-named one. The released CLI has no `review resolve` (`error: unknown command 'resolve'`).
+- **Post-change state.** The branch resolver, given the gate event, consumes the named artifact (probe 1, exit 0) and refuses the other (probe 2, exit 1).
+- **Valid control.** Probe 9 passes after the ledger is restored.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and `resolve.test.ts` run, then the file was restored byte-identical (`cmp`):
+
+1. Ancestry forced true: the wrong-head and unresolved-head tests fail (2 failed).
+2. The run-ID comparison disabled: the wrong-run-ID test and the CLI exit-1 test fail (2 failed).
+3. The row and artifact scope comparisons disabled: the wrong-scope test fails (1 failed).
+
+**Correction (p12-t05, after the Intent amendment at `9775df23a`).** The ancestor acceptance described above is removed. The resolver now requires the row's Reviewed Head to equal the event's `reviewedHead` exactly; an ancestor is `reviewed_head_mismatch`, and `reviewed_head_unresolved` and the git dependency are gone. Probe 1's event used dispatch head P2 and passed as `ancestor`; under the amendment that event is refused, and the matching event carries P1. The re-run probes and can-fail proofs are in p12-t05.
+
+### Task p12-t03: Receive consumes the gate-named event on every adopting path
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t03
+**Intent:** Several prose changes, plus pins that fail when the text is reverted:
+
+- review-receive Step 1 accepts a gate event and consumes it through `oat review resolve`, failing closed. Without an event, Step 1 is unchanged.
+- Every path that runs `oat gate review` and then receive passes the event to receive.
+- review-provide Step 9 and receive's ledger rule record `Invocation: gate` and the exact `oat_gate_target` for every gate review, artifact reviews included.
+- The p07 re-review L1 deferral is folded into receive's CLI-unavailable fallback clause.
+
+**Files:** `.agents/skills/oat-project-{review-receive,review-provide,goal,brief,lite,discover,design,quick-start,plan,import-plan}/SKILL.md`, `.agents/skills/oat-project-implement/SKILL.md` (version only), `.agents/skills/oat-project-implement/references/{completion-and-closeout,phase-execution}.md`, `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins).
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 19fb8190dc3fd3e03c9ef0c559d9ee8ab90b68e0
+**Proof:** isolated-HOME contract suites 1202/1202 (28 files) exit 0, the autonomy inventory included. Also exit 0:
+
+- `pnpm oat:validate-skills` (68 skills);
+- `pnpm exec oxlint .agents/skills`;
+- `oxfmt --check` on the changed files;
+- `pnpm run check:skill-bumps` after the commit (12 changed skills and agent roles against `origin/main`).
+
+`oat sync --scope project` (branch build) reported no changes, because the provider views are links.
+
+**Known Unknown settled (how receive is given the gate's event, and which paths adopt it).**
+
+- **Input.** Explicit fields, not the gate JSON. The caller passes the ok or blocked result's `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead` as receive's Step 1 gate event. Receive runs `oat --json review resolve --project "$PROJECT_PATH" --artifact … --scope … --type … --run-id … --reviewed-head …`.
+- **On exit 0,** `REVIEW_PATH` is the result's `path`, and the `oat review latest` selection and its `ls -t` fallback do not run.
+- **On a nonzero exit,** receive stops and reports each diagnostic. It receives, archives and edits nothing, and never falls back.
+- **A missing `reviewedHead`.** A gate result from a CLI older than 0.3.46 has no full-SHA `reviewedHead`. It cannot name its event and stops the same way.
+- **Adopting paths.** The ten paths that run `oat gate review` and then receive:
+  - implement Step 14 (`completion-and-closeout.md`), which on resume reads the event from the persisted `launch_result_receipt` and which the goal milestone exit gate delegates to;
+  - the optional phase gate (`phase-execution.md`);
+  - the Gate Execution sections of goal, brief, lite, discover, design, quick-start, plan and import-plan.
+
+  Each carries one identical sentence, pinned once per path.
+
+- **Manual and auto reviews** pass no event, and Step 1 is unchanged for them (its existing `--actionable-project` pin and the p07 supersession pins still pass).
+
+**Gate Target rule.** review-provide Step 9 and receive's Step 6 ledger rule now write `Invocation: gate` and the exact `oat_gate_target` for every gate review, artifact reviews included. An artifact review keeps `Reviewed Head` at `-`. Receive also reads `oat_review_invocation` and `oat_gate_target` from an artifact review's frontmatter. The code-only phrasings are pinned absent.
+
+**p07 re-review L1 folded.** Receive's CLI-unavailable fallback clause now skips a candidate only when its own row is `received`. It names the two Invocation classes, gate (`gate`, any Gate Target) and lifecycle (`manual` or `auto`), and says rows of different classes never supersede each other. The p07 pin was updated to the new text.
+
+**Version bumps.** Three skills had no bump on this branch: `oat-project-discover` 2.2.12 → 2.2.13, `oat-project-design` 2.3.9 → 2.3.10, and `oat-project-implement` 2.3.26 → 2.3.27. Their `skills.test.ts` pins were updated mechanically (eight `implement` pins, two `design` pins and one `discover` pin). The other eight skills changed here already carry their single PR-scoped p07 bump.
+
+**Autonomy inventory.** The new lines avoid the scan's trigger words. No line the scan already maps was edited, so the inventory needed no coverage entries and passes unchanged.
+
+**Pins can fail.** Each change was made in the working tree and `review-event-row-contracts.test.ts` run, then the file was restored byte-identical (`cmp`). Each failed 1 of 32:
+
+1. The hand-off sentence removed from `phase-execution.md`.
+2. Receive's "never fall back to" changed to "may fall back to".
+3. review-provide's Gate Target line reverted to "for gate code reviews".
+4. The L1 `received` clause removed from the fallback.
+
+### Task p12-t04: Document `reviewedHead`, `oat review resolve` and the gate-event hand-off
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t04
+**Intent:** Document the gate result's `reviewedHead` and its head corroboration, the `oat review resolve` command, receive's gate-event consumption, and the Gate Target rule for artifact-gate rows. Confirm the generated docs index is unchanged.
+**Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+**Commit:** 7b22eb1f001e34a45d918c367712baf6018a2a44
+**Proof:** every part of the proof command exited 0.
+
+- `docs:check`: 0 errors. The new lines add two `provenance` warnings, on the reviews page's new `.oat/projects/shared/example` resolve example. That class already appears on the page's existing `oat review latest` examples. The page-length warnings predate this change.
+- `docs:lint`: 91 files, 0 errors.
+- Docs-index regeneration and `git diff --exit-code -- apps/oat-docs/index.md`: no reader page was added or renamed.
+
+**Documentation and instructions.**
+
+- The CLI reference gains an `oat review resolve` entry, and its `oat gate review` entry now names `reviewedHead`, `corroboration.reviewedHead` and the gate-event hand-off.
+- Workflow Gates describes the same fields and the hand-off.
+- The Reviews page gains "Consuming a gate's review event" and the Gate Target rule for artifact-gate rows.
+
+`packages/cli/README.md` and the root `README.md` list no review subcommands, so they need no change. No `AGENTS.md` fact changed: no command, directory, version pin, workflow or footgun named in an instruction file moved. The lockstep packages stay at 0.3.46 (bumped once for m02 by p07).
+
+### Task p12-t05: The event's reviewedHead is the artifact head; the resolver uses exact equality
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-impl-20261103-01
+**Handle:** direct:rgi-p12-impl-20261103-01:p12-t05
+**Intent:** Apply the p12 Intent amendment at `9775df23a`. The gate result's `reviewedHead` is the artifact's validated full-SHA `oat_review_head_sha` when present, otherwise the HEAD captured at dispatch. `corroboration.reviewedHead` keeps `match`, `ancestor`, `mismatch` and `unavailable`, now comparing the artifact head with the dispatch HEAD, reporting only. `oat review resolve` compares the row's Reviewed Head with the event's `reviewedHead` by exact equality: a `-` row head is `unavailable` and accepted, and any other difference, an ancestor included, is `reviewed_head_mismatch` with exit 1. Ancestor acceptance and `reviewed_head_unresolved` are removed. Tests, docs and the code comments follow.
+**Files:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/src/commands/review/resolve.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate src/commands/review src/commands/help-snapshots.test.ts`
+**Commit:** a7c50a2dfe7587bc9a9a8678d68a462a5fc0d258
+**Proof:** 585/585 (14 files) exit 0; CLI `type-check` and `lint`, `docs:check` and `docs:lint` exit 0.
+
+**Changes.** The gate's `eventReviewedHead` returns the artifact head, else the dispatch head, on the normal and the post-selection recovery paths. The resolver's head check is `-` → `unavailable`, equal → `match`, anything else → `reviewed_head_mismatch`; its `git` option and `head-ancestry` import are removed. The gate tests now pin `reviewedHead` as the anchored artifact head (`parent`, corroboration `ancestor`), the unrelated head (`mismatch`), the non-git root's artifact head (`unavailable`), and the dispatch-head fallback when the artifact has none. The resolver tests add an anchored event whose head is the row head (accepted), and refuse an event the row head is only an ancestor of, a row head that descends from the event head, and an unknown head. No skill prose described ancestor acceptance, so no skill changed and no version bump is needed.
+
+**Branch-build probes** (`node packages/cli/dist/index.js`, rebuilt uncached at `a7c50a2df`; the p12-t02 scratch repository and ledger):
+
+| #   | Probe                                   | Exit | Result                                                     |
+| --- | --------------------------------------- | ---- | ---------------------------------------------------------- |
+| 1   | Matching event, head P1                 | 0    | `ok`, every check `match`                                  |
+| 2   | Ancestor-head event, head P2            | 1    | `refused`, `reviewed_head_mismatch` from the row           |
+| 3   | Wrong artifact (the newer manual one)   | 1    | `refused`, `gate_run_id_missing`, `reviewed_head_mismatch` |
+| 4   | Wrong head (an unrelated root commit)   | 1    | `refused`, `reviewed_head_mismatch`                        |
+| 5   | Wrong scope (`p02`)                     | 1    | `refused`, `scope_mismatch` from the artifact and the row  |
+| 6   | Wrong type (`artifact`)                 | 1    | `refused`, `type_mismatch` from the artifact and the row   |
+| 7   | Wrong run ID                            | 1    | `refused`, `gate_run_id_mismatch`                          |
+| 8   | No bound row                            | 1    | `refused`, `row_not_bound`                                 |
+| 9   | Row head `-`, event head P2             | 0    | `ok`, reviewedHead `unavailable`                           |
+| 10  | Ledger restored (`cmp`), matching event | 0    | `ok`                                                       |
+| 11  | Abbreviated `--reviewed-head abc1234`   | 1    | `status: error`                                            |
+
+**Negative control.** Pre-change: the released 0.3.45 `oat --json review latest --project … --actionable-project` still returns the newer manual artifact (`…T130000Z.md`, `actionable: true`), and 0.3.45 has no `review resolve`. Post-change: the resolver consumes the gate-named artifact (probe 1) and refuses the other (probe 3) and the ancestor-head event (probe 2). Valid control: probe 10.
+
+**Real gate fields.** The real branch-build gate result from p12 (run `05d374ed-…`) has `reviewedHead` `a9878b266…`, equal to its artifact's `oat_review_head_sha` and its row's Reviewed Head (corroboration `match`). Passed through the rebuilt resolver, it exits 0 with every check `match` and no diagnostics.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and its suite run, then the file was restored byte-identical (`cmp`):
+
+1. The resolver's exact-equality test replaced with `true`: `resolve.test.ts` fails 3 of 19 (the ancestor, descendant and unknown-head refusals).
+2. `eventReviewedHead` reverted to the dispatch head: `gate/index.test.ts` fails 3 of 284 (the anchored, unrelated-head and non-git cases).
+
+### Task p12-t06: (review) The resolver refuses a superseded or already-processed row
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-fix-20261103-01
+**Handle:** direct:rgi-p12-fix-20261103-01:p12-t06
+**Commit:** 4e644183055ab537467788fcf5de44b4c090ff6f
+**Source review:** reviews/archived/p12-review-2026-11-03T200007Z.md (M1)
+
+Intent: `oat review resolve` binds the row but never checks supersession or status, so it accepted a superseded `received` row (one `oat review check` reports and `oat review latest` skips) and a `passed` row. Outcome 4 says readers ignore a superseded row. Run p07's supersession evaluation (exported from `check.ts`, with the same git ancestry helper `check` uses for the descendant-head clause) for the bound row and refuse with a structured diagnostic naming the superseding row (e.g. `row_superseded`); refuse a bound row whose status is not `received` (review-provide Step 9 writes `received`; a processed row means the event was already consumed), e.g. `row_not_received`. Add resolver tests and a branch-build probe (superseded, passed, valid control); update the CLI reference code list and receive Step 1's bullet.
+Files: `packages/cli/src/commands/review/{resolve,check}.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `.agents/skills/oat-project-review-receive/SKILL.md` (already bumped on this branch).
+Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review` plus the isolated-HOME contract suites.
+
+**Proof:** review suites plus help snapshots 119/119 exit 0; isolated-HOME contract suites 1202/1202 exit 0; CLI `type-check` and `lint`, `oxlint .agents/skills`, `oat:validate-skills`, `docs:lint` and `oxfmt --check` on the changed files exit 0. `oat sync --scope project` (branch build): no changes required.
+
+**Changes.** `check.ts` exports `evaluateReviewSupersession(git, repoRoot, rows)`, p07's evaluation (`reviewSupersessionHeadPairs`, `resolveGitReviewHeadAncestry`, `findSupersededReviews`), and `describeReviewLedgerRow`; `oat review check` now calls the same function, so the two commands share one rule. After binding a row, `oat review resolve` refuses a Status other than `received` (`row_not_received`, expected `received`) and, for a `received` row, a p07 supersession (`row_superseded`, expected `current`, actual `row N`, with the superseding row's report as `supersededBy`). `checks` gains `rowStatus` and `supersession` (`current`, `superseded`, `unavailable`). The resolver takes a `git` option and command dependency. A head pair git cannot answer counts as not descending, as in every other p07 reader. The CLI reference lists both codes and the new checks; receive's superseded-row bullet says the resolver applies the same rule on the gate-event path. The existing "different artifact path" test now uses a `received` row, so it keeps a single cause.
+
+**Branch-build probes** (rebuilt CLI, the p12-t02 scratch repository; event: the gate artifact `…T120000Z.md`, head P1, run `0f6c7a10-…`):
+
+| Probe                                                    | Exit | Result                                                                                                          |
+| -------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------- |
+| Valid control: gate row at P1, later manual row at P2    | 0    | `ok`, `rowStatus: match`, `supersession: current` (lifecycle rows never supersede gate rows)                    |
+| Superseded: a later `received` gate row at descendant P2 | 1    | `refused`, `row_superseded` naming row 3 (`…T140000Z.md`); `oat review check` reports row 1 superseded by row 3 |
+| Processed: the gate row's Status set to `passed`         | 1    | `refused`, `row_not_received`, `supersession: unavailable`                                                      |
+| Ledger restored (`cmp`), same event                      | 0    | `ok`                                                                                                            |
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and `resolve.test.ts` run, then restored byte-identical (`cmp`):
+
+1. The supersession lookup never matching the bound row: the superseded-row test fails (1 of 21).
+2. The `received` status check disabled: the processed-row test fails (1 of 21).
+
+### Task p12-t07: (review) Artifact scope and type absent from frontmatter
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p12-fix-20261103-01
+**Handle:** direct:rgi-p12-fix-20261103-01:p12-t07
+**Commit:** e67f07e0d81a26ed1d5f5cdf76721ead9cca64f8
+**Source review:** reviews/archived/p12-review-2026-11-03T200007Z.md (L1)
+
+Intent: the resolver skips the artifact's `oat_review_scope`/`oat_review_type` comparison when the field is absent, while the CLI reference says both are validated (the run ID fails closed when absent). Refuse an absent field with `scope_missing`/`type_missing`, mirroring `gate_run_id_missing`, or, if a real gate artifact can lack them, report them unavailable and document it; pick the option consistent with what gate artifacts actually carry and say which in the record.
+Files: `packages/cli/src/commands/review/resolve.ts`, its test, `apps/oat-docs/docs/reference/cli-reference.md`.
+Proof: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+
+**Proof:** review suites plus help snapshots 120/120 exit 0; CLI `type-check`, `lint` and `docs:lint` exit 0.
+
+**Which case applies: refuse.** Real gate artifacts carry both fields. The reviewer's artifact frontmatter contract writes `oat_review_scope` and `oat_review_type` (`packages/cli/assets/agents/oat-reviewer.md`, the frontmatter block), and every gate review artifact found on this machine (9 under a `reviews/` directory carrying `oat_gate_run_id`, in this checkout, the main checkout and the p12 real-gate scratch repository) has both. So an absent field is refused like an absent run ID: `scope_missing` and `type_missing` (source `artifact`, expected the event value, actual `null`), and `checks.scope` or `checks.type` reads `mismatch`. The CLI reference now says all three artifact fields fail closed when absent and lists both codes.
+
+**Branch-build probe** (rebuilt CLI, the p12-t02 scratch repository, the matching P1 event): with both fields removed from the gate artifact, exit 1, `refused`, `scope_missing` and `type_missing`; with the artifact restored (`cmp`), exit 0, `ok`.
+
+**Can-fail proof.** Both absent-field guards disabled in the working tree: the new test fails (1 of 22); the file was restored byte-identical (`cmp`).
+
+### Review Received: p12
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p12-review-2026-11-03T200007Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 4
+
+- M1 (Medium): `oat review resolve` accepts a superseded `received` row and a `passed` row, contradicting Outcome 4 and receive Step 1 → fix task p12-t06; agreed, a stale persisted or retried event is realistic.
+- L1 (Low): artifact scope and type are validated only when present in frontmatter, contrary to the CLI reference → fix task p12-t07.
+- L2 (Low): the optional phase gate and the eight planning gates pass the gate event only in-session, so an interruption between gate and receive leaves receive with newest-artifact selection (Step 14 persists it) → approved deferral (see Deferred Findings); persisting those gate results is a new robustness requirement outside p12's adopting-path Intent (Feature Planning Triage), and p07 supersession still protects that path.
+- L3 (Low): the mid-phase amendment `9775df23a` of p12's Intent and Exit evidence records no operator acknowledgement → accepted; the root made p12 concrete at `f3a9603f7` under the brief's authority to make provisional phases concrete and corrected that concrete text before any review, tightening the guarantee to exact equality, within Outcome 4. The amendment and its reason were reported to the operator in the run report on 2026-11-03; any operator objection reopens it.
+- L4 (Low, bookkeeping): the phase paragraph's stale code-state sentence → corrected by an appended line in this receive's bookkeeping commit.
+
+Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p12-rev-20261103-01`, reconnaissance not attempted); reproduced the negative control and proved two guards can fail.
+
+**Outcome:** fixes queued: p12-t06, p12-t07
+
+**Outcome:** fixes queued: p12-t06, p12-t07; both completed (head `8016d7d98`) and passed re-review (reviews/archived/p12-review-2026-11-03T201925Z.md)
+
+### Review Received: p12 (re-review of the fix records)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p12-review-2026-11-03T201925Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: the fix range `c92b11dfb..8016d7d98` (p12-t06, p12-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p12-rev-20261103-02`, reconnaissance not attempted). It confirmed M1 and L1 resolved: `oat review resolve` and `oat review check` share `evaluateReviewSupersession`; the round-1 probe (run-1 event, run-2 at a descendant head) now refuses with `row_superseded` naming row 2 and exits 1, and nine further supersession cases follow the p07 rule. It neutralized each new guard in turn, saw exactly its test fail, and restored a clean tree. `row_not_received` cannot block a legitimate resumed receive, because a partial Step 6 write was already refused by `artifact_mismatch` or `artifact_not_active`. The unpinned receive Step 1 sentence is explanatory; the operative stop-on-refusal rule is pinned at `review-event-row-contracts.test.ts:224-227`.
+
+**Outcome:** passed
+
+## Phase p13: Pending required reviews before a pull request
+
+**Status:** completed
+**Base:** 579379cf27b6e3ceddc9a7c731200c6c53b2d82d
+**Head:** 2375b77bd1b1326b5feec60ae7258f3bbeb7556a
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+
+Head advanced from `2f1dae7a0` to the p13-t07 record commit after the review fixes p13-t05, p13-t06 and p13-t07 (code state `890aa4879`); each exited 0: `pnpm check` (0 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 444 files and 9520 tests, control-plane 314 tests), `pnpm build` (5 of 5 cached), `check:skill-bumps` (16 skills and agent roles), `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate` (0.3.46), the forced docs build (0 of 6 cached) with the index diff, `pnpm lint`, `pnpm format`, the isolated-HOME contract suites (34 files, 1272 tests), `pnpm test:smoke`, `pnpm test:skills`, `oat:validate-skills` and `oat project journal check --at review --scope p13`. Branch-build probe `review pending --scope project` on this project: `missing` empty with p08 and p09 provisional and rowless; a scratch copy with p08 made concrete lists `p08 code` under `missing`.
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`; task class hard-reasoning: a new read-only review command whose required-row rules must agree with pr-final Step 2, delivery check and Outcome 4, plus a new autonomy row and two PR skills whose prose must stay consistent). Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply: the command, the skill prose and the autonomy row share the required-row and waiver contract and the contract tests, so they fail the independence test. Rung 4 does not apply, because the phase adds a CLI surface and an autonomy boundary. p13 was made concrete at `579379cf2` before this start (project log). `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `6a5a4b806` (p13-t04); only journal commits follow it. `origin/main` is still `c42fd95bd`, checked by `git fetch origin main` before the version gate. The DoD gate list ran in CI order and each command exited 0:
+
+1. `pnpm check`: 0 of 11 cached.
+2. `pnpm type-check`: 5 of 11 cached.
+3. `pnpm test`: 5 of 12 cached. `pnpm test:evidence`: forced, isolated HOME, 0 of 12 cached; CLI 444 files and 9516 tests, control-plane 14 files and 314 tests.
+4. `pnpm build`: 5 of 5 cached (replayed). The forced `test:evidence` built all five packages uncached.
+5. `pnpm run check:skill-bumps`: 16 changed skills and agent roles against `origin/main`.
+6. `pnpm release:check-versions`.
+7. `pnpm release:validate`: 5 packages at 0.3.46.
+8. `pnpm build:docs`: 6 of 6 cached, then forced (`turbo run build --filter=oat-docs... --force`), 0 of 6 cached.
+9. The docs-index regeneration plus `git diff --exit-code -- apps/oat-docs/index.md`.
+
+Also exited 0: `pnpm lint` and `pnpm format` (5 of 10 cached each); `pnpm test:skills` (721 tests); `pnpm oat:validate-skills` (68 skills); the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205). `oat project journal check --project <this project> --at review --scope p13` is `ok`, with no reasons or warnings, on both the installed 0.3.45 CLI and the branch build. One post-commit recovery (rgi-p13-rec-01, 1 of 10 used). Exit evidence: p13-t01 (unit fixtures, guard-can-fail N1 to N5, branch-build probes 1 to 5 with the released-CLI negative control, the waived row still `pending`, closeout-check and delivery check unchanged, journal check accepting a waiver line), p13-t02 (delivery check pinned unchanged by a waiver), p13-t03 (listing and stop pins with C1 to C4, `PRFINAL-06` in the autonomy inventory, version bumps) and p13-t04 (docs).
+
+### Task p13-t01: `oat review pending`, a read-only listing of pending required reviews
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t01
+**Intent:** Add `oat review pending --project <path> --scope <pNN[,pNN…]|mNN|project> [--json]`. It reads the latest `## Reviews` row per Scope + Type; required keys are the `code` rows of the scope's phases that exist in the plan (`mNN` through the Milestones table, `project` for every phase) plus `plan | artifact` for a `project` scope unless the plan-review skip line is recorded. It reports `pending` and `waived` separately, applies a `**Review waived:**` line under the journal's `## Reviews and Gates` only to a required key whose latest row is still `pending`, always exits 0 on a readable project, and decides nothing. Export the plan-review skip-line predicate from the control-plane instead of copying its regex.
+**Files:** `packages/control-plane/src/state/quick-plan-readiness.ts` (+ test), `packages/control-plane/src/index.ts`, `packages/control-plane/README.md`, `packages/cli/src/commands/review/{pending,index}.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `packages/cli/src/commands/help-snapshots.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/help-snapshots.test.ts`
+**Commit:** f831a2fa964503d42c20effd210049ef1d6733bb
+**Proof:** control-plane 314/314 exit 0; CLI review suites plus help snapshots 133/133 exit 0 (12 new `pending.test.ts` cases, the `review pending --help` snapshot and the updated `review --help` listing); CLI and control-plane `type-check` and `lint` exit 0. `packages/control-plane/README.md` documents the new `hasPlanReviewSkipLine` export.
+
+**Known Unknown settled (which pending rows count as required, and where a waiver is recorded).** As the concrete Intent states: the journal slot. The row stays `pending`; a waiver is one line under `## Reviews and Gates` in `implementation.md`. The plan-review skip rule is shared, not copied: the control-plane exports `hasPlanReviewSkipLine(planContent)`, the same record-line rule inside `## Reviews` the quick readiness guard applies (the guard now calls it).
+
+**Choices settled within the Intent.**
+
+- **Command.** `oat review pending [--project <path>] --scope <project|mNN|pNN[,pNN…]> [--json]`. `--project` defaults to the active project, like `check`, `resolve` and `latest`.
+- **Scope.** `project` takes every `## Phase` heading the plan declares (task-mode `## Phase N:` and brief/goal `## Phase pNN:` alike, through the shared journal record reader) and adds `plan | artifact` unless the skip line is recorded. One `mNN` (normalized, so `m2` is `m02`) expands through `readMilestoneMembership` and `milestonePhaseScope`; an unknown milestone or an invalid Milestones table exits 1 with the membership errors. A comma list takes each normalized `pNN`/`p-revN`; any other token (`final`, `m01` inside a list) exits 1. Requested phases the plan does not declare are reported under `scope.ignored` and never listed. Extracted goal phases are not filtered: no PR skill passes a `project` scope in goal mode (pr-final's goal path passes the terminal phases, pr-progress the milestone), and a stray row could still be waived.
+- **Required and latest.** The latest `## Reviews` row per Scope + Type, with phase scopes normalized (`p1` = `p01`). `required` lists every required key with its latest `status` and 1-based `row`, `null` when the key has no row; such a key is not pending (the Intent lists rows still `pending`), but it is visible.
+- **JSON.** `{ status: "ok", project, scope: { requested, kind: phases|milestone|project, phases, ignored, plan: required|skipped|not-in-scope }, required, pending, waived, waivers }`. `waived` entries carry `waiver: { line, waivedBy, date, reason }`. `waivers` lists every parsed waiver line with `applied` and `unapplied` (`not-required`, `review-recorded`, `no-row`, `missing-reason`, or `null`). Exit 0 on any readable project and scope; exit 1 only for a missing `--scope`, no project, an unreadable `plan.md` or an unresolvable scope.
+- **Waiver parsing.** A record line anywhere inside the journal's `## Reviews and Gates` section, `###` receipts included, so a line appended at the end of the slot counts; fenced or indented examples and lines in any other section do not. It matches the `**Review waived:**` label, optionally as a `-`/`*`/`+` list item, then the scope and type tokens (backticks tolerated). `**Waived by:**` and `**Date:**` read up to the next `·`; `**Reason:**` reads to the end of the line, so a reason may contain `·`. A waiver applies only to a required key whose latest row is `pending` and only with a non-empty reason (the acceptance criteria require "a waiver with a reason"); it is inert once the latest row records a review.
+
+**Branch-build probes** (`pnpm build` exit 0, then `node packages/cli/dist/index.js`).
+
+1. **This project, `--scope m02`:** exit 0; required p07 `passed` (row 23), p12 `passed` (row 25), p13 `pending` (row 26); pending `p13 code`; no waivers.
+2. **Negative control, scratch quick project `/tmp/p13-quick-rQA3`** (`p01 passed`, `p02 pending`, `final passed`, `plan passed`). Pre-change: the released `oat` 0.3.45 has no `review pending` (`error: unknown command 'pending'`, exit 1), and pr-final Step 2's ledger read selects only `| final | code | passed |`, so the pending `p02` row passes unlisted (the bad state is accepted). Post-change: the branch lists `pending [p02 code, row 2]`, exit 0. Valid control: with `p02` recorded `passed`, nothing is pending and the waiver reports `review-recorded`.
+3. **Waiver, same scratch project:** one `**Review waived:** p02 code · **Waived by:** tstang · **Date:** 2026-11-03 · **Reason:** …` line under `## Reviews and Gates`, committed. The branch lists `waived [p02 code, status pending]` and nothing pending; `plan.md` row 28 still reads `| p02 | code | pending | - | - | - | - | - |`; `project closeout-check` output before and after is byte-identical (exit 0, `not_required`).
+4. **Goal milestone, delivery and closeout unchanged:** a scratch script (`/tmp/p13-scripts/goal-waiver-probe.mts`, run with `tsx`) built the delivery suite's `goal-repo` received-milestone scenario, then appended a `## Reviews and Gates` waiver line and committed it (`b69ba4eb3`). Branch `project delivery check --subject m01`: before and after exit 0, `status: ok`, review fresh, exit carrier fresh, `deliverable: true`, JSON identical apart from `publishedHeads`. Branch `project closeout-check`: before and after identical (exit 1, `incomplete`, `goal_not_declared`).
+5. **Journal check accepts a waiver line:** in a scratch clone of this branch, a real `**Review waived:** p13 code · …` line appended under this project's `## Reviews and Gates` leaves `oat project journal check --at review --scope p13` at `ok` with no reasons or warnings on both the branch build and the released 0.3.45; `review pending --scope m02` then reports `p13 code` waived with its row still `pending`. No grammar change was needed.
+
+**Guard can fail** (each neutralized in the working tree, `pending.test.ts` run, then restored byte-identical with `cmp`; 1 of 12 failed each time): N1 the waiver applicability guard forced to `applied: true` (the unapplied-waiver test fails); N2 the `## Reviews and Gates` section filter removed (the placement test fails); N3 the skip line ignored (the never-listed test fails); N4 requested phases not intersected with the plan (the never-listed test fails); N5 the milestone scope replaced by every plan phase (the `mNN` test fails).
+
+### Task p13-t02: Pin delivery check unchanged by an appended review waiver
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t02
+**Intent:** Keep the exit evidence that a waiver line leaves `oat project delivery check` unchanged as an automated test, not only a one-off probe: on the `goal-repo` received-milestone scenario, appending a `**Review waived:**` line under `## Reviews and Gates` and committing it leaves the `m01` check `status: ok`, deliverable, with the same exit code and JSON apart from `publishedHeads`. Test-only.
+**Files:** `packages/cli/src/commands/project/delivery/check.test.ts`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery`
+**Commit:** 4e5d062fa38e4e50fe3a578085e0b57590e5349b
+**Proof:** delivery suites 126/126 (3 files) exit 0; CLI `lint` exit 0. The record was written after the commit rather than opened before it; the commit is the record's one implementation commit.
+
+**Test can fail.** With `judgeJournalChange` (`delivery/evidence.ts`) made to refuse any journal that contains `**Review waived:**`, the new test fails (1 failed); the file was restored byte-identical (`cmp`). The branch-build counterpart is p13-t01 probe 4.
+
+### Task p13-t03: pr-progress and pr-final list pending required reviews before a PR
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t03
+**Intent:** Before PR creation, `oat-project-pr-progress` (new Step 3.5; in goal mode before Step 5.5 item 4 writes `registering`) and `oat-project-pr-final` (new Step 2.5; in goal mode inside Step 1.5 before registration item 4) run `oat review pending` for the PR's scope. With pending rows and no waiver, an interactive run offers run, waive with a recorded reason, or stop; a non-interactive run stops. pr-final's stop is the new autonomy row `PRFINAL-06` with its prompt-site coverage keys; pr-progress states the same stop in prose. Pin the listing and stop sentences; bump pr-progress to 1.3.8 and pr-final to 1.6.17.
+**Files:** `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `.agents/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins), `.oat/sync/manifest.json` (if sync changes it).
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 43817937d42a0ffc6e5db20c9c01b46cd188ca19
+**Proof:** isolated-HOME contract suites 1205/1205 (29 files) exit 0, the autonomy inventory and the named-skill execution contract included; `pnpm oat:validate-skills` (68 skills), `pnpm exec oxlint .agents/skills` and `oxfmt --check` on the changed files exit 0. `oat sync --scope project` (branch build) reported no changes, because the provider views are links; `.oat/sync/manifest.json` is unchanged. `pnpm run check:skill-bumps` after the commit failed on two skills that vendor the autonomy contract; see Recovery Event rgi-p13-rec-01 below.
+
+**Shape.**
+
+- **pr-progress Step 3.5** (new, between Step 3 and Step 4) runs `oat --json review pending --project "$PROJECT_PATH" --scope "$PENDING_SCOPE"` before Step 6 creates a pull request and, in goal mode, before Step 5.5 item 4 writes `registering` (Step 5.5's intro says so too). `PENDING_SCOPE` is `pNN`, a contiguous run's phase ids as a comma list, the active milestone's `mNN`, or a registered delivery's frozen phase ids; a `range=`/`base_sha=` scope runs no listing. Interactive: run (route to review-provide `code <pNN>` then review-receive, and end the run), waive with a recorded reason, or stop. Non-interactive (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`): stop at the boundary, report each pending row, write no waiver, create, register or push nothing. pr-progress is not an autonomy-inventory root, so the stop is prose only.
+- **pr-final Step 2.5** (new, between Step 2 and Step 3) lists `--scope project` outside goal mode. Goal Step 1.5 replaces Steps 2–6, so item 3 gains a paragraph: before item 4 writes a terminal delivery's `registering` entry, run Step 2.5 with that delivery's terminal phase ids. `OAT_AUTONOMOUS=1` or `OAT_NON_INTERACTIVE=1` stops at `PRFINAL-06`: never waive, never proceed, record the blocker, and stop before the PR artifact, push, PR or `registering` entry. Otherwise the user chooses run, waive or stop.
+- **Waiver line** (both skills, identical): `**Review waived:** <scope> <type> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`, appended under `## Reviews and Gates` only on the user's explicit choice; the `## Reviews` row stays `pending`; the line is committed alone as bookkeeping (`oat project push` for a synced project), and the listing is re-run to confirm the row reads `waived`.
+- **Autonomy contract.** New row `PRFINAL-06` (Required reviews pending without a waiver; `boundary:unresolved-critical-findings`, like `PRFINAL-03`), and the one new prompt-scan site (`- Otherwise ask the user to choose one option for the pending rows:`) is mapped `db86a9d44b48 -> PRFINAL-06`. No mapped line was edited.
+- **Named-skill contract.** The run options and the `PRFINAL-06` resume target name review-provide and review-receive in backticks, so three `non-executing` `CALL_SITE_MATRIX` rows classify them, matching the existing Step 2 rows (terminal handoff or boundary resume target; the skill stops before either runs).
+- **Pins** (`pending-review-listing-contracts.test.ts`): each step's position (pr-progress Step 3.5 before Step 5.5; pr-final Step 2.5 before Step 3 and its goal paragraph between items 3 and 4), the listing command, the non-interactive and `PRFINAL-06` stop sentences, the interactive choice, the waiver template and "Leave the `## Reviews` row `pending`.", the `PRFINAL-06` contract row, and a cross-check that the documented waiver line, filled in, is applied by `listPendingReviews`. Step 2.5 avoids the words the existing Step 2 slice pins as absent (`archived`, `PRFINAL-05`).
+- **Versions.** pr-progress 1.3.7 → 1.3.8 and pr-final 1.6.16 → 1.6.17 (one bump each against `origin/main`); `skills.test.ts` pins updated (three).
+
+**Pins can fail** (each made in the working tree, the new test file run, then both skills restored byte-identical with `cmp`): C1 pr-progress "stop at this boundary" changed to "continue" (1 of 3 failed); C2 pr-final's "Never write a waiver and never proceed." removed (1 of 3); C3 pr-final's goal paragraph removed from Step 1.5 (1 of 3); C4 pr-final's waiver label changed to `**Waiver:**` (2 of 3: the pin and the parser cross-check).
+
+### Recovery Event rgi-p13-rec-01
+
+- Phase/task: p13 / p13-t03
+- Original request: rgi-p13-impl-20261103-01
+- Original commit: 43817937d42a0ffc6e5db20c9c01b46cd188ca19
+- Defect class: lint
+- Discovered by: pnpm run check:skill-bumps
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 0d17557c73d5a3bdcf2b3981f531af72b39bf901
+- Verification: focused `pnpm run check:skill-bumps` exit 0 (16 changed skills and agent roles against `origin/main`) before and after the commit; phase isolated-HOME contract suites 1205/1205 exit 0 before and after; `pnpm oat:validate-skills` exit 0.
+- Reason: `.agents/docs/autonomy-contract.md` (the new `PRFINAL-06` row and its coverage key) is vendored by symlink into seven skills. Five already carried their single m02 bump; `oat-project-document` (1.8.13) and `oat-project-autonomous` (1.0.24, through `references/gate-inventory.md`) did not, so the gate failed. The correction is mechanical, in-phase and behavior-free: one patch bump each (1.8.14, 1.0.25) and the two `skills.test.ts` document pins. Reservation committed at `fdfb2e97f` before editing; the ledger entry is `completed` in the recovery commit.
+
+### Task p13-t04: Document `oat review pending`, the waiver line and the pre-PR listing
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p13-impl-20261103-01
+**Handle:** direct:rgi-p13-impl-20261103-01:p13-t04
+**Intent:** Document the `oat review pending` command (CLI reference), the pending-review listing and the waiver line on the Reviews page, and the pre-PR listing and `PRFINAL-06` stop in the PR flow; confirm the generated docs index is unchanged and that no `AGENTS.md` fact changed.
+**Files:** `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`.
+**Proof command:** `pnpm --filter oat-docs docs:check && pnpm --filter oat-docs docs:lint && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+**Commit:** 6a5a4b806da49761b78dd1dc15b979b3982c0c6c
+**Proof:** every part of the proof command exited 0. `docs:check`: 0 errors; the new lines add three `provenance` warnings, on the Reviews page's new `--project .oat/projects/shared/example` examples, the class the page's existing `oat review latest` and `oat review resolve` examples already carry. `docs:lint`: 91 files, 0 errors. The docs-index regeneration and `git diff --exit-code -- apps/oat-docs/index.md`: no reader page was added or renamed.
+
+**Documentation and instructions.**
+
+- The CLI reference gains an `oat review pending` entry: scope forms, required rows, the waiver line and when it applies, the JSON shape, and the exit codes.
+- The Reviews page gains "Pending required reviews before a PR": the listing, the run/waive/stop choice, `PRFINAL-06`, the waiver line example, and why a waiver is never a review.
+- The PR Flow page states the pre-PR listing and links to that section.
+- `packages/control-plane/README.md` already documents `hasPlanReviewSkipLine` (p13-t01).
+
+`packages/cli/README.md` and the root `README.md` list no review subcommands, so they need no change. No `AGENTS.md` fact changed: no command, directory, version pin, workflow or footgun named in an instruction file moved (`git grep` over `*AGENTS.md` and `.agents/rules/` finds only the control-plane "never run git" convention, which still holds). The lockstep packages stay at 0.3.46.
+
+### Task p13-t05: (review) List required phases that have no Reviews row
+
+**Status:** completed
+**Commit:** 5809d88f5af73f6a15e492fd03780f06512c8b98
+**Executor:** phase-implementer:rgi-p13-fix-20261103-01
+**Handle:** direct:rgi-p13-fix-20261103-01:p13-t05
+**Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (M1)
+
+Intent: per the operator decision recorded in the p13 Intent (2026-11-03), `oat review pending` reports a required key whose phase is concrete (not `**Provisional:** yes`) but has no `## Reviews` row in a separate `missing` list, while a provisional phase with no row stays unlisted; a `**Review waived:**` line applies to a `missing` key (moving it to `waived`) instead of reporting `no-row`. pr-progress Step 3.5 and pr-final Step 2.5 (and the goal Step 1.5 paragraph) treat `missing` like `pending`: run, waive or stop, and a non-interactive run stops (`PRFINAL-06` for pr-final). Add unit tests, a guard-can-fail control and pins; update the CLI reference and the reviews and PR-flow docs.
+Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md` (both already bumped on this branch), `.agents/docs/autonomy-contract.md` if the row text changes, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/init/tools/shared src/validation`
+
+Correction (p13 re-review L1, bookkeeping, 2026-11-03): the p13-t05 missing-list guard can fail. The implementer's fix report recorded these controls: `isMissing` forced false failed 4 tests; the provisional exclusion removed failed 4. The re-reviewer reproduced them independently: the missing list failed 5 tests, the provisional exclusion 4 and the missing-key waiver rule 3, each restored byte-identical with a clean tree (reviews/archived/p13-review-2026-11-03T213802Z.md).
+
+### Task p13-t06: (review) Route a pending plan row to an artifact plan review
+
+**Status:** completed
+**Commit:** a653f1aa4fc0f6560eeec35a1248684743d419e1
+**Executor:** phase-implementer:rgi-p13-fix-20261103-01
+**Handle:** direct:rgi-p13-fix-20261103-01:p13-t06
+**Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (L1)
+
+Intent: pr-final's **Run them** option and its `PRFINAL-06` resume target send every listed row to `oat-project-review-provide` with `code <scope>`, which is invalid for the `plan | artifact` row. Say `code <pNN>` for a phase row and `artifact plan` for the plan row, and extend the pin.
+Files: `.agents/skills/oat-project-pr-final/SKILL.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`.
+Proof: the isolated-HOME contract suites.
+
+### Task p13-t07: (review) Scope pr-progress Step 3's do-not-block sentence
+
+**Status:** completed
+**Commit:** 890aa4879a148c2f6a509ac2f8cdc812fcd8224b
+**Executor:** phase-implementer:rgi-p13-fix-20261103-01
+**Handle:** direct:rgi-p13-fix-20261103-01:p13-t07
+**Source review:** reviews/archived/p13-review-2026-11-03T210640Z.md (L2)
+
+Intent: pr-progress Step 3 ends "Do not block PR generation; this is a progress PR." directly before Step 3.5, which can stop. Scope it to Step 3's warning, for example "Do not block PR generation on this warning; Step 3.5 governs pending required reviews." Check existing Step 3 pins first.
+Files: `.agents/skills/oat-project-pr-progress/SKILL.md`, the pinning contract test if one covers the sentence.
+Proof: the isolated-HOME contract suites.
+
+### Review Received: p13
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p13-review-2026-11-03T210640Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 3
+
+- M1 (Medium): a required concrete phase with no `## Reviews` row is never listed as pending, so a PR (autonomous included) proceeds; real on this project (p12's row first appeared with its review event) → put to the operator first, because it extends the literal Intent (AGENTS.md); the operator chose the `missing` list on 2026-11-03 → fix task p13-t05, and the p13 Intent and Exit evidence record the decision.
+- L1 (Low): pr-final's run option and `PRFINAL-06` resume target route a pending `plan | artifact` row to `code <scope>` → fix task p13-t06.
+- L2 (Low): pr-progress Step 3's unscoped "Do not block PR generation" sits before Step 3.5, which can stop → fix task p13-t07.
+- L3 (Low): `BL-261002-list-pending-required-reviews` still says the waiver is recorded in the Reviews table; the journal-slot departure is authorized by the Known Unknown and logged → approved deferral to the backlog item's closure at m02 delivery (see Deferred Findings).
+
+Reviewer: fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p13-rev-20261103-01`, reconnaissance not attempted); re-ran the branch-build probes and proved three guards can fail.
+
+**Outcome:** fixes queued: p13-t05, p13-t06, p13-t07
+
+**Outcome:** fixes queued: p13-t05, p13-t06, p13-t07; all three completed (head `2375b77bd`) and passed re-review (reviews/archived/p13-review-2026-11-03T213802Z.md)
+
+### Review Received: p13 (re-review of the fix records)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p13-review-2026-11-03T213802Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: the fix range `2f1dae7a0..2375b77bd` (p13-t05, p13-t06, p13-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p13-rev-20261103-02`, reconnaissance not attempted). It confirmed M1, L1 and L2 resolved, neutralized the missing-list, provisional and missing-key waiver guards in turn (5, 4 and 3 tests failed), restored a clean tree, and probed `--scope project` on this project (`missing: []`, provisional p08 and p09 excluded) and a scratch task-mode project. The implementer's plan-row concern is not a gap: every template, the brief and goal skills seed `plan | artifact`, and a disabled plan review records the skip line.
+
+- L1 (Low, bookkeeping): the p13-t05 record does not cite the guard-can-fail control the amended Exit evidence requires → fixed at receive (bookkeeping): an appended correction line after the p13-t05 record cites the implementer's and the re-reviewer's controls.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/p13-review-2026-11-03T213802Z.md)
+
+## Phase p-rev1: Refuse a malformed Reviewed Head in review resolve
+
+**Status:** completed
+**Base:** efea9ac0a6923fe62af1abbcc78180df7312d3ec
+**Head:** 2c341cff58b74a8cb13ff9e80c4e27690ea27210
+**Executor:** phase-implementer:rgi-prev1-impl-20261103-01
+**Corrects:** p12
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer; p-rev2 follows sequentially (no parallel group declared). Added at `efea9ac0a` by the m02 exit gate receive. `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `c16a278ab`, and only the journal commit follows it. `git fetch origin main` showed that `origin/main` has not moved past the merge base. The DoD gates ran in CI order and each exited 0:
+
+- `pnpm check` (5 of 11 cached);
+- `pnpm type-check` (5 of 11 cached);
+- `pnpm test` (5 of 12 cached) and `pnpm test:evidence` (0 of 12 cached);
+- `pnpm build` (a FULL TURBO replay of the uncached 0-of-5 build of the same source run before the task commit);
+- `pnpm run check:skill-bumps` (16 checks; no skill changed in this phase);
+- `release:check-versions`;
+- `release:validate` (five packages at 0.3.46);
+- `pnpm build:docs` (cache replay, then forced with 0 of 6 cached);
+- the docs index regeneration, with `git diff --exit-code -- apps/oat-docs/index.md` exiting 0.
+
+`pnpm lint`, `pnpm format`, the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205) and the p-rev1 journal check at review also exited 0. No version bump was needed: the lockstep packages are already at 0.3.46 and no skill or agent changed.
+
+### Task p-rev1-t01: `oat review resolve` refuses a Reviewed Head that is neither a full SHA nor `-`
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev1-impl-20261103-01
+**Handle:** direct:rgi-prev1-impl-20261103-01:p-rev1-t01
+**Intent:** Fix M1 of the m02 exit gate. The resolver reads the raw Reviewed Head cell of the bound row instead of the parser's validated `reviewedHead`. A `-` cell, or a ledger without a Reviewed Head column, still reads `unavailable` and is accepted. Any other cell that is not a full SHA, such as an abbreviated SHA or `not-a-sha`, refuses with the new diagnostic `reviewed_head_invalid`, `checks.reviewedHead: mismatch` and exit 1. `parseReviewTable` keeps its default output; only the resolver opts in to the raw cell, so no other reader changes.
+**Files:** `packages/control-plane/src/{types,index}.ts`, `packages/control-plane/src/state/reviews.ts`, `packages/control-plane/src/state/reviews.test.ts`, `packages/control-plane/README.md`, `packages/cli/src/commands/review/resolve.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/reviews.test.ts && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/help-snapshots.test.ts`, then the gate artifact's M1 reproduction against the rebuilt branch CLI.
+**Commit:** c16a278abea0aa19891cb9b207d022c33b653f10
+**Proof:** control-plane `reviews.test.ts` 15/15 exit 0 (2 new tests); CLI `src/commands/review` plus `help-snapshots.test.ts` 142/142 (6 files) exit 0 (5 new resolver tests); control-plane and CLI `type-check` and `lint` exit 0; `docs:check` and `docs:lint` exit 0; `pnpm build` exit 0 (0 of 5 cached).
+
+**Changes.** `parseReviewTable(planContent, { rawReviewedHead: true })` also returns the unvalidated cell as `reviewedHeadCell` when the table has a Reviewed Head column (empty when a short row has no cell). The option is off by default, so `getProjectState`, `review latest`, `review check` and `review pending` get the same rows as before. The resolver opts in. A missing column or a `-` cell reads `unavailable`. A full SHA compares by exact equality as before. Anything else, including an empty cell, is `reviewed_head_invalid`, with `source: row`, `expected` set to the event head, `actual` set to the raw cell, `checks.reviewedHead: mismatch` and exit 1. The `ReviewStatus` type, the control-plane README and the CLI reference document the field and the new code. The CLI reference code list now names `reviewed_head_invalid`. The receive skill's Step 1 tells the reader to report each diagnostic's `code`, `expected` and `actual` and does not list codes, so it stays true and no skill changed. `reviews/index.md` still reads true: it says any difference other than `-` is a mismatch.
+
+**M1 reproduction** (the gate artifact's probe, verbatim, `python3 -I` from the repository root):
+
+| Case              | Pre-change branch build (390fb8391)         | Branch build (c16a278ab)                               |
+| ----------------- | ------------------------------------------- | ------------------------------------------------------ |
+| match             | exit 0, `ok`, `match`                       | exit 0, `ok`, `match`                                  |
+| wrong-full        | exit 1, `refused`, `reviewed_head_mismatch` | exit 1, `refused`, `reviewed_head_mismatch`            |
+| abbreviated       | exit 0, `ok`, `unavailable` (the M1 defect) | exit 1, `refused`, `mismatch`, `reviewed_head_invalid` |
+| malformed         | exit 0, `ok`, `unavailable` (the M1 defect) | exit 1, `refused`, `mismatch`, `reviewed_head_invalid` |
+| unavailable (`-`) | exit 0, `ok`, `unavailable`                 | exit 0, `ok`, `unavailable`                            |
+
+A legacy five-column ledger with no Reviewed Head column on the branch build gives exit 0, `ok`, `unavailable`, no diagnostics. The released `0.3.45` `oat` on PATH has no `review resolve`: it exits 1 with `unknown command 'resolve'`. The pre-change branch build is therefore the bad state that accepts the malformed cells.
+
+**Negative control.** In the bad state, the pre-change branch build at `390fb8391` accepted the abbreviated and the malformed cell as `unavailable` with exit 0. After the fix, the branch build refuses the same cells with `reviewed_head_invalid` and exit 1. The valid controls still pass: the matching full SHA and `-` are accepted, and a legacy column-less ledger reads `unavailable`.
+
+**Can-fail proofs.** Each guard was neutralized in the working tree and its suite run. The file was then restored and checked byte-identical with `cmp`.
+
+1. The resolver's `!FULL_SHA.test(rowHead)` branch was disabled. `resolve.test.ts` failed 4 of 27: the abbreviated, malformed and empty-cell refusals, and the CLI exit-1 test.
+2. The parser's `reviewedHeadCell` emission was disabled. `reviews.test.ts` failed 1 of 15: the raw-cell test.
+3. The resolver's `rawReviewedHead: true` opt-in was dropped, which restores the pre-change read. `resolve.test.ts` failed 11 of 27, the three invalid-cell refusals among them.
+
+### Review Received: p-rev1
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev1-review-2026-11-03T221746Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `efea9ac0a..2c341cff5` (p-rev1-t01, corrects p12), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev1-rev-20261103-01`, reconnaissance not attempted). It re-ran the gate's M1 reproduction plus uppercase-SHA, empty-cell and legacy-table cases on the branch build (match, uppercase, `-` and legacy accepted; wrong full SHA `reviewed_head_mismatch`; abbreviated, malformed and empty `reviewed_head_invalid`), confirmed every other reader sees unchanged rows, scanned 514 local `plan.md` files for empty cells (none), and proved two guards can fail. The m02 exit gate's M1 is resolved.
+
+- L1 (Low, optional): the resolver's JSON `row` report shows `reviewedHead: null` for an invalid cell as for `-`, while the `reviewed_head_invalid` diagnostic carries the raw cell → approved deferral (see Deferred Findings); no consumer reads the row field to tell the two apart, and the refusal already reports the raw value.
+
+**Outcome:** passed (deferred items only)
+
+## Phase p-rev2: Resolve synced-project review ancestry in the source repository
+
+**Status:** completed
+**Base:** 33d1edfef88633cfeab8a28c3441b09bb2922bf1
+**Head:** d128a41181d86d258be802500c4129bf45ed0fa0
+**Executor:** phase-implementer:rgi-prev2-impl-20261103-01
+**Corrects:** p07
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer, after p-rev1 was accepted at `33d1edfef`. `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `564d91470`; only the journal commit follows it. `git fetch origin main` showed that `origin/main` has not moved past the merge base. The DoD gates ran in CI order and each exited 0:
+
+- `pnpm check` (9 of 11 cached);
+- `pnpm type-check` (9 of 11 cached);
+- `pnpm test` (9 of 12 cached) and `pnpm test:evidence` (0 of 12 cached);
+- `pnpm build` (a FULL TURBO replay of the build of the same source run before the task commit, in which the CLI task was rebuilt);
+- `pnpm run check:skill-bumps` (16 checks; no skill or agent role changed in this phase);
+- `release:check-versions`;
+- `release:validate` (five packages at 0.3.46);
+- `pnpm build:docs` (a cache replay, then forced with 0 of 6 cached);
+- the docs index regeneration, with `git diff --exit-code -- apps/oat-docs/index.md` exiting 0.
+
+`pnpm lint`, `pnpm format`, the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205) and the p-rev2 journal check at review also exited 0. No version bump was needed: the lockstep packages are already at 0.3.46 and no skill or agent changed.
+
+### Task p-rev2-t01: `oat project status` resolves review head ancestry in the repository that contains the project
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev2-impl-20261103-01
+**Handle:** direct:rgi-prev2-impl-20261103-01:p-rev2-t01
+**Intent:** Fix M2 of the m02 exit gate. `getProjectStateWithReviewAncestry` runs `git merge-base --is-ancestor` with `cwd` at the project directory, so when that directory is its own nested repository the source commits a Reviewed Head names do not resolve and `oat project status` keeps a superseded `received` event live. Run its ancestry queries from the project's parent directory instead, the boundary `oat project list` already uses (its `cwd` is the scope root), so git discovers the source repository that `review latest` and `review check` query. The control-plane reader stays pure.
+**Files:** `packages/cli/src/commands/review/head-ancestry.ts`, `packages/cli/src/commands/review/__tests__/ancestry-wiring.test.ts`.
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/project/status.test.ts src/commands/project/list.test.ts`, then the gate artifact's M2 reproduction against the rebuilt branch CLI.
+**Commit:** 564d91470973a83f66564f511270eea7acfa8b74
+**Proof:** the proof command passed 121/121 tests in 7 files, exit 0. `ancestry-wiring.test.ts` now runs each case in both the `shared` and the `synced-nested` layout, 4 tests in all. CLI `type-check` and `lint` exited 0, and so did `oxfmt --check` on both files. `pnpm build` exited 0, with 4 of 5 tasks cached; the CLI task was rebuilt.
+
+**Which readers diverged.** The pre-change branch build ran over a supplementary reader probe: the M2 ledger in three layouts, read by `project status`, `project list --scope synced`, `review latest --actionable-project` and `review check`, all with cwd at the source repository root. Only `project status` diverged, and only when the project directory was an independent nested repository.
+
+- `project list` already agreed: `listProjectsWithReviewAncestry` runs git from the scope root, the project's parent directory.
+- `review latest` and `review check` already agreed: they run git from `resolveProjectRoot(cwd)`.
+- A linked-worktree synced checkout already agreed under every reader. `oat project new` and `oat project pull` create synced checkouts this way, and a linked worktree shares the source object store, so the source heads resolve in it.
+
+**Fix.** `getProjectStateWithReviewAncestry` now runs git from `dirname(resolve(projectPath))`, the boundary `project list` uses for the same project. From there git discovers the repository that contains the project. Nothing else changed:
+
+- the status command and its dependency signature are unchanged;
+- an absolute `--project-path` still reads without resolving a repository from cwd (the existing `status.test.ts` control passes);
+- the control-plane reader still takes precomputed ancestry and runs no git.
+
+No doc describes the git working directory, so none changed. The CLI reference and the reviews page say only that ancestry is answered with `git merge-base --is-ancestor`. The control-plane `AGENTS.md` and README say the CLI supplies the resolver. All of these remain true.
+
+**M2 reproduction.** The gate artifact's probe was extracted verbatim (sha256 `a669787d…e30be`) and run with `python3 -I` from the repository root:
+
+| Layout          | Pre-change branch build (78eae1e55)                                                               | Branch build (564d91470)                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| no nested git   | status `oat-project-summary`, latest null, check `superseded_received_row`                        | status `oat-project-summary`, latest null, check `superseded_received_row` |
+| nested git (M2) | status `oat-project-review-receive` (the M2 defect), latest null, check `superseded_received_row` | status `oat-project-summary`, latest null, check `superseded_received_row` |
+
+**Supplementary reader probe** (branch build). The descendant later head retires the event in every reader in every layout: ordinary, nested and linked worktree; status, list, latest and check. The unresolvable later head (`f`×40) keeps the event live in every reader in every layout: status and list route to receive, latest returns `reviews/r1.md`, and check reports nothing.
+
+**Negative control.**
+
+- Bad state: the pre-change branch build routed `project status` to `oat-project-review-receive` for the nested layout, while latest and check treated the event as superseded.
+- After the fix: the branch build retires the event in status, so all four readers agree.
+- Valid controls still pass. The ordinary layout gives the same results before and after the fix. The unresolvable, non-descendant head stays live in every reader.
+
+**Can-fail proof.** The fix was neutralized in the working tree by restoring `projectPath` as git's cwd, and the wiring test was run. `ancestry-wiring.test.ts` failed 1 of 4: the `synced-nested` descendant case, at the status assertion (`expected 'oat-project-review-receive' not to be 'oat-project-review-receive'`). The file was then restored and checked byte-identical with `cmp`.
+
+### Review Received: p-rev2
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev2-review-2026-11-03T223853Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `33d1edfef..d128a4118` (p-rev2-t01, corrects p07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev2-rev-20261103-01`, reconnaissance not attempted). It confirmed every implementer claim (only `project status` diverged; `project list` already used the scope root; linked-worktree synced checkouts never diverged), re-ran the gate's M2 reproduction verbatim (all readers agree in both layouts), proved the new wiring's test can fail, and found no regression for shared or local projects or the absolute `--project-path` contract. The m02 exit gate's M2 is resolved.
+
+- L1 (Low): `review latest` and `review check` still resolve the repository from the caller's cwd (`latest.ts:462`, `check.ts:329`), so run from inside a nested independent project repository, or with a separate-repository synced scope root, they can disagree with `project status` → approved deferral (see Deferred Findings); pre-existing, and only in layouts OAT never creates (`oat project new` and `pull` make linked worktrees).
+
+**Outcome:** passed (deferred items only)
+
+## Phase p-rev3: Keep a retired waiver from hiding a later pending review
+
+**Status:** completed
+**Base:** 91d2e491f289528577d23d832584c2cda10b44a6
+**Head:** c08b2c054d95dda0691fc3a247b70c5acdaa8007
+**Executor:** phase-implementer:rgi-prev3-impl-20261103-01
+**Corrects:** p13
+
+Worktree: the project branch checkout (`goal/review-gate-integrity-m02`). Committing owner: the phase implementer (`oat-phase-implementer-claude-claude-opus-5-5-high`). Parallelism assessment: rung 3, one phase implementer. Added at `91d2e491f` by the m02 exit gate rerun receive. `origin/main` has not moved since the p07 base merge.
+
+Phase verification at the head: pass. The code state is `f29800f5a` (p-rev3-t01), and only the journal record commit follows it. `git fetch origin main` showed `origin/main` still at the merge base `c42fd95bd`. The DoD gates ran in CI order and each exited 0:
+
+- `pnpm check` (5 of 11 cached);
+- `pnpm type-check` (5 of 11 cached);
+- `pnpm test` (5 of 12 cached) and `pnpm test:evidence` (0 of 12 cached; CLI 444 files and 9533 tests, control-plane 14 files and 316 tests);
+- `pnpm build` (5 of 5 cached, a replay; the forced `test:evidence` built all five packages uncached, and an uncached 0-of-5 build of the same source ran before the probes);
+- `pnpm run check:skill-bumps` (16 checks; pr-progress and pr-final already carry their m02 bump);
+- `release:check-versions`;
+- `release:validate` (five packages at 0.3.46);
+- `pnpm build:docs` (6 of 6 cached, then forced with 0 of 6 cached);
+- the docs index regeneration, with `git diff --exit-code -- apps/oat-docs/index.md` exiting 0.
+
+`pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`, 1205/1205), `pnpm test:skills`, `pnpm oat:validate-skills` (68 skills) and the p-rev3 journal check at review (branch build) also exited 0. Exit evidence: p-rev3-t01 (the gate's M1 reproduction lists the new row pending; active, inert-after-review and fresh-waiver controls; pre/post branch-build negative control; guard-can-fail G1 to G3; skills, CLI reference and Reviews page state the rule). No version bump was needed and no recovery attempt was used (0 of 10).
+
+Head advanced from `8ce9e2a54` to the p-rev3-t02 record commit `08a2dc6d5` after the review fix p-rev3-t02 (request `rgi-prev3-fix-20261103-01`, code state `bc77d8025`); no later phase has a Base. Each gate exited 0, in CI order: `pnpm check` (5 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 9534 tests, control-plane 317), `pnpm build` (5 of 5 cached, a replay; an uncached 0-of-5 build of the same source ran before the probes, and the forced evidence run rebuilt), `check:skill-bumps` (16 checks), `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate` (0.3.46), `pnpm build:docs` (cached, then forced with 0 of 6 cached) and the docs index regeneration with an empty diff. `pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (1205/1205) and the p-rev3 journal check at review also exited 0. No version bump was needed (the lockstep packages are at 0.3.46 and no skill changed); recovery attempts 0 of 10.
+
+Head advanced from `08a2dc6d5` to the p-rev3-t03 record commit `edc4b4eee` after the review fix p-rev3-t03 (request `rgi-prev3-fix-20261103-02`, code state `ee5d306c8`); no later phase has a Base. Each gate exited 0, in CI order: `pnpm check` (5 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 9535 tests, control-plane 317), `pnpm build` (5 of 5 cached, a replay; an uncached 0-of-5 build of the same source ran before the probes, and the forced evidence run rebuilt), `check:skill-bumps`, `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate` (0.3.46), `pnpm build:docs` (cached, then forced with 0 of 6 cached) and the docs index regeneration with an empty diff. `pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (1205/1205) and the p-rev3 journal check at review also exited 0. No version bump was needed; recovery attempts 0 of 10.
+
+Head advanced from `edc4b4eee` to the p-rev3-t04 record commit `c08b2c054` after the review fix p-rev3-t04 (request `rgi-prev3-fix-20261103-03`, code state `c5e3d2ee5`); no later phase has a Base. Each gate exited 0, in CI order: `pnpm check` (0 of 11 cached), `pnpm type-check` (5 of 11 cached), `pnpm test` (5 of 12 cached), `pnpm test:evidence` (0 of 12 cached; CLI 9535 tests, control-plane 317), `pnpm build` (5 of 5 cached, a replay; the forced evidence run rebuilt uncached, and t04 changed no package source), `check:skill-bumps` (16 checks), `release:check-versions` (after `git fetch origin main`, still `c42fd95bd`), `release:validate`, `pnpm build:docs` (cached, then forced with 0 of 6 cached) and the docs index regeneration with an empty diff. `pnpm lint` and `pnpm format` (5 of 10 cached each), the isolated-HOME contract suites (1205/1205) and the p-rev3 journal check at review also exited 0. No version bump was needed; recovery attempts 0 of 10.
+
+### Task p-rev3-t01: A review waiver applies only to the pending row it names
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-impl-20261103-01
+**Handle:** direct:rgi-prev3-impl-20261103-01:p-rev3-t01
+**Intent:** Correct p13 for the m02 exit gate rerun finding M1. `oat review pending` decides waiver applicability from the latest Scope + Type row only, so a waiver retired by a later recorded review applies again to a new `pending` row of the same key. Bind a waiver to the pending obligation it was written for: the waiver line names the listed row (`**Row:** <n>`), and applies only while that row is the key's latest row and still `pending`; a line that names no row (`-` or no `**Row:**` label, the p13 form) applies only while no row of its key records a review. Any order that cannot be established lists the key as pending. Update the waiver template in pr-progress Step 3.5 and pr-final Step 2.5, the CLI reference and the Reviews docs.
+**Files:** `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`, `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review` and `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, plus the branch-build probe `/tmp/prev3-scripts/probe.py` before and after the change.
+**Commit:** f29800f5a51175dc6fcdd233ea73762faac2e90e
+**Proof:** `src/commands/review` plus help snapshots and `src/commands/project/delivery`: 9 files, 276 tests, exit 0 (`pending.test.ts` 22, six new). The isolated-HOME contract suites `src/commands/init/tools/shared` and `src/validation`: 29 files, 1205 tests, exit 0. CLI `type-check` and `lint` exit 0. `check:skill-bumps` exit 0 (16 checks; pr-progress and pr-final already carry their single m02 bump, so no further bump). `oat sync --scope project`: no changes. `docs:check` (0 errors) and `docs:lint` (91 files, 0 errors) exit 0. `oxfmt --check` on the seven files exit 0.
+
+**Ordering rule chosen.** Dates cannot order a waiver against a review: the ledger Date and the waiver Date are days, and same-day events are the norm (every event of this project's m02 is dated 2026-11-03), so a date rule would either reapply a same-day retired waiver or, failing closed, refuse every fresh same-day waiver. The Intent's fallback applies instead: the waiver line names what it waives, backward-compatibly. The template gains `**Row:** <row>`, the 1-based row number the listing already reports for each pending entry (`-` for a `missing` entry). A line naming a row applies only while that row is the key's latest row and still `pending`; a recorded review in place, a later recorded row, or any later appended row (`row-mismatch`) retires it. A line naming no row (`-` or the p13 form without the field) applies only while no row of its key records a review (`review-recorded` otherwise), because it cannot be ordered against one. A malformed row (for example `03`) and a named row on a key with no row are `row-mismatch`; a `**Row:**` inside the reason is never read. Every unordered case lists the key as pending. No Reviews column, status or ledger edit is added; JSON `waivers` entries gain `row` (as written, `null` when none) and the `unapplied` set gains `row-mismatch`. Both PR skills state the rule and the field; the CLI reference and the Reviews page document it.
+
+**Negative control** (branch build, `/tmp/prev3-scripts/probe.py`, one temporary goal project per case, scope `p01`; rows 1 `pending`, 2 `passed` 2026-11-02, 3 `pending` where shown; every run exit 0):
+
+| Case                                                                         | Pre-change build at `7c844c203` | Post-change build at `f29800f5a`                     |
+| ---------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------- |
+| 1 rowless waiver over the only pending row (active control)                  | waived                          | waived                                               |
+| 2 rowless waiver, then a recorded review                                     | `review-recorded`               | `review-recorded`                                    |
+| 3 rowless waiver (2026-11-01), recorded review, new pending row (gate M1)    | **waived by the old line**      | **pending row 3**, `review-recorded`                 |
+| 4 same rows, no waiver                                                       | pending row 3                   | pending row 3                                        |
+| 5 `**Row:** 1` over the only pending row (active control)                    | waived                          | waived                                               |
+| 6 old line plus fresh `**Row:** 3` after the new pending row (fresh control) | waived (by the old line)        | waived by the fresh line; old line `review-recorded` |
+| 7 stale `**Row:** 1` with rows 1 to 3                                        | **waived**                      | **pending row 3**, `row-mismatch`                    |
+| 8 fresh rowless line (2026-11-03) after the review                           | **waived**                      | **pending row 3**, `review-recorded` (fails closed)  |
+
+The gate artifact's M1 script, extracted verbatim from `range-review-2026-11-03T224623Z.md` and run against the post-change build, now matches every expected outcome: `valid-waiver` waived, `recorded-review` inactive, `new-pending-after-review` lists row 3 as pending with the waiver `review-recorded`, `new-pending-no-waiver` lists row 3.
+
+**Journal check accepts the new field:** in a scratch clone of this branch, a `**Review waived:** p13 code · **Row:** 26 · …` line appended under `## Reviews and Gates` leaves `oat project journal check --at review --scope p13` at `ok` with no reasons or warnings (branch build), and `review pending --scope m02` reports that line `row-mismatch` (row 26 is no longer the latest `p13` row).
+
+**Guard can fail** (each neutralized in the working tree, `pending.test.ts` and `pending-review-listing-contracts.test.ts` run, then restored and checked byte-identical with `cmp`): G1, the rowless retirement guard disabled: 3 of 25 fail, the gate reproduction among them; G2, the named-row binding guard disabled: 4 of 25 fail, including the skills' documented-line cross-check; G3, `**Row:** <row>` removed from pr-final's template: 2 of 3 contract tests fail.
+
+### Task p-rev3-t02: (review) Number waiver rows by physical table position
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-fix-20261103-01 (continuation of rgi-prev3-impl-20261103-01)
+**Handle:** direct:rgi-prev3-fix-20261103-01:p-rev3-t02
+**Source review:** reviews/archived/p-rev3-review-2026-11-03T231519Z.md (L1)
+
+Intent: the waiver `**Row:**` number counts only rows `parseReviewTable` accepts, which drops a row with a blank required cell, so after such a row the numbering shifts and a retired waiver can bind to a newly appended `pending` row (reproduced on the branch build, `pending.ts:352`, `reviews.ts:124-126`). Number rows by their physical position among the `## Reviews` table's data rows, so the number the listing reports and the user writes is stable whatever a row contains; a named row that does not parse is `row-mismatch`. Add the regression and a guard-can-fail control; keep the docs and skill wording true.
+Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, and the docs or skills only if their wording changes.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review src/commands/init/tools/shared src/validation`
+**Files:** `packages/control-plane/src/state/reviews.ts` (+ `reviews.test.ts`), `packages/control-plane/src/types.ts`, `packages/control-plane/README.md`, `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`. The control-plane files widen the declared list mechanically: the reviewer's suggested fix, an opt-in `parseReviewTable` option beside `rawReviewedHead`, is the only place the physical data-line index exists.
+**Commit:** bc77d8025b1c32c7c6743cbcf579c18ea15976e2
+**Proof:** the proof command exited 0 (34 files, 1286 tests); control-plane 317/317; CLI and control-plane `type-check` and `lint` exit 0; `docs:lint` 0 errors; `oxfmt --check` on the seven files exit 0.
+
+**Change.** `parseReviewTable(planContent, { dataLine: true })` adds `dataLine`, each row's 1-based position among the table's data lines, counted before rows with an empty required cell are dropped (off by default; `ProjectState.reviews` never carries it). `oat review pending` numbers rows with it, so the `row` it reports, and the `**Row:**` the skills tell users to copy from it, are the same physical number; a named row whose line does not parse can never equal a key's latest row, so it is `row-mismatch`. The skills' wording ("the row number the listing reports") stays true and is unchanged; the CLI reference and the control-plane README state the numbering.
+
+**Negative control** (branch build, `/tmp/prev3-scripts/l1.py`, five-column ledger, scope `p01`, every run exit 0):
+
+| Case                                                                             | Pre-fix build at `6936c2fed`     | Post-fix build at `bc77d8025`     |
+| -------------------------------------------------------------------------------- | -------------------------------- | --------------------------------- |
+| L1: `**Row:** 1` waiver, row 1 claimed with a blank Date cell, new `pending` row | **waived (row 1)**, applied      | **pending row 2**, `row-mismatch` |
+| Well-formed claimed row 1, new `pending` row (control)                           | pending row 2, `row-mismatch`    | pending row 2, `row-mismatch`     |
+| Fresh `**Row:** 2` after the malformed row                                       | waived by the stale line (row 1) | waived by the fresh line (row 2)  |
+| Active `**Row:** 1` over the only pending row                                    | waived                           | waived                            |
+
+**Second table inside `## Reviews`:** not fixed, as directed. Physical numbering counts every table line after the first separator, so a second table's header and separator still take row numbers; a narrow second table (no Date or Artifact column), whose lines the old numbering dropped, now also takes numbers (probe: `p01` row 1, a trailing `p02` row 5 after a two-column table, previously 2). The listing and the user-written number still agree.
+
+**Guard can fail** (each neutralized in the working tree, the test run, then restored and checked byte-identical with `cmp`): G4, `pending.ts` calling `parseReviewTable(planContent)` without `dataLine`: the L1 regression fails (1 of 23); G5, `reviews.ts` returning `dataLine: 0 + 1` for every row: the control-plane `dataLine` test fails (1 of 16).
+
+### Review Received: p-rev3
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-11-03T231519Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `91d2e491f..8ce9e2a54` (p-rev3-t01, corrects p13), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev3-rev-20261103-01`, reconnaissance not attempted). The gate rerun's M1 reproduction passes; fail-closed cases (missing key, pending after review, several waivers, cross-key row, malformed or empty row, `**Row:**` in the reason) hold; numbering is stable under oxfmt; both skills carry the same template; journal check accepts old and new lines; two guards proved able to fail.
+
+- L1 (Low): row numbers skip rows `parseReviewTable` drops (a blank required cell), so a retired waiver can bind to a later pending row → fix task p-rev3-t02; a fail-open path in an assurance guard, and p-rev3 is still the latest phase, so its head may advance.
+
+**Outcome:** fixes queued: p-rev3-t02
+
+**Outcome:** fixes queued: p-rev3-t02; completed (head `08a2dc6d5`); its re-review queued p-rev3-t03
+
+### Task p-rev3-t03: (review) Retire rowless waivers when a Reviews data row does not parse
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-fix-20261103-02 (continuation of rgi-prev3-impl-20261103-01)
+**Handle:** direct:rgi-prev3-fix-20261103-02:p-rev3-t03
+**Source review:** reviews/archived/p-rev3-review-2026-11-03T233325Z.md (L1)
+
+Intent: a rowless (p13-form) waiver cannot see a review recorded in a row `parseReviewTable` drops (a blank required cell), so it still applies to a later pending row of its key (reproduced on the branch build, `pending.ts:320`). Fail closed: in `listPendingReviews`, treat any gap in the `dataLine` sequence as an unparseable data row and retire every rowless waiver while one exists (the key may be unreadable from the malformed line). Add the regression and a guard-can-fail control; keep docs true.
+Files: `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, docs only if wording changes.
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+**Files:** `packages/cli/src/commands/review/pending.ts`, `packages/cli/src/commands/review/__tests__/pending.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`.
+**Commit:** ee5d306c84a79cd483801d01eb30dc5e98b00395
+**Proof:** the proof command plus `src/commands/init/tools/shared` and `src/validation` under the isolated HOME exited 0 (34 files, 1287 tests); CLI `type-check` and `lint` exit 0; `docs:check` (0 errors) and `docs:lint` exit 0; `oxfmt --check` on the four files exit 0.
+
+**Change.** `listPendingReviews` sets `ledgerHasUnparsedRow` when the parsed rows' `dataLine` values are not exactly `1..n`, which means a data line before the last parsed row did not parse. While it is set, every waiver line naming no row is unapplied with the new reason `unparsed-row` (checked after `review-recorded`, so a visible review still reports that reason). The key is not recovered from the malformed line. Named-row waivers keep their rules (`row-mismatch`). A dropped line after the last parsed row is not a gap: no `pending` row follows it to be hidden. The CLI reference adds `unparsed-row` to the reason list and one clause to the rowless rule; the Reviews page adds one sentence.
+
+**Negative control** (branch build, `/tmp/prev3-scripts/l1b.py`, five-column ledger, scope `p01`, every run exit 0):
+
+| Case                                                                 | Pre-fix build at `21c67c4c0` | Post-fix build at `ee5d306c8`     |
+| -------------------------------------------------------------------- | ---------------------------- | --------------------------------- |
+| Rowless waiver, row 1 claimed with a blank Date, new `pending` row 2 | **waived (row 2)**           | **pending row 2**, `unparsed-row` |
+| Same with a blank Scope cell                                         | **waived (row 2)**           | **pending row 2**, `unparsed-row` |
+| Well-formed claimed row 1, new `pending` row (control)               | pending 2, `review-recorded` | pending 2, `review-recorded`      |
+| Rowless waiver over a well-formed pending row (active control)       | waived 1                     | waived 1                          |
+| `**Row:** 2` after the blank-Date row (named control)                | waived 2                     | waived 2                          |
+| Dropped line after the only pending row (trailing control)           | waived 1                     | waived 1                          |
+
+**Guard can fail:** G6, the `unparsed-row` check neutralized (`false &&`): the new regression fails (1 of 24); restored and checked byte-identical with `cmp`.
+
+### Review Received: p-rev3 (re-review of p-rev3-t02)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-11-03T233325Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `8ce9e2a54..08a2dc6d5` (p-rev3-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev3-rev-20261103-02`, reconnaissance not attempted). L1 resolved (the prior reproduction lists row 2 pending and the stale `**Row:** 1` reads `row-mismatch`); other readers unchanged; two guards proved able to fail; second-table numbering adds no fail-open.
+
+- L1 (Low): a rowless waiver still applies after a recorded review whose row does not parse → fix task p-rev3-t03 (review cycle 2 of 3; a fail-open path in an assurance guard with a small fail-closed fix).
+
+**Outcome:** fixes queued: p-rev3-t03
+
+**Outcome:** fixes queued: p-rev3-t03; completed (head `edc4b4eee`); its re-review (cycle 3) queued p-rev3-t04
+
+### Task p-rev3-t04: (review) Name the unparsed-row case in the PR skills' waiver rule
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-prev3-fix-20261103-03 (continuation of rgi-prev3-impl-20261103-01)
+**Handle:** direct:rgi-prev3-fix-20261103-03:p-rev3-t04
+**Source review:** reviews/archived/p-rev3-review-2026-11-03T234849Z.md (L1)
+
+Intent: pr-progress Step 3.5 and pr-final Step 2.5 describe the rowless-waiver rule without the `unparsed-row` case, so with an unparseable Reviews row a `**Row:** -` waiver for a missing key stays `missing` with no next step; the Reviews page's advice to name the row cannot work for a missing key. Add one clause to each skill (an `unparsed-row` waiver means fix the malformed Reviews row, then re-run the listing) and correct the Reviews page wording; update any pin that covers the rule. Both skills are already bumped on this branch.
+Files: `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts` if a pin covers it.
+Proof: the isolated-HOME contract suites.
+**Files:** `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `packages/cli/src/commands/init/tools/shared/pending-review-listing-contracts.test.ts`.
+**Commit:** c5e3d2ee54d2b3ca4366a8395efcfc55b382f666
+**Proof:** the isolated-HOME contract suites (`src/commands/init/tools/shared` and `src/validation`) exited 0, 1205/1205. `check:skill-bumps` exit 0 (16 checks; both skills already carry their m02 bump, so none added), `oat sync --scope project` no changes, `oat:validate-skills` exit 0, `docs:lint` exit 0, `oxfmt --check` on the four files exit 0.
+
+**Change.** Both skills' rowless sentence now reads, identically: "A line naming no row stops applying once any row of its key records a review, and while a `## Reviews` row that does not parse sits above a parsed row (`unapplied: unparsed-row`); fix that row, then re-run the listing." The Reviews page names `unparsed-row`, says to fix the row and re-run the listing, and states that a waiver naming its row also applies but a `missing` key has no row to name, so fixing the row is its only remedy. The existing `WAIVER_RETIRED` pin, asserted in both skills' step sections, carries the full sentence.
+
+**Pin can fail:** G7, the clause removed from pr-progress: the pr-progress pin fails (1 of 3); G8, the clause removed from pr-final: the pr-final pin fails (1 of 3). Each skill was restored and checked byte-identical with `cmp`.
+
+### Review Received: p-rev3 (re-review of p-rev3-t03, cycle 3 of 3)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-11-03T234849Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-prev3-rev-20261103-03`, reconnaissance not attempted). L1 resolved (blank Date and blank Scope reproductions list the new row pending with `unparsed-row`; controls hold); the trailing-line exception is caught once a pending row follows; the ledger-wide trade-off is documented; no other reader changed; two guards proved able to fail.
+
+- L1 (Low): the PR skills omit the `unparsed-row` case from the rowless-waiver rule → the review-cycle cap is reached, so the root put it to the operator, who chose (2026-11-03) to fix it as p-rev3-t04 with the m02 exit gate rerun over `p07-p-rev3` as its review, instead of a fourth p-rev3 cycle.
+
+**Outcome:** fixes queued: p-rev3-t04 (operator decision at the cycle cap; reviewed by the exit gate rerun)
+
+**Outcome:** fixes queued: p-rev3-t04; completed (head `c08b2c054`); p-rev3 accepted at the cycle cap by operator decision, with t04 reviewed by the m02 exit gate rerun over `p07-p-rev3`
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
@@ -932,6 +1980,30 @@ Late-fix rule (fourth advance): the m01 integrated-review fixes (p11-t07) advanc
 - Root-inline phase: p11 review fix (p11-t06) · reason: four Lows of a passing review, fixed at receive · root model claude-opus-5-5
 - Root-inline phase: p11 m01-integrated-review fix (p11-t07) · reason: one Medium and two Lows, a one-sentence definition change plus journal corrections · root model claude-opus-5-5
 - run/v1 · request=rgi-m01-rev-20261102-02 · scope=m01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=m01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p07-impl-20261103-01 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p07-rev-20261103-01 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p07-fix-20261103-01 · scope=p07-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p07-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p07-rev-20261103-02 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p12-impl-20261103-01 · scope=p12 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p12-rev-20261103-01 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+-
+- run/v1 · request=rgi-p12-fix-20261103-01 · scope=p12-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p12-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p12-rev-20261103-02 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p13-impl-20261103-01 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p13-rev-20261103-01 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p13-fix-20261103-01 · scope=p13-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p13-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p13-rev-20261103-02 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev1-impl-20261103-01 · scope=p-rev1 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev1-rev-20261103-01 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev2-impl-20261103-01 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev2-rev-20261103-01 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev3-impl-20261103-01 · scope=p-rev3 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev3-rev-20261103-01 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev3-fix-20261103-01 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-prev3-rev-20261103-02 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev3-fix-20261103-02 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-prev3-rev-20261103-03 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-prev3-fix-20261103-03 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1060,6 +2132,98 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 
 - PR: d01 (m01: p01, p02, p10, p11) registered and opened at https://github.com/voxmedia/open-agent-toolkit/pull/400 on 2026-11-03 (base `892ecdc0a`, reviewed head `5599af21d`); milestone m01 `delivered`, endpoint merged.
 
+### Review Received: plan (m02 amendment, structured artifact review)
+
+**Date:** 2026-11-03
+**Review artifact:** none (structured mode, `oat-reviewer-claude-claude-opus-5-5-high`, Auto Artifact-Review Loop, retry bound 2)
+
+**Findings:** attempt 1 at `c1a653b97`: High 2 · Medium 3 · Low 7; attempt 2 at `248f3ba72`: Medium 1 · Low 3; attempt 3 at `f293a5877`: Medium 2 · Low 1.
+
+- Attempt 1 H1 (material): the stranded-row repair would promote another event to `passed`, against bookkeeping limit 3 and the 48f5553c ruling. The operator chose read-side supersession, replacing the earlier bookkeeping-receive repair choice. H2/M1: event key made precise (ledger cells; `-` artifact rows never form a duplicate key). M2 is moot after H1; M3: the check is advisory in m02. L1–L7 folded; L6 (`Total: 9 phases`) was bookkeeping.
+- Attempt 2 M1 (material): the "later round" definition was too loose across manual and gate lanes. The operator chose same lane, a recorded later round, at the same or a descendant head. L1–L3 folded.
+- Attempt 3 (retry bound exhausted): M1 defines the classes (gate with any target; lifecycle = `manual`/`auto`; `-` rows stay live) with a cross-target control; M2 adds the pure-router descendant-head question to p07's Known Unknown, with a descendant-head control; L1 aligns p13's waiver wording with its Known Unknown. These were folded as artifact-local precision of the operator decisions, unreviewed by the loop; the configured `oat-project-goal` gate reviews the result.
+
+**Outcome:** fixes_completed (residual attempt-3 findings folded; no further loop attempt)
+
+### Review Received: plan (m02 amendment, gate)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-11-03T023206Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- The `oat-project-goal` lifecycle gate (run `6cf18b35-39f7-4103-9625-ad09950fd3c7`, target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, different family from the declared `claude-opus-5-5` producer; installed CLI 0.3.45, Codex route receipt persisted) reviewed the m02 amendment bundle at `ee377dd7bcbedec4e0c66cc8d12a754c45c1587d` for m02 (`p07, p12, p13`).
+- L1 (low): `state.md` descriptive prose still directed work to m01 → fixed at receive (bookkeeping): Status, Current Phase, Progress and Next Milestone prose copied from the recorded state (m01 merged at its endpoint, m02 aligning); no frontmatter, acceptance marker or gate binding changed.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/artifact-plan-review-2026-11-03T023206Z.md)
+
+- Gate `oat-project-goal` (plan, m02 amendment): `ok`, `review_completed_gate_passed`, threshold `high`, raw counts 0/0/0/1, receive-eligible, received 2026-11-03. First use of the released m01 bookkeeping rule on this project.
+- Approval (m02 amendment): approved 2026-11-03 by user at `ee377dd7bcbedec4e0c66cc8d12a754c45c1587d` (the gate-reviewed bundle). `oat_milestone_gates.m02.plan` written `allowed`/`passed`, `config_fingerprint` `sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75` = sha256 of the compact JSON of `oat gate resolve oat-project-goal` `effectiveGate` (no CLI emits a canonical fingerprint; m01's value used an unrecorded method).
+- Gate `oat-project-implement` (code, m02 exit, run `788ae91a-3479-436f-8d7d-08bfa2e064f8`, configured command unchanged, default selection `claude-opus-5-5-high`, released 0.3.45): `review_failed`, `review_did_not_complete`. The reviewer refused before reviewing: `--review-scope final` expands to every accepted phase (p01, p02, p10, p11, p07, p12, p13), and m01's phase heads are not ancestors of this branch after PR #400's squash merge (`c7cd3b715`), so sequential continuity fails (p07's base does not descend from p11's head `5599af21d`). No artifact, no Reviews row, no carrier written. No attempt consumed: the refusal is deterministic and the review never ran, like m01's launch-reconciliation case.
+- Operator routing (m02 exit gate, 2026-11-03): run the configured gate once with `--review-scope p07-p13` (target, threshold and prompt unchanged), which resolves to exactly m02's phases p07, p12, p13 over `eba04d813..2375b77bd`, the scope `oat project delivery check --subject m02` expects. One-off routing for this run only, not a configuration change. A backlog item tracks the contract gap: in goal mode a configured `final` exit gate cannot resolve after an earlier milestone ships by squash merge.
+
+### Review Received: p07-p13 (m02 exit gate)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-03T215601Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 0
+
+The configured `oat-project-implement` exit gate (run `93e1b0a1-9b04-4c31-9aa2-e032b9820a9d`, scope `p07-p13` under the operator's routing, default selection `codex-6-sol-xhigh`, cross-family: m02 was produced by Opus 5.5) reviewed m02 (`p07, p12, p13`) over `eba04d813..2375b77bd`. The event was validated with the branch-build `oat review resolve` (every check `match`, supersession `current`).
+
+- M1 (Medium): `oat review resolve` reads an abbreviated or malformed Reviewed Head as the `-` placeholder and accepts it as `unavailable`, contradicting p12's exact equality → revision phase p-rev1 (`**Corrects:** p12`); a later phase has a `**Base:**`, so the late-fix rule requires a revision phase.
+- M2 (Medium): in a synced project the review ancestry runs git in the nested tracking checkout, so `project status` keeps a superseded `received` event live while `review latest` and `review check` do not, contradicting Outcome 4's reader agreement → revision phase p-rev2 (`**Corrects:** p07`).
+
+**Outcome:** fixes queued: p-rev1, p-rev2 (gate passed its threshold; the exit gate reruns over the milestone set `p07-p-rev2` after both are accepted)
+
+- Gate `oat-project-implement` (code, m02 exit, run `93e1b0a1-9b04-4c31-9aa2-e032b9820a9d`, `--review-scope p07-p13`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/2/0, receive-eligible, received 2026-11-03; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m02.exit`.
+- Operator routing applied to the rerun (m02 exit gate, 2026-11-03): the fixes queued by run `93e1b0a1` require the exit gate to rerun over the milestone set, so the rerun uses the same m02-phases scope the operator chose, now `--review-scope p07-p-rev2` (p07, p12, p13, p-rev1, p-rev2), with target, threshold and prompt unchanged.
+
+### Review Received: p07-p-rev2 (m02 exit gate rerun)
+
+**Date:** 2026-11-03
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-03T224623Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 0
+
+The exit gate rerun (run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, scope `p07-p-rev2`, default selection `codex-6-sol-xhigh`, cross-family) reviewed m02 (`p07, p12, p13, p-rev1, p-rev2`) over `eba04d813..d128a4118`. It found the first run's M1 and M2 resolved.
+
+- M1 (Medium): `oat review pending` judges a waiver against the latest Scope + Type row only, so a waiver retired by a later recorded review applies again to a newly appended `pending` row and a PR proceeds without a review or a fresh waiver, contradicting p13's "inert once a later row records a review" → revision phase p-rev3 (`**Corrects:** p13`).
+
+**Outcome:** fixes queued: p-rev3 (gate passed its threshold; the exit gate reruns over `p07-p-rev3` after p-rev3 is accepted)
+
+- Gate `oat-project-implement` (code, m02 exit rerun, run `d738cd0e-5795-48ef-a387-e3ec184f90e5`, `--review-scope p07-p-rev2`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/1/0, receive-eligible, received 2026-11-03; no attempt consumed. No carrier written: queued fixes require another rerun.
+- Operator routing applied to the rerun (m02 exit gate, 2026-11-03): p-rev3 is accepted, so the rerun uses the same m02-phases scope, now `--review-scope p07-p-rev3` (p07, p12, p13, p-rev1, p-rev2, p-rev3), with target, threshold and prompt unchanged. By operator decision at the p-rev3 cycle cap, this run is also the review of p-rev3-t04 (`c5e3d2ee5`).
+
+### Review Received: p07-p-rev3 (m02 exit gate rerun)
+
+**Date:** 2026-11-04
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-04T015726Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+The exit gate rerun (run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, scope `p07-p-rev3`, default selection `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family) reviewed m02 (`p07, p12, p13, p-rev1, p-rev2, p-rev3`) over `eba04d813..c08b2c054`. No blocking findings; it confirmed the p-rev3-t04 wording matches the unparsed-row behavior and states the remedy in both PR skills, which settles t04's review under the operator's cycle-cap decision.
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m02 exit rerun, run `81c12aac-482e-4ffd-93f3-b796e9c4ae76`, `--review-scope p07-p-rev3`): `ok`, `review_completed_gate_passed`, threshold `important`, counts 0/0/0/0, receive-eligible, received 2026-11-04; no attempt consumed. `oat_milestone_gates.m02.exit` written `allowed`/`passed`, `resolution: configured`, `reviewed_head` `c08b2c054d95dda0691fc3a247b70c5acdaa8007`, subject `code` [p07, p12, p13, p-rev1, p-rev2, p-rev3]. `config_fingerprint` `sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2` = sha256 of the compact JSON of `oat gate resolve oat-project-implement` `effectiveGate` (the m02 plan carrier's method). That declaration's `--review-scope final` was replaced by the m02 phase range under the operator routing above, because `final` refuses on m01's squash-merged anchors.
+
+### Review Received: m02 (integrated milestone review)
+
+**Date:** 2026-11-04
+**Review artifact (local-only):** reviews/archived/m02-review-2026-11-04T020725Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-high`) covered `p07, p12, p13, p-rev1, p-rev2, p-rev3` over `eba04d813..c08b2c054` (116 commits, 75 paths). It found the six phases compose into Outcome 4, the lockstep versions at 0.3.46 against `origin/main` 0.3.45, one bump per changed skill (16), and a fresh docs index, with branch-build probes matching the CLI reference except L1.
+
+- L1 (Low): `oat review check` (`check.ts:188`) and `oat review resolve` (`resolve.ts:370`–`:478`) number Reviews rows among parsed rows, while `oat review pending` numbers physical data lines (p-rev3-t02), so a row below an unparsed row reads as two numbers; waivers copy the row from `pending`, so nothing fails open → approved deferral (see Deferred Findings); operator decision 2026-11-04, because fixing it queues a fix under p-rev3 and reruns the exit gate and this review.
+- L2 (Low, bookkeeping): the p07 re-review L1 deferral line reads open although p12-t03 (`19fb8190d`) folded it → closed at receive by an appended Deferred Findings line; no other change.
+
+**Outcome:** passed
+
+- m02 delivery check after receive (2026-11-04): `status: ok`, exit carrier and integrated review fresh at `c08b2c054`; m02 moved `reviewing → delivering`. A first check reported both stale because the backlog commit filing `BL-261104-goal-mode-exit-gate-resolve` (after the reviewed head, under `.oat/repo/pjm/backlog/`) is not permitted bookkeeping; by operator decision that unpushed commit was dropped from the branch and the item will be refiled on a separate branch off main.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -1074,6 +2238,14 @@ Integrated delivery review of m01 (`p01, p02, p10, p11`; range `56f55a3378d6e35d
 - PR #400 self-review (testing and complexity lenses, fresh Opus reviewer, 0 blocking) C1 (non-blocking): the verdict parser's `findingsComplete` flag, duplicate-ID refusal and ID-prefix/severity mismatch refusal (`packages/cli/src/commands/gate/review-verdict.ts`) served only the reverted p02 verifier; no code reads them, and they can refuse a review whose counts agree. Deferred to p08 by operator decision on 2026-11-03 (removing them now would reopen m01's exit gate and integrated review). Trigger: p08 start, which owns stable finding keys. Bundled with it: T2 (the closed-label test asserts no negative), T3/C3 (two effective-delta tests in `bookkeeping-findings-contracts.test.ts` repeat `post-implement-sequence-contracts.test.ts` coverage), and T4/C2 (`ReviewVerdictValidationError`'s unused `kind`, `status` and `receiveEligible` fields and the tests asserting them). T1 (a wrapped detail line refuses as orphaned) is the existing p01 review round 2 L1 deferral.
 
 - PR #400 Cursor Bugbot (review of 2fd06ff2b), fixed in the branch on 2026-11-03 by operator decision, with no re-review or gate: (High) review-receive Step 2.6 item 7 routed a bookkeeping-only final receive from Step 7.6 to Step 10, past the Step 8.5 deferred-Medium resurfacing that item 3 requires; item 7 now runs Step 8.5 first for `final` scope. (Medium) plan-writing step 4's bookkeeping-only `plan` branch could record `passed` after an interactive decline; a declined edit now leaves the finding residual and never `passed`. Both are post-gate skill-prose changes after reviewed head 5599af21d, so d01's bound revisions and the m01 exit gate predate them; the operator chose to merge without re-gating. Contract tests (`src/commands/init/tools/shared`, `src/validation`) and `oat:validate-skills` pass.
+- p07 re-review L1 (Low): the review-receive CLI-unavailable fallback clause (`.agents/skills/oat-project-review-receive/SKILL.md:163`) omits that the candidate's own row must be `received` and does not name the gate and lifecycle Invocation classes. Deferred by the root under review-receive Step 9 (Low, concrete rationale): p12 rewrites this receive artifact-selection step, and fixing it now would open a third p07 review cycle. Trigger: p12 start; fold the clarification into p12's receive change and its pin test.
+- p12 review L2 (Low): the optional phase gate and the eight planning gates (goal, brief, lite, discover, design, quick-start, plan, import-plan) hand the gate event to receive only in-session; after an interruption the router's receive route has no event and falls back to newest-artifact selection, protected only by p07 supersession. Implement Step 14 persists its event. Deferred by the root (Feature Planning Triage: a new persistence requirement outside p12's adopting-path Intent). Trigger: the first observed interrupted gate→receive handoff, or p13/m03 if they touch these gate paths.
+- p13 review L3 (Low): `BL-261002-list-pending-required-reviews` acceptance criteria still say the waiver is recorded in the Reviews table; p13 records it as a `**Review waived:**` line under `## Reviews and Gates` with the row left `pending`, authorized by the p13 Known Unknown (`rgi-p13-concrete-20261103`). Deferred by the root to the item's closure. Trigger: m02 delivery, when the item is closed with that note.
+- p-rev1 review L1 (Low): `oat review resolve`'s JSON `row` report shows `reviewedHead: null` for both an invalid cell and `-`; the `reviewed_head_invalid` diagnostic carries the raw cell. Deferred by the root: no consumer distinguishes them through the row field (Feature Planning Triage). Trigger: the first consumer that reads the row report's head.
+- p-rev2 review L1 (Low): `review latest` and `review check` resolve the git repository from the caller's cwd, so in a nested independent project repository (run from inside it) or under a separate-repository synced scope root they can disagree with `project status` on supersession. Pre-existing; OAT never creates either layout. Deferred by the root. Trigger: OAT creating or supporting an independent nested project repository, or an observed disagreement.
+- p07 re-review L1 (Low) closure: resolved by p12-t03 (`19fb8190d`), which rewrote the receive CLI-unavailable fallback to skip a candidate only when its own row is `received` and to name the gate and lifecycle Invocation classes, pinned in `review-event-row-contracts.test.ts`. Recorded at the m02 integrated review receive (finding L2), 2026-11-04.
+- m02 integrated review L1 (Low): `oat review check` and `oat review resolve` number Reviews rows by position among parsed rows, while `oat review pending` numbers physical data lines, so one row can read as two numbers when an unparsed row sits above it. Nothing fails open: waiver `**Row:**` values are copied from `pending`. Deferred by operator decision on 2026-11-04 (fixing it now would reopen m02's exit gate and integrated review). Trigger: p08 start (m03), which owns review-table identity; number all three commands by physical data line, or document the difference in the CLI reference.
+- PR #403 Warp review suggestion (nonblocking, [thread](https://github.com/voxmedia/open-agent-toolkit/pull/403#discussion_r4475162750)): `review-event-row-contracts.test.ts` builds the asserted row with a test-local `recordReviewEvent` writer, so that assertion cannot detect a regression in the real review-provide step; the Step 9 prose pin and the real `scaffoldProject` checks in `scaffold.test.ts` keep their coverage. Valid; test hygiene, not a defect. Deferred by operator decision on 2026-11-06 (fixing it now would change test code after reviewed head `c08b2c054` and stale d02's exit gate and integrated review). Trigger: p08 start (m03); remove the simulated writer and its post-write cases.
 
 ## Deviations from Plan / Design
 

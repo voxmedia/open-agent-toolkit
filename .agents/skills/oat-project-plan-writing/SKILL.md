@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.39
+  version: 1.2.40
 ---
 
 # Plan Writing Contract
@@ -565,6 +565,7 @@ Use this loop after an artifact has been written and before the calling skill ha
 6. **Record the outcome**
    - Record a clean pass or residual findings in the calling skill's lifecycle output before handoff.
    - For `plan`, update the `plan` artifact row in the Reviews table without deleting any existing rows. Use `passed` when clean; if residual findings remain, preserve enough detail in the handoff for the next skill/user to act.
+   - That row is this structured review's own event row under the one-writer rule in Review Table Preservation Rules: the unbound `plan` placeholder it claims, or one appended row when none remains. A row a gate child wrote belongs to the gate's event and is updated by that event's receive; never record this outcome on it or add a second row for it.
    - For a bookkeeping-only `plan` result (step 4), use `passed` with the note `bookkeeping-only fixes applied at receive` and one line per finding in the lifecycle output; never report it as a clean review.
    - For `analysis`, mark the analysis artifact as reviewed/verified using the calling skill's analysis-tracking convention, and surface any residual findings before the corresponding apply skill consumes it.
 
@@ -659,6 +660,9 @@ If any required section is missing when a skill edits `plan.md`, it must be rest
   - The first event for a scope/type may claim an unbound `pending` placeholder whose Artifact is `-`.
   - When a new review has a distinct artifact filename and no unbound placeholder remains, append a new row. Never overwrite a bound row merely because its scope/type matches.
   - Later mutations, including archive-path rewrites, must select the event by scope/type and artifact filename. A path move from `reviews/` to `reviews/archived/` keeps the same event identity.
+  - The key is read from ledger cells alone. `Reviewed Head` and the artifact's `oat_gate_run_id` only corroborate it. A row whose Artifact is `-` (an unclaimed placeholder, or a structured review that writes no artifact) never shares a key with another row.
+- **One writer per event.** Each review event has exactly one row. When a gate child or `oat-project-review-provide` Step 9 has already written the row for an event, a lifecycle skill that records the outcome of that review updates that row, matched by Scope + Type + Artifact filename, and never appends a second row for it. A structured review that writes no artifact claims the unbound `pending` placeholder for its scope and type, and appends a row only when no unbound placeholder remains.
+- **Superseded rows (read-side).** A `received` row is superseded by a later row of the same Scope, Type and Invocation class that records a review (any status but `pending`) at the same or a descendant Reviewed Head. The classes are gate (any Gate Target) and lifecycle (`manual` or `auto`); rows of different classes never supersede each other, and a row whose Invocation or Reviewed Head is `-` is never superseded. Readers that select a review event ignore a superseded row. Nothing edits, promotes or deletes it, and its Status stays `received`. `oat review check --project "$PROJECT_PATH" --json` reports superseded rows and duplicate keys; it is read-only and advisory.
 - Skills must **never delete** existing review rows.
 - New rows may be appended (e.g., `p03` for a newly added phase).
 - Status semantics: `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.

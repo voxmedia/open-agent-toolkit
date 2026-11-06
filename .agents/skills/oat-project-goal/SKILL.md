@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # Goal Project
@@ -463,6 +463,8 @@ re-run.
 
 Record the review row in `## Reviews` (or the explicit skip
 `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`).
+The row is the review's own event row under the plan-writing one-writer rule:
+the seeded `plan | artifact` placeholder, never a second row.
 Format and validate again, then create the post-review scoped commit before
 Gate Execution.
 
@@ -511,6 +513,12 @@ review ...` without the global `--json` placement. Reusable declarations
    `targeting_correlation_failed` is never receivable. Correct and revalidate
    `artifact_validation_failed` before receipt. Unknown, contradictory, or
    malformed results stop.
+
+   Pass review-receive the gate result's event (`artifactPath`, `scope`,
+   `reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so
+   receive consumes exactly that artifact through `oat review resolve` and stops
+   on a mismatch instead of selecting the newest review.
+
 6. For a validated, receive-eligible `blocked` result, apply `GOAL-10`:
    - `block`: remediate and re-run the gate up to `maxAttempts` attempts
      (default `2`);

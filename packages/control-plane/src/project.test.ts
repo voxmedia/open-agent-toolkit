@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -284,6 +284,105 @@ oat_review_type: code
     expect(projectState.recommendation).toMatchObject({
       skill: 'oat-project-review-receive',
       reason: 'Unprocessed review feedback exists',
+    });
+  });
+
+  describe('a stranded received row with an active artifact', () => {
+    const strandedHead = 'a'.repeat(40);
+    const laterHead = 'b'.repeat(40);
+
+    async function createStrandedProject(
+      supersedingHead: string,
+    ): Promise<string> {
+      const repoRoot = await createDir('oat-control-plane-stranded-');
+      const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await createReviewRoutingProject(projectDir, 'pr_open');
+      await mkdir(join(projectDir, 'reviews'), { recursive: true });
+      await writeFile(
+        join(projectDir, 'reviews', 'final-review-r1.md'),
+        `---
+oat_review_scope: final
+oat_review_type: code
+oat_review_invocation: gate
+---
+
+# Stranded round
+`,
+        'utf8',
+      );
+      await writeFile(
+        join(projectDir, 'plan.md'),
+        `---
+oat_status: complete
+oat_template: false
+---
+
+## Phase 1: Example
+
+### Task p01-t01: Example
+
+## Reviews
+
+| Scope | Type | Status | Date | Artifact | Reviewed Head | Invocation | Gate Target |
+| ----- | ---- | ------ | ---- | -------- | ------------- | ---------- | ----------- |
+| p01 | code | passed | 2026-06-12 | reviews/p01-review.md | - | manual | - |
+| final | code | received | 2026-06-13 | reviews/final-review-r1.md | ${strandedHead} | gate | codex-6-sol-xhigh |
+| final | code | passed | 2026-06-14 | reviews/archived/final-review-r2.md | ${supersedingHead} | gate | claude-opus-5-5-high |
+`,
+        'utf8',
+      );
+      return projectDir;
+    }
+
+    it('is ignored when a later same-class round recorded a review at the same head', async () => {
+      const projectDir = await createStrandedProject(strandedHead);
+
+      const projectState = await getProjectState(projectDir);
+
+      expect(projectState.reviews[1]).toMatchObject({
+        status: 'received',
+        superseded: true,
+      });
+      expect(projectState.activeReviewArtifacts).toEqual([
+        {
+          path: 'reviews/final-review-r1.md',
+          archived: false,
+          actionable: false,
+        },
+      ]);
+      expect(projectState.recommendation.skill).toBe('oat-project-complete');
+      const [summary] = await listProjects(dirname(projectDir));
+      expect(summary?.recommendation.skill).toBe('oat-project-complete');
+    });
+
+    it('is ignored at a descendant head only when the caller resolves the ancestry', async () => {
+      const projectDir = await createStrandedProject(laterHead);
+
+      // No resolver: the pure reader cannot know the heads' ancestry, so the
+      // row stays live, as before supersession existed.
+      const unresolved = await getProjectState(projectDir);
+      expect(unresolved.recommendation.skill).toBe(
+        'oat-project-review-receive',
+      );
+
+      const asked: string[] = [];
+      const resolved = await getProjectState(projectDir, {
+        resolveReviewHeadAncestry: async (pairs) => {
+          asked.push(
+            ...pairs.map((pair) => `${pair.ancestor}..${pair.descendant}`),
+          );
+          return new Set(asked);
+        },
+      });
+      expect(asked).toEqual([`${strandedHead}..${laterHead}`]);
+      expect(resolved.reviews[1]?.superseded).toBe(true);
+      expect(resolved.recommendation.skill).toBe('oat-project-complete');
+
+      const [summary] = await listProjects(dirname(projectDir), {
+        resolveReviewHeadAncestry: async () =>
+          new Set([`${strandedHead}..${laterHead}`]),
+      });
+      expect(summary?.recommendation.skill).toBe('oat-project-complete');
     });
   });
 

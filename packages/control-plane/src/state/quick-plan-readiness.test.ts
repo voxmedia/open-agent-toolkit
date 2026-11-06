@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   evaluateQuickPlanReadiness,
+  hasPlanReviewSkipLine,
   readRecordLines,
   recordLineMask,
 } from './quick-plan-readiness';
@@ -616,5 +617,27 @@ describe('recordLineMask', () => {
       lines.filter((_, index) => mask[index]),
     );
     expect(readRecordLines(lines)).toEqual(['a', 'd']);
+  });
+});
+
+describe('hasPlanReviewSkipLine', () => {
+  const SKIP =
+    'Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)';
+
+  it('reads the skip line recorded on its own line inside ## Reviews', () => {
+    expect(hasPlanReviewSkipLine(`## Reviews\n\n${SKIP}\n`)).toBe(true);
+    expect(hasPlanReviewSkipLine(`## Reviews\n\n- ${SKIP}\n`)).toBe(true);
+  });
+
+  it('ignores a quotation, a fenced example and a line outside the section', () => {
+    expect(
+      hasPlanReviewSkipLine(`## Reviews\n\nThe guard reads "${SKIP}".\n`),
+    ).toBe(false);
+    expect(
+      hasPlanReviewSkipLine(`## Reviews\n\n\`\`\`text\n${SKIP}\n\`\`\`\n`),
+    ).toBe(false);
+    expect(hasPlanReviewSkipLine(`## Notes\n\n${SKIP}\n\n## Reviews\n\n`)).toBe(
+      false,
+    );
   });
 });

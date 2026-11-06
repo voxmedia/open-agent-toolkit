@@ -72,7 +72,7 @@ mode omits them. `recommendSkill` routes goal projects through a goal priority
 block (terminal declaration, review feedback and recovery records, membership,
 then the milestone status table) that reads only this persisted state.
 
-### `getProjectState(projectPath)`
+### `getProjectState(projectPath, options?)`
 
 Reads one OAT project directory and returns a full `ProjectState` snapshot, including:
 
@@ -103,7 +103,41 @@ provenance:
 Legacy five-column review rows remain supported. Missing, empty, placeholder,
 or invalid provenance is omitted from the parsed object.
 
-### `listProjects(projectsRoot)`
+`parseReviewTable(planContent, { rawReviewedHead: true })` also returns each
+row's unvalidated Reviewed Head cell as `reviewedHeadCell` when the table has
+that column, so a reader that needs exact equality can tell a `-` placeholder
+from an abbreviated or malformed head. `oat review resolve` is that reader. The
+option is off by default, and `ProjectState.reviews` never carries the field.
+
+`parseReviewTable(planContent, { dataLine: true })` also returns each row's
+1-based position among the table's data lines as `dataLine`, counted before
+rows with an empty required cell are dropped, so a dropped row keeps its slot
+and never shifts the number of a later row. `oat review pending` reports this
+number as a row's `row` and matches a waiver's `**Row:**` against it. The option
+is off by default, and `ProjectState.reviews` never carries the field.
+
+A row may also carry `superseded: true`, a read-side mark that is never a
+ledger cell: a `received` row is superseded by a later row of the same Scope,
+Type and Invocation class (gate, or lifecycle: `manual` and `auto`) that
+records a review (any status but `pending`) at the same or a descendant
+Reviewed Head. A row whose Invocation or Reviewed Head is absent is never
+superseded. The router ignores a superseded row when it decides whether review
+feedback is waiting, so a stranded round never routes to
+`oat-project-review-receive`. Superseded rows stay in `reviews` in ledger
+order.
+
+`getProjectState(projectPath, options?)` and `listProjects(projectsRoot,
+options?)` accept `ProjectReadOptions`. This package never runs git, so
+descendant-head supersession needs the caller's
+`resolveReviewHeadAncestry(pairs)`, which returns the `ancestor..descendant`
+keys (`reviewHeadPairKey`) that hold. Without it only same-head supersession
+applies and a distinct head counts as not descending. The OAT CLI supplies a
+resolver backed by `git merge-base --is-ancestor`. The pure rule is exported
+for other readers: `parseReviewTable`, `reviewSupersessionHeadPairs`,
+`findSupersededReviews`, `markSupersededReviews`, `resolveReviewHeadAncestry`
+and `reviewInvocationClass`.
+
+### `listProjects(projectsRoot, options?)`
 
 Reads all projects under a configured projects root and returns lightweight `ProjectSummary` records suitable for list or dashboard surfaces.
 
@@ -151,6 +185,12 @@ against `plan.md` content (`null` when the file is missing) and returns the same
 `quickPlanNotReadyReason` returns the reason `recommendSkill` gives when a quick
 plan is not ready. The CLI dashboard (`oat state refresh`) routes a quick plan in
 progress through both, so it reports the router's route and wording.
+
+`hasPlanReviewSkipLine(planContent)` reports whether `plan.md` records the
+plan-review skip disposition (`Plan artifact review: skipped
+(workflow.autoArtifactReview.plan=false)`) as its own record line inside
+`## Reviews`, the rule the readiness predicate applies. `oat review pending`
+uses it to leave `plan | artifact` out of a project scope's required reviews.
 
 ## Current Consumers
 

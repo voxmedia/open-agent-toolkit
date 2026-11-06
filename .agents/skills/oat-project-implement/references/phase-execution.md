@@ -1012,6 +1012,11 @@ Do not pass `--target` in normal execution. All three receive-eligibility
 conditions must hold: `status` is `ok` or `blocked`, `receiveEligible: true`,
 and `handoff` is non-null.
 
+Pass review-receive the gate result's event (`artifactPath`, `scope`,
+`reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so receive
+consumes exactly that artifact through `oat review resolve` and stops on a
+mismatch instead of selecting the newest review.
+
 - `ok`: consume the artifact through non-pausing judgment-sweep mode.
 - `blocked`: consume blocking findings, route fixes to the original phase
   implementer under the bounded loop, then re-run root review and the gate.

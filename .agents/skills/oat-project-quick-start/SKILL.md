@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.24
+  version: 2.3.25
 ---
 
 # Quick Start Project
@@ -855,7 +855,7 @@ Apply the shared loop exactly:
   neither route applies, fail closed before artifact review.
 - Apply Critical and High artifact-local fixes when unambiguous; offer Medium and Low fixes instead of silently applying them.
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
-- Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
+- Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff. The row is this review's own event row under the plan-writing one-writer rule; never append a second row for it.
 
 ### Gate Execution
 
@@ -927,6 +927,7 @@ as the last check before plan and project completion:
    - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
    - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
    - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
+   - Pass review-receive the gate result's event (`artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`) as its Step 1 gate event, so receive consumes exactly that artifact through `oat review resolve` and stops on a mismatch instead of selecting the newest review.
 
 6. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
@@ -994,7 +995,10 @@ according to its `onFailure` policy.
 Before changing readiness, durably record the review outcome in `plan.md`:
 
 - When review ran, update the `plan` review row in the `## Reviews` section to
-  the outcome reached by Step 3.6. Use `passed` only for a clean result. If
+  the outcome reached by Step 3.6. That row is the structured review's own
+  event row under the one-writer rule in `oat-project-plan-writing` (the
+  claimed `plan` placeholder), never a row the gate child wrote and never a
+  second row. Use `passed` only for a clean result. If
   residual findings remain, retain their actual non-passed status and add a
   concise residual-finding disposition in the same section.
 - When `workflow.autoArtifactReview.plan` is explicitly `false`, record the

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.7
+  version: 1.3.8
 ---
 
 # Progress PR
@@ -236,7 +236,64 @@ Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
 
 Do not let an earlier passed event hide a later event for the same phase.
 
-Do not block PR generation; this is a progress PR.
+Do not block PR generation on this warning; Step 3.5 governs pending
+required reviews.
+
+### Step 3.5: List Pending Required Reviews
+
+Before PR creation, list the required reviews still `pending` or `missing`
+for the PR's scope. This step runs before Step 6 creates a pull request and, in goal mode,
+before Step 5.5 item 4 writes its `registering` entry.
+
+```bash
+oat --json review pending --project "$PROJECT_PATH" --scope "$PENDING_SCOPE"
+```
+
+`PENDING_SCOPE` is the PR's phase scope: `pNN` for a phase PR, the phase ids
+of a contiguous `pNN-pMM` run as a comma list (`p02,p03`), and in goal mode
+the milestone id (`mNN`) for the active milestone's delivery or a registered
+delivery's frozen phase ids as a comma list for a `dNN` or recovery target. A
+`range=` or `base_sha=` scope names no phases, so no listing runs.
+
+The command is read-only and exits 0 whatever it lists. Its `pending` list
+holds required review rows (each scope phase's `code` row) whose latest
+`## Reviews` event is still `pending`; its `missing` list holds the required
+`code` keys of concrete phases (not `**Provisional:** yes`) that have no
+`## Reviews` row at all; its `waived` list holds the ones a recorded waiver
+covers. Treat a `missing` entry exactly like a `pending` one: below, the
+pending rows are both lists. When `pending` and `missing` are both empty,
+continue. Otherwise report each pending row by scope, type and row number
+(`no row` for a `missing` entry), then:
+
+- **Interactive run:** offer three options: run the pending reviews (route to
+  `oat-project-review-provide` with `code <pNN>`, then
+  `oat-project-review-receive`, and end this run), waive them with a recorded
+  reason, or stop.
+- **Waive:** only on the user's explicit choice and with the reason the user
+  gives, append one line per waived row under `## Reviews and Gates` in
+  `implementation.md`:
+  `**Review waived:** <scope> <type> · **Row:** <row> · **Waived by:** <user> · **Date:** <YYYY-MM-DD> · **Reason:** <text>`,
+  where `<row>` is the row number the listing reports (`-` for a `missing`
+  entry).
+  Leave the `## Reviews` table unchanged: a `pending` row stays `pending` and
+  a `missing` key gets no row. Commit only `implementation.md` as bookkeeping
+  (`chore(oat): record review waiver <scope> <type>`; a `synced` project uses
+  `oat project push` with that message), then re-run the listing: the key must
+  now appear under `waived`, not `pending` or `missing`.
+- **Non-interactive run** (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`):
+  stop at this boundary with required reviews pending or missing and no
+  waiver. Report
+  each pending row and the review command that would run it, write no waiver,
+  and create, register or push nothing.
+
+A waiver is not a review. The `## Reviews` table is unchanged; pr-final's final-review
+check, `oat project closeout-check` and `oat project delivery check` never read
+the line.
+A waiver covers only the row it names: once that row records a review, or a
+later row is appended for its key, the waiver is inert and the key is listed
+again. A line naming no row stops applying once any row of its key records a
+review, and while a `## Reviews` row that does not parse sits above a parsed
+row (`unapplied: unparsed-row`); fix that row, then re-run the listing.
 
 ### Step 4: Collect Scope Data
 
@@ -359,7 +416,8 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 `oat-project-brief/references/brief-contract.md` sections 12.5–12.8 govern;
 this step states only the order. It never writes review dispositions, exit
 gate outcomes, or `oat_milestone` itself, and it never registers a delivery
-without passing evidence.
+without passing evidence. Step 3.5's pending-review listing runs before item 4
+writes a `registering` entry; a stop there registers nothing.
 
 1. **Refresh.** When `oat_deliveries` has entries, run
    `oat project delivery refresh --project "$PROJECT_PATH" --json` and commit
@@ -524,6 +582,7 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 ## Success Criteria
 
 - Residual active review artifacts are archived before PR generation continues
+- Required reviews still `pending` or `missing` for the scope were listed before PR creation and were run, waived with a recorded reason, or stopped the run
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
 - Goal mode: the delivery was registered only on a deliverable `delivery check`, idempotently, with its exit-gate result captured and one structural log entry per registration

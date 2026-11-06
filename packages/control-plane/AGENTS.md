@@ -19,6 +19,7 @@ Maintain `@open-agent-toolkit/control-plane` as the typed, read-only "read" laye
 ## Working conventions
 
 - Keep the package read-only: parse and aggregate project artifacts; do not mutate project files or write to disk.
+- Never run git here. A rule that needs commit ancestry takes the answer from the caller, as `## Reviews` supersession does through `ProjectReadOptions.resolveReviewHeadAncestry`; the CLI supplies a `git merge-base --is-ancestor` resolver (`packages/cli/src/commands/review/head-ancestry.ts`), so the router and `oat review check` evaluate the same pairs.
 - Stay dependency-light — no CLI, UI, or server dependencies beyond Node.js builtins and `yaml` for frontmatter parsing.
 - Module layout: `state/` (artifact, task, review, frontmatter parsing), `recommender/` (next-skill routing and boundary logic), `shared/utils/` (errors, normalization, frontmatter helpers).
 - Return stable typed objects (`ProjectState`, `ProjectSummary`); keep shared types in `types.ts` and the public surface in `index.ts`.

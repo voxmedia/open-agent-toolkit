@@ -31,9 +31,78 @@ oat review latest --project .oat/projects/shared/example --actionable-project --
 
 The default resolver is an all-history lookup. It orders candidates by `oat_generated_at` frontmatter, not filesystem mtime. With an active or explicit project, it scans the project's `reviews/` directory first, then `reviews/archived/`, then ad-hoc review locations (`.oat/repo/reviews/` and `.oat/projects/local/orphan-reviews/`). When candidates share the same generated time, active project reviews outrank archived and ad-hoc reviews, then lifecycle recency breaks remaining ties (`final` > higher phase/task scope > lower phase/task scope).
 
-Use `--actionable-project` when project review-receive needs work waiting for disposition. A top-level artifact is actionable only when its scope, type, and artifact path identify a `received` event in the plan's Reviews ledger. Top-level placement alone is insufficient: passed, `fixes_added`, `fixes_completed`, mismatched, and archived events return `actionable: false`. The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. If no matching review exists, those fields are `null`.
+Use `--actionable-project` when project review-receive needs work waiting for disposition. A top-level artifact is actionable only when its scope, type, and artifact path identify a `received` event in the plan's Reviews ledger. Top-level placement alone is insufficient: passed, `fixes_added`, `fixes_completed`, mismatched, and archived events return `actionable: false`. A superseded `received` event (see the status model below) also returns `actionable: false`. The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. If no matching review exists, those fields are `null`.
 
 `oat-project-review-receive` uses this resolver when it is invoked from natural language and needs to offer the latest project review, or route an ad-hoc result to `oat-review-receive`.
+
+### Consuming a gate's review event
+
+A gate path does not ask for the newest review. Every lifecycle path that runs `oat gate review` and then review-receive (implement's exit gate and optional phase gate, and the planning gates) passes receive the event the gate result names: its `artifactPath`, `scope`, `reviewType`, `runId` and `reviewedHead`. Receive resolves that event before reading the artifact:
+
+```bash
+oat --json review resolve --project .oat/projects/shared/example \
+  --artifact .oat/projects/shared/example/reviews/final-review-2026-11-03T120000Z.md \
+  --scope final --type code \
+  --run-id 0f6c7a10-3c1e-4c55-9a43-8b1d2c3e4f50 \
+  --reviewed-head <full SHA from the gate result>
+```
+
+The resolver binds the event's Reviews row by scope, type and artifact filename and checks the row's scope, type, artifact path and reviewed head, and the artifact's `oat_gate_run_id`, against the event. The row's reviewed head must equal the event's `reviewedHead` exactly, which the gate takes from the artifact's `oat_review_head_sha`; a `-` reviewed head (an artifact review) is accepted as unavailable, and any other difference, an ancestor included, is a mismatch. Any mismatch, a missing or duplicate row, or a missing artifact exits nonzero with structured diagnostics, and receive stops without falling back to the newest artifact. Manual and auto reviews pass no event and keep the `oat review latest` selection above.
+
+## Pending required reviews before a PR
+
+Before a pull request is created, `oat-project-pr-progress` (Step 3.5) and
+`oat-project-pr-final` (Step 2.5, or inside goal Step 1.5 before a terminal
+delivery is registered) list the required reviews still `pending` or
+`missing` for the PR's scope:
+
+```bash
+oat --json review pending --project .oat/projects/shared/example --scope p03
+oat --json review pending --project .oat/projects/shared/example --scope m02
+oat --json review pending --project .oat/projects/shared/example --scope project
+```
+
+A required review is the `code` row of each scope phase the plan declares,
+plus the `plan`/`artifact` row for a whole-project scope unless the plan-review
+skip line is recorded. `final` stays with pr-final's final-review check and a
+milestone row with `oat project delivery check`; `spec` and `design` rows are
+never required here. Each key is read from its latest Reviews row, so an
+earlier `passed` row never hides a later `pending` one. A concrete phase whose
+`code` review has no Reviews row at all is listed under `missing`; a phase the
+plan still marks `**Provisional:** yes` is not listed until it has a row. The
+command is read-only and decides nothing.
+
+`missing` is handled exactly like `pending`.
+
+When rows are pending or missing, an interactive run offers to run them, waive them with a
+recorded reason, or stop. A non-interactive run stops at that boundary; in
+pr-final it is the autonomy gate `PRFINAL-06`. A waiver is written only on the
+user's explicit choice, as one line under `## Reviews and Gates` in
+`implementation.md`:
+
+```markdown
+**Review waived:** p03 code · **Row:** 7 · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** docs-only phase, covered by the final review
+```
+
+The Reviews table is unchanged: a waiver adds no Reviews row, status or column, never
+counts as `passed`, and is not read by pr-final's final-review check,
+`oat project closeout-check` or `oat project delivery check`. It moves a key
+from `pending` or `missing` to `waived` in the listing only while the key's
+latest status is `pending`, or it has no row and its phase is concrete, and the
+line carries a reason.
+
+A waiver covers only the pending row it was written for. `**Row:**` names the
+row number the listing reports (`-` for a `missing` key). The waiver applies
+only while that row is still the key's latest row and still `pending`: once
+the row records a review, or a later row is appended for the same key, the
+waiver is inert and the key is listed again, so an old waiver never hides newly
+pending work. A line that names no row applies only until any row of its key
+records a review, because ledger and journal dates cannot order a waiver
+against a review recorded the same day. It also stops applying while a Reviews row
+that does not parse (a blank required cell) sits above a parsed row, because
+that row may hide a recorded review (`unapplied: unparsed-row`). Fix that
+row, then re-run the listing; a waiver that names its row also applies, but a
+`missing` key has no row to name, so fixing the row is its only remedy.
 
 ## Bookkeeping commits (required)
 
@@ -108,6 +177,38 @@ artifact filename identify an event:
 
 Readers that need current lifecycle state use the latest appended event matching
 the relevant scope and type.
+
+Each event has one row and one writer. Scaffolds seed one `pending`
+placeholder per review a mode runs: every mode carries a `plan` artifact row,
+and only spec-driven projects carry `spec` and `design` rows. Quick, import
+and lite seed no placeholder for those artifacts; a review of one, such as a
+quick lightweight-design review, appends its own row under
+`oat-project-review-provide` Step 9. When a gate child or
+`oat-project-review-provide` has written an event's row, the skill that records
+the outcome updates that row, matched by scope, type and artifact filename,
+and never appends a second one. A structured review that writes no artifact
+claims the unbound placeholder for its scope and type. A row whose artifact is
+`-` never shares an event key with another row.
+
+A gate-originated event records `gate` in the invocation column and the exact
+gate target, for artifact reviews as well as code reviews; an artifact review's
+reviewed head stays `-`.
+
+A `received` row is superseded when a later row of the same scope, type and
+invocation class records a review (any status but `pending`) at the same or a
+descendant reviewed head. The classes are gate (any gate target) and lifecycle
+(`manual` or `auto`); rows of different classes never supersede each other,
+and a row whose invocation or reviewed head is `-` is never superseded.
+Supersession is read-side only: the router and `oat review latest` ignore a
+superseded row, so a stranded gate round never routes to review-receive, and
+nothing edits, promotes or deletes the row. To list superseded rows and
+duplicate event keys, run the read-only, advisory check:
+
+```bash
+oat review check --project .oat/projects/shared/example --json
+```
+
+It never changes the ledger and blocks no lifecycle step.
 
 ## Current policy
 

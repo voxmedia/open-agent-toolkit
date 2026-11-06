@@ -691,6 +691,30 @@ describe('oat project delivery check', () => {
     expect(exitCode).toBe(1);
   });
 
+  // m02 p13: a pending-review waiver is one line appended under the journal's
+  // `## Reviews and Gates`. Delivery check never reads it, and appending it is
+  // a section 12.8 bookkeeping successor, so the milestone's evidence and
+  // deliverability are unchanged.
+  it('leaves a milestone check unchanged by an appended review-waiver line', async () => {
+    await receivedMilestone();
+    const before = await check(repo!, 'm01');
+    const journal = await repo!.read('implementation.md');
+    await repo!.write(
+      'implementation.md',
+      `${journal}\n## Reviews and Gates\n\n**Review waived:** p02 code · **Waived by:** operator · **Date:** 2026-11-03 · **Reason:** covered by the integrated review\n`,
+    );
+    repo!.commitAll('chore(oat): record review waiver p02 code');
+
+    const after = await check(repo!, 'm01');
+
+    expect(before.payload).toMatchObject({ status: 'ok', deliverable: true });
+    expect(after.exitCode).toBe(before.exitCode);
+    expect({ ...after.payload, publishedHeads: null }).toEqual({
+      ...before.payload,
+      publishedHeads: null,
+    });
+  });
+
   it('reports an Outcome change after review as stale', async () => {
     const chain = await receivedMilestone();
     const plan = await repo!.read('plan.md');

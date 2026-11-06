@@ -14,7 +14,15 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { readOatLocalConfig, type OatLocalConfig } from '@config/oat-config';
 import { normalizeToPosixPath, resolveProjectRoot } from '@fs/paths';
+import {
+  markSupersededReviews,
+  parseReviewTable,
+  resolveReviewHeadAncestry,
+  type ReviewHeadAncestryResolver,
+} from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
+
+import { createGitReviewHeadAncestryResolver } from './head-ancestry';
 
 export type ReviewLatestKind = 'project' | 'adhoc';
 
@@ -38,6 +46,11 @@ export interface FindLatestReviewOptions {
   repoRoot: string;
   projectPath?: string | null;
   actionableProjectOnly?: boolean;
+  /**
+   * Resolves head ancestry for descendant-head supersession. Without one,
+   * only same-head supersession applies.
+   */
+  resolveReviewHeadAncestry?: ReviewHeadAncestryResolver;
 }
 
 interface ReviewLatestDependencies {
@@ -219,10 +232,40 @@ function parseReviewLedgerEvents(planContent: string): ReviewLedgerEvent[] {
   }));
 }
 
+function ledgerEventKey(scope: string, type: string, artifact: string): string {
+  return [
+    scope.trim().toLowerCase(),
+    type.trim().toLowerCase(),
+    normalizeToPosixPath(artifact.trim()),
+  ].join('\u0000');
+}
+
+/**
+ * Event keys of the `received` rows a later recorded round supersedes (same
+ * Scope, Type and Invocation class, same or descendant Reviewed Head). Their
+ * artifacts are never actionable.
+ */
+async function supersededLedgerEvents(
+  planContent: string,
+  resolver: ReviewHeadAncestryResolver | undefined,
+): Promise<Set<string>> {
+  const rows = parseReviewTable(planContent);
+  const marked = markSupersededReviews(
+    rows,
+    await resolveReviewHeadAncestry(rows, resolver),
+  );
+  return new Set(
+    marked
+      .filter((row) => row.superseded === true)
+      .map((row) => ledgerEventKey(row.scope, row.type, row.artifact)),
+  );
+}
+
 async function correlateProjectActionability(
   repoRoot: string,
   projectPath: string,
   candidates: ReviewCandidate[],
+  resolver: ReviewHeadAncestryResolver | undefined,
 ): Promise<ReviewCandidate[]> {
   let planContent: string;
   try {
@@ -246,6 +289,7 @@ async function correlateProjectActionability(
   if (events.length === 0) {
     return candidates;
   }
+  const superseded = await supersededLedgerEvents(planContent, resolver);
 
   return candidates.map((candidate) => {
     if (candidate.kind !== 'project' || candidate.archived) {
@@ -264,7 +308,15 @@ async function correlateProjectActionability(
 
     return {
       ...candidate,
-      actionable: matchingEvent?.status.toLowerCase() === 'received',
+      actionable:
+        matchingEvent?.status.toLowerCase() === 'received' &&
+        !superseded.has(
+          ledgerEventKey(
+            matchingEvent.scope,
+            matchingEvent.type,
+            matchingEvent.artifact,
+          ),
+        ),
     };
   });
 }
@@ -365,6 +417,7 @@ export async function findLatestReview(
       options.repoRoot,
       projectPath,
       candidates,
+      options.resolveReviewHeadAncestry,
     );
   }
   if (options.actionableProjectOnly) {
@@ -416,6 +469,7 @@ async function runReviewLatest(
       repoRoot,
       projectPath,
       actionableProjectOnly: options.actionableProject,
+      resolveReviewHeadAncestry: createGitReviewHeadAncestryResolver(repoRoot),
     });
 
     if (context.json) {

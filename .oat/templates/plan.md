@@ -166,7 +166,7 @@ git commit -m "feat(p01-t02): {description}"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed. Spec-driven projects keep `spec`/`design`; quick and import scaffolds seed no `spec`/`design` placeholder, and a review of those artifacts, such as a quick lightweight-design review, appends its own row under review-provide Step 9.}
 
 | Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
@@ -175,6 +175,7 @@ git commit -m "feat(p01-t02): {description}"
 | final  | code     | pending | -    | -        | -             | -          | -           |
 | spec   | artifact | pending | -    | -        | -             | -          | -           |
 | design | artifact | pending | -    | -        | -             | -          | -           |
+| plan   | artifact | pending | -    | -        | -             | -          | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

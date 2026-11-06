@@ -14,6 +14,11 @@ import {
   parseStateFrontmatter,
 } from './state/parser';
 import {
+  markSupersededReviews,
+  resolveReviewHeadAncestry,
+  type ReviewHeadAncestryResolver,
+} from './state/review-supersession';
+import {
   parseReviewArtifactIdentity,
   parseReviewTable,
   scanUnprocessedReviews,
@@ -28,8 +33,20 @@ import {
   type ReviewStatus,
 } from './types';
 
+/** Options shared by the project readers. */
+export interface ProjectReadOptions {
+  /**
+   * Answers which `## Reviews` head pairs are ancestor relations, so a
+   * `received` row superseded at a descendant head is ignored. This package
+   * never runs git: a caller that can (the CLI) supplies the resolver. Without
+   * one, only same-head supersession applies.
+   */
+  resolveReviewHeadAncestry?: ReviewHeadAncestryResolver;
+}
+
 export async function getProjectState(
   projectPath: string,
+  options: ProjectReadOptions = {},
 ): Promise<ProjectState> {
   const displayPath = await resolveProjectDisplayPath(projectPath);
   const [
@@ -47,7 +64,10 @@ export async function getProjectState(
   ]);
 
   const parsedState = parseStateFrontmatter(stateContent);
-  const tableReviews = parseReviewTable(planContent);
+  const tableReviews = await readReviewTable(
+    planContent,
+    options.resolveReviewHeadAncestry,
+  );
   const activeReviewArtifacts = await toActiveReviewArtifacts(
     reviewFiles,
     projectPath,
@@ -102,6 +122,7 @@ export async function getProjectState(
 
 export async function listProjects(
   projectsRoot: string,
+  options: ProjectReadOptions = {},
 ): Promise<ProjectSummary[]> {
   const repoRoot = await findRepoRoot(projectsRoot);
   const entries = await readdir(projectsRoot, { withFileTypes: true });
@@ -128,7 +149,10 @@ export async function listProjects(
           scanUnprocessedReviews(projectDir),
         ]);
       const parsedState = parseStateFrontmatter(stateContent);
-      const tableReviews = parseReviewTable(planContent);
+      const tableReviews = await readReviewTable(
+        planContent,
+        options.resolveReviewHeadAncestry,
+      );
       const activeReviewArtifacts = await toActiveReviewArtifacts(
         reviewFiles,
         projectDir,
@@ -363,6 +387,21 @@ async function readOptionalFile(path: string): Promise<string> {
   }
 }
 
+/**
+ * The `## Reviews` rows with read-side supersession marked. Superseded rows
+ * stay in the list, in ledger order, so newest-row readers are unchanged.
+ */
+async function readReviewTable(
+  planContent: string,
+  resolver: ReviewHeadAncestryResolver | undefined,
+): Promise<ReviewStatus[]> {
+  const rows = parseReviewTable(planContent);
+  return markSupersededReviews(
+    rows,
+    await resolveReviewHeadAncestry(rows, resolver),
+  );
+}
+
 function mergeReviews(
   tableReviews: ReviewStatus[],
   activeReviewArtifacts: ReviewArtifactStatus[],
@@ -407,7 +446,8 @@ async function toActiveReviewArtifacts(
             review.scope.toLowerCase() === identity.scope.toLowerCase() &&
             review.type.toLowerCase() === identity.type.toLowerCase() &&
             review.artifact === path &&
-            review.status.toLowerCase() === 'received',
+            review.status.toLowerCase() === 'received' &&
+            review.superseded !== true,
         );
 
       return {

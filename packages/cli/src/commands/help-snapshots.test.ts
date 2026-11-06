@@ -707,6 +707,40 @@ describe('help output snapshots', () => {
       OAT review artifact commands
 
       Options:
+        -h, --help         display help for command
+
+      Global Options:
+        -V, --version      output the version number
+        --json             Output a single JSON document
+        --verbose          Enable verbose debug output
+        --cwd <path>       Override working directory
+
+      Commands:
+        latest [options]   Find the most recent OAT review artifact
+        check [options]    Report superseded and duplicate Reviews ledger rows
+                           (advisory)
+        resolve [options]  Bind a gate result event to its Reviews row and validate
+                           it (fails closed)
+        pending [options]  List required reviews still pending for a PR scope
+                           (read-only)
+        help [command]     display help for command
+      "
+    `);
+  });
+
+  it('review check --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'check',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat review check [options]
+
+      Report superseded and duplicate Reviews ledger rows (advisory)
+
+      Options:
+        --project <path>  Project path to check (defaults to the active project)
         -h, --help        display help for command
 
       Global Options:
@@ -714,10 +748,61 @@ describe('help output snapshots', () => {
         --json            Output a single JSON document
         --verbose         Enable verbose debug output
         --cwd <path>      Override working directory
+      "
+    `);
+  });
 
-      Commands:
-        latest [options]  Find the most recent OAT review artifact
-        help [command]    display help for command
+  it('review resolve --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'resolve',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat review resolve [options]
+
+      Bind a gate result event to its Reviews row and validate it (fails closed)
+
+      Options:
+        --project <path>       Project path (defaults to the active project)
+        --artifact <path>      The gate result's artifactPath
+        --scope <scope>        The gate result's scope
+        --type <type>          The gate result's reviewType (code or artifact)
+        --run-id <id>          The gate result's runId
+        --reviewed-head <sha>  The gate result's reviewedHead (full SHA)
+        -h, --help             display help for command
+
+      Global Options:
+        -V, --version          output the version number
+        --json                 Output a single JSON document
+        --verbose              Enable verbose debug output
+        --cwd <path>           Override working directory
+      "
+    `);
+  });
+
+  it('review pending --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'pending',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat review pending [options]
+
+      List required reviews still pending for a PR scope (read-only)
+
+      Options:
+        --project <path>  Project path (defaults to the active project)
+        --scope <scope>   project, one milestone (mNN), or a comma list of phase ids
+                          (pNN)
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
       "
     `);
   });

@@ -5,16 +5,14 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { getProjectStateWithReviewAncestry } from '@commands/review/head-ancestry';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
   type ActiveProjectResolution,
 } from '@config/oat-config';
 import { resolveProjectRoot } from '@fs/paths';
-import {
-  getProjectState,
-  type ProjectState,
-} from '@open-agent-toolkit/control-plane';
+import { type ProjectState } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 
 interface ProjectStatusDependencies {
@@ -34,7 +32,7 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveActiveProject,
-  getProjectState,
+  getProjectState: getProjectStateWithReviewAncestry,
 };
 
 function resolveTargetProjectPath(

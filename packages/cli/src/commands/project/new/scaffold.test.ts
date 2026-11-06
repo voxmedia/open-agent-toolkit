@@ -36,6 +36,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
 import {
+  omitUnusedArtifactReviewRows,
   scaffoldProject as scaffoldProjectImpl,
   type ScaffoldProjectOptions,
   type ScaffoldProjectResult,
@@ -1502,6 +1503,74 @@ describe('scaffoldProject', () => {
       }
     },
   );
+
+  it.each([
+    {
+      mode: 'spec-driven' as const,
+      artifactScopes: ['spec', 'design', 'plan'],
+    },
+    { mode: 'quick' as const, artifactScopes: ['plan'] },
+    { mode: 'import' as const, artifactScopes: ['plan'] },
+    { mode: 'lite' as const, artifactScopes: ['plan'] },
+    { mode: 'brief' as const, artifactScopes: ['plan'] },
+    { mode: 'goal' as const, artifactScopes: ['plan'] },
+  ])(
+    'seeds exactly the $mode artifact review placeholders the mode reviews',
+    async ({ mode, artifactScopes }) => {
+      // One row per review event: every mode carries a `plan` placeholder the
+      // plan review claims, and only spec-driven seeds `spec`/`design` rows;
+      // in the other modes a review of those artifacts appends its own row.
+      const repoRoot = await createRepoRootWithRealTemplates();
+      tempDirs.push(repoRoot);
+
+      const result = await scaffoldProject({
+        repoRoot,
+        projectName: `review-rows-${mode}`,
+        mode,
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-02-16',
+      });
+
+      const plan = await readFile(
+        join(repoRoot, result.projectPath, 'plan.md'),
+        'utf8',
+      );
+      const artifactRows = [
+        ...plan.matchAll(
+          /^\|\s*([a-z0-9-]+)\s*\|\s*artifact\s*\|\s*pending\s*\|\s*-\s*\|\s*-\s*\|/gm,
+        ),
+      ].map((match) => match[1]);
+      expect(artifactRows.sort()).toEqual([...artifactScopes].sort());
+    },
+  );
+
+  it('drops only unclaimed spec/design placeholders, never a bound row', () => {
+    const table = [
+      '## Reviews',
+      '',
+      '| Scope  | Type     | Status   | Date       | Artifact             |',
+      '| ------ | -------- | -------- | ---------- | -------------------- |',
+      '| spec   | artifact | pending  | -          | -                    |',
+      '| design | artifact | received | 2026-02-16 | reviews/design-r.md  |',
+      '| design | artifact | pending  | -          | -                    |',
+      '| plan   | artifact | pending  | -          | -                    |',
+      '',
+      '## Implementation Complete',
+      '',
+      '| spec   | artifact | pending  | -          | -                    |',
+    ].join('\n');
+
+    const quick = omitUnusedArtifactReviewRows(table, 'quick');
+    const [reviews, after] = quick.split('## Implementation Complete');
+    expect(reviews).not.toContain('| spec ');
+    expect(quick).toContain('| design | artifact | received |');
+    expect(quick).toContain('| plan   | artifact | pending  |');
+    expect(quick.match(/\| design \| artifact \| pending/g)).toBeNull();
+    // Rows outside the Reviews section are not touched.
+    expect(after).toContain('| spec   | artifact | pending');
+    expect(omitUnusedArtifactReviewRows(table, 'spec-driven')).toBe(table);
+  });
 
   it.each(['spec-driven', 'quick', 'import', 'lite', 'brief', 'goal'] as const)(
     'creates no oat-execution-learnings.md when scaffolding a %s project',

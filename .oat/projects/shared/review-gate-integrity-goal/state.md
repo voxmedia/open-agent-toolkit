@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 395b90677db9487e42f01d31b045f4819f3d85ae
+oat_last_commit: 66defc07b6204d3278ee99e7efb37e0802d9387c
 oat_blockers: []
 associated_issues:
   # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -71,9 +71,12 @@ oat_phase_recovery_policy:
     p10:
       used_attempts: 1
       pending_attempt: null
+    p13:
+      used_attempts: 1
+      pending_attempt: null
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
-oat_milestone: m01
+oat_milestone: m02
 oat_milestone_status: delivered
 oat_goal_status: active
 oat_goal_outcome_audit: null
@@ -100,15 +103,40 @@ oat_milestone_gates:
       subject:
         kind: code
         scope: [p01, p02, p10, p11]
-      freshness: fresh
+      freshness: stale
       decided_at: '2026-11-02T23:56:32Z'
+      freshness_reason: 'delivery refresh (d01): disallowed-path: 4a870d471b88068a8dbc598cfa9612ce46958b59 changes .agents/skills/oat-project-plan-writing/SKILL.md, which is not permitted bookkeeping'
+  m02:
+    plan:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75'
+      reviewed_head: ee377dd7bcbedec4e0c66cc8d12a754c45c1587d
+      subject:
+        kind: plan
+        scope: [p07, p12, p13]
+        ref: ee377dd7bcbedec4e0c66cc8d12a754c45c1587d
+      decided_at: '2026-11-03T03:17:46Z'
+    exit:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2'
+      reviewed_head: c08b2c054d95dda0691fc3a247b70c5acdaa8007
+      subject:
+        kind: code
+        scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3]
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-04T02:00:17Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
     scope: [p01, p02, p10, p11]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -120,9 +148,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/400
         base: '892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3'
         reviewed_head: '5599af21d4927c7d39c668b9d1662509e5d3b403'
-        observed_head: 94d2f23b4b80d639a650bbc25ab828fb44556ef2
+        observed_head: 4a870d471b88068a8dbc598cfa9612ce46958b59
         observed_base: 892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/m01-review-2026-11-03T000239Z.md
       scope: [p01, p02, p10, p11]
@@ -134,7 +162,7 @@ oat_deliveries:
             head: '5599af21d4927c7d39c668b9d1662509e5d3b403',
           },
         ]
-      disposition: passed
+      disposition: stale
     exit_gate:
       status: allowed
       disposition: passed
@@ -144,6 +172,54 @@ oat_deliveries:
       subject: { kind: code, scope: [p01, p02, p10, p11] }
       freshness: fresh
       decided_at: '2026-11-02T23:56:32Z'
+    endpoint_attainment:
+      observed_at: 2026-11-03T01:47:59.352Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/400
+          head: 4a870d471b88068a8dbc598cfa9612ce46958b59
+          base: 892ecdc0a70e2bf8c8c14b28a8042f9d03c00fa3
+          status: merged
+  - delivery_id: d02
+    milestone: m02
+    scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3]
+    endpoint: merged
+    kind: pr
+    status: open
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: goal/review-gate-integrity-m02
+      head_sha_at_registration: 'b645d1fc57ab0a3dff5983564d765b7b87233c6f'
+    members:
+      - url: https://github.com/voxmedia/open-agent-toolkit/pull/403
+        base: 'c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b'
+        reviewed_head: 'c08b2c054d95dda0691fc3a247b70c5acdaa8007'
+        observed_head: 4787dd12cde5162a362ac308bc53530db085244f
+        observed_base: c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b
+        status: open
+    integrated_review:
+      artifact: reviews/archived/m02-review-2026-11-04T020725Z.md
+      scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3]
+      bound_revisions:
+        [
+          {
+            member: 0,
+            base: 'c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b',
+            head: 'c08b2c054d95dda0691fc3a247b70c5acdaa8007',
+          },
+        ]
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2'
+      reviewed_head: c08b2c054d95dda0691fc3a247b70c5acdaa8007
+      subject: { kind: code, scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3] }
+      freshness: fresh
+      decided_at: '2026-11-04T02:00:17Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -198,22 +274,22 @@ oat_deliveries:
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/400' # null | string — tracked PR URL when a PR exists
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/403' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-03T00:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-05T00:28:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-gate-integrity-goal
 
-**Status:** Implement (m01)
+**Status:** Implement (m02)
 **Started:** 2026-11-01
-**Last Updated:** 2026-11-02
+**Last Updated:** 2026-11-03
 
 ## Current Phase
 
-Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
+m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its integrated review and exit gate are stale by the operator-accepted post-gate Bugbot fixes. m02 (p07, p12, p13) approved and activated 2026-11-03.
 
 ## Artifacts
 
@@ -230,7 +306,10 @@ Implementing m01 (p01, p02, p10, p11) under the amendment approved 2026-11-02
 - ✓ p10 accepted (bookkeeping definition and the receive rule)
 - ✓ p11 accepted (implement and planning paths, docs, release 0.3.44, DR-261102-bookkeeping-only-review)
 - ✓ m01 exit gate passed (fresh at 1a5a37684)
-- ⧗ m01 integrated review fixes (p11-t07), then exit gate and a new integrated review
+- ✓ m01 integrated review cycle 2 passed; exit gate rerun passed; d01 registered and PR #400 merged 2026-11-03 (post-gate Bugbot fixes accepted without re-gating)
+- ✓ m02 amendment (p07, p12, p13) reviewed and gated
+- ✓ m02 amendment approved and m02 activated (2026-11-03)
+- ⧗ p07 implementation
 
 ## Blockers
 
@@ -238,4 +317,4 @@ None
 
 ## Next Milestone
 
-Continue `oat-project-implement` at m01 milestone closeout
+Continue `oat-project-implement` at p07

@@ -117,6 +117,136 @@ rgi-m01-closeout-c2: m01 closeout. Exit gate attempt 5 passed at 5599af21d (0/0/
 
 Registered d01 for m01 (p01, p02, p10, p11) at https://github.com/voxmedia/open-agent-toolkit/pull/400; review-gate-integrity-goal-register-d01
 
+### 2026-11-03 · structural · oat-project-goal · m01
+
+Re-alignment entry for m01: d01 (PR 400) observed merged at its endpoint (squash c7cd3b715); integrated review and exit gate stale by operator-directed post-gate Bugbot fixes (4a870d471); review-gate-integrity-goal-realign-m01
+
+### 2026-11-03 · project · friction · PR bots review after the milestone gates and can force post-gate fixes
+
+**Category:** gotcha
+**Source:** review-gate-integrity-goal-learning-m01-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-03T02:05:12Z
+
+Observation: Cursor Bugbot reviewed PR 400 after the m01 exit gate and cycle-2 integrated review had passed with no findings, and raised two valid skill-prose findings (one High). The operator had them fixed on the delivery branch without re-gating, which staled d01's integrated review and the m01 exit carrier at the merge.
+Impact: The goal's evidence chain ends stale for m01 even though the merged code is better than what was gated; each later milestone can repeat this.
+Recommendation: For m02 onward, open the delivery PR (draft) before the integrated review so PR-bot findings fold into the reviewed head, or agree up front that post-gate bot fixes merge without re-gating and record them as operator-accepted staleness.
+
+### 2026-11-03 · project · friction · Squash merge requires a fresh branch for the next milestone
+
+**Category:** gotcha
+**Source:** review-gate-integrity-goal-learning-m01-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-03T02:05:12Z
+
+Observation: PR 400 was squash-merged, so the 126 goal-branch commits are not ancestors of main even though the trees match. Continuing on goal/review-gate-integrity would carry duplicate history into the m02 PR.
+Impact: Each milestone after a squash merge needs a new head branch cut from the observed integration base.
+Recommendation: Cut goal/review-gate-integrity-m02 (and later mNN branches) from origin/main after each endpoint observation; d01's lookup keys keep the old head branch, which refresh resolves by PR URL.
+
+### 2026-11-03 · structural · oat gate review · plan
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/artifact-plan-review-2026-11-03T023206Z.md run=6cf18b35-39f7-4103-9625-ad09950fd3c7
+
+### 2026-11-03 · structural · oat-project-goal · m02
+
+Activated m02 (p07, p12, p13); review-gate-integrity-goal-activate-m02
+
+### 2026-11-03 · structural · oat-project-implement · p07
+
+p07 accepted: review round 1 passed (0C/0H/1M/3L, fixes p07-t05..t07), round 2 re-review of the fix range passed (0/0/0/1, Low deferred to p12); 1 fix loop; head 34ebd3ef9. rgi-p07-outcome-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p12
+
+Made p12 concrete before dispatch (plan-and-resume Step 2.2), within Outcome 4 and Decision (3) gap-only provenance: the gate captures and emits reviewedHead; a read-only resolver binds and validates the gate-named Reviews event and fails closed; receive Step 1 accepts the gate event; adopting paths settled as every gate-then-receive path (implement exit gate, phase gate, eight planning gates); artifact-gate rows record Invocation gate and the gate target; folds in the p07 re-review L1 deferral. No Outcome, Constraint, Decision, endpoint or Approach changed. rgi-p12-concrete-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p12
+
+Amended p12's concrete Intent after the implementer showed the dispatch HEAD differs from the Reviews row's Reviewed Head (the reviewed range end) on every anchored gate: reviewedHead is the artifact's oat_review_head_sha when present, else the dispatch HEAD; the gate's corroboration reports match/ancestor/mismatch/unavailable against the dispatch HEAD; the resolver keeps exact equality. Within Outcome 4; no Outcome, Constraint or Decision changed. rgi-p12-head-amend-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p12
+
+p12 accepted: review round 1 passed (0C/0H/1M/4L, fixes p12-t06..t07; L2 deferred, L3 accepted and reported, L4 corrected), round 2 re-review of the fix range passed (0/0/0/0); 1 fix loop; head 8016d7d98. rgi-p12-outcome-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p13
+
+Made p13 concrete before dispatch (plan-and-resume Step 2.2), within Outcome 4: a read-only oat review pending command lists required pending rows per PR scope (phase code rows in scope, plan artifact for project scope unless skip-lined; never spec, design, final or mNN); the Known Unknown settles on the journal slot (row stays pending, one appended **Review waived:** line in ## Reviews and Gates, user-written only), because a Reviews cell would break the Outcome 4 event key or be overwritten; pr-progress and pr-final list before PR creation with run, waive or stop, non-interactive stop, new PRFINAL-06 row. Departs from the backlog item's 'recorded in the Reviews table' wording, as the Known Unknown permits. Seeded the p13 code Reviews row. rgi-p13-concrete-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p13
+
+p13 review M1 (a concrete phase with no Reviews row escapes the pending listing) extended the literal Intent, so it went to the operator before any fix task; the operator chose a separate missing list that both PR skills treat like pending (2026-11-03). Recorded in the p13 Intent and Exit evidence; fix tasks p13-t05..t07. rgi-p13-m1-decision-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p13
+
+p13 accepted: review round 1 passed (0C/0H/1M/3L; M1 put to the operator, who chose the missing list; fixes p13-t05..t07; L3 deferred to the backlog item's closure), round 2 re-review of the fix range passed (0/0/0/1 bookkeeping, fixed at receive); 1 fix loop; head 2375b77bd. m02 phases p07, p12, p13 all accepted. rgi-p13-outcome-20261103
+
+### 2026-11-03 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=788ae91a-3479-436f-8d7d-08bfa2e064f8
+
+### 2026-11-03 · structural · oat gate review · p07-p13
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T215601Z.md run=93e1b0a1-9b04-4c31-9aa2-e032b9820a9d
+
+### 2026-11-03 · structural · oat-project-implement · m02
+
+m02 exit gate (run 93e1b0a1, scope p07-p13, Sol xhigh cross-family) passed its threshold with M1 (resolve accepts a malformed Reviewed Head) and M2 (synced-project ancestry runs in the nested checkout). Later phases have bases, so per the late-fix rule both go to appended revision phases inside m02: p-rev1 corrects p12, p-rev2 corrects p07; milestone row now p07, p12, p13, p-rev1, p-rev2. The gate reruns over p07-p-rev2 after both are accepted. rgi-m02-exit1-revisions-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p-rev1
+
+p-rev1 accepted (corrects p12, m02 exit gate M1): review passed 0/0/0/1, Low deferred; 0 fix loops; head 2c341cff5. rgi-prev1-outcome-20261103
+
+### 2026-11-03 · structural · oat-project-implement · p-rev2
+
+p-rev2 accepted (corrects p07, m02 exit gate M2): review passed 0/0/0/1, Low deferred; 0 fix loops; head d128a4118. All m02 phase-units accepted; the exit gate reruns over p07-p-rev2. rgi-prev2-outcome-20261103
+
+### 2026-11-03 · structural · oat-project-review-provide · p07-p-rev2
+
+Completed one read-only reconnaissance wave with two native gpt-6.1-terra medium lanes; primary verified their evidence and wrote reviews/range-review-2026-11-03T224623Z.md with 0 Critical, 0 High, 1 Medium and 0 Low findings. d738cd0e-5795-48ef-a387-e3ec184f90e5-review-recon
+
+### 2026-11-03 · structural · oat gate review · p07-p-rev2
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T224623Z.md run=d738cd0e-5795-48ef-a387-e3ec184f90e5
+
+### 2026-11-03 · structural · oat-project-implement · m02
+
+m02 exit gate rerun (run d738cd0e, scope p07-p-rev2, Sol xhigh) passed its threshold; the first run's M1 and M2 are resolved; new M1: a retired waiver reapplies to a later pending row. Appended revision phase p-rev3 (corrects p13); the gate reruns over p07-p-rev3. rgi-m02-exit2-revision-20261103
+
+### 2026-11-04 · structural · oat-project-implement · p-rev3
+
+p-rev3 reached the 3-cycle review cap with one Low (the PR skills omit the unparsed-row waiver case). The operator chose to fix it as p-rev3-t04 and let the m02 exit gate rerun over p07-p-rev3 review it, with no fourth p-rev3 cycle. rgi-prev3-cap-20261103
+
+### 2026-11-04 · structural · oat-project-implement · p-rev3
+
+p-rev3 accepted (corrects p13, m02 exit gate rerun M1): review cycles 1-3 passed 0/0/0/1 each with fixes t02, t03, t04; t04 accepted at the cycle cap by operator decision and reviewed by the next exit gate rerun; head c08b2c054. All m02 phase-units accepted; the exit gate reruns over p07-p-rev3. rgi-prev3-outcome-20261103
+
+### 2026-11-04 · structural · oat-project-review-provide · p07-p-rev3
+
+Completed read-only mechanical test reconnaissance for reviews/range-review-2026-11-04T015726Z.md; root reconciled evidence inline; 81c12aac-482e-4ffd-93f3-b796e9c4ae76-review-orchestration
+
+### 2026-11-04 · structural · oat gate review · p07-p-rev3
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-04T015726Z.md run=81c12aac-482e-4ffd-93f3-b796e9c4ae76
+
+### 2026-11-04 · structural · oat-project-implement · m02
+
+m02 exit gate rerun 81c12aac (p07-p-rev3, codex-6-sol-xhigh) passed 0/0/0/0 after three runs; exit carrier allowed and fresh at c08b2c054; m02 moved to reviewing. rgi-m02-exit-allowed-20261104
+
+### 2026-11-04 · project · friction · Repo records after a reviewed head stale goal milestone evidence
+
+**Category:** gotcha
+**Source:** rgi-learning-m02-01
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-04T16:05:36Z
+
+Observation: a commit filing a backlog item (.oat/repo/pjm/backlog/) after m02's reviewed head made oat project delivery check report the exit carrier and integrated review stale (disallowed-path), although the implementation fingerprint excludes .oat/repo.
+Impact: a goal milestone can lose fresh gate and review evidence from a repo-record write unrelated to its code.
+Recommendation: file backlog items and decision records for a milestone on a separate branch, or after delivery; consider admitting .oat/repo paths as section 12.8 bookkeeping successors.
+Uncertainty: whether excluding .oat/repo from the successor rule is intended.
+
+### 2026-11-05 · structural · oat-project-pr-progress · d02
+
+Registered d02 for m02 (p07, p12, p13, p-rev1, p-rev2, p-rev3) at https://github.com/voxmedia/open-agent-toolkit/pull/403; rgi-register-d02
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -562,6 +562,8 @@ describe('oat gate', () => {
     preFindingsBody?: string[];
     /** Replaces the Low section content (pair with explicit counts). */
     lowFindingLines?: string[];
+    /** Written as `oat_review_head_sha` when set. */
+    reviewHeadSha?: string;
   }): Promise<string> {
     const relativePath = `${options.projectPath}/reviews/${options.fileName ?? 'p01-review.md'}`;
     await mkdir(join(options.root, dirname(relativePath)), {
@@ -629,6 +631,9 @@ describe('oat gate', () => {
             ]),
         'oat_review_type: code',
         `oat_review_scope: ${options.reviewScope ?? 'p01'}`,
+        ...(options.reviewHeadSha
+          ? [`oat_review_head_sha: ${options.reviewHeadSha}`]
+          : []),
         ...(options.reviewInvocation === null
           ? []
           : [`oat_review_invocation: ${options.reviewInvocation ?? 'gate'}`]),
@@ -4475,6 +4480,247 @@ describe('oat gate', () => {
       stdio: 'pipe',
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  describe('reviewedHead', () => {
+    const GATE_ARGS = [
+      '--target',
+      'codex-default',
+      '--review-scope',
+      'p01',
+      '--review-type',
+      'code',
+      '--exit-nonzero-on',
+      'high',
+      'Use oat-project-review-provide code p01.',
+    ];
+
+    function git(cwd: string, args: string[]): string {
+      return execFileSync('git', args, {
+        cwd,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: 'Test',
+          GIT_AUTHOR_EMAIL: 'test@example.com',
+          GIT_COMMITTER_NAME: 'Test',
+          GIT_COMMITTER_EMAIL: 'test@example.com',
+        },
+      }).trim();
+    }
+
+    /** A gate root that is a git repository with two commits. */
+    async function setupRepo(): Promise<{
+      root: string;
+      home: string;
+      projectPath: string;
+      parent: string;
+      child: string;
+    }> {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      git(root, ['init', '-q']);
+      await writeFile(join(root, 'a.txt'), 'a\n', 'utf8');
+      git(root, ['add', 'a.txt']);
+      git(root, ['commit', '-q', '-m', 'one']);
+      const parent = git(root, ['rev-parse', 'HEAD']);
+      await writeFile(join(root, 'a.txt'), 'b\n', 'utf8');
+      git(root, ['commit', '-q', '-am', 'two']);
+      const child = git(root, ['rev-parse', 'HEAD']);
+      return { root, home, projectPath, parent, child };
+    }
+
+    it('reports the artifact head as reviewedHead and a match against the dispatch HEAD', async () => {
+      const { root, home, projectPath, child } = await setupRepo();
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            reviewHeadSha: child,
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        receiveEligible: true,
+        reviewedHead: child,
+        corroboration: {
+          reviewedHead: { status: 'match', expected: child, actual: child },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports an anchored artifact head as reviewedHead, never the dispatch HEAD, on a blocked result', async () => {
+      const { root, home, projectPath, parent, child } = await setupRepo();
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'high',
+            reviewHeadSha: parent,
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'blocked',
+        receiveEligible: true,
+        reviewedHead: parent,
+        corroboration: {
+          reviewedHead: { status: 'ancestor', expected: child, actual: parent },
+        },
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('falls back to the HEAD captured at dispatch, not after the reviewer commits, when the artifact has no head', async () => {
+      const { root, home, projectPath, child } = await setupRepo();
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+          // The reviewer's own bookkeeping commit lands after dispatch.
+          await writeFile(join(root, 'a.txt'), 'c\n', 'utf8');
+          git(root, ['commit', '-q', '-am', 'reviewer bookkeeping']);
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(git(root, ['rev-parse', 'HEAD'])).not.toBe(child);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        reviewedHead: child,
+        corroboration: {
+          reviewedHead: {
+            status: 'unavailable',
+            expected: child,
+            actual: null,
+          },
+        },
+      });
+    });
+
+    it('reports a mismatch without changing receive eligibility', async () => {
+      const { root, home, projectPath, child } = await setupRepo();
+      const unrelated = 'a'.repeat(40);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            reviewHeadSha: unrelated,
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        receiveEligible: true,
+        reviewedHead: unrelated,
+        corroboration: {
+          reviewedHead: {
+            status: 'mismatch',
+            expected: child,
+            actual: unrelated,
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('keeps the artifact head and reports unavailable corroboration outside a git repository', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            reviewHeadSha: 'b'.repeat(40),
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        reviewedHead: 'b'.repeat(40),
+        corroboration: {
+          reviewedHead: {
+            status: 'unavailable',
+            expected: null,
+            actual: 'b'.repeat(40),
+          },
+        },
+      });
+    });
+
+    it('reports a null reviewedHead when neither head is available', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: GATE_ARGS,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        reviewedHead: null,
+        corroboration: {
+          reviewedHead: { status: 'unavailable', expected: null, actual: null },
+        },
+      });
+    });
   });
 
   it('runs gate review through an explicit target, annotates the prompt, and blocks on High findings', async () => {
@@ -8381,6 +8627,24 @@ describe('oat gate', () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
+    const gitEnv = {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Test',
+      GIT_AUTHOR_EMAIL: 'test@example.com',
+      GIT_COMMITTER_NAME: 'Test',
+      GIT_COMMITTER_EMAIL: 'test@example.com',
+    };
+    execFileSync('git', ['init', '-q'], { cwd: root, env: gitEnv });
+    await writeFile(join(root, 'a.txt'), 'a\n', 'utf8');
+    execFileSync('git', ['add', 'a.txt'], { cwd: root, env: gitEnv });
+    execFileSync('git', ['commit', '-q', '-m', 'one'], {
+      cwd: root,
+      env: gitEnv,
+    });
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: root,
+      encoding: 'utf8',
+    }).trim();
     let artifactPath = '';
     const runner = createProcessRunner({
       onExecute: async () => {
@@ -8388,6 +8652,7 @@ describe('oat gate', () => {
           root,
           projectPath,
           finding: 'clean',
+          reviewHeadSha: head,
         });
       },
     });
@@ -8407,7 +8672,12 @@ describe('oat gate', () => {
       receiveEligible: true,
       postSelectionRecovery: true,
       handoff: expect.stringContaining('oat-project-review-receive'),
-      corroboration: { run: 'matched', invocation: 'matched' },
+      reviewedHead: head,
+      corroboration: {
+        run: 'matched',
+        invocation: 'matched',
+        reviewedHead: { status: 'match', expected: head, actual: head },
+      },
     });
     // Recovery is re-validation, never re-review: the reviewer ran once.
     expect(

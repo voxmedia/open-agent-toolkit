@@ -27,6 +27,7 @@ import {
   probeSyncedTerminalRefs,
   type SyncedTerminalRefProbe,
 } from '@commands/project/sync/resolve-target';
+import { listProjectsWithReviewAncestry } from '@commands/review/head-ancestry';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
@@ -39,7 +40,6 @@ import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import {
-  listProjects,
   type ProjectListRow,
   type ProjectSummary,
 } from '@open-agent-toolkit/control-plane';
@@ -78,7 +78,7 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveProjectsRoot,
-  listProjects,
+  listProjects: listProjectsWithReviewAncestry,
   listSyncedRecords,
   probeSyncedTerminalRefs,
   probeAuthoritativeCompletedRef,

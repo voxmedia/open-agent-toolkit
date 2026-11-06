@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.17
+  version: 1.5.18
 ---
 
 # Request Review
@@ -1599,14 +1599,21 @@ Record this artifact as one append-ordered review event:
   `git rev-parse <authoritative-range-head>^{commit}`; `-` for non-code reviews.
   Never record an abbreviation, symbolic ref, or range string.
 - `Invocation`: for code reviews, the artifact's `oat_review_invocation`
-  (`manual`, `auto`, or `gate`); `-` for non-code reviews.
-- `Gate Target`: for gate code reviews, the exact gate-context
-  `oat_gate_target`; `-` otherwise.
+  (`manual`, `auto`, or `gate`); `gate` for every gate review, artifact
+  reviews included; `-` for other non-code reviews.
+- `Gate Target`: for every gate review, artifact reviews included, the exact
+  gate-context `oat_gate_target`; `-` otherwise.
 
 For the first event with this Scope + Type, claim an unbound `pending`
 placeholder only when its Artifact is `-`. Otherwise append a new row for the
 new artifact. Never replace or regress a bound event merely because Scope +
 Type matches; distinct artifact filenames are distinct review events.
+
+**One writer per event.** This step writes the event's row once, and it is the
+event's only row. A later step that records this review's outcome, such as
+review-receive or the planning skill whose gate dispatched this review, updates
+this same row, matched by Scope + Type + Artifact filename, and never appends a
+second row for the event (the plan-writing Review Table Preservation Rules).
 
 Before writing, inspect the table header. A legacy five-column ledger is valid:
 widen its header and separator with `Reviewed Head`, `Invocation`, and
