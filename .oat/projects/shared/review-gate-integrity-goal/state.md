@@ -184,7 +184,7 @@ oat_deliveries:
     scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -196,9 +196,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/403
         base: 'c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b'
         reviewed_head: 'c08b2c054d95dda0691fc3a247b70c5acdaa8007'
-        observed_head: 4787dd12cde5162a362ac308bc53530db085244f
+        observed_head: 247bdb3db2a3439969b58a9195d097dc99edc9eb
         observed_base: c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/m02-review-2026-11-04T020725Z.md
       scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3]
@@ -220,6 +220,13 @@ oat_deliveries:
       subject: { kind: code, scope: [p07, p12, p13, p-rev1, p-rev2, p-rev3] }
       freshness: fresh
       decided_at: '2026-11-04T02:00:17Z'
+    endpoint_attainment:
+      observed_at: 2026-11-06T20:52:48.334Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/403
+          head: 247bdb3db2a3439969b58a9195d097dc99edc9eb
+          base: c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b
+          status: merged
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
