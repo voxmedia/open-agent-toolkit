@@ -230,6 +230,8 @@ recommendation so plan review and generation stay aligned to the same pack file.
 - Preserve existing manual customizations — only modify the problematic section
 - If the artifact marks a recommendation `omit`, do not include it in the apply plan
 - If the artifact marks a recommendation `ask_user`, include it with the evidence and require explicit user approval
+- If a pack's `Design Intent and Constraints` is `ask_user`, list its open intent questions in the plan and ask the
+  user to answer them during plan review; write only the answers they give
 - If the change corrects an existing rule claim, treat the artifact's `Claim Corrections` and `Must Not Include`
   fields as mandatory constraints rather than optional hints
 - If evidence is missing or stale, stop and ask for a fresh analysis instead of guessing
@@ -355,8 +357,8 @@ For each approved recommendation, in the order from Step 2:
    - `Must Not Include` is prohibited content
    - `Preferred Default for New Files` determines which sub-pattern new files should follow
    - `Claim Corrections` replaces stale claims in updated files
-   - `Design Intent and Constraints` fills the template section of the same name; when it is `none` or `ask_user`,
-     leave the section out unless the user confirms its content
+   - `Design Intent and Constraints` fills the template section of the same name. `none` means leave the section
+     out. `ask_user` means use the intent the user supplied during plan review; if they supplied none, leave it out
 6. Recheck every claim you carry into the file at HEAD before writing it, including `Must Include` items and `Claim
 Corrections` replacements: open the cited source and confirm the claim still holds. Recheck security, auth,
    deploy, and data-boundary claims with particular care. If a claim no longer holds, stop that recommendation and

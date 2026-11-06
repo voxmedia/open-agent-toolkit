@@ -48,7 +48,7 @@ Instruction files form a hierarchy. A root `AGENTS.md` carries repo-wide convent
 
 A nested instruction file **inherits everything from its ancestors** and contains **only the domain-specific delta** — the conventions, models, terminology, and invariants that are true for that subtree and are not already captured (or are contradicted) above it. A child file must **not repeat** the parent: no copied conventions, no restated repo-wide rules. See `references/docs/agent-instruction.md` §13 ("Scoped Files (When and How)") for the full progressive-disclosure model.
 
-A nested file should be small and additive — a thin delta rather than a full document — but every new file is still an ongoing maintenance cost: each one must be kept true as its subtree changes, and a stale one misleads agents. When the delta is thin, prefer folding it into the nearest ancestor file. The decision bar is qualitative, not size-based:
+A nested file should be small and additive — a thin delta rather than a full document — but every new file is still an ongoing maintenance cost: each one must be kept true as its subtree changes, and a stale one misleads agents. When the delta is thin, recommend folding it into the nearest ancestor file instead: emit it as an update to that ancestor file (a scoped section naming the subtree), not as a new file. The decision bar is qualitative, not size-based:
 
 > Would an agent working only from the nearest existing (ancestor) instruction file get something wrong, or miss something, in this directory's domain?
 
@@ -92,9 +92,9 @@ Record distinct sub-areas in the coverage gap assessment. A scoped `AGENTS.md` r
 
 For each directory meeting 1+ primary indicators:
 
-| Directory | Indicators       | Severity    | Recommendation                                     |
-| --------- | ---------------- | ----------- | -------------------------------------------------- |
-| `{path/}` | {which criteria} | High/Medium | Create scoped AGENTS.md / Create rules for {topic} |
+| Directory | Indicators       | Severity    | Recommendation                                                                                       |
+| --------- | ---------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
+| `{path/}` | {which criteria} | High/Medium | Create scoped AGENTS.md / Update ancestor `{path/AGENTS.md}` (thin delta) / Create rules for {topic} |
 
 **Severity mapping:**
 

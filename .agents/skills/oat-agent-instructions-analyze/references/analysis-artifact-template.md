@@ -131,7 +131,7 @@ Missing always-on provider compatibility files that should exist even when no co
 
 ### Directory Coverage
 
-Directories assessed as needing instruction files but currently uncovered.
+Directories assessed as needing instruction coverage but currently uncovered. When the delta is thin, the recommendation is an update to the nearest ancestor file rather than a new file; state which in Reason.
 
 | #   | Directory | Reason                                         | Evidence     | Disclosure                       | Link Target       | Severity      |
 | --- | --------- | ---------------------------------------------- | ------------ | -------------------------------- | ----------------- | ------------- |

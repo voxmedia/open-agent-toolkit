@@ -38,7 +38,7 @@ If a recommendation lacks that detail, it should be blocked pending a fresh anal
 | Field                           | Value                                                                                                             |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Recommendation ID               | `rec-001`                                                                                                         |
-| Action                          | {create / update}                                                                                                 |
+| Action                          | {create / update (an update may fold a thin subtree delta into an ancestor file)}                                 |
 | Provider                        | {agents_md / claude / cursor / copilot}                                                                           |
 | Format                          | {AGENTS.md / Claude rule / Cursor rule / Copilot instruction / Copilot shim}                                      |
 | Target                          | `{target-file-path}`                                                                                              |
@@ -53,6 +53,7 @@ If a recommendation lacks that detail, it should be blocked pending a fresh anal
 | Must Not Include                | {unsupported or stale content that must stay out}                                                                 |
 | Preferred Default For New Files | {pattern A / pattern B / N/A}                                                                                     |
 | Claim Corrections               | {`old claim -> verified replacement` or `none`}                                                                   |
+| Design Intent                   | {evidenced intent and constraints / `none` / `ask_user`: the open intent questions for the user to answer}        |
 | Template                        | `{template-file-path}`                                                                                            |
 
 **Context:** {1-2 sentences describing what this file will contain and why it's needed.}
