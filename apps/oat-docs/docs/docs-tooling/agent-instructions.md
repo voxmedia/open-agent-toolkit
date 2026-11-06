@@ -44,6 +44,16 @@ consistency need exhaustive evidence, not a convenient sample. Formatting
 tools and canonical documentation are often better linked than restated as
 large always-loaded instruction blocks.
 
+Recommendations aim for content that stays true across normal merges.
+Counts, ratios, and `path:line` locators are evidence in the report, never
+text for instruction files, and neither are exhaustive lists of routes,
+hooks, or files. Generated files point to stable anchors such as a symbol,
+config key, or glob. They favor design intent and invariants over
+inventories, and intent is included only when the repository evidences it;
+otherwise the recommendation asks you. Security and auth boundaries are
+phrased as pointers to where they are enforced, and rules about where files
+go must match the test runner or tool configuration.
+
 Provider recommendations follow configured policy. For example, a Claude
 shim (a `CLAUDE.md` file whose job is to import `AGENTS.md` with
 `@AGENTS.md`) is not universally required. The setting
@@ -104,8 +114,11 @@ disclosure choice rather than copying the full summary into every provider.
 Apply may reopen cited sources to verify them and generate instruction text,
 but cannot add new recommendations or infer a formatting rule from tool
 defaults. Missing preferred patterns, evidence, or link targets are reasons
-to stop for clarification. Provider baselines must already be explicit in
-the analysis, including which shim strategy applies.
+to stop for clarification. Before writing, apply rechecks each carried-over
+claim at the current commit and stops if one no longer holds; it never
+copies line numbers from the evidence into instruction text. Provider
+baselines must already be explicit in the analysis, including which shim
+strategy applies.
 
 **Expected output:** Approved canonical instruction and rule changes
 committed on a new `oat/agent-instructions-<timestamp>` branch, with

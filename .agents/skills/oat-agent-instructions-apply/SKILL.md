@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.7.4
+  version: 1.8.0
 ---
 
 # Agent Instructions Apply
@@ -67,7 +67,7 @@ The markdown artifact remains the human-readable review summary.
 Apply may:
 
 - read the exact evidence sources cited by the artifact
-- verify that cited files still exist
+- verify that cited files still exist and that each carried-over claim still holds at HEAD
 - translate approved recommendations into concrete instruction text
 
 Apply must **not**:
@@ -340,7 +340,8 @@ For each approved recommendation, in the order from Step 2:
    - the matching recommendation pack when the companion bundle exists
    - the evidence files cited in the artifact
    - `package.json` for commands and dependencies
-   - directory structure for architecture section
+   - the cited docs, decision records, or entry points that explain the architecture's purpose and design intent
+     (not a directory listing)
    - existing instruction files for consistency
 3. Generate the file content by filling the template with project-specific details from the cited evidence.
 4. Preserve progressive disclosure decisions from the artifact:
@@ -354,7 +355,11 @@ For each approved recommendation, in the order from Step 2:
    - `Must Not Include` is prohibited content
    - `Preferred Default for New Files` determines which sub-pattern new files should follow
    - `Claim Corrections` replaces stale claims in updated files
-6. For glob-scoped rules:
+6. Recheck every claim you carry into the file at HEAD before writing it, including `Must Include` items and `Claim
+Corrections` replacements: open the cited source and confirm the claim still holds. Recheck security, auth,
+   deploy, and data-boundary claims with particular care. If a claim no longer holds, stop that recommendation and
+   ask for a fresh analysis or user guidance rather than adjusting it yourself.
+7. For glob-scoped rules:
    - Write the canonical markdown once to `.agents/rules/{name}.md`
    - Include canonical rule frontmatter (`description`, `globs`, `activation`) instead of provider-specific wrappers. `activation` must be one of `always`, `glob`, `agent-requested`, `manual` (not `auto`); use `glob` with `globs` for file-targeted rules. See `references/instruction-file-templates/frontmatter/canonical-rule.md`.
    - After writing canonical rules, run `oat sync --scope project` to generate provider-specific rule files
@@ -367,15 +372,27 @@ For each approved recommendation, in the order from Step 2:
 1. Read the existing file and the matching recommendation pack when the companion bundle exists.
 2. Identify the section(s) that need updating based on the finding.
 3. Make targeted edits using only the approved recommendation and its cited evidence.
-4. Do not rewrite the entire file unless the user explicitly approves.
+4. Recheck each claim the edit writes at HEAD, as in step 6 of "Creating new files". When an edited section holds a
+   line-number reference, replace it with the symbol, function, or config-key name rather than adjusting the number.
+5. Do not rewrite the entire file unless the user explicitly approves.
 
 **Negative rules:**
 
 - Do not add tabs-vs-spaces, quote style, import sorting, naming, or similar formatting rules unless the artifact cites repo evidence for them.
 - Do not upgrade a repeated code pattern into a hard instruction unless the artifact already approved it.
 - If formatter/linter config exists, prefer `run formatter/lint` or a link to the config/doc over prose restatement of the same rule.
-- Do not soften specific runtime versions, infrastructure notes, commit conventions, or rule corrections into vague prose
-  when the artifact or cited evidence is explicit.
+- Do not soften specific versions, commands, or explicit claim corrections into vague prose when the artifact or
+  cited evidence is explicit.
+- Do not write volatile facts into instruction files: no line numbers (name the symbol, function, or config key
+  instead), no counts or ratios, and no exhaustive lists or catalogs of routes, hooks, consumers, or files. Evidence
+  refs such as `path:line` stay in the analysis; never transcribe them. Before keeping a line, ask "Would a normal
+  merge in this directory make this line false?" If yes, omit it or point to a stable anchor (symbol, config key,
+  glob).
+- Phrase security, auth, deploy, and data boundaries as pointers to where they are enforced ("auth is enforced in
+  `middleware.ts`; read it before changing routes"), never as negative absolutes ("there is no X").
+- Do not write a rule about where files go (test layout, globs) unless the artifact cites the runner or tool config
+  key that picks those files up; if that config no longer matches at HEAD, drop the rule and report it.
+- Do not invent design intent. Write only intent the artifact evidences; anything else is `ask_user`.
 - If a cited source no longer exists, stop that recommendation and ask for a fresh analysis or user guidance.
 
 **Required context — read these bundled skill docs before generating:**

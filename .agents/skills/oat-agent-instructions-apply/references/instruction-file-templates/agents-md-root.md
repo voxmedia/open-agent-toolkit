@@ -24,12 +24,21 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 
 ## Architecture Overview
 
-{2-4 sentences describing the project structure, key modules, and how they relate.}
+{2-4 sentences on what the system is for, how its major parts relate, and why it is shaped this way. Favor purpose
+and reasoning over a directory inventory; an agent can list directories itself.}
 
-### Key Directories
+### Where to Start
 
-- `{dir/}` - {purpose}
-- `{dir/}` - {purpose}
+- `{stable entry point: a top-level directory, main module, or config file}` - {why an agent starts here}
+- {At most a few pointers. No exhaustive file, route, or hook lists.}
+
+### Design Intent and Constraints
+
+- {Why it is built this way — only intent evidenced by docs, decision records, comments, or existing instructions}
+- {Invariants that must hold, e.g. ordering, idempotency, or where auth and data boundaries are enforced (phrase
+  boundaries as pointers: "auth is enforced in `{file}`; read it before changing routes")}
+- {What not to change without asking}
+- {If intent is not evidenced, leave this section out and raise it as `ask_user`; never invent it}
 
 ### Technology Stack
 
@@ -63,6 +72,9 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 - [ ] Lint clean (`{lint-command}`)
 - [ ] Type check passes (`{type-check-command}`)
 - [ ] Build succeeds (`{build-command}`)
+- [ ] Instructions still true: when a change invalidates or adds a durable convention, update the nearest affected
+      instruction files (`AGENTS.md`, `CLAUDE.md`, rules) in the same PR, and record design intent or decisions the
+      code does not show
 
 ## References
 
@@ -83,3 +95,11 @@ Use this template when generating a root-level AGENTS.md file. This is the canon
 - Only include conventions that are backed by repo evidence
 - If formatter/linter config already enforces a style rule, prefer commands or links over restating the rule
 - Use progressive disclosure: keep essentials inline and link to deeper docs/config/examples
+- Inline only what is non-obvious, spread across many files, or costly to get wrong; omit anything one grep or `ls`
+  finds
+- No line numbers (name the symbol, function, or config key), no counts or ratios, and no exhaustive catalogs of
+  routes, hooks, consumers, or files
+- Staleness test for every line: "Would a normal merge in this directory make this line false?" If yes, omit it or
+  point to a stable anchor (symbol, config key, glob)
+- Any rule about where files go must match the runner or tool config that picks them up (for example Playwright
+  `testDir`/`testMatch`, Jest `roots`, `tsconfig.json` `include`)

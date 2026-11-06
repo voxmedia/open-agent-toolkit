@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.12.5
+  version: 1.13.0
 ---
 
 # Agent Instructions Analysis
@@ -235,7 +235,17 @@ not from repo-root `.agents/docs/`.
 - If a formatter or linter already enforces a rule, prefer recording the command and linking to the config/doc rather
   than restating tabs/spaces, quote style, import ordering, or similar trivia as prose instructions.
 - Numeric claims are held to a higher bar: any count, ratio, "only N files", or named split that appears in the
-  artifact or a generated rule must be backed by an exhaustive repo-wide count, not just a sample.
+  artifact must be backed by an exhaustive repo-wide count, not just a sample.
+- Counts, ratios, and line numbers are evidence, not instruction content. Recommendations must not ask for them, or
+  for exhaustive catalogs of routes, hooks, consumers, or files, to appear in a generated file. Shape each
+  recommendation around what stays true across normal merges: ask "Would a normal merge in this directory make this
+  line false?" and, if yes, omit it or point to a stable anchor (a symbol, function, config key, or glob).
+- Security, auth, deploy, and data-boundary claims require high confidence; otherwise mark them `ask_user`. Phrase
+  them as pointers to where the boundary is enforced ("auth is enforced in `middleware.ts`; read it before changing
+  routes"), never as negative absolutes ("there is no server-side auth gate").
+- Design intent (why it is built this way, invariants that must hold, what not to change without asking) is the
+  highest-value content for instruction files, but only when evidenced by docs, decision records, comments, or
+  existing instructions. Unevidenced intent is `ask_user`, never inferred.
 
 **Documentation inventory integration:**
 
@@ -253,7 +263,9 @@ documentation inventory from Step 2 to:
 2. Read the local evidence sources needed to validate the file's claims.
 3. Check each applicable criterion from the quality checklist.
 4. Note findings with severity ratings, exact source refs, and a confidence rating.
-5. Record a disclosure decision for each recommendation: `inline`, `link_only`, `omit`, or `ask_user`.
+5. Record a disclosure decision for each recommendation: `inline`, `link_only`, `omit`, or `ask_user`. Use the
+   discovery-cost bar: `inline` only what is non-obvious, spread across many files, or costly to get wrong; anything
+   an agent finds with one grep or `ls` is `omit`. Record the reason in the pack's `Disclosure Reason`.
 6. Record line count and quality assessment (pass / minor issues / significant issues / major issues).
 
 **Provider-specific validation:**
@@ -263,6 +275,11 @@ documentation inventory from Step 2 to:
 - **Claude rules** (`.claude/rules/*.md`): Validate `paths` frontmatter if conditional.
 - **Cursor rules** (`.cursor/rules/*.mdc`): Validate frontmatter fields (`alwaysApply`, `globs`, `description`).
 - **Copilot instructions** (`.github/instructions/*.instructions.md`): Validate `applyTo` frontmatter.
+- **Placement rules (any provider):** Frontmatter shape is not enough. For any rule about where files go (test
+  layout, spec directories) and for a rule's own `globs`/`paths`/`applyTo`, verify the location against the runner or
+  tool config that consumes those files: Playwright `projects`/`testDir`/`testMatch`, Jest `roots`/`testMatch`, Vitest
+  `include`, `tsconfig.json` `include`. Cite the config key as evidence. On a mismatch, record a finding and drop the
+  placement rule rather than recommending it.
 - **Copilot shim** (`.github/copilot-instructions.md`): Verify it's a minimal pointer, not content duplication.
 
 **Instruction load budget assessment:**
@@ -295,6 +312,8 @@ At minimum, validate:
 - claims about which imports, wrappers, helpers, or setup APIs are preferred
 
 Record the outcome in the artifact's existing-rule validation section.
+When an existing rule carries a count, ratio, line number, or exhaustive catalog, the correction is to remove it or
+replace it with a stable anchor, not to update the number.
 Any discrepancy that would cause agents to follow the wrong pattern should be flagged as a High finding or higher.
 
 ### Step 4: Assess Coverage Gaps

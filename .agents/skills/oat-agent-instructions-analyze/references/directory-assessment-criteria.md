@@ -29,6 +29,9 @@ Apply these criteria **per directory, at every depth** — not just to top-level
 - Represents a bounded context or module with domain-specific business logic
 - Has its own data models, terminology, or invariants
 - Has non-obvious conventions an agent would otherwise miss — patterns that diverge from the parent's defaults
+- Has design intent worth recording: why it is built this way, invariants that must hold (ordering, idempotency,
+  auth or data boundaries), and what should not change without asking. These are usually the highest-value content
+  for a scoped file because the code shows what it does, not why
 - **Applies at any depth.** A top-level package and a nested domain subdirectory are assessed the same way: `packages/billing/`, `services/auth/`, `lib/search-engine/`, **and** `packages/<pkg>/src/<domain>/` (for example, a `bigquery-sync/` or `payment-reconciliation/` subdirectory inside an otherwise modest package).
 - **Signal strength:** Strong — this is the primary trigger for a nested instruction file. A bounded domain with its own models, terminology, invariants, and non-obvious conventions warrants a file **at any depth, regardless of how large or small its parent is**. Domain specificity, not parent size, decides this.
 
@@ -45,13 +48,13 @@ Instruction files form a hierarchy. A root `AGENTS.md` carries repo-wide convent
 
 A nested instruction file **inherits everything from its ancestors** and contains **only the domain-specific delta** — the conventions, models, terminology, and invariants that are true for that subtree and are not already captured (or are contradicted) above it. A child file must **not repeat** the parent: no copied conventions, no restated repo-wide rules. See `references/docs/agent-instruction.md` §13 ("Scoped Files (When and How)") for the full progressive-disclosure model.
 
-Because a nested file is small and additive — it adds a thin delta rather than a full document — **the cost of adding one is low**. The decision bar is therefore qualitative, not size-based:
+A nested file should be small and additive — a thin delta rather than a full document — but every new file is still an ongoing maintenance cost: each one must be kept true as its subtree changes, and a stale one misleads agents. When the delta is thin, prefer folding it into the nearest ancestor file. The decision bar is qualitative, not size-based:
 
 > Would an agent working only from the nearest existing (ancestor) instruction file get something wrong, or miss something, in this directory's domain?
 
 If yes, the directory is a coverage-gap candidate. If no — the ancestor file already covers everything an agent needs here — it is not, regardless of how many files the directory contains.
 
-**Worked example.** A package has ~29 source files overall and a root-level `AGENTS.md` describing the package's general conventions. Inside it, `src/bigquery-sync/` holds ~15 files implementing BigQuery sync: it has its own data models, its own terminology (sync cursors, watermark tables, backfill windows), and non-obvious invariants (ordering guarantees, idempotency keys, partition-boundary handling) that appear nowhere else in the package. The parent package is well under any "large" bar, so an app/package-only or size-gated reading would conclude "no nested file warranted." That conclusion is wrong: an agent editing `src/bigquery-sync/` from the package-level `AGENTS.md` alone would miss the sync invariants and likely introduce a correctness bug. `src/bigquery-sync/` is a legitimate coverage-gap candidate — it meets Indicator 4 — and should be surfaced with a scoped `AGENTS.md` recommendation that captures only the sync-specific delta.
+**Worked example.** A package has ~29 source files overall and a root-level `AGENTS.md` describing the package's general conventions. Inside it, `src/bigquery-sync/` holds ~15 files implementing BigQuery sync: it has its own data models, its own terminology (sync cursors, watermark tables, backfill windows), and non-obvious invariants (ordering guarantees, idempotency keys, partition-boundary handling) that appear nowhere else in the package. The parent package is well under any "large" bar, so an app/package-only or size-gated reading would conclude "no nested file warranted." That conclusion is wrong: an agent editing `src/bigquery-sync/` from the package-level `AGENTS.md` alone would miss the sync invariants and likely introduce a correctness bug. `src/bigquery-sync/` is a legitimate coverage-gap candidate — it meets Indicator 4 — and should be surfaced with a scoped `AGENTS.md` recommendation that captures only the sync-specific delta: the invariants and why they exist, not an inventory of the files.
 
 ## Decomposing Broad Recommendations
 
@@ -66,7 +69,7 @@ Decompose when the area's subdirectories differ by:
 
 When you find heterogeneity, assess its major subdirectories starting at depth 1–2 before writing a single broad recommendation. If the first pass still leaves a sub-area that is clearly heterogeneous, keep decomposing deeper until the distinct conventions are visible or the analysis stops yielding materially different guidance. A homogeneous area — even a large one — needs only one recommendation; there are no distinct sub-areas to split out.
 
-Record distinct sub-areas in the coverage gap assessment. A scoped `AGENTS.md` recommendation for a heterogeneous area should enumerate the major sub-areas and their conventions, not just report a total file count.
+Record distinct sub-areas in the coverage gap assessment. A scoped `AGENTS.md` recommendation for a heterogeneous area should name the major sub-areas and their conventions, not just report a total file count. File counts stay in the assessment as evidence; they are not content for the recommended file.
 
 ## Secondary Indicators (strengthen the case but not sufficient alone)
 
