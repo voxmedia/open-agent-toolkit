@@ -377,6 +377,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p07-p-rev3 | code     | passed          | 2026-11-03 | reviews/archived/range-review-2026-11-04T015726Z.md         | c08b2c054d95dda0691fc3a247b70c5acdaa8007 | gate       | codex-6-sol-xhigh    |
 | m02        | code     | passed          | 2026-11-04 | reviews/archived/m02-review-2026-11-04T020725Z.md           | c08b2c054d95dda0691fc3a247b70c5acdaa8007 | manual     | -                    |
 | plan       | artifact | fixes_completed | 2026-11-06 | -                                                           | 2666257febe06b43b9229b71fb602b8ac071d015 | -          | -                    |
+| plan       | artifact | received        | 2026-11-06 | reviews/artifact-plan-review-2026-11-06T222001Z.md          | -                                        | gate       | codex-6-sol-xhigh    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
