@@ -42,9 +42,9 @@ and reasoning over a directory inventory; an agent can list directories itself.}
 
 ### Stack Decisions
 
-The manifests (`package.json`, `composer.json`, `pyproject.toml`, `go.mod`, `Gemfile`, `.nvmrc`, or the
-equivalent for the stack) are the source of truth for what is installed and at which version. Point to them; do
-not copy a dependency or version inventory. Record only what they cannot say:
+{Record only what the manifests (`package.json`, `composer.json`, `pyproject.toml`, `go.mod`, `Gemfile`, `.nvmrc`,
+or the stack's equivalent) cannot say. Point to them for dependencies and versions; never copy an inventory. Omit
+any line below that a glance at the manifest answers.}
 
 - **Source of truth:** {e.g., "dependencies and versions: `package.json` and `.nvmrc`"}
 - **Use for new code:** {which option to choose when several coexist, e.g., "new JS packages use `pmc-scripts`, not
@@ -54,8 +54,6 @@ not copy a dependency or version inventory. Record only what they cannot say:
 - **Behavior-changing versions:** {only where a version changes which API is correct, e.g., "Next.js Pages Router,
   not App Router"; name the file that pins it}
 - **Commit Format:** {e.g., Conventional Commits with commitlint — only if the repo enforces one}
-
-Leave out any line that a glance at the manifest answers.
 
 ## Code Conventions
 
