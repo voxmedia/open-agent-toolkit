@@ -239,7 +239,8 @@ not from repo-root `.agents/docs/`.
 - Counts, ratios, and line numbers are evidence, not instruction content. Recommendations must not ask for them, or
   for exhaustive catalogs of routes, hooks, consumers, or files, to appear in a generated file. Shape each
   recommendation around what stays true across normal merges: ask "Would a normal merge in this directory make this
-  line false?" and, if yes, omit it or point to a stable anchor (a symbol, function, config key, or glob).
+  line false?" and, if yes, omit it or point to a stable anchor (a symbol, function, config key, or glob). Versions
+  are allowed when the line names the config file that pins them.
 - Security, auth, deploy, and data-boundary claims require high confidence; otherwise mark them `ask_user`. Phrase
   them as pointers to where the boundary is enforced ("auth is enforced in `middleware.ts`; read it before changing
   routes"), never as claims that something is absent (e.g. "there is no server-side auth gate").

@@ -73,5 +73,6 @@ project. Favor purpose and reasoning over an inventory of files.}
 - Each scoped file is ongoing maintenance; if the pack's delta looks thin, raise it with the user rather than
   reshaping the recommendation
 - No line numbers, counts or ratios, or exhaustive catalogs of routes, hooks, consumers, or files; apply the
-  staleness test ("Would a normal merge in this directory make this line false?") to every line
+  staleness test ("Would a normal merge in this directory make this line false?") to every line; versions are
+  allowed when the line names the config file that pins them
 - Any test-layout or file-placement rule must match the runner or tool config that picks those files up

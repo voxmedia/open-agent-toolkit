@@ -72,7 +72,8 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 - [ ] No exhaustive lists or catalogs of routes, hooks, consumers, or files; point to the stable anchor that
       enumerates them (a registry, config key, or glob) instead
 - [ ] Every line passes the staleness test: "Would a normal merge in this directory make this line false?" If yes,
-      omit it or replace it with a stable anchor
+      omit it or replace it with a stable anchor. Versions are allowed when the line names the config file that pins
+      them
 - **Severity if failing:** Medium (stale references or volatile content) or High (actively misleading)
 
 ### 10. Cross-Format Body Consistency
