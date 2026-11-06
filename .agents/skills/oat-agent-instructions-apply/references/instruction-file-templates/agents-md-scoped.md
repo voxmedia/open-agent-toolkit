@@ -16,18 +16,28 @@ Use this template when generating an AGENTS.md for a subdirectory (package, serv
 
 ## Architecture
 
-{2-3 sentences describing this module's purpose, boundaries, and how it fits into the larger project.}
+{2-3 sentences on this module's purpose, its boundaries, why it is built this way, and how it fits into the larger
+project. Favor purpose and reasoning over an inventory of files.}
 
-### Key Files
+### Entry Points
 
-- `{file}` - {purpose}
-- `{file}` - {purpose}
+- `{stable entry point: main module, registry, or config file}` - {why an agent starts here}
+- {At most a few pointers. No exhaustive file, route, hook, or consumer lists.}
 
-### Technology Stack
+### Design Intent and Constraints
 
-- **Runtime:** {e.g., Node.js 22, Python 3.12}
-- **Framework:** {e.g., Express, FastAPI}
-- **Testing:** {e.g., Vitest, pytest}
+- {Why this module is built this way — only intent evidenced by docs, decision records, comments, or existing
+  instructions}
+- {Invariants that must hold here (ordering, idempotency, auth or data boundaries phrased as pointers to where they
+  are enforced)}
+- {What not to change without asking}
+- {If intent is not evidenced, leave this section out and raise it as `ask_user`; never invent it}
+
+### Stack Decisions
+
+{Only when this subtree differs from the root: which option to use for new code here, what is legacy, or a
+platform constraint. Point to this subtree's manifest (`package.json` or the stack's equivalent) for dependencies
+and versions; never copy them. Omit this section when the root already covers it.}
 
 ## Conventions
 
@@ -60,3 +70,9 @@ Use this template when generating an AGENTS.md for a subdirectory (package, serv
 - Inherits from root AGENTS.md by default; this file adds or overrides
 - Keep only directory-specific essentials inline; link to deeper module docs/config when helpful
 - Only include conventions backed by repo evidence for this subtree
+- Each scoped file is ongoing maintenance; if the pack's delta looks thin, raise it with the user rather than
+  reshaping the recommendation
+- No line numbers, counts or ratios, or exhaustive catalogs of routes, hooks, consumers, or files; apply the
+  staleness test ("Would a normal merge in this directory make this line false?") to every line; versions are
+  allowed when the line names the config file that pins them
+- Any test-layout or file-placement rule must match the runner or tool config that picks those files up

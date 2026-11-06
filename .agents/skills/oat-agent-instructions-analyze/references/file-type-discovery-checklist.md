@@ -154,8 +154,9 @@ and shows the expected imports, signature, and delegation pattern.
 
 Sampling discovers candidate patterns. It does **not** justify numeric claims on its own.
 
-Before writing any numeric claim into the artifact or a generated rule, verify it with an exhaustive repo-wide count.
-This applies to:
+Before writing any numeric claim into the analysis artifact, verify it with an exhaustive repo-wide count. Counts are
+evidence for the analysis, not content for instruction files: a generated rule or `AGENTS.md` must not carry counts,
+ratios, or "only N files" statements, because the next normal merge makes them false. This applies to:
 
 - file counts and split ratios
 - "only N files use X" statements
@@ -165,11 +166,15 @@ This applies to:
 If a sample suggests "Pattern A is gone" or "only 3 files still use Pattern B", stop and verify across the whole repo
 before writing the claim.
 
-Quantify the behavior you found, not just the filename suffix:
+Quantify the behavior you found, not just the filename suffix. Record the counts as evidence in the artifact:
 
-- `12/14 files use Pages utility wrapper`
-- `9/18 directories use static registration, 9/18 use instance registration`
-- `7/10 block manifests use apiVersion 3, older files use apiVersion 2`
+- Evidence: `12/14 files use Pages utility wrapper` -> rule text: "Wrap new pages in the Pages utility wrapper."
+- Evidence: `9/18 directories use static registration, 9/18 use instance registration` -> rule text: "Two
+  registration styles exist; new directories use instance registration." (the preferred default comes from analysis)
+- Evidence: `7/10 block manifests use apiVersion 3, older files use apiVersion 2` -> rule text: "New block manifests
+  use apiVersion 3; apiVersion 2 files are legacy."
+
+The left side stays in the artifact and pack `Evidence`; only the right side may reach an instruction file.
 
 Interpret the result this way:
 
@@ -271,3 +276,11 @@ Beyond individual file types, check for **co-location patterns** — conventions
 - Do older directories and newer directories use different schema/API versions?
 
 Co-location patterns often indicate the need for a glob-scoped rule at the directory pattern level (e.g., `src/components/**/*.tsx`).
+
+## Verify Placement Rules Against Tool Config
+
+A rule that says where files go (test layout, spec directories, a rule's own `globs`) is only true if the tool that
+consumes those files agrees. Before recommending one, read the runner or tool config and confirm the location is
+picked up: Playwright `projects`, `testDir`, and `testMatch`; Jest `roots` and `testMatch`; Vitest `include`;
+`tsconfig.json` `include`. Cite the config key in the evidence. If the observed layout and the config disagree, drop
+the placement rule and record the mismatch as a finding instead.

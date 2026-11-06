@@ -131,7 +131,7 @@ Missing always-on provider compatibility files that should exist even when no co
 
 ### Directory Coverage
 
-Directories assessed as needing instruction files but currently uncovered.
+Directories assessed as needing instruction coverage but currently uncovered. When the delta is thin, the recommendation is an update to the nearest ancestor file rather than a new file; state which in Reason.
 
 | #   | Directory | Reason                                         | Evidence     | Disclosure                       | Link Target       | Severity      |
 | --- | --------- | ---------------------------------------------- | ------------ | -------------------------------- | ----------------- | ------------- |
@@ -237,6 +237,8 @@ Prioritized actions based on findings above.
 - When the companion bundle exists, apply should treat `recommendations.yaml` plus `packs/*.md` as the primary
   generation contract and use this markdown artifact as reviewer context.
 - Recommendations marked `omit` must stay out of generated instructions.
+- Evidence locators (`path:line`), counts, and ratios stay in this artifact and the bundle. Generated instructions
+  name a symbol, function, config key, or glob instead.
 - Recommendations marked `ask_user` require explicit user confirmation before generation.
 - If cited config/docs/files are missing at apply time, stop and re-run analyze or ask the user rather than inventing a replacement rule.
 - If formatter/linter config already enforces a style rule, generated instructions should prefer commands and links over prose restatement.

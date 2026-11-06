@@ -60,13 +60,21 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 - [ ] Not vague ("write good code") — concrete checks (tests pass, lint clean, types valid)
 - **Severity if failing:** Medium
 
-### 9. Staleness
+### 9. Staleness and Durability
 
 - [ ] Referenced file paths still exist in the repo
 - [ ] Referenced commands still work
 - [ ] Technology/framework references match current stack
 - [ ] No references to removed features or deprecated patterns
-- **Severity if failing:** Medium (stale references) or High (actively misleading)
+- [ ] No line numbers (`file.ts:142`); references use a symbol, function, or config-key name instead
+- [ ] No counts or ratios (`47/54 hooks`, `107 Jest files`, "only 3 files use X"); counts belong in the analysis
+      artifact as evidence, never in the instruction file
+- [ ] No exhaustive lists or catalogs of routes, hooks, consumers, or files; point to the stable anchor that
+      enumerates them (a registry, config key, or glob) instead
+- [ ] Every line passes the staleness test: "Would a normal merge in this directory make this line false?" If yes,
+      omit it or replace it with a stable anchor. Versions are allowed when the line names the config file that pins
+      them
+- **Severity if failing:** Medium (stale references or volatile content) or High (actively misleading)
 
 ### 10. Cross-Format Body Consistency
 
@@ -78,7 +86,14 @@ Per-file evaluation criteria for agent instruction files. Use this checklist to 
 ### 11. Claims Are Evidence-Backed
 
 - [ ] Every non-obvious convention is backed by a concrete repo source (config, docs, existing instructions, or representative code samples)
-- [ ] Numeric claims (`N files`, split ratios, "only X uses Y") are backed by exhaustive repo-wide counts, not samples
+- [ ] Numeric claims (`N files`, split ratios, "only X uses Y") in the analysis artifact are backed by exhaustive
+      repo-wide counts, not samples; an instruction file that carries one fails Criterion 9 even when the count is
+      accurate today
+- [ ] Security, auth, deploy, and data-boundary claims are phrased as pointers to where the boundary is enforced
+      ("auth is enforced in `middleware.ts`; read it before changing routes"), never as claims that something is
+      absent (e.g. "there is no server-side auth gate"), and are backed by high-confidence evidence
+- [ ] Rules about where files go (test layout, spec directories, globs) match the runner or tool config that picks
+      those files up (see "Verify Placement Rules Against Tool Config" in `file-type-discovery-checklist.md`)
 - [ ] Recommendations that remove or contradict an existing rule cite the verification evidence that justifies the correction
 - [ ] Formatting/style claims are omitted unless supported by repo evidence
 - [ ] If a formatter or linter enforces the rule, the file prefers commands/links over prose restatement

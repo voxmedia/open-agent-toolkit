@@ -1625,7 +1625,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-agent-instructions-analyze/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.12.5');
+    expect(readDeclaredVersion(content)).toBe('1.13.0');
     expect(content).toMatch(
       /coverage gap assessment \(Step 4\)[^\n]*affected directories/,
     );

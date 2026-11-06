@@ -54,3 +54,5 @@ See `frontmatter/` for provider-specific frontmatter examples.
 - Only the frontmatter wrapper changes per provider (see `frontmatter/` directory)
 - Use progressive disclosure: keep the rule short and link to deeper docs/examples when needed
 - Do not encode style trivia unless it is backed by repo evidence and genuinely helps the matching files
+- No line numbers, counts or ratios, or exhaustive file catalogs; reference symbols, config keys, or globs instead
+- The rule's `globs` and any placement guidance must match the runner or tool config that picks up those files
