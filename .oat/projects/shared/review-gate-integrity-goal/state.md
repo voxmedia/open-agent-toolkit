@@ -296,7 +296,7 @@ oat_generated: false
 
 ## Current Phase
 
-m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its integrated review and exit gate are stale by the operator-accepted post-gate Bugbot fixes. m02 (p07, p12, p13) approved and activated 2026-11-03.
+m02 delivered: d02 (PR #403) observed merged at its endpoint 2026-11-06 (squash 9da04ef1c); its integrated review and exit gate stayed fresh. m03 amendment (p08, p14, p15, p16) reviewed and gated; approval pending.
 
 ## Artifacts
 
@@ -316,7 +316,9 @@ m01 delivered: d01 (PR #400) observed merged at its endpoint 2026-11-03; its int
 - ✓ m01 integrated review cycle 2 passed; exit gate rerun passed; d01 registered and PR #400 merged 2026-11-03 (post-gate Bugbot fixes accepted without re-gating)
 - ✓ m02 amendment (p07, p12, p13) reviewed and gated
 - ✓ m02 amendment approved and m02 activated (2026-11-03)
-- ⧗ p07 implementation
+- ✓ p07, p12, p13, p-rev1, p-rev2, p-rev3 accepted; m02 exit gate passed (fresh at c08b2c054); m02 integrated review passed
+- ✓ d02 registered (PR #403) and merged 2026-11-06
+- ⧗ m03 amendment: artifact review and gate done; approval pending
 
 ## Blockers
 
@@ -324,4 +326,4 @@ None
 
 ## Next Milestone
 
-Continue `oat-project-implement` at p07
+Approve the m03 amendment (`oat-project-goal`), then activate m03 and run `oat-project-implement` at p08.

@@ -2224,6 +2224,18 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 
 - m02 delivery check after receive (2026-11-04): `status: ok`, exit carrier and integrated review fresh at `c08b2c054`; m02 moved `reviewing → delivering`. A first check reported both stale because the backlog commit filing `BL-261104-goal-mode-exit-gate-resolve` (after the reviewed head, under `.oat/repo/pjm/backlog/`) is not permitted bookkeeping; by operator decision that unpushed commit was dropped from the branch and the item will be refiled on a separate branch off main.
 
+### Review Received: plan (m03 amendment gate)
+
+**Date:** 2026-11-06
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-11-06T222001Z.md
+**Gate:** `oat-project-goal` configured gate, target `codex-6-sol-xhigh` (gpt-6.1-sol, xhigh), run `0d1fa309-a0e6-45a0-b4a9-c319f0fe3fa3`, reviewed head `e38f33e5e58e4b9fd30f84240d250a3c2555febf`, threshold high, status ok, `review_completed_gate_passed`
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- L1 (Low): `state.md` readable Current Phase, Progress and Next Milestone text still described m02 implementation at p07 → fixed at receive (bookkeeping): rewrote that text from recorded facts (d02 merged, m03 amendment awaiting approval); no tracked state field changed. Operator confirmed the edit.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/artifact-plan-review-2026-11-06T222001Z.md)
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
