@@ -507,10 +507,10 @@
 | BL-261002-provide-a-complete-oat         | Fix oat tools remove --all at project scope and drop stale requiredBy entries                        | open   | medium   | feature | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan       | open   | medium   | task    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                    | open   | medium   | feature | M        |
+| BL-261104-goal-mode-exit-gate-resolve    | Goal-mode exit gate: resolve state-selected final to the active milestone's phases                   | open   | medium   | task    | S        |
 | BL-261011-guard-goal-brief-amendments    | Guard goal brief amendments against an open delivery head branch                                     | open   | medium   | task    | M        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                   | open   | medium   | feature | M        |
 | BL-261002-offer-a-strict-gate-reviewer   | Keep failed planning gates blocking and align gate wording and decision records                      | open   | medium   | feature | S        |
-| BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                  | open   | medium   | feature | S        |
 | BL-261025-make-oat-docs-generators       | Make OAT docs generators and writers predictable                                                     | open   | medium   | feature | L        |
 | BL-261002-make-explainer-kit-accept-or   | Make explainer-kit accept or reject source-code inputs explicitly                                    | open   | medium   | task    | S        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                    | open   | medium   | feature | L        |

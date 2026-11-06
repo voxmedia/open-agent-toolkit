@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-11-06 — BL-261002-list-pending-required-reviews — List pending required reviews when a project reaches a pull request — Shipped in review-gate-integrity-goal m02 (p13, PR #403): oat review pending, and pr-progress/pr-final list pending or missing required reviews before PR creation and stop non-interactive runs (PRFINAL-06). A waiver is recorded as a **Review waived:** line under implementation.md ## Reviews and Gates with the row left pending, not in the Reviews table.
 - 2026-11-03 — BL-260909-restamp-a-stale-copy-strategy — Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge — Closed in 2026-11-02 triage: the pre-framing digest bridge is ~30 harmless lines and installs migrate on sync since #351; removal cannot be safely timed from this repository.
 - 2026-11-03 — BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow — Closed in 2026-11-02 triage with PR #190: the review-gate-integrity goal and the 30-minute gate default cover most of the timeout pain; branch review-plan-workflow kept for reference.
 - 2026-11-03 — BL-261003-reassess-lite-execution-scope — Reassess Lite execution scope and preserve completed work on promotion — Closed in 2026-11-02 triage: operator decided not to invest; Lite promotion at startup stays the supported route.
