@@ -36,8 +36,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval; [] = none for brief modes
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -76,8 +76,8 @@ oat_phase_recovery_policy:
       pending_attempt: null
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
-oat_milestone: m02
-oat_milestone_status: delivered
+oat_milestone: m03
+oat_milestone_status: aligning
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -130,6 +130,18 @@ oat_milestone_gates:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-04T02:00:17Z'
+  m03:
+    plan:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75'
+      reviewed_head: e38f33e5e58e4b9fd30f84240d250a3c2555febf
+      subject:
+        kind: plan
+        scope: [p08, p14, p15, p16]
+        ref: e38f33e5e58e4b9fd30f84240d250a3c2555febf
+      decided_at: '2026-11-06T23:34:45Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
@@ -280,23 +292,23 @@ oat_deliveries:
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/403' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-05T00:28:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-06T23:34:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-gate-integrity-goal
 
-**Status:** Implement (m02)
+**Status:** Plan (m03 aligning)
 **Started:** 2026-11-01
 **Last Updated:** 2026-11-03
 
 ## Current Phase
 
-m02 delivered: d02 (PR #403) observed merged at its endpoint 2026-11-06 (squash 9da04ef1c); its integrated review and exit gate stayed fresh. m03 amendment (p08, p14, p15, p16) reviewed and gated; approval pending.
+m02 delivered: d02 (PR #403) observed merged at its endpoint 2026-11-06 (squash 9da04ef1c); its integrated review and exit gate stayed fresh. m03 amendment (p08, p14, p15, p16) reviewed, gated and approved 2026-11-06; m03 aligning.
 
 ## Artifacts
 
@@ -318,7 +330,8 @@ m02 delivered: d02 (PR #403) observed merged at its endpoint 2026-11-06 (squash 
 - ✓ m02 amendment approved and m02 activated (2026-11-03)
 - ✓ p07, p12, p13, p-rev1, p-rev2, p-rev3 accepted; m02 exit gate passed (fresh at c08b2c054); m02 integrated review passed
 - ✓ d02 registered (PR #403) and merged 2026-11-06
-- ⧗ m03 amendment: artifact review and gate done; approval pending
+- ✓ m03 amendment reviewed, gated and approved (2026-11-06)
+- ⧗ m03 activation
 
 ## Blockers
 
@@ -326,4 +339,4 @@ None
 
 ## Next Milestone
 
-Approve the m03 amendment (`oat-project-goal`), then activate m03 and run `oat-project-implement` at p08.
+Activate m03 (`oat-project-goal`), then run `oat-project-implement` at p08.

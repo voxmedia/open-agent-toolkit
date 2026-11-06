@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-03
+oat_last_updated: 2026-11-06
 oat_current_task_id: null
 oat_generated: false
 oat_template: false
@@ -52,9 +52,12 @@ oat_template: false
 | p-rev2 | completed | 1     | 1/1      |
 | p-rev3 | completed | 1     | 1/1      |
 | p08    | pending   | 1     | 0/1      |
+| p14    | pending   | 1     | 0/1      |
+| p15    | pending   | 1     | 0/1      |
+| p16    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 10/12 phases accepted
+**Total:** 10/15 phases accepted
 
 ---
 
@@ -1946,6 +1949,18 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 
 **Status:** pending
 
+## Phase p14: Finding classification at receive
+
+**Status:** pending
+
+## Phase p15: Goal milestone exit gate scope
+
+**Status:** pending
+
+## Phase p16: m02 review-ledger follow-ups
+
+**Status:** pending
+
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
 **Status:** pending
@@ -2236,6 +2251,10 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 
 **Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/artifact-plan-review-2026-11-06T222001Z.md)
 
+- m03 amendment artifact review (2026-11-06): three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, exhausted), dispositions in `plan.md` under the Reviews table. H1 (what counts as a convergence sequence) went to the operator, who chose successive runs of one configured gate on one subject (brief Decisions, m03 (5)).
+- Gate `oat-project-goal` (plan, m03 amendment, run `0d1fa309-a0e6-45a0-b4a9-c319f0fe3fa3`, target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family from the declared `claude-opus-5-5` producer; installed CLI 0.3.45, inline Codex route): `ok`, `review_completed_gate_passed`, threshold `high`, raw counts 0/0/0/1, receive-eligible, received 2026-11-06 with the bookkeeping-only fix above; no attempt consumed.
+- Approval (m03 amendment): approved 2026-11-06 by user at `e38f33e5e58e4b9fd30f84240d250a3c2555febf` (the gate-reviewed bundle). `oat_milestone_gates.m03.plan` written `allowed`/`passed`, subject `plan` [p08, p14, p15, p16], `config_fingerprint` `sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75` = sha256 of the compact JSON of `oat gate resolve oat-project-goal` `effectiveGate` (the m02 method; the declaration is unchanged since m02).
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -2258,6 +2277,7 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 - p07 re-review L1 (Low) closure: resolved by p12-t03 (`19fb8190d`), which rewrote the receive CLI-unavailable fallback to skip a candidate only when its own row is `received` and to name the gate and lifecycle Invocation classes, pinned in `review-event-row-contracts.test.ts`. Recorded at the m02 integrated review receive (finding L2), 2026-11-04.
 - m02 integrated review L1 (Low): `oat review check` and `oat review resolve` number Reviews rows by position among parsed rows, while `oat review pending` numbers physical data lines, so one row can read as two numbers when an unparsed row sits above it. Nothing fails open: waiver `**Row:**` values are copied from `pending`. Deferred by operator decision on 2026-11-04 (fixing it now would reopen m02's exit gate and integrated review). Trigger: p08 start (m03), which owns review-table identity; number all three commands by physical data line, or document the difference in the CLI reference.
 - PR #403 Warp review suggestion (nonblocking, [thread](https://github.com/voxmedia/open-agent-toolkit/pull/403#discussion_r4475162750)): `review-event-row-contracts.test.ts` builds the asserted row with a test-local `recordReviewEvent` writer, so that assertion cannot detect a regression in the real review-provide step; the Step 9 prose pin and the real `scaffoldProject` checks in `scaffold.test.ts` keep their coverage. Valid; test hygiene, not a defect. Deferred by operator decision on 2026-11-06 (fixing it now would change test code after reviewed head `c08b2c054` and stale d02's exit gate and integrated review). Trigger: p08 start (m03); remove the simulated writer and its post-write cases.
+- m03 re-alignment (2026-11-06) re-routing: m02 integrated review L1 (review-table row numbering) and the PR #403 Warp suggestion (test-local row writer) move from p08 to p16 by operator decision (brief Decisions, m03 (3)); trigger: p16 start. p10 review L1, p12 review L2 and m01 exit gate L1 are dispositioned by p14 (its Exit evidence). The p08 journal heading keeps its scaffolded name; the brief's p08 name is now "Gate convergence marking and the stable finding key".
 
 ## Deviations from Plan / Design
 
