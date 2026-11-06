@@ -50,7 +50,10 @@ text for instruction files, and neither are exhaustive lists of routes,
 hooks, or files. Generated files point to stable anchors such as a symbol,
 config key, or glob. They favor design intent and invariants over
 inventories, and intent is included only when the repository evidences it;
-otherwise the recommendation asks you. Security and auth boundaries are
+otherwise the recommendation asks you. The stack section points to the manifests
+(`package.json` or the equivalent for the stack) instead of copying a
+dependency list, and records only what they cannot show: which option to use
+for new code, what is legacy, and platform constraints. Security and auth boundaries are
 phrased as pointers to where they are enforced, and rules about where files
 go must match the test runner or tool configuration. A generated root
 `AGENTS.md` also gets a Definition of Done item that keeps its instructions

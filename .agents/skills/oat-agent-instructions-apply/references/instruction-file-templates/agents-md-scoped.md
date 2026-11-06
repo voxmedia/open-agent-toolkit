@@ -33,11 +33,11 @@ project. Favor purpose and reasoning over an inventory of files.}
 - {What not to change without asking}
 - {If intent is not evidenced, leave this section out and raise it as `ask_user`; never invent it}
 
-### Technology Stack
+### Stack Decisions
 
-- **Runtime:** {e.g., Node.js 22, Python 3.12}
-- **Framework:** {e.g., Express, FastAPI}
-- **Testing:** {e.g., Vitest, pytest}
+{Only when this subtree differs from the root: which option to use for new code here, what is legacy, or a
+platform constraint. Point to this subtree's manifest (`package.json` or the stack's equivalent) for dependencies
+and versions; never copy them. Omit this section when the root already covers it.}
 
 ## Conventions
 

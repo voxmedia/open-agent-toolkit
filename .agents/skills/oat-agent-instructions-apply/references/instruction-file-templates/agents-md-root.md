@@ -40,14 +40,22 @@ and reasoning over a directory inventory; an agent can list directories itself.}
 - {What not to change without asking}
 - {If intent is not evidenced, leave this section out and raise it as `ask_user`; never invent it}
 
-### Technology Stack
+### Stack Decisions
 
-- **Runtime:** {e.g., Node.js 22 (pinned in `.nvmrc`), Python 3.12 — include concrete versions when the repo evidence provides them, and name the file that pins them}
-- **Framework:** {e.g., Next.js 15, FastAPI}
-- **Infrastructure:** {e.g., Docker Compose, local DB, cloud/service environment, wrapper scripts}
-- **Build:** {e.g., Turborepo, Webpack}
-- **Testing:** {e.g., Vitest, pytest}
+The manifests (`package.json`, `composer.json`, `pyproject.toml`, `go.mod`, `Gemfile`, `.nvmrc`, or the
+equivalent for the stack) are the source of truth for what is installed and at which version. Point to them; do
+not copy a dependency or version inventory. Record only what they cannot say:
+
+- **Source of truth:** {e.g., "dependencies and versions: `package.json` and `.nvmrc`"}
+- **Use for new code:** {which option to choose when several coexist, e.g., "new JS packages use `pmc-scripts`, not
+  the legacy central build"}
+- **Legacy, do not extend:** {present but deprecated, e.g., "jQuery is legacy; do not add new jQuery code"}
+- **Platform constraints:** {constraints no manifest shows, e.g., "deploys to WordPress VIP: read-only filesystem"}
+- **Behavior-changing versions:** {only where a version changes which API is correct, e.g., "Next.js Pages Router,
+  not App Router"; name the file that pins it}
 - **Commit Format:** {e.g., Conventional Commits with commitlint — only if the repo enforces one}
+
+Leave out any line that a glance at the manifest answers.
 
 ## Code Conventions
 
@@ -85,8 +93,9 @@ and reasoning over a directory inventory; an agent can list directories itself.}
 
 - Target: <300 lines (hard max 500)
 - Canonical commands should appear in the first screenful
-- When version numbers are available in repo evidence, include them instead of generic stack names, and name the
-  config file that pins them
+- Do not restate the dependency or version inventory from the manifests (`package.json` or the stack's equivalent);
+  point to them. Mention a version only when it changes which API or approach is correct, and name the file that
+  pins it
 - Call out local infrastructure or wrapper scripts when they materially affect how the project runs
 - If commit format is enforced by repo config, mention it explicitly
 - Prefer noting the canonical command source of truth (`package.json`, `composer.json`, Makefile, etc.) so static command lists do not drift
