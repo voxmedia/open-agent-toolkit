@@ -717,8 +717,12 @@ merges findings:
 1. A current and a previous finding with the same key match when that key
    occurs once among each run's unmatched findings.
 2. A reworded finding matches a remaining previous finding with the same
-   location and severity, when that pair occurs once on each side. A finding
-   without a location never matches in this pass.
+   location and severity, when that pair occurs once on each side and the
+   rewording is corroborated. The two titles must share at least two words of
+   three or more letters, not counting common words such as `the` or `with`.
+   When both locations give a line, the lines must be at most 20 apart. Sharing
+   a file is never enough on its own. A finding without a location never
+   matches in this pass.
 
 Everything left over is `new` (current) or resolved (previous).
 

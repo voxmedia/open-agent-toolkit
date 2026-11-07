@@ -164,6 +164,88 @@ export function stableFindingKey(
   return `${findingLocationKey(finding.location) ?? '-'}::${findingTitleKey(finding.title)}`;
 }
 
+/** The first line number of a location's trailing line reference. */
+export function findingLocationLine(location: string | null): number | null {
+  const match =
+    location === null
+      ? null
+      : (/#L(\d+)(?:-L?\d+)?$/i.exec(location.trim()) ??
+        /:(\d+)(?:[-–]\d+)?(?::\d+)?$/.exec(location.trim()));
+  return match ? Number(match[1]) : null;
+}
+
+const TITLE_STOP_WORDS = new Set([
+  'about',
+  'after',
+  'all',
+  'also',
+  'and',
+  'any',
+  'are',
+  'but',
+  'can',
+  'does',
+  'for',
+  'from',
+  'has',
+  'have',
+  'into',
+  'its',
+  'not',
+  'only',
+  'still',
+  'than',
+  'that',
+  'the',
+  'then',
+  'this',
+  'when',
+  'with',
+]);
+
+/** Title words that can corroborate a reworded finding. */
+function significantTitleWords(title: string): Set<string> {
+  return new Set(
+    findingTitleKey(title)
+      .split(' ')
+      .filter((word) => word.length >= 3 && !TITLE_STOP_WORDS.has(word)),
+  );
+}
+
+/** Shared significant title words a reworded finding must keep. */
+export const REWORDED_MIN_SHARED_TITLE_WORDS = 2;
+/** How far a reworded finding's line may move, when both runs give one. */
+export const REWORDED_MAX_LINE_DISTANCE = 20;
+
+/**
+ * Whether two findings that share a file and a severity are one reworded
+ * finding rather than two findings that happen to sit in one file: their
+ * titles share at least two significant words and, when both locations give a
+ * line, the lines are at most 20 apart.
+ */
+function corroboratesRewording(
+  current: ReviewFindingRecord,
+  previous: ReviewFindingRecord,
+): boolean {
+  const previousWords = significantTitleWords(previous.title);
+  let shared = 0;
+  for (const word of significantTitleWords(current.title)) {
+    if (previousWords.has(word)) {
+      shared += 1;
+    }
+  }
+  if (shared < REWORDED_MIN_SHARED_TITLE_WORDS) {
+    return false;
+  }
+  const currentLine = findingLocationLine(current.location);
+  const previousLine = findingLocationLine(previous.location);
+  return (
+    currentLine === null ||
+    previousLine === null ||
+    Math.abs(currentLine - previousLine) <= REWORDED_MAX_LINE_DISTANCE
+  );
+}
+
 function uniqueIndexes<T>(
   items: readonly T[],
   candidates: readonly number[],
@@ -195,8 +277,10 @@ function uniqueIndexes<T>(
  *    each run.
  * 2. Location pass (a reworded finding): among the findings still unmatched, a
  *    current and a previous finding with the same location key and the same
- *    severity match, when that pair of values occurs exactly once on each side.
- *    A finding without a location never matches in this pass.
+ *    severity match, when that pair of values occurs exactly once on each side
+ *    and the rewording is corroborated (`corroboratesRewording`): sharing a
+ *    file is not enough. A finding without a location never matches in this
+ *    pass.
  * 3. Everything else: an unmatched current finding is `new`; an unmatched
  *    previous finding is `resolved`.
  *
@@ -222,19 +306,31 @@ export function markFindings(
       .filter((index) => !taken.has(index));
   };
 
-  const passes: ((finding: ReviewFindingRecord) => string | null)[] = [
-    (finding) => stableFindingKey(finding),
-    (finding) => {
-      const location = findingLocationKey(finding.location);
-      return location === null ? null : `${finding.severity}::${location}`;
+  const passes: {
+    keyOf: (finding: ReviewFindingRecord) => string | null;
+    accepts: (
+      current: ReviewFindingRecord,
+      previous: ReviewFindingRecord,
+    ) => boolean;
+  }[] = [
+    { keyOf: (finding) => stableFindingKey(finding), accepts: () => true },
+    {
+      keyOf: (finding) => {
+        const location = findingLocationKey(finding.location);
+        return location === null ? null : `${finding.severity}::${location}`;
+      },
+      accepts: corroboratesRewording,
     },
   ];
-  for (const keyOf of passes) {
+  for (const { keyOf, accepts } of passes) {
     const currentKeys = uniqueIndexes(current, unmatchedCurrent(), keyOf);
     const previousKeys = uniqueIndexes(previous, unmatchedPrevious(), keyOf);
     for (const [key, currentIndex] of currentKeys) {
       const previousIndex = previousKeys.get(key);
-      if (previousIndex !== undefined) {
+      if (
+        previousIndex !== undefined &&
+        accepts(current[currentIndex]!, previous[previousIndex]!)
+      ) {
         matchOf.set(currentIndex, previousIndex);
       }
     }

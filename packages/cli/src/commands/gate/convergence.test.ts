@@ -9,6 +9,7 @@ import {
   computeGateConvergence,
   convergenceLogTokens,
   findingLocationKey,
+  findingLocationLine,
   findingTitleKey,
   markFindings,
   readPhaseIds,
@@ -66,6 +67,15 @@ describe('stable finding key', () => {
     expect(findingLocationKey('src/a.ts#L10-L20')).toBe('src/a.ts');
     expect(findingLocationKey('plan.md')).toBe('plan.md');
     expect(findingLocationKey(null)).toBeNull();
+  });
+
+  it('reads the first line of a trailing line reference', () => {
+    expect(findingLocationLine('src/a.ts:430')).toBe(430);
+    expect(findingLocationLine('src/a.ts:534-544')).toBe(534);
+    expect(findingLocationLine('src/a.ts:12:3')).toBe(12);
+    expect(findingLocationLine('src/a.ts#L10-L20')).toBe(10);
+    expect(findingLocationLine('plan.md')).toBeNull();
+    expect(findingLocationLine(null)).toBeNull();
   });
 
   it('ignores the advisory bookkeeping mark, case and punctuation in the title', () => {
@@ -127,6 +137,52 @@ describe('markFindings', () => {
       mark: 'carried_over',
       previous: { runId: 'run-1', id: 'M2' },
     });
+  });
+
+  it('never carries over an unrelated finding that only shares a file and severity', () => {
+    // The p08 review's counterexample: two distinct Medium findings on plan.md.
+    const marked = markFindings(
+      [record('M1', 'Outcome 3 lacks named evidence', 'plan.md:80')],
+      [record('M1', 'Plan gate subject merges two amendments', 'plan.md:120')],
+      'run-1',
+    );
+    expect(marked.findings[0]?.mark).toBe('new');
+    expect(marked.counts).toEqual({ new: 1, carriedOver: 0, resolved: 1 });
+  });
+
+  it('needs two shared title words to carry over a reworded finding', () => {
+    const previous = [
+      record('M1', 'Gate result omits ancestry', 'src/a.ts:10'),
+    ];
+    expect(
+      markFindings(
+        [record('M1', 'Status misses ancestry entirely', 'src/a.ts:12')],
+        previous,
+        'run-1',
+      ).counts,
+    ).toEqual({ new: 1, carriedOver: 0, resolved: 1 });
+    expect(
+      markFindings(
+        [record('M1', 'Gate status misses ancestry', 'src/a.ts:12')],
+        previous,
+        'run-1',
+      ).counts,
+    ).toEqual({ new: 0, carriedOver: 1, resolved: 0 });
+  });
+
+  it('does not carry over a reworded finding whose line moved more than 20 lines', () => {
+    const previous = [
+      record('M1', 'Gate result omits ancestry', 'src/a.ts:10'),
+    ];
+    const at = (location: string) =>
+      markFindings(
+        [record('M1', 'Gate status omits ancestry', location)],
+        previous,
+        'run-1',
+      ).counts.carriedOver;
+    expect(at('src/a.ts:30')).toBe(1);
+    expect(at('src/a.ts:31')).toBe(0);
+    expect(at('src/a.ts')).toBe(1);
   });
 
   it('keeps a regraded finding carried over when its title and location are unchanged', () => {
