@@ -2054,6 +2054,24 @@ Guard-can-fail. Each rule was neutralized in the working tree, the convergence t
 
 Verification: `src/commands/gate` under `scripts/with-isolated-home.sh` passed 10 files and 499 tests, exit 0. `pnpm --filter @open-agent-toolkit/cli check` exit 0; CLI `tsc --noEmit` exit 0; CLI build exit 0.
 
+### Task p08-t03: Document gate convergence and the stable finding key
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Handle:** direct:rgi-p08-impl-20261107-01:p08-t03
+**Intent:** Document the stable finding key, how runs are linked into a sequence, the `convergence` result field and the project-log tokens, and bump the lockstep public package versions for the shipped CLI change.
+**Files:** `apps/oat-docs/docs/workflows/advanced/workflow-gates.md` (new section "Convergence across a gate sequence", plus the tokens under "Project log finalization"), `apps/oat-docs/docs/workflows/projects/execution/project-log.md` (gate entry tokens), `apps/oat-docs/docs/reference/cli-reference.md` (`oat gate review`), `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` and `packages/cli/assets/public-package-versions.json` (0.3.46 to 0.3.47)
+**Proof command:** `pnpm release:check-versions`, plus `markdownlint-cli2` over the three changed pages
+**Commit:** 26ed56e7d6682acff76597a7ed9ff97dc9727921
+
+No skill or agent-role file changed, so no `metadata.version` or `version:` bump is due. No README or instruction file describes gate result fields, so none needed an update. Checks:
+
+- `pnpm release:check-versions` passed, exit 0, after `git fetch origin main`.
+- markdownlint over the three pages reported 0 errors.
+- `docs generate-index` left `apps/oat-docs/index.md` unchanged.
+
+The first commit attempt was refused by commitlint (header longer than 100 characters) before any commit was made. The same identity and paths were retried with a shorter message.
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
