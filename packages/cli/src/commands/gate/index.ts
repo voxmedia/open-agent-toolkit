@@ -121,6 +121,11 @@ import {
 } from './child-process';
 import { validateConfiguredGateCommand } from './configured-command';
 import {
+  computeGateConvergence,
+  convergenceLogTokens,
+  type GateConvergence,
+} from './convergence';
+import {
   parseReviewGateVerdict,
   severityDisplayName,
   type ReviewArtifactGateInvocation,
@@ -333,6 +338,8 @@ interface ReviewGateProjectLogFinalization {
   counts?: ReviewGateVerdict['counts'];
   artifactPath?: string;
   artifactSignature?: string;
+  /** Present for every run after the first in its sequence. */
+  convergence?: GateConvergence;
   runId: string;
 }
 type ReviewProjectResolutionSource =
@@ -2947,6 +2954,77 @@ function reviewGateOutcome(payload: {
   return 'review_completed_gate_passed';
 }
 
+function describeGateConvergence(convergence: GateConvergence): string {
+  const { sequence } = convergence;
+  const subject = `${sequence.subject.kind} ${sequence.subject.value}`;
+  const previous = sequence.previousRun
+    ? `previous run ${sequence.previousRun.runId}`
+    : 'no previous run';
+  const result =
+    convergence.status === 'compared' && convergence.counts
+      ? `new=${convergence.counts.new}, carried over=${convergence.counts.carriedOver}, resolved=${convergence.counts.resolved}`
+      : `unavailable (${convergence.reason ?? 'unknown'})`;
+  return `Convergence: run ${sequence.run} of ${sequence.reviewType} sequence ${subject} (${previous}): ${result}`;
+}
+
+/**
+ * Marks this run's findings against the previous run of its sequence. Reading
+ * the earlier runs is best effort: a failure is reported as a diagnostic and
+ * the result is emitted without convergence fields, never altered otherwise.
+ */
+async function resolveGateConvergence(options: {
+  context: CommandContext;
+  dependencies: GateCommandDependencies;
+  repoRoot: string;
+  project: string;
+  runId: string;
+  snapshot: ReviewGateArtifactSnapshot;
+  verdict: ReviewGateVerdict;
+}): Promise<GateConvergence | undefined> {
+  try {
+    const convergence = await computeGateConvergence({
+      repoRoot: options.repoRoot,
+      projectPath: options.project,
+      current: {
+        artifactPath: options.snapshot.path,
+        content: options.snapshot.content,
+        runId: options.runId,
+        generatedTime: options.snapshot.generatedTime,
+        verdict: options.verdict,
+      },
+      parsePrevious: async (run) =>
+        options.dependencies.parseReviewGateVerdict(
+          join(options.repoRoot, run.path),
+          {
+            normalizeMissingEmptySeveritySections: true,
+            artifactSnapshot: {
+              content: run.content,
+              signature: createHash('sha256').update(run.content).digest('hex'),
+            },
+          },
+        ),
+    });
+    return convergence ?? undefined;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (options.context.json) {
+      options.dependencies.writeDiagnostic(
+        `${JSON.stringify({
+          type: 'gate-convergence-unavailable',
+          runId: options.runId,
+          project: options.project,
+          message,
+        })}\n`,
+      );
+    } else {
+      options.context.logger.warn(
+        `Warning: gate convergence could not be computed: ${message}. Gate result is unchanged.`,
+      );
+    }
+    return undefined;
+  }
+}
+
 function writeReviewGateResult(
   context: CommandContext,
   payload: {
@@ -2977,11 +3055,22 @@ function writeReviewGateResult(
     lateCompletion?: true;
     postSelectionRecovery?: true;
     recursion?: GateRecursionDecision;
+    /**
+     * Present only for a run after the first in its sequence; a first run's
+     * envelope carries no convergence field.
+     */
+    convergence?: GateConvergence;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
   if (context.json) {
-    context.logger.json({ outcome, ...payload, receiveEligible: true });
+    const { convergence, ...rest } = payload;
+    context.logger.json({
+      outcome,
+      ...rest,
+      ...(convergence ? { convergence } : {}),
+      receiveEligible: true,
+    });
     return;
   }
 
@@ -3011,6 +3100,9 @@ function writeReviewGateResult(
   context.logger.info(
     `Verdict: ${payload.status} (critical=${payload.counts.critical}, high=${payload.counts.high}, medium=${payload.counts.medium}, low=${payload.counts.low})`,
   );
+  if (payload.convergence) {
+    context.logger.info(describeGateConvergence(payload.convergence));
+  }
   if (payload.diversity) {
     if (payload.diversity.warning) {
       context.logger.warn(payload.diversity.warning);
@@ -3619,7 +3711,13 @@ async function finalizeReviewGateProjectLog(
   // recognizable to a retry or to a later recovery, so neither ever appends a
   // second entry for the same run. It is an additive token on the one-line
   // structural body, which no consumer parses.
-  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact} run=${finalization.runId}`;
+  // Convergence tokens appear only for a run after the first in its sequence.
+  // They name the previous run by its 8-character prefix, never the full id,
+  // so no word of this entry carries another run's idempotency identity.
+  const convergence = finalization.convergence
+    ? convergenceLogTokens(finalization.convergence)
+    : '';
+  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact}${convergence} run=${finalization.runId}`;
 
   // Finalization runs after the JSON envelope is emitted, and `logger.warn` is
   // suppressed in JSON mode. Automation would otherwise get no signal that the
@@ -4928,6 +5026,15 @@ async function runReviewGate(
       threshold,
       blocking,
     });
+    const convergence = await resolveGateConvergence({
+      context,
+      dependencies,
+      repoRoot,
+      project: projectPath,
+      runId,
+      snapshot: artifactSnapshot,
+      verdict,
+    });
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
       runId,
@@ -4951,6 +5058,7 @@ async function runReviewGate(
       corroboration,
       ...(childResult.timedOut ? { lateCompletion: true } : {}),
       recursion,
+      ...(convergence ? { convergence } : {}),
     });
     // Record the disposition only once the envelope is written, so a failed
     // emission cannot leave the log claiming a result no caller received.
@@ -4960,6 +5068,9 @@ async function runReviewGate(
       projectLogFinalization.counts = verdict.counts;
       projectLogFinalization.artifactPath = producedArtifact.path;
       projectLogFinalization.artifactSignature = producedArtifact.signature;
+      if (convergence) {
+        projectLogFinalization.convergence = convergence;
+      }
     }
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
@@ -5012,6 +5123,7 @@ async function runReviewGate(
           // it, and keep the project-log status at its pre-recovery
           // `review_failed` value until the envelope is actually written.
           let recoveryEmitted = false;
+          let recoveredConvergence: GateConvergence | undefined;
           try {
             const recoveredHandoff = buildReviewGateHandoff({
               artifactPath: snapshot.path,
@@ -5025,6 +5137,15 @@ async function runReviewGate(
               postSelectionContext.dispatchHead ?? null,
               snapshot.content,
             );
+            recoveredConvergence = await resolveGateConvergence({
+              context,
+              dependencies,
+              repoRoot: identity.repoRoot,
+              project: identity.project,
+              runId: identity.runId,
+              snapshot,
+              verdict: disposition.verdict,
+            });
             const buffered = createBufferedResultContext(context);
             writeReviewGateResult(buffered.context, {
               status: disposition.blocking ? 'blocked' : 'ok',
@@ -5055,6 +5176,9 @@ async function runReviewGate(
                 : {}),
               postSelectionRecovery: true,
               recursion,
+              ...(recoveredConvergence
+                ? { convergence: recoveredConvergence }
+                : {}),
             });
             buffered.flush();
             recoveryEmitted = true;
@@ -5070,6 +5194,9 @@ async function runReviewGate(
               projectLogFinalization.counts = disposition.verdict.counts;
               projectLogFinalization.artifactPath = snapshot.path;
               projectLogFinalization.artifactSignature = snapshot.signature;
+              if (recoveredConvergence) {
+                projectLogFinalization.convergence = recoveredConvergence;
+              }
             }
             process.exitCode = disposition.blocking ? 1 : 0;
             return;
