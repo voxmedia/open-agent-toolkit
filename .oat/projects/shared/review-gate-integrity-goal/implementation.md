@@ -2183,6 +2183,44 @@ Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restore
 
 Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0, CLI build exit 0, and markdownlint on `workflow-gates.md` reported 0 errors.
 
+### Task p08-t06: (review) Cover the incomplete-record and unreadable-sequence convergence paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-01
+**Handle:** direct:rgi-p08-fix-20261107-01:p08-t06
+**Source review:** p08-review-2026-11-07T233955Z.md, M2 and L1
+**Intent:** A test fails if either `findingsComplete` branch is removed, and the `gate-convergence-unavailable` diagnostic path is covered. L1: the Deferred Findings slot records the p08 closures.
+**Files:** `packages/cli/src/commands/gate/convergence.test.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/src/commands/gate/index.ts` (convergence becomes an injectable `GateCommandDependencies.computeGateConvergence`, default unchanged, so the unreadable-sequence path can be driven)
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** c70f73f2e535c0a380cb248adf10e04966320838
+
+What the evidence showed: the gate's own parses run with missing-section normalization. That normalization refuses an artifact whose records cannot cover its counts, such as a count-line-only artifact or a nonzero severity whose section is missing. So through `oat gate review`:
+
+- such a previous run reaches convergence as `previous_artifact_unparsable`, which is still `unavailable` and never all-new;
+- such a current run fails validation before convergence runs.
+
+The `findingsComplete` branches guard the exported `computeGateConvergence`, whose caller-supplied `parsePrevious` may accept such a run. The unit tests drive the branches there.
+
+New tests:
+
+- **Unit test.** In `reports either run as unavailable when its records do not cover its counts`, a count-line-only previous run gives `previous_findings_incomplete`, and a count-line-only current run gives `findings_incomplete`. Both come from the captured m02 runs with their `## Findings` section removed, and neither carries counts.
+- **Gate test, count-line-only previous run.** The gate reports `unavailable` with `previous_artifact_unparsable`, no counts or findings, and the matching log token.
+- **Gate test, count-line-only current run.** The gate returns `artifact_validation_failed`, with no `convergence` and no log token.
+- **Gate test, unreadable sequence (JSON mode).** It emits exactly one `gate-convergence-unavailable` diagnostic with the run ID, project and message. The result keeps `status: ok`, `receiveEligible: true` and its counts, with no `convergence` and no log token.
+- **Gate test, unreadable sequence (human mode).** It emits the documented warning.
+
+Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restored and compared against a copy. The restored suites passed: exit 0, 323 tests.
+
+- Previous-run `findingsComplete` branch disabled: the unit test failed.
+- Current-run branch disabled: the unit test failed.
+- Previous-parse catch removed: the unit unparsable test and both gate unparsable tests failed.
+- `gate-convergence-unavailable` write replaced with a no-op: the diagnostic test failed.
+- Human-mode warning replaced with a no-op: the warning test failed.
+
+An earlier attempt at the last two neutralizations did not compile. The guard script still restored and verified the file, and the effective no-op form above is the one recorded.
+
+Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0.
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
@@ -2513,6 +2551,15 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 - m02 integrated review L1 (Low): `oat review check` and `oat review resolve` number Reviews rows by position among parsed rows, while `oat review pending` numbers physical data lines, so one row can read as two numbers when an unparsed row sits above it. Nothing fails open: waiver `**Row:**` values are copied from `pending`. Deferred by operator decision on 2026-11-04 (fixing it now would reopen m02's exit gate and integrated review). Trigger: p08 start (m03), which owns review-table identity; number all three commands by physical data line, or document the difference in the CLI reference.
 - PR #403 Warp review suggestion (nonblocking, [thread](https://github.com/voxmedia/open-agent-toolkit/pull/403#discussion_r4475162750)): `review-event-row-contracts.test.ts` builds the asserted row with a test-local `recordReviewEvent` writer, so that assertion cannot detect a regression in the real review-provide step; the Step 9 prose pin and the real `scaffoldProject` checks in `scaffold.test.ts` keep their coverage. Valid; test hygiene, not a defect. Deferred by operator decision on 2026-11-06 (fixing it now would change test code after reviewed head `c08b2c054` and stale d02's exit gate and integrated review). Trigger: p08 start (m03); remove the simulated writer and its post-write cases.
 - m03 re-alignment (2026-11-06) re-routing: m02 integrated review L1 (review-table row numbering) and the PR #403 Warp suggestion (test-local row writer) move from p08 to p16 by operator decision (brief Decisions, m03 (3)); trigger: p16 start. p10 review L1, p12 review L2 and m01 exit gate L1 are dispositioned by p14 (its Exit evidence). The p08 journal heading keeps its scaffolded name; the brief's p08 name is now "Gate convergence marking and the stable finding key".
+- p08 closures (recorded by p08-t06 for p08 review round 1 finding L1, 2026-11-07). These are the dispositions from p08-t01 (`2f8f90617`), whose record gives the reasons:
+  - p01 review L2: fixed. Reviewer IDs are read from `**M1: title**` and `**L1:** text` list items.
+  - p01 review round 2 L2: fixed. Explicit IDs are reserved before generation, so order no longer matters.
+  - p01 review round 2 L1 (and PR #400 T1): closed. No captured output has the shape; it still fails closed; the refusal message was clarified. Reopen with a captured refusal.
+  - p01 review L3: closed without action, because no consumer branches on the refusal code.
+  - PR #400 C1: the duplicate-ID and ID-prefix/severity refusals were removed. `findingsComplete` was kept for convergence; p08-t06 covers it.
+  - PR #400 T2: fixed with a negative test for near-miss labels.
+  - PR #400 T3/C3: fixed by removing the duplicate effective-delta tests; `post-implement-sequence-contracts.test.ts` keeps the coverage.
+  - PR #400 T4/C2: fixed by removing the unused error fields and their assertions.
 
 ## Deviations from Plan / Design
 
