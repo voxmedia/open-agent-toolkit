@@ -2140,6 +2140,49 @@ Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restore
 
 Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0, CLI build exit 0, and markdownlint on `workflow-gates.md` reported 0 errors.
 
+### Task p08-t05: (review) Require corroboration before carrying over a reworded finding
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-01
+**Handle:** direct:rgi-p08-fix-20261107-01:p08-t05
+**Source review:** p08-review-2026-11-07T233955Z.md, M1
+**Intent:** An unmatched finding is new and is never silently merged. Two unrelated findings that only share a file and severity are no longer reported as carried over, while the reworded-carried-over case still matches.
+**Files:** `packages/cli/src/commands/gate/convergence.ts`, `packages/cli/src/commands/gate/convergence.test.ts`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** d84765508e36d55c0564797501ba11933899cf5b
+
+Decision: the location pass still pairs findings with a unique (severity, file) on each side, but a pair is accepted only when the rewording is corroborated.
+
+- **Title words.** The titles share at least two significant words. A significant word is a title-key word of three or more characters outside a short list of common words.
+- **Line distance.** When both locations give a line, the lines are at most 20 apart. A location without a line skips this check.
+- **Reason for the bounds.** The captured-derived reworded case shares `review` and `ancestry` and moved 6 lines (65 to 71). The review's counterexample shares no word. Two words rather than one stops a single domain word (`gate`, `review`) from linking unrelated findings. 20 lines allows the usual movement of a fix round. A finding that misses the bounds is reported as new and resolved, which follows the rule that ambiguity is never merged.
+
+Before and after control with `node /tmp/rgi-p08/m1-control.mjs <dist>`. The before build is the pre-fix build at `db61151ed`; the after build is the branch build.
+
+| Case                                                                                                                                            | Before                | After          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------- |
+| Review counterexample: Medium `Plan gate subject merges two amendments` (`plan.md:120`) against `Outcome 3 lacks named evidence` (`plan.md:80`) | `carried_over`, 0/1/0 | `new`, 1/0/1   |
+| Reworded fixture pair                                                                                                                           | `carried_over`        | `carried_over` |
+| Accepted control without a location                                                                                                             | `new`, 1/0/1          | `new`, 1/0/1   |
+
+Run with `node /tmp/rgi-p08/real-seq.mjs <dist>`, the real m01 and m02 sequences give the same counts with both builds. Only the pre-fix build linked plan runs; that was H1.
+
+New tests:
+
+- the review's counterexample;
+- the two-shared-words boundary;
+- the 20-line boundary at 30 and 31, plus a location without a line;
+- `findingLocationLine`.
+
+Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restored and compared against a copy. The restored suites passed: exit 0, 318 tests.
+
+- Corroboration removed: the counterexample, word and line tests failed.
+- One shared word accepted: the two-word test failed.
+- Line distance ignored: the line test failed.
+- Corroboration always refusing: the unit and gate reworded tests failed, along with the word and line tests.
+
+Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0, CLI build exit 0, and markdownlint on `workflow-gates.md` reported 0 errors.
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
