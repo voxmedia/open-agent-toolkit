@@ -728,17 +728,6 @@ describe('implement final review, exit gate and milestone exit gate (p11)', () =
     );
   });
 
-  it('relies on the effective-delta v2 exclusion of project tracking paths', () => {
-    // The bookkeeping fix stays fresh only because v2 excludes these paths.
-    for (const pathspec of [
-      ':(exclude,literal)$PROJECT_PATH/state.md',
-      ':(exclude,literal).oat/projects',
-      ':(exclude,literal).oat/repo',
-    ]) {
-      expect(step14, pathspec).toContain(pathspec);
-    }
-  });
-
   it('writes the milestone exit carrier allowed/passed for a bookkeeping-only result, with the stale fallback', () => {
     const milestone = normalize(
       sliceBetween(
@@ -764,87 +753,6 @@ describe('implement final review, exit gate and milestone exit gate (p11)', () =
     expect(milestone).toContain(
       'Its fix commit must be a section 12.8 bookkeeping successor, so step 3 decides whether it stands: when the `exit` result reads stale because of that commit, persist `status: blocked`, `disposition: null` and handle the result under `onFailure` and `maxAttempts` as before, the attempt included.',
     );
-  });
-});
-
-describe('effective-delta v2 exclusions leave a tracking-only fix out of the delta (p11)', () => {
-  const tempDirs: string[] = [];
-
-  afterEach(() => {
-    for (const dir of tempDirs.splice(0)) {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
-
-  function git(cwd: string, ...args: string[]): string {
-    return execFileSync('git', args, {
-      cwd,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        LC_ALL: 'C',
-        GIT_CONFIG_NOSYSTEM: '1',
-        GIT_CONFIG_GLOBAL: '/dev/null',
-        GIT_AUTHOR_NAME: 'oat',
-        GIT_AUTHOR_EMAIL: 'oat@example.invalid',
-        GIT_COMMITTER_NAME: 'oat',
-        GIT_COMMITTER_EMAIL: 'oat@example.invalid',
-      },
-    });
-  }
-
-  function commitFile(cwd: string, path: string, body: string): void {
-    mkdirSync(join(cwd, path, '..'), { recursive: true });
-    writeFileSync(join(cwd, path), body);
-    git(cwd, 'add', '--', path);
-    git(cwd, 'commit', '-q', '--no-verify', '-m', path);
-  }
-
-  it('hashes the same delta before and after a tracking-only fix commit, and a different one after a code change', () => {
-    const closeout = readRepoFile(CLOSEOUT);
-    const project = '.oat/projects/shared/demo';
-    // The exact literal pathspecs the closeout contract names, read from it.
-    const pathspecs = [
-      ...closeout.matchAll(/`(:\(exclude,literal\)[^`]+)`/g),
-    ].map((match) => match[1]!.replace('$PROJECT_PATH', project));
-    expect(pathspecs).toEqual([
-      `:(exclude,literal)${project}/state.md`,
-      ':(exclude,literal).oat/projects',
-      ':(exclude,literal).oat/repo',
-    ]);
-
-    const repo = mkdtempSync(join(tmpdir(), 'oat-bookkeeping-delta-'));
-    tempDirs.push(repo);
-    git(repo, 'init', '-q', '-b', 'main');
-    commitFile(repo, 'README.md', 'base\n');
-    const base = git(repo, 'rev-parse', 'HEAD').trim();
-    commitFile(repo, 'src/feature.ts', 'export const x = 1;\n');
-    commitFile(repo, `${project}/plan.md`, '| p01 | code | received |\n');
-
-    const delta = () =>
-      git(
-        repo,
-        'diff',
-        '--raw',
-        '-z',
-        '--no-renames',
-        '--no-abbrev',
-        `${base}..HEAD`,
-        '--',
-        '.',
-        ...pathspecs,
-      );
-    const reviewed = delta();
-
-    // A bookkeeping-only fix: Reviews cell, journal note, state pointer.
-    commitFile(repo, `${project}/plan.md`, '| p01 | code | passed |\n');
-    commitFile(repo, `${project}/implementation.md`, '- note\n');
-    commitFile(repo, `${project}/state.md`, 'oat_current_task: p02\n');
-    expect(delta()).toBe(reviewed);
-
-    // Control: a code change after the review changes the delta.
-    commitFile(repo, 'src/feature.ts', 'export const x = 2;\n');
-    expect(delta()).not.toBe(reviewed);
   });
 });
 

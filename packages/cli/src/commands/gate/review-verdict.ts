@@ -26,8 +26,10 @@ export interface ReviewGateVerdict {
   findings: ReviewFindingRecord[];
   /**
    * True only when all four severity sections are present and the records for
-   * each severity exactly cover `counts`. Consumers that require per-finding
-   * coverage must refuse a verdict when this is false.
+   * each severity exactly cover `counts`. Gate convergence marking reads it:
+   * records that do not cover `counts` cannot show which findings a run
+   * carried over or resolved, so such a run is reported unavailable rather
+   * than compared.
    */
   findingsComplete: boolean;
   blocking: boolean;
@@ -58,6 +60,14 @@ export interface ReviewDispatchAudit {
 
 export type Severity = keyof ReviewGateVerdict['counts'];
 
+/**
+ * One identified finding. `id` is unique within the artifact: a reviewer's
+ * explicit ID (`**M1 — …**`, `- **M1: …**`, `- **M1:** …`) is kept when it is
+ * the first use of that ID and carries its section's severity prefix; every
+ * other finding receives the next free generated ID for its severity, never
+ * one any explicit ID in the artifact claims. `title` and `location` are the
+ * reviewer's own text, with an explicit ID prefix removed from the title.
+ */
 export interface ReviewFindingRecord {
   id: string;
   severity: Severity;
@@ -69,15 +79,10 @@ export type ReviewVerdictValidationCode =
   | 'finding_count_disagreement'
   | 'finding_detail_ambiguous'
   | 'finding_detail_orphaned'
-  | 'finding_id_duplicate'
-  | 'finding_title_severity_mismatch'
   | 'findings_unrecognizable';
 
 export class ReviewVerdictValidationError extends Error {
   override readonly name = 'ReviewVerdictValidationError';
-  readonly kind = 'review-verdict-validation';
-  readonly status = 'artifact_validation_failed';
-  readonly receiveEligible = false;
 
   constructor(
     readonly code: ReviewVerdictValidationCode,
@@ -571,6 +576,11 @@ interface ParsedFindingTitle {
   location: string | null;
 }
 
+/** A finding as written, before artifact-wide ID assignment. */
+interface IdentifiedFinding extends ParsedFindingTitle {
+  severity: Severity;
+}
+
 interface SeveritySectionAnalysis {
   counts: ReviewGateVerdict['counts'];
   findings: ReviewFindingRecord[];
@@ -588,6 +598,30 @@ function parseExplicitFindingTitle(text: string): ParsedFindingTitle | null {
   };
 }
 
+/**
+ * A list item's trailing location parenthetical, as the title shapes write it:
+ * `(\`path:line\`)` or `(path)`, optionally followed by `.` or `,`.
+ */
+function splitTrailingLocation(text: string): {
+  title: string;
+  location: string | null;
+} {
+  const location = /\s+\((?:`([^`]+)`|([^()]+))\)[.,]?\s*$/.exec(text);
+  return {
+    title: location ? text.slice(0, location.index).trim() : text.trim(),
+    location: (location?.[1] ?? location?.[2] ?? '').trim() || null,
+  };
+}
+
+/**
+ * Reviewer ID prefixes a list-item finding carries in its bold lead, taken
+ * from captured gate artifacts: `**M1: title**` (the m02 exit-gate runs) and
+ * `**L1:** text` (the backlog-wave-5 returned message). The ID is identity
+ * only: it never changes how the item is counted.
+ */
+const LIST_TITLE_ID_IN_BOLD = /^([CHML]\d+):\s+(\S.*)$/;
+const LIST_TITLE_ID_ONLY_BOLD = /^([CHML]\d+):$/;
+
 function parseListFindingTitle(text: string): ParsedFindingTitle {
   const bold = /^\*\*(.+?)\*\*(.*)$/.exec(text);
   if (bold?.[1]) {
@@ -597,21 +631,22 @@ function parseListFindingTitle(text: string): ParsedFindingTitle {
     if (explicit) {
       return explicit;
     }
+    const lead = bold[1].trim();
     const suffix = (bold[2] ?? '').trim();
+    const idOnly = LIST_TITLE_ID_ONLY_BOLD.exec(lead);
+    if (idOnly?.[1] && suffix.length > 0) {
+      return { id: idOnly[1], ...splitTrailingLocation(suffix) };
+    }
+    const idInBold = LIST_TITLE_ID_IN_BOLD.exec(lead);
     const location = /^\((?:`([^`]+)`|([^()]+))\)[.,]?$/.exec(suffix) ?? null;
     return {
-      id: null,
-      title: bold[1].trim(),
+      id: idInBold?.[1] ?? null,
+      title: (idInBold?.[2] ?? lead).trim(),
       location: (location?.[1] ?? location?.[2] ?? '').trim() || null,
     };
   }
 
-  const location = /\s+\((?:`([^`]+)`|([^()]+))\)[.,]?\s*$/.exec(text);
-  return {
-    id: null,
-    title: location ? text.slice(0, location.index).trim() : text.trim(),
-    location: (location?.[1] ?? location?.[2] ?? '').trim() || null,
-  };
+  return { id: null, ...splitTrailingLocation(text) };
 }
 
 function detailLabel(text: string): (typeof DETAIL_LABELS)[number] | null {
@@ -643,49 +678,18 @@ function identifyFindingsInSection(
   content: string,
   severity: Severity,
   artifactPath: string,
-  priorFindingCount: number,
-  usedFindingIds: Set<string>,
-): ReviewFindingRecord[] {
+): IdentifiedFinding[] {
   if (sectionContentIsEmpty(content)) {
     return [];
   }
 
-  const findings: ReviewFindingRecord[] = [];
+  const findings: IdentifiedFinding[] = [];
   let detailOwnerState: 'none' | 'awaiting' | 'active' | 'ended' = 'none';
   let ownedDetailLabels = new Set<(typeof DETAIL_LABELS)[number]>();
   let activeFence: ReturnType<typeof fenceMarker> = null;
 
   const addFinding = (parsed: ParsedFindingTitle): void => {
-    const expectedPrefix = findingPrefix(severity);
-    if (parsed.id && !parsed.id.startsWith(expectedPrefix)) {
-      throw new ReviewVerdictValidationError(
-        'finding_title_severity_mismatch',
-        `Review artifact at ${artifactPath} has finding ${parsed.id} under ${severityDisplayName(severity)}; the explicit finding ID must use the ${expectedPrefix} prefix for its severity.`,
-      );
-    }
-    let id =
-      parsed.id ??
-      `${expectedPrefix}${priorFindingCount + findings.length + 1}`;
-    if (!parsed.id) {
-      let ordinal = priorFindingCount + findings.length + 1;
-      while (usedFindingIds.has(id)) {
-        ordinal += 1;
-        id = `${expectedPrefix}${ordinal}`;
-      }
-    }
-    if (usedFindingIds.has(id)) {
-      throw new ReviewVerdictValidationError(
-        'finding_id_duplicate',
-        `Review artifact at ${artifactPath} declares duplicate finding ID ${id}; every per-finding record must have a unique ID.`,
-      );
-    }
-    usedFindingIds.add(id);
-    findings.push({
-      id,
-      severity,
-      title: parsed.title,
-      location: parsed.location,
-    });
+    findings.push({ ...parsed, severity });
   };
 
   for (const line of markdownLines(content)) {
@@ -731,7 +735,7 @@ function identifyFindingsInSection(
         if (detailOwnerState === 'none') {
           throw new ReviewVerdictValidationError(
             'finding_detail_orphaned',
-            `Review artifact at ${artifactPath} has an orphaned ${label} detail bullet in ${severityDisplayName(severity)}; closed-label column-zero details require an immediately preceding explicit bold finding title in the same severity section.`,
+            `Review artifact at ${artifactPath} has an orphaned ${label} detail bullet in ${severityDisplayName(severity)}; closed-label column-zero details require an immediately preceding explicit bold finding title in the same severity section, and any other line between them, including an indented or wrapped continuation line, ends that title's detail run.`,
           );
         }
         if (detailOwnerState === 'ended' || ownedDetailLabels.has(label)) {
@@ -762,6 +766,64 @@ function identifyFindingsInSection(
   }
 
   return findings;
+}
+
+/**
+ * Give every identified finding an ID that is unique within the artifact,
+ * independent of the order in which explicit and unlabeled findings appear.
+ *
+ * Pass one reserves each explicit ID at its first use when it carries its
+ * section's severity prefix. Pass two keeps those reservations and gives every
+ * other finding (unlabeled, a repeated explicit ID, or an ID whose prefix names
+ * another severity) the next free ID for its severity, starting from its
+ * 1-based position in that severity and skipping every reserved or already
+ * assigned ID. Nothing is refused: the stable finding key never reads IDs, and
+ * an ID only has to name one record of its run unambiguously.
+ */
+function assignFindingIds(
+  identified: readonly IdentifiedFinding[],
+): ReviewFindingRecord[] {
+  const keepsExplicitId = identified.map(() => false);
+  const reserved = new Set<string>();
+  for (const [index, finding] of identified.entries()) {
+    if (
+      finding.id !== null &&
+      finding.id.startsWith(findingPrefix(finding.severity)) &&
+      !reserved.has(finding.id)
+    ) {
+      reserved.add(finding.id);
+      keepsExplicitId[index] = true;
+    }
+  }
+
+  const assigned = new Set<string>(reserved);
+  const positions: Record<Severity, number> = {
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+  };
+  return identified.map((finding, index) => {
+    positions[finding.severity] += 1;
+    let id: string;
+    if (keepsExplicitId[index] && finding.id !== null) {
+      id = finding.id;
+    } else {
+      const prefix = findingPrefix(finding.severity);
+      let ordinal = positions[finding.severity];
+      while (assigned.has(`${prefix}${ordinal}`)) {
+        ordinal += 1;
+      }
+      id = `${prefix}${ordinal}`;
+      assigned.add(id);
+    }
+    return {
+      id,
+      severity: finding.severity,
+      title: finding.title,
+      location: finding.location,
+    };
+  });
 }
 
 function missingSeverityHeadings(
@@ -897,8 +959,7 @@ function analyzeSeveritySections(
     medium: 0,
     low: 0,
   };
-  const findings: ReviewFindingRecord[] = [];
-  const usedFindingIds = new Set<string>();
+  const identified: IdentifiedFinding[] = [];
 
   for (const [offset, heading] of severityHeadings.entries()) {
     const nextHeading = severityHeadings[offset + 1];
@@ -911,14 +972,12 @@ function analyzeSeveritySections(
       content.slice(sectionStart, sectionEnd),
       heading.severity,
       artifactPath,
-      counts[heading.severity],
-      usedFindingIds,
     );
     counts[heading.severity] += sectionFindings.length;
-    findings.push(...sectionFindings);
+    identified.push(...sectionFindings);
   }
 
-  return { counts, findings };
+  return { counts, findings: assignFindingIds(identified) };
 }
 
 function findingRecordsAreComplete(
