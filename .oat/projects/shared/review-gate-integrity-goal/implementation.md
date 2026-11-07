@@ -1953,6 +1953,48 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 
 Phase start 2026-11-07, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the stable finding key, run linkage and the convergence fields feed one gate result and one record of the review: no two slices are independent. The work adds new surfaces and settles open design (p08's Known Unknowns), so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p08 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c` in the gate, review, review-provide, review-receive and reviewer paths.
 
+### Task p08-t01: Settle the parser identity deferrals for the stable finding key
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Handle:** direct:rgi-p08-impl-20261107-01:p08-t01
+**Intent:** Settle the deferred parser identity items before the key exists, keeping or removing each refusal according to what the stable finding key needs: p01 review L2 and L3, p01 review round 2 L1 and L2, and the PR #400 self-review C1 bundle with T2, T3/C3 and T4/C2.
+**Files:** `packages/cli/src/commands/gate/review-verdict.ts`, `packages/cli/src/commands/gate/review-verdict.test.ts`, `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `packages/cli/src/commands/gate/__fixtures__/convergence/m02-exit-r{1,2,3}-range-review-*.md` (captured output, provenance headers), `.oxfmtrc.jsonc` (formatter ignore for those byte-for-byte fixtures, the existing captured-fixture precedent), `references/probes/p08-parser-identity-controls.mjs`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts`
+**Commit:** 2f8f90617f02d2f5aad9431de082e7141ce388b4
+
+What the key needs (decided here, used by p08-t02): the stable finding key reads only a finding's severity, title and location, never a reviewer ID; a carried-over mark needs an ID that names exactly one record of its run; and comparing two runs needs records that cover their counts (`findingsComplete`). Dispositions:
+
+- **p01 review L2 — fixed.** List items whose bold lead carries a reviewer ID now yield that ID and a clean title: `- **M1: title** (loc)` (the shape of all three m02 exit-gate artifacts) and `- **L1:** text` (the backlog-wave-5 returned message). Both shapes come from captured output. Counting is unchanged. The key needs it: otherwise the same finding titled `M1: X` in one run and `M2: X` in the next would never match.
+- **p01 review round 2 L2 — fixed.** Explicit IDs are reserved artifact-wide before any ID is generated, so a plain finding before `**M1 — …**` gets `M2` instead of causing a refusal.
+- **C1 duplicate-ID refusal — removed; C1 ID-prefix/severity refusal — removed.** The key never reads IDs, and IDs are now unique by construction: an explicit ID is kept at its first use when its prefix matches its section; a repeat or mismatched ID gets the next free generated ID for its section. Neither shape is refused any more, so a review whose counts agree is no longer rejected for its labels.
+- **C1 `findingsComplete` — kept.** Convergence marking reads it: a run whose records do not cover its counts cannot be compared, so p08-t02 reports it `unavailable`.
+- **T4/C2 — fixed.** `ReviewVerdictValidationError`'s unused `kind`, `status` and `receiveEligible` fields and the assertions on them are gone; `code` stays.
+- **T2 — fixed.** New negative test: near-miss labels (`Fixes:`, an unlisted bold `**Recommendation:**`, lower-case `issue:`) are separate list findings (Medium 4), never details of the title above them.
+- **T3/C3 — fixed.** Removed `relies on the effective-delta v2 exclusion of project tracking paths` and the git-level `effective-delta v2 exclusions leave a tracking-only fix out of the delta (p11)` block from `bookkeeping-findings-contracts.test.ts`; `post-implement-sequence-contracts.test.ts` pins the same sentence (it reads `completion-and-closeout.md` through `readImplementSkill`) and runs the same v2 exclusion git test (`excludes project and repository records from effective-delta-v2 only`).
+- **p01 review round 2 L1 (and T1) — closed, message clarified, grammar unchanged.** A search of all 371 review artifacts under the six local worktrees found no wrapped or nested detail line under an explicit title, so accepting one would add grammar no captured output uses (the real-output fixture Constraint, the R1 narrow-grammar Decision and Feature Planning Triage). The shape still fails closed; the orphaned-detail refusal now says an intervening indented or wrapped line ends the detail run, which removes the misleading cause. Reopen with captured output if a real gate run is refused this way.
+- **p01 review L3 — closed without action.** No consumer branches on the refusal code: convergence reads only accepted verdicts, and the `artifact_validation_failed` envelope's message names the cause. Adding a field no one reads is the speculative complexity Feature Planning Triage rules out; refile when a consumer appears.
+
+Before/after controls (parser identity; the gate's first-run envelope is controlled in p08-t02). Probe: `node .oat/projects/shared/review-gate-integrity-goal/references/probes/p08-parser-identity-controls.mjs <cli-dist> .`, run against a build of the phase base `2c7ab359b` (copied to `/tmp/rgi-p08/base-dist`) and against the branch build. Counts are identical in every accepted case.
+
+| Control                                                   | Base `2c7ab359b`                                                                   | Branch                                                                        |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| wave-5 captured `**L1:**`/`**L2:**` Lows in a Low section | accepted, ids L1/L2, titles `L1:` / `L2:`                                          | accepted 0/0/0/2, ids L1/L2, titles are the finding text                      |
+| real m02 run 1 (`**M1: …**`)                              | accepted 0/0/2/0, titles `M1: Preserve …`, `M2: Resolve …`                         | accepted 0/0/2/0, titles `Preserve …`, `Resolve …`, same locations            |
+| plain list finding before `**M1 — …**`                    | refused `finding_id_duplicate`                                                     | accepted, M2 (plain) and M1 (explicit)                                        |
+| two `**H1 — …**` titles                                   | refused `finding_id_duplicate`                                                     | accepted, H1 and H2                                                           |
+| `**H1 — …**` under Medium                                 | refused `finding_title_severity_mismatch`                                          | accepted, M1                                                                  |
+| wrapped detail line under a title                         | refused `finding_detail_orphaned`; error carried `kind`/`status`/`receiveEligible` | refused `finding_detail_orphaned` with the clarified message; no extra fields |
+
+Guard-can-fail (each neutralized in the working tree, suite rerun, then restored from a copy; restored suite exit 0, 78/78):
+
+- `LIST_TITLE_ID_IN_BOLD` made unmatchable: `reads the reviewer ID from captured …` and `gives an explicit ID whose prefix names another severity …` failed (exit 1).
+- `LIST_TITLE_ID_ONLY_BOLD` made unmatchable: `reads the reviewer ID from captured …` failed (exit 1).
+- Explicit-ID reservation disabled (`&& false` on the pass-one test): `assigns IDs independently of …`, `skips explicit IDs when generating …` and the prefix test failed (exit 1).
+- First-use check dropped so a repeated explicit ID is kept: `keeps a repeated explicit finding ID unique …` failed (exit 1).
+
+Verification: focused verdict suite 78/78 exit 0; `src/commands/gate` plus `bookkeeping-findings-contracts.test.ts` under `scripts/with-isolated-home.sh`, 10 files 550 tests, exit 0; `pnpm --filter @open-agent-toolkit/cli check` exit 0; CLI `tsc --noEmit` exit 0; CLI build exit 0. The three m02 fixtures still match their archived artifacts byte for byte below the header after the commit hook.
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
