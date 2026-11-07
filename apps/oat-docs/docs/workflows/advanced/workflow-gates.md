@@ -671,6 +671,90 @@ oat --json gate review \
 Read the resulting envelope and exit code; that is the whole completion
 contract.
 
+### Convergence across a gate sequence
+
+A gate sequence is the successive runs of one configured gate on one subject,
+reruns after fixes included. For every `ok` or `blocked` run after the first in
+its sequence, the result carries an additive `convergence` object that marks
+each of this run's findings `new` or `carried_over` relative to the previous
+run, and counts the previous run's findings that no longer appear as resolved.
+The first run of a sequence carries no `convergence` field. The gate never
+rewrites the reviewer's artifact.
+
+The subject depends on the run:
+
+| Run                                                                                                                                                          | Subject                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Goal project, `code` review whose scope is `final` or whose artifact names more than one phase, all of them in one milestone of `plan.md`'s Milestones table | That milestone (`milestone:m02`), whatever scope token the run used              |
+| Goal project, `artifact` review on scope `plan`                                                                                                              | The plan amendment: runs after the latest recorded plan approval before this run |
+| Every other run, and every run outside goal mode                                                                                                             | The review scope (`scope:p03`)                                                   |
+
+Runs are linked through records that already exist; no new store is written.
+The earlier runs are the project's gate-run review artifacts, in `reviews/` and
+`reviews/archived/`, that carry `oat_review_invocation: gate`, a gate run ID and
+a valid `oat_generated_at`, were written before this run, and have the same
+review type and subject. The latest of them is the previous run and the only
+run compared. The gate target is not part of the identity. Review artifacts are
+local-only, so a checkout that lacks the earlier artifacts reports a first run.
+
+Findings are matched by the stable finding key,
+`<location>::<title>`. The location is the reviewer's location without a
+trailing line reference (`:430`, `:534-544`, `#L10-L20`), lower-cased. The title
+drops the advisory `(bookkeeping)` mark and is lower-cased with every run of
+characters other than letters and digits collapsed to one space. Reviewer IDs
+and severity are not part of the key. Matching runs in two passes and never
+merges findings:
+
+1. A current and a previous finding with the same key match when that key
+   occurs once among each run's unmatched findings.
+2. A reworded finding matches a remaining previous finding with the same
+   location and severity, when that pair occurs once on each side. A finding
+   without a location never matches in this pass.
+
+Everything left over is `new` (current) or resolved (previous).
+
+```json
+"convergence": {
+  "sequence": {
+    "reviewType": "code",
+    "subject": { "kind": "milestone", "value": "m02" },
+    "run": 2,
+    "previousRun": {
+      "runId": "93e1b0a1-…",
+      "artifactPath": "….md",
+      "generatedAt": "2026-11-03T21:56:01Z"
+    }
+  },
+  "status": "compared",
+  "counts": { "new": 1, "carriedOver": 0, "resolved": 2 },
+  "findings": [
+    {
+      "id": "M1",
+      "severity": "medium",
+      "title": "…",
+      "location": "…",
+      "key": "…",
+      "mark": "new"
+    }
+  ],
+  "resolved": [{ "id": "M1", "severity": "medium", "title": "…", "location": "…", "key": "…" }]
+}
+```
+
+A carried-over finding also carries `previous: { runId, id, severity }`.
+`subject.kind` is `milestone`, `plan-amendment` (with `amendmentAfter`, the
+approval time or `null`), or `scope`. When the previous run's artifact no longer
+parses, or either run's finding records do not cover its counts, `status` is
+`unavailable` with a `reason` (`previous_artifact_unparsable`,
+`previous_findings_incomplete`, or `findings_incomplete`) and no counts. When
+the earlier runs cannot be read at all, the gate emits a
+`gate-convergence-unavailable` diagnostic and returns the result without
+`convergence`. Convergence never changes `status`, `blocking`,
+`receiveEligible`, or `handoff`.
+
+The gate's project-log record of the run carries the same counts. See
+[Project Log](../projects/execution/project-log.md).
+
 ### Project log finalization
 
 After the envelope is written, the gate appends one structural entry to the
@@ -679,6 +763,12 @@ worktree for whatever executes next. The entry body ends with
 `run=<runId>` — the same run id the envelope carries. That token is the entry's
 stable identity: a retry or a later recovery recognizes the entry it already
 wrote instead of appending a second one.
+For a run after the first in its
+[gate sequence](#convergence-across-a-gate-sequence), the body adds
+`convergence=new:N,carried:N,resolved:N sequence=<kind>:<value> sequence_run=N previous_run=<prefix>`
+before `run=`, or `convergence=unavailable:<reason>` when the runs cannot be
+compared. The previous run is named by the first eight characters of its run
+ID, never the whole ID, so the entry never reads as that run's own entry.
 
 Staging and committing the log retries **three attempts** separated by two
 waits (250 ms, then 500 ms) when, and only when, git itself reports index-lock
