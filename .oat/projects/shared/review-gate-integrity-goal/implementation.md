@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p10    | completed | 1     | 1/1      |
-| p11    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p12    | completed | 1     | 1/1      |
-| p13    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p08    | pending   | 1     | 0/1      |
-| p14    | pending   | 1     | 0/1      |
-| p15    | pending   | 1     | 0/1      |
-| p16    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p10    | completed   | 1     | 1/1      |
+| p11    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p12    | completed   | 1     | 1/1      |
+| p13    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p08    | in_progress | 1     | 0/1      |
+| p14    | pending     | 1     | 0/1      |
+| p15    | pending     | 1     | 0/1      |
+| p16    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 10/15 phases accepted
 
@@ -1947,7 +1947,11 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 241b12a95bc3022ce8e4f8589699f90e31d22417
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+
+Phase start 2026-11-07, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the stable finding key, run linkage and the convergence fields feed one gate result and one record of the review: no two slices are independent. The work adds new surfaces and settles open design (p08's Known Unknowns), so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p08 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c` in the gate, review, review-provide, review-receive and reviewer paths.
 
 ## Phase p14: Finding classification at receive
 
