@@ -1995,6 +1995,65 @@ Guard-can-fail (each neutralized in the working tree, suite rerun, then restored
 
 Verification: focused verdict suite 78/78 exit 0; `src/commands/gate` plus `bookkeeping-findings-contracts.test.ts` under `scripts/with-isolated-home.sh`, 10 files 550 tests, exit 0; `pnpm --filter @open-agent-toolkit/cli check` exit 0; CLI `tsc --noEmit` exit 0; CLI build exit 0. The three m02 fixtures still match their archived artifacts byte for byte below the header after the commit hook.
 
+### Task p08-t02: Mark gate findings new or carried over across a sequence
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Handle:** direct:rgi-p08-impl-20261107-01:p08-t02
+**Intent:** Settle the Known Unknowns (finding key, run linkage, mark carrier, plan-gate subject, `final`-token exit attribution) and mark every finding of a run after the first in its sequence new or carried over, with new, carried-over and resolved counts in the gate JSON and in the gate's project-log record of the review; a first run stays unchanged.
+**Files:** `packages/cli/src/commands/gate/convergence.ts` (new), `packages/cli/src/commands/gate/convergence.test.ts` (new), `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/src/commands/gate/__fixtures__/convergence/m02-exit-r1-{stuck,reworded}-rerun.md` (derived from captured run 1, edits recorded in their headers), `references/probes/p08-m02-sequence-probe.mjs`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** 805ddf52d6924c3edb3aa35758a5aa3dca788fcf
+
+Known Unknown decisions (none changes an Outcome, Constraint, Decision or the Approach):
+
+- **Stable finding key.** `<location key or ->::<title key>`. The location key is the reviewer's location without a trailing line reference (`:430`, `:534-544`, `:12:3`, `#L10-L20`), lower-cased. The title key drops the advisory `(bookkeeping)` mark, applies NFKC and lower-case, and collapses every run of non-letter, non-digit characters to one space. Reviewer IDs and severity are not in the key: reviewers renumber on every run (p08-t01) and may regrade. Matching is deterministic and never merges. The exact pass pairs findings whose key is unique among the unmatched findings of each run. The location pass then pairs a reworded finding through a unique (severity, location key) on each side; a finding without a location never matches in it. Everything else is new or resolved. Reason: line numbers move between fix rounds, while file and wording identify the finding; ambiguity is reported as new and resolved instead of guessed.
+- **Run linkage, without a new store.** The earlier runs are the project's gate-run review artifacts, active (`reviews/`) and archived (`reviews/archived/`), that carry `oat_review_invocation: gate`, an `oat_gate_run_id` and a valid `oat_generated_at`, were written before this run, and have the same (review type, subject). The previous run is the latest of them; it is the only run compared, and the sequence position is its count plus one. The gate target is not part of the identity, because one configured gate may select another target on a rerun. Limitation, to be documented in p08-t03: review artifacts are local-only, so a checkout without the earlier artifacts reports a first run.
+- **Mark carrier.** The gate JSON result's `convergence` object (sequence, status, counts, per-finding marks with the previous run's finding reference, resolved findings), plus tokens in the gate's one-line project-log record of the review: ` convergence=new:N,carried:N,resolved:N sequence=<kind>:<value> sequence_run=N previous_run=<8-char prefix>`, before ` run=`. The reviewer's artifact is never rewritten. The previous run is named by its 8-character prefix because the log's idempotency scan treats any word containing a full run ID as that run's entry. A previous run whose artifact cannot be parsed, or either run whose records do not cover its counts, gives `status: unavailable` with a reason instead of counts, and never a guessed all-new result. A failure to read earlier runs is a `gate-convergence-unavailable` diagnostic (a warning in human mode), and the result is emitted without convergence fields, unchanged otherwise. The post-selection recovery path reports convergence the same way.
+- **Goal plan-gate subject.** The plan amendment open when the run was written: an `artifact` run on scope `plan` in a goal project has subject `plan-amendment` bounded by the latest recorded plan approval (`oat_milestone_gates.<m>.plan.decided_at`) before it. Each run's boundary is derived from its own time, so two plan runs share a sequence only when no plan approval was recorded between them.
+- **`final`-token exit attribution, without p15.** A goal `code` run whose scope is `final`, or whose artifact names more than one phase in `oat_review_phase_ids`, belongs to the milestone when every named phase is in that one milestone of `plan.md`'s Milestones table; the scope token does not matter. A single-phase phase gate, a cross-milestone run, a run without phase IDs, and every run outside goal mode stay on their review scope.
+
+Exit evidence:
+
+- **Converging, stuck and reworded sequences (gate JSON and project-log record).** In the `index.test.ts` block `gate convergence (p08)`:
+  - m02 r2 after r1 gives run 2, subject `milestone:m02`, new 1, carried 0, resolved 2. r3 after r1 and r2 gives run 3, previous run `d738cd0e…`, 0/0/1.
+  - The stuck rerun gives carried 2 with the earlier M1/M2 references.
+  - The reworded rerun gives carried 2, with M2 matched by the location pass.
+  - An unparsable previous run gives `unavailable: previous_artifact_unparsable` with the verdict unchanged.
+  - The post-selection recovered result carries the same convergence.
+
+  Every case also asserts the log body tokens.
+
+- **First run unchanged.** The test asserts no `convergence` key and a log body matching the pre-p08 shape exactly. Branch-build control: `node .oat/projects/shared/review-gate-integrity-goal/references/probes/p08-m02-sequence-probe.mjs <cli-entry> .`, run with `packages/cli/dist/index.js` (branch) and `/tmp/rgi-p08/base-dist/index.js` (a build of phase base `2c7ab359b`, with `assets` linked). The masked first-run JSON envelopes are identical, and the first-run log bodies of all three scratch projects are identical. The base build reports no convergence on any later run. The parser-identity changes do not reach the first-run envelope; they are the before/after table in p08-t01.
+- **Branch build links the m02 runs as one sequence.** The same probe with the branch build gives these real `oat --json gate review` runs (exit 0, status ok):
+  - r1: convergence absent.
+  - r2: `milestone:m02` run 2, `M1:new`, resolved M1/M2, counts 1/0/2.
+  - r3: run 3, resolved M1, counts 0/0/1.
+  - stuck: run 2, `M1:carried_over<-M1`, `M2:carried_over<-M2`, counts 0/2/0.
+  - reworded: run 2, same marks, counts 0/2/0.
+
+  Each later run's log line carries the convergence tokens.
+
+- **Real project records.** The branch build's `listGateRunArtifacts` and `sequenceSubject`, run over this project's own artifacts, group the three m02 exit runs as `code milestone:m02` and the five m01 `final` runs as `code milestone:m01`. They split the four plan runs into three amendments: the two runs before the m01 approval (`2026-11-02T16:13:30Z`), one run after it, and one after the m02 approval (`2026-11-03T03:17:46Z`). Probe:
+
+  ```bash
+  node --input-type=module -e "const m=await import('./packages/cli/dist/commands/gate/convergence.js');const p='.oat/projects/shared/review-gate-integrity-goal';const r=await m.readSequenceProjectRecords(p);for(const run of await m.listGateRunArtifacts('.',p)){const s=m.sequenceSubject(run,r);console.log(run.reviewType,s.kind+':'+s.value,s.amendmentAfter??'',run.path.split('/').pop())}"
+  ```
+
+Guard-can-fail. Each rule was neutralized in the working tree, the convergence tests were rerun, and the file was restored from a copy, verified with `cmp`. The restored suites passed (exit 0, 310 tests).
+
+- Exact pass removed: `keeps a regraded finding carried over …` failed.
+- Location pass removed: both `carries over a reworded finding …` tests (unit and gate) failed.
+- Uniqueness guard removed: `leaves two identical findings … unmatched` and `never merges: …` failed.
+- Milestone attribution removed: six tests failed, including the m02 sequence (unit and gate) and both attribution tests.
+- Plan-approval boundary removed: `separates goal plan gate runs at every recorded plan approval` failed.
+- First-run `null` replaced with a run-1 object: the first-run gate test, both non-linking tests and the m02 unit sequence failed.
+- Full previous run ID in the log tokens: the prefix test and two gate log assertions failed.
+- Recovery-path convergence set to `undefined`: `reports convergence on a post-selection recovered result` failed.
+- Log tokens left out of the record body: five gate tests failed.
+
+Verification: `src/commands/gate` under `scripts/with-isolated-home.sh` passed 10 files and 499 tests, exit 0. `pnpm --filter @open-agent-toolkit/cli check` exit 0; CLI `tsc --noEmit` exit 0; CLI build exit 0.
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
