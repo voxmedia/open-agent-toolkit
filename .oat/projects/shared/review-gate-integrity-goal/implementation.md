@@ -2056,6 +2056,8 @@ Exit evidence:
   node --input-type=module -e "const m=await import('./packages/cli/dist/commands/gate/convergence.js');const p='.oat/projects/shared/review-gate-integrity-goal';const r=await m.readSequenceProjectRecords(p);for(const run of await m.listGateRunArtifacts('.',p)){const s=m.sequenceSubject(run,r);console.log(run.reviewType,s.kind+':'+s.value,s.amendmentAfter??'',run.path.split('/').pop())}"
   ```
 
+- **Correction (p08-t04, review round 1 H1).** The plan-run grouping above was wrong. The two runs before the m01 approval are the original brief's plan gate (`5e3ad377`, 2026-11-01) and the m01 amendment's (`803a6f3e`, 2026-11-02), two different amendments. The m01 re-approval had overwritten the brief approval's carrier time. p08-t04 bounds amendments by every approval line. With that fix, the four plan runs give: `5e3ad377` unplaced (never linked), then three separate amendments after `cbc8836c`, `b2a38a09` and `ee377dd7`.
+
 Guard-can-fail. Each rule was neutralized in the working tree, the convergence tests were rerun, and the file was restored from a copy, verified with `cmp`. The restored suites passed (exit 0, 310 tests).
 
 - Exact pass removed: `keeps a regraded finding carried over …` failed.
@@ -2087,6 +2089,56 @@ No skill or agent-role file changed, so no `metadata.version` or `version:` bump
 - `docs generate-index` left `apps/oat-docs/index.md` unchanged.
 
 The first commit attempt was refused by commitlint (header longer than 100 characters) before any commit was made. The same identity and paths were retried with a shorter message.
+
+### Task p08-t04: (review) Bound goal plan-gate amendments by every recorded approval
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-01
+**Handle:** direct:rgi-p08-fix-20261107-01:p08-t04
+**Source review:** p08-review-2026-11-07T233955Z.md, H1
+**Intent:** Runs on different plan amendments never share a sequence, even when a re-approval of the same milestone has overwritten that milestone's plan carrier.
+**Files:** `packages/cli/src/commands/gate/convergence.ts`, `packages/cli/src/commands/gate/convergence.test.ts`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts`
+**Commit:** d218c3d712f223f218c7657953520bf233d19072
+
+Decision: the amendment boundary is the set of plan approvals recorded before the run. The approvals come from records that already exist and that a re-approval does not overwrite: the brief's `**Brief approved:**` and `**Milestone mNN approved:**` lines under `## Delivery endpoint and authority` (written by `oat-project-goal` step 3; each names the approved commit).
+
+- **Timing.** A line is timed by the `oat_milestone_gates.<m>.plan` carrier's `decided_at` while that carrier's `subject.ref` (else `reviewed_head`) still names the line's commit. Otherwise the line's date is read as that whole day in any time zone, `[D − 14h, D + 1 day + 12h)`. The skill does not record which zone the date uses.
+- **Unplaced runs.** A plan run inside such a window is undetermined. It reports as a first run and is never linked.
+- **Unnamed carriers.** A carrier that no line names still counts as an approval at its `decided_at`.
+- **`amendmentAfter`.** It is now the commit the latest earlier approval approved. That identifies the whole set, because a later run's approvals include every earlier run's approvals.
+
+Alternatives rejected:
+
+- **The plan artifacts' reviewed head.** Plan-gate artifacts carry no `oat_review_head_sha`.
+- **Git ancestry of the approved commits.** It needs git in convergence, and it fails where a milestone branch was squash-merged and the approved commits are gone.
+- **The commit time of the commit that added each approval line.** It needs git history.
+
+Evidence:
+
+- **Before (pre-fix build at `db61151ed`, copied to `/tmp/rgi-p08/prefix-dist`).** `5e3ad377` and `803a6f3e` both resolve to `plan-amendment:plan` with an empty `amendmentAfter`, which is one sequence.
+- **After (branch build).** `5e3ad377` is undetermined. `803a6f3e`, `6cf18b35` and `0d1fa309` fall after `cbc8836c…`, `b2a38a09…` and `ee377dd7…` respectively. The m01 and m02 code groupings are unchanged.
+- **Probe.** `/tmp/rgi-p08/real-records.mjs <dist>`, the p08-t02 probe with the run ID and `undetermined` printed:
+
+  ```bash
+  node --input-type=module -e "const m=await import('./packages/cli/dist/commands/gate/convergence.js');const p='.oat/projects/shared/review-gate-integrity-goal';const r=await m.readSequenceProjectRecords(p);for(const run of await m.listGateRunArtifacts('.',p)){const s=m.sequenceSubject(run,r);console.log(run.reviewType,s.kind+':'+s.value,s.undetermined?'undetermined':(s.amendmentAfter??''),run.runId.slice(0,8))}"
+  ```
+
+New tests in `goal plan-gate amendments from this project's own records`. They use the carriers and approval lines copied verbatim from this project's `state.md` and `plan.md`, and the four real plan-run IDs and times:
+
+- each run's subject is placed as above;
+- the m01 amendment's run and the brief's run each report a first run, even with a run before every approval archived;
+- a rerun inside the m03 amendment links to `0d1fa309` as run 2;
+- runs before any approval link.
+
+Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restored and compared against a copy. The restored suite passed: exit 0, 314 tests.
+
+- Approval lines ignored: both amendment tests failed.
+- Date-window ambiguity ignored: both failed.
+- Undetermined runs given a sequence key: the never-links test failed.
+- Carrier timing not matched to lines: both failed.
+
+Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0, CLI build exit 0, and markdownlint on `workflow-gates.md` reported 0 errors.
 
 ## Phase p14: Finding classification at receive
 
