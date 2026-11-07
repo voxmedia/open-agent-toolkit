@@ -17,10 +17,16 @@
  *   named phase belongs to one milestone — the subject is that milestone,
  *   whatever scope token the run used;
  * - goal plan gate run: an `artifact` gate run on scope `plan` — the subject is
- *   the plan amendment open when the run was written: earlier plan runs belong
- *   to it only when they were written after the latest plan approval
- *   (`oat_milestone_gates.<m>.plan.decided_at`) that precedes this run, so runs
- *   on different amendments never share a sequence;
+ *   the plan amendment open when the run was written, identified by the set of
+ *   plan approvals recorded before it. Approvals are read from records that
+ *   survive a re-approval: every `**Brief approved:**` and
+ *   `**Milestone mNN approved:**` line the brief keeps under
+ *   `## Delivery endpoint and authority`, timed by the matching
+ *   `oat_milestone_gates.<m>.plan` carrier's `decided_at` when that carrier
+ *   still names the approved commit, and otherwise only by the line's date. A
+ *   run that falls inside a date-only approval's day cannot be placed; it is
+ *   never linked to another run. Runs on different amendments never share a
+ *   sequence;
  * - every other run, and every run outside goal mode: the review scope.
  *
  * The gate target is not part of the identity: one configured gate may select
@@ -54,10 +60,16 @@ export interface ConvergenceSubject {
   /** The milestone id, `plan`, or the review scope. */
   value: string;
   /**
-   * `plan-amendment` only: the latest plan approval time before the run, or
-   * `null` when no plan approval precedes it.
+   * `plan-amendment` only: the commit the latest plan approval before the run
+   * approved, or `null` when no plan approval precedes it.
    */
   amendmentAfter?: string | null;
+  /**
+   * `plan-amendment` only: set when the run falls inside the day of a
+   * date-only approval, so its amendment cannot be established. Such a run is
+   * never linked to another run.
+   */
+  undetermined?: true;
 }
 
 export interface ConvergencePreviousRun {
@@ -278,12 +290,25 @@ export function markFindings(
 // ---------------------------------------------------------------------------
 // Sequence subject
 
+/**
+ * One recorded plan approval. `start` and `end` bound when it happened, in
+ * epoch milliseconds: equal for an approval timed by its carrier's
+ * `decided_at`, and the whole calendar day in any time zone for one known only
+ * by the date on its approval line.
+ */
+export interface PlanApproval {
+  /** The approved commit, or `carrier:<milestone>` when none is recorded. */
+  id: string;
+  start: number;
+  end: number;
+}
+
 export interface SequenceProjectRecords {
   goal: boolean;
   /** Phase id to milestone id, from a Milestones table with no errors. */
   phaseMilestones: ReadonlyMap<string, string>;
-  /** Epoch milliseconds of every recorded plan approval, ascending. */
-  planApprovals: readonly number[];
+  /** Every recorded plan approval. */
+  planApprovals: readonly PlanApproval[];
 }
 
 export interface SequenceRun {
@@ -293,17 +318,25 @@ export interface SequenceRun {
   generatedTime: number;
 }
 
-function latestApprovalBefore(
-  approvals: readonly number[],
+/**
+ * The plan approvals recorded before `time`, latest last, or `null` when an
+ * approval known only by its date may fall on either side of `time`.
+ */
+function approvalsBefore(
+  approvals: readonly PlanApproval[],
   time: number,
-): number | null {
-  let latest: number | null = null;
+): PlanApproval[] | null {
+  const before: PlanApproval[] = [];
   for (const approval of approvals) {
-    if (approval < time && (latest === null || approval > latest)) {
-      latest = approval;
+    if (approval.end < time) {
+      before.push(approval);
+    } else if (approval.start < time) {
+      return null;
     }
   }
-  return latest;
+  return before.sort(
+    (left, right) => left.end - right.end || left.id.localeCompare(right.id),
+  );
 }
 
 /** The subject a run belongs to, as the module comment defines it. */
@@ -331,24 +364,35 @@ export function sequenceSubject(
     run.reviewType === 'artifact' &&
     scope.toLowerCase() === 'plan'
   ) {
-    const approval = latestApprovalBefore(
-      records.planApprovals,
-      run.generatedTime,
-    );
+    const before = approvalsBefore(records.planApprovals, run.generatedTime);
+    if (before === null) {
+      return {
+        kind: 'plan-amendment',
+        value: 'plan',
+        amendmentAfter: null,
+        undetermined: true,
+      };
+    }
+    // The latest approval identifies the whole set: approvals before a later
+    // run include every approval before an earlier one, and any approval
+    // between the two runs ends after all of the earlier run's approvals.
     return {
       kind: 'plan-amendment',
       value: 'plan',
-      amendmentAfter:
-        approval === null ? null : new Date(approval).toISOString(),
+      amendmentAfter: before.at(-1)?.id ?? null,
     };
   }
   return { kind: 'scope', value: scope };
 }
 
+/** The sequence identity, or `null` for a run that is never linked. */
 function subjectKey(
   reviewType: ReviewGateVerdict['reviewType'],
   subject: ConvergenceSubject,
-): string {
+): string | null {
+  if (subject.undetermined) {
+    return null;
+  }
   return [
     reviewType,
     subject.kind,
@@ -411,6 +455,93 @@ async function readOptional(path: string): Promise<string | null> {
   }
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const APPROVAL_LINE =
+  /^- \*\*(?:Brief|Milestone m\d+) approved:\*\* (\d{4}-\d{2}-\d{2}) by .+ at `?([0-9a-f]{7,40})`?\s*$/i;
+
+/** The approval lines under the brief's `## Delivery endpoint and authority`. */
+function readApprovalLines(plan: string): { date: string; commit: string }[] {
+  const lines: { date: string; commit: string }[] = [];
+  let inSection = false;
+  for (const line of plan.split(/\r?\n/)) {
+    if (/^##\s/.test(line)) {
+      inSection = /^##\s+Delivery endpoint and authority\s*$/i.test(line);
+      continue;
+    }
+    const match = inSection ? APPROVAL_LINE.exec(line.trim()) : null;
+    if (match) {
+      lines.push({ date: match[1]!, commit: match[2]!.toLowerCase() });
+    }
+  }
+  return lines;
+}
+
+function sameCommit(left: string, right: string): boolean {
+  return left.startsWith(right) || right.startsWith(left);
+}
+
+/**
+ * Every recorded plan approval. An approval line is timed by the plan carrier
+ * that still names its commit; a re-approval of the same milestone overwrites
+ * that carrier, so an earlier line keeps only its date, widened to cover the
+ * day in any time zone (UTC-12 to UTC+14). A carrier no line names is still an
+ * approval, timed by its `decided_at`.
+ */
+function readPlanApprovals(
+  state: Record<string, unknown>,
+  plan: string,
+): PlanApproval[] {
+  const carriers: { milestone: string; commit: string | null; at: number }[] =
+    [];
+  for (const [milestone, gates] of Object.entries(
+    plainRecord(state['oat_milestone_gates']) ?? {},
+  )) {
+    const carrier = plainRecord(plainRecord(gates)?.['plan']);
+    const at = timeValue(carrier?.['decided_at']);
+    if (!carrier || !Number.isFinite(at)) {
+      continue;
+    }
+    const commit =
+      stringValue(plainRecord(carrier['subject'])?.['ref']) ??
+      stringValue(carrier['reviewed_head']);
+    carriers.push({ milestone, commit: commit?.toLowerCase() ?? null, at });
+  }
+
+  const approvals: PlanApproval[] = [];
+  const timedCarriers = new Set<number>();
+  for (const line of readApprovalLines(plan)) {
+    const carrierIndex = carriers.findIndex(
+      (carrier) =>
+        carrier.commit !== null && sameCommit(carrier.commit, line.commit),
+    );
+    if (carrierIndex >= 0) {
+      timedCarriers.add(carrierIndex);
+      const at = carriers[carrierIndex]!.at;
+      approvals.push({ id: line.commit, start: at, end: at });
+      continue;
+    }
+    const day = Date.parse(`${line.date}T00:00:00Z`);
+    if (Number.isFinite(day)) {
+      approvals.push({
+        id: line.commit,
+        start: day - 14 * HOUR_MS,
+        end: day + DAY_MS + 12 * HOUR_MS,
+      });
+    }
+  }
+  carriers.forEach((carrier, index) => {
+    if (!timedCarriers.has(index)) {
+      approvals.push({
+        id: carrier.commit ?? `carrier:${carrier.milestone}`,
+        start: carrier.at,
+        end: carrier.at,
+      });
+    }
+  });
+  return approvals;
+}
+
 export async function readSequenceProjectRecords(
   projectDir: string,
 ): Promise<SequenceProjectRecords> {
@@ -418,25 +549,13 @@ export async function readSequenceProjectRecords(
     (await readOptional(join(projectDir, 'state.md'))) ?? '',
   );
   const goal = stringValue(state['oat_workflow_mode']) === 'goal';
-  const planApprovals: number[] = [];
   const phaseMilestones = new Map<string, string>();
   if (!goal) {
-    return { goal, phaseMilestones, planApprovals };
+    return { goal, phaseMilestones, planApprovals: [] };
   }
-
-  for (const carriers of Object.values(
-    plainRecord(state['oat_milestone_gates']) ?? {},
-  )) {
-    const decided = timeValue(
-      plainRecord(plainRecord(carriers)?.['plan'])?.['decided_at'],
-    );
-    if (Number.isFinite(decided)) {
-      planApprovals.push(decided);
-    }
-  }
-  planApprovals.sort((left, right) => left - right);
 
   const plan = await readOptional(join(projectDir, 'plan.md'));
+  const planApprovals = readPlanApprovals(state, plan ?? '');
   if (plan !== null) {
     const implementation =
       (await readOptional(join(projectDir, 'implementation.md'))) ?? '';
@@ -569,6 +688,9 @@ export async function computeGateConvergence(options: {
   };
   const subject = sequenceSubject(currentRun, records);
   const key = subjectKey(currentRun.reviewType, subject);
+  if (key === null) {
+    return null;
+  }
 
   const earlier = (
     await listGateRunArtifacts(options.repoRoot, options.projectPath)

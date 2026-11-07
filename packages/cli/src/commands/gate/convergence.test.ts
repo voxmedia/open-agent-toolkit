@@ -12,6 +12,7 @@ import {
   findingTitleKey,
   markFindings,
   readPhaseIds,
+  readSequenceProjectRecords,
   sequenceSubject,
   stableFindingKey,
   type SequenceProjectRecords,
@@ -185,8 +186,16 @@ describe('sequenceSubject', () => {
       ['p08', 'm03'],
     ]),
     planApprovals: [
-      Date.parse('2026-11-03T03:17:46Z'),
-      Date.parse('2026-11-06T23:30:00Z'),
+      {
+        id: 'ee377dd7',
+        start: Date.parse('2026-11-03T03:17:46Z'),
+        end: Date.parse('2026-11-03T03:17:46Z'),
+      },
+      {
+        id: 'e38f33e5',
+        start: Date.parse('2026-11-06T23:30:00Z'),
+        end: Date.parse('2026-11-06T23:30:00Z'),
+      },
     ],
   };
 
@@ -252,7 +261,7 @@ describe('sequenceSubject', () => {
     expect(plan('2026-11-06T22:20:01Z')).toEqual({
       kind: 'plan-amendment',
       value: 'plan',
-      amendmentAfter: '2026-11-03T03:17:46.000Z',
+      amendmentAfter: 'ee377dd7',
     });
     expect(plan('2026-11-07T10:00:00Z')).toEqual(plan('2026-11-08T10:00:00Z'));
     expect(plan('2026-11-07T10:00:00Z')).not.toEqual(
@@ -492,6 +501,261 @@ describe('computeGateConvergence over the captured m02 exit-gate runs', () => {
       sequence: { run: 2 },
       status: 'unavailable',
       reason: 'previous_artifact_unparsable',
+    });
+  });
+});
+
+describe('goal plan-gate amendments from this project’s own records', () => {
+  // The plan carriers and approval lines are copied verbatim from this
+  // project's state.md (`oat_milestone_gates.*.plan`) and plan.md
+  // (`## Delivery endpoint and authority`) at a2afa719c. The run IDs and times
+  // are the four archived plan-gate artifacts'. The m01 carrier was
+  // overwritten by the m01 re-approval, so the brief approval keeps only the
+  // date on its line.
+  const tempDirs: string[] = [];
+  const project = '.oat/projects/shared/review-gate-integrity-goal';
+  const runs = [
+    ['5e3ad377-2f84-4f4d-8906-f8577b7a604e', '2026-11-01T21:41:29Z'],
+    ['803a6f3e-a36a-4bd8-a4d8-fc2047ee60aa', '2026-11-02T15:55:47Z'],
+    ['6cf18b35-39f7-4103-9625-ad09950fd3c7', '2026-11-03T02:32:06Z'],
+    ['0d1fa309-a0e6-45a0-b4a9-c319f0fe3fa3', '2026-11-06T22:20:01Z'],
+  ] as const;
+  const carrier = (milestone: string, commit: string, decidedAt: string) => [
+    `  ${milestone}:`,
+    '    plan:',
+    '      status: allowed',
+    '      disposition: passed',
+    `      reviewed_head: ${commit}`,
+    '      subject:',
+    '        kind: plan',
+    `        ref: ${commit}`,
+    `      decided_at: '${decidedAt}'`,
+  ];
+  const approvalLines = [
+    '- **Brief approved:** 2026-11-01 by user at cbc8836c7ca14d56742831a13fc0cd8e1fba2057',
+    '- **Milestone m01 approved:** 2026-11-02 by user at b2a38a09005e35818eccfa4191ad97444316e020',
+    '- **Milestone m02 approved:** 2026-11-03 by user at ee377dd7bcbedec4e0c66cc8d12a754c45c1587d',
+    '- **Milestone m03 approved:** 2026-11-06 by user at e38f33e5e58e4b9fd30f84240d250a3c2555febf',
+  ];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function projectWith(lines: string[]): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-gate-plan-amendment-'));
+    tempDirs.push(root);
+    await mkdir(join(root, project, 'reviews', 'archived'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, project, 'state.md'),
+      [
+        '---',
+        'oat_workflow_mode: goal',
+        'oat_milestone_gates:',
+        ...carrier(
+          'm01',
+          'b2a38a09005e35818eccfa4191ad97444316e020',
+          '2026-11-02T16:13:30Z',
+        ),
+        ...carrier(
+          'm02',
+          'ee377dd7bcbedec4e0c66cc8d12a754c45c1587d',
+          '2026-11-03T03:17:46Z',
+        ),
+        ...carrier(
+          'm03',
+          'e38f33e5e58e4b9fd30f84240d250a3c2555febf',
+          '2026-11-06T23:34:45Z',
+        ),
+        '---',
+        '',
+      ].join('\n'),
+    );
+    await writeFile(
+      join(root, project, 'plan.md'),
+      [
+        '# Project Brief',
+        '',
+        '## Delivery endpoint and authority',
+        '',
+        '- **Endpoint:** merged',
+        ...lines,
+        '',
+        '## Milestones',
+        '',
+      ].join('\n'),
+    );
+    return root;
+  }
+
+  function planArtifact(runId: string, generatedAt: string): string {
+    return [
+      '---',
+      'oat_generated: true',
+      `oat_generated_at: ${generatedAt}`,
+      'oat_review_scope: plan',
+      'oat_review_type: artifact',
+      'oat_review_invocation: gate',
+      `oat_project: ${project}`,
+      `oat_gate_run_id: ${runId}`,
+      '---',
+      '',
+      '# Artifact Review: plan',
+      '',
+      'Findings by severity: 0 critical, 0 high, 1 medium, 0 low',
+      '',
+      '## Findings',
+      '',
+      '### Critical',
+      '',
+      'None',
+      '',
+      '### High',
+      '',
+      'None',
+      '',
+      '### Medium',
+      '',
+      '- **M1: Plan carrier wording** (`plan.md:120`)',
+      '',
+      '### Low',
+      '',
+      'None',
+      '',
+    ].join('\n');
+  }
+
+  async function convergenceFor(
+    root: string,
+    runId: string,
+    generatedAt: string,
+  ) {
+    const path = `${project}/reviews/current-plan-review.md`;
+    const content = planArtifact(runId, generatedAt);
+    await writeFile(join(root, path), content);
+    const verdict = await parseReviewGateVerdict(join(root, path));
+    return computeGateConvergence({
+      repoRoot: root,
+      projectPath: project,
+      current: {
+        artifactPath: path,
+        content,
+        runId,
+        generatedTime: Date.parse(generatedAt),
+        verdict,
+      },
+      parsePrevious: async (run) =>
+        parseReviewGateVerdict(join(root, run.path)),
+    });
+  }
+
+  it('places each real plan run in its own amendment and leaves the brief’s run unplaced', async () => {
+    const root = await projectWith(approvalLines);
+    const records = await readSequenceProjectRecords(join(root, project));
+    expect(
+      runs.map(([, at]) =>
+        sequenceSubject(
+          {
+            reviewType: 'artifact',
+            scope: 'plan',
+            phaseIds: [],
+            generatedTime: Date.parse(at),
+          },
+          records,
+        ),
+      ),
+    ).toEqual([
+      {
+        kind: 'plan-amendment',
+        value: 'plan',
+        amendmentAfter: null,
+        undetermined: true,
+      },
+      {
+        kind: 'plan-amendment',
+        value: 'plan',
+        amendmentAfter: 'cbc8836c7ca14d56742831a13fc0cd8e1fba2057',
+      },
+      {
+        kind: 'plan-amendment',
+        value: 'plan',
+        amendmentAfter: 'b2a38a09005e35818eccfa4191ad97444316e020',
+      },
+      {
+        kind: 'plan-amendment',
+        value: 'plan',
+        amendmentAfter: 'ee377dd7bcbedec4e0c66cc8d12a754c45c1587d',
+      },
+    ]);
+  });
+
+  it('never links a plan run to a run of an earlier amendment', async () => {
+    const root = await projectWith(approvalLines);
+    for (const [runId, at] of runs) {
+      await writeFile(
+        join(root, project, 'reviews', 'archived', `${runId}.md`),
+        planArtifact(runId, at),
+      );
+    }
+    // The m01 amendment's run follows the brief's run, a different amendment.
+    await expect(convergenceFor(root, runs[1][0], runs[1][1])).resolves.toBe(
+      null,
+    );
+    // The brief's own run cannot be placed, so it is never linked, not even
+    // to a run that certainly precedes every approval.
+    await writeFile(
+      join(root, project, 'reviews', 'archived', 'pre-brief.md'),
+      planArtifact(
+        '00000000-0000-4000-8000-0000000000bb',
+        '2026-10-30T12:00:00Z',
+      ),
+    );
+    await expect(convergenceFor(root, runs[0][0], runs[0][1])).resolves.toBe(
+      null,
+    );
+    // A rerun inside the m03 amendment links to that amendment's run only.
+    await expect(
+      convergenceFor(
+        root,
+        '00000000-0000-4000-8000-0000000000aa',
+        '2026-11-06T23:00:00Z',
+      ),
+    ).resolves.toMatchObject({
+      sequence: {
+        subject: {
+          kind: 'plan-amendment',
+          amendmentAfter: 'ee377dd7bcbedec4e0c66cc8d12a754c45c1587d',
+        },
+        run: 2,
+        previousRun: { runId: runs[3][0] },
+      },
+      status: 'compared',
+      counts: { new: 0, carriedOver: 1, resolved: 0 },
+    });
+  });
+
+  it('keeps runs before any approval in one amendment', async () => {
+    const root = await projectWith([]);
+    await writeFile(
+      join(root, project, 'state.md'),
+      '---\noat_workflow_mode: goal\n---\n',
+    );
+    await writeFile(
+      join(root, project, 'reviews', 'archived', 'first.md'),
+      planArtifact(runs[0][0], runs[0][1]),
+    );
+    await expect(
+      convergenceFor(root, runs[1][0], runs[1][1]),
+    ).resolves.toMatchObject({
+      sequence: {
+        subject: { kind: 'plan-amendment', amendmentAfter: null },
+        run: 2,
+      },
     });
   });
 });

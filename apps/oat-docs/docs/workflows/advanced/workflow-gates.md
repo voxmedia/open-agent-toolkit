@@ -683,11 +683,20 @@ rewrites the reviewer's artifact.
 
 The subject depends on the run:
 
-| Run                                                                                                                                                          | Subject                                                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Goal project, `code` review whose scope is `final` or whose artifact names more than one phase, all of them in one milestone of `plan.md`'s Milestones table | That milestone (`milestone:m02`), whatever scope token the run used              |
-| Goal project, `artifact` review on scope `plan`                                                                                                              | The plan amendment: runs after the latest recorded plan approval before this run |
-| Every other run, and every run outside goal mode                                                                                                             | The review scope (`scope:p03`)                                                   |
+| Run                                                                                                                                                          | Subject                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Goal project, `code` review whose scope is `final` or whose artifact names more than one phase, all of them in one milestone of `plan.md`'s Milestones table | That milestone (`milestone:m02`), whatever scope token the run used |
+| Goal project, `artifact` review on scope `plan`                                                                                                              | The plan amendment: the plan approvals recorded before this run     |
+| Every other run, and every run outside goal mode                                                                                                             | The review scope (`scope:p03`)                                      |
+
+A plan run's approvals come from records that survive a re-approval of the same
+milestone. Each `**Brief approved:**` or `**Milestone mNN approved:**` line under
+the brief's `## Delivery endpoint and authority` is one approval. It is timed by
+the `oat_milestone_gates.<m>.plan` carrier's `decided_at` while that carrier
+still names the approved commit. Otherwise only the line's date is known, and it
+is read as that whole day in any time zone. A run that falls inside such a day
+cannot be placed in an amendment: it reports as a first run, and no later run
+links to it. A carrier that no approval line names also counts as an approval.
 
 Runs are linked through records that already exist; no new store is written.
 The earlier runs are the project's gate-run review artifacts, in `reviews/` and
@@ -743,7 +752,7 @@ Everything left over is `new` (current) or resolved (previous).
 
 A carried-over finding also carries `previous: { runId, id, severity }`.
 `subject.kind` is `milestone`, `plan-amendment` (with `amendmentAfter`, the
-approval time or `null`), or `scope`. When the previous run's artifact no longer
+commit the latest earlier plan approval approved, or `null`), or `scope`. When the previous run's artifact no longer
 parses, or either run's finding records do not cover its counts, `status` is
 `unavailable` with a `reason` (`previous_artifact_unparsable`,
 `previous_findings_incomplete`, or `findings_incomplete`) and no counts. When
