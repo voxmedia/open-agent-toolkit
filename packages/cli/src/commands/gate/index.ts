@@ -161,6 +161,8 @@ interface GateCommandDependencies {
     options: ProcessRunOptions,
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
+  /** Links the validated run to its gate sequence; read-only, best effort. */
+  computeGateConvergence: typeof computeGateConvergence;
   appendProjectLog: typeof appendProjectLog;
   processEnv: NodeJS.ProcessEnv;
   writeGateRunMarker: (
@@ -492,6 +494,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   readGateRouteReceipt,
   runProcess: runChildProcess,
   parseReviewGateVerdict,
+  computeGateConvergence,
   appendProjectLog,
   processEnv: process.env,
   writeGateRunMarker,
@@ -2982,7 +2985,7 @@ async function resolveGateConvergence(options: {
   verdict: ReviewGateVerdict;
 }): Promise<GateConvergence | undefined> {
   try {
-    const convergence = await computeGateConvergence({
+    const convergence = await options.dependencies.computeGateConvergence({
       repoRoot: options.repoRoot,
       projectPath: options.project,
       current: {

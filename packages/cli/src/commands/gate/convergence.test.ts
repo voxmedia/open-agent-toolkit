@@ -508,6 +508,58 @@ describe('computeGateConvergence over the captured m02 exit-gate runs', () => {
     });
   });
 
+  it('reports either run as unavailable when its records do not cover its counts', async () => {
+    const root = await goalProject();
+    const countLineOnly = (content: string): string =>
+      content.slice(0, content.indexOf('\n## Findings') + 1);
+    const archivedR1 = join(
+      root,
+      project,
+      'reviews/archived/range-review-2026-11-03T215601Z.md',
+    );
+    const r1 = await fixture('m02-exit-r1-range-review-2026-11-03T215601Z.md');
+    await writeFile(archivedR1, countLineOnly(r1));
+    await expect(
+      current(
+        root,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        `${project}/reviews/range-review-2026-11-03T224623Z.md`,
+      ),
+    ).resolves.toEqual({
+      sequence: expect.objectContaining({ run: 2 }),
+      status: 'unavailable',
+      reason: 'previous_findings_incomplete',
+    });
+
+    await writeFile(archivedR1, r1);
+    const path = `${project}/reviews/range-review-2026-11-03T224623Z.md`;
+    const content = countLineOnly(
+      await fixture('m02-exit-r2-range-review-2026-11-03T224623Z.md'),
+    );
+    await writeFile(join(root, path), content);
+    const verdict = await parseReviewGateVerdict(join(root, path));
+    expect(verdict.findingsComplete).toBe(false);
+    await expect(
+      computeGateConvergence({
+        repoRoot: root,
+        projectPath: project,
+        current: {
+          artifactPath: path,
+          content,
+          runId: 'd738cd0e-5795-48ef-a387-e3ec184f90e5',
+          generatedTime: Date.parse('2026-11-03T22:46:23Z'),
+          verdict,
+        },
+        parsePrevious: async (run) =>
+          parseReviewGateVerdict(join(root, run.path)),
+      }),
+    ).resolves.toEqual({
+      sequence: expect.objectContaining({ run: 2 }),
+      status: 'unavailable',
+      reason: 'findings_incomplete',
+    });
+  });
+
   it('does not link the exit runs when the project is not in goal mode', async () => {
     const root = await goalProject();
     await writeFile(
