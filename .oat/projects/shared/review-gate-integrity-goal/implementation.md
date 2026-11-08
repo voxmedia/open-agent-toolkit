@@ -1950,7 +1950,7 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 **Status:** in_progress
 **Base:** 241b12a95bc3022ce8e4f8589699f90e31d22417
 **Executor:** phase-implementer:rgi-p08-impl-20261107-01
-**Head:** 9eebbd39ce7dc2dc7cfa1b47ad061b6b0a690dab
+**Head:** d23563aeefcd8881be6591a91920bdc68be1bb17
 
 Phase verification (2026-11-07, at the head above, exit codes captured per gate):
 
@@ -1965,6 +1965,21 @@ Phase verification (2026-11-07, at the head above, exit codes captured per gate)
 - `docs generate-index` exit 0, and `git diff --exit-code -- apps/oat-docs/index.md` exit 0.
 - `pnpm test:evidence` exit 0, with 0 of 12 tasks cached. The CLI ran 9,564 tests and control-plane 317.
 - `pnpm lint` and `pnpm format` both exit 0. No `.agents/skills` or `tools/smoke` file changed.
+- `oat project journal check --at review --scope p08` returned `ok`.
+
+Review-fix round 1 (`rgi-p08-fix-20261107-01`, p08-t04 to p08-t06). Head advanced from `9eebbd39c` to the commit above under the late-fix rule; base unchanged. Verification at that head, exit codes captured per gate:
+
+- `pnpm check` exit 0, with 0 of 11 tasks cached.
+- `pnpm type-check` exit 0, with 5 of 11 tasks cached.
+- `pnpm build` exit 0. It was fully cached; `packages/cli/dist` was confirmed to contain the p08-t05 and p08-t06 code.
+- `pnpm test:evidence` exit 0, with 0 of 12 tasks cached. The CLI ran 9,576 tests and control-plane 317.
+- `pnpm run check:skill-bumps` exit 0.
+- `git fetch origin main`, then `pnpm release:check-versions` exit 0.
+- `pnpm release:validate` exit 0.
+- `pnpm build:docs` exit 0. It was cached from the docs build `pnpm test:evidence` had just run.
+- `docs generate-index` exit 0, and the `index.md` diff exit 0.
+- The m02 sequence probe on the rebuilt branch build exited 0 and gave the same results as p08-t02: r1 absent, r2 1/0/2, r3 0/0/1, stuck 0/2/0, reworded 0/2/0.
+- The real-records probe places `5e3ad377` as undetermined and the other three plan runs in separate amendments.
 - `oat project journal check --at review --scope p08` returned `ok`.
 
 Phase start 2026-11-07, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the stable finding key, run linkage and the convergence fields feed one gate result and one record of the review: no two slices are independent. The work adds new surfaces and settles open design (p08's Known Unknowns), so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p08 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c` in the gate, review, review-provide, review-receive and reviewer paths.
