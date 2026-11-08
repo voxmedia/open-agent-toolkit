@@ -48,6 +48,8 @@ The diagram follows an interactive quick, spec-driven, or imported project,
 and its endings assume the final phase is a checkpoint, as described above.
 Dashed paths happen only when you chose a checkpoint or configured a gate, and
 a configured gate must be allowed before the pull request opens or you approve.
+The checkpoint pause covers only non-final checkpoints: the final checkpoint
+occurs in the selected ending, after the final review and any gate.
 `workflow.postImplementSequence` then picks the ending: `pr`, `docs-pr`, or a
 structured value with `pr` in `preApproval` opens the pull request first; a
 structured value with `pr` in `postApproval` opens it by itself after you
@@ -57,20 +59,20 @@ projects and autonomous runs differ as the table above shows.
 
 === "Diagram"
 
-    ![Interactive quick, spec-driven and imported projects: where you confirm, read the plan, approve checkpoints, and approve before or after the PR opens](/diagrams/where-people-approve-light.svg)
-    ![Interactive quick, spec-driven and imported projects: where you confirm, read the plan, approve checkpoints, and approve before or after the PR opens](/diagrams/where-people-approve-dark.svg)
+    ![Interactive quick, spec-driven, imported projects: you confirm, read the plan, approve non-final checkpoints, then approve before or after the PR opens](/diagrams/where-people-approve-light.svg)
+    ![Interactive quick, spec-driven, imported projects: you confirm, read the plan, approve non-final checkpoints, then approve before or after the PR opens](/diagrams/where-people-approve-dark.svg)
 
 === "Mermaid source"
 
     ```mermaid
     flowchart TD
       accTitle: Where a person approves in an interactive project
-      accDescr: Interactive quick, spec-driven and imported projects. You confirm requirements, and a design if there is one, except for an imported plan. The automatic plan review fixes Critical and High findings and offers Medium and Low ones. Planning stops, and reading plan.md is your unrecorded plan approval. Each phase runs an implementer and a reviewer agent, pausing for your approval at checkpoint phases. The final review always runs. A configured gate must be allowed before the PR opens and before you approve. workflow.postImplementSequence then decides the ending: with pr before approval the PR opens and then you approve; with pr after approval you approve and the PR opens by itself; with no pr step you approve and then start the final PR.
+      accDescr: Interactive quick, spec-driven and imported projects. You confirm requirements, and a design if there is one, except for an imported plan. The automatic plan review fixes Critical and High findings and offers Medium and Low ones. Planning stops, and reading plan.md is your unrecorded plan approval. Each phase runs an implementer and a reviewer agent, pausing for your approval only at the non-final checkpoint phases you chose; the final checkpoint occurs in the selected ending. The final review always runs. A configured gate must be allowed before the PR opens and before you approve. workflow.postImplementSequence then decides the ending: with pr before approval the PR opens and then you approve; with pr after approval you approve and the PR opens by itself; with no pr step you approve and then start the final PR.
       REQ["Requirements and design\nyou confirm requirements (and design,\nif any); an imported plan has no such step"]
       PLAN["Plan and automatic review\nthe agent fixes Critical and High;\nMedium and Low are offered to you"]
       STOP["Planning stops\nread plan.md now: this is your\nplan approval, and nothing records it"]
       PH["Each phase\nan implementer and a reviewer agent;\nCritical or High adds a fix round"]
-      CK["Checkpoint pause\nyou approve at each checkpoint\nphase, asked on the first run\nor configured"]
+      CK["Non-final checkpoint pause\nyou approve at chosen\nnon-final checkpoint phases"]
       FIN["Final review\nalways runs; you may be asked how"]
       GATE["Gate\na separate reviewer agent,\nbefore the PR and your approval"]
       SEQ["workflow.postImplementSequence\ndecides when the PR opens"]

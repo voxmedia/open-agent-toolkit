@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1002" width="720" height="1002" role="img" aria-labelledby="wpa-title wpa-desc">
   <title id="wpa-title">Where a person approves in an interactive project</title>
-  <desc id="wpa-desc">Interactive quick, spec-driven and imported projects. You confirm requirements, and a design if the mode has one; an imported plan has no such step. Planning ends with an automatic plan review in which the agent fixes Critical and High findings and offers Medium and Low ones to you. Planning then stops: reading plan.md is your plan approval, and nothing records it. Each phase runs an implementer and a reviewer agent, and a Critical or High finding adds a fix round; at each checkpoint phase, asked on the first run or configured, you approve before the run continues. The final review always runs, and you may be asked how to run it. If a gate is configured, a separate reviewer agent runs it, and it must be allowed before the PR opens and before you approve. Then workflow.postImplementSequence decides when the PR opens: with pr before approval, the PR opens and then you approve the final checkpoint; with pr after approval, you approve and the PR then opens by itself; with no pr step, you approve and then run /oat-project-pr-final, which the agent offers when the setting is unset.</desc>
+  <desc id="wpa-desc">Interactive quick, spec-driven and imported projects. You confirm requirements, and a design if the mode has one; an imported plan has no such step. Planning ends with an automatic plan review in which the agent fixes Critical and High findings and offers Medium and Low ones to you. Planning then stops: reading plan.md is your plan approval, and nothing records it. Each phase runs an implementer and a reviewer agent, and a Critical or High finding adds a fix round; at each non-final checkpoint phase you chose, asked on the first run or configured, you approve before the run continues. Only non-final checkpoints pause here; the final checkpoint occurs in the selected ending, after the final review and any gate. The final review always runs, and you may be asked how to run it. If a gate is configured, a separate reviewer agent runs it, and it must be allowed before the PR opens and before you approve. Then workflow.postImplementSequence decides when the PR opens: with pr before approval, the PR opens and then you approve the final checkpoint; with pr after approval, you approve and the PR then opens by itself; with no pr step, you approve and then run /oat-project-pr-final, which the agent offers when the setting is unset.</desc>
   <style>
     svg {
       --bg: #ffffff;
@@ -47,7 +47,7 @@
     <!-- PH -> FIN -->
     <path class="edge" d="M 195 504 L 195 561" marker-end="url(#wpa-arrow)"/>
     <!-- PH -> CK (if chosen) -->
-    <path class="edge-opt" d="M 350 461 L 449 461" marker-end="url(#wpa-arrow-opt)"/>
+    <path class="edge-opt" d="M 350 461 L 429 461" marker-end="url(#wpa-arrow-opt)"/>
     <!-- FIN -> GATE (if configured) -->
     <path class="edge-opt" d="M 350 596 L 449 596" marker-end="url(#wpa-arrow-opt)"/>
     <!-- FIN -> SEQ (no gate) -->
@@ -63,7 +63,7 @@
   </g>
 
   <!-- Edge labels -->
-  <text class="sans s" x="400" y="453" text-anchor="middle">if chosen</text>
+  <text class="sans s" x="390" y="453" text-anchor="middle">if chosen</text>
   <text class="sans s" x="400" y="588" text-anchor="middle">if configured</text>
   <text class="sans s" x="187" y="670" text-anchor="end">no gate</text>
   <text class="sans s" x="577" y="678" text-anchor="start">when allowed</text>
@@ -95,12 +95,11 @@
   <text class="sans s" x="195" y="468" text-anchor="middle">an implementer and a reviewer agent;</text>
   <text class="sans s" x="195" y="486" text-anchor="middle">Critical or High adds a fix round</text>
 
-  <!-- CK: Checkpoint pause -->
-  <rect class="node" x="450" y="418" width="230" height="104" rx="8" ry="8"/>
-  <text class="sans t" x="565" y="446" text-anchor="middle">Checkpoint pause</text>
-  <text class="sans s" x="565" y="468" text-anchor="middle">you approve at each checkpoint</text>
-  <text class="sans s" x="565" y="486" text-anchor="middle">phase, asked on the first run</text>
-  <text class="sans s" x="565" y="504" text-anchor="middle">or configured</text>
+  <!-- CK: Non-final checkpoint pause -->
+  <rect class="node" x="430" y="418" width="250" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="555" y="446" text-anchor="middle">Non-final checkpoint pause</text>
+  <text class="sans s" x="555" y="468" text-anchor="middle">you approve at chosen</text>
+  <text class="sans s" x="555" y="486" text-anchor="middle">non-final checkpoint phases</text>
 
   <!-- FIN: Final review -->
   <rect class="node" x="40" y="562" width="310" height="68" rx="8" ry="8"/>

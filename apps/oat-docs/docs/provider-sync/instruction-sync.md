@@ -215,7 +215,13 @@ Which states can appear depends on the effective strategy: `none` reports
 `managed_shim` and `unmanaged` but never `missing`, and a shim strategy reports
 `missing` but never `managed_shim` or `unmanaged`. `stray` and an unreadable
 file's `content_mismatch` appear under either, except that under `none` a
-broken or unreadable `CLAUDE.md` symlink is reported `unmanaged`.
+broken or unreadable `CLAUDE.md` symlink is reported `unmanaged`. Under a shim
+strategy, `--force` repairs a paired `CLAUDE.md` in `content_mismatch`, broken
+or unreadable ones included, but a `CLAUDE.md` that an `AGENTS.md` resolves to
+is kept and its link must be repaired by hand. An unreadable canonical
+`AGENTS.md` or lone `CLAUDE.md` is always repaired by hand, and under `none`
+sync never rewrites a `CLAUDE.md`, so every `content_mismatch` there is
+repaired by hand.
 
 === "Diagram"
 
@@ -227,14 +233,14 @@ broken or unreadable `CLAUDE.md` symlink is reported `unmanaged`.
     ```mermaid
     flowchart TD
       accTitle: Instruction sync strategies and states
-      accDescr: AGENTS.md is canonical. The effective strategy is the --strategy flag, then instructions.claude.shims, then the default none. Under none, ok means no CLAUDE.md, managed_shim is removed all or nothing, unmanaged is kept with a warning, and a broken or unreadable CLAUDE.md symlink is reported unmanaged. Under pointer, symlink or copy, ok means the shim has that shape, missing is created, and content_mismatch is rewritten with --force. In either, a stray CLAUDE.md is adopted into AGENTS.md, and any other unreadable file is content_mismatch, repaired by hand.
+      accDescr: AGENTS.md is canonical. The effective strategy is the --strategy flag, then instructions.claude.shims, then the default none. Under none, ok means no CLAUDE.md, managed_shim is removed all or nothing, unmanaged is kept with a warning, and a broken or unreadable CLAUDE.md symlink is reported unmanaged. Under pointer, symlink or copy, ok means the shim has that shape, missing is created, and content_mismatch is repaired with --force for repairable shims: a mismatched, broken or unreadable paired CLAUDE.md may be rewritten with --force, but a CLAUDE.md that an AGENTS.md resolves to is kept and its link must be repaired by hand. In either, a stray CLAUDE.md is adopted into AGENTS.md, and an unreadable canonical AGENTS.md or lone CLAUDE.md is content_mismatch, repaired by hand; under none every content_mismatch is repaired by hand.
       CANON["AGENTS.md is canonical\nin every directory the scan reaches"]
       STRAT["Effective strategy\n--strategy, then instructions.claude.shims,\nthen the default none"]
       NONE["none (default)\nno CLAUDE.md beside AGENTS.md"]
       SHIM["pointer, symlink or copy\na CLAUDE.md shim in that shape"]
       NS["States under none\nok: no CLAUDE.md\nmanaged_shim: removed, all or nothing\nunmanaged: kept, with a warning\nunreadable CLAUDE.md symlink: unmanaged"]
-      SS["States under a shim\nok: the shim has that shape\nmissing: sync creates it\ncontent_mismatch: --force rewrites it"]
-      STR["In either strategy\nstray (a lone CLAUDE.md): adopted into AGENTS.md,\nthen removed (none, unless blocked) or rewritten as a shim\nother unreadable files: content_mismatch, repaired by hand"]
+      SS["States under a shim\nok: the shim has that shape\nmissing: sync creates it\ncontent_mismatch:\n--force for repairable shims"]
+      STR["In either strategy\nstray (a lone CLAUDE.md): adopted into AGENTS.md,\nthen removed (none, unless blocked) or rewritten as a shim\nunreadable AGENTS.md, lone CLAUDE.md, or any file under none: repair by hand"]
       CANON --> STRAT
       STRAT --> NONE
       STRAT --> SHIM
@@ -458,9 +464,9 @@ Examples:
 - unreadable canonical `AGENTS.md`
 - broken or unreadable `AGENTS.md` symlink targets
 - unreadable Claude-only sources
-- broken or unreadable paired `CLAUDE.md` symlink targets under a shim strategy (under `none` they are reported `unmanaged`)
+- a `CLAUDE.md` that an `AGENTS.md` resolves to, which `--force` keeps under every shim strategy (any broken or unreadable paired `CLAUDE.md` symlink is replaced by `--force` under a shim strategy, and reported `unmanaged` and kept under `none`)
 
-In these cases, sync reports a manual-repair skip instead of guessing at destructive recovery.
+In these cases, sync reports a skip instead of guessing at destructive recovery: `repair manually` for an unreadable source, and `kept` for a `CLAUDE.md` that an `AGENTS.md` resolves to.
 
 ## Example Workflow
 

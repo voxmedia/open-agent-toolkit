@@ -16,7 +16,6 @@
     .canvas { fill: var(--bg); }
     .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
     .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
-    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
     .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
@@ -80,7 +79,7 @@
   <text class="mono s" x="44" y="516">projects/synced/&lt;name&gt;/</text>
 
   <!-- LOCALPATHS -->
-  <rect class="node-opt" x="28" y="546" width="468" height="130" rx="8" ry="8"/>
+  <rect class="node" style="stroke: var(--optional); stroke-dasharray: 5 4" x="28" y="546" width="468" height="130" rx="8" ry="8"/>
   <text class="sans t" x="44" y="572">In the <tspan class="mono"># OAT local paths</tspan> block, when added</text>
   <text class="mono s" x="44" y="598">**/analysis/</text>
   <text class="mono s" x="44" y="618">**/pr/</text>

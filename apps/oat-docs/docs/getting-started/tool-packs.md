@@ -76,8 +76,8 @@ The `core` pack can only live under your home directory:
 
 The requested scope decides where a pack's assets land. `core` never lands in
 the repository, and an install with no `--scope` keeps an installed pack where
-it is; an interactive install of several packs asks per pack instead. An
-explicit `--scope all` for one pack writes both scopes, which the diagram
+it is; an interactive install of several packs asks per pack instead. For a
+non-core pack, an explicit `--scope all` writes both scopes, which the diagram
 leaves out.
 
 === "Diagram"

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 724" width="720" height="724" role="img" aria-labelledby="is-title is-desc">
   <title id="is-title">Instruction sync strategies and states</title>
-  <desc id="is-desc">AGENTS.md is canonical in every directory the scan reaches. The effective strategy is the --strategy flag, then instructions.claude.shims, then the default none. Under none there is no CLAUDE.md beside AGENTS.md: ok means no CLAUDE.md, managed_shim is removed all or nothing, unmanaged is kept with a warning, and a broken or unreadable CLAUDE.md symlink is reported unmanaged. Under pointer, symlink or copy there is a CLAUDE.md shim in that shape: ok means the shim has that shape, missing is created by sync, and content_mismatch is rewritten with --force. In either strategy a stray lone CLAUDE.md is adopted into AGENTS.md, then removed under none (unless removal is blocked) or rewritten as a shim, and any other unreadable file is content_mismatch and is repaired by hand.</desc>
+  <desc id="is-desc">AGENTS.md is canonical in every directory the scan reaches. The effective strategy is the --strategy flag, then instructions.claude.shims, then the default none. Under none there is no CLAUDE.md beside AGENTS.md: ok means no CLAUDE.md, managed_shim is removed all or nothing, unmanaged is kept with a warning, and a broken or unreadable CLAUDE.md symlink is reported unmanaged. Under pointer, symlink or copy there is a CLAUDE.md shim in that shape: ok means the shim has that shape, missing is created by sync, and content_mismatch is repaired with --force for repairable shims: a mismatched, broken or unreadable paired CLAUDE.md may be rewritten with --force, but a CLAUDE.md that an AGENTS.md resolves to is kept and its link must be repaired by hand. In either strategy a stray lone CLAUDE.md is adopted into AGENTS.md, then removed under none (unless removal is blocked) or rewritten as a shim. An unreadable canonical AGENTS.md or an unreadable lone CLAUDE.md is content_mismatch and is repaired by hand; under none, sync never rewrites a CLAUDE.md, so every content_mismatch there is repaired by hand.</desc>
   <style>
     svg {
       --bg: #161d27;
@@ -88,13 +88,14 @@
   <text class="sans t" x="525" y="430" text-anchor="middle">States under a shim</text>
   <text class="sans s" x="525" y="452" text-anchor="middle"><tspan class="mono">ok</tspan>: the shim has that shape</text>
   <text class="sans s" x="525" y="470" text-anchor="middle"><tspan class="mono">missing</tspan>: sync creates it</text>
-  <text class="sans s" x="525" y="488" text-anchor="middle"><tspan class="mono">content_mismatch</tspan>: <tspan class="mono">--force</tspan> rewrites it</text>
+  <text class="sans s" x="525" y="488" text-anchor="middle"><tspan class="mono">content_mismatch</tspan>:</text>
+  <text class="sans s" x="525" y="506" text-anchor="middle"><tspan class="mono">--force</tspan> for repairable shims</text>
 
   <!-- STR: In either strategy -->
-  <rect class="node" x="110" y="580" width="500" height="104" rx="8" ry="8"/>
+  <rect class="node" x="60" y="580" width="600" height="104" rx="8" ry="8"/>
   <text class="sans t" x="360" y="608" text-anchor="middle">In either strategy</text>
   <text class="sans s" x="360" y="630" text-anchor="middle"><tspan class="mono">stray</tspan> (a lone <tspan class="mono">CLAUDE.md</tspan>): adopted into <tspan class="mono">AGENTS.md</tspan>,</text>
   <text class="sans s" x="360" y="648" text-anchor="middle">then removed (<tspan class="mono">none</tspan>, unless blocked) or rewritten as a shim</text>
-  <text class="sans s" x="360" y="666" text-anchor="middle">other unreadable files: <tspan class="mono">content_mismatch</tspan>, repaired by hand</text>
+  <text class="sans s" x="360" y="666" text-anchor="middle">unreadable <tspan class="mono">AGENTS.md</tspan>, lone <tspan class="mono">CLAUDE.md</tspan>, or any file under <tspan class="mono">none</tspan>: repair by hand</text>
 
 </svg>
