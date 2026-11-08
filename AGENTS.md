@@ -191,7 +191,10 @@ Instructions are code: keep them accurate as the repository changes.
   `npx @open-agent-toolkit/cli sync --scope project` and commit the canonical
   rules, tracked generated views, and `.oat/sync/manifest.json` together. Preserve
   ignored output policies. Codex has no generated rule views, so the index below
-  makes matching rule scopes discoverable.
+  makes matching rule scopes discoverable. On a branch that has merged a `main`
+  newer than the released CLI, run the branch build instead
+  (`pnpm build`, then `node packages/cli/dist/index.js sync --scope project`):
+  the released CLI deletes provider views it does not know.
 
 ### Instruction index
 

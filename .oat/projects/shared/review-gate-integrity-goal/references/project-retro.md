@@ -20,7 +20,7 @@ oat_retro_evidence_sources:
     status: used
   - source: session-transcript-pre-handoff
     status: unavailable
-oat_retro_promotions: proposed
+oat_retro_promotions: partial
 oat_retro_filing: proposed
 oat_generated: true
 oat_template: false
@@ -116,13 +116,12 @@ merging.
 
 ## Current State
 
-- **Promotions:** `proposed`. RP-01 through RP-04 are all `proposed`
-  (apply items, none settled).
+- **Promotions:** `partial`. RP-01 is `applied` (AGENTS.md); RP-02 through
+  RP-04 are `proposed`.
 - **Filing:** `proposed`. UP-01 through UP-03 are `proposed` with no
-  destination: `workflow.retro.filing.upstream` and `workflow.retro.filing.repo`
-  are unset.
+  destination.
 - **Unsettled items:**
-  - RP-01 through RP-04: apply.
+  - RP-02 through RP-04: apply.
   - UP-01 through UP-03: file through `oat-project-retro-file`.
 
 ## What Went Well
@@ -335,9 +334,9 @@ merging.
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** AGENTS.md
-- **Applied-ref:** —
+- **Applied-ref:** AGENTS.md
 - **Disposition-note:** —
 
 **Problem.** AGENTS.md "Keeping instructions current" tells agents to run
