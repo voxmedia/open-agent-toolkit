@@ -1,8 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import {
+  convergenceLogTokens,
+  type GateConvergence,
+} from '@commands/gate/convergence';
+import { afterEach, describe, expect, it } from 'vitest';
 
 /**
  * Finding classes at receive (m03, p14; Outcome 5, BL-261013).
@@ -503,4 +508,153 @@ describe('planning review and gate paths record classes (p14)', () => {
       expect(row).toContain('`boundary:product-judgment`');
     },
   );
+});
+
+describe('complexity-review fallback starts from recorded classes and convergence (p14)', () => {
+  const FALLBACK = '.agents/docs/complexity-review-fallback.md';
+  const fallback = readRepoFile(FALLBACK);
+  const flat = normalize(fallback);
+
+  const tempDirs: string[] = [];
+  afterEach(() => {
+    for (const dir of tempDirs.splice(0)) {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('gives the reviewer the recorded classes and the gate convergence marks', () => {
+    expect(flat).toContain(
+      '- **Recorded classes:** the `**Finding classes:**` line of each receipt in the loop, which records one class per finding under the "Finding classes at receive" section of `bookkeeping-findings.md`',
+    );
+    expect(flat).toContain(
+      '- **Convergence (gate loops):** for each gate run of the loop, its convergence marks, read as [Convergence of a gate loop](#convergence-of-a-gate-loop) describes.',
+    );
+  });
+
+  it('classifies open findings from the recorded classes, never re-deriving or rewriting them', () => {
+    const open = normalize(
+      sliceBetween(
+        fallback,
+        '- **Open findings:**',
+        '- **Dissolvable findings:**',
+      ),
+    );
+    expect(open).toContain(
+      "start from the class each finding's receipt recorded: `bookkeeping`, `accepted-requirement` (the contract requires it; carry its cited source), `regression` (the change broke something that worked), or `new-hardening` (a new demand beyond the contract).",
+    );
+    expect(open).toContain(
+      'Classify only a finding no receipt classified, and mark it `unrecorded`.',
+    );
+    expect(open).toContain(
+      'keep the recorded class and add the disagreement as a note; never rewrite it.',
+    );
+    expect(open).toContain(
+      'for a gate loop the findings its convergence marks carry over from run to run.',
+    );
+  });
+
+  it("puts the recorded classes and each gate run's counts in the exhaustion stop", () => {
+    expect(flat).toContain(
+      "why the loop stopped: the budget, the count reached, and the findings still blocking with their recorded classes; for a gate loop, also each run's new, carried-over and resolved counts from [Convergence of a gate loop](#convergence-of-a-gate-loop);",
+    );
+    expect(flat).toContain(
+      'presents the decision with the loop-stop reasons alone, recorded classes and convergence counts included.',
+    );
+    expect(flat).toContain(
+      'Report such runs as they are, never as zero counts.',
+    );
+    expect(flat).toContain(
+      'The marks are read only; nothing recomputes or rewrites them.',
+    );
+  });
+
+  it('reads each run of the m02 exit-gate sequence from the gate log by run ID', () => {
+    const block = sliceBetween(
+      fallback,
+      '### Convergence of a gate loop',
+      '### Routing outside implement',
+    );
+    const match = /```bash\n([\s\S]*?)```/.exec(block);
+    expect(match).not.toBeNull();
+    const snippet = match![1]!;
+
+    // Provenance: the three real m02 exit-gate runs of this repository's
+    // review-gate-integrity-goal project (project-log.md entries written by
+    // the released 0.3.45 gate, run IDs from the archived range-review
+    // artifacts). Runs 2 and 3 carry the tokens the branch gate appends,
+    // produced here by p08's own `convergenceLogTokens` with the counts p08's
+    // m02 sequence probe recorded (r2 1/0/2, r3 0/0/1).
+    const r1 = '93e1b0a1-9b04-4c31-9aa2-e032b9820a9d';
+    const r2 = 'd738cd0e-5795-48ef-a387-e3ec184f90e5';
+    const r3 = '81c12aac-482e-4ffd-93f3-b796e9c4ae76';
+    const stuck = '0f0f0f0f-0000-4000-8000-000000000001';
+    const unparsable = '0f0f0f0f-0000-4000-8000-000000000002';
+    const unlogged = '0f0f0f0f-0000-4000-8000-000000000003';
+    const subject = { kind: 'milestone', value: 'm02' } as const;
+    const marks = (
+      run: number,
+      previous: string,
+      rest: Pick<GateConvergence, 'status' | 'counts' | 'reason'>,
+    ): string =>
+      convergenceLogTokens({
+        sequence: {
+          reviewType: 'code',
+          subject,
+          run,
+          previousRun: {
+            runId: previous,
+            artifactPath: 'reviews/archived/previous.md',
+            generatedAt: '2026-11-03T21:56:01Z',
+          },
+        },
+        ...rest,
+      });
+    const entry = (heading: string, body: string): string =>
+      `### ${heading}\n\n${body}\n`;
+    const log = [
+      '# Project Log\n',
+      entry(
+        '2026-11-03 · structural · oat gate review · p07-p13',
+        `target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T215601Z.md run=${r1}`,
+      ),
+      entry(
+        '2026-11-03 · structural · oat gate review · p07-p-rev2',
+        `target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-03T224623Z.md${marks(2, r1, { status: 'compared', counts: { new: 1, carriedOver: 0, resolved: 2 } })} run=${r2}`,
+      ),
+      entry(
+        '2026-11-04 · structural · oat gate review · p07-p-rev3',
+        `target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-04T015726Z.md${marks(3, r2, { status: 'compared', counts: { new: 0, carriedOver: 0, resolved: 1 } })} run=${r3}`,
+      ),
+      entry(
+        '2026-11-04 · structural · oat gate review · p07-p13',
+        `target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=1 status=blocked${marks(2, r1, { status: 'compared', counts: { new: 0, carriedOver: 2, resolved: 0 } })} run=${stuck}`,
+      ),
+      entry(
+        '2026-11-04 · structural · oat gate review · p07-p13',
+        `target=codex-6-sol-xhigh threshold=high exit=1 status=blocked${marks(2, r1, { status: 'unavailable', reason: 'previous_artifact_unparsable' })} run=${unparsable}`,
+      ),
+    ].join('\n');
+
+    const projectPath = mkdtempSync(join(tmpdir(), 'oat-p14-convergence-'));
+    tempDirs.push(projectPath);
+    writeFileSync(join(projectPath, 'project-log.md'), log);
+
+    const output = execFileSync(
+      'bash',
+      [
+        '-c',
+        `GATE_RUN_IDS=("${r1}" "${r2}" "${r3}" "${stuck}" "${unparsable}" "${unlogged}")\n${snippet}`,
+      ],
+      { encoding: 'utf8', env: { ...process.env, PROJECT_PATH: projectPath } },
+    );
+
+    expect(output.trim().split('\n')).toEqual([
+      '93e1b0a1 no convergence marks',
+      'd738cd0e convergence=new:1,carried:0,resolved:2 sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1',
+      '81c12aac convergence=new:0,carried:0,resolved:1 sequence=milestone:m02 sequence_run=3 previous_run=d738cd0e',
+      '0f0f0f0f convergence=new:0,carried:2,resolved:0 sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1',
+      '0f0f0f0f convergence=unavailable:previous_artifact_unparsable sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1',
+      '0f0f0f0f no convergence marks',
+    ]);
+  });
 });
