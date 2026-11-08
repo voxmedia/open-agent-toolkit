@@ -24,7 +24,6 @@
     .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
     .t { fill: var(--text); font-size: 15px; font-weight: 600; }
     .s { fill: var(--text-2); font-size: 13px; }
-    .o { fill: var(--optional); font-size: 13px; }
   </style>
   <defs>
     <marker id="glance-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
@@ -58,10 +57,10 @@
   </g>
 
   <!-- Edge labels -->
-  <text class="sans o" x="380" y="28" text-anchor="middle">some providers read <tspan class="mono">.agents/</tspan> directly</text>
-  <text class="sans o" x="146" y="204" text-anchor="start">installs skills and agents into</text>
-  <text class="mono o" x="146" y="222" text-anchor="start">.agents/ or ~/.agents/</text>
-  <text class="sans o" x="554" y="385" text-anchor="end">one storage scope per project</text>
+  <text class="sans s" x="380" y="28" text-anchor="middle">some providers read <tspan class="mono">.agents/</tspan> directly</text>
+  <text class="sans s" x="146" y="204" text-anchor="start">installs skills and agents into</text>
+  <text class="mono s" x="146" y="222" text-anchor="start">.agents/ or ~/.agents/</text>
+  <text class="sans s" x="554" y="385" text-anchor="end">one storage scope per project</text>
 
   <!-- CANON: main idea -->
   <rect class="node-em" x="24" y="56" width="220" height="96" rx="8" ry="8"/>
