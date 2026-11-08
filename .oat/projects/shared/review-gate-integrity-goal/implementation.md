@@ -2642,6 +2642,27 @@ Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `g
 
 **Scope note (operator, 2026-11-08):** the operator asked that m03 stop growing hardening. p16 takes the cheaper exit the brief allows for each item: where making the three commands number rows the same way is more than a small change, the CLI reference states the difference instead; the test-local row writer is removed, not replaced.
 
+### Task p16-t01: Number Reviews rows by data line in check and resolve
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-01
+**Handle:** direct:rgi-p16-impl-20261108-01:p16-t01
+**Intent:** Close m02 integrated review L1 by the code exit. `oat review check` and `oat review resolve` share `buildReviewLedgerRowReport`; reading rows with `parseReviewTable(..., { dataLine: true })` and taking `row` from `dataLine` makes both report the physical data-line number `oat review pending` reports. One test runs all three commands on one fixture with an unparsed row above parsed ones; the CLI reference and control-plane README say the three commands share the numbering.
+**Files:** `packages/cli/src/commands/review/check.ts`, `packages/cli/src/commands/review/resolve.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `packages/control-plane/README.md`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+**Commit:** df4961ef2d0a73d3d4bd73c5dcb967ab723672c5
+
+Exit option: the code change, because it was small and local: one line in the shared `buildReviewLedgerRowReport` (`row: row.dataLine ?? index + 1`), `dataLine: true` on the two `parseReviewTable` calls, and resolve's row messages reading the report's number. No new helper. Proof: review suites 83/83 (exit 0). The new test (data line 1 has a blank Date; rows 2 and 3 are same-head gate rows) gets row 2 and superseding row 3 from `oat review check` and `oat review resolve`, and row 3 from `oat review pending`. Can-fail control: setting the shared line back to `index + 1` failed the test (expected 2 and 3, got 1 and 2; exit 1); restored. CLI type-check and oxlint exit 0.
+
+### Task p16-t02: Remove the simulated review-provide row writer from the contract test
+
+**Status:** in_progress
+**Executor:** phase-implementer:rgi-p16-impl-20261108-01
+**Handle:** direct:rgi-p16-impl-20261108-01:p16-t02
+**Intent:** Close the PR #403 Warp suggestion. Delete the test-local `recordReviewEvent` writer, its `artifactRows` helper and the two post-write `it.each` cases from `review-event-row-contracts.test.ts`, and the imports only they used. Keep the Step 9 prose pin; the real `scaffoldProject` checks in `scaffold.test.ts` stay as they are. Nothing replaces them.
+**Files:** `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
 **Status:** pending
