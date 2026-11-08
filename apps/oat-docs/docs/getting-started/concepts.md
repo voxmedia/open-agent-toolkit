@@ -9,7 +9,7 @@ OAT combines a provider-sync layer, reusable skills and CLI tooling, and an opti
 
 ## Choose What to Adopt
 
-OAT has one core path and two optional parts. You edit canonical skills, agents, and rules once and `oat sync` writes the provider views your coding tools need; tool packs (such as `workflows` and `docs`) install more skills, and tracked projects keep a record under `.oat/projects/` in the storage scope you choose.
+OAT has one core path and two optional parts. You edit canonical skills, agents, and rules once and `oat sync` writes the provider views your coding tools need; tool packs (such as `workflows` and `docs`) install more skills, and tracked projects keep a record under `.oat/projects/` by default, in the storage scope you choose.
 
 === "Diagram"
 
@@ -21,12 +21,12 @@ OAT has one core path and two optional parts. You edit canonical skills, agents,
     ```mermaid
     flowchart TD
       accTitle: OAT at a glance
-      accDescr: Canonical skills, agents and rules in .agents/ flow through oat sync into provider views, and some providers read .agents/ directly. Tool packs install skills and agents into .agents/ or ~/.agents/. Tracked projects keep a record under .oat/projects/ in one storage scope: synced by default, shared or local. Use any part on its own.
+      accDescr: Canonical skills, agents and rules in .agents/ flow through oat sync into provider views, and some providers read .agents/ directly. Tool packs install skills and agents into .agents/ or ~/.agents/. Tracked projects keep a record under .oat/projects/ by default, in one storage scope: synced by default, shared or local. Use any part on its own.
       CANON["Canonical assets\n.agents/\nskills · agents · rules"] --> SYNC["oat sync\ngenerate views"]
       SYNC --> VIEWS["Provider views\n.claude/ .cursor/\n.github/ .codex/"]
       CANON -.->|"some providers read .agents/ directly"| VIEWS
       PACKS["Tool packs\noat tools install\nproject or user scope · core is user-only"] -.->|"installs skills and agents into\n.agents/ or ~/.agents/"| CANON
-      PROJECTS["Tracked projects\nworkflows-pack skills keep a record\n.oat/projects/"] -.->|"one storage scope per project"| SYNCED["synced (default)\nown Git ref, pushed to origin\nneeds an origin remote"]
+      PROJECTS["Tracked projects\nworkflows-pack skills keep a record\n.oat/projects/ by default"] -.->|"one storage scope per project"| SYNCED["synced (default)\nown Git ref, pushed to origin\nneeds an origin remote"]
       PROJECTS -.-> SHARED["shared\ncommitted on the current branch"]
       PROJECTS -.-> LOCAL["local\nthis machine only, gitignored"]
       %% Footer in the SVGs: Use any part on its own; combine them when useful.

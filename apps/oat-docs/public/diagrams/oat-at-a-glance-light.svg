@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 576" width="760" height="576" role="img" aria-labelledby="glance-title glance-desc">
   <title id="glance-title">OAT at a glance</title>
-  <desc id="glance-desc">Core path: canonical assets in .agents/ (skills, agents and rules) feed oat sync, which generates provider views under .claude/, .cursor/, .github/ and .codex/. A dashed path shows that some providers read .agents/ directly instead. Below, two optional parts: tool packs, installed with oat tools install at project or user scope (the core pack is user-only), install skills and agents into .agents/ or ~/.agents/ along a dashed path; tracked projects, whose workflows-pack skills keep a record under .oat/projects/, use one storage scope per project: synced (the default, its own Git ref pushed to origin, needs an origin remote), shared (committed on the current branch) or local (this machine only, gitignored). A footer says to use any part on its own and combine them when useful.</desc>
+  <desc id="glance-desc">Core path: canonical assets in .agents/ (skills, agents and rules) feed oat sync, which generates provider views under .claude/, .cursor/, .github/ and .codex/. A dashed path shows that some providers read .agents/ directly instead. Below, two optional parts: tool packs, installed with oat tools install at project or user scope (the core pack is user-only), install skills and agents into .agents/ or ~/.agents/ along a dashed path; tracked projects, whose workflows-pack skills keep a record under .oat/projects/ by default, use one storage scope per project: synced (the default, its own Git ref pushed to origin, needs an origin remote), shared (committed on the current branch) or local (this machine only, gitignored). A footer says to use any part on its own and combine them when useful.</desc>
   <style>
     svg {
       --bg: #ffffff;
@@ -90,7 +90,7 @@
   <rect class="node" x="392" y="268" width="344" height="96" rx="8" ry="8"/>
   <text class="sans t" x="564" y="302" text-anchor="middle">Tracked projects</text>
   <text class="sans s" x="564" y="324" text-anchor="middle">workflows-pack skills keep a record</text>
-  <text class="mono s" x="564" y="344" text-anchor="middle">.oat/projects/</text>
+  <text class="mono s" x="564" y="344" text-anchor="middle">.oat/projects/ <tspan class="sans">by default</tspan></text>
 
   <!-- SYNCED -->
   <rect class="node" x="24" y="420" width="226" height="84" rx="8" ry="8"/>
