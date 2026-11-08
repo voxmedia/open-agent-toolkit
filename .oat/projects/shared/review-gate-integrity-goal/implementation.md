@@ -2682,12 +2682,17 @@ Scope: `e6975c460..b538b09ea` (p16-t01, p16-t02), fresh `oat-reviewer-claude-cla
 
 ### Task p16-t03: (review) Exclude blocked plan carriers from amendment approval boundaries
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-02
+**Handle:** direct:rgi-p16-impl-20261108-02:p16-t03
+**Commit:** a42076f45e1d350275ce078d54cf34fdd6d08ab2
 **Source review:** reviews/archived/range-review-2026-11-08T051752Z.md (M1)
 
 Intent: m03 exit gate M1. `readPlanApprovals` (`packages/cli/src/commands/gate/convergence.ts:607`) treats every timestamped plan carrier as an approval, including a `status: blocked, disposition: null` carrier, which is never approval (brief contract 12.4). A resumed rerun of the same amendment then gets a different `amendmentAfter` than the first run and loses convergence. Count only approved carriers (`status: allowed`) as approval boundaries, in both the line-matched path and the unmatched-carrier fallback. Add one convergence-boundary test for the resumed blocked-plan case beside the existing approved-carrier control; no other hardening (operator direction for m03).
 Files: `packages/cli/src/commands/gate/convergence.ts`, its convergence test
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+
+`readPlanApprovals` now skips any plan carrier whose `status` is not `allowed` when it collects carriers, so a blocked carrier neither times an approval line nor enters the unmatched-carrier fallback (5 production lines: the guard condition plus a doc-comment sentence). One test in the captured-m02 block adapts the real m02 run-1 fixture's frontmatter to two `plan` artifact runs around a `status: blocked, disposition: null` m02 carrier and expects run 2 in the m01 amendment with 2 carried over; it shares two small test-local helpers (`adaptedR1`, `rerun`) that p16-t04 reuses. The existing approved-carrier and different-amendment tests pass unchanged. One added sentence in `workflow-gates.md` states that only an allowed carrier counts. Proof: gate suites 513/513 (exit 0). Can-fail control: replacing the status guard with `false` failed the new test with `expected null` (exit 1), the reviewer's observed outcome; restored.
 
 ### Task p16-t04: (review) Keep milestone identity when a state-selected final resolves to one phase
 
