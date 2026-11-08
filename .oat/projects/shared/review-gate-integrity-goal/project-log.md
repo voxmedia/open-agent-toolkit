@@ -306,6 +306,10 @@ Review .oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-08T051752Z.md run=10ed9157-0fdf-4981-b9b1-1ca3dffc673f
 
+### 2026-11-08 · structural · oat-project-review-receive · p08-p16
+
+m03 exit gate run 10ed9157 (p08-p16, codex-6-sol-xhigh) received: 0/0/2/0, both accepted-requirement under Outcome 5; fix records p16-t03, p16-t04 queued under p16 by the late-fix rule; exit gate reruns after p16 re-acceptance; rgi-m03-exit-r1-receive-20261108
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

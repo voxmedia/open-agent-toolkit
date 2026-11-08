@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-06
-oat_current_task_id: p08
+oat_current_task_id: p16
 oat_generated: false
 oat_template: false
 ---
@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p10    | completed | 1     | 1/1      |
-| p11    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p12    | completed | 1     | 1/1      |
-| p13    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p08    | completed | 1     | 1/1      |
-| p14    | completed | 1     | 1/1      |
-| p15    | completed | 1     | 1/1      |
-| p16    | completed | 1     | 1/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p10    | completed   | 1     | 1/1      |
+| p11    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p12    | completed   | 1     | 1/1      |
+| p13    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p08    | completed   | 1     | 1/1      |
+| p14    | completed   | 1     | 1/1      |
+| p15    | completed   | 1     | 1/1      |
+| p16    | in_progress | 1     | 1/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 14/15 phases accepted
+**Total:** 13/15 phases accepted
 
 ---
 
@@ -2634,7 +2634,7 @@ Scope: `d4f00d2ee..a7e16e0a1` (p15-t01, p15-t02), fresh `oat-reviewer-claude-cla
 
 ## Phase p16: m02 review-ledger follow-ups
 
-**Status:** completed
+**Status:** in_progress
 **Base:** e6975c460ce4622330e660f6cf4af4fcc54f5dc5
 **Executor:** phase-implementer:rgi-p16-impl-20261108-01
 **Head:** b538b09ea910171a766846d520cfba274b1be3a7
@@ -2679,6 +2679,24 @@ Exit option: the code change, because it was small and local: one line in the sh
 Scope: `e6975c460..b538b09ea` (p16-t01, p16-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p16-rev-20261108-01`, reconnaissance not attempted). The reviewer confirmed `check`, `resolve` and `pending` report the same data-line row on a scratch project with an unparsed first row, the other `parseReviewTable` callers are unchanged, and the removed writer's one real assertion stays covered by `scaffold.test.ts`; review and contract suites 113/113 and 1260/1260, exit 0.
 
 **Outcome:** passed; p16 accepted at head `b538b09ea` after one review cycle (no fix loop)
+
+### Task p16-t03: (review) Exclude blocked plan carriers from amendment approval boundaries
+
+**Status:** pending
+**Source review:** reviews/archived/range-review-2026-11-08T051752Z.md (M1)
+
+Intent: m03 exit gate M1. `readPlanApprovals` (`packages/cli/src/commands/gate/convergence.ts:607`) treats every timestamped plan carrier as an approval, including a `status: blocked, disposition: null` carrier, which is never approval (brief contract 12.4). A resumed rerun of the same amendment then gets a different `amendmentAfter` than the first run and loses convergence. Count only approved carriers (`status: allowed`) as approval boundaries, in both the line-matched path and the unmatched-carrier fallback. Add one convergence-boundary test for the resumed blocked-plan case beside the existing approved-carrier control; no other hardening (operator direction for m03).
+Files: `packages/cli/src/commands/gate/convergence.ts`, its convergence test
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+
+### Task p16-t04: (review) Keep milestone identity when a state-selected final resolves to one phase
+
+**Status:** pending
+**Source review:** reviews/archived/range-review-2026-11-08T051752Z.md (M2)
+
+Intent: m03 exit gate M2. `sequenceSubject` (`packages/cli/src/commands/gate/convergence.ts:461`) makes a goal code run a milestone sequence only when its resolved scope is literally `final` or it has more than one phase, so p15's single-phase resolution of a state-selected `final` (which keeps `oat_review_requested_scope: final`) reads as a `scope:pNN` sequence. Carry the artifact's `oat_review_requested_scope` on `SequenceRun` (current and prior-run readers) and treat a requested `final` like a resolved `final` for the milestone subject. Ordinary single-phase review gates keep their scope sequence. Add one convergence-boundary test using p15-shaped frontmatter beside the existing ordinary-phase and literal-final controls; no other hardening.
+Files: `packages/cli/src/commands/gate/convergence.ts`, its convergence test
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
@@ -2988,6 +3006,23 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 - Gate `oat-project-goal` (plan, m03 amendment, run `0d1fa309-a0e6-45a0-b4a9-c319f0fe3fa3`, target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family from the declared `claude-opus-5-5` producer; installed CLI 0.3.45, inline Codex route): `ok`, `review_completed_gate_passed`, threshold `high`, raw counts 0/0/0/1, receive-eligible, received 2026-11-06 with the bookkeeping-only fix above; no attempt consumed.
 - Approval (m03 amendment): approved 2026-11-06 by user at `e38f33e5e58e4b9fd30f84240d250a3c2555febf` (the gate-reviewed bundle). `oat_milestone_gates.m03.plan` written `allowed`/`passed`, subject `plan` [p08, p14, p15, p16], `config_fingerprint` `sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75` = sha256 of the compact JSON of `oat gate resolve oat-project-goal` `effectiveGate` (the m02 method; the declaration is unchanged since m02).
 - Operator routing (m03 exit gate, 2026-11-07): run the configured gate with `--review-scope p08-p16` (target, threshold and prompt unchanged), which resolves to exactly m03's phases p08, p14, p15, p16 in brief order, the scope `oat project delivery check --subject m03` expects. The installed CLI (0.3.46) predates p15's state-selected exit hint, and a literal `final` refuses on m01's and m02's squash-merged anchors, as at m02. One-off routing for this run and its reruns, not a configuration change.
+
+### Review Received: p08-p16 (m03 exit gate)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-08T051752Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 0
+**Finding classes:** M1 accepted-requirement (plan.md Outcome 5: reruns in a blocked gate's remediation loop stay one sequence; brief contract 12.4: a blocked carrier is not approval) · M2 accepted-requirement (plan.md Outcome 5: a goal milestone exit gate's subject is the milestone, whatever scope token a run used)
+
+The configured `oat-project-implement` exit gate (run `10ed9157-0fdf-4981-b9b1-1ca3dffc673f`, scope `p08-p16` under the operator routing above, default selection `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family: m03 was produced by Opus 5.5) reviewed m03 (`p08, p14, p15, p16`) over `241b12a95..b538b09ea`. It reproduced both findings on the branch build with valid controls; p14, p15 and p16 were found implemented, and p08 partial only through M1 and M2.
+
+- M1 (Medium): a `status: blocked` plan carrier is counted as an amendment approval, splitting a resumed rerun of one amendment into two sequences → fix task p16-t03; Outcome 5 requires it.
+- M2 (Medium): a state-selected `final` resolved to a single phase is sequenced by scope rather than milestone → fix task p16-t04; Outcome 5 requires it, and m04 is a single-phase milestone.
+
+**Outcome:** fixes queued: p16-t03, p16-t04 (gate passed its threshold; under the late-fix rule the fixes go under p16, and the exit gate reruns over `p08-p16` after p16 is accepted again)
+
+- Gate `oat-project-implement` (code, m03 exit, run `10ed9157-0fdf-4981-b9b1-1ca3dffc673f`, `--review-scope p08-p16`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/2/0, receive-eligible, received 2026-11-08; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m03.exit` (`oat project delivery check --subject m03`: `undeliverable`, exit `missing`, source `milestone-carrier`).
 
 ## Deferred Findings
 
