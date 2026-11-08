@@ -96,7 +96,7 @@
   <text class="sans t" x="360" y="608" text-anchor="middle">In either strategy</text>
   <text class="sans s" x="360" y="630" text-anchor="middle"><tspan class="mono">stray</tspan> (a lone <tspan class="mono">CLAUDE.md</tspan>): adopted into <tspan class="mono">AGENTS.md</tspan>,</text>
   <text class="sans s" x="360" y="648" text-anchor="middle">then removed (<tspan class="mono">none</tspan>, unless blocked) or rewritten as a shim</text>
-  <text class="sans s" x="360" y="666" text-anchor="middle">unreadable <tspan class="mono">AGENTS.md</tspan> or lone <tspan class="mono">CLAUDE.md</tspan> (<tspan class="mono">content_mismatch</tspan>): repair by hand</text>
+  <text class="sans s" x="360" y="666" text-anchor="middle"><tspan class="mono">AGENTS.md</tspan> or lone <tspan class="mono">CLAUDE.md</tspan> unreadable (<tspan class="mono">content_mismatch</tspan>): repair by hand</text>
   <text class="sans s" x="360" y="684" text-anchor="middle">under <tspan class="mono">none</tspan>, repair every <tspan class="mono">content_mismatch</tspan> by hand</text>
 
 </svg>

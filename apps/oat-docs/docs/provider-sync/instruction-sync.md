@@ -240,7 +240,7 @@ repaired by hand.
       SHIM["pointer, symlink or copy\na CLAUDE.md shim in that shape"]
       NS["States under none\nok: no CLAUDE.md\nmanaged_shim: removed, all or nothing\nunmanaged: kept, with a warning\nunreadable CLAUDE.md symlink: unmanaged"]
       SS["States under a shim\nok: the shim has that shape\nmissing: sync creates it\ncontent_mismatch:\n--force for repairable shims"]
-      STR["In either strategy\nstray (a lone CLAUDE.md): adopted into AGENTS.md,\nthen removed (none, unless blocked) or rewritten as a shim\nunreadable AGENTS.md or lone CLAUDE.md (content_mismatch): repair by hand\nunder none, repair every content_mismatch by hand"]
+      STR["In either strategy\nstray (a lone CLAUDE.md): adopted into AGENTS.md,\nthen removed (none, unless blocked) or rewritten as a shim\nAGENTS.md or lone CLAUDE.md unreadable (content_mismatch): repair by hand\nunder none, repair every content_mismatch by hand"]
       CANON --> STRAT
       STRAT --> NONE
       STRAT --> SHIM
