@@ -368,6 +368,10 @@ Observation: d01's post-gate fix 4a870d471 staled its integrated review and exit
 Impact: the goal could not pass closeout-check; the operator accepted d01 as delivered and closed out by hand.
 Recommendation: re-gate any post-gate fix before a goal milestone PR merges, or accept it with a recorded waiver at that time; closeout has no later path for a squash-merged delivery.
 
+### 2026-11-08 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/review-gate-integrity-goal/references/project-retro.md evidence_used=archived-review-markdown,gate-analysis-outputs,git-history,lifecycle-artifacts,pr-progress-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings,session-transcript-pre-handoff promotions=4 upstream=3 apply=performed filing=performed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
