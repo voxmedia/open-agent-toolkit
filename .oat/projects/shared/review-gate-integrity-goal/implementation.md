@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p08    | completed   | 1     | 1/1      |
-| p14    | in_progress | 1     | 0/1      |
-| p15    | pending     | 1     | 0/1      |
-| p16    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p14    | completed | 1     | 1/1      |
+| p15    | pending   | 1     | 0/1      |
+| p16    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 11/15 phases accepted
+**Total:** 12/15 phases accepted
 
 ---
 
@@ -2337,7 +2337,7 @@ Scope: `241b12a95..dc43fa5b9`, fix delta `174be01c4..dc43fa5b9` (p08-t07), fresh
 
 ## Phase p14: Finding classification at receive
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 1ebb004cb49edd8772797e50d3fdb55b1b3935e5
 **Executor:** phase-implementer:rgi-p14-impl-20261108-01
 **Head:** 27f118621b1c2eff195d4c04e84b137761790b7e
@@ -2540,6 +2540,39 @@ Guard-can-fail (`bash /tmp/rgi-p14/gcf/t07.sh`, each neutralized, run, restored 
 
 Verification: isolated-HOME contract suites 1254/1254, exit 0 (autonomy inventory and complexity-review contracts included; one ordering pin in `complexity-review-contracts.test.ts` first caught an `OAT_AUTONOMOUS=1 … boundary report` sentence ahead of the per-phase dispatch, reworded to "in an autonomous run"); oxfmt check exit 0; markdownlint 0 errors on the four pages. No version bump: every touched skill already carries its p14 bump against `origin/main`.
 
+### Review Received: p14
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p14-review-2026-11-08T011039Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 6
+
+**Finding classes:** M1 accepted-requirement (plan.md Outcome 5) · M2 new-hardening · L1 accepted-requirement (plan.md Outcome 5) · L2 accepted-requirement (plan.md Outcome 5) · L3 accepted-requirement (p14 operator scope note) · L4 accepted-requirement (plan.md p14 exit evidence) · L5 accepted-requirement (plan.md Outcome 5) · L6 accepted-requirement (plan.md Outcome 5)
+
+Scope: `1ebb004cb..9e9c3083c` (p14-t01 to p14-t06), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p14-rev-20261108-01`, reconnaissance not attempted). M2 (stopping an autonomous run on every uncited finding) was a new requirement and went to the operator before any fix work: the operator decided that only an uncited Critical or High finding stops an autonomous run, and an uncited Medium or Low is recorded `awaiting operator` and listed at the next stop; that decision also settles M1. The operator then cut the fix round to M1 on 2026-11-08, citing over-engineering across m03: L1, L2, L3 and L5 were dropped (see Deferred Findings); L4 and L6 had already landed in p14-t07 and were kept.
+
+- M1 (Medium): the per-phase round's autonomous stop covered only Critical/High while the shared rule stopped on every routed finding → fixed in p14-t07 per the operator's M2 decision.
+- M2 (Medium): stop on every uncited finding was unrequested product behavior → operator decision, applied in p14-t07.
+- L4, L6 (Low): fixed in p14-t07.
+- L1, L2, L3, L5 (Low): not fixed; operator cut.
+
+**Outcome:** fixes queued: p14-t07 (`rgi-p14-fix-20261108-01`, round 1 of 2); completed (head `27f118621`); re-reviewed in round 2
+
+### Review Received: p14 (re-review of p14-t07)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p14-review-2026-11-08T014245Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+**Finding classes:** L1 accepted-requirement (operator decision, p14-t07 record)
+
+Scope: fix delta `c2be1b84d..27f118621` (p14-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p14-rev-20261108-02`, reconnaissance not attempted). M1 and M2 resolved and stated consistently on every touched surface; L4 and L6 correct. Reviewer ran the isolated-HOME contract suites (1254/1254, exit 0), `pnpm run check:skill-bumps` (exit 0), oxfmt on the 20 changed files (exit 0), markdownlint on the four docs pages (0 errors) and docs index regeneration (no diff). The phase-wide gate list recorded above ran at `9e9c3083c`; the prose-only t07 delta was verified by those checks and the full list runs again at the m03 exit.
+
+- L1 (Low): review-receive does not say what status a review takes when an autonomous Medium marked `awaiting operator` is its only open blocking-count finding → deferred (see Deferred Findings).
+
+**Outcome:** passed; p14 accepted at head `27f118621` after two review cycles (fix loop: one round, retry 1 of 2)
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
@@ -2615,6 +2648,7 @@ Verification: isolated-HOME contract suites 1254/1254, exit 0 (autonomy inventor
 - run/v1 · request=rgi-p14-impl-20261108-01 · scope=p14 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p14-rev-20261108-01 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p14-fix-20261108-01 · scope=p14-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p14-impl-20261108-01 · observed=~ · match=~
+- run/v1 · request=rgi-p14-rev-20261108-02 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -2887,6 +2921,8 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
   - m01 exit gate L1: fixed in p14-t02 (`d317617cc`); limit 1 of `.agents/docs/bookkeeping-findings.md` no longer lists review artifacts as tracking files.
   - p12 review L2: kept deferred. Persisting the gate event across interruption is a new requirement no contract source names (`new-hardening` under p14's classes), and no interrupted handoff has been observed. Trigger unchanged: the first observed interrupted gate→receive handoff.
   - p10 review L1: kept deferred. No contract source requires the record to change; integrated reviews carry no gate convergence marks, and the fallback reads the unchanged receipt's classes. Trigger: the first real stale fallback after a bookkeeping-only receive.
+- p14 review L1, L2, L3, L5 (Low): the routing snippet's edge cases (a missing finding produces no output), the complexity-review fallback's narrower contract-source list, pre-p08 gate runs without convergence tokens in the fallback, and where plan-writing's classes line is recorded. Cut by the operator on 2026-11-08 (fix round limited to M1 as unwanted hardening across m03). Trigger: a real receive or complexity-review run that misroutes because of one of them.
+- p14 review round 2 L1 (Low): review-receive does not state the review status when an autonomous Medium recorded `awaiting operator` is the only open Critical/High/Medium finding (the pass rule still counts it). Deferred under the same operator cut. Trigger: the first autonomous receive that reaches this state, or the next edit of review-receive Step 2.6.
 
 ## Deviations from Plan / Design
 

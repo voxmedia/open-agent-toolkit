@@ -286,6 +286,10 @@ Activated m03 (p08, p14, p15, p16); review-gate-integrity-goal-activate-m03
 
 p08 accepted (gate convergence visibility, Outcome 5): review cycles 1-3 found 0/1/2/1, 0/0/0/2, 0/0/0/0; fix loop 1 of 2 blocking rounds (t04-t06), post-pass Low fixes in t07; head dc43fa5b9. rgi-p08-outcome-20261108
 
+### 2026-11-08 · structural · oat-project-implement · p14
+
+p14 accepted (finding classification at receive, Outcome 5): review cycles 1-2 found 0/0/2/6, 0/0/0/1; fix loop 1 of 2 (t07: operator decision on uncited Medium/Low under autonomy, plus L4, L6); operator cut L1-L3, L5 and round-2 L1 as unwanted hardening; head 27f118621. rgi-p14-outcome-20261108
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
