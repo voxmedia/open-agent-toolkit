@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p10    | completed | 1     | 1/1      |
-| p11    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p12    | completed | 1     | 1/1      |
-| p13    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p08    | completed | 1     | 1/1      |
-| p14    | completed | 1     | 1/1      |
-| p15    | completed | 1     | 1/1      |
-| p16    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p10    | completed   | 1     | 1/1      |
+| p11    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p12    | completed   | 1     | 1/1      |
+| p13    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p08    | completed   | 1     | 1/1      |
+| p14    | completed   | 1     | 1/1      |
+| p15    | completed   | 1     | 1/1      |
+| p16    | in_progress | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 13/15 phases accepted
 
@@ -2634,7 +2634,13 @@ Scope: `d4f00d2ee..a7e16e0a1` (p15-t01, p15-t02), fresh `oat-reviewer-claude-cla
 
 ## Phase p16: m02 review-ledger follow-ups
 
-**Status:** pending
+**Status:** in_progress
+**Base:** e6975c460ce4622330e660f6cf4af4fcc54f5dc5
+**Executor:** phase-implementer:rgi-p16-impl-20261108-01
+
+Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`); two small upkeep items, no fan-out. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`. Phase recovery: default limit 10, no p16 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base.
+
+**Scope note (operator, 2026-11-08):** the operator asked that m03 stop growing hardening. p16 takes the cheaper exit the brief allows for each item: where making the three commands number rows the same way is more than a small change, the CLI reference states the difference instead; the test-local row writer is removed, not replaced.
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
