@@ -2442,6 +2442,27 @@ Guard-can-fail (`bash /tmp/rgi-p14/gcf/t03.sh`, each neutralized, run, restored 
 
 Verification: isolated-HOME contract suites 1226/1226, exit 0 (autonomy inventory included); oxfmt check exit 0. No new version bump: implement keeps its p14-t02 bump (2.3.28).
 
+### Task p14-t04: Classes on the planning review and gate paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t04
+**Intent:** State the classification and routing on inventory rows 11 to 13: plan-writing's structured `plan` artifact-review loop, the brief and goal Step 3.6 dispositions and the brief contract's review ladder, and the Gate Execution of discover, design, quick-start, plan, import-plan, brief, goal and lite; extend the six artifact-review autonomy rows.
+**Files:** `.agents/skills/oat-project-plan-writing/SKILL.md`, `.agents/skills/oat-project-{quick-start,plan,import-plan,brief,goal,lite,discover,design}/SKILL.md`, `.agents/skills/oat-project-brief/references/brief-contract.md`, `.agents/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 0208538020ca7118e50706bc151527c81365c308
+
+Shape (beside today's text):
+
+- **Gate Execution (eight skills).** One identical paragraph after the bookkeeping-only settlement: review-receive records the classes; an operator-routed finding gets no remediation edit until the operator decides (`REVIEWRECEIVE-10` under autonomy); `onFailure` and the attempt count apply unchanged.
+- **plan-writing step 4.** A "Finding classes (`plan` target, every result)" bullet after the bookkeeping-only bullet: classify before applying or offering any fix; the severity bullets apply only to fix-routed findings; an operator-routed finding is never a default Critical/High fix or a routine Medium/Low offer, and under autonomy the loop stops at `product-judgment`; a reviewed plan never cites itself. Step 6 records the `**Finding classes:**` line with the outcome. The `analysis` target is untouched (inventory exclusion).
+- **Brief and goal Step 3.6.** A `new-hardening` finding is a material finding: it goes back to the user before any edit (their existing realignment route). The brief contract's section 5 ladder says the same.
+- **Autonomy rows.** QS-11, LITE-08, BRIEF-09, GOAL-09, PLAN-09 and IMPORT-08 gain the stop clause and `boundary:product-judgment`. The boundary cell grew past the column's widest cell, so oxfmt re-padded the gate inventory table: 147 lines changed, 7 with `git diff -w` (the six rows and the separator row). The planning gate rows (QS-12, PLAN-11 and the rest) and IMPLEMENT-12/18 need no change: their stop happens in receive, under `REVIEWRECEIVE-10`.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t04.sh`, each neutralized, run, restored and checked with `cmp`): discover's gate paragraph removed (1 failed); plan-writing's "bullets below apply only to findings that section routes to fix work" removed (1 failed); goal's Step 3.6 sentence removed (1 failed); QS-11's clause removed (1 failed); the brief contract paragraph removed (1 failed). Each exit 1; restored 42/42, exit 0.
+
+Verification: isolated-HOME contract suites 1245/1245, exit 0 (autonomy inventory included); oxfmt check exit 0. No new version bump: every skill touched here carries its p14-t02 bump.
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
