@@ -2417,6 +2417,31 @@ Restored: 94/94, exit 0.
 
 Verification: isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`) 1219/1219, exit 0, including `autonomy-gate-inventory.test.ts` (no new line in an inventory root matches the prompt scan); oxfmt check and oxlint on the changed files exit 0; `pnpm run check:skill-bumps` after the commit exit 0 (14 changed skill bumps against `origin/main`).
 
+### Task p14-t03: Classes on implement's review and gate paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t03
+**Intent:** State the classification and routing on inventory rows 6 to 10: the per-phase review round (the root classifies before the fix child), the optional phase gate, the final review on both routes, the implement exit gate and the goal milestone exit gate; add `IMPLEMENT-21` for the per-phase stop.
+**Files:** `.agents/skills/oat-project-implement/references/phase-execution.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `.agents/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** f9573882d771cd1758cc189f00a499fb3dd0c0de
+
+Shape (each beside today's text, which stays as it was):
+
+- **Per-phase round.** A "Finding classes (every round, before step 1)" paragraph after the bookkeeping-only round: only fix-routed findings enter step 2's bounded findings; a Critical or High routed to the operator holds the fix child until the operator decides, and under autonomy the root commits the receipt and stops (`IMPLEMENT-21`, `boundary:product-judgment`). The per-phase round is the one receive path that does not run through review-receive, so it needs its own autonomy row. Retry limit, pass rule and cycle cap unchanged.
+- **Phase gate.** One paragraph after the outcome bullets: only fix-routed findings reach the phase implementer; an operator-routed one holds the gate's fix round (`REVIEWRECEIVE-10`); verdict and retry limit unchanged.
+- **Step 7b.** Either per-phase record carries the round's `**Finding classes:**` line.
+- **Final review.** One bullet on each route: an operator-routed finding gets no fix task; the autonomous run stops at receive's boundary.
+- **Exit gate.** One Structured-outcomes bullet: routing changes no envelope status, `on_failure` or `attempts_completed`.
+- **Goal milestone exit gate.** One sentence in step 2: receive routes as Step 14 states; carrier rules unchanged.
+
+The `IMPLEMENT-21` cell was kept narrower than the table's widest prompt cell, so oxfmt did not re-pad the gate inventory table (1 line added).
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t03.sh`, each neutralized, run, restored and checked with `cmp`): loop filter sentence removed (1 failed); "dispatch no fix child … until the operator decides it" changed to "dispatch the fix child" (1 failed); exit-gate "changes no envelope status, `on_failure` policy or `attempts_completed`" changed to "consumes one attempt" (1 failed); milestone sentence removed (1 failed); `IMPLEMENT-21` row removed (1 failed). Each exit 1; restored 23/23, exit 0.
+
+Verification: isolated-HOME contract suites 1226/1226, exit 0 (autonomy inventory included); oxfmt check exit 0. No new version bump: implement keeps its p14-t02 bump (2.3.28).
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
