@@ -12,10 +12,11 @@
  *
  * Sequence identity is the pair (review type, subject):
  *
- * - goal milestone exit run: a `code` gate run whose scope is `final` or whose
- *   artifact names more than one phase (`oat_review_phase_ids`), when every
- *   named phase belongs to one milestone — the subject is that milestone,
- *   whatever scope token the run used;
+ * - goal milestone exit run: a `code` gate run whose scope or requested scope
+ *   (`oat_review_requested_scope`) is `final`, or whose artifact names more
+ *   than one phase (`oat_review_phase_ids`), when every named phase belongs to
+ *   one milestone — the subject is that milestone, whatever scope token the
+ *   run used;
  * - goal plan gate run: an `artifact` gate run on scope `plan` — the subject is
  *   the plan amendment open when the run was written, identified by the set of
  *   plan approvals recorded before it. Approvals are read from records that
@@ -23,7 +24,9 @@
  *   `**Milestone mNN approved:**` line the brief keeps under
  *   `## Delivery endpoint and authority`, timed by the matching
  *   `oat_milestone_gates.<m>.plan` carrier's `decided_at` when that carrier
- *   still names the approved commit, and otherwise only by the line's date. A
+ *   still names the approved commit, and otherwise only by the line's date.
+ *   Only an approved carrier (`status: allowed`) counts; a blocked carrier is
+ *   never an approval. A
  *   run that falls inside a date-only approval's day cannot be placed; it is
  *   never linked to another run. Runs on different amendments never share a
  *   sequence;

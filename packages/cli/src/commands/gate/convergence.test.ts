@@ -730,8 +730,9 @@ describe('computeGateConvergence over the captured m02 exit-gate runs', () => {
         ]),
       ].join('\n'),
     );
-    // The second run carries the frontmatter p15 writes when a state-selected
-    // `final` resolves to the singleton milestone's one phase.
+    // Both runs carry the frontmatter p15 writes when a state-selected `final`
+    // resolves to the singleton milestone's one phase, so the earlier run is
+    // linked through its requested scope too.
     const exit = (scope: string, runId: string, at: string) =>
       adaptedR1({
         oat_generated_at: at,
@@ -743,7 +744,7 @@ describe('computeGateConvergence over the captured m02 exit-gate runs', () => {
     await expect(
       rerun(
         root,
-        await exit('final', 'first', '2026-11-01T12:00:00Z'),
+        await exit('p02', 'first', '2026-11-01T12:00:00Z'),
         await exit('p02', 'second', '2026-11-01T12:10:00Z'),
       ),
     ).resolves.toMatchObject({
