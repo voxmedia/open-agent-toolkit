@@ -142,7 +142,8 @@ and any budget that runs out adds one read-only complexity-review run.
   each lifecycle step such as planning and implementation. See
   [Autonomous Project Execution](advanced/autonomy.md). In a goal project,
   `oat-project-pr-progress` pushes the branch and opens each milestone's pull
-  request once the milestone's evidence checks fresh, and
+  request once the milestone's evidence checks fresh, including when the agent
+  starts it after you accept an offered delivery step, and
   `oat-project-complete` opens none when the registered deliveries already
   cover every accepted phase, even with `workflow.createPrOnComplete` set.
 

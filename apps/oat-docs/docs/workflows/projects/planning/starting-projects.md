@@ -391,6 +391,14 @@ the next one starts.
 goal project, goal resumes it at the step its state calls for: authoring,
 milestone activation, re-alignment, or the terminal declaration.
 
+The agent can also start the skill itself, but only when you ask for a goal
+step, such as "re-align" or "declare the goal met", or when you accept a goal
+step it offered, such as the re-alignment after a milestone's pull request is
+delivered. A delivered milestone is not that ask, and the agent never picks
+goal mode for new work on its own. Starting the skill this way changes
+nothing it asks you: each approval, the re-alignment questions, and the
+declaration that the goal is met still wait for your answer.
+
 **Example scenario:** Administrators need audit exports now and scheduled
 delivery later. Goal interviews you once for the whole outcome, splits it into
 milestone m01 (CSV export) and m02 (scheduled delivery), and activates m01.

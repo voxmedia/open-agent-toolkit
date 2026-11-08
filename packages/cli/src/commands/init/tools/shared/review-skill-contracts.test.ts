@@ -496,17 +496,42 @@ describe('review skill contracts', () => {
           'offer the recommended next skill before routing',
         ],
       },
+      {
+        path: '.agents/skills/oat-project-pr-progress/SKILL.md',
+        descriptionTriggers: ['"open the progress PR"', '"deliver m02"'],
+        bodyContracts: [
+          '## Model Invocation Gate',
+          'Do NOT auto-invoke merely because a phase review passed, a milestone reached `delivering`',
+          'Invocability changes who may start this skill, not who decides.',
+        ],
+      },
+      {
+        path: '.agents/skills/oat-project-goal/SKILL.md',
+        descriptionTriggers: ['"re-align"', '"declare the goal met"'],
+        bodyContracts: [
+          '## Model Invocation Gate',
+          'Do NOT auto-invoke merely because a milestone reached `delivered` or `aligning`',
+          "choosing goal mode for new work stays the user's decision.",
+          'Invocability changes who may start this skill, not who decides.',
+          'the terminal declaration (Step 9, `GOAL-13`)',
+          'Step 9 still asks its declaration question before anything is written.',
+          'Ask once whether the user declares the goal met',
+          'it never sets or assumes `OAT_AUTONOMOUS`.',
+        ],
+      },
     ];
 
     for (const skill of skills) {
       const content = readRepoFile(skill.path);
+      const description = content.match(/^description:\s*(.+)$/m)?.[1] ?? '';
+      const prose = content.replace(/\s+/g, ' ');
       expect(content).toContain('disable-model-invocation: false');
-      expect(content).toContain('Do NOT auto-invoke');
+      expect(description).toContain('Do NOT auto-invoke');
       for (const trigger of skill.descriptionTriggers) {
-        expect(content).toContain(trigger);
+        expect(description).toContain(trigger);
       }
       for (const contract of skill.bodyContracts) {
-        expect(content).toContain(contract);
+        expect(prose).toContain(contract);
       }
     }
   });
