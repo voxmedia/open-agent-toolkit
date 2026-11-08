@@ -2345,6 +2345,42 @@ Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `g
 
 **Scope note (operator, 2026-11-08):** Outcome 5 says the convergence marks and the recorded classes "both feed the existing exhaustion stop and complexity review", and no phase's exit evidence covered the convergence half. The operator assigned it to p14 as a journal scope note, without amending `plan.md`: p14 also makes the existing exhaustion stop and the complexity review read the convergence marks that p08 records (the gate result's `convergence` field and the record's convergence tokens) when a gate sequence has them. Added exit check: a contract test pins that the complexity-review fallback starts from the recorded classes and, for gate rounds, the convergence counts of the exhausted loop's runs. Outcome 5's limit holds: no authorization record or extra-cycle allowance is added.
 
+### Task p14-t01: Inventory the review and gate receive paths
+
+**Status:** no-change
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t01
+**Intent:** Settle the inventory half of the p14 Known Unknown: every place a project review or gate result's findings are dispositioned into fix work, edits or deferrals, where its receipt already lives, and which exhaustion stops read the result.
+**Files:** none (journal record only)
+**Proof command:** `grep -rn 'bookkeeping-findings.md\|review resolve\|complexity-review-fallback.md' .agents/skills/*/SKILL.md .agents/skills/*/references/*.md` and `find .agents/skills -type l -lname '*bookkeeping-findings.md'`, read against the p11-t01/t02 path list
+
+Adopting receive paths. Every one records its classes in the receipt it already writes, so no Reviews column, status or new record is added:
+
+| #   | Receive path                                                                              | Owner and place                                                                     | Class record                         | Routing owner                  |
+| --- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------ |
+| 1   | Code review, manual or `auto`                                                             | `oat-project-review-receive` Steps 2 to 11                                          | Step 7 `### Review Received` receipt | review-receive Step 2.6        |
+| 2   | Code review from a blocking gate (auto-disposition mode)                                  | review-receive                                                                      | Step 7 receipt                       | review-receive Step 2.6        |
+| 3   | Code review from a passing gate (judgment-sweep mode)                                     | review-receive                                                                      | Step 7 receipt                       | review-receive Step 2.6        |
+| 4   | Artifact review, manual or gate                                                           | review-receive (artifact mode, Step 10A)                                            | Step 7 receipt                       | review-receive Step 2.6        |
+| 5   | Goal integrated milestone or delivery review                                              | review-receive Step 3 (goal)                                                        | Step 7 receipt                       | review-receive Step 2.6        |
+| 6   | Per-phase review round                                                                    | `oat-project-implement` `phase-execution.md`, Bounded Fix and Re-Review Loop        | the phase's review receipt (Step 7b) | the root, before the fix child |
+| 7   | Optional phase review gate                                                                | implement `phase-execution.md`, Optional External Phase Review Gate                 | review-receive receipt (rows 2, 3)   | review-receive                 |
+| 8   | Final review, autonomous and interactive routes                                           | implement `completion-and-closeout.md` Step 13                                      | review-receive receipt               | review-receive                 |
+| 9   | Implementation exit gate                                                                  | implement `completion-and-closeout.md` Step 14                                      | review-receive receipt               | review-receive                 |
+| 10  | Goal milestone exit gate                                                                  | implement Goal Milestone Closeout step 1 (delegates to Step 14)                     | review-receive receipt               | review-receive                 |
+| 11  | Structured plan artifact-review loop (`plan` target)                                      | `oat-project-plan-writing` Auto Artifact-Review Loop, loaded by six planning skills | the loop's step 6 outcome record     | plan-writing step 4            |
+| 12  | Brief and goal artifact-review dispositions                                               | `oat-project-brief` and `oat-project-goal` Step 3.6 (restate row 11)                | row 11                               | row 11, as a material finding  |
+| 13  | Lifecycle gates of discover, design, quick-start, plan, import-plan, brief, goal and lite | each skill's Gate Execution, which hands the gate event to review-receive           | review-receive receipt               | review-receive                 |
+
+Exhaustion stops that read the recorded classes and, for gate loops, the convergence marks (the complexity-review fallback's When table): phase-review retry exhaustion (review loop), phase gate retry exhaustion (gate loop), final review cap (review loop), implement exit gate at `maxAttempts` (gate loop; the goal milestone exit gate delegates to it), the review-receive three-cycle cap (review loop whose history includes gate artifacts), and the quick-start plan gate at `maxAttempts` (gate loop).
+
+Not adopted, with reasons:
+
+- `oat-project-review-receive-remote` (GitHub PR comments into plan tasks): the brief's Out of Scope excludes remote reviews, and m01's path list (Outcome 1) did not include it. Reported to the operator as a possible follow-up.
+- `oat-review-receive` and `oat-review-receive-remote`: ad-hoc, non-project reviews (Out of Scope).
+- plan-writing's `analysis` target: docs and instruction analysis, not a project review event; p11 left it out of the bookkeeping branch for the same reason.
+- Saved complexity reports: not review events (the fallback's own rule).
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
