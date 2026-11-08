@@ -513,8 +513,8 @@ describe('review skill contracts', () => {
           'Do NOT auto-invoke merely because a milestone reached\n`delivered` or `aligning`',
           "choosing goal mode for new work stays the user's decision.",
           'Invocability changes who may start this skill, not who decides.',
-          'the terminal declaration (Step 9, `GOAL-13`)',
-          'Step 9 still asks its declaration question\nbefore anything is written.',
+          'the terminal declaration (Step 9,\n`GOAL-13`)',
+          'Step 9 still asks its\ndeclaration question before anything is written.',
         ],
       },
     ];

@@ -1,6 +1,6 @@
 ---
 name: oat-project-goal
-description: Use when the user explicitly asks to start or continue a goal-mode OAT project — e.g. "start a goal project", "re-align", "declare the goal met", or confirms a previously offered goal step. Do NOT auto-invoke just because a milestone was delivered. One approved Project Brief with a Milestones table, a milestone loop of activation, delivery and re-alignment, and a terminal declaration audited against the brief's outcomes.
+description: Use when the user explicitly asks to start or continue a goal-mode OAT project — e.g. "start a goal project", "re-align", "declare the goal met", or accepts a previously offered goal step. Do NOT auto-invoke just because a milestone was delivered. One approved Project Brief with a Milestones table, a milestone loop of activation, delivery and re-alignment, and a terminal declaration audited against the brief's outcomes.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
 disable-model-invocation: false
@@ -32,7 +32,7 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 
 This skill is model-invokable only for an explicit goal ask, such as "start a
 goal project for …", "re-align", "activate m02", or "declare the goal met", or
-when the user confirms a previously offered goal step, for example the
+when the user accepts a previously offered goal step, for example the
 re-alignment that `oat-project-pr-progress` or the router offers once a
 milestone is delivered. Do NOT auto-invoke merely because a milestone reached
 `delivered` or `aligning`, or because new work looks like it needs several
@@ -40,12 +40,12 @@ deliveries: choosing goal mode for new work stays the user's decision.
 
 Invocability changes who may start this skill, not who decides. Every decision
 the steps below put to the user still needs the user's explicit answer in this
-session: the alignment and re-alignment interviews (`GOAL-03`, `GOAL-12`), each
-brief or amendment approval (Step 3.7, `GOAL-11`), every scope decision in the
-outcome audit, and the terminal declaration (Step 9, `GOAL-13`). An ask to
-declare the goal met starts Step 9; Step 9 still asks its declaration question
-before anything is written. Under `OAT_AUTONOMOUS=1` the autonomy contract below
-governs unchanged, and `GOAL-13` stays a boundary.
+session: the alignment and re-alignment interviews (`GOAL-03`, `GOAL-12`),
+each sign-off on the brief or an amendment (Step 3.7, `GOAL-11`), every scope
+decision in the outcome audit, and the terminal declaration (Step 9,
+`GOAL-13`). An ask to declare the goal met starts Step 9; Step 9 still asks its
+declaration question before anything is written. Under `OAT_AUTONOMOUS=1` the
+autonomy contract below governs unchanged, and `GOAL-13` stays a boundary.
 
 ## Mode Assertion
 
