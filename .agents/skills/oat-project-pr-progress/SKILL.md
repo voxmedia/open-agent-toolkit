@@ -36,8 +36,9 @@ Generate a PR-ready summary that is:
 This skill is model-invokable only for an explicit progress-PR or delivery ask
 such as "open the progress PR", "progress PR for p02", or "deliver m02", or
 when the user confirms a previously offered progress-PR or milestone-delivery
-step, for example one that the `oat-project-implement` closeout or the router
-offered. Do NOT auto-invoke merely because a phase review passed, a milestone
+step, for example one that `oat-project-review-receive` or the router
+(`oat-project-next`, `oat-project-progress`) offered once a milestone reached
+`delivering`. Do NOT auto-invoke merely because a phase review passed, a milestone
 reached `delivering`, or project state otherwise looks ready for a PR.
 
 Invocability changes who may start this skill, not who decides. Every

@@ -102,9 +102,11 @@ The agent can also start the skill itself, but only when you ask for a
 progress PR or a milestone delivery, such as "open the progress PR" or
 "deliver m02", or when you accept a progress-PR or delivery step it offered.
 A passed phase review or a milestone that reached `delivering` is not that
-ask. Starting the skill this way changes nothing it asks you: you still
-choose whether to open the PR, and only you can waive a pending required
-review.
+ask. Starting the skill this way changes nothing it asks you: outside goal
+mode you still choose whether to open the PR, and only you can waive a pending
+required review. In a goal project, asking for a milestone delivery is what
+authorizes its pull request, which the skill creates or attaches without a
+further question.
 
 **Prerequisites:** Needs an active OAT project: yes. The project needs
 `plan.md`. If no project is active, the skill asks for the project name and

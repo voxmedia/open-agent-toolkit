@@ -33,8 +33,7 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 This skill is model-invokable only for an explicit goal ask, such as "start a
 goal project for …", "re-align", "activate m02", or "declare the goal met", or
 when the user accepts a previously offered goal step, for example the
-re-alignment that `oat-project-pr-progress` or the router offers once a
-milestone is delivered. Do NOT auto-invoke merely because a milestone reached
+re-alignment the router offers once a milestone is delivered. Do NOT auto-invoke merely because a milestone reached
 `delivered` or `aligning`, or because new work looks like it needs several
 deliveries: choosing goal mode for new work stays the user's decision.
 
@@ -44,8 +43,10 @@ session: the alignment and re-alignment interviews (`GOAL-03`, `GOAL-12`),
 each sign-off on the brief or an amendment (Step 3.7, `GOAL-11`), every scope
 decision in the outcome audit, and the terminal declaration (Step 9,
 `GOAL-13`). An ask to declare the goal met starts Step 9; Step 9 still asks its
-declaration question before anything is written. Under `OAT_AUTONOMOUS=1` the
-autonomy contract below governs unchanged, and `GOAL-13` stays a boundary.
+declaration question before anything is written. A model-invoked run is
+interactive: it never sets or assumes `OAT_AUTONOMOUS`. Only a run the operator
+started with `OAT_AUTONOMOUS=1` follows the autonomy contract below, unchanged,
+and there `GOAL-13` stays a boundary.
 
 ## Mode Assertion
 
