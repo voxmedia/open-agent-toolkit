@@ -16,6 +16,44 @@ OAT uses two scopes for `.oat` data:
 
 Project scope is used for project workflows and repo-local sync state. User scope is used for global ideas and user-level sync state.
 
+Whether Git commits an OAT file depends on OAT's `.gitignore` blocks: the
+`# OAT core` block that `oat init` writes, and the `# OAT local paths` block,
+which holds paths picked in interactive `oat init` or added with
+`oat local add`. Installing every pack at project scope
+(`oat tools install --scope project`) also adds `projects/**/pr/` and
+`projects/**/reviews/archived/` there; naming the workflows pack does not.
+User-scope files and the
+default PJM remote state live outside the working tree. See
+[What OAT writes](what-oat-writes.md#what-to-commit) for each team-choice
+trade-off.
+
+=== "Diagram"
+
+    ![OAT paths grouped as committed, team choice, ignored by OAT core, or ignored when in the local-paths block; ~/.oat and Git-directory state stay out of Git](/diagrams/directory-scopes-light.svg)
+    ![OAT paths grouped as committed, team choice, ignored by OAT core, or ignored when in the local-paths block; ~/.oat and Git-directory state stay out of Git](/diagrams/directory-scopes-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      accTitle: Where OAT files live and what Git commits
+      accDescr: In the repository, not ignored and committed are .oat/config.json, sync/config.json, projects/shared/NAME/, projects/synced/NAME.json and .oat/repo/pjm/, pjm/remote/bindings/ and reference/. Not ignored and a team choice are sync/manifest.json, templates/, scripts/ and ideas/. The OAT core block ignores config.local.json, the state.md dashboard, projects/local/, projects/archived/ and projects/synced/NAME/. Paths in the # OAT local paths block, when added, are ignored: analysis/, pr/, reviews/archived/ and ideas/. The home directory ~/.oat/ and the Git directory's oat/pjm-remote/ are never committed.
+      subgraph repo["Repository"]
+        COMMIT["Not ignored: commit\n.oat/ config.json, sync/config.json,\nprojects/shared/NAME/, projects/synced/NAME.json\n.oat/repo/ pjm/, pjm/remote/bindings/, reference/"]
+        TEAM["Not ignored: team choice\n.oat/ sync/manifest.json, templates/, scripts/, ideas/"]
+        CORE["Ignored by the # OAT core block\n.oat/ config.local.json, state.md (dashboard), projects/local/,\nprojects/archived/, projects/synced/NAME/"]
+        LOCALP["In the # OAT local paths block, when added\n.oat/ **/analysis/, **/pr/, **/reviews/archived/, ideas/\n.oat/repo/ analysis/"]
+      end
+      subgraph home["Home directory"]
+        HOME["Not in the repository\n~/.oat/ config.json, sync/config.json, sync/manifest.json,\ntemplates/, scripts/, docs/, ideas/"]
+      end
+      subgraph gitdir["Git directory"]
+        GITD["Never committed\ngit-common-dir/oat/pjm-remote/"]
+      end
+      classDef opt stroke-dasharray: 5 5
+      class LOCALP opt
+    ```
+
 ## Top-level project `.oat/` layout
 
 ```text

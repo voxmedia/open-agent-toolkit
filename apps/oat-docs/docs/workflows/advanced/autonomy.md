@@ -29,6 +29,41 @@ Terms used on this page:
 - **Boundary:** a point where an autonomous run stops on purpose and reports
   what a person must decide or provide before it can continue.
 
+An autonomous run follows one path from activation to completion (a final pull
+request by default), and leaves it only at a boundary. A boundary stop is a finished, resumable outcome:
+a person resolves it and resumes, interactively or by invoking autonomy again.
+
+=== "Diagram"
+
+    ![An autonomous run activates session signals, resolves the project, runs lifecycle skills to completion, or stops at a boundary a person resolves](/diagrams/autonomous-run-light.svg)
+    ![An autonomous run activates session signals, resolves the project, runs lifecycle skills to completion, or stops at a boundary a person resolves](/diagrams/autonomous-run-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: An autonomous project run
+      accDescr: oat-project-autonomous sets OAT_AUTONOMOUS=1 and OAT_NON_INTERACTIVE=1 for this session only and resolves the project, explicit, then active, then a new project from your goal as lite, brief, quick or spec-driven. A preflight checks delegation and a kickoff report lists limits, used attempts and hard stops. Lifecycle skills run with every interactive gate auto-resolved or stopped at a boundary. Checkpoints are reviewed, not waited on, and the final approval follows a passing final review. A complete run opens the final PR by default, never merges, and pushes the branch after each lifecycle step without force. A goal-mode project, unclear input, a preflight or kickoff stop, or any later stop reaches a boundary report; a person can then take over in a session without the signals and resume the owning skill, or invoke oat-project-autonomous again.
+      ACT["oat-project-autonomous\nsets OAT_AUTONOMOUS=1 and\nOAT_NON_INTERACTIVE=1 for this session"]
+      RES["Resolve the project\nexplicit, then active, then a new project\nfrom your goal: lite, brief, quick or spec-driven"]
+      KICK["Preflight and kickoff report\ndelegation checked; limits, used\nattempts and hard stops reported"]
+      LIFE["Lifecycle skills run\nevery interactive gate auto-resolves\nor stops at a boundary"]
+      CLOSE["Checkpoints and closeout\ncheckpoints reviewed, not waited on;\nfinal approval after final review passes"]
+      DONE["Run complete\nfinal PR by default; never merged;\nbranch pushed after each lifecycle step, no force"]
+      BND["Boundary stop\nreports evidence and the\naction a person must take"]
+      TAKE["Take over or resume\ntake over: start a session without\nthe signals and resume the owning\nskill; or invoke\noat-project-autonomous again"]
+      ACT --> RES
+      RES --> KICK
+      KICK --> LIFE
+      LIFE --> CLOSE
+      CLOSE --> DONE
+      RES -->|goal-mode project or unclear input| BND
+      KICK -->|stop| BND
+      LIFE -->|stop| BND
+      CLOSE -->|stop| BND
+      BND -.->|you choose| TAKE
+    ```
+
 ## Activation contract
 
 An autonomous session uses both signals:

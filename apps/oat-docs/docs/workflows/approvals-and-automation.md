@@ -44,6 +44,52 @@ to review the plan, so read `plan.md` when planning finishes and before you run
 `/oat-project-implement`. Do not re-run `/oat-project-quick-start` to continue:
 on a quick project whose plan is ready, it starts implementation straight away.
 
+The diagram follows an interactive quick, spec-driven, or imported project,
+and its endings assume the final phase is a checkpoint, as described above.
+Dashed paths happen only when you chose a checkpoint or configured a gate, and
+a configured gate must be allowed before the pull request opens or you approve.
+`workflow.postImplementSequence` then picks the ending: `pr`, `docs-pr`, or a
+structured value with `pr` in `preApproval` opens the pull request first; a
+structured value with `pr` in `postApproval` opens it by itself after you
+approve; `wait`, `summary`, no value, or a structured value without `pr` leaves
+it to you, and with no value the agent offers it. Lite, brief, and goal
+projects and autonomous runs differ as the table above shows.
+
+=== "Diagram"
+
+    ![Interactive quick, spec-driven and imported projects: where you confirm, read the plan, approve checkpoints, and approve before or after the PR opens](/diagrams/where-people-approve-light.svg)
+    ![Interactive quick, spec-driven and imported projects: where you confirm, read the plan, approve checkpoints, and approve before or after the PR opens](/diagrams/where-people-approve-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Where a person approves in an interactive project
+      accDescr: Interactive quick, spec-driven and imported projects. You confirm requirements, and a design if there is one, except for an imported plan. The automatic plan review fixes Critical and High findings and offers Medium and Low ones. Planning stops, and reading plan.md is your unrecorded plan approval. Each phase runs an implementer and a reviewer agent, pausing for your approval at checkpoint phases. The final review always runs. A configured gate must be allowed before the PR opens and before you approve. workflow.postImplementSequence then decides the ending: with pr before approval the PR opens and then you approve; with pr after approval you approve and the PR opens by itself; with no pr step you approve and then start the final PR.
+      REQ["Requirements and design\nyou confirm requirements (and design,\nif any); an imported plan has no such step"]
+      PLAN["Plan and automatic review\nthe agent fixes Critical and High;\nMedium and Low are offered to you"]
+      STOP["Planning stops\nread plan.md now: this is your\nplan approval, and nothing records it"]
+      PH["Each phase\nan implementer and a reviewer agent;\nCritical or High adds a fix round"]
+      CK["Checkpoint pause\nyou approve at each checkpoint\nphase, asked on the first run\nor configured"]
+      FIN["Final review\nalways runs; you may be asked how"]
+      GATE["Gate\na separate reviewer agent,\nbefore the PR and your approval"]
+      SEQ["workflow.postImplementSequence\ndecides when the PR opens"]
+      L["PR opens first\nthe PR opens, then you\napprove the final checkpoint"]
+      M["PR opens after\nyou approve the final\ncheckpoint, then the PR\nopens by itself"]
+      R["You start the PR\nyou approve the final\ncheckpoint, then run\n/oat-project-pr-final\n(unset: the agent offers it)"]
+      REQ --> PLAN
+      PLAN --> STOP
+      STOP --> PH
+      PH --> FIN
+      PH -.->|if chosen| CK
+      FIN -.->|if configured| GATE
+      FIN -->|no gate| SEQ
+      GATE -.->|when allowed| SEQ
+      SEQ -->|pr before approval| L
+      SEQ -->|pr after approval| M
+      SEQ -->|no pr step| R
+    ```
+
 What does and does not give a person a say on the plan:
 
 - **Lite:** its single approval covers the requirements and the plan, and the

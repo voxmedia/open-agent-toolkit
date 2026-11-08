@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 408" width="760" height="408" role="img" aria-labelledby="ps-title ps-desc">
+  <title id="ps-title">Requested install scope and where pack assets land</title>
+  <desc id="ps-desc">oat tools install with an optional pack name; the requested --scope decides where assets land. --scope project, any pack but core: the repository, in .agents/skills/, .agents/agents/, .oat/templates/ and .oat/scripts/. --scope project with core: core is not installed; with no pack name it is skipped, and naming core exits 1. --scope user, or no --scope for a pack not yet installed: the home directory, in ~/.agents/skills/, ~/.agents/agents/, ~/.oat/templates/, ~/.oat/scripts/ and, for core, ~/.oat/docs/. No --scope for a pack already installed: it keeps its current placement, project, user or both.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ps-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ps-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="408" rx="12" ry="12"/>
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 260 92 L 260 108 Q 260 116 252 116 L 112 116 Q 104 116 104 124 L 104 235" marker-end="url(#ps-arrow)"/>
+    <path class="edge" d="M 340 92 L 340 108 Q 340 116 332 116 L 296 116 Q 288 116 288 124 L 288 235" marker-end="url(#ps-arrow)"/>
+    <path class="edge" d="M 420 92 L 420 108 Q 420 116 428 116 L 464 116 Q 472 116 472 124 L 472 235" marker-end="url(#ps-arrow)"/>
+    <path class="edge" d="M 500 92 L 500 108 Q 500 116 508 116 L 648 116 Q 656 116 656 124 L 656 235" marker-end="url(#ps-arrow)"/>
+  </g>
+
+  <!-- Edge labels (two lines, background masks the edge) -->
+  <rect class="label-bg" x="34" y="150" width="140" height="44" rx="4" ry="4"/>
+  <text class="sans el" x="104" y="167" text-anchor="middle"><tspan class="mono">--scope project</tspan></text>
+  <text class="sans el" x="104" y="186" text-anchor="middle">any pack but core</text>
+  <rect class="label-bg" x="218" y="150" width="140" height="44" rx="4" ry="4"/>
+  <text class="sans el" x="288" y="167" text-anchor="middle"><tspan class="mono">--scope project</tspan></text>
+  <text class="sans el" x="288" y="186" text-anchor="middle">core</text>
+  <rect class="label-bg" x="390" y="150" width="164" height="44" rx="4" ry="4"/>
+  <text class="sans el" x="472" y="167" text-anchor="middle"><tspan class="mono">--scope user</tspan>, or no</text>
+  <text class="sans el" x="472" y="186" text-anchor="middle"><tspan class="mono">--scope</tspan>, new pack</text>
+  <rect class="label-bg" x="596" y="150" width="120" height="44" rx="4" ry="4"/>
+  <text class="sans el" x="656" y="167" text-anchor="middle">no <tspan class="mono">--scope</tspan>,</text>
+  <text class="sans el" x="656" y="186" text-anchor="middle">pack installed</text>
+
+  <!-- ROOT -->
+  <rect class="node-em" x="190" y="24" width="380" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="380" y="53" text-anchor="middle">oat tools install [pack]</text>
+  <text class="sans s" x="380" y="75" text-anchor="middle">Requested <tspan class="mono">--scope</tspan></text>
+
+  <!-- PROJ -->
+  <rect class="node" x="20" y="236" width="168" height="126" rx="8" ry="8"/>
+  <text class="sans t" x="104" y="262" text-anchor="middle">Repository</text>
+  <text class="mono s" x="104" y="286" text-anchor="middle">.agents/skills/</text>
+  <text class="mono s" x="104" y="306" text-anchor="middle">.agents/agents/</text>
+  <text class="mono s" x="104" y="326" text-anchor="middle">.oat/templates/</text>
+  <text class="mono s" x="104" y="346" text-anchor="middle">.oat/scripts/</text>
+
+  <!-- CORE -->
+  <rect class="node" x="204" y="236" width="168" height="126" rx="8" ry="8"/>
+  <text class="sans t" x="288" y="262" text-anchor="middle">core not installed</text>
+  <text class="sans s" x="288" y="286" text-anchor="middle">No pack name:</text>
+  <text class="sans s" x="288" y="306" text-anchor="middle">core is skipped</text>
+  <text class="sans s" x="288" y="326" text-anchor="middle">core named:</text>
+  <text class="sans s" x="288" y="346" text-anchor="middle">exit 1</text>
+
+  <!-- USER -->
+  <rect class="node" x="388" y="236" width="168" height="146" rx="8" ry="8"/>
+  <text class="sans t" x="472" y="262" text-anchor="middle">Home directory</text>
+  <text class="mono s" x="472" y="286" text-anchor="middle">~/.agents/skills/</text>
+  <text class="mono s" x="472" y="306" text-anchor="middle">~/.agents/agents/</text>
+  <text class="mono s" x="472" y="326" text-anchor="middle">~/.oat/templates/</text>
+  <text class="mono s" x="472" y="346" text-anchor="middle">~/.oat/scripts/</text>
+  <text class="mono s" x="472" y="366" text-anchor="middle">~/.oat/docs/ (core)</text>
+
+  <!-- KEEP -->
+  <rect class="node" x="572" y="236" width="168" height="106" rx="8" ry="8"/>
+  <text class="sans t" x="656" y="262" text-anchor="middle">Current placement</text>
+  <text class="sans s" x="656" y="286" text-anchor="middle">Project, user</text>
+  <text class="sans s" x="656" y="306" text-anchor="middle">or both, as</text>
+  <text class="sans s" x="656" y="326" text-anchor="middle">already installed</text>
+</svg>

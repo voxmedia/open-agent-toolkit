@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 708" width="760" height="708" role="img" aria-labelledby="ds-title ds-desc">
+  <title id="ds-title">Where OAT files live and what Git commits</title>
+  <desc id="ds-desc">Where OAT files live and whether Git commits them. Repository, .oat/ and .oat/repo/ columns. Not ignored, commit: .oat/config.json, sync/config.json, projects/shared/&lt;name&gt;/, projects/synced/&lt;name&gt;.json; .oat/repo/pjm/, pjm/remote/bindings/, reference/. Not ignored, team choice: sync/manifest.json, templates/, scripts/, ideas/. Ignored by the # OAT core block: config.local.json, state.md (dashboard), projects/local/, projects/archived/, projects/synced/&lt;name&gt;/. In the # OAT local paths block, when added (dashed): **/analysis/, **/pr/, **/reviews/archived/, ideas/; .oat/repo/analysis/. Home directory ~/.oat/, not in the repository: config.json, sync/config.json, sync/manifest.json, templates/, scripts/, docs/, ideas/. Git directory &lt;git-common-dir&gt;/oat/, never committed: pjm-remote/.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ds-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ds-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="708" rx="12" ry="12"/>
+  <!-- Containers -->
+  <rect class="group" x="16" y="16" width="492" height="676" rx="12" ry="12"/>
+  <text class="sans t" x="32" y="46">Repository</text>
+  <text class="mono t" x="44" y="84">.oat/</text>
+  <text class="mono t" x="316" y="84">.oat/repo/</text>
+  <rect class="group" x="524" y="16" width="220" height="290" rx="12" ry="12"/>
+  <text class="sans t" x="540" y="46">Home directory</text>
+  <text class="mono t" x="552" y="84">~/.oat/</text>
+  <rect class="group" x="524" y="322" width="220" height="164" rx="12" ry="12"/>
+  <text class="sans t" x="540" y="352">Git directory</text>
+  <text class="mono s" x="552" y="384">&lt;git-common-dir&gt;/oat/</text>
+
+  <!-- COMMIT -->
+  <rect class="node-em" x="28" y="100" width="468" height="130" rx="8" ry="8"/>
+  <text class="sans t" x="44" y="126">Not ignored: commit</text>
+  <text class="mono s" x="44" y="152">config.json</text>
+  <text class="mono s" x="44" y="172">sync/config.json</text>
+  <text class="mono s" x="44" y="192">projects/shared/&lt;name&gt;/</text>
+  <text class="mono s" x="44" y="212">projects/synced/&lt;name&gt;.json</text>
+  <text class="mono s" x="316" y="152">pjm/</text>
+  <text class="mono s" x="316" y="172">pjm/remote/bindings/</text>
+  <text class="mono s" x="316" y="192">reference/</text>
+
+  <!-- TEAM -->
+  <rect class="node" x="28" y="242" width="468" height="130" rx="8" ry="8"/>
+  <text class="sans t" x="44" y="268">Not ignored: team choice</text>
+  <text class="mono s" x="44" y="294">sync/manifest.json</text>
+  <text class="mono s" x="44" y="314">templates/</text>
+  <text class="mono s" x="44" y="334">scripts/</text>
+  <text class="mono s" x="44" y="354">ideas/</text>
+
+  <!-- CORE -->
+  <rect class="node" x="28" y="384" width="468" height="150" rx="8" ry="8"/>
+  <text class="sans t" x="44" y="410">Ignored by the <tspan class="mono"># OAT core</tspan> block</text>
+  <text class="mono s" x="44" y="436">config.local.json</text>
+  <text class="mono s" x="44" y="456">state.md (dashboard)</text>
+  <text class="mono s" x="44" y="476">projects/local/</text>
+  <text class="mono s" x="44" y="496">projects/archived/</text>
+  <text class="mono s" x="44" y="516">projects/synced/&lt;name&gt;/</text>
+
+  <!-- LOCALPATHS -->
+  <rect class="node-opt" x="28" y="546" width="468" height="130" rx="8" ry="8"/>
+  <text class="sans t" x="44" y="572">In the <tspan class="mono"># OAT local paths</tspan> block, when added</text>
+  <text class="mono s" x="44" y="598">**/analysis/</text>
+  <text class="mono s" x="44" y="618">**/pr/</text>
+  <text class="mono s" x="44" y="638">**/reviews/archived/</text>
+  <text class="mono s" x="44" y="658">ideas/</text>
+  <text class="mono s" x="316" y="598">analysis/</text>
+
+  <!-- HOME -->
+  <rect class="node" x="536" y="100" width="196" height="190" rx="8" ry="8"/>
+  <text class="sans t" x="552" y="126">Not in the repository</text>
+  <text class="mono s" x="552" y="152">config.json</text>
+  <text class="mono s" x="552" y="172">sync/config.json</text>
+  <text class="mono s" x="552" y="192">sync/manifest.json</text>
+  <text class="mono s" x="552" y="212">templates/</text>
+  <text class="mono s" x="552" y="232">scripts/</text>
+  <text class="mono s" x="552" y="252">docs/</text>
+  <text class="mono s" x="552" y="272">ideas/</text>
+
+  <!-- GITDIR -->
+  <rect class="node" x="536" y="400" width="196" height="70" rx="8" ry="8"/>
+  <text class="sans t" x="552" y="426">Never committed</text>
+  <text class="mono s" x="552" y="452">pjm-remote/</text>
+</svg>

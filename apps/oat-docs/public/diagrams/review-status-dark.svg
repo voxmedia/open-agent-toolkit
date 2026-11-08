@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 284" width="720" height="284" role="img" aria-labelledby="rs-title rs-desc">
+  <title id="rs-title">Review row status progression</title>
+  <desc id="rs-desc">Each row in the plan.md Reviews table is one review event. A seeded pending placeholder becomes received when a review is written, awaiting review-receive. Review-receive moves a received row to passed when nothing is left to fix, or to fixes_added when it queues fix tasks. Implementing the fix tasks moves the row to fixes_completed. A re-review appends a new row, which starts at received.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="rs-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="rs-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="284" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- P -> R -->
+    <path class="edge" d="M 240 74 L 259 74" marker-end="url(#rs-arrow)"/>
+    <!-- R -> PASS -->
+    <path class="edge" d="M 460 74 L 479 74" marker-end="url(#rs-arrow)"/>
+    <!-- R -> FA -->
+    <path class="edge" d="M 360 108 L 360 175" marker-end="url(#rs-arrow)"/>
+    <!-- FA -> FC -->
+    <path class="edge" d="M 260 210 L 241 210" marker-end="url(#rs-arrow)"/>
+    <!-- FC -> R (re-review appends a new row) -->
+    <path class="edge" d="M 140 176 L 140 150 Q 140 142 148 142 L 302 142 Q 310 142 310 134 L 310 109" marker-end="url(#rs-arrow)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <text class="sans s" x="225" y="135" text-anchor="middle">re-review: new row</text>
+
+  <!-- P: pending -->
+  <rect class="node" x="40" y="40" width="200" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="140" y="68" text-anchor="middle">pending</text>
+  <text class="sans s" x="140" y="90" text-anchor="middle">seeded placeholder row</text>
+
+  <!-- R: received -->
+  <rect class="node-em" x="260" y="40" width="200" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="360" y="68" text-anchor="middle">received</text>
+  <text class="sans s" x="360" y="90" text-anchor="middle">awaiting review-receive</text>
+
+  <!-- PASS: passed -->
+  <rect class="node" x="480" y="40" width="200" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="580" y="68" text-anchor="middle">passed</text>
+  <text class="sans s" x="580" y="90" text-anchor="middle">receive: nothing left to fix</text>
+
+  <!-- FA: fixes_added -->
+  <rect class="node" x="260" y="176" width="200" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="360" y="204" text-anchor="middle">fixes_added</text>
+  <text class="sans s" x="360" y="226" text-anchor="middle">receive queued fix tasks</text>
+
+  <!-- FC: fixes_completed -->
+  <rect class="node" x="40" y="176" width="200" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="140" y="204" text-anchor="middle">fixes_completed</text>
+  <text class="sans s" x="140" y="226" text-anchor="middle">fix tasks implemented</text>
+
+</svg>

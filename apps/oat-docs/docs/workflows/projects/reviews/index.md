@@ -74,6 +74,37 @@ command is read-only and decides nothing.
 
 `missing` is handled exactly like `pending`.
 
+The listing decides nothing by itself; the PR skill acts on it. When nothing is
+pending or missing the PR step continues; otherwise an interactive run offers
+three choices and a non-interactive run stops before the PR without writing a
+waiver. After a waiver, the re-run listing shows the review as waived and the
+PR step continues.
+
+=== "Diagram"
+
+    ![oat review pending lists pending or missing reviews before a PR; interactive runs run, waive or stop, and a waiver lets the PR continue; others stop](/diagrams/review-pending-light.svg)
+    ![oat review pending lists pending or missing reviews before a PR; interactive runs run, waive or stop, and a waiver lets the PR continue; others stop](/diagrams/review-pending-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Pending required reviews before a PR
+      accDescr: oat review pending lists the required reviews for the PR scope. When none is pending or missing, the PR step continues. Pending or missing reviews lead an interactive run to offer run them, which ends this run, waive with a reason, or stop, and a non-interactive run to stop before the PR without ever writing a waiver. Choosing waive writes a waiver line in implementation.md, leaves the Reviews table unchanged, and re-runs the listing, after which the PR step continues.
+      A["oat review pending\nrequired reviews for the PR's scope"]
+      B["None pending or missing\nthe PR step continues"]
+      C["Pending or missing\nlatest row is pending, or a\nconcrete phase has no row"]
+      D["Interactive run\nrun them (ends this run),\nwaive with a reason, or stop"]
+      E["Non-interactive run\nstops before the PR;\nnever writes a waiver"]
+      F["Waiver line\nin implementation.md;\nReviews table unchanged"]
+      A --> B
+      A --> C
+      C --> D
+      C --> E
+      D -.->|you choose waive| F
+      F -.->|re-run listing| B
+    ```
+
 When rows are pending or missing, an interactive run offers to run them, waive them with a
 recorded reason, or stop. A non-interactive run stops at that boundary; in
 pr-final it is the autonomy gate `PRFINAL-06`. A waiver is written only on the
@@ -160,6 +191,34 @@ Status progression in `plan.md` Reviews table:
 - `fixes_added`
 - `fixes_completed`
 - `passed`
+
+A row only moves forward. Review-receive sends a `received` row to `passed`
+when nothing is left to fix, or to `fixes_added` when it queues fix tasks; a
+re-review never moves an old row back, it appends a new row that starts at
+`received`.
+
+=== "Diagram"
+
+    ![A Reviews row goes from pending to received; receive moves it to passed or fixes_added, then fixes_completed; a re-review appends a new received row](/diagrams/review-status-light.svg)
+    ![A Reviews row goes from pending to received; receive moves it to passed or fixes_added, then fixes_completed; a re-review appends a new received row](/diagrams/review-status-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      accTitle: Review row status progression
+      accDescr: A seeded pending row becomes received when a review is written. Review-receive moves it to passed when nothing is left to fix, or to fixes_added when it queues fix tasks. Implemented fix tasks move it to fixes_completed. A re-review appends a new row that starts at received.
+      P["pending\nseeded placeholder row"]
+      R["received\nawaiting review-receive"]
+      PASS["passed\nreceive: nothing left to fix"]
+      FA["fixes_added\nreceive queued fix tasks"]
+      FC["fixes_completed\nfix tasks implemented"]
+      P --> R
+      R --> PASS
+      R --> FA
+      FA --> FC
+      FC -->|re-review: new row| R
+    ```
 
 Each row is an append-ordered review event. Duplicate scope and type rows are
 valid because separate reviews can cover the same subject. Scope, type, and the

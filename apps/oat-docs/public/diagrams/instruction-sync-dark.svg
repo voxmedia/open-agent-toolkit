@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 724" width="720" height="724" role="img" aria-labelledby="is-title is-desc">
+  <title id="is-title">Instruction sync strategies and states</title>
+  <desc id="is-desc">AGENTS.md is canonical in every directory the scan reaches. The effective strategy is the --strategy flag, then instructions.claude.shims, then the default none. Under none there is no CLAUDE.md beside AGENTS.md: ok means no CLAUDE.md, managed_shim is removed all or nothing, unmanaged is kept with a warning, and a broken or unreadable CLAUDE.md symlink is reported unmanaged. Under pointer, symlink or copy there is a CLAUDE.md shim in that shape: ok means the shim has that shape, missing is created by sync, and content_mismatch is rewritten with --force. In either strategy a stray lone CLAUDE.md is adopted into AGENTS.md, then removed under none (unless removal is blocked) or rewritten as a shim, and any other unreadable file is content_mismatch and is repaired by hand.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="is-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="is-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="724" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- CANON -> STRAT -->
+    <path class="edge" d="M 360 108 L 360 147" marker-end="url(#is-arrow)"/>
+    <!-- STRAT -> NONE -->
+    <path class="edge" d="M 310 234 L 310 256 Q 310 264 302 264 L 203 264 Q 195 264 195 272 L 195 293" marker-end="url(#is-arrow)"/>
+    <!-- STRAT -> SHIM -->
+    <path class="edge" d="M 410 234 L 410 256 Q 410 264 418 264 L 517 264 Q 525 264 525 272 L 525 293" marker-end="url(#is-arrow)"/>
+    <!-- NONE -> NS -->
+    <path class="edge" d="M 195 362 L 195 401" marker-end="url(#is-arrow)"/>
+    <!-- SHIM -> SS -->
+    <path class="edge" d="M 525 362 L 525 401" marker-end="url(#is-arrow)"/>
+    <!-- NS -> STR -->
+    <path class="edge" d="M 195 524 L 195 579" marker-end="url(#is-arrow)"/>
+    <!-- SS -> STR -->
+    <path class="edge" d="M 525 524 L 525 579" marker-end="url(#is-arrow)"/>
+  </g>
+
+  <!-- CANON: AGENTS.md is canonical -->
+  <rect class="node" x="190" y="40" width="340" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="68" text-anchor="middle"><tspan class="mono">AGENTS.md</tspan> is canonical</text>
+  <text class="sans s" x="360" y="90" text-anchor="middle">in every directory the scan reaches</text>
+
+  <!-- STRAT: Effective strategy -->
+  <rect class="node-em" x="160" y="148" width="400" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="176" text-anchor="middle">Effective strategy</text>
+  <text class="sans s" x="360" y="198" text-anchor="middle"><tspan class="mono">--strategy</tspan>, then <tspan class="mono">instructions.claude.shims</tspan>,</text>
+  <text class="sans s" x="360" y="216" text-anchor="middle">then the default <tspan class="mono">none</tspan></text>
+
+  <!-- NONE: none (default) -->
+  <rect class="node" x="40" y="294" width="310" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="322" text-anchor="middle"><tspan class="mono">none</tspan> (default)</text>
+  <text class="sans s" x="195" y="344" text-anchor="middle">no <tspan class="mono">CLAUDE.md</tspan> beside <tspan class="mono">AGENTS.md</tspan></text>
+
+  <!-- SHIM: pointer, symlink or copy -->
+  <rect class="node" x="370" y="294" width="310" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="525" y="322" text-anchor="middle"><tspan class="mono">pointer</tspan>, <tspan class="mono">symlink</tspan> or <tspan class="mono">copy</tspan></text>
+  <text class="sans s" x="525" y="344" text-anchor="middle">a <tspan class="mono">CLAUDE.md</tspan> shim in that shape</text>
+
+  <!-- NS: States under none -->
+  <rect class="node" x="40" y="402" width="310" height="122" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="430" text-anchor="middle">States under <tspan class="mono">none</tspan></text>
+  <text class="sans s" x="195" y="452" text-anchor="middle"><tspan class="mono">ok</tspan>: no <tspan class="mono">CLAUDE.md</tspan></text>
+  <text class="sans s" x="195" y="470" text-anchor="middle"><tspan class="mono">managed_shim</tspan>: removed, all or nothing</text>
+  <text class="sans s" x="195" y="488" text-anchor="middle"><tspan class="mono">unmanaged</tspan>: kept, with a warning</text>
+  <text class="sans s" x="195" y="506" text-anchor="middle">unreadable <tspan class="mono">CLAUDE.md</tspan> symlink: <tspan class="mono">unmanaged</tspan></text>
+
+  <!-- SS: States under a shim -->
+  <rect class="node" x="370" y="402" width="310" height="122" rx="8" ry="8"/>
+  <text class="sans t" x="525" y="430" text-anchor="middle">States under a shim</text>
+  <text class="sans s" x="525" y="452" text-anchor="middle"><tspan class="mono">ok</tspan>: the shim has that shape</text>
+  <text class="sans s" x="525" y="470" text-anchor="middle"><tspan class="mono">missing</tspan>: sync creates it</text>
+  <text class="sans s" x="525" y="488" text-anchor="middle"><tspan class="mono">content_mismatch</tspan>: <tspan class="mono">--force</tspan> rewrites it</text>
+
+  <!-- STR: In either strategy -->
+  <rect class="node" x="110" y="580" width="500" height="104" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="608" text-anchor="middle">In either strategy</text>
+  <text class="sans s" x="360" y="630" text-anchor="middle"><tspan class="mono">stray</tspan> (a lone <tspan class="mono">CLAUDE.md</tspan>): adopted into <tspan class="mono">AGENTS.md</tspan>,</text>
+  <text class="sans s" x="360" y="648" text-anchor="middle">then removed (<tspan class="mono">none</tspan>, unless blocked) or rewritten as a shim</text>
+  <text class="sans s" x="360" y="666" text-anchor="middle">other unreadable files: <tspan class="mono">content_mismatch</tspan>, repaired by hand</text>
+
+</svg>

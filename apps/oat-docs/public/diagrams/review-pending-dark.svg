@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 592" width="720" height="592" role="img" aria-labelledby="rp-title rp-desc">
+  <title id="rp-title">Pending required reviews before a PR</title>
+  <desc id="rp-desc">Before a PR, oat review pending lists the required reviews for the PR scope. When none is pending or missing, the PR step continues. When a required review is pending (its latest row is pending) or missing (a concrete phase has no row), an interactive run offers to run them, which ends this run, waive them with a reason, or stop, and a non-interactive run stops before the PR and never writes a waiver. If you choose to waive, a waiver line is written in implementation.md, the Reviews table is unchanged, and the listing is re-run: the waived review no longer counts as pending or missing, so the PR step continues.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="rp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="rp-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="592" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- A -> B -->
+    <path class="edge" d="M 310 108 L 310 131 Q 310 139 302 139 L 198 139 Q 190 139 190 147 L 190 169" marker-end="url(#rp-arrow)"/>
+    <!-- A -> C -->
+    <path class="edge" d="M 410 108 L 410 131 Q 410 139 418 139 L 522 139 Q 530 139 530 147 L 530 169" marker-end="url(#rp-arrow)"/>
+    <!-- C -> D -->
+    <path class="edge" d="M 505 256 L 505 279 Q 505 287 497 287 L 338 287 Q 330 287 330 295 L 330 317" marker-end="url(#rp-arrow)"/>
+    <!-- C -> E -->
+    <path class="edge" d="M 555 256 L 555 279 Q 555 287 563 287 L 567 287 Q 575 287 575 295 L 575 317" marker-end="url(#rp-arrow)"/>
+    <!-- D -> F (you choose waive) -->
+    <path class="edge-opt" d="M 330 404 L 330 465" marker-end="url(#rp-arrow-opt)"/>
+    <!-- F -> B (re-run listing) -->
+    <path class="edge-opt" d="M 220 509 L 128 509 Q 120 509 120 501 L 120 239" marker-end="url(#rp-arrow-opt)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <text class="sans s" x="342" y="440" text-anchor="start">you choose waive</text>
+  <text class="sans s" x="128" y="380" text-anchor="start">re-run listing</text>
+
+  <!-- A: oat review pending -->
+  <rect class="node-em" x="160" y="40" width="400" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="360" y="68" text-anchor="middle">oat review pending</text>
+  <text class="sans s" x="360" y="90" text-anchor="middle">required reviews for the PR's scope</text>
+
+  <!-- B: None pending or missing -->
+  <rect class="node" x="40" y="170" width="300" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="190" y="198" text-anchor="middle">None pending or missing</text>
+  <text class="sans s" x="190" y="220" text-anchor="middle">the PR step continues</text>
+
+  <!-- C: Pending or missing -->
+  <rect class="node" x="380" y="170" width="300" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="530" y="198" text-anchor="middle">Pending or missing</text>
+  <text class="sans s" x="530" y="220" text-anchor="middle">latest row is <tspan class="mono">pending</tspan>, or a</text>
+  <text class="sans s" x="530" y="238" text-anchor="middle">concrete phase has no row</text>
+
+  <!-- D: Interactive run -->
+  <rect class="node" x="220" y="318" width="220" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="330" y="346" text-anchor="middle">Interactive run</text>
+  <text class="sans s" x="330" y="368" text-anchor="middle">run them (ends this run),</text>
+  <text class="sans s" x="330" y="386" text-anchor="middle">waive with a reason, or stop</text>
+
+  <!-- E: Non-interactive run -->
+  <rect class="node" x="470" y="318" width="210" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="575" y="346" text-anchor="middle">Non-interactive run</text>
+  <text class="sans s" x="575" y="368" text-anchor="middle">stops before the PR;</text>
+  <text class="sans s" x="575" y="386" text-anchor="middle">never writes a waiver</text>
+
+  <!-- F: Waiver line -->
+  <rect class="node" x="220" y="466" width="220" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="330" y="494" text-anchor="middle">Waiver line</text>
+  <text class="sans s" x="330" y="516" text-anchor="middle">in <tspan class="mono">implementation.md</tspan>;</text>
+  <text class="sans s" x="330" y="534" text-anchor="middle">Reviews table unchanged</text>
+
+</svg>
