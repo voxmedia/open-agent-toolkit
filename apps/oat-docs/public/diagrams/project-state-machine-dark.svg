@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 896" width="760" height="896" role="img" aria-labelledby="psm-title psm-desc">
   <title id="psm-title">Project state machine by phase</title>
-  <desc id="psm-desc">Project state machine grouped by phase. Planning: Discovery in progress, Ready for spec, Spec in progress, Ready for design, Design in progress, Ready for plan, Plan in progress, Ready for implement, in that order. Two dashed edges labeled entry point lead into Plan in progress: one from Lite: batched interview (no discovery/spec/design), one from Brief or goal: interview (one Project Brief). Implementation: Ready for implement leads to Implement in progress, which leads to Implement complete. Review, in the plan.md Reviews table: Implement in progress leads to Review received; Review received leads to Fixes added when fixes are queued, or to Review passed when no fixes are queued; Fixes added leads to Fixes completed, Fixes completed to Review passed, and Review passed back to Implement in progress. PR and revision: Implement complete leads to PR open (pr_open); PR open leads to Revise (in_progress), which leads back to PR open; PR open leads to Complete.</desc>
+  <desc id="psm-desc">Project state machine grouped by phase. Planning: Discovery in progress, Ready for spec, Spec in progress, Ready for design, Design in progress, Ready for plan, Plan in progress, Ready for implement, in that order. Two dashed edges labeled entry point lead into Plan in progress: one from Lite: batched interview (no discovery/spec/design), one from Brief or goal: interview (one Project Brief). Implementation: Ready for implement leads to Implement in progress, which leads to Implement complete. Review, in the plan.md Reviews table: Implement in progress leads to Review received; Review received leads to Fixes added when fixes are queued, or to Review passed when no fixes are queued; Fixes added leads to Fixes completed; a re-review then adds a new row, so Fixes completed leads back to Review received (edge labeled re-review: new row); Review passed leads back to Implement in progress. PR and revision: Implement complete leads to PR open (pr_open); PR open leads to Revise (in_progress), which leads back to PR open; PR open leads to Complete.</desc>
   <style>
     svg {
       --bg: #161d27;
@@ -77,7 +77,7 @@
     <!-- FA -> FC -->
     <path class="edge" d="M 134 600 V 639" marker-end="url(#psm-arrow)"/>
     <!-- FC -> PASSED -->
-    <path class="edge" d="M 220 662 H 319" marker-end="url(#psm-arrow)"/>
+    <path class="edge" d="M 220 662 H 262 Q 270 662 270 654 V 600 Q 270 592 278 592 H 319" marker-end="url(#psm-arrow)"/>
     <!-- PASSED -> I -->
     <path class="edge" d="M 508 662 H 520 Q 528 662 528 654 V 502 Q 528 494 520 494 H 474 Q 470 494 470 490 V 483" marker-end="url(#psm-arrow)"/>
     <!-- IC -> PRO -->
@@ -98,7 +98,8 @@
   <text class="sans s" x="270" y="262" text-anchor="middle">entry point</text>
   <text class="sans s" x="278" y="330">entry point</text>
   <text class="sans s" x="270" y="570" text-anchor="middle">fixes queued</text>
-  <text class="sans s" x="406" y="624" text-anchor="end">no fixes queued</text>
+  <text class="sans s" x="422" y="624" text-anchor="start">no fixes queued</text>
+  <text class="sans s" x="278" y="626" text-anchor="start">re-review: new row</text>
 
   <!-- Nodes -->
   <!-- D -->

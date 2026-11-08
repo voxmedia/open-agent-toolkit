@@ -29,7 +29,7 @@ follows once implementation is complete.
     ```mermaid
     flowchart TD
       accTitle: Project state machine by phase
-      accDescr: Planning runs from discovery to ready for implement, with lite and brief or goal entering at plan in progress. Implementation leads to implement complete. A review loop returns to implementation. PR open loops through revise and ends at complete.
+      accDescr: Planning runs from discovery to ready for implement, with lite and brief or goal entering at plan in progress. Implementation leads to implement complete. A review loop, in which a re-review adds a new row, returns to implementation. PR open loops through revise and ends at complete.
       subgraph PLANNING["Planning"]
         D["Discovery in progress"] --> RS["Ready for spec"]
         RS --> S["Spec in progress"] --> RD["Ready for design"]
@@ -45,7 +45,7 @@ follows once implementation is complete.
         RV["Review received"] -->|fixes queued| FA["Fixes added"]
         RV -->|no fixes queued| PASSED["Review passed"]
         FA --> FC["Fixes completed"]
-        FC --> PASSED
+        FC -->|"re-review: new row"| RV
       end
       subgraph PRREV["PR and revision"]
         PRO["PR open (pr_open)"] --> REV["Revise (in_progress)"]
@@ -160,7 +160,7 @@ delivery boundary; see
 In `plan.md` Reviews table:
 
 - `pending` -> `received` -> `passed` when receive queues no fixes
-- `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed` after a re-review
+- `pending` -> `received` -> `fixes_added` -> `fixes_completed`; the re-review then adds a new row that starts at `received` and reaches `passed` when receive queues no fixes
 
 ## Guardrail
 
