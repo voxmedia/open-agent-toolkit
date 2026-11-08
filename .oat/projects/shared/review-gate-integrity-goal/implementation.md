@@ -2696,12 +2696,17 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 ### Task p16-t04: (review) Keep milestone identity when a state-selected final resolves to one phase
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-02
+**Handle:** direct:rgi-p16-impl-20261108-02:p16-t04
+**Commit:** c653bc0bf210c6d5c5631dbbfab5695499bf869e
 **Source review:** reviews/archived/range-review-2026-11-08T051752Z.md (M2)
 
 Intent: m03 exit gate M2. `sequenceSubject` (`packages/cli/src/commands/gate/convergence.ts:461`) makes a goal code run a milestone sequence only when its resolved scope is literally `final` or it has more than one phase, so p15's single-phase resolution of a state-selected `final` (which keeps `oat_review_requested_scope: final`) reads as a `scope:pNN` sequence. Carry the artifact's `oat_review_requested_scope` on `SequenceRun` (current and prior-run readers) and treat a requested `final` like a resolved `final` for the milestone subject. Ordinary single-phase review gates keep their scope sequence. Add one convergence-boundary test using p15-shaped frontmatter beside the existing ordinary-phase and literal-final controls; no other hardening.
 Files: `packages/cli/src/commands/gate/convergence.ts`, its convergence test
 Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+
+`SequenceRun` gains an optional `requestedScope`, filled from `oat_review_requested_scope` by both readers (the current run in `computeGateConvergence` and each prior run in `listGateRunArtifacts`, via a new `GateRunArtifact.requestedScope`), and `sequenceSubject` treats a requested `final` like a resolved `final` for the milestone subject; the existing one-milestone and non-empty-phase conditions still apply, so ordinary single-phase gates and an explicit whole-project `final` keep their scope sequence (12 insertions, 4 deletions in production code). One test in the captured-m02 block adapts the real m02 run-1 fixture to a `final` run followed by a p15-shaped run (`oat_review_scope: p02`, `oat_review_requested_scope: final`, `oat_review_phase_ids: [p02]`) on singleton milestone m02 and expects milestone m02 run 2 with 2 carried over; the existing ordinary-phase and literal-final `sequenceSubject` controls pass unchanged. The subject table row in `workflow-gates.md` names the requested scope. Proof: gate suites 514/514 (exit 0). Can-fail control: replacing the requested-scope condition with `false` failed the new test with `expected null` (exit 1); restored.
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
