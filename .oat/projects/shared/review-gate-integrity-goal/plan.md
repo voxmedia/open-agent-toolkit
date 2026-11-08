@@ -384,6 +384,7 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p08        | code     | passed          | 2026-11-08 | reviews/archived/p08-review-2026-11-08T002049Z.md           | dc43fa5b93a85ede751ba1df052239fc099eef25 | implement-phase | -                    |
 | p14        | code     | fixes_completed | 2026-11-08 | reviews/archived/p14-review-2026-11-08T011039Z.md           | 9e9c3083ced3eea68f9a50b3e503fd2be75554fa | implement-phase | -                    |
 | p14        | code     | passed          | 2026-11-08 | reviews/archived/p14-review-2026-11-08T014245Z.md           | 27f118621b1c2eff195d4c04e84b137761790b7e | implement-phase | -                    |
+| p15        | code     | passed          | 2026-11-08 | reviews/archived/p15-review-2026-11-08T020653Z.md           | a7e16e0a109d86ea8402cc530eb30363f920a955 | implement-phase | -                    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 

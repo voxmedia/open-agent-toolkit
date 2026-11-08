@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p08    | completed   | 1     | 1/1      |
-| p14    | completed   | 1     | 1/1      |
-| p15    | in_progress | 1     | 0/1      |
-| p16    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p14    | completed | 1     | 1/1      |
+| p15    | completed | 1     | 1/1      |
+| p16    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 12/15 phases accepted
+**Total:** 13/15 phases accepted
 
 ---
 
@@ -2575,7 +2575,7 @@ Scope: fix delta `c2be1b84d..27f118621` (p14-t07), fresh `oat-reviewer-claude-cl
 
 ## Phase p15: Goal milestone exit gate scope
 
-**Status:** in_progress
+**Status:** completed
 **Base:** d4f00d2ee622ce76bca9e42d1ca8e2aef6107018
 **Executor:** phase-implementer:rgi-p15-impl-20261108-01
 **Head:** a7e16e0a109d86ea8402cc530eb30363f920a955
@@ -2620,6 +2620,17 @@ Run after `pnpm --filter @open-agent-toolkit/cli build` (branch CLI 0.3.47, bund
 - negative control `released install: state-selected hint=final -> token=final` then `released state-selected: scope=final phase_ids=p01,p02,p03,p04 verdict=reconcile reason="sequential continuity: p03 base does not equal or descend from the previous head"`, the m02 incident's refusal.
 
 No model is dispatched: the probe runs each installed skill's Step 3.0 resolver verbatim and applies that install's Step 1 token selection, so the artifact recording (`oat_review_requested_scope: final`, scope token, `oat_review_phase_ids`) is evidenced by the p15-t01 contract tests.
+
+### Review Received: p15
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p15-review-2026-11-08T020653Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: `d4f00d2ee..a7e16e0a1` (p15-t01, p15-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p15-rev-20261108-01`, reconnaissance not attempted). The reviewer re-ran the isolated-HOME probe (branch resolves the state-selected `final` to m02's `p03-p04`; explicit `code final` stays whole-project; the released 0.3.46 install refuses with the m02 sequential-continuity error) and the contract suites (1262/1262, exit 0). Reviewer observations, not findings: a whole-project `final` after `declared_met` would still hit the squash-merge refusal at terminal closeout (outside Outcome 7; not adopted); the probe's exit code does not encode correctness, its output is read against the expected lines in its header.
+
+**Outcome:** passed; p15 accepted at head `a7e16e0a1` after one review cycle (no fix loop)
 
 ## Phase p16: m02 review-ledger follow-ups
 
@@ -2694,6 +2705,7 @@ No model is dispatched: the probe runs each installed skill's Step 3.0 resolver 
 - run/v1 · request=rgi-p14-fix-20261108-01 · scope=p14-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p14-impl-20261108-01 · observed=~ · match=~
 - run/v1 · request=rgi-p14-rev-20261108-02 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p15-impl-20261108-01 · scope=p15 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p15 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p15-rev-20261108-01 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
