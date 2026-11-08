@@ -21,7 +21,7 @@ oat_retro_evidence_sources:
   - source: session-transcript-pre-handoff
     status: unavailable
 oat_retro_promotions: complete
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -118,10 +118,12 @@ merging.
 
 - **Promotions:** `complete`. RP-01 through RP-03 are `applied` (AGENTS.md);
   RP-04 is `applied` (BL-261103-codex-gate-target-loses).
-- **Filing:** `proposed`. UP-01 through UP-03 are `proposed` with no
-  destination.
-- **Unsettled items:**
-  - UP-01 through UP-03: file through `oat-project-retro-file`.
+- **Filing:** `complete`. UP-01 through UP-03 are `filed` as repository
+  backlog items (destination commit `89cdeb15d`, unpushed):
+  - UP-01: BL-261108-give-goal-closeout-a-recorded;
+  - UP-02: BL-261108-stop-workflow-owned-commits;
+  - UP-03: BL-261108-derive-first-release-versions.
+- **Unsettled items:** none.
 
 ## What Went Well
 
@@ -425,12 +427,12 @@ Do not change the acceptance criteria.
 
 ### UP-01: Give goal closeout a recorded path for a squash-merged delivery with stale evidence
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
-- **Sanitized:** no
-- **Disposition-note:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-261108-give-goal-closeout-a-recorded.md
+- **Destination-receipt:** 89cdeb15daae51b40539a223b79870599a42a4ee
+- **Remote-visibility:** unpushed
+- **Sanitized:** yes
+- **Disposition-note:** Filed as a new high-priority backlog item; related BL-260820 and BL-261102 are distinct.
 
 **Problem.** When a post-gate fix lands on a milestone PR and the PR is
 squash-merged, the delivery's integrated review and exit gate read stale
@@ -453,12 +455,12 @@ waiver for a stale delivery at closeout, so `closeout-check` and
 
 ### UP-02: Stop workflow-owned commits from staling milestone delivery evidence
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
-- **Sanitized:** no
-- **Disposition-note:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-261108-stop-workflow-owned-commits.md
+- **Destination-receipt:** 89cdeb15daae51b40539a223b79870599a42a4ee
+- **Remote-visibility:** unpushed
+- **Sanitized:** yes
+- **Disposition-note:** Filed as a new high-priority backlog item.
 
 **Problem.** `oat project delivery check` treats every commit after a reviewed
 head as a disallowed successor, including commits the workflow itself makes:
@@ -480,12 +482,12 @@ record them explicitly as out of scope for freshness.
 
 ### UP-03: Derive release versions in the project summary from tags
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
-- **Sanitized:** no
-- **Disposition-note:** —
+- **Status:** filed
+- **Destination:** .oat/repo/pjm/backlog/items/BL-261108-derive-first-release-versions.md
+- **Destination-receipt:** 89cdeb15daae51b40539a223b79870599a42a4ee
+- **Remote-visibility:** unpushed
+- **Sanitized:** yes
+- **Disposition-note:** Filed as a new low-priority backlog item.
 
 **Problem.** The generated summary stated the wrong first release for two
 milestones (0.3.45 instead of 0.3.44 for m01, and 0.3.46 instead of 0.3.47 for
