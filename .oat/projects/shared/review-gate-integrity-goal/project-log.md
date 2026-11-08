@@ -330,6 +330,33 @@ m03 integrated review passed (0/0/0/2, bookkeeping-only fixes at receive, artifa
 
 Registered d03 for m03 (p08, p14, p15, p16) at https://github.com/voxmedia/open-agent-toolkit/pull/407; review-gate-integrity-goal-register-d03
 
+### 2026-11-08 · structural · oat-project-goal · m03
+
+Re-alignment entry for m03 (p08, p14, p15, p16): d03 (PR #407) observed merged at its agreed endpoint; review-gate-integrity-goal-realign-m03
+
+### 2026-11-08 · project · feedback · m03 p08 was over-built before the hardening stop
+
+**Category:** decision
+**Source:** review-gate-integrity-goal-learning-m03-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-08T16:48:19Z
+
+Observation: p08 shipped plan-gate amendment inference (about 150 source and 300 test lines in gate/convergence.ts) for a case no recorded plan gate has hit, and p14 copied one routing paragraph into 8 planning skills; the operator stopped hardening only after p14, and the PR #407 self-review's testing and complexity lenses found the cost after both gates had passed.
+Impact: the m03 delivery carries machinery the brief did not need, and fixing it now would have staled the exit gate and integrated review, so it was deferred to a backlog simplification item.
+Recommendation: apply Feature Planning Triage at each phase start of a goal milestone (name the observed case each new mechanism serves), and run a complexity lens in the per-phase review rather than first at PR self-review.
+Uncertainty: per-phase reviews were not briefed with the complexity-review standard, so it is unknown whether they would have caught it earlier.
+
+### 2026-11-08 · project · friction · Released toolchain lags the goal's own fixes
+
+**Category:** environment-limited
+**Source:** review-gate-integrity-goal-learning-m03-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-08T16:48:20Z
+
+Observation: the m03 exit gate needed operator scope routing (p08-p16) because installed CLI 0.3.46 predates p15's milestone-scoped final; oat-project-pr-progress and oat-project-goal are not model-invokable, so each milestone handoff stopped for the user to type a slash command.
+Impact: every milestone closeout of this goal paid manual routing and handoff steps that the shipped behavior removes only after release.
+Recommendation: release and run oat tools update after each milestone merge before re-alignment; the invocation gate change is in progress in a separate PR modeled on #387.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
