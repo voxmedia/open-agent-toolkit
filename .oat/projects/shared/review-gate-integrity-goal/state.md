@@ -77,7 +77,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m03
-oat_milestone_status: reviewing
+oat_milestone_status: delivering
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
