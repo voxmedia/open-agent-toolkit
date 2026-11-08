@@ -150,6 +150,40 @@ describe('markFindings', () => {
     expect(marked.counts).toEqual({ new: 1, carriedOver: 0, resolved: 1 });
   });
 
+  it('never counts IDs or numbers as words that corroborate a rewording', () => {
+    // The p08 review round 2 counterexample: two distinct Low findings on one
+    // tracking file that share only the phase ID and `stale`.
+    const marked = markFindings(
+      [
+        record(
+          'L1',
+          'p08 journal Head line is stale',
+          'implementation.md:1953',
+          'low',
+        ),
+      ],
+      [
+        record(
+          'L1',
+          'p08 Reviews row date is stale',
+          'implementation.md:1960',
+          'low',
+        ),
+      ],
+      'run-1',
+    );
+    expect(marked.findings[0]?.mark).toBe('new');
+    expect(marked.counts).toEqual({ new: 1, carriedOver: 0, resolved: 1 });
+    // Task IDs and plain numbers do not corroborate either.
+    expect(
+      markFindings(
+        [record('M1', 'p08-t04 step 12 drifted', 'plan.md:40')],
+        [record('M1', 'p08-t04 step 12 missing', 'plan.md:44')],
+        'run-1',
+      ).counts,
+    ).toEqual({ new: 1, carriedOver: 0, resolved: 1 });
+  });
+
   it('needs two shared title words to carry over a reworded finding', () => {
     const previous = [
       record('M1', 'Gate result omits ancestry', 'src/a.ts:10'),

@@ -719,7 +719,9 @@ merges findings:
 2. A reworded finding matches a remaining previous finding with the same
    location and severity, when that pair occurs once on each side and the
    rewording is corroborated. The two titles must share at least two words of
-   three or more letters, not counting common words such as `the` or `with`.
+   three or more characters. Common words such as `the` or `with` do not count,
+   and neither does any word containing a digit, such as a phase or task ID
+   (`p08`, `t04`) or a number.
    When both locations give a line, the lines must be at most 20 apart. Sharing
    a file is never enough on its own. A finding without a location never
    matches in this pass.
@@ -756,11 +758,17 @@ Everything left over is `new` (current) or resolved (previous).
 
 A carried-over finding also carries `previous: { runId, id, severity }`.
 `subject.kind` is `milestone`, `plan-amendment` (with `amendmentAfter`, the
-commit the latest earlier plan approval approved, or `null`), or `scope`. When the previous run's artifact no longer
-parses, or either run's finding records do not cover its counts, `status` is
-`unavailable` with a `reason` (`previous_artifact_unparsable`,
-`previous_findings_incomplete`, or `findings_incomplete`) and no counts. When
-the earlier runs cannot be read at all, the gate emits a
+commit the latest earlier plan approval approved, or `null`), or `scope`.
+
+When the previous run's artifact no longer parses, `status` is `unavailable`
+with `reason: previous_artifact_unparsable` and no counts. The gate parses
+earlier runs the way it validates its own, so an earlier run whose finding
+records do not cover its counts (a count-line-only artifact, for example) is
+also reported as `previous_artifact_unparsable`. A current run like that fails
+validation before convergence runs. The reasons `previous_findings_incomplete`
+and `findings_incomplete` come only from callers of the convergence API that
+supply a more lenient parser; `oat gate review` does not emit them. When the
+earlier runs cannot be read at all, the gate emits a
 `gate-convergence-unavailable` diagnostic and returns the result without
 `convergence`. Convergence never changes `status`, `blocking`,
 `receiveEligible`, or `handoff`.

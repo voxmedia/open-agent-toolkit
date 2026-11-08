@@ -203,12 +203,23 @@ const TITLE_STOP_WORDS = new Set([
   'with',
 ]);
 
-/** Title words that can corroborate a reworded finding. */
+/**
+ * Title words that can corroborate a reworded finding: title-key words of
+ * three or more characters, outside the common words above and without a
+ * digit. A token with a digit is an ID or a number (`p08`, `t04`, `m03`, `12`):
+ * findings about one phase or one record share it whether or not they are the
+ * same finding, so it never corroborates.
+ */
 function significantTitleWords(title: string): Set<string> {
   return new Set(
     findingTitleKey(title)
       .split(' ')
-      .filter((word) => word.length >= 3 && !TITLE_STOP_WORDS.has(word)),
+      .filter(
+        (word) =>
+          word.length >= 3 &&
+          !/\p{N}/u.test(word) &&
+          !TITLE_STOP_WORDS.has(word),
+      ),
   );
 }
 
@@ -220,8 +231,8 @@ export const REWORDED_MAX_LINE_DISTANCE = 20;
 /**
  * Whether two findings that share a file and a severity are one reworded
  * finding rather than two findings that happen to sit in one file: their
- * titles share at least two significant words and, when both locations give a
- * line, the lines are at most 20 apart.
+ * titles share at least two significant words (`significantTitleWords`) and,
+ * when both locations give a line, the lines are at most 20 apart.
  */
 function corroboratesRewording(
   current: ReviewFindingRecord,
