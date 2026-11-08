@@ -298,6 +298,10 @@ p15 accepted (goal milestone exit gate scope, Outcome 7): one review cycle, 0/0/
 
 p16 accepted (m02 review-ledger follow-ups, Outcome 4 upkeep): one review cycle, 0/0/0/0; no fix loop; check/resolve/pending number rows by data line, test-local writer removed; head b538b09ea. rgi-p16-outcome-20261108
 
+### 2026-11-08 · structural · oat-project-review-provide · p08-p16
+
+Review .oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-08T051752Z.md used one awaited intelligent-recon wave (gpt-6.1-terra medium); root reconciled its observations and independently reproduced 2 Medium convergence defects. 10ed9157-p14-recon-1
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
