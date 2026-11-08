@@ -3151,6 +3151,8 @@ Document any intentional deviations from the brief. Include accepted review find
 
 Declared at m03 re-alignment after d03 (PR #407) was observed merged. Outcomes 1 to 5 and 7 are met through d01 (PR #400), d02 (PR #403) and d03 (PR #407). Outcome 6 and its phase p09 (non-goal closeout freshness) are deferred by the operator: `BL-260820-track-pr-closeout-evidence` stays open for a separate project. The operator also chose to file one simplification backlog item for the PR #407 self-review findings (C1 to C3, T1 to T4) and the Bugbot classes-line contradiction recorded under Deferred Findings.
 
+**Closeout without delivery coverage (operator, 2026-11-08):** `oat project closeout-check` refuses on d01 (PR #400): its integrated review and exit gate bound `5599af21d`, and the post-gate Cursor Bugbot fix `4a870d471` (8 lines across `oat-project-plan-writing` and `oat-project-review-receive`, accepted without re-gating by operator decision on 2026-11-03) makes both stale. Fresh evidence would have to bind `4a870d471` exactly, which exists only on the squash-merged `goal/review-gate-integrity` branch and is not an ancestor of main, and the older-delivery recovery record belongs to `oat-project-pr-progress`, which is user-invoke only. The operator accepted d01 as delivered: the fix has run through m02 and m03 without incident. The goal stays declared met without a passing `closeout-check` and is not archived through `oat project complete-state`; summary and backlog closeout were done by hand.
+
 Filled at terminal closeout.
 
 ## References

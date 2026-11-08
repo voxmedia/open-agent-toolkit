@@ -357,6 +357,17 @@ Observation: the m03 exit gate needed operator scope routing (p08-p16) because i
 Impact: every milestone closeout of this goal paid manual routing and handoff steps that the shipped behavior removes only after release.
 Recommendation: release and run oat tools update after each milestone merge before re-alignment; the invocation gate change is in progress in a separate PR modeled on #387.
 
+### 2026-11-08 · project · friction · A squash-merged delivery cannot be re-gated
+
+**Category:** gotcha
+**Source:** review-gate-integrity-goal-learning-closeout-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-08T18:20:00Z
+
+Observation: d01's post-gate fix 4a870d471 staled its integrated review and exit gate, and recovery needs evidence bound to that exact head, which after a squash merge exists only on the merged branch and is not an ancestor of main; the recovery record owner (oat-project-pr-progress) is also not model-invokable.
+Impact: the goal could not pass closeout-check; the operator accepted d01 as delivered and closed out by hand.
+Recommendation: re-gate any post-gate fix before a goal milestone PR merges, or accept it with a recorded waiver at that time; closeout has no later path for a squash-merged delivery.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
