@@ -2583,6 +2583,22 @@ Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `g
 
 **Scope note (operator, 2026-11-08):** after p14 the operator asked that m03 stop growing hardening. p15 implements the brief's intent and exit evidence and nothing beyond them: no robustness for malformed inputs or extra pins that no contract source requires; a finding that asks for more goes to the operator as `new-hardening`.
 
+### Task p15-t01: State-selected goal milestone exit hint in review-provide
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p15-impl-20261108-01
+**Handle:** direct:rgi-p15-impl-20261108-01:p15-t01
+**Intent:** Add a review-provide Step 1 rule, mirroring the recovery-exit hint, that resolves a state-selected `final` hint in a goal milestone closeout to the active milestone's ordered accepted phases; keep explicit whole-project `code final`; pin it with contract tests; state it in implement's milestone closeout and the gates docs page.
+**Files:** `.agents/skills/oat-project-review-provide/SKILL.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `packages/cli/src/commands/init/tools/shared/goal-exit-scope-contracts.test.ts` (new), `packages/cli/src/validation/skills.test.ts` (version pins)
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** c02e6e7eb3b58d575e088943047286cc4f5be8ea
+
+Also changed: `.agents/docs/autonomy-contract.md` (HEAD prompt-site coverage: the edited gate-originated sentence `e516f72a0c53` remapped to `6707ebf7af52 -> NG`, plus `3baf9489fd2e`, `521648e9ac44`, `56b37f7cd17b` and closeout `10a78dc75cbf` as `NG`, as the recovery hint's sites are) and `.oat/sync/manifest.json` (`oat sync --scope project` refreshed `oatVersion` only; skill views are symlinks). Skill bump: review-provide 1.5.18 → 1.5.19; implement and every skill vendoring the autonomy contract were already bumped on this branch relative to `origin/main`. No CLI helper: the rule reuses the existing token selection and the Step 3.0 resolver, and the probe (p15-t02) shows the prose rule resolves correctly.
+
+Known Unknown decision (no Outcome, Constraint, Decision or Approach changes): a state-selected `final` hint means a goal milestone closeout when the goal is `oat_goal_status: active` and no `oat_goal_recovery` record is pending; it keeps its whole-project meaning when the request carries no state-selection instruction (explicit `code final`) or once `oat_goal_status` is `declared_met`. Reason: terminal closeout, the only goal path that reviews the whole project, runs after the declaration (`completion-and-closeout.md`: Steps 11–16 run only after a valid declaration), and the gate's own prompt reserves the whole-project review for a complete project, which an undeclared goal is not. A pending recovery keeps today's recovery-exit rule (at `exit_gate`) or the normal rules, so the two hints never overlap. Milestone status is not used because a stale exit carrier can route back to closeout from `implementing` or `reviewing`.
+
+Guard-can-fail (one mutation per pinned clause, inside `scripts/with-isolated-home.sh`, `vitest -t <test>` on `goal-exit-scope-contracts.test.ts`): removing `` `oat_goal_status` is `active`; `` / the argv sentence / the `declared_met` clause / `Read the active milestone (`oat_milestone`)` / `or widen it to the whole project` / `so earlier milestones' anchors are not read` / `the exact milestone set in `oat_review_phase_ids``(SKILL.md, searched from the hint heading) and`With no recovery pending`(closeout) each turned its test red (exit 1, 1 failed); each file was restored and`cmp`matched; both files'`shasum -c` matched the pre-run hashes; the restored suite passed 8/8. Proof suites: 31 files, 1262 tests, exit 0 (direct vitest, no Turborepo cache).
+
 ## Phase p16: m02 review-ledger follow-ups
 
 **Status:** pending
