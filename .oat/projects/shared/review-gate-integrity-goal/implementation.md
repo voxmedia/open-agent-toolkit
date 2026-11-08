@@ -2463,6 +2463,31 @@ Guard-can-fail (`bash /tmp/rgi-p14/gcf/t04.sh`, each neutralized, run, restored 
 
 Verification: isolated-HOME contract suites 1245/1245, exit 0 (autonomy inventory included); oxfmt check exit 0. No new version bump: every skill touched here carries its p14-t02 bump.
 
+### Task p14-t05: The complexity-review fallback starts from recorded classes and gate convergence
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t05
+**Intent:** Make the complexity-review fallback start from the recorded classes (Outcome 5) and, under the operator's 2026-11-08 scope note, make the exhaustion stop and the complexity review read the convergence marks p08 records (the gate result's `convergence` object and the gate record's `convergence= sequence= sequence_run= previous_run=` tokens) for a gate loop.
+**Files:** `.agents/docs/complexity-review-fallback.md` (vendored into implement, quick-start and review-receive, all bumped in p14-t02), `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Commit:** 3a901e74555e97f013f79c5dae2faf9958afb022
+
+Shape:
+
+- **Reviewer brief.** Two loop-history bullets: the `**Finding classes:**` line of each receipt in the loop plus the operator's decisions, and, for gate loops, each run's convergence marks.
+- **Convergence of a gate loop** (new subsection under Dispatch). For a run whose gate result the root still holds, the marks are its `convergence` object; otherwise the shipped snippet reads the tokens of the run's `project-log.md` entry by its `run=<runId>` token, for each `oat_gate_run_id` in the loop history. A run with no marks (a first run, or earlier runs unreadable) and `convergence=unavailable:<reason>` are reported as they are, never as zero counts. Nothing recomputes or rewrites the marks, and p08's computation is unchanged.
+- **Open findings.** Start from each receipt's recorded class, including `bookkeeping` and the cited source; classify only an unclassified finding and mark it `unrecorded`; a disagreement is a note, never a rewrite; for a gate loop the recurring families include the findings its marks carry over.
+- **Exhaustion stop.** The decision message's "why the loop stopped" lists the still-blocking findings with their recorded classes and, for a gate loop, each run's new, carried-over and resolved counts; with no reviewer route, the loop-stop reasons still carry them. Every owning step already shows this decision message, so no owning skill changed.
+
+Exit evidence (scope note's added check, `finding-classes-contracts.test.ts`, "complexity-review fallback …" block): prose pins for the brief, Open findings and the decision message, and an executed fixture. The fixture's log entries are this project's three real m02 exit-gate entries (`project-log.md`, run IDs from the archived range-review artifacts), with runs 2 and 3 carrying the tokens p08's own `convergenceLogTokens` produces for the counts p08's m02 probe recorded. The shipped snippet reads: r1 `no convergence marks`, r2 `convergence=new:1,carried:0,resolved:2 sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1`, r3 `convergence=new:0,carried:0,resolved:1 … sequence_run=3 previous_run=d738cd0e`. Controls: a stuck run (`carried:2`), an `unavailable:previous_artifact_unparsable` run, and a run with no log entry (`no convergence marks`). Because the tokens come from p08's formatter, a later change to its token format fails this test.
+
+Real-artifact probe: the shipped snippet run against this project's real `project-log.md` for the three m02 run IDs prints `no convergence marks` for each, exit 0. That is correct, because the released 0.3.45 gate that wrote them predates p08's tokens, and it shows the stop reports missing marks rather than zero counts.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t05.sh`, each neutralized, run, restored and checked with `cmp`): `sequence_run` dropped from the token pattern (1 failed); missing marks reported as zero counts (1 failed); Open findings reverted to re-deriving the classes (1 failed); the decision message's convergence clause removed (1 failed); the Recorded classes bullet removed (1 failed). Each exit 1; restored 46/46, exit 0.
+
+Verification: isolated-HOME contract suites 1249/1249, exit 0; CLI `pnpm run type-check` exit 0; oxlint and oxfmt check exit 0.
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
