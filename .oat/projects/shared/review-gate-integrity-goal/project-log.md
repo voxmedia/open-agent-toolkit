@@ -326,6 +326,10 @@ m03 exit gate rerun 9c23d08c (p08-p16, codex-6-sol-xhigh) passed 0/0/0/0 at b2f6
 
 m03 integrated review passed (0/0/0/2, bookkeeping-only fixes at receive, artifact m03-review-2026-11-08T055143Z); delivery check ok; m03 reviewing -> delivering; rgi-m03-int-receive-20261108
 
+### 2026-11-08 · structural · oat-project-pr-progress · d03
+
+Registered d03 for m03 (p08, p14, p15, p16) at https://github.com/voxmedia/open-agent-toolkit/pull/407; review-gate-integrity-goal-register-d03
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
