@@ -2578,6 +2578,9 @@ Scope: fix delta `c2be1b84d..27f118621` (p14-t07), fresh `oat-reviewer-claude-cl
 **Status:** in_progress
 **Base:** d4f00d2ee622ce76bca9e42d1ca8e2aef6107018
 **Executor:** phase-implementer:rgi-p15-impl-20261108-01
+**Head:** a7e16e0a109d86ea8402cc530eb30363f920a955
+
+Verification at head (phase implementer, explicit exit codes): `pnpm check` 0 (0/11 cached), `pnpm type-check` 0, `pnpm test` 0 (every test task a cache miss; cli 447 files passed), `pnpm build` 0 (replayed; `turbo run build --force` 0, 0/6 cached), `pnpm run check:skill-bumps` 0 (15 checks), `git fetch origin main` then `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0 (replay of the forced run's same six tasks), docs `generate-index` 0 and `git diff --exit-code -- apps/oat-docs/index.md` 0, `pnpm lint` 0, `pnpm format` 0, `pnpm oat:validate-skills` 0, isolated-HOME contract suites 0 (31 files, 1262 tests). Guard-can-fail 8/8 clauses; probe (p15-t02) exit 0 with the expected branch, explicit-`final` and released outcomes.
 
 Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`); one rule in review-provide's scope resolution with its contract tests and one probe, so no fan-out. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`. Phase recovery: default limit 10, no p15 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base.
 
