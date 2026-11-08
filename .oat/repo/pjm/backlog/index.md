@@ -530,6 +530,7 @@
 | BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail       | open   | medium   | task    | M        |
 | BL-261002-settle-dispatch-policy         | Settle dispatch policy precedence and stop legacy presets overwriting ladder columns                 | open   | medium   | task    | M        |
 | BL-260927-give-gate-receipts-portable    | Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative     | open   | medium   | feature | S        |
+| BL-261108-simplify-m03-gate-convergence  | Simplify m03 gate convergence and finding-class machinery                                            | open   | medium   | task    | M        |
 | BL-261025-tighten-oat-docs-check-rules   | Tighten oat docs check rules and diagnostics                                                         | open   | medium   | feature | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                           | open   | medium   | task    | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                        | open   | medium   | task    | S        |
