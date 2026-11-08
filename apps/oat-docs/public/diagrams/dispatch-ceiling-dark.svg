@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 574" width="750" height="574" role="img" aria-labelledby="dc-title dc-desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 590" width="750" height="590" role="img" aria-labelledby="dc-title dc-desc">
   <title id="dc-title">How a dispatch ceiling is resolved and applied</title>
-  <desc id="dc-desc">A config policy (workflow.dispatchPolicy, layered local over shared over user) wins over the project policy (oat_dispatch_policy in state.md, chosen at planning), which applies only when no config policy is set (dashed). With neither, there is no policy: an interactive run asks and a non-interactive run stops. The resolved policy is a capped tier (Economy to Frontier), Uncapped (any configured candidate), or Inherit Host Defaults (OAT passes no model or effort). For a capped tier, each phase takes the project cap or a narrower plan Dispatch Profile row, passed as --ceiling-tier, and the root requests one exact candidate with --candidate-model and --candidate-effort under that phase maximum. A candidate at or below the cap launches the phase: Codex and Claude enforce it, Cursor pins it without verifying, other providers treat it as advisory. A candidate above the cap is rejected (dashed).</desc>
+  <desc id="dc-desc">A config policy (workflow.dispatchPolicy, layered local over shared over user) wins over the project policy (oat_dispatch_policy in state.md, chosen at planning), which applies only when no config policy is set (dashed). With neither, there is no policy: an interactive run asks and a non-interactive run stops. The resolved policy is a capped tier (Economy to Frontier), Uncapped (any configured candidate), or Inherit Host Defaults (OAT passes no model or effort). For a capped tier, each phase takes the project cap or a narrower plan Dispatch Profile row, passed as --ceiling-tier, and the root requests one exact candidate under that phase maximum with --candidate-model and, where the provider takes it, --candidate-effort: required for Codex, optional for Claude, omitted for Cursor and other providers. A candidate at or below the cap launches the phase: Codex and Claude enforce it, Cursor pins it without verifying, other providers treat it as advisory. A candidate above the cap is rejected (dashed).</desc>
   <style>
     svg {
       --bg: #161d27;
@@ -16,7 +16,6 @@
     .canvas { fill: var(--bg); }
     .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
     .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
-    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
     .arrow { fill: var(--accent); }
@@ -25,7 +24,6 @@
     .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
     .t { fill: var(--text); font-size: 15px; font-weight: 600; }
     .s { fill: var(--text-2); font-size: 13px; }
-    .c { fill: var(--text); font-size: 13px; }
     .el { fill: var(--text-2); font-size: 13px; }
   </style>
   <defs>
@@ -37,7 +35,7 @@
     </marker>
   </defs>
 
-  <rect class="canvas" x="0" y="0" width="750" height="574" rx="12" ry="12"/>
+  <rect class="canvas" x="0" y="0" width="750" height="590" rx="12" ry="12"/>
 
   <!-- Edges (drawn first so nodes sit on top) -->
   <g class="edges">
@@ -48,9 +46,9 @@
     <path class="edge" d="M 360 210 L 360 257" marker-end="url(#dc-arrow)"/>
     <path class="edge" d="M 380 210 L 380 226 Q 380 234 388 234 L 592 234 Q 600 234 600 242 L 600 257" marker-end="url(#dc-arrow)"/>
     <path class="edge" d="M 130 318 L 130 355" marker-end="url(#dc-arrow)"/>
-    <path class="edge" d="M 220 404 L 269 404" marker-end="url(#dc-arrow)"/>
+    <path class="edge" d="M 220 404 L 249 404" marker-end="url(#dc-arrow)"/>
     <path class="edge" d="M 470 404 L 529 404" marker-end="url(#dc-arrow)"/>
-    <path class="edge-opt" d="M 370 442 L 370 489" marker-end="url(#dc-arrow-opt)"/>
+    <path class="edge-opt" d="M 360 466 L 360 505" marker-end="url(#dc-arrow-opt)"/>
   </g>
 
   <!-- CONFIG -->
@@ -105,10 +103,13 @@
   <text class="sans el" x="138" y="341" text-anchor="start">each phase</text>
 
   <!-- EXACT CANDIDATE -->
-  <rect class="node" x="270" y="366" width="200" height="76" rx="8" ry="8"/>
-  <text class="sans t" x="370" y="389" text-anchor="middle">Exact candidate</text>
-  <text class="mono s" x="370" y="409" text-anchor="middle">--candidate-model</text>
-  <text class="mono s" x="370" y="427" text-anchor="middle">--candidate-effort</text>
+  <rect class="node" x="250" y="342" width="220" height="124" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="362" text-anchor="middle">Exact candidate</text>
+  <text class="mono s" x="360" y="382" text-anchor="middle">--candidate-model</text>
+  <text class="mono s" x="360" y="400" text-anchor="middle">--candidate-effort:</text>
+  <text class="sans s" x="360" y="418" text-anchor="middle">required for Codex,</text>
+  <text class="sans s" x="360" y="436" text-anchor="middle">optional for Claude,</text>
+  <text class="sans s" x="360" y="454" text-anchor="middle">omitted for Cursor, others</text>
 
   <!-- LAUNCH -->
   <rect class="node" x="530" y="356" width="200" height="96" rx="8" ry="8"/>
@@ -120,9 +121,9 @@
   <text class="sans el" x="500" y="396" text-anchor="middle">≤ cap</text>
 
   <!-- REJECTED -->
-  <rect class="node" x="270" y="490" width="200" height="60" rx="8" ry="8"/>
-  <text class="sans t" x="370" y="514" text-anchor="middle">Rejected</text>
-  <text class="sans s" x="370" y="534" text-anchor="middle">above-cap candidate</text>
+  <rect class="node" x="260" y="506" width="200" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="530" text-anchor="middle">Rejected</text>
+  <text class="sans s" x="360" y="550" text-anchor="middle">above-cap candidate</text>
 
-  <text class="sans el" x="378" y="470" text-anchor="start">above the cap</text>
+  <text class="sans el" x="368" y="490" text-anchor="start">above the cap</text>
 </svg>

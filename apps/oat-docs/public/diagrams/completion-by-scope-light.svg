@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 680" width="740" height="680" role="img" aria-labelledby="cs-title cs-desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 796" width="760" height="796" role="img" aria-labelledby="cs-title cs-desc">
   <title id="cs-title">Completion by project scope</title>
-  <desc id="cs-desc">oat-project-complete reads the project scope. A local project is never archived: it stays in place and never exports a recap. Shared and synced projects are durable and reach an archive choice, set by workflow.archiveOnComplete or asked. Declined: a shared project stays where it is; a synced project keeps its ref and checkout and marks its record complete. Archived: oat project archive moves the project, copying it to archived/ and then removing the active copy, and a synced project moves to its completed ref. Archive then runs three conditional steps (dashed): summary export when archive.summaryExportPath is set (a synced project needs it to succeed), recap export when a recap run is selected, and shared-storage (S3) sync when archive.s3Uri and archive.s3SyncOnComplete are set; a synced project needs that upload to succeed.</desc>
+  <desc id="cs-desc">oat-project-complete reads the project scope. A local project is never archived: it stays in place and never exports a recap. Shared and synced projects are durable and reach an archive choice, set by workflow.archiveOnComplete or asked. Declined: a shared project stays where it is; a synced project keeps its ref and checkout and marks its record complete. Archived: oat project archive is one operation that snapshots the project into archived/; a shared project's active copy is removed right after the snapshot. Its conditional work (dashed) runs inside that operation: recap export, written before the snapshot when a recap run is selected; summary export when archive.summaryExportPath is set; and shared-storage (S3) sync when archive.s3Uri and archive.s3SyncOnComplete are set. A synced project needs its summary export and upload to succeed, and only then does synced cleanup move its ref to completed and remove its checkout.</desc>
   <style>
     svg {
       --bg: #ffffff;
@@ -16,7 +16,6 @@
     .canvas { fill: var(--bg); }
     .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
     .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
-    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
     .arrow { fill: var(--accent); }
@@ -25,7 +24,6 @@
     .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
     .t { fill: var(--text); font-size: 15px; font-weight: 600; }
     .s { fill: var(--text-2); font-size: 13px; }
-    .c { fill: var(--text); font-size: 13px; }
     .el { fill: var(--text-2); font-size: 13px; }
   </style>
   <defs>
@@ -37,7 +35,7 @@
     </marker>
   </defs>
 
-  <rect class="canvas" x="0" y="0" width="740" height="680" rx="12" ry="12"/>
+  <rect class="canvas" x="0" y="0" width="760" height="796" rx="12" ry="12"/>
 
   <!-- Edges (drawn first so nodes sit on top) -->
   <g class="edges">
@@ -53,8 +51,10 @@
     <!-- archive -> summary export -->
     <path class="edge-opt" d="M 590 508 L 590 524 Q 590 532 582 532 L 138 532 Q 130 532 130 540 L 130 559" marker-end="url(#cs-arrow-opt)"/>
     <!-- archive -> recap export -->
-    <path class="edge-opt" d="M 590 508 L 590 524 Q 590 532 582 532 L 378 532 Q 370 532 370 540 L 370 569" marker-end="url(#cs-arrow-opt)"/>
+    <path class="edge-opt" d="M 590 508 L 590 524 Q 590 532 582 532 L 378 532 Q 370 532 370 540 L 370 559" marker-end="url(#cs-arrow-opt)"/>
     <path class="edge-opt" d="M 630 508 L 630 559" marker-end="url(#cs-arrow-opt)"/>
+    <!-- archive -> synced cleanup (synced) -->
+    <path class="edge" d="M 720 460 L 734 460 Q 742 460 742 468 L 742 726 Q 742 734 734 734 L 721 734" marker-end="url(#cs-arrow)"/>
   </g>
 
   <!-- COMPLETE -->
@@ -98,12 +98,12 @@
   <text class="sans s" x="370" y="455" text-anchor="middle">shared: stays where it is</text>
   <text class="sans s" x="370" y="473" text-anchor="middle">synced: ref and checkout kept</text>
 
-  <!-- ARCHIVE -->
+  <!-- ARCHIVE (one operation) -->
   <rect class="node" x="500" y="412" width="220" height="96" rx="8" ry="8"/>
   <text class="mono t" x="610" y="436" text-anchor="middle">oat project archive</text>
-  <text class="sans s" x="610" y="456" text-anchor="middle">copies to archived/,</text>
-  <text class="sans s" x="610" y="474" text-anchor="middle">then removes the active copy</text>
-  <text class="sans s" x="610" y="492" text-anchor="middle">synced: moves to completed ref</text>
+  <text class="sans s" x="610" y="456" text-anchor="middle">snapshot to archived/</text>
+  <text class="sans s" x="610" y="474" text-anchor="middle">shared: active copy removed</text>
+  <text class="sans s" x="610" y="492" text-anchor="middle">right after the snapshot</text>
 
   <text class="sans el" x="362" y="404" text-anchor="end">declined</text>
 
@@ -117,10 +117,11 @@
   <text class="sans s" x="130" y="640" text-anchor="middle">synced: must succeed</text>
 
   <!-- RECAP EXPORT -->
-  <rect class="node" x="260" y="570" width="220" height="76" rx="8" ry="8"/>
-  <text class="sans t" x="370" y="593" text-anchor="middle">Recap export</text>
-  <text class="sans s" x="370" y="613" text-anchor="middle">if a recap run is selected</text>
-  <text class="sans s" x="370" y="631" text-anchor="middle">one tracked page</text>
+  <rect class="node" x="260" y="560" width="220" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="584" text-anchor="middle">Recap export</text>
+  <text class="sans s" x="370" y="604" text-anchor="middle">if a recap run is selected</text>
+  <text class="sans s" x="370" y="622" text-anchor="middle">one tracked page,</text>
+  <text class="sans s" x="370" y="640" text-anchor="middle">written before the snapshot</text>
 
   <!-- S3 SYNC -->
   <rect class="node" x="500" y="560" width="220" height="96" rx="8" ry="8"/>
@@ -131,7 +132,15 @@
 
   <text class="sans el" x="138" y="552" text-anchor="start">if set</text>
 
-  <text class="sans el" x="378" y="556" text-anchor="start">if selected</text>
+  <text class="sans el" x="378" y="552" text-anchor="start">if selected</text>
+
+  <!-- SYNCED CLEANUP -->
+  <rect class="node" x="380" y="696" width="340" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="550" y="719" text-anchor="middle">Synced cleanup</text>
+  <text class="sans s" x="550" y="739" text-anchor="middle">only after configured exports succeed</text>
+  <text class="sans s" x="550" y="757" text-anchor="middle">ref moves to completed, checkout removed</text>
+
+  <text class="sans el" x="734" y="684" text-anchor="end">synced</text>
 
   <text class="sans el" x="638" y="538" text-anchor="start">if set</text>
 </svg>

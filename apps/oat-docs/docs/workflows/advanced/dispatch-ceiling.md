@@ -50,7 +50,7 @@ project chose in `state.md`. For what each dispatch records as evidence, see
     ```mermaid
     flowchart TD
       accTitle: How a dispatch ceiling is resolved and applied
-      accDescr: A config dispatch policy wins over the project policy in state.md, which applies only when no config policy is set. With neither, an interactive run asks and a non-interactive run stops. A capped tier gives each phase a maximum, the project cap or a narrower Dispatch Profile row, passed as --ceiling-tier. Under it the root requests one exact candidate with --candidate-model and --candidate-effort; at or below the cap the phase launches, above it the request is rejected. Uncapped allows any configured candidate; Inherit Host Defaults passes no model or effort.
+      accDescr: A config dispatch policy wins over the project policy in state.md, which applies only when no config policy is set. With neither, an interactive run asks and a non-interactive run stops. A capped tier gives each phase a maximum, the project cap or a narrower Dispatch Profile row, passed as --ceiling-tier. Under it the root requests one exact candidate with --candidate-model and, where the provider takes it, --candidate-effort (required for Codex, optional for Claude, omitted for Cursor and others); at or below the cap the phase launches, above it the request is rejected. Uncapped allows any configured candidate; Inherit Host Defaults passes no model or effort.
       CFG["Config policy\nworkflow.dispatchPolicy\nlocal #gt; shared #gt; user"] --> RES["Policy resolution\nconfig wins over state.md"]
       PRJ["Project policy\noat_dispatch_policy\nstate.md, chosen at planning"] -.->|"if no config policy"| RES
       RES -.->|"neither set"| NONE["No policy\ninteractive: asks\nnon-interactive: stops"]
@@ -58,7 +58,7 @@ project chose in `state.md`. For what each dispatch records as evidence, see
       RES --> UNC["Uncapped\nany configured candidate"]
       RES --> INH["Inherit Host Defaults\nOAT passes no model or effort"]
       CAP -->|"each phase"| PM["Phase maximum\nproject cap, or narrower\nplan Dispatch Profile row\npassed as --ceiling-tier"]
-      PM --> EX["Exact candidate\n--candidate-model\n--candidate-effort"]
+      PM --> EX["Exact candidate\n--candidate-model\n--candidate-effort:\nrequired for Codex,\noptional for Claude,\nomitted for Cursor, others"]
       EX -->|"≤ cap"| LA["Launch the phase\nCodex, Claude: enforced\nCursor: pinned, not verified\nothers: advisory"]
       EX -.->|"above the cap"| REJ["Rejected\nabove-cap candidate"]
     ```

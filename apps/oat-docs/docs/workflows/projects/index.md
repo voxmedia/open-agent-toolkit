@@ -27,7 +27,7 @@ depend on the workflow mode or on a choice such as running a retrospective.
     ```mermaid
     flowchart LR
       accTitle: One project record across the lifecycle
-      accDescr: Each lifecycle stage writes into one project folder. Solid nodes are in every project; dashed nodes depend on the workflow mode or a choice. state.md is updated at every stage; project-log.md is created on the first append unless workflow.projectLog is false.
+      accDescr: Each lifecycle stage writes into one project folder. Solid nodes are in every project; dashed nodes depend on the workflow mode or a choice. state.md is updated at every stage. project-log.md follows workflow.projectLog: auto creates it on the first append, true or --with-project-log also scaffolds it with the project, and false creates none automatically.
       subgraph STAGES["Stages"]
         direction TB
         D["Discovery"] --> SD["Spec, design"] --> P["Plan"] --> I["Implement"] --> RP["Review, PR"] --> C["Closeout"]
@@ -45,7 +45,7 @@ depend on the workflow mode or on a choice such as running a retrospective.
         SUM["summary.md\nwhen the summary runs"]:::opt
         RETRO["references/project-retro.md\nwhen a retro runs"]:::opt
         STATE["state.md\nupdated at every stage"]
-        LOG["project-log.md\ncreated on first append,\nunless workflow.projectLog is false"]:::opt
+        LOG["project-log.md\nauto: created on first append\ntrue, --with-project-log: scaffolded\nfalse: no automatic creation"]:::opt
       end
       D --> DISC
       SD --> SPEC
