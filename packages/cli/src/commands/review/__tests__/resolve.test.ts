@@ -8,6 +8,8 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { checkReviewLedger } from '../check';
+import { listPendingReviews } from '../pending';
 import {
   createReviewResolveCommand,
   resolveReviewEvent,
@@ -795,5 +797,75 @@ describe('oat review resolve', () => {
       message: expect.stringContaining('full 40-character commit SHA'),
     });
     expect(process.exitCode).toBe(1);
+  });
+});
+
+describe('row numbering across review commands', () => {
+  it('reports one row number from check, resolve and pending when an unparsed row sits above (m02 integrated review L1)', async () => {
+    const { root, parent, child } = await createRepo();
+    await writeGateArtifact(root, child);
+    // Data line 1 has a blank Date cell, so the parser drops it.
+    const content = [
+      '## Phase p01: Work p01',
+      '',
+      '**Provisional:** no',
+      '',
+      '## Reviews',
+      '',
+      ...WIDE_HEADER,
+      row([
+        'p01',
+        'code',
+        'passed',
+        '',
+        'reviews/archived/p01-old.md',
+        parent,
+        'manual',
+        '-',
+      ]),
+      gateRow(child),
+      row([
+        'p01',
+        'code',
+        'received',
+        '2026-11-03',
+        'reviews/p01-review-2026-11-03T140000Z.md',
+        child,
+        'gate',
+        'claude-opus-5-5-high',
+      ]),
+      '',
+    ].join('\n');
+    await writeFile(join(root, PROJECT, 'plan.md'), content, 'utf8');
+
+    const checked = await checkReviewLedger({
+      repoRoot: root,
+      projectPath: PROJECT,
+    });
+    const resolved = await resolveReviewEvent({
+      repoRoot: root,
+      projectPath: PROJECT,
+      event: gateEvent(child),
+    });
+    const pending = await listPendingReviews({
+      repoRoot: root,
+      projectPath: PROJECT,
+      scope: 'p01',
+    });
+
+    expect(checked.diagnostics).toMatchObject([
+      {
+        code: 'superseded_received_row',
+        row: { row: 2 },
+        supersededBy: { row: 3 },
+      },
+    ]);
+    expect(resolved.row).toMatchObject({ row: 2 });
+    expect(resolved.diagnostics).toMatchObject([
+      { code: 'row_superseded', supersededBy: { row: 3 } },
+    ]);
+    expect(pending.required).toMatchObject([
+      { scope: 'p01', type: 'code', row: 3 },
+    ]);
   });
 });
