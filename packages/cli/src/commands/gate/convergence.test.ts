@@ -617,6 +617,95 @@ describe('computeGateConvergence over the captured m02 exit-gate runs', () => {
     ).resolves.toBeNull();
   });
 
+  /** The real m02 run-1 artifact with only the named frontmatter fields set. */
+  async function adaptedR1(fields: Record<string, string>): Promise<string> {
+    let text = await fixture('m02-exit-r1-range-review-2026-11-03T215601Z.md');
+    for (const [key, value] of Object.entries(fields)) {
+      text = text.replace(new RegExp(`^${key}: .+$`, 'm'), `${key}: ${value}`);
+    }
+    return text;
+  }
+
+  /** Writes `first` as an archived run, then computes `second` as current. */
+  async function rerun(root: string, first: string, second: string) {
+    await writeFile(join(root, project, 'reviews/archived/first.md'), first);
+    const path = `${project}/reviews/second.md`;
+    await writeFile(join(root, path), second);
+    return computeGateConvergence({
+      repoRoot: root,
+      projectPath: project,
+      current: {
+        artifactPath: path,
+        content: second,
+        runId: 'second',
+        generatedTime: Date.parse('2026-11-01T12:10:00Z'),
+        verdict: await parseReviewGateVerdict(join(root, path)),
+      },
+      parsePrevious: async (run) =>
+        parseReviewGateVerdict(join(root, run.path)),
+    });
+  }
+
+  it('keeps a resumed plan rerun in its amendment across a blocked plan carrier', async () => {
+    const root = await goalProject();
+    const approved = 'a'.repeat(40);
+    await writeFile(
+      join(root, project, 'plan.md'),
+      [
+        '# Project Brief',
+        '',
+        '## Delivery endpoint and authority',
+        '',
+        `- **Milestone m01 approved:** 2026-10-01 by user at ${approved}`,
+        '',
+      ].join('\n'),
+    );
+    // The m02 carrier is the `status: blocked, disposition: null` record a
+    // stopped plan gate persists; it falls between the two runs.
+    const carrier = (milestone: string, status: string, at: string) => [
+      `  ${milestone}:`,
+      '    plan:',
+      `      status: ${status}`,
+      `      disposition: ${status === 'allowed' ? 'passed' : 'null'}`,
+      `      reviewed_head: ${status === 'allowed' ? approved : 'b'.repeat(40)}`,
+      `      decided_at: '${at}'`,
+    ];
+    await writeFile(
+      join(root, project, 'state.md'),
+      [
+        '---',
+        'oat_workflow_mode: goal',
+        'oat_milestone_gates:',
+        ...carrier('m01', 'allowed', '2026-10-01T12:00:00Z'),
+        ...carrier('m02', 'blocked', '2026-11-01T12:05:00Z'),
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const plan = (runId: string, at: string) =>
+      adaptedR1({
+        oat_generated_at: at,
+        oat_review_type: 'artifact',
+        oat_review_scope: 'plan',
+        oat_review_requested_scope: 'plan',
+        oat_gate_run_id: runId,
+      });
+    await expect(
+      rerun(
+        root,
+        await plan('first', '2026-11-01T12:00:00Z'),
+        await plan('second', '2026-11-01T12:10:00Z'),
+      ),
+    ).resolves.toMatchObject({
+      sequence: {
+        subject: { kind: 'plan-amendment', amendmentAfter: approved },
+        run: 2,
+        previousRun: { runId: 'first' },
+      },
+      counts: { new: 0, carriedOver: 2, resolved: 0 },
+    });
+  });
+
   it('reports a previous run it cannot parse as unavailable, never as all-new', async () => {
     const root = await goalProject();
     const broken = (

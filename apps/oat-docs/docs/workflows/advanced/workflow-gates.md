@@ -710,6 +710,8 @@ still names the approved commit. Otherwise only the line's date is known, and it
 is read as that whole day in any time zone. A run that falls inside such a day
 cannot be placed in an amendment: it reports as a first run, and no later run
 links to it. A carrier that no approval line names also counts as an approval.
+Only an approved carrier (`status: allowed`) counts; a blocked carrier is never
+an approval.
 
 Runs are linked through records that already exist; no new store is written.
 The earlier runs are the project's gate-run review artifacts, in `reviews/` and

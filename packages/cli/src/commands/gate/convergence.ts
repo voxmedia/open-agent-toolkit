@@ -593,7 +593,8 @@ function sameCommit(left: string, right: string): boolean {
  * that still names its commit; a re-approval of the same milestone overwrites
  * that carrier, so an earlier line keeps only its date, widened to cover the
  * day in any time zone (UTC-12 to UTC+14). A carrier no line names is still an
- * approval, timed by its `decided_at`.
+ * approval, timed by its `decided_at`. Only an approved carrier
+ * (`status: allowed`) is approval evidence; a blocked carrier is never one.
  */
 function readPlanApprovals(
   state: Record<string, unknown>,
@@ -606,7 +607,11 @@ function readPlanApprovals(
   )) {
     const carrier = plainRecord(plainRecord(gates)?.['plan']);
     const at = timeValue(carrier?.['decided_at']);
-    if (!carrier || !Number.isFinite(at)) {
+    if (
+      !carrier ||
+      !Number.isFinite(at) ||
+      stringValue(carrier['status']) !== 'allowed'
+    ) {
       continue;
     }
     const commit =
