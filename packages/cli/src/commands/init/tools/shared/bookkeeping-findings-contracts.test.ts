@@ -170,14 +170,17 @@ describe('shared bookkeeping definition', () => {
     const limits = normalize(section(doc, 'Limits on the fix'));
 
     expect(limits).toContain(
-      "The fix touches only the project's own tracking files under `.oat/projects/<scope>/<project>/`: `state.md`, the tracking sections of `plan.md` (its Reviews table and progress totals), `implementation.md`, `project-log.md`, `summary.md`, and the project's review artifacts.",
+      "The fix touches only the project's own tracking files under `.oat/projects/<scope>/<project>/`: `state.md`, the tracking sections of `plan.md` (its Reviews table and progress totals), `implementation.md`, `project-log.md` and `summary.md`.",
     );
     expect(limits).toContain(
       'Requirement artifacts (`discovery.md`, `spec.md`, `design.md`) are never tracking files.',
     );
+    // m01 exit gate L1 (fixed in p14): review artifacts are no longer listed
+    // as tracking files beside the sentence that forbids editing them.
     expect(limits).toContain(
-      "Receive moves or archives a review artifact and never edits it: a bookkeeping fix never changes a review artifact's findings, frontmatter or provenance.",
+      "Review artifacts are not tracking files: the fix may move one of the project's review artifacts, as receive does when it archives one, but never edits a review artifact's findings, frontmatter or provenance.",
     );
+    expect(limits).not.toContain("and the project's review artifacts.");
   });
 
   it("lets a fix correct another event's stale non-`passed` cells but never promote it, move its head or add its row", () => {

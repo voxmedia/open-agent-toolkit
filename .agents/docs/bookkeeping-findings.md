@@ -9,6 +9,11 @@ what ships. This document defines once which findings are bookkeeping and what
 receiving an all-bookkeeping result permits. Every project review and gate path
 that applies the rule names this definition rather than restating it.
 
+The same receivers also record one class for every finding they receive
+([Finding classes at receive](#finding-classes-at-receive)), so that a finding
+no contract source requires reaches the operator before any fix work exists for
+it. Bookkeeping is one of those classes, decided by the definition below.
+
 ## Definition
 
 A finding is **bookkeeping** when it only asks to correct a record of existing
@@ -52,11 +57,11 @@ them is not bookkeeping.
 1. **Tracking files only.** The fix touches only the project's own tracking
    files under `.oat/projects/<scope>/<project>/`: `state.md`, the tracking
    sections of `plan.md` (its Reviews table and progress totals),
-   `implementation.md`, `project-log.md`, `summary.md`, and the project's
-   review artifacts. Requirement artifacts (`discovery.md`, `spec.md`,
-   `design.md`) are never tracking files. Receive moves or archives a review
-   artifact and never edits it: a bookkeeping fix never changes a review
-   artifact's findings, frontmatter or provenance.
+   `implementation.md`, `project-log.md` and `summary.md`. Review artifacts
+   are not tracking files: the fix may move one of the project's review
+   artifacts, as receive does when it archives one, but never edits a review
+   artifact's findings, frontmatter or provenance. Requirement artifacts
+   (`discovery.md`, `spec.md`, `design.md`) are never tracking files.
 2. **Section 12.8 on goal paths.** On goal paths the fix is a change brief
    contract section 12.8 permits: a correcting journal line is appended rather
    than a recorded one rewritten, approved brief sections are never edited, and
@@ -105,3 +110,95 @@ The rule never rewrites raw findings, severities, counts or verdicts. A
 bookkeeping repair never infers task or phase completion, waives a HiLL
 checkpoint, grants an approval, or accepts an unresolved Critical finding.
 Under `OAT_AUTONOMOUS=1` the rule applies without a stop.
+
+## Finding classes at receive
+
+Every project review and gate receive records exactly one class for each
+finding of the result before it creates any fix task, execution record,
+artifact edit or deferral for that finding. The receiving agent classifies, as
+it does for bookkeeping; the reviewer's findings, severities, counts and
+verdict are never changed.
+
+| Class                  | Applies when                                                                                       | Citation            |
+| ---------------------- | -------------------------------------------------------------------------------------------------- | ------------------- |
+| `bookkeeping`          | The finding meets the definition above, its exclusions and its limits                              | none                |
+| `regression`           | The reviewed change broke behavior that worked before it                                           | what broke          |
+| `accepted-requirement` | A contract source requires what the finding asks for                                               | the contract source |
+| `new-hardening`        | No contract source requires it: it asks for a guarantee, safeguard or behavior beyond the contract | none                |
+
+When more than one class fits, the first in this order wins: `bookkeeping`,
+`regression`, `accepted-requirement`, `new-hardening`. A doubtful finding is
+not bookkeeping, and a finding the receiver cannot tie to a contract source is
+`new-hardening`.
+
+**Contract sources.** A contract source is an approved record the reviewed
+work must satisfy:
+
+- the project's requirement artifacts: `discovery.md`, `spec.md` and
+  `design.md`; the imported plan in import mode; and, in lite, brief and goal
+  modes, the requirement sections of `plan.md` (for a brief: Goal, Outcomes,
+  Constraints and Out of Scope, Decisions, and the phase's Intent and Exit
+  evidence);
+- for a code review, the approved plan's tasks or phase blocks that cover the
+  reviewed work;
+- the backlog items the project closes and the decision records under
+  `.oat/repo/reference/decisions/`; and
+- the repository instructions every change must meet (the applicable
+  `AGENTS.md` files).
+
+A reviewed artifact is never its own contract source: a plan review cites what
+the plan was built from, never the plan. A requirement the operator accepts at
+receive is cited by that decision from then on.
+
+**The record.** The receipt each path already writes carries one line beside
+its `**Findings:**` line. It adds no Reviews column, status or record:
+
+```markdown
+**Finding classes:** H1 accepted-requirement (spec.md FR3) · M1 regression (first-run gate envelope) · M2 new-hardening · L1 bookkeeping
+```
+
+Entries are separated by `·`. An `accepted-requirement` entry names its
+contract source and a `regression` entry names what broke, in parentheses;
+`bookkeeping` and `new-hardening` entries carry no citation.
+
+**Routing.** A finding becomes fix work (a fix task, an execution record or an
+artifact edit) only when its recorded class is `bookkeeping`, `regression`, or
+`accepted-requirement` with its source in parentheses. Every other finding (a
+`new-hardening` finding, an `accepted-requirement` that cites no source, or a
+finding with no recorded class) reaches the operator before any fix work,
+edit or deferral exists for it. With `FINDING_CLASSES` set to the record line's
+text after its label, this partition is exact:
+
+```bash
+printf '%s\n' "$FINDING_CLASSES" | awk '{
+  n = split($0, entries, / · /)
+  for (i = 1; i <= n; i++) {
+    entry = entries[i]
+    sub(/^ +/, "", entry); sub(/ +$/, "", entry)
+    if (entry == "") continue
+    split(entry, words, " ")
+    if (entry ~ /^[^ ]+ bookkeeping$/ || entry ~ /^[^ ]+ regression( \(.+\))?$/ ||
+        entry ~ /^[^ ]+ accepted-requirement \(.+\)$/) print "fix " words[1]
+    else print "operator " words[1]
+  }
+}'
+```
+
+The operator decides each finding routed to it: accept it as a requirement (it
+is then recorded `accepted-requirement` citing that decision and handled like
+any other), defer it (one `## Deferred Findings` line that names the
+operator), or reject it (recorded with the operator's reason). No receive mode
+decides such a finding by its own defaults. In an interactive run the receiver
+puts the question to the operator before creating fix work for it. Under
+`OAT_AUTONOMOUS=1`, or with no operator channel, the receiver records the class,
+creates no fix work for that finding, commits the receive's bookkeeping and
+stops at a `product-judgment` boundary that lists each such finding with its
+missing source; the operator's decision is recorded on resume. The result's
+other findings follow their path unchanged.
+
+Routing a finding to the operator changes no count, severity, verdict,
+Reviews status rule, review-cycle count or gate attempt, and adds no
+allowance: a blocking gate stays blocked, and its `onFailure` policy and
+attempt count apply to the result as before. When a review or gate budget runs
+out, the complexity review in `complexity-review-fallback.md` starts from these
+recorded classes.
