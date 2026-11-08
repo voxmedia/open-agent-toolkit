@@ -954,6 +954,19 @@ passing review. In brief modes the fix commit is bookkeeping and does not
 advance the phase's `**Head:**`. A round with any finding that is not
 bookkeeping runs the loop below unchanged, for every finding in it.
 
+**Finding classes (every round, before step 1).** Record one class per finding
+of the round under the "Finding classes at receive" section of
+`references/docs/bookkeeping-findings.md`, in the round's
+`**Finding classes:**` line of the phase's review receipt. Only findings that
+section routes to fix work enter step 2's bounded findings. When a Critical or
+High finding routes to the operator (a `new-hardening` finding, an
+`accepted-requirement` that cites no source, or a finding with no recorded
+class), dispatch no fix child for the round until the operator decides it;
+under `OAT_AUTONOMOUS=1` (`IMPLEMENT-21`), commit the receipt and stop at a
+`product-judgment` boundary. A Medium or Low finding routed there gets no fix
+task or deferral until the operator decides it. The retry limit, the pass rule
+and the review-cycle cap are unchanged.
+
 On Critical/High findings:
 
 1. Read `oat_orchestration_retry_limit` from state (default `2`, range 0–5).
@@ -1030,6 +1043,12 @@ mismatch instead of selecting the newest review.
   terminal line under `## Reviews and Gates` keep the raw verdict and counts.
   A phase gate writes no carrier.
 - target execution, artifact validation, or missing-artifact failure: stop.
+
+Receive records one class per finding of an `ok` or `blocked` result, in its
+Step 2.6. Only findings it routes to fix work go to the phase implementer; a
+finding it routes to the operator holds the gate's fix round until the
+operator decides it (`REVIEWRECEIVE-10` under autonomy). The gate verdict and
+the gate retry limit apply as before.
 
 The phase row stays `in_progress` until this gate passes and every review
 disposition is settled; the bookkeeping that records the passing gate sets it
@@ -1194,8 +1213,9 @@ Write the review-outcome bookkeeping that Step 7a leaves out:
   substance, disposition and rationale, the fix task or approved deferral it
   links to, final outcome; the review path is a local-only citation);
   otherwise write one line with the reviewer's request ID, verdict and
-  severity counts. Write one terminal line per gate run under
-  `## Reviews and Gates`; `state.md` owns gate transitions, so the journal line
+  severity counts. Either record carries the round's `**Finding classes:**`
+  line whenever the round has findings. Write one terminal line per gate run
+  under `## Reviews and Gates`; `state.md` owns gate transitions, so the journal line
   records only the outcome, waivers and operator choices;
 - write excluded parallel phases and unmerged worktrees as lines under
   `## Deferred Findings`;

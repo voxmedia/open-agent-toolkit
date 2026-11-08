@@ -102,6 +102,9 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    when the `exit` result reads stale because of that commit, persist
    `status: blocked`, `disposition: null` and handle the result under
    `onFailure` and `maxAttempts` as before, the attempt included.
+   Receive records one class per finding of the gate result and routes a
+   finding no contract source requires to the operator, as Step 14 states;
+   the carrier rules above are unchanged.
 3. **Read freshness before any transition.** Run
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
    and persist its `exit` result (`source: milestone-carrier`) as the
@@ -327,6 +330,9 @@ remembered review or receive outcome does not satisfy this step.
 
 - If receive creates fix tasks, return through the normal bounded implement and
   re-review loop.
+- Receive records one class per finding (its Step 2.6). A finding it routes to
+  the operator gets no fix task, and the run stops at receive's
+  `REVIEWRECEIVE-10` boundary until the operator decides it.
 - A bookkeeping-only result (review-receive Step 2.6, under
   `references/docs/bookkeeping-findings.md`) creates no fix tasks and records
   the final Reviews row `passed` with the note
@@ -427,6 +433,7 @@ To run in a separate session use: oat-project-review-provide code final
 - If inline (option 3): Agent first verifies equivalent current-host controls or an allowed exception, then executes the review per `oat-project-review-provide`; otherwise it uses the exact/pinned route or blocks
 - After review: User runs `oat-project-review-receive` to process findings
 - If Critical/High findings: Fix tasks added, re-run the `oat-project-implement` skill
+- Receive records one class per finding (`references/docs/bookkeeping-findings.md`, Finding classes at receive); a finding no contract source requires reaches the operator before any fix task exists for it
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
 - If every finding is bookkeeping (`references/docs/bookkeeping-findings.md`): receive fixes them in one tracking-file commit, adds no fix tasks and records the final review `passed` with the note `bookkeeping-only fixes applied at receive`; continue to Step 14 with no re-review and no cycle counted
 
@@ -708,6 +715,11 @@ disposition.
   fresh. That holds for a project under the default `.oat/projects/` root; a
   project whose `projects.root` lies outside it, or a legacy v1 generation,
   goes stale and follows the stale-generation rule.
+- Receive records one class per finding of an `ok` or `blocked` envelope
+  (review-receive Step 2.6). A finding it routes to the operator gets no
+  remediation work until the operator decides it. That routing changes no
+  envelope status, `on_failure` policy or `attempts_completed`; an attempt is
+  consumed only as the `block` rule below states.
 - `block` outcomes consume remediation attempts only after a valid configured
   gate result and its eligible receive disposition are durably processed.
   Increment `attempts_completed` before remediation/rerun. Below

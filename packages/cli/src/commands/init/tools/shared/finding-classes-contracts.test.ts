@@ -298,3 +298,111 @@ describe('review-receive records classes and routes to the operator (p14)', () =
     expect(row).toContain('`boundary:product-judgment`');
   });
 });
+
+describe('implement review and gate paths record classes (p14)', () => {
+  const phaseExecution = readRepoFile(
+    '.agents/skills/oat-project-implement/references/phase-execution.md',
+  );
+  const closeout = readRepoFile(
+    '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+  );
+
+  it('classifies a per-phase round before the fix child and holds an operator-routed Critical or High', () => {
+    const loop = normalize(
+      sliceBetween(
+        phaseExecution,
+        '#### Bounded Fix and Re-Review Loop',
+        'On Critical/High findings:',
+      ),
+    );
+    expect(loop).toContain(
+      '**Finding classes (every round, before step 1).** Record one class per finding of the round under the "Finding classes at receive" section of `references/docs/bookkeeping-findings.md`',
+    );
+    expect(loop).toContain(
+      "Only findings that section routes to fix work enter step 2's bounded findings.",
+    );
+    expect(loop).toContain(
+      'dispatch no fix child for the round until the operator decides it; under `OAT_AUTONOMOUS=1` (`IMPLEMENT-21`), commit the receipt and stop at a `product-judgment` boundary.',
+    );
+    expect(loop).toContain(
+      'The retry limit, the pass rule and the review-cycle cap are unchanged.',
+    );
+  });
+
+  it('sends only fix-routed phase gate findings to the phase implementer', () => {
+    const gate = normalize(
+      sliceBetween(
+        phaseExecution,
+        '### Optional External Phase Review Gate',
+        '#### Reviews Ledger Mutation Contract',
+      ),
+    );
+    expect(gate).toContain(
+      "Only findings it routes to fix work go to the phase implementer; a finding it routes to the operator holds the gate's fix round until the operator decides it (`REVIEWRECEIVE-10` under autonomy). The gate verdict and the gate retry limit apply as before.",
+    );
+  });
+
+  it('keeps the classes line in the per-phase review record', () => {
+    const step7b = normalize(
+      sliceBetween(
+        phaseExecution,
+        '#### Step 7b: Post-Review Bookkeeping',
+        'Phase row transitions:',
+      ),
+    );
+    expect(step7b).toContain(
+      "Either record carries the round's `**Finding classes:**` line whenever the round has findings.",
+    );
+  });
+
+  it('routes an uncited final review finding to the operator on both routes', () => {
+    const step13 = normalize(
+      sliceBetween(
+        closeout,
+        '### Step 13: Trigger Final Review',
+        '### Step 14: Gate Execution',
+      ),
+    );
+    expect(step13).toContain(
+      "A finding it routes to the operator gets no fix task, and the run stops at receive's `REVIEWRECEIVE-10` boundary until the operator decides it.",
+    );
+    expect(step13).toContain(
+      'a finding no contract source requires reaches the operator before any fix task exists for it',
+    );
+  });
+
+  it('leaves the exit gate status, policy and attempts unchanged by routing', () => {
+    const step14 = normalize(
+      sliceBetween(
+        closeout,
+        '### Step 14: Gate Execution',
+        '### Step 15: Final HiLL Closeout Sequence',
+      ),
+    );
+    expect(step14).toContain(
+      'A finding it routes to the operator gets no remediation work until the operator decides it. That routing changes no envelope status, `on_failure` policy or `attempts_completed`; an attempt is consumed only as the `block` rule below states.',
+    );
+  });
+
+  it('applies the same routing to the goal milestone exit gate', () => {
+    const milestone = normalize(
+      sliceBetween(
+        closeout,
+        '### Goal Milestone Closeout',
+        '### Step 11: Prepare Final Closeout Baseline',
+      ),
+    );
+    expect(milestone).toContain(
+      'Receive records one class per finding of the gate result and routes a finding no contract source requires to the operator, as Step 14 states; the carrier rules above are unchanged.',
+    );
+  });
+
+  it('IMPLEMENT-21 stops a round at a product-judgment boundary', () => {
+    const row = autonomyRow(readRepoFile(AUTONOMY), 'IMPLEMENT-21');
+    expect(row).toContain('Phase review finding for the operator');
+    expect(row).toContain(
+      'dispatch no fix child for a round whose Critical or High finding is `new-hardening`, an `accepted-requirement` that cites no source, or unclassified',
+    );
+    expect(row).toContain('`boundary:product-judgment`');
+  });
+});
