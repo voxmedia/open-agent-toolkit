@@ -2236,6 +2236,53 @@ An earlier attempt at the last two neutralizations did not compile. The guard sc
 
 Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0.
 
+### Task p08-t07: (review) Keep IDs from corroborating rewordings and state the gate's reasons accurately
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-02
+**Handle:** direct:rgi-p08-fix-20261107-02:p08-t07
+**Source review:** p08-review-2026-11-08T001015Z.md, L1 and L2
+**Intent:**
+
+- L1: a word with a digit (a phase, milestone or task ID, or a number) never corroborates a reworded finding, so two distinct findings about one phase are not merged.
+- L2: the gate docs name the reasons `oat gate review` actually emits for incomplete finding records.
+
+**Files:** `packages/cli/src/commands/gate/convergence.ts`, `packages/cli/src/commands/gate/convergence.test.ts`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** 588208ed1f5776c908b97172e347ccd9babff25a
+
+L1:
+
+- **Rule.** `significantTitleWords` now drops any title-key word that contains a digit (`\p{N}`). Words such as `p08`, `t04` and `m03` and plain numbers no longer count; status words like `stale` still do.
+- **Test, written first.** It covers the review's counterexample: two Low findings, `p08 journal Head line is stale` at `implementation.md:1953` and `p08 Reviews row date is stale` at `implementation.md:1960`. It also covers `p08-t04 step 12 …`. The test failed before the fix (1 failed, 28 passed) and passed after.
+- **Results that must not change, all on the branch build.**
+  - The m02 sequence probe: m02 1/0/2 then 0/0/1, stuck 0/2/0, reworded 0/2/0.
+  - `/tmp/rgi-p08/m1-control.mjs`: the reworded fixture pair is still carried over.
+  - `/tmp/rgi-p08/real-seq.mjs`: the real m01 and m02 sequence counts are unchanged.
+- **Docs.** The docs now say "three or more characters" and that a word with a digit does not count.
+
+L2: `workflow-gates.md` now says that through `oat gate review`:
+
+- an earlier run whose records do not cover its counts is reported as `previous_artifact_unparsable`;
+- an incomplete current run fails validation before convergence runs;
+- `previous_findings_incomplete` and `findings_incomplete` come only from convergence-API callers that supply a more lenient parser.
+
+Guard-can-fail: with the digit filter replaced by `true`, the new test failed. The file was restored and compared against a copy, and the restored suites passed: exit 0, 324 tests.
+
+Verification:
+
+| Check                                                     | Exit  | Notes                                                    |
+| --------------------------------------------------------- | ----- | -------------------------------------------------------- |
+| `src/commands/gate` under `scripts/with-isolated-home.sh` | 0     | 10 files, 512 tests                                      |
+| `pnpm check`                                              | 0     | 0 of 11 tasks cached                                     |
+| `pnpm type-check`                                         | 0     | 5 of 11 cached                                           |
+| `pnpm build`                                              | 0     | fully cached; `dist` confirmed to contain the digit rule |
+| `pnpm build:docs`                                         | 0     | the docs build ran (cache miss)                          |
+| index regeneration plus diff                              | 0 / 0 |                                                          |
+| markdownlint and `oxfmt --check` on `workflow-gates.md`   | clean |                                                          |
+
+`pnpm test:evidence` was not rerun, because only these three files changed.
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
