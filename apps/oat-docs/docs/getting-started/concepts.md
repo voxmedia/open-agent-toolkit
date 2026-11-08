@@ -9,7 +9,7 @@ OAT combines a provider-sync layer, reusable skills and CLI tooling, and an opti
 
 ## Choose What to Adopt
 
-OAT has one core path and two optional parts. You edit canonical skills, agents, and rules once and `oat sync` writes each coding tool's view; tool packs (such as `workflows` and `docs`) install more skills, and tracked projects keep a record under `.oat/projects/` in the storage scope you choose.
+OAT has one core path and two optional parts. You edit canonical skills, agents, and rules once and `oat sync` writes the provider views your coding tools need; tool packs (such as `workflows` and `docs`) install more skills, and tracked projects keep a record under `.oat/projects/` in the storage scope you choose.
 
 === "Diagram"
 
@@ -47,7 +47,7 @@ Continue with [Provider Sync](../provider-sync/index.md), [Tool Packs](tool-pack
 
 OAT keeps canonical assets in repo-controlled locations and projects provider-specific views from that source of truth. The canonical form is what you edit and review directly; provider views are synchronized outputs that let Claude Code, Cursor, Copilot, Gemini, and Codex consume the same intent in their native layouts.
 
-The top row of the diagram in [Choose What to Adopt](#choose-what-to-adopt) shows this flow: canonical skills, agents, and rules in `.agents/` pass through `oat sync` into `.claude/`, `.cursor/`, `.github/`, and `.codex/`.
+The top row of the diagram in [Choose What to Adopt](#choose-what-to-adopt) shows this flow: `oat sync` writes provider views under `.claude/`, `.cursor/`, `.github/`, and `.codex/` from canonical skills, agents, and rules in `.agents/`, and some providers read `.agents/` directly (Cursor, Copilot, and Codex read skills from `.agents/skills`).
 
 Gemini CLI is a native read-only consumer; OAT does not generate a `.gemini/` view through sync.
 
@@ -90,11 +90,11 @@ In tracked projects the two divide the work. Skills make the judgment calls; the
     ```mermaid
     flowchart TD
       accTitle: Skills decide, the CLI enforces
-      accDescr: Skills decide discovery depth, design choices and review findings, then call the oat CLI instead of hand-parsing state. The CLI reads project state as JSON, runs boundary checks that refuse an invalid plan, journal or closeout, and writes the records it owns. When oat is missing, autonomous and cloud runs restore it or stop rather than approximate state.
+      accDescr: Skills decide discovery depth, design choices and review findings, then call the oat CLI instead of hand-parsing state. The CLI reads project state for skills, runs boundary checks that refuse an invalid plan, journal or closeout, and writes the records it owns. When oat is missing, autonomous and cloud runs restore it or stop rather than approximate state.
       SKILL["Skills decide\ndiscovery depth, design choices,\nreview findings"] -->|calls| CLI["The CLI enforces\nskills call it instead of hand-parsing"]
-      CLI --> READ["oat project status\nreads project state\nas JSON"]
+      CLI --> READ["oat project status\nreads project state\nfor skills"]
       CLI --> CHECK["Boundary checks\nrefuse an invalid plan,\njournal or closeout"]
-      CLI --> WRITE["Records it owns\nproject log, decisions,\ncompleted state"]
+      CLI --> WRITE["Records it owns\nproject log,\ncompleted state"]
       SKILL -.->|"oat missing\nautonomous, cloud runs"| STOP["Restore oat or stop\nnever approximate state or transitions"]
     ```
 

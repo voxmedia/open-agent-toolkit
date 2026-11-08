@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 404" width="720" height="404" role="img" aria-labelledby="pc-title pc-desc">
   <title id="pc-title">Skills decide, the CLI enforces</title>
-  <desc id="pc-desc">Skills decide: discovery depth, design choices and review findings. Skills call the oat CLI, which enforces the contract instead of skills hand-parsing state. The CLI reads project state as JSON with oat project status, runs boundary checks that refuse an invalid plan, journal or closeout, and writes the records it owns: the project log, decisions and the completed state. A dashed branch: when oat is missing, autonomous and cloud runs restore oat or stop, never approximating state or transitions.</desc>
+  <desc id="pc-desc">Skills decide: discovery depth, design choices and review findings. Skills call the oat CLI, which enforces the contract instead of skills hand-parsing state. The CLI reads project state for skills with oat project status, runs boundary checks that refuse an invalid plan, journal or closeout, and writes the records it owns: the project log and the completed state. A dashed branch: when oat is missing, autonomous and cloud runs restore oat or stop, never approximating state or transitions.</desc>
   <style>
     svg {
       --bg: #ffffff;
@@ -78,7 +78,7 @@
   <rect class="node" x="16" y="304" width="216" height="84" rx="8" ry="8"/>
   <text class="mono t" x="124" y="332" text-anchor="middle">oat project status</text>
   <text class="sans s" x="124" y="354" text-anchor="middle">reads project state</text>
-  <text class="sans s" x="124" y="373" text-anchor="middle">as JSON</text>
+  <text class="sans s" x="124" y="373" text-anchor="middle">for skills</text>
 
   <!-- CHECK -->
   <rect class="node" x="252" y="304" width="216" height="84" rx="8" ry="8"/>
@@ -89,6 +89,6 @@
   <!-- WRITE -->
   <rect class="node" x="488" y="304" width="216" height="84" rx="8" ry="8"/>
   <text class="sans t" x="596" y="332" text-anchor="middle">Records it owns</text>
-  <text class="sans s" x="596" y="354" text-anchor="middle">project log, decisions,</text>
+  <text class="sans s" x="596" y="354" text-anchor="middle">project log,</text>
   <text class="sans s" x="596" y="373" text-anchor="middle">completed state</text>
 </svg>
