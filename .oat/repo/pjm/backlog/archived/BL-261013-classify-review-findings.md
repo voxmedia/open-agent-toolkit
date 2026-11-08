@@ -1,7 +1,7 @@
 ---
 id: BL-261013-classify-review-findings
 title: Classify review findings against the contract at every receive
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - gates
 assignee: null
 created: 2026-10-13T03:25:54.559Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-08T18:20:20Z'
 associated_issues: []
 external_plans: []
 ---

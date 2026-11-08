@@ -1,7 +1,7 @@
 ---
 id: BL-260927-mark-gate-findings-as-new-or
 title: Mark gate findings as new or carried over between attempts
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-27T13:44:46.186Z
-updated: 2026-09-27T13:44:46.186Z
+updated: '2026-11-08T18:20:20Z'
 associated_issues: []
 external_plans: []
 ---

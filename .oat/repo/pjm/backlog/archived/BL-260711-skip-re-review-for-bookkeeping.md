@@ -1,14 +1,14 @@
 ---
 id: BL-260711-skip-re-review-for-bookkeeping
 title: 'Skip re-review for bookkeeping-only review findings'
-status: open
+status: closed
 priority: urgent
 scope: feature
 scope_estimate: L
 labels: [reviews, orchestration, gates, efficiency]
 assignee: null
 created: '2026-07-11T15:29:00Z'
-updated: 2026-10-03T19:13:37.625699+00:00
+updated: '2026-11-08T18:20:19Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/233

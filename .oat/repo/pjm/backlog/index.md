@@ -474,11 +474,9 @@
 
 | ID                                       | Title                                                                                                | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                  | open   | urgent   | feature | L        |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                                     | open   | high     | feature | M        |
 | BL-261002-add-an-explicit-plan-approval  | Add an explicit plan-approval step to quick and spec-driven projects                                 | open   | high     | feature | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                            | open   | high     | feature | L        |
-| BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                 | open   | high     | task    | M        |
 | BL-261025-close-docs-skill-workflow-gaps | Close docs skill workflow gaps found in the consumer rollout                                         | open   | high     | feature | L        |
 | BL-261103-codex-gate-target-loses        | Codex gate target loses the branch-local route receipt                                               | open   | high     | task    | S        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                              | open   | high     | feature | M        |
@@ -491,7 +489,6 @@
 | BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                         | open   | high     | feature | M        |
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                       | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                               | open   | medium   | feature | M        |
-| BL-261013-classify-review-findings       | Classify review findings against the contract at every receive                                       | open   | medium   | task    | M        |
 | BL-261002-commit-a-headless-rendered     | Commit a headless rendered-site QA tour for the docs app                                             | open   | medium   | task    | M        |
 | BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                  | open   | medium   | task    | S        |
 | BL-261002-decide-first-run-defaults      | Decide first-run defaults for project scope without origin and non-interactive pack install          | open   | medium   | idea    | M        |
@@ -507,7 +504,6 @@
 | BL-261002-provide-a-complete-oat         | Fix oat tools remove --all at project scope and drop stale requiredBy entries                        | open   | medium   | feature | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan       | open   | medium   | task    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                    | open   | medium   | feature | M        |
-| BL-261104-goal-mode-exit-gate-resolve    | Goal-mode exit gate: resolve state-selected final to the active milestone's phases                   | open   | medium   | task    | S        |
 | BL-261011-guard-goal-brief-amendments    | Guard goal brief amendments against an open delivery head branch                                     | open   | medium   | task    | M        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                   | open   | medium   | feature | M        |
 | BL-261002-offer-a-strict-gate-reviewer   | Keep failed planning gates blocking and align gate wording and decision records                      | open   | medium   | feature | S        |
@@ -517,7 +513,6 @@
 | BL-261002-make-the-copy-sync-strategy    | Make the copy sync strategy checkout-independent and settable from the CLI                           | open   | medium   | task    | M        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions | open   | medium   | task    | S        |
 | BL-260830-make-documentation-aware       | Make the knowledge index optional by default for discovery and planning                              | open   | medium   | feature | M        |
-| BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                           | open   | medium   | feature | M        |
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                          | open   | medium   | bug     | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                    | open   | medium   | task    | M        |
 | BL-261102-provide-a-supported-closeout   | Provide a supported closeout path for legacy-shaped projects                                         | open   | medium   | feature | M        |

@@ -152,7 +152,7 @@ Proposed post-merge comment:
 - Priority and size rationale: Retain existing urgent/feature/L. Shared lifecycle recovery policy prevents unnecessary human stops, while semantic ambiguity still blocks. Cross-skill operational-invalid-artifact recovery needs careful audit identity and guard coverage.
 - Implementation readiness: Policy settled; focused technical design remains for category-specific equivalence verifiers and fail-closed recovery.
 - Approval: approved by the user on 2026-10-03; repository changes and the exact deferred post-merge GitHub actions are authorized.
-- Applied backlog reference: [BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings](../backlog/items/BL-260711-skip-re-review-for-bookkeeping.md).
+- Applied backlog reference: [BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings](../backlog/archived/BL-260711-skip-re-review-for-bookkeeping.md).
 - Post-merge result: not started; issue mutations remain deferred until merge.
 
 Proposed post-merge comment:

@@ -1,7 +1,7 @@
 ---
 id: BL-260820-bind-each-gate-review
 title: Bind each gate review disposition to its exact received ledger event
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - reliability
 assignee: null
 created: 2026-08-20T00:51:29.893Z
-updated: 2026-10-02T03:10:18Z
+updated: '2026-11-08T18:20:19Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/194

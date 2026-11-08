@@ -26,6 +26,8 @@ the producer, invocation, target, artifact, and relevant source head across
 review and gate paths. Source:
 [GitHub issue #202](https://github.com/voxmedia/open-agent-toolkit/issues/202).
 
+**Delivery status (2026-11-08):** review-gate-integrity m02 (PR #403) shipped only the `reviewedHead` a gate result carries for exact-event consumption and the gate target on artifact-gate rows. The versioned provenance envelope remains open.
+
 ## Acceptance Criteria
 
 - Define one versioned provenance-envelope schema shared by direct review,

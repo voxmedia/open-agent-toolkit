@@ -33,6 +33,8 @@ Remaining: the other closeout receipts (reviews, checks, and the summary,
 document and PR steps) are not bound to the head they covered, and PR progress
 and final closeout do not compare them with the current head.
 
+**Delivery status (2026-11-08):** Planned as review-gate-integrity p09 (Outcome 6) and deferred when the operator declared that goal met after m03; it stays open for a separate project.
+
 ## Acceptance Criteria
 
 - Every closeout-relevant review, check, and gate receipt beyond the exit gate
