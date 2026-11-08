@@ -2516,6 +2516,30 @@ Deferral dispositions (the Deferred Findings section records each):
 
 Verification: markdownlint 0 errors on the four pages; `pnpm docs:validate` exit 0; `pnpm docs:check` exit 0 with no warning on a changed line (the page warnings predate p14); oxfmt check exit 0.
 
+### Task p14-t07: (review) Autonomous routing by severity, review-receive defaults and the pass rule after a decision
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-fix-20261108-01
+**Handle:** direct:rgi-p14-fix-20261108-01:p14-t07
+**Source review:** p14-review-2026-11-08T011039Z.md (M1, M2, L4, L6)
+**Intent:** Apply the operator's M2 decision on every adopted receive path and in every doc that states the stop, make review-receive's conversion defaults defer to `REVIEWRECEIVE-10`, and state that a decision on a blocking finding leaves the pass rule unmet.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-review-receive/SKILL.md`, `.agents/skills/oat-project-implement/references/{phase-execution,completion-and-closeout}.md`, `.agents/skills/oat-project-{quick-start,plan,import-plan,brief,goal,lite,discover,design}/SKILL.md`, `.agents/skills/oat-project-plan-writing/SKILL.md`, `apps/oat-docs/docs/workflows/{advanced/autonomy,advanced/workflow-gates,projects/execution/implementation-execution,projects/reviews/index}.md`, `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** d616e8a65ff9f54c96faa3a05f995deea733839f
+
+**Operator decision (2026-11-08, p14 review round 1 M2, relayed by the root in fix request `rgi-p14-fix-20261108-01`; settles M1):** under autonomy, an uncited Medium or Low finding (`new-hardening`, an `accepted-requirement` with no source, or unclassified) does not stop the run. It gets no fix task, its entry in the receipt's `**Finding classes:**` line is recorded `awaiting operator`, and the run lists it at its next stop or in its boundary report. Only an uncited Critical or High finding halts the run, at `REVIEWRECEIVE-10` or `IMPLEMENT-21`; the `product-judgment` stop class is not stretched to Medium or Low. Interactive runs still put the finding to the operator in-session before any fix task. This replaces the p14-t02 choice to stop on every routed finding.
+
+Shape:
+
+- **Shared definition.** The operator-decision paragraph now splits by severity: Critical or High stops at `product-judgment`; Medium or Low ends its entry with `, awaiting operator` and is listed at the next stop or boundary report; the classes line is never rewritten. An added sentence (L6): the operator's decision changes no count either, so a rejected or deferred Critical or High finding leaves the pass rule unmet and a blocking gate blocked, and the run continues through the existing retry limit and exhaustion stop; only accepting it makes it fix work. No allowance is added.
+- **Paths.** The same split on review-receive Step 2.6 (plus the Step 7 `awaiting operator` disposition and both Step 11 summaries), the per-phase round, the phase gate, the final review, the exit gate (outcome stays `block` after a rejection), the eight planning Gate Executions, plan-writing step 4, and brief and goal Step 3.6. The goal milestone exit gate delegates to Step 14 and needed no change.
+- **Autonomy rows.** `REVIEWRECEIVE-10`, `IMPLEMENT-21` and the six artifact-review rows carry the split; `REVIEWRECEIVE-03`, `-04` and `-05` convert only fix-routed findings and leave the rest to `REVIEWRECEIVE-10` (L4). Each edited cell stays narrower than the column's widest cell, so the table was not re-padded (11 lines changed).
+- **Docs.** The reviews page, autonomy page, workflow-gates page and implementation-execution page say the same thing. Root `AGENTS.md` already says only that such a finding reaches the operator before fix work, which still holds.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t07.sh`, each neutralized, run, restored and checked with `cmp`): shared Medium/Low bullet changed to "the run stops" (1 failed); per-phase Medium/Low sentence replaced (1 failed); `REVIEWRECEIVE-04` reverted to "Default to conversion;" (1 failed); the L6 sentence changed (1 failed); review-receive's Medium/Low sentence changed to stop (1 failed); lite's Gate Execution split removed (1 failed); plan-writing's Medium/Low clause changed to stop (1 failed); `IMPLEMENT-21`'s Medium/Low clause changed to stop (1 failed). Each exit 1; restored 51/51, exit 0.
+
+Verification: isolated-HOME contract suites 1254/1254, exit 0 (autonomy inventory and complexity-review contracts included; one ordering pin in `complexity-review-contracts.test.ts` first caught an `OAT_AUTONOMOUS=1 … boundary report` sentence ahead of the per-phase dispatch, reworded to "in an autonomous run"); oxfmt check exit 0; markdownlint 0 errors on the four pages. No version bump: every touched skill already carries its p14 bump against `origin/main`.
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
