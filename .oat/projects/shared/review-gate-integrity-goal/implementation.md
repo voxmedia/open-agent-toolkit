@@ -2381,6 +2381,42 @@ Not adopted, with reasons:
 - plan-writing's `analysis` target: docs and instruction analysis, not a project review event; p11 left it out of the bookkeeping branch for the same reason.
 - Saved complexity reports: not review events (the fallback's own rule).
 
+### Task p14-t02: Shared finding classes, operator routing and review-receive
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t02
+**Intent:** Define the four classes, the contract sources, the receipt record and the operator routing once, beside m01's bookkeeping definition; make review-receive (inventory rows 1 to 5, and through it rows 7 to 10 and 13) record a class per finding and route an uncited finding to the operator; add `REVIEWRECEIVE-10`; fix m01 exit gate L1; bump every skill that vendors the changed shared docs.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-review-receive/SKILL.md`, the `metadata.version` of 14 skills (review-receive 1.6.17, implement 2.3.28, quick-start 2.3.26, plan 1.4.22, import-plan 1.4.24, brief 1.0.9, goal 1.0.5, lite 1.1.15, discover 2.2.14, design 2.3.11, plan-writing 1.2.41, document 1.8.15, pr-final 1.6.18, autonomous 1.0.26), `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts` (new), `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins)
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** d317617ccb30bca7ce4c3aa8351b7d94309fc84a
+
+Known Unknown decisions (none changes an Outcome, Constraint, Decision or the Approach):
+
+- **Where a class is recorded.** One `**Finding classes:**` line beside the `**Findings:**` line of the receipt each path already writes (`H1 accepted-requirement (spec.md FR3) · M2 new-hardening · …`). Reason: the receipt is the durable record every receive already writes, stands without the local-only review file, and is what the complexity-review fallback's loop history already reads; it adds no Reviews column, status or new store (Outcome 4, Constraints).
+- **One shared place.** The classes live in a new section of `.agents/docs/bookkeeping-findings.md`, whose `bookkeeping` class is m01's definition unchanged. Reason: Decision "One definition (Round 1 Q1)" rejects a second classifier, and that doc is already vendored into every receiving skill, so no new link, bundle input or coverage row is needed.
+- **Precedence and doubt.** One class per finding, first match in the order `bookkeeping`, `regression`, `accepted-requirement`, `new-hardening`; a finding the receiver cannot tie to a contract source is `new-hardening`. Reason: Outcome 5 requires one class; doubt routes to the operator, the safe direction, as doubt routes away from bookkeeping in m01.
+- **Contract sources.** The fallback's existing list (backlog items, `discovery.md`, `spec.md`, `design.md`, decision records), plus the requirement sections of `plan.md` in lite, brief and goal modes, the imported plan, the approved plan's tasks or phase blocks for a code review, and the applicable `AGENTS.md` instructions; a reviewed artifact never cites itself. Reason: without the brief, lite and plan sources every brief-mode finding would read as new-hardening, and without `AGENTS.md` a Definition of Done finding (docs, version bump) would; the self-citation bar is the fallback's own "a plan cannot justify its own machinery".
+- **Routing is a mechanical partition.** A finding becomes fix work only when its recorded class is `bookkeeping`, `regression`, or `accepted-requirement` with a source in parentheses; anything else reaches the operator, who accepts it as a requirement, defers it or rejects it (the BL-261013 criterion). The partition ships as an `awk` snippet in the shared doc so the exit-evidence fixture executes the shipped rule rather than a copy of it. Reason: a citation-less `accepted-requirement` is the AGENTS.md incident's failure mode, and the snippet makes "cites no source" testable.
+- **Every mode, including non-pausing ones.** The auto-disposition and judgment-sweep defaults never decide an operator-routed finding; under `OAT_AUTONOMOUS=1` the receive commits its bookkeeping and stops at a `product-judgment` boundary (`REVIEWRECEIVE-10`). Reason: the backlog criterion gives the operator the defer and reject choices too, so a receiver-chosen deferral would decide the scope question the AGENTS.md rule assigns to the operator. Accepted cost: a passing gate's uncited Low stops an autonomous run.
+- **No allowance (Outcome 5's limit).** Routing changes no count, severity, verdict, status rule, review-cycle count or gate attempt; a blocking gate stays blocked under its `onFailure` and attempts.
+
+Deferred item fixed here: **m01 exit gate L1.** Limit 1 no longer lists review artifacts among the tracking files; it says they are not tracking files, that a fix may move one as receive does when archiving, and never edits one. Pinned (old phrase asserted absent).
+
+Exit evidence (fixture, executed against the shipped snippet in `finding-classes-contracts.test.ts`): `H1 new-hardening · M1 accepted-requirement (discovery.md Requirements: …)`, derived from the artifact-cleanup incident BL-261013 records, routes `operator H1` and `fix M1` (the H1 finding never becomes a plan task; the accepted-requirement control does). Controls: an `accepted-requirement` with no or empty citation routes to the operator; `regression` and `bookkeeping` route to fix work; an unknown or missing class routes to the operator. The snippet was also run by hand under BSD awk 20200816 and gawk with the same result.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t02.sh`: each neutralized in the working tree, the two contract files run, then restored from a copy and checked with `cmp`):
+
+1. Snippet routes `new-hardening` to fix work: 2 failed (the incident and its control), exit 1.
+2. Snippet drops the citation requirement: 1 failed (uncited `accepted-requirement`), exit 1.
+3. review-receive Step 5 guard sentence removed: 1 failed, exit 1.
+4. `REVIEWRECEIVE-10` row removed: 1 failed, exit 1.
+5. Limit 1 old wording restored: 1 failed, exit 1.
+
+Restored: 94/94, exit 0.
+
+Verification: isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`) 1219/1219, exit 0, including `autonomy-gate-inventory.test.ts` (no new line in an inventory root matches the prompt scan); oxfmt check and oxlint on the changed files exit 0; `pnpm run check:skill-bumps` after the commit exit 0 (14 changed skill bumps against `origin/main`).
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
