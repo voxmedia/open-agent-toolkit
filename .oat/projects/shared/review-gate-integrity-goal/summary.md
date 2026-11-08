@@ -18,7 +18,7 @@ Review and gate cycles spent reviewer runs and gate attempts on findings that co
 
 ## What Was Implemented
 
-**m01, d01 ([PR #400](https://github.com/voxmedia/open-agent-toolkit/pull/400), merged 2026-11-03, released in 0.3.45). Phases p01, p02, p10, p11.**
+**m01, d01 ([PR #400](https://github.com/voxmedia/open-agent-toolkit/pull/400), merged 2026-11-03, released in 0.3.44). Phases p01, p02, p10, p11.**
 
 - **Shared definition.** `.agents/docs/bookkeeping-findings.md` defines a bookkeeping finding narrowly, with its exclusions and three limits on the fix.
   - Bookkeeping means correcting a record of existing evidence or state.
@@ -33,14 +33,14 @@ Review and gate cycles spent reviewer runs and gate attempts on findings that co
   - Fixtures carry provenance headers.
 - **Verifier reverted.** p02's clerical-resolution verifier was built and then reverted inside p02, under the 2026-11-02 amendment.
 
-**m02, d02 ([PR #403](https://github.com/voxmedia/open-agent-toolkit/pull/403), merged 2026-11-06, released in 0.3.46). Phases p07, p12, p13, p-rev1, p-rev2, p-rev3.**
+**m02, d02 ([PR #403](https://github.com/voxmedia/open-agent-toolkit/pull/403), merged 2026-11-06, first released in 0.3.47 with m03). Phases p07, p12, p13, p-rev1, p-rev2, p-rev3.**
 
 - **One row per review event (p07).** The plan template carries a `plan` placeholder row. The quick, import and lite scaffolds no longer have unused `spec`/`design` rows.
 - **Supersession (p07).** A `received` row is superseded on the read side by a later recorded row in the same Scope, Type and Invocation class, at the same or a descendant head.
   - The Invocation classes are gate and lifecycle.
   - Readers ignore superseded rows, and the read-only `oat review check` reports them along with duplicate keys.
 - **Exact gate consumption (p12).** The gate result adds `reviewedHead`. Receive consumes the exact event the gate names, and fails closed when the event does not match.
-- **Pending-review listing (p13).** `oat review pending` lists required reviews that are still `pending` before pr-progress or pr-final opens a PR. Each must be run, waived with a recorded `**Review waived:**` line, or the run stops.
+- **Pending-review listing (p13).** `oat review pending` lists required reviews that are still `pending` or missing, and recorded waivers, before pr-progress or pr-final opens a PR. Each must be run, waived with a recorded `**Review waived:**` line, or the run stops.
 - **Revision phases.**
   - p-rev1: `oat review resolve` refuses a malformed Reviewed Head.
   - p-rev2: synced-project review ancestry resolves in the source repository.
@@ -48,7 +48,7 @@ Review and gate cycles spent reviewer runs and gate attempts on findings that co
 
 **m03, d03 ([PR #407](https://github.com/voxmedia/open-agent-toolkit/pull/407), merged 2026-11-08, version 0.3.47). Phases p08, p14, p15, p16.**
 
-- **Convergence marks (p08).** On every rerun of a configured gate on one subject, each finding is marked new or carried over, through a stable finding key over the parser's records. The gate JSON and its review record report new, carried-over and resolved counts. A first run has no convergence fields.
+- **Convergence marks (p08).** On every rerun of a configured gate on one subject, each finding is marked new or carried over, through a stable finding key over the parser's records. The gate JSON and its review record report new, carried-over and resolved counts when the run could be compared, or a reason when it could not. A first run has no convergence fields.
   - The subject is the milestone for a goal exit gate, the amendment for a goal plan gate, and the scope elsewhere.
 - **Finding classes (p14).** Every receive path records one class per finding in a `**Finding classes:**` line: `bookkeeping`, `regression`, `accepted-requirement` (with its contract source) or `new-hardening`.
   - A `new-hardening` finding reaches the operator before any fix task exists.
