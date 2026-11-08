@@ -706,6 +706,56 @@ describe('computeGateConvergence over the captured m02 exit-gate runs', () => {
     });
   });
 
+  it('keeps a state-selected final that resolved to one phase in its milestone sequence', async () => {
+    const root = await goalProject();
+    await writeFile(
+      join(root, project, 'plan.md'),
+      [
+        '# Project Brief',
+        '',
+        '## Milestones',
+        '',
+        '| Milestone | Phases |',
+        '| --------- | ------ |',
+        '| m01 | p01 |',
+        '| m02 | p02 |',
+        '',
+        ...['p01', 'p02'].flatMap((id) => [
+          `## Phase ${id}: Work`,
+          '',
+          '**Intent:** work',
+          '**Exit evidence:** done',
+          '**Provisional:** no',
+          '',
+        ]),
+      ].join('\n'),
+    );
+    // The second run carries the frontmatter p15 writes when a state-selected
+    // `final` resolves to the singleton milestone's one phase.
+    const exit = (scope: string, runId: string, at: string) =>
+      adaptedR1({
+        oat_generated_at: at,
+        oat_review_scope: scope,
+        oat_review_requested_scope: 'final',
+        oat_review_phase_ids: '[p02]',
+        oat_gate_run_id: runId,
+      });
+    await expect(
+      rerun(
+        root,
+        await exit('final', 'first', '2026-11-01T12:00:00Z'),
+        await exit('p02', 'second', '2026-11-01T12:10:00Z'),
+      ),
+    ).resolves.toMatchObject({
+      sequence: {
+        subject: { kind: 'milestone', value: 'm02' },
+        run: 2,
+        previousRun: { runId: 'first' },
+      },
+      counts: { new: 0, carriedOver: 2, resolved: 0 },
+    });
+  });
+
   it('reports a previous run it cannot parse as unavailable, never as all-new', async () => {
     const root = await goalProject();
     const broken = (

@@ -421,6 +421,8 @@ export interface SequenceProjectRecords {
 export interface SequenceRun {
   reviewType: ReviewGateVerdict['reviewType'];
   scope: string;
+  /** The artifact's `oat_review_requested_scope`, when recorded. */
+  requestedScope?: string;
   phaseIds: readonly string[];
   generatedTime: number;
 }
@@ -458,7 +460,9 @@ export function sequenceSubject(
     );
     const [milestone] = [...milestones];
     if (
-      (scope.toLowerCase() === 'final' || run.phaseIds.length > 1) &&
+      (scope.toLowerCase() === 'final' ||
+        run.requestedScope?.trim().toLowerCase() === 'final' ||
+        run.phaseIds.length > 1) &&
       run.phaseIds.length > 0 &&
       milestones.size === 1 &&
       milestone !== undefined
@@ -692,6 +696,7 @@ export interface GateRunArtifact {
   generatedTime: number;
   reviewType: ReviewGateVerdict['reviewType'];
   scope: string;
+  requestedScope: string;
   phaseIds: string[];
 }
 
@@ -748,6 +753,8 @@ export async function listGateRunArtifacts(
         generatedTime,
         reviewType: reviewTypeValue(frontmatter['oat_review_type']),
         scope: stringValue(frontmatter['oat_review_scope']) ?? '',
+        requestedScope:
+          stringValue(frontmatter['oat_review_requested_scope']) ?? '',
         phaseIds: readPhaseIds(frontmatter['oat_review_phase_ids']),
       });
     }
@@ -790,12 +797,13 @@ export async function computeGateConvergence(options: {
   const records = await readSequenceProjectRecords(
     join(options.repoRoot, options.projectPath),
   );
+  const currentFrontmatter = readFrontmatter(current.content);
   const currentRun: SequenceRun = {
     reviewType: current.verdict.reviewType,
     scope: current.verdict.scope ?? '',
-    phaseIds: readPhaseIds(
-      readFrontmatter(current.content)['oat_review_phase_ids'],
-    ),
+    requestedScope:
+      stringValue(currentFrontmatter['oat_review_requested_scope']) ?? '',
+    phaseIds: readPhaseIds(currentFrontmatter['oat_review_phase_ids']),
     generatedTime: current.generatedTime,
   };
   const subject = sequenceSubject(currentRun, records);

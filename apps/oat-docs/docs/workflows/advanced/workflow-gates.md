@@ -696,11 +696,11 @@ rewrites the reviewer's artifact.
 
 The subject depends on the run:
 
-| Run                                                                                                                                                          | Subject                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Goal project, `code` review whose scope is `final` or whose artifact names more than one phase, all of them in one milestone of `plan.md`'s Milestones table | That milestone (`milestone:m02`), whatever scope token the run used |
-| Goal project, `artifact` review on scope `plan`                                                                                                              | The plan amendment: the plan approvals recorded before this run     |
-| Every other run, and every run outside goal mode                                                                                                             | The review scope (`scope:p03`)                                      |
+| Run                                                                                                                                                                                                            | Subject                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Goal project, `code` review whose scope or requested scope (`oat_review_requested_scope`) is `final` or whose artifact names more than one phase, all of them in one milestone of `plan.md`'s Milestones table | That milestone (`milestone:m02`), whatever scope token the run used |
+| Goal project, `artifact` review on scope `plan`                                                                                                                                                                | The plan amendment: the plan approvals recorded before this run     |
+| Every other run, and every run outside goal mode                                                                                                                                                               | The review scope (`scope:p03`)                                      |
 
 A plan run's approvals come from records that survive a re-approval of the same
 milestone. Each `**Brief approved:**` or `**Milestone mNN approved:**` line under
