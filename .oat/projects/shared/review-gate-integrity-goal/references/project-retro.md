@@ -20,7 +20,7 @@ oat_retro_evidence_sources:
     status: used
   - source: session-transcript-pre-handoff
     status: unavailable
-oat_retro_promotions: partial
+oat_retro_promotions: complete
 oat_retro_filing: proposed
 oat_generated: true
 oat_template: false
@@ -116,12 +116,11 @@ merging.
 
 ## Current State
 
-- **Promotions:** `partial`. RP-01 through RP-03 are `applied` (AGENTS.md);
-  RP-04 is `proposed`.
+- **Promotions:** `complete`. RP-01 through RP-03 are `applied` (AGENTS.md);
+  RP-04 is `applied` (BL-261103-codex-gate-target-loses).
 - **Filing:** `proposed`. UP-01 through UP-03 are `proposed` with no
   destination.
 - **Unsettled items:**
-  - RP-04: apply.
   - UP-01 through UP-03: file through `oat-project-retro-file`.
 
 ## What Went Well
@@ -398,9 +397,9 @@ addresses and its estimated size before the operator is asked to approve.
 
 - **Type:** docs
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** .oat/repo/pjm/backlog/items/BL-261103-codex-gate-target-loses.md
-- **Applied-ref:** —
+- **Applied-ref:** .oat/repo/pjm/backlog/items/BL-261103-codex-gate-target-loses.md
 - **Disposition-note:** —
 
 **Problem.** BL-261103's first acceptance criterion asks for the root cause of
