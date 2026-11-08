@@ -943,6 +943,13 @@ as the last check before plan and project completion:
    with any finding that is not bookkeeping follows the policies above
    unchanged.
 
+   Review-receive records one class per finding of the gate result, in its
+   Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it routes to
+   the operator (`new-hardening`, or an `accepted-requirement` that cites no
+   source) gets no remediation edit until the operator decides it; under
+   `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10`. The `onFailure`
+   policy and the attempt count apply to the result unchanged.
+
    **Complexity review at `maxAttempts`.** When `block` attempts are exhausted,
    dispatch the complexity review that
    `references/docs/complexity-review-fallback.md` defines for the plan bundle

@@ -553,6 +553,17 @@ Use this loop after an artifact has been written and before the calling skill ha
      record that finding as residual and never record `passed`. This starts no
      new review attempt and consumes no retry. A result with any finding that is
      not bookkeeping follows the bullets below unchanged.
+   - Finding classes (`plan` target, every result): before applying or
+     offering any fix, record one class per finding under the "Finding classes
+     at receive" section of `references/docs/bookkeeping-findings.md`. The
+     bullets below apply only to findings that section routes to fix work. A
+     finding it routes to the operator (`new-hardening`, or an
+     `accepted-requirement` that cites no source) is never applied as a
+     Critical or High default fix or offered as a routine Medium or Low edit:
+     it goes to the operator before any edit for it, and under
+     `OAT_AUTONOMOUS=1` the loop stops at a `product-judgment` boundary. A
+     reviewed plan is never its own contract source. The retry bound is
+     unchanged.
    - Apply Critical and High fixes by default when they are local to the reviewed artifact and the fix is unambiguous.
    - Offer Medium and Low fixes to the user instead of applying them silently.
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.
@@ -567,6 +578,7 @@ Use this loop after an artifact has been written and before the calling skill ha
    - For `plan`, update the `plan` artifact row in the Reviews table without deleting any existing rows. Use `passed` when clean; if residual findings remain, preserve enough detail in the handoff for the next skill/user to act.
    - That row is this structured review's own event row under the one-writer rule in Review Table Preservation Rules: the unbound `plan` placeholder it claims, or one appended row when none remains. A row a gate child wrote belongs to the gate's event and is updated by that event's receive; never record this outcome on it or add a second row for it.
    - For a bookkeeping-only `plan` result (step 4), use `passed` with the note `bookkeeping-only fixes applied at receive` and one line per finding in the lifecycle output; never report it as a clean review.
+   - For `plan`, record the step 4 classes with the outcome as one `**Finding classes:**` line in the shared definition's format, together with the operator's decision on each operator-routed finding.
    - For `analysis`, mark the analysis artifact as reviewed/verified using the calling skill's analysis-tracking convention, and surface any residual findings before the corresponding apply skill consumes it.
 
 ## Canonical Plan Format

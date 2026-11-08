@@ -406,3 +406,101 @@ describe('implement review and gate paths record classes (p14)', () => {
     expect(row).toContain('`boundary:product-judgment`');
   });
 });
+
+describe('planning review and gate paths record classes (p14)', () => {
+  const GATE_SKILLS = [
+    'oat-project-quick-start',
+    'oat-project-plan',
+    'oat-project-import-plan',
+    'oat-project-brief',
+    'oat-project-goal',
+    'oat-project-lite',
+    'oat-project-discover',
+    'oat-project-design',
+  ] as const;
+
+  it.each(GATE_SKILLS)(
+    '%s Gate Execution routes an uncited gate finding to the operator with attempts unchanged',
+    (skill) => {
+      const content = normalize(
+        readRepoFile(`.agents/skills/${skill}/SKILL.md`),
+      );
+      const paragraph =
+        'Review-receive records one class per finding of the gate result, in its Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it routes to the operator (`new-hardening`, or an `accepted-requirement` that cites no source) gets no remediation edit until the operator decides it; under `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10`. The `onFailure` policy and the attempt count apply to the result unchanged.';
+      expect(content).toContain(paragraph);
+      // Beside the bookkeeping-only settlement, inside Gate Execution.
+      expect(content.indexOf(paragraph)).toBeGreaterThan(
+        content.indexOf(
+          'A receive-eligible `blocked` result that review-receive settled in its bookkeeping-only mode',
+        ),
+      );
+    },
+  );
+
+  it('plan-writing classifies a plan result before applying or offering any fix', () => {
+    const loop = normalize(
+      sliceBetween(
+        readRepoFile('.agents/skills/oat-project-plan-writing/SKILL.md'),
+        '4. **Apply or offer fixes by severity**',
+        '5. **Rewrite and re-dispatch within the bound**',
+      ),
+    );
+    expect(loop).toContain(
+      '- Finding classes (`plan` target, every result): before applying or offering any fix, record one class per finding under the "Finding classes at receive" section of `references/docs/bookkeeping-findings.md`. The bullets below apply only to findings that section routes to fix work.',
+    );
+    expect(loop).toContain(
+      'is never applied as a Critical or High default fix or offered as a routine Medium or Low edit: it goes to the operator before any edit for it, and under `OAT_AUTONOMOUS=1` the loop stops at a `product-judgment` boundary.',
+    );
+    expect(loop).toContain('A reviewed plan is never its own contract source.');
+  });
+
+  it('plan-writing records the classes line with the outcome', () => {
+    const outcome = normalize(
+      sliceBetween(
+        readRepoFile('.agents/skills/oat-project-plan-writing/SKILL.md'),
+        '6. **Record the outcome**',
+        '## Canonical Plan Format',
+      ),
+    );
+    expect(outcome).toContain(
+      "For `plan`, record the step 4 classes with the outcome as one `**Finding classes:**` line in the shared definition's format, together with the operator's decision on each operator-routed finding.",
+    );
+  });
+
+  it.each(['oat-project-brief', 'oat-project-goal'] as const)(
+    '%s Step 3.6 treats a new-hardening finding as material',
+    (skill) => {
+      const content = normalize(
+        readRepoFile(`.agents/skills/${skill}/SKILL.md`),
+      );
+      expect(content).toMatch(
+        /a finding no contract source requires \(`new-hardening`\) (is a material finding: it goes back to the user before any edit|is a material finding that goes back to the user before any edit), and under autonomy the loop stops\./i,
+      );
+    },
+  );
+
+  it('the brief contract review ladder returns an uncited finding to the user', () => {
+    const ladder = normalize(
+      section(
+        readRepoFile(
+          '.agents/skills/oat-project-brief/references/brief-contract.md',
+        ),
+        '5. Review ladder',
+      ),
+    );
+    expect(ladder).toContain(
+      'A finding no contract source requires (`new-hardening`) returns to the user before any fix work exists for it, as a material finding does',
+    );
+  });
+
+  it.each(['QS-11', 'LITE-08', 'BRIEF-09', 'GOAL-09', 'PLAN-09', 'IMPORT-08'])(
+    '%s stops an operator-routed artifact-review finding at product-judgment',
+    (id) => {
+      const row = autonomyRow(readRepoFile(AUTONOMY), id);
+      expect(row).toContain(
+        'a finding routed to the operator under `bookkeeping-findings.md` (`new-hardening`, or an `accepted-requirement` that cites no source) stops before any edit for it',
+      );
+      expect(row).toContain('`boundary:product-judgment`');
+    },
+  );
+});

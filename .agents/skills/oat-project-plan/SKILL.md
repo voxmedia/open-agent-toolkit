@@ -692,6 +692,13 @@ the last check before the completion boundary:
    and do not re-run the gate. A result with any finding that is not bookkeeping
    follows the policies above unchanged.
 
+   Review-receive records one class per finding of the gate result, in its
+   Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it routes to
+   the operator (`new-hardening`, or an `accepted-requirement` that cites no
+   source) gets no remediation edit until the operator decides it; under
+   `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10`. The `onFailure`
+   policy and the attempt count apply to the result unchanged.
+
 7. Runtime selection note: the review-only declaration carries producer
    identity, not reviewer runtime identity. By default, `oat gate review` and
    `oat gate cross-provider-exec` resolve the current host from built-in
