@@ -25,7 +25,7 @@
     .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
     .t { fill: var(--text); font-size: 15px; font-weight: 600; }
     .s { fill: var(--text-2); font-size: 13px; }
-    .frame { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
   </style>
   <defs>
     <marker id="psm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
@@ -39,13 +39,13 @@
   <rect class="canvas" x="0" y="0" width="760" height="896" rx="12" ry="12"/>
 
   <!-- Phase groups -->
-  <rect class="frame" x="12" y="16" width="736" height="370" rx="10" ry="10"/>
+  <rect class="group" x="12" y="16" width="736" height="370" rx="10" ry="10"/>
   <text class="sans s" x="28" y="40">Planning</text>
-  <rect class="frame" x="12" y="402" width="736" height="104" rx="10" ry="10"/>
+  <rect class="group" x="12" y="402" width="736" height="104" rx="10" ry="10"/>
   <text class="sans s" x="28" y="426">Implementation</text>
-  <rect class="frame" x="12" y="522" width="736" height="178" rx="10" ry="10"/>
+  <rect class="group" x="12" y="522" width="736" height="178" rx="10" ry="10"/>
   <text class="sans s" x="28" y="546">Review (plan.md Reviews table)</text>
-  <rect class="frame" x="12" y="716" width="736" height="164" rx="10" ry="10"/>
+  <rect class="group" x="12" y="716" width="736" height="164" rx="10" ry="10"/>
   <text class="sans s" x="28" y="740">PR and revision</text>
 
   <!-- Edges (drawn first so nodes sit on top) -->

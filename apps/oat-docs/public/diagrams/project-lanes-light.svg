@@ -25,7 +25,6 @@
     .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
     .t { fill: var(--text); font-size: 15px; font-weight: 600; }
     .s { fill: var(--text-2); font-size: 13px; }
-    .c { fill: var(--text); font-size: 13px; font-weight: 600; }
   </style>
   <defs>
     <marker id="pl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
@@ -71,53 +70,53 @@
 
   <!-- Stage boxes -->
   <rect class="node-em" x="32" y="52" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="80" y="75" text-anchor="middle">Discovery</text>
+  <text class="sans t" x="80" y="75" text-anchor="middle">Discovery</text>
   <rect class="node" x="152" y="52" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="200" y="75" text-anchor="middle">Spec</text>
+  <text class="sans t" x="200" y="75" text-anchor="middle">Spec</text>
   <rect class="node" x="272" y="52" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="320" y="75" text-anchor="middle">Design</text>
+  <text class="sans t" x="320" y="75" text-anchor="middle">Design</text>
   <rect class="node" x="392" y="52" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="440" y="75" text-anchor="middle">Plan</text>
+  <text class="sans t" x="440" y="75" text-anchor="middle">Plan</text>
   <rect class="node" x="512" y="52" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="560" y="75" text-anchor="middle">Implement</text>
+  <text class="sans t" x="560" y="75" text-anchor="middle">Implement</text>
   <rect class="node" x="632" y="52" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="75" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="75" text-anchor="middle">Review / PR</text>
   <rect class="node-em" x="32" y="132" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="80" y="155" text-anchor="middle">Discovery</text>
+  <text class="sans t" x="80" y="155" text-anchor="middle">Discovery</text>
   <rect class="node" x="392" y="132" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="440" y="155" text-anchor="middle">Plan</text>
+  <text class="sans t" x="440" y="155" text-anchor="middle">Plan</text>
   <rect class="node" x="512" y="132" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="560" y="155" text-anchor="middle">Implement</text>
+  <text class="sans t" x="560" y="155" text-anchor="middle">Implement</text>
   <rect class="node" x="632" y="132" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="155" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="155" text-anchor="middle">Review / PR</text>
   <rect class="node" x="272" y="164" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="320" y="187" text-anchor="middle">Design</text>
+  <text class="sans t" x="320" y="187" text-anchor="middle">Design</text>
   <rect class="node-em" x="392" y="248" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="440" y="271" text-anchor="middle">Plan</text>
+  <text class="sans t" x="440" y="271" text-anchor="middle">Plan</text>
   <rect class="node" x="512" y="248" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="560" y="271" text-anchor="middle">Implement</text>
+  <text class="sans t" x="560" y="271" text-anchor="middle">Implement</text>
   <rect class="node" x="632" y="248" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="271" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="271" text-anchor="middle">Review / PR</text>
   <rect class="node-em" x="392" y="328" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="440" y="351" text-anchor="middle">Plan</text>
+  <text class="sans t" x="440" y="351" text-anchor="middle">Plan</text>
   <rect class="node" x="512" y="328" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="560" y="351" text-anchor="middle">Implement</text>
+  <text class="sans t" x="560" y="351" text-anchor="middle">Implement</text>
   <rect class="node" x="632" y="328" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="351" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="351" text-anchor="middle">Review / PR</text>
   <rect class="node-em" x="392" y="408" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="440" y="431" text-anchor="middle">Plan</text>
+  <text class="sans t" x="440" y="431" text-anchor="middle">Plan</text>
   <rect class="node" x="512" y="408" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="560" y="431" text-anchor="middle">Implement</text>
+  <text class="sans t" x="560" y="431" text-anchor="middle">Implement</text>
   <rect class="node" x="632" y="408" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="431" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="431" text-anchor="middle">Review / PR</text>
   <rect class="node-em" x="392" y="532" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="440" y="555" text-anchor="middle">Plan</text>
+  <text class="sans t" x="440" y="555" text-anchor="middle">Plan</text>
   <rect class="node" x="512" y="532" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="560" y="555" text-anchor="middle">Implement</text>
+  <text class="sans t" x="560" y="555" text-anchor="middle">Implement</text>
   <rect class="node" x="632" y="532" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="555" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="555" text-anchor="middle">Review / PR</text>
   <rect class="node-em" x="632" y="612" width="96" height="36" rx="8" ry="8"/>
-  <text class="sans c" x="680" y="635" text-anchor="middle">Review / PR</text>
+  <text class="sans t" x="680" y="635" text-anchor="middle">Review / PR</text>
 
   <!-- Lane titles and labels -->
   <text class="sans t" x="32" y="40">Spec-driven</text>
@@ -136,7 +135,7 @@
   <text class="mono s" x="142" y="520">oat-project-import-plan</text>
   <text class="sans t" x="32" y="600">Capture</text>
   <text class="mono s" x="142" y="600">oat-project-capture</text>
-  <text class="sans c" x="32" y="626">Existing branch work</text>
+  <text class="sans t" x="32" y="626">Existing branch work</text>
   <text class="sans s" x="32" y="644">(<tspan class="mono">discovery.md</tspan>, <tspan class="mono">implementation.md</tspan> recorded)</text>
   <text class="sans s" x="504" y="622" text-anchor="middle">ready for review</text>
 
