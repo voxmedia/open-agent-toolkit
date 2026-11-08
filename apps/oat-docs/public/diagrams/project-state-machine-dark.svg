@@ -76,7 +76,7 @@
     <path class="edge" d="M 414 600 V 639" marker-end="url(#psm-arrow)"/>
     <!-- FA -> FC -->
     <path class="edge" d="M 134 600 V 639" marker-end="url(#psm-arrow)"/>
-    <!-- FC -> PASSED -->
+    <!-- FC -> RV (re-review: new row) -->
     <path class="edge" d="M 220 662 H 262 Q 270 662 270 654 V 600 Q 270 592 278 592 H 319" marker-end="url(#psm-arrow)"/>
     <!-- PASSED -> I -->
     <path class="edge" d="M 508 662 H 520 Q 528 662 528 654 V 502 Q 528 494 520 494 H 474 Q 470 494 470 490 V 483" marker-end="url(#psm-arrow)"/>

@@ -160,7 +160,7 @@ delivery boundary; see
 In `plan.md` Reviews table:
 
 - `pending` -> `received` -> `passed` when receive queues no fixes
-- `pending` -> `received` -> `fixes_added` -> `fixes_completed`; the re-review then adds a new row that starts at `received` and reaches `passed` when receive queues no fixes
+- `pending` -> `received` -> `fixes_added` -> `fixes_completed`; the re-review then adds a new row that starts at `received` and reaches `passed` when receive queues no fixes; in brief and goal modes, a `p-revN` revision review received with no fixes also moves the corrected phase's `fixes_added` row to `passed`
 
 ## Guardrail
 
