@@ -116,12 +116,12 @@ merging.
 
 ## Current State
 
-- **Promotions:** `partial`. RP-01 is `applied` (AGENTS.md); RP-02 through
-  RP-04 are `proposed`.
+- **Promotions:** `partial`. RP-01 and RP-02 are `applied` (AGENTS.md);
+  RP-03 and RP-04 are `proposed`.
 - **Filing:** `proposed`. UP-01 through UP-03 are `proposed` with no
   destination.
 - **Unsettled items:**
-  - RP-02 through RP-04: apply.
+  - RP-03 and RP-04: apply.
   - UP-01 through UP-03: file through `oat-project-retro-file`.
 
 ## What Went Well
@@ -354,9 +354,9 @@ instead.
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** AGENTS.md
-- **Applied-ref:** —
+- **Applied-ref:** AGENTS.md
 - **Disposition-note:** —
 
 **Problem.** Two recovery events (`rgi-p10-rec-01`, `rgi-p13-rec-01`) had the

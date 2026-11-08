@@ -11,6 +11,8 @@
 - When a PR changes any bundled file of a canonical skill — anything under `.agents/skills/<name>/` except `tests/` — increase that skill's `metadata.version` in the same PR.
 - When a PR changes a canonical agent role at `.agents/agents/*.md`, increase that file's top-level `version:` in the same PR; agent roles keep the top-level field per `DR-260908-bundled-skills-declare`.
 - The version bump is PR-scoped, not edit-scoped: one bump per changed skill in the final PR diff is required, even if the skill was edited multiple times on the branch.
+- A file under `.agents/docs/` that a skill links into its tree counts as a bundled file of every skill that links it, so editing it requires a bump in each of those skills.
+- `pnpm run check:skill-bumps` diffs committed history (`origin/main...HEAD`) only; run it after committing, because a pass before the commit says nothing about uncommitted edits.
 
 </skills_system>
 
