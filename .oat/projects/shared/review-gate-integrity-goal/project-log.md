@@ -310,6 +310,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:
 
 m03 exit gate run 10ed9157 (p08-p16, codex-6-sol-xhigh) received: 0/0/2/0, both accepted-requirement under Outcome 5; fix records p16-t03, p16-t04 queued under p16 by the late-fix rule; exit gate reruns after p16 re-acceptance; rgi-m03-exit-r1-receive-20261108
 
+### 2026-11-08 · structural · oat-project-implement · p16
+
+p16 re-accepted at b2f6b3b44 after m03 exit gate fixes (p16-t03, p16-t04) and a root-inline Low fix (p16-t05); 2 review cycles, round 2 0/0/0/0; rgi-p16-outcome-r2-20261108
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

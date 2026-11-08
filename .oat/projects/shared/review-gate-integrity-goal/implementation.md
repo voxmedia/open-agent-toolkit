@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p08    | completed   | 1     | 1/1      |
-| p14    | completed   | 1     | 1/1      |
-| p15    | completed   | 1     | 1/1      |
-| p16    | in_progress | 1     | 1/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p14    | completed | 1     | 1/1      |
+| p15    | completed | 1     | 1/1      |
+| p16    | completed | 1     | 1/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 13/15 phases accepted
+**Total:** 14/15 phases accepted
 
 ---
 
@@ -2720,6 +2720,23 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 31/31 convergence tests pass; `pnpm --filter @open-agent-toolkit/cli check` and `type-check` exit 0. Guard can fail: with the prior-run reader's `requestedScope` set to `''`, the strengthened test fails (1 failed, 30 passed); restored.
 
+### Review Received: p16 (m03 exit gate fixes)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p16-review-2026-11-08T053439Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+**Finding classes:** L1 accepted-requirement (plan.md p08 Exit evidence: guard-can-fail controls show the matching rule's tests can fail) · L2 accepted-requirement (AGENTS.md: instructions and documentation stay true; the module comment is the definition `sequenceSubject` names)
+
+Scope: the fix delta `b538b09ea..e638186b0` (p16-t03, p16-t04), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p16-rev-20261108-02`, reconnaissance not attempted). The reviewer re-ran the exit gate's reproduction on a fresh build: all four cases return run 2 with two carried over, and disabling either fix returns `null` again. Exit gate M1 and M2 are resolved, and the approved-carrier, different-amendment, ordinary single-phase, literal `final` and whole-project `final` controls hold.
+
+- L1 (Low): the p16-t04 test's first run used a literal `final`, leaving the prior-run requested-scope reader untested → fix record p16-t05 (`cfa5ec8af`), guard can fail.
+- L2 (Low): the module doc comment did not state either new rule → fix record p16-t05.
+
+Round 2 (confirmation, same reviewer, delta `e638186b0..b2f6b3b44`, artifact `reviews/archived/p16-review-2026-11-08T053807Z.md`): Critical 0 · High 0 · Medium 0 · Low 0. L1 and L2 resolved; the reviewer reproduced the guard-can-fail result on a `git archive` copy.
+
+**Outcome:** passed; p16 accepted again at head `b2f6b3b44` after two review cycles. The m03 exit gate reruns over `p08-p16`.
+
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
 **Status:** pending
@@ -2794,6 +2811,7 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 - run/v1 · request=rgi-p16-rev-20261108-01 · scope=p16 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p16-impl-20261108-02 · scope=p16 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p16 (fix record p16-t05 only), reason: two Low re-review findings, a one-line test change and a doc comment, fixed in the root per the small-fix rule; root model claude-opus-5-5
+- run/v1 · request=rgi-p16-rev-20261108-02 · scope=p16 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
