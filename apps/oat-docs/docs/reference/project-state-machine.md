@@ -15,33 +15,47 @@ This page is the compact contract for how project lifecycle state and review sta
 
 ## State Transition Map
 
+The map groups states by phase. Review statuses come from the `plan.md`
+Reviews table and lead back to implementation; the `pr_open` revise loop
+follows once implementation is complete.
+
 === "Diagram"
 
-    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite, brief and goal enter at planning](/diagrams/project-state-machine-light.svg)
-    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite, brief and goal enter at planning](/diagrams/project-state-machine-dark.svg)
+    ![State machine by phase: planning (lite, brief, goal enter at plan), implementation, a review loop back to it, then PR open, revise and complete](/diagrams/project-state-machine-light.svg)
+    ![State machine by phase: planning (lite, brief, goal enter at plan), implementation, a review loop back to it, then PR open, revise and complete](/diagrams/project-state-machine-dark.svg)
 
 === "Mermaid source"
 
     ```mermaid
     flowchart TD
-      D["Discovery in progress"] --> RS["Ready for spec"]
-      RS --> S["Spec in progress"] --> RD["Ready for design"]
-      RD --> G["Design in progress"] --> RP["Ready for plan"]
-      RP --> P["Plan in progress"] --> RI["Ready for implement"]
-      RI --> I["Implement in progress"] --> IC["Implement complete"]
-      IC --> PRO["PR open (pr_open)"]
-      PRO --> REV["Revise (in_progress)"]
-      REV --> PRO
-      PRO --> C["Complete"]
-
-      I --> RV["Review received"]
-      RV --> FA["Fixes added"]
-      FA --> FC["Fixes completed"]
-      FC --> PASSED["Review passed"]
+      accTitle: Project state machine by phase
+      accDescr: Planning runs from discovery to ready for implement, with lite and brief or goal entering at plan in progress. Implementation leads to implement complete. A review loop returns to implementation. PR open loops through revise and ends at complete.
+      subgraph PLANNING["Planning"]
+        D["Discovery in progress"] --> RS["Ready for spec"]
+        RS --> S["Spec in progress"] --> RD["Ready for design"]
+        RD --> G["Design in progress"] --> RP["Ready for plan"]
+        RP --> P["Plan in progress"] --> RI["Ready for implement"]
+        LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
+        BRIEF["Brief or goal: interview\n(one Project Brief)"] -. entry point .-> P
+      end
+      subgraph IMPLEMENTATION["Implementation"]
+        I["Implement in progress"] --> IC["Implement complete"]
+      end
+      subgraph REVIEW["Review (plan.md Reviews table)"]
+        RV["Review received"] -->|fixes queued| FA["Fixes added"]
+        RV -->|no fixes queued| PASSED["Review passed"]
+        FA --> FC["Fixes completed"]
+        FC --> PASSED
+      end
+      subgraph PRREV["PR and revision"]
+        PRO["PR open (pr_open)"] --> REV["Revise (in_progress)"]
+        REV --> PRO
+        PRO --> C["Complete"]
+      end
+      RI --> I
+      I --> RV
       PASSED --> I
-
-      LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
-      BRIEF["Brief or goal: interview\n(one Project Brief)"] -. entry point .-> P
+      IC --> PRO
     ```
 
 The solid chain is the spec-driven progression. Lite, brief and goal enter at
@@ -145,7 +159,8 @@ delivery boundary; see
 
 In `plan.md` Reviews table:
 
-- `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed`
+- `pending` -> `received` -> `passed` when receive queues no fixes
+- `pending` -> `received` -> `fixes_added` -> `fixes_completed` -> `passed` after a re-review
 
 ## Guardrail
 
