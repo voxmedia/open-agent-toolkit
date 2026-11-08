@@ -2708,6 +2708,18 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 
 `SequenceRun` gains an optional `requestedScope`, filled from `oat_review_requested_scope` by both readers (the current run in `computeGateConvergence` and each prior run in `listGateRunArtifacts`, via a new `GateRunArtifact.requestedScope`), and `sequenceSubject` treats a requested `final` like a resolved `final` for the milestone subject; the existing one-milestone and non-empty-phase conditions still apply, so ordinary single-phase gates and an explicit whole-project `final` keep their scope sequence (12 insertions, 4 deletions in production code). One test in the captured-m02 block adapts the real m02 run-1 fixture to a `final` run followed by a p15-shaped run (`oat_review_scope: p02`, `oat_review_requested_scope: final`, `oat_review_phase_ids: [p02]`) on singleton milestone m02 and expects milestone m02 run 2 with 2 carried over; the existing ordinary-phase and literal-final `sequenceSubject` controls pass unchanged. The subject table row in `workflow-gates.md` names the requested scope. Proof: gate suites 514/514 (exit 0). Can-fail control: replacing the requested-scope condition with `false` failed the new test with `expected null` (exit 1); restored.
 
+### Task p16-t05: (review) Cover the prior-run requested-scope reader and document both sequence rules
+
+**Status:** completed
+**Executor:** root-inline:rgi-p16-t05-20261108
+**Source review:** reviews/archived/p16-review-2026-11-08T053439Z.md (L1, L2)
+**Intent:** p16 re-review L1: the p16-t04 test's first run used a literal `final`, so the prior-run reader of `oat_review_requested_scope` (`convergence.ts:759`) was never exercised; make both runs p15-shaped (`p02` scope, requested `final`). L2: the module doc comment that `sequenceSubject` names as its definition did not state either new rule; update it.
+**Files:** `packages/cli/src/commands/gate/convergence.test.ts`, `packages/cli/src/commands/gate/convergence.ts` (comment only)
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence`
+**Commit:** cfa5ec8af24fcf5b83b63c18c1fa66c2a7c7631b
+
+31/31 convergence tests pass; `pnpm --filter @open-agent-toolkit/cli check` and `type-check` exit 0. Guard can fail: with the prior-run reader's `requestedScope` set to `''`, the strengthened test fails (1 failed, 30 passed); restored.
+
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
 **Status:** pending
@@ -2781,6 +2793,7 @@ Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli
 - run/v1 · request=rgi-p16-impl-20261108-01 · scope=p16 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p16-rev-20261108-01 · scope=p16 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p16-impl-20261108-02 · scope=p16 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p16 (fix record p16-t05 only), reason: two Low re-review findings, a one-line test change and a doc comment, fixed in the root per the small-fix rule; root model claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
