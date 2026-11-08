@@ -2656,12 +2656,15 @@ Exit option: the code change, because it was small and local: one line in the sh
 
 ### Task p16-t02: Remove the simulated review-provide row writer from the contract test
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:rgi-p16-impl-20261108-01
 **Handle:** direct:rgi-p16-impl-20261108-01:p16-t02
 **Intent:** Close the PR #403 Warp suggestion. Delete the test-local `recordReviewEvent` writer, its `artifactRows` helper and the two post-write `it.each` cases from `review-event-row-contracts.test.ts`, and the imports only they used. Keep the Step 9 prose pin; the real `scaffoldProject` checks in `scaffold.test.ts` stay as they are. Nothing replaces them.
 **Files:** `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`
 **Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 337ad7ac3dc380b6c4b1293d02fdaf833dda40c4
+
+76 lines removed: the writer, `artifactRows`, the two `it.each` cases, and the `applyTemplateReplacements` and `WorkflowMode` imports. The kept pin moved into a block titled for the Step 9 rule, since its old title named the simulation. Proof: contract suites 1260/1260 (exit 0), the file 30/30.
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
