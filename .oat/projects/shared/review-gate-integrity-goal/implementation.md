@@ -1950,7 +1950,7 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 **Status:** in_progress
 **Base:** 241b12a95bc3022ce8e4f8589699f90e31d22417
 **Executor:** phase-implementer:rgi-p08-impl-20261107-01
-**Head:** d23563aeefcd8881be6591a91920bdc68be1bb17
+**Head:** dc43fa5b93a85ede751ba1df052239fc099eef25
 
 Phase verification (2026-11-07, at the head above, exit codes captured per gate):
 
@@ -1980,6 +1980,17 @@ Review-fix round 1 (`rgi-p08-fix-20261107-01`, p08-t04 to p08-t06). Head advance
 - `docs generate-index` exit 0, and the `index.md` diff exit 0.
 - The m02 sequence probe on the rebuilt branch build exited 0 and gave the same results as p08-t02: r1 absent, r2 1/0/2, r3 0/0/1, stuck 0/2/0, reworded 0/2/0.
 - The real-records probe places `5e3ad377` as undetermined and the other three plan runs in separate amendments.
+- `oat project journal check --at review --scope p08` returned `ok`.
+
+Review-fix round 2 (`rgi-p08-fix-20261107-02`, p08-t07). The head advanced from `d23563aee` to the commit above under the late-fix rule; the base is unchanged. Verification at that head:
+
+- `src/commands/gate` passed 512 tests, exit 0.
+- `pnpm check` exit 0, with 0 of 11 tasks cached.
+- `pnpm type-check` exit 0, with 5 of 11 cached.
+- `pnpm build` exit 0. It was cached, and `dist` was checked to contain the new rule.
+- `pnpm build:docs` exit 0; the docs build ran.
+- Index regeneration and its diff both exit 0.
+- The m02 sequence probe gave the same results as before.
 - `oat project journal check --at review --scope p08` returned `ok`.
 
 Phase start 2026-11-07, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the stable finding key, run linkage and the convergence fields feed one gate result and one record of the review: no two slices are independent. The work adds new surfaces and settles open design (p08's Known Unknowns), so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p08 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c` in the gate, review, review-provide, review-receive and reviewer paths.
