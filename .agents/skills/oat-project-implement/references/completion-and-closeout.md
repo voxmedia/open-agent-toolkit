@@ -66,8 +66,11 @@ oat-project-implement --project "$PROJECT_PATH" --json`, canonical
    project state and a committed goal recovery is at `exit_gate`,
    `oat-project-review-provide` resolves the `final` hint through its
    state-selected recovery-exit rule before anchor expansion; the launcher
-   still executes the same argv. A literal whole-project review request keeps
-   its meaning. Before launching a phase-only recovery gate, check that the
+   still executes the same argv. With no recovery pending, the same prompt
+   resolves the hint through its state-selected milestone-exit rule to the
+   active milestone's ordered accepted phases, so an earlier squash-merged
+   milestone's anchors are not read. A literal whole-project review request
+   keeps its meaning. Before launching a phase-only recovery gate, check that the
    configured review scope can resolve to the exact recovery set. A literal
    whole-project request with a wider scope is incompatible: report the
    configured scope and required recovery set, leave recovery blocked, and

@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.18
+  version: 1.5.19
 ---
 
 # Request Review
@@ -36,7 +36,7 @@ Before acting, verify that there is an active OAT project or a user-provided rev
 
 When the invocation is manual, summarize the inferred review type and scope, then ask before running the review.
 
-**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments except the state-selected goal recovery exit hint below, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary, but it does not waive dispatch controls. Resolve the reviewer target and use the exact registered role or explicitly pinned fresh child. Inline gate review is allowed only with verified equivalent current-host model and effort controls or a documented base-role exception; otherwise fail closed.
+**Gate-originated mode:** If the request context says the review is gate-originated, set `REVIEW_INVOCATION=gate`, honor any provided review type/scope arguments except the state-selected goal recovery and milestone exit hints below, and run without interactive confirmation prompts. The gate session is already the explicit authorization boundary, but it does not waive dispatch controls. Resolve the reviewer target and use the exact registered role or explicitly pinned fresh child. Inline gate review is allowed only with verified equivalent current-host model and effort controls or a documented base-role exception; otherwise fail closed.
 
 ## Mode Assertion
 
@@ -191,10 +191,44 @@ without state-based selection, retains the ordinary `final` meaning.
   Preserve all gate invocation/correlation fields, configured target and
   threshold. This does not claim a whole-project or integrated review.
 
-Absent a matching recovery record, at another stage, in another workflow,
-with an explicit range, or without the state-selection instruction, keep the
-normal scope rules below. Never repair historical anchors or history to make
-this resolution pass.
+**State-selected goal milestone exit hint (before normal inference or `final` expansion):**
+
+Resolve a supplied `final` hint to the active milestone's phase set only when
+all of these hold: invocation is a `code` gate; its prompt explicitly asks to
+use project state to determine the review scope; workflow mode is `goal`;
+`oat_goal_status` is `active`; and no `oat_goal_recovery` record is pending.
+That is the goal milestone closeout's exit gate, run verbatim with
+`--review-scope final`; an undeclared goal is not a complete
+project. The configured command and its argv remain unchanged. An explicit
+request for a whole-project final review, including a prompt asking for
+`code final` without state-based selection, retains the ordinary `final`
+meaning, and so does a state-selected `final` once `oat_goal_status` is
+`declared_met` (terminal closeout).
+
+- Read the active milestone (`oat_milestone`) and its exact ordered phase set
+  from the shared Milestones reader (`oat project status --json`), and require
+  every phase in it to be accepted. Do not derive membership from first/last
+  expansion, commit labels or the newest delivery.
+- Select a token exactly as the recovery hint does: the single-phase token, or
+  a contiguous phase-range token only when its expansion equals the exact
+  milestone set. An unaccepted phase or a set with no exact supported token
+  refuses the review; never flatten a noncontiguous set or widen it to the
+  whole project.
+- This is the **exit review**, not the integrated milestone review. Run Step
+  3.0 unchanged on the selected token, so earlier milestones' anchors are not
+  read and a squash-merged earlier milestone no longer refuses; invalid
+  selected anchors still refuse. Do not run Step 3.0g's exit-first
+  prerequisite against this gate.
+- Record as the recovery hint does: `oat_review_requested_scope: final`,
+  `oat_review_scope` the selected token, the exact milestone set in
+  `oat_review_phase_ids`, and a Review Scope disclosure that the
+  state-selection prompt resolved the original `final` hint through the active
+  milestone's phase set.
+
+Outside these two hints (a recovery at another stage, another workflow, an
+explicit range, or no state-selection instruction), keep the normal scope rules
+below. Never repair historical anchors or history to make either resolution
+pass.
 
 **If no arguments — infer from project state:**
 

@@ -103,6 +103,19 @@ in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
 
+### Goal milestone exit scope
+
+In a goal milestone closeout, the configured implement exit gate runs
+unchanged with `--review-scope final`. When its prompt explicitly asks to
+select review scope from project state, the goal is still `active` and no
+recovery is pending, the reviewer resolves the `final` hint to the active
+milestone's ordered accepted phases (a single phase or the matching contiguous
+phase range) instead of the whole project, so an earlier milestone that was
+squash-merged does not make the gate refuse on its phase anchors. The artifact
+records the original `final` hint, the selected scope and the exact phase set.
+An explicit whole-project `code final` request, and a state-selected `final`
+after the goal is declared met, keep the whole-project meaning.
+
 ### Goal recovery scope
 
 For a goal project's recovery exit, a gate prompt that explicitly asks to
