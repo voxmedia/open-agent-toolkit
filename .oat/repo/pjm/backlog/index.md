@@ -482,9 +482,11 @@
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                              | open   | high     | feature | M        |
 | BL-261002-enforce-remote-planning        | Enforce remote planning approval caps, storage scope, and binding locations                          | open   | high     | task    | M        |
 | BL-261002-gitignore-project-review       | Gitignore project review artifacts instead of committing them                                        | open   | high     | task    | M        |
+| BL-261108-give-goal-closeout-a-recorded  | Give goal closeout a recorded path for a squash-merged stale delivery                                | open   | high     | feature | M        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                         | open   | high     | feature | M        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                    | open   | high     | feature | L        |
 | BL-261024-roll-out-the-shipped-oat-docs  | Roll out the shipped OAT docs front door and approval policy to consumer repositories                | open   | high     | feature | M        |
+| BL-261108-stop-workflow-owned-commits    | Stop workflow-owned commits from staling goal delivery evidence                                      | open   | high     | task    | S        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                        | open   | high     | feature | L        |
 | BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                         | open   | high     | feature | M        |
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                       | open   | medium   | feature | M        |
@@ -540,6 +542,7 @@
 | BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                               | open   | low      | task    | XS       |
 | BL-261002-decide-a-supported-permission  | Decide a supported permission setup for unattended cross-runtime review                              | open   | low      | idea    | M        |
 | BL-261030-decide-whether-a-no-op-sync    | Decide whether a no-op sync should restamp the manifest oatVersion                                   | open   | low      | task    | S        |
+| BL-261108-derive-first-release-versions  | Derive first-release versions in the project summary from tags                                       | open   | low      | task    | S        |
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                        | open   | low      | task    | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                             | open   | low      | task    | S        |
 | BL-261102-let-pr-skills-fall-back        | Let PR skills fall back to origin/HEAD when git.defaultBranch is unset                               | open   | low      | task    | S        |
