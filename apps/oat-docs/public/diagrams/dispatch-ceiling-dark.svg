@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 574" width="750" height="574" role="img" aria-labelledby="dc-title dc-desc">
+  <title id="dc-title">How a dispatch ceiling is resolved and applied</title>
+  <desc id="dc-desc">A config policy (workflow.dispatchPolicy, layered local over shared over user) wins over the project policy (oat_dispatch_policy in state.md, chosen at planning), which applies only when no config policy is set (dashed). With neither, there is no policy: an interactive run asks and a non-interactive run stops. The resolved policy is a capped tier (Economy to Frontier), Uncapped (any configured candidate), or Inherit Host Defaults (OAT passes no model or effort). For a capped tier, each phase takes the project cap or a narrower plan Dispatch Profile row, passed as --ceiling-tier, and the root requests one exact candidate with --candidate-model and --candidate-effort under that phase maximum. A candidate at or below the cap launches the phase: Codex and Claude enforce it, Cursor pins it without verifying, other providers treat it as advisory. A candidate above the cap is rejected (dashed).</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .c { fill: var(--text); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="dc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="dc-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="750" height="574" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 175 100 L 175 117 Q 175 125 183 125 L 332 125 Q 340 125 340 133 L 340 149" marker-end="url(#dc-arrow)"/>
+    <path class="edge-opt" d="M 565 100 L 565 117 Q 565 125 557 125 L 388 125 Q 380 125 380 133 L 380 149" marker-end="url(#dc-arrow-opt)"/>
+    <path class="edge-opt" d="M 470 180 L 559 180" marker-end="url(#dc-arrow-opt)"/>
+    <path class="edge" d="M 340 210 L 340 226 Q 340 234 332 234 L 138 234 Q 130 234 130 242 L 130 257" marker-end="url(#dc-arrow)"/>
+    <path class="edge" d="M 360 210 L 360 257" marker-end="url(#dc-arrow)"/>
+    <path class="edge" d="M 380 210 L 380 226 Q 380 234 388 234 L 592 234 Q 600 234 600 242 L 600 257" marker-end="url(#dc-arrow)"/>
+    <path class="edge" d="M 130 318 L 130 355" marker-end="url(#dc-arrow)"/>
+    <path class="edge" d="M 220 404 L 269 404" marker-end="url(#dc-arrow)"/>
+    <path class="edge" d="M 470 404 L 529 404" marker-end="url(#dc-arrow)"/>
+    <path class="edge-opt" d="M 370 442 L 370 489" marker-end="url(#dc-arrow-opt)"/>
+  </g>
+
+  <!-- CONFIG -->
+  <rect class="node" x="20" y="24" width="310" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="175" y="47" text-anchor="middle">Config policy</text>
+  <text class="mono s" x="175" y="67" text-anchor="middle">workflow.dispatchPolicy</text>
+  <text class="sans s" x="175" y="85" text-anchor="middle">local &gt; shared &gt; user</text>
+
+  <!-- PROJECT -->
+  <rect class="node" x="410" y="24" width="310" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="565" y="47" text-anchor="middle">Project policy</text>
+  <text class="mono s" x="565" y="67" text-anchor="middle">oat_dispatch_policy</text>
+  <text class="sans s" x="565" y="85" text-anchor="middle">state.md, chosen at planning</text>
+
+  <!-- RESOLUTION -->
+  <rect class="node" x="250" y="150" width="220" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="174" text-anchor="middle">Policy resolution</text>
+  <text class="sans s" x="360" y="194" text-anchor="middle">config wins over state.md</text>
+
+  <text class="sans el" x="573" y="118" text-anchor="start">if no config policy</text>
+
+  <!-- NO POLICY -->
+  <rect class="node" x="560" y="142" width="160" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="640" y="165" text-anchor="middle">No policy</text>
+  <text class="sans s" x="640" y="185" text-anchor="middle">interactive: asks</text>
+  <text class="sans s" x="640" y="203" text-anchor="middle">non-interactive: stops</text>
+
+  <text class="sans el" x="476" y="172" text-anchor="start">neither set</text>
+
+  <!-- CAPPED (main idea) -->
+  <rect class="node-em" x="20" y="258" width="220" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="130" y="282" text-anchor="middle">Capped tier</text>
+  <text class="sans s" x="130" y="302" text-anchor="middle">Economy to Frontier</text>
+
+  <!-- UNCAPPED -->
+  <rect class="node" x="260" y="258" width="200" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="282" text-anchor="middle">Uncapped</text>
+  <text class="sans s" x="360" y="302" text-anchor="middle">any configured candidate</text>
+
+  <!-- INHERIT -->
+  <rect class="node" x="480" y="258" width="240" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="600" y="282" text-anchor="middle">Inherit Host Defaults</text>
+  <text class="sans s" x="600" y="302" text-anchor="middle">OAT passes no model or effort</text>
+
+  <!-- PHASE MAX -->
+  <rect class="node" x="20" y="356" width="200" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="120" y="380" text-anchor="middle">Phase maximum</text>
+  <text class="sans s" x="120" y="400" text-anchor="middle">project cap, or narrower</text>
+  <text class="sans s" x="120" y="418" text-anchor="middle">plan Dispatch Profile row</text>
+  <text class="sans s" x="120" y="436" text-anchor="middle">passed as <tspan class="mono">--ceiling-tier</tspan></text>
+
+  <text class="sans el" x="138" y="341" text-anchor="start">each phase</text>
+
+  <!-- EXACT CANDIDATE -->
+  <rect class="node" x="270" y="366" width="200" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="389" text-anchor="middle">Exact candidate</text>
+  <text class="mono s" x="370" y="409" text-anchor="middle">--candidate-model</text>
+  <text class="mono s" x="370" y="427" text-anchor="middle">--candidate-effort</text>
+
+  <!-- LAUNCH -->
+  <rect class="node" x="530" y="356" width="200" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="630" y="380" text-anchor="middle">Launch the phase</text>
+  <text class="sans s" x="630" y="400" text-anchor="middle">Codex, Claude: enforced</text>
+  <text class="sans s" x="630" y="418" text-anchor="middle">Cursor: pinned, not verified</text>
+  <text class="sans s" x="630" y="436" text-anchor="middle">others: advisory</text>
+
+  <text class="sans el" x="500" y="396" text-anchor="middle">≤ cap</text>
+
+  <!-- REJECTED -->
+  <rect class="node" x="270" y="490" width="200" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="514" text-anchor="middle">Rejected</text>
+  <text class="sans s" x="370" y="534" text-anchor="middle">above-cap candidate</text>
+
+  <text class="sans el" x="378" y="470" text-anchor="start">above the cap</text>
+</svg>

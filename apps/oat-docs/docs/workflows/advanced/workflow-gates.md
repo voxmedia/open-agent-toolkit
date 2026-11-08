@@ -30,6 +30,41 @@ exit status.
   and [How independent the reviewer must be](#how-independent-the-reviewer-must-be).
   The sections between here and there are the detailed contract.
 
+A gate runs as the last step of the skill it is configured for, and only when
+one is configured. `ok` lets the skill continue, and `blocked` goes to the
+configured `onFailure` policy after receive. An operational failure stays
+blocked in implement, lite, brief and goal; discover, design, plan, quick-start
+and import-plan apply `onFailure` to it instead.
+[Failure behavior](#failure-behavior) has the full contract. For where
+the gate lane sits among dispatched agents, see
+[Orchestration Model](orchestration-model.md).
+
+=== "Diagram"
+
+    ![Gate flow: resolve, review, then ok, blocked into onFailure, or operational failure: blocked in implement, lite, brief, goal; onFailure in the rest](/diagrams/workflow-gates-light.svg)
+    ![Gate flow: resolve, review, then ok, blocked into onFailure, or operational failure: blocked in implement, lite, brief, goal; onFailure in the rest](/diagrams/workflow-gates-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Where a gate runs and what it decides
+      accDescr: A gate configured under workflow.gates.skills runs as the last step of discovery or design, a planning skill, or implementation. oat gate resolve finds it; with none configured or the project disabling it, no gate runs. A configured command, usually oat gate review, returns ok, blocked (findings at or above the threshold, default high) or an operational failure. Implement, lite, brief and goal keep an operational failure blocked under any onFailure; discover, design, plan, quick-start and import-plan apply onFailure to it. After receive, onFailure applies to blocked: block fixes and reruns up to maxAttempts, warn records and continues, and prompt or an exhausted block goes to the operator.
+      DD["Discovery, design\noat-project-discover\noat-project-design"] --> RES
+      PL["Planning skills\nplan, quick-start, lite,\nbrief, goal, import-plan"] --> RES
+      IMP["Implementation\noat-project-implement\nexit gate, after final review"] --> RES
+      RES["oat gate resolve\nworkflow.gates.skills.#lt;skill#gt;"]
+      RES -.->|"none or disabled"| NONE["No gate runs\nskill continues"]
+      RES -->|"configured"| REV["oat gate review\nthe usual configured command\nanother model family if available"]
+      REV --> OK["ok\nreceive, then continue"]
+      REV --> BL["blocked\nfindings at or above threshold\ndefault high"]
+      REV --> OPF["Operational failure\nimplement, lite, brief, goal:\nblocked under any onFailure"]
+      BL --> ONF["onFailure\nblocked: after receive\nwarn: record and continue"]
+      OPF -.->|"discover, design,\nplan, quick-start,\nimport-plan"| ONF
+      ONF -.->|"block: fix and rerun,\nup to maxAttempts, default 2"| REV
+      ONF -.->|"prompt, or block exhausted"| OP["Operator decides\nsees accumulated feedback"]
+    ```
+
 The shortest way to add an independent review to the implement step, shared
 with your team through the committed `.oat/config.json`, is the same command as
 in
@@ -1179,8 +1214,8 @@ contributor fields are absent. The achieved level is one of:
 
 ## Failure behavior
 
-Gate failure behavior is owned by the gate-aware skill. The configured policy
-applies only to a validated, receive-eligible `blocked` result after its
+Gate failure behavior is owned by the gate-aware skill. For a validated,
+receive-eligible `blocked` result, the configured policy applies after its
 eligible receive completes durably:
 
 | `onFailure` | Meaning                                                                              |
@@ -1192,8 +1227,13 @@ eligible receive completes durably:
 `review_failed`, `artifact_validation_failed`,
 `targeting_correlation_failed`, unknown or contradictory envelopes, launch
 failures, and receive failures are operational failures rather than validated
-blocking findings. They remain blocked regardless of `onFailure`; even `warn`
-cannot turn them into an allowed disposition.
+blocking findings. `oat-project-implement`, `oat-project-lite`,
+`oat-project-brief`, and `oat-project-goal` keep them blocked regardless of
+`onFailure`; even `warn` cannot turn them into an allowed disposition. The
+discovery, design, and planning skills (`oat-project-discover`,
+`oat-project-design`, `oat-project-plan`, `oat-project-quick-start`, and
+`oat-project-import-plan`) apply `onFailure` to any failed gate run instead;
+see [When the gate finds blocking problems](#when-the-gate-finds-blocking-problems).
 
 A validated `blocked` result whose every finding is bookkeeping (a stale
 ledger cell, an archived-path reference, a progress counter; see

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 588" width="750" height="588" role="img" aria-labelledby="ll-title ll-desc">
+  <title id="ll-title">Where project-log learnings go</title>
+  <desc id="ll-desc">Lifecycle surfaces such as implement, reviews and gates append entries to project-log.md with oat project log append. The log feeds parallel branches rather than one pipeline. Synthesis (oat project log synthesize), when run, writes the end-of-run synthesis into the log (dashed); completion only warns when it is pending (dashed). The summary (oat-project-summary) offers promotion of reusable judgments, then the roll-up (oat project log rollup) writes a digest into summary.md and general judgments to the ledger. The optional retro (oat-project-retro) reads the log first and writes references/project-retro.md; applying repo changes and, through the separate oat-project-retro-file skill, filing issues or backlog items each need consent (dashed). oat-project-complete requires the roll-up when the log has entries, then appends the seal.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .c { fill: var(--text); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ll-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ll-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="750" height="588" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 375 84 L 375 123" marker-end="url(#ll-arrow)"/>
+    <!-- log -> synthesis (when run) -->
+    <path class="edge-opt" d="M 315 184 L 315 200 Q 315 208 307 208 L 123 208 Q 115 208 115 216 L 115 235" marker-end="url(#ll-arrow-opt)"/>
+    <!-- log -> summary -->
+    <path class="edge" d="M 355 184 L 355 235" marker-end="url(#ll-arrow)"/>
+    <!-- log -> retro (optional) -->
+    <path class="edge-opt" d="M 395 184 L 395 200 Q 395 208 403 208 L 607 208 Q 615 208 615 216 L 615 235" marker-end="url(#ll-arrow-opt)"/>
+    <path class="edge" d="M 355 312 L 355 371" marker-end="url(#ll-arrow)"/>
+    <path class="edge-opt" d="M 515 312 L 515 346"/>
+    <path class="edge-opt" d="M 515 346 L 622 346 Q 630 346 630 354 L 630 371" marker-end="url(#ll-arrow-opt)"/>
+    <path class="edge-opt" d="M 515 346 L 515 491 Q 515 498 522 498 L 529 498" marker-end="url(#ll-arrow-opt)"/>
+    <path class="edge" d="M 355 448 L 355 487" marker-end="url(#ll-arrow)"/>
+    <!-- synthesis -> complete (warn only) -->
+    <path class="edge-opt" d="M 115 312 L 115 518 Q 115 526 123 526 L 204 526" marker-end="url(#ll-arrow-opt)"/>
+  </g>
+
+  <!-- SURFACES -->
+  <rect class="node" x="235" y="24" width="280" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="375" y="48" text-anchor="middle">Lifecycle surfaces</text>
+  <text class="sans s" x="375" y="68" text-anchor="middle">implement, reviews, gates</text>
+
+  <!-- LOG (main idea) -->
+  <rect class="node-em" x="235" y="124" width="280" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="375" y="148" text-anchor="middle">project-log.md</text>
+  <text class="sans s" x="375" y="168" text-anchor="middle">judgment and structural entries</text>
+
+  <text class="mono el" x="383" y="109" text-anchor="start">log append</text>
+
+  <!-- SYNTHESIS -->
+  <rect class="node" x="20" y="236" width="190" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="115" y="259" text-anchor="middle">Synthesis</text>
+  <text class="mono s" x="115" y="279" text-anchor="middle">log synthesize</text>
+  <text class="sans s" x="115" y="297" text-anchor="middle">end-of-run, in the log</text>
+
+  <!-- SUMMARY -->
+  <rect class="node" x="240" y="236" width="230" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="355" y="259" text-anchor="middle">Summary</text>
+  <text class="mono s" x="355" y="279" text-anchor="middle">oat-project-summary</text>
+  <text class="sans s" x="355" y="297" text-anchor="middle">offers promotion</text>
+
+  <!-- RETRO -->
+  <rect class="node" x="500" y="236" width="230" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="615" y="259" text-anchor="middle">Retro</text>
+  <text class="mono s" x="615" y="279" text-anchor="middle">oat-project-retro</text>
+  <text class="sans s" x="615" y="297" text-anchor="middle">references/project-retro.md</text>
+
+  <text class="sans el" x="123" y="228" text-anchor="start">when run</text>
+
+  <text class="sans el" x="530" y="202" text-anchor="start">optional</text>
+
+  <!-- ROLLUP -->
+  <rect class="node" x="240" y="372" width="230" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="355" y="395" text-anchor="middle">Roll-up</text>
+  <text class="mono s" x="355" y="415" text-anchor="middle">log rollup</text>
+  <text class="sans s" x="355" y="433" text-anchor="middle">digest to summary.md, ledger</text>
+
+  <text class="sans el" x="363" y="346" text-anchor="start">after summary.md</text>
+
+  <!-- APPLY -->
+  <rect class="node" x="530" y="372" width="200" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="630" y="396" text-anchor="middle">Apply</text>
+  <text class="sans s" x="630" y="416" text-anchor="middle">repo changes</text>
+
+  <!-- FILE (separate skill) -->
+  <rect class="node" x="530" y="460" width="200" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="630" y="483" text-anchor="middle">File</text>
+  <text class="mono s" x="630" y="503" text-anchor="middle">oat-project-retro-file</text>
+  <text class="sans s" x="630" y="521" text-anchor="middle">issues, backlog</text>
+
+  <text class="sans el" x="523" y="336" text-anchor="start">with consent</text>
+
+  <!-- COMPLETE -->
+  <rect class="node" x="205" y="488" width="300" height="76" rx="8" ry="8"/>
+  <text class="mono t" x="355" y="511" text-anchor="middle">oat-project-complete</text>
+  <text class="sans s" x="355" y="531" text-anchor="middle">requires the roll-up if the log has entries</text>
+  <text class="sans s" x="355" y="549" text-anchor="middle">then appends the seal</text>
+
+  <text class="sans el" x="363" y="472" text-anchor="start">required</text>
+
+  <text class="sans el" x="123" y="420" text-anchor="start">warn if pending</text>
+</svg>

@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 680" width="740" height="680" role="img" aria-labelledby="cs-title cs-desc">
+  <title id="cs-title">Completion by project scope</title>
+  <desc id="cs-desc">oat-project-complete reads the project scope. A local project is never archived: it stays in place and never exports a recap. Shared and synced projects are durable and reach an archive choice, set by workflow.archiveOnComplete or asked. Declined: a shared project stays where it is; a synced project keeps its ref and checkout and marks its record complete. Archived: oat project archive moves the project, copying it to archived/ and then removing the active copy, and a synced project moves to its completed ref. Archive then runs three conditional steps (dashed): summary export when archive.summaryExportPath is set (a synced project needs it to succeed), recap export when a recap run is selected, and shared-storage (S3) sync when archive.s3Uri and archive.s3SyncOnComplete are set; a synced project needs that upload to succeed.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .c { fill: var(--text); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="cs-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="cs-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="740" height="680" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 370 76 L 370 103" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 346 164 L 346 172 Q 346 180 338 180 L 138 180 Q 130 180 130 188 L 130 199" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 370 164 L 370 199" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 394 164 L 394 172 Q 394 180 402 180 L 602 180 Q 610 180 610 188 L 610 199" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 130 260 L 130 295" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 370 260 L 370 295" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 610 260 L 610 295" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 430 356 L 430 376 Q 430 384 422 384 L 378 384 Q 370 384 370 392 L 370 411" marker-end="url(#cs-arrow)"/>
+    <path class="edge" d="M 550 356 L 550 376 Q 550 384 558 384 L 602 384 Q 610 384 610 392 L 610 411" marker-end="url(#cs-arrow)"/>
+    <!-- archive -> summary export -->
+    <path class="edge-opt" d="M 590 508 L 590 524 Q 590 532 582 532 L 138 532 Q 130 532 130 540 L 130 559" marker-end="url(#cs-arrow-opt)"/>
+    <!-- archive -> recap export -->
+    <path class="edge-opt" d="M 590 508 L 590 524 Q 590 532 582 532 L 378 532 Q 370 532 370 540 L 370 569" marker-end="url(#cs-arrow-opt)"/>
+    <path class="edge-opt" d="M 630 508 L 630 559" marker-end="url(#cs-arrow-opt)"/>
+  </g>
+
+  <!-- COMPLETE -->
+  <rect class="node" x="240" y="24" width="260" height="52" rx="8" ry="8"/>
+  <text class="mono t" x="370" y="54" text-anchor="middle">oat-project-complete</text>
+
+  <!-- SCOPE (main idea) -->
+  <rect class="node-em" x="240" y="104" width="260" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="128" text-anchor="middle">Project scope</text>
+  <text class="mono s" x="370" y="148" text-anchor="middle">oat project scope</text>
+
+  <!-- LOCAL -->
+  <rect class="node" x="20" y="200" width="220" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="130" y="224" text-anchor="middle">local</text>
+  <text class="sans s" x="130" y="244" text-anchor="middle">not durable</text>
+
+  <!-- SHARED -->
+  <rect class="node" x="260" y="200" width="220" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="370" y="224" text-anchor="middle">shared</text>
+  <text class="sans s" x="370" y="244" text-anchor="middle">durable</text>
+
+  <!-- SYNCED -->
+  <rect class="node" x="500" y="200" width="220" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="610" y="224" text-anchor="middle">synced</text>
+  <text class="sans s" x="610" y="244" text-anchor="middle">durable; project ref</text>
+
+  <!-- LOCAL OUTCOME -->
+  <rect class="node" x="20" y="296" width="220" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="130" y="319" text-anchor="middle">Never archived</text>
+  <text class="sans s" x="130" y="339" text-anchor="middle">stays in place</text>
+  <text class="sans s" x="130" y="357" text-anchor="middle">no recap export</text>
+
+  <!-- ARCHIVE CHOICE -->
+  <rect class="node" x="260" y="296" width="460" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="490" y="320" text-anchor="middle">Archive?</text>
+  <text class="sans s" x="490" y="340" text-anchor="middle">set by <tspan class="mono">workflow.archiveOnComplete</tspan>, or asked</text>
+
+  <!-- DECLINED -->
+  <rect class="node" x="260" y="412" width="220" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="435" text-anchor="middle">Not archived</text>
+  <text class="sans s" x="370" y="455" text-anchor="middle">shared: stays where it is</text>
+  <text class="sans s" x="370" y="473" text-anchor="middle">synced: ref and checkout kept</text>
+
+  <!-- ARCHIVE -->
+  <rect class="node" x="500" y="412" width="220" height="96" rx="8" ry="8"/>
+  <text class="mono t" x="610" y="436" text-anchor="middle">oat project archive</text>
+  <text class="sans s" x="610" y="456" text-anchor="middle">copies to archived/,</text>
+  <text class="sans s" x="610" y="474" text-anchor="middle">then removes the active copy</text>
+  <text class="sans s" x="610" y="492" text-anchor="middle">synced: moves to completed ref</text>
+
+  <text class="sans el" x="362" y="404" text-anchor="end">declined</text>
+
+  <text class="sans el" x="618" y="404" text-anchor="start">archive</text>
+
+  <!-- SUMMARY EXPORT -->
+  <rect class="node" x="20" y="560" width="220" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="130" y="584" text-anchor="middle">Summary export</text>
+  <text class="mono s" x="130" y="604" text-anchor="middle">archive.summaryExportPath</text>
+  <text class="sans s" x="130" y="622" text-anchor="middle">copies summary.md</text>
+  <text class="sans s" x="130" y="640" text-anchor="middle">synced: must succeed</text>
+
+  <!-- RECAP EXPORT -->
+  <rect class="node" x="260" y="570" width="220" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="370" y="593" text-anchor="middle">Recap export</text>
+  <text class="sans s" x="370" y="613" text-anchor="middle">if a recap run is selected</text>
+  <text class="sans s" x="370" y="631" text-anchor="middle">one tracked page</text>
+
+  <!-- S3 SYNC -->
+  <rect class="node" x="500" y="560" width="220" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="610" y="584" text-anchor="middle">Shared-storage sync</text>
+  <text class="mono s" x="610" y="604" text-anchor="middle">archive.s3Uri +</text>
+  <text class="mono s" x="610" y="622" text-anchor="middle">archive.s3SyncOnComplete</text>
+  <text class="sans s" x="610" y="640" text-anchor="middle">synced: upload must succeed</text>
+
+  <text class="sans el" x="138" y="552" text-anchor="start">if set</text>
+
+  <text class="sans el" x="378" y="556" text-anchor="start">if selected</text>
+
+  <text class="sans el" x="638" y="538" text-anchor="start">if set</text>
+</svg>

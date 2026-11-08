@@ -9,6 +9,57 @@ Use this section when you want the detailed lifecycle and artifact model behind 
 
 Projects are where the workflow layer becomes concrete: lifecycle phases, `state.md`, `plan.md`, review gates, PR flow, and repository-analysis helpers all live here.
 
+## One record per project
+
+Every tracked project keeps one folder of artifacts, and each lifecycle stage
+adds to it. Solid boxes are files and folders every project has (split
+coordination parents excepted); dashed boxes
+depend on the workflow mode or on a choice such as running a retrospective.
+[Lifecycle](lifecycle.md) shows the stage order and each mode's lane.
+
+=== "Diagram"
+
+    ![Lifecycle stages beside one project folder: the artifacts each stage writes, solid when every project has them, dashed when mode or choice decides](/diagrams/artifact-rail-light.svg)
+    ![Lifecycle stages beside one project folder: the artifacts each stage writes, solid when every project has them, dashed when mode or choice decides](/diagrams/artifact-rail-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      accTitle: One project record across the lifecycle
+      accDescr: Each lifecycle stage writes into one project folder. Solid nodes are in every project; dashed nodes depend on the workflow mode or a choice. state.md is updated at every stage; project-log.md is created on the first append unless workflow.projectLog is false.
+      subgraph STAGES["Stages"]
+        direction TB
+        D["Discovery"] --> SD["Spec, design"] --> P["Plan"] --> I["Implement"] --> RP["Review, PR"] --> C["Closeout"]
+      end
+      subgraph REC["One project record\n.oat/projects/#lt;scope#gt;/#lt;name#gt;/"]
+        direction TB
+        DISC["discovery.md\nspec-driven, quick, capture"]:::opt
+        SPEC["spec.md"]:::opt
+        DES["design.md\nspec-driven; quick may add design.md"]:::opt
+        PLAN["plan.md"]
+        REFS["references/\ncreated for import, brief, goal"]:::opt
+        IMPL["implementation.md"]
+        REV["reviews/\nfilled as reviews and PRs run"]
+        PRD["pr/"]
+        SUM["summary.md\nwhen the summary runs"]:::opt
+        RETRO["references/project-retro.md\nwhen a retro runs"]:::opt
+        STATE["state.md\nupdated at every stage"]
+        LOG["project-log.md\ncreated on first append,\nunless workflow.projectLog is false"]:::opt
+      end
+      D --> DISC
+      SD --> SPEC
+      SD --> DES
+      P --> PLAN
+      P --> REFS
+      I --> IMPL
+      RP --> REV
+      RP --> PRD
+      C --> SUM
+      C --> RETRO
+      classDef opt stroke-dasharray: 5 4
+    ```
+
 ## Reference Contracts
 
 Read [Project Artifacts](../../reference/project-artifacts.md) for project file contracts and [State Machine](../../reference/project-state-machine.md) for lifecycle and review-state transitions.

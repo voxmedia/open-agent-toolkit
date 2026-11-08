@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 712" width="760" height="712" role="img" aria-labelledby="wg-title wg-desc">
+  <title id="wg-title">Where a gate runs and what it decides</title>
+  <desc id="wg-desc">A gate configured under workflow.gates.skills runs as the last step of discovery or design (oat-project-discover, oat-project-design), of a planning skill (plan, quick-start, lite, brief, goal, import-plan), or of implementation (oat-project-implement, the exit gate after the final review). oat gate resolve finds the gate; when none is configured or the project disables it, no gate runs and the skill continues (dashed). A configured command, usually oat gate review, dispatches a reviewer from another model family when one is available. ok means receive and continue. blocked means findings at or above the threshold (default high); after receive, onFailure applies: block fixes and reruns up to maxAttempts (default 2) (dashed loop), warn records and continues, and prompt or an exhausted block goes to the operator (dashed). An operational failure stays blocked under any onFailure in implement, lite, brief and goal; discover, design, plan, quick-start and import-plan apply onFailure to it instead (dashed), so under warn they finish without a review.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .c { fill: var(--text); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="wg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="wg-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="712" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 130 100 L 130 112 Q 130 120 138 120 L 337 120 Q 345 120 345 128 L 345 139" marker-end="url(#wg-arrow)"/>
+    <path class="edge" d="M 375 100 L 375 139" marker-end="url(#wg-arrow)"/>
+    <path class="edge" d="M 620 100 L 620 112 Q 620 120 612 120 L 413 120 Q 405 120 405 128 L 405 139" marker-end="url(#wg-arrow)"/>
+    <path class="edge-opt" d="M 235 170 L 118 170 Q 110 170 110 178 L 110 247" marker-end="url(#wg-arrow-opt)"/>
+    <path class="edge" d="M 375 200 L 375 247" marker-end="url(#wg-arrow)"/>
+    <path class="edge" d="M 355 324 L 355 340 Q 355 348 347 348 L 133 348 Q 125 348 125 356 L 125 371" marker-end="url(#wg-arrow)"/>
+    <path class="edge" d="M 375 324 L 375 371" marker-end="url(#wg-arrow)"/>
+    <path class="edge" d="M 395 324 L 395 340 Q 395 348 403 348 L 617 348 Q 625 348 625 356 L 625 371" marker-end="url(#wg-arrow)"/>
+    <path class="edge" d="M 375 448 L 375 499" marker-end="url(#wg-arrow)"/>
+    <!-- operational failure -> onFailure (discover, design, plan, quick-start, import-plan) -->
+    <path class="edge-opt" d="M 560 448 L 560 516 Q 560 524 552 524 L 491 524" marker-end="url(#wg-arrow-opt)"/>
+    <!-- block: fix and rerun -->
+    <path class="edge-opt" d="M 490 560 L 737 560 Q 745 560 745 552 L 745 300 Q 745 292 737 292 L 516 292" marker-end="url(#wg-arrow-opt)"/>
+    <path class="edge-opt" d="M 375 576 L 375 627" marker-end="url(#wg-arrow-opt)"/>
+  </g>
+
+  <!-- DISCOVER/DESIGN -->
+  <rect class="node" x="20" y="24" width="220" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="130" y="47" text-anchor="middle">Discovery, design</text>
+  <text class="mono s" x="130" y="67" text-anchor="middle">oat-project-discover</text>
+  <text class="mono s" x="130" y="85" text-anchor="middle">oat-project-design</text>
+
+  <!-- PLANNING -->
+  <rect class="node" x="260" y="24" width="230" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="375" y="47" text-anchor="middle">Planning skills</text>
+  <text class="mono s" x="375" y="67" text-anchor="middle">plan, quick-start, lite,</text>
+  <text class="mono s" x="375" y="85" text-anchor="middle">brief, goal, import-plan</text>
+
+  <!-- IMPLEMENT -->
+  <rect class="node" x="510" y="24" width="220" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="620" y="47" text-anchor="middle">Implementation</text>
+  <text class="mono s" x="620" y="67" text-anchor="middle">oat-project-implement</text>
+  <text class="sans s" x="620" y="85" text-anchor="middle">exit gate, after final review</text>
+
+  <!-- RESOLVE -->
+  <rect class="node" x="235" y="140" width="280" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="375" y="164" text-anchor="middle">oat gate resolve</text>
+  <text class="mono s" x="375" y="184" text-anchor="middle">workflow.gates.skills.&lt;skill&gt;</text>
+
+  <!-- NO GATE -->
+  <rect class="node" x="20" y="248" width="180" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="272" text-anchor="middle">No gate runs</text>
+  <text class="sans s" x="110" y="292" text-anchor="middle">skill continues</text>
+
+  <text class="sans el" x="120" y="162" text-anchor="start">none or disabled</text>
+
+  <!-- REVIEW (main idea) -->
+  <rect class="node-em" x="235" y="248" width="280" height="76" rx="8" ry="8"/>
+  <text class="mono t" x="375" y="271" text-anchor="middle">oat gate review</text>
+  <text class="sans s" x="375" y="291" text-anchor="middle">the usual configured command</text>
+  <text class="sans s" x="375" y="309" text-anchor="middle">another model family if available</text>
+
+  <text class="sans el" x="383" y="229" text-anchor="start">configured</text>
+
+  <!-- OK -->
+  <rect class="node" x="20" y="372" width="210" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="125" y="396" text-anchor="middle">ok</text>
+  <text class="sans s" x="125" y="416" text-anchor="middle">receive, then continue</text>
+
+  <!-- BLOCKED -->
+  <rect class="node" x="260" y="372" width="230" height="76" rx="8" ry="8"/>
+  <text class="mono t" x="375" y="395" text-anchor="middle">blocked</text>
+  <text class="sans s" x="375" y="415" text-anchor="middle">findings at or above threshold</text>
+  <text class="sans s" x="375" y="433" text-anchor="middle">default high</text>
+
+  <!-- OPERATIONAL -->
+  <rect class="node" x="520" y="372" width="210" height="76" rx="8" ry="8"/>
+  <text class="sans t" x="625" y="395" text-anchor="middle">Operational failure</text>
+  <text class="sans s" x="625" y="415" text-anchor="middle">implement, lite, brief, goal:</text>
+  <text class="sans s" x="625" y="433" text-anchor="middle">blocked under any <tspan class="mono">onFailure</tspan></text>
+
+  <!-- ONFAILURE -->
+  <rect class="node" x="260" y="500" width="230" height="76" rx="8" ry="8"/>
+  <text class="mono t" x="375" y="523" text-anchor="middle">onFailure</text>
+  <text class="sans s" x="375" y="543" text-anchor="middle">blocked: after receive</text>
+  <text class="sans s" x="375" y="561" text-anchor="middle">warn: record and continue</text>
+
+  <text class="sans el" x="568" y="470" text-anchor="start">discover, design,</text>
+
+  <text class="sans el" x="568" y="486" text-anchor="start">plan, quick-start,</text>
+
+  <text class="sans el" x="568" y="502" text-anchor="start">import-plan</text>
+
+  <text class="sans el" x="530" y="262" text-anchor="start">block: fix and rerun,</text>
+
+  <text class="sans el" x="530" y="280" text-anchor="start">up to maxAttempts, default 2</text>
+
+  <!-- OPERATOR -->
+  <rect class="node" x="260" y="628" width="230" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="375" y="652" text-anchor="middle">Operator decides</text>
+  <text class="sans s" x="375" y="672" text-anchor="middle">sees accumulated feedback</text>
+
+  <text class="sans el" x="367" y="606" text-anchor="end">prompt, or block exhausted</text>
+</svg>

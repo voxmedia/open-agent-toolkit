@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 652" width="720" height="652" role="img" aria-labelledby="ar-title ar-desc">
+  <title id="ar-title">One project record across the lifecycle</title>
+  <desc id="ar-desc">Lifecycle stages on the left, one project folder (.oat/projects/&lt;scope&gt;/&lt;name&gt;/) on the right. Discovery writes discovery.md (spec-driven, quick and capture). Spec and design write spec.md and design.md (spec-driven; quick may add a lightweight design.md). Plan writes plan.md, present in every project, and references/ is created for import (imported-plan.md) and for brief and goal (research/). Implement writes implementation.md, present in every project. Review and PR fill reviews/ and pr/, folders every project has. Closeout adds summary.md when the summary runs and references/project-retro.md when a retro runs. state.md is in every project and updated at every stage; project-log.md is created on the first append unless workflow.projectLog is false. Solid boxes are in every project; dashed boxes depend on mode or choice.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .node-opt { fill: var(--node); stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .c { fill: var(--text); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ar-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ar-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="652" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 110 132 L 110 147" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 200 110 L 223 110" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 110 192 L 110 207" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 200 170 L 223 170" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 110 252 L 110 267" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 200 230 L 223 230" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 110 312 L 110 327" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 200 290 L 223 290" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 110 372 L 110 387" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 200 350 L 223 350" marker-end="url(#ar-arrow)"/>
+    <path class="edge" d="M 200 410 L 223 410" marker-end="url(#ar-arrow)"/>
+  </g>
+
+  <!-- RECORD: one project folder -->
+  <rect class="node-em" x="224" y="20" width="476" height="560" rx="8" ry="8"/>
+
+  <text class="sans t" x="240" y="46" text-anchor="start">One project record</text>
+
+  <text class="mono s" x="240" y="66" text-anchor="start">.oat/projects/&lt;scope&gt;/&lt;name&gt;/</text>
+
+  <!-- STAGE Discovery -->
+  <rect class="node" x="20" y="88" width="180" height="44" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="114" text-anchor="middle">Discovery</text>
+
+  <rect class="node-opt" x="240" y="95" width="114" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="297" y="115" text-anchor="middle">discovery.md</text>
+
+  <text class="sans el" x="368" y="115" text-anchor="start">spec-driven, quick, capture</text>
+
+  <!-- STAGE Spec, design -->
+  <rect class="node" x="20" y="148" width="180" height="44" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="174" text-anchor="middle">Spec, design</text>
+
+  <rect class="node-opt" x="240" y="155" width="75" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="277.5" y="175" text-anchor="middle">spec.md</text>
+
+  <rect class="node-opt" x="323" y="155" width="90" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="368" y="175" text-anchor="middle">design.md</text>
+
+  <text class="sans el" x="427" y="175" text-anchor="start">spec-driven; quick may add design.md</text>
+
+  <!-- STAGE Plan -->
+  <rect class="node" x="20" y="208" width="180" height="44" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="234" text-anchor="middle">Plan</text>
+
+  <rect class="node" x="240" y="215" width="75" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="277.5" y="235" text-anchor="middle">plan.md</text>
+
+  <rect class="node-opt" x="323" y="215" width="106" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="376" y="235" text-anchor="middle">references/</text>
+
+  <text class="sans el" x="443" y="235" text-anchor="start">created for import, brief, goal</text>
+
+  <!-- STAGE Implement -->
+  <rect class="node" x="20" y="268" width="180" height="44" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="294" text-anchor="middle">Implement</text>
+
+  <rect class="node" x="240" y="275" width="153" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="316.5" y="295" text-anchor="middle">implementation.md</text>
+
+  <!-- STAGE Review, PR -->
+  <rect class="node" x="20" y="328" width="180" height="44" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="354" text-anchor="middle">Review, PR</text>
+
+  <rect class="node" x="240" y="335" width="82" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="281" y="355" text-anchor="middle">reviews/</text>
+
+  <rect class="node" x="330" y="335" width="43" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="351.5" y="355" text-anchor="middle">pr/</text>
+
+  <text class="sans el" x="387" y="355" text-anchor="start">filled as reviews and PRs run</text>
+
+  <!-- STAGE Closeout -->
+  <rect class="node" x="20" y="388" width="180" height="44" rx="8" ry="8"/>
+  <text class="sans t" x="110" y="414" text-anchor="middle">Closeout</text>
+
+  <rect class="node-opt" x="240" y="395" width="98" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="289" y="415" text-anchor="middle">summary.md</text>
+
+  <text class="sans el" x="352" y="415" text-anchor="start">when the summary runs</text>
+
+  <rect class="node-opt" x="240" y="433" width="231" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="355.5" y="453" text-anchor="middle">references/project-retro.md</text>
+
+  <text class="sans el" x="485" y="453" text-anchor="start">when a retro runs</text>
+
+  <text class="sans s" x="240" y="492" text-anchor="start">Across all stages</text>
+
+  <rect class="node" x="240" y="502" width="82" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="281" y="522" text-anchor="middle">state.md</text>
+
+  <text class="sans el" x="336" y="522" text-anchor="start">updated at every stage</text>
+
+  <rect class="node-opt" x="240" y="540" width="129" height="30" rx="6" ry="6"/>
+  <text class="mono c" x="304.5" y="560" text-anchor="middle">project-log.md</text>
+
+  <text class="sans el" x="383" y="553" text-anchor="start">created on first append,</text>
+
+  <text class="sans el" x="383" y="569" text-anchor="start">unless workflow.projectLog is false</text>
+
+  <!-- LEGEND -->
+  <rect class="node" x="224" y="602" width="30" height="20" rx="5" ry="5"/>
+  <rect class="node-opt" x="374" y="602" width="30" height="20" rx="5" ry="5"/>
+
+  <text class="sans el" x="264" y="617" text-anchor="start">every project</text>
+
+  <text class="sans el" x="414" y="617" text-anchor="start">depends on mode or choice</text>
+</svg>
