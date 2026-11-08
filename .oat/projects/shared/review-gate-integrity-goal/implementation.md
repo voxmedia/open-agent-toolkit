@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p08    | completed   | 1     | 1/1      |
-| p14    | completed   | 1     | 1/1      |
-| p15    | completed   | 1     | 1/1      |
-| p16    | in_progress | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p14    | completed | 1     | 1/1      |
+| p15    | completed | 1     | 1/1      |
+| p16    | completed | 1     | 1/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 13/15 phases accepted
+**Total:** 14/15 phases accepted
 
 ---
 
@@ -2634,7 +2634,7 @@ Scope: `d4f00d2ee..a7e16e0a1` (p15-t01, p15-t02), fresh `oat-reviewer-claude-cla
 
 ## Phase p16: m02 review-ledger follow-ups
 
-**Status:** in_progress
+**Status:** completed
 **Base:** e6975c460ce4622330e660f6cf4af4fcc54f5dc5
 **Executor:** phase-implementer:rgi-p16-impl-20261108-01
 **Head:** b538b09ea910171a766846d520cfba274b1be3a7
@@ -2668,6 +2668,17 @@ Exit option: the code change, because it was small and local: one line in the sh
 **Commit:** 337ad7ac3dc380b6c4b1293d02fdaf833dda40c4
 
 76 lines removed: the writer, `artifactRows`, the two `it.each` cases, and the `applyTemplateReplacements` and `WorkflowMode` imports. The kept pin moved into a block titled for the Step 9 rule, since its old title named the simulation. Proof: contract suites 1260/1260 (exit 0), the file 30/30.
+
+### Review Received: p16
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p16-review-2026-11-08T022148Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: `e6975c460..b538b09ea` (p16-t01, p16-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p16-rev-20261108-01`, reconnaissance not attempted). The reviewer confirmed `check`, `resolve` and `pending` report the same data-line row on a scratch project with an unparsed first row, the other `parseReviewTable` callers are unchanged, and the removed writer's one real assertion stays covered by `scaffold.test.ts`; review and contract suites 113/113 and 1260/1260, exit 0.
+
+**Outcome:** passed; p16 accepted at head `b538b09ea` after one review cycle (no fix loop)
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
@@ -2740,6 +2751,7 @@ Exit option: the code change, because it was small and local: one line in the sh
 - run/v1 · request=rgi-p15-impl-20261108-01 · scope=p15 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p15 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p15-rev-20261108-01 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p16-impl-20261108-01 · scope=p16 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p16-rev-20261108-01 · scope=p16 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

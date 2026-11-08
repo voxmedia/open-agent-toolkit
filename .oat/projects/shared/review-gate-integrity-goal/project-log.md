@@ -294,6 +294,10 @@ p14 accepted (finding classification at receive, Outcome 5): review cycles 1-2 f
 
 p15 accepted (goal milestone exit gate scope, Outcome 7): one review cycle, 0/0/0/0; no fix loop; prose rule in review-provide, no CLI helper; head a7e16e0a1. rgi-p15-outcome-20261108
 
+### 2026-11-08 · structural · oat-project-implement · p16
+
+p16 accepted (m02 review-ledger follow-ups, Outcome 4 upkeep): one review cycle, 0/0/0/0; no fix loop; check/resolve/pending number rows by data line, test-local writer removed; head b538b09ea. rgi-p16-outcome-20261108
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
