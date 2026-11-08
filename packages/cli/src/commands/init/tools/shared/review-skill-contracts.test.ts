@@ -496,6 +496,27 @@ describe('review skill contracts', () => {
           'offer the recommended next skill before routing',
         ],
       },
+      {
+        path: '.agents/skills/oat-project-pr-progress/SKILL.md',
+        descriptionTriggers: ['"open the progress PR"', '"deliver m02"'],
+        bodyContracts: [
+          '## Model Invocation Gate',
+          'Do NOT auto-invoke merely because a phase review passed, a milestone\nreached `delivering`',
+          'Invocability changes who may start this skill, not who decides.',
+        ],
+      },
+      {
+        path: '.agents/skills/oat-project-goal/SKILL.md',
+        descriptionTriggers: ['"re-align"', '"declare the goal met"'],
+        bodyContracts: [
+          '## Model Invocation Gate',
+          'Do NOT auto-invoke merely because a milestone reached\n`delivered` or `aligning`',
+          "choosing goal mode for new work stays the user's decision.",
+          'Invocability changes who may start this skill, not who decides.',
+          'the terminal declaration (Step 9, `GOAL-13`)',
+          'Step 9 still asks its declaration question\nbefore anything is written.',
+        ],
+      },
     ];
 
     for (const skill of skills) {

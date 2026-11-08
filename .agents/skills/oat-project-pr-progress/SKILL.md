@@ -1,11 +1,11 @@
 ---
 name: oat-project-pr-progress
-description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
-disable-model-invocation: true
+description: Use when the user explicitly asks for a mid-project progress PR on an active OAT project — e.g. "open the progress PR", "progress PR for p02", "deliver m02", or confirms a previously offered progress-PR or milestone-delivery step. Do NOT auto-invoke just because a phase or milestone looks ready. Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
+disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.8
+  version: 1.3.9
 ---
 
 # Progress PR
@@ -30,6 +30,20 @@ Generate a PR-ready summary that is:
 **Recommended:**
 
 - Phase code review is `passed` in `plan.md` `## Reviews` before opening a progress PR.
+
+## Model Invocation Gate
+
+This skill is model-invokable only for an explicit progress-PR or delivery ask
+such as "open the progress PR", "progress PR for p02", or "deliver m02", or
+when the user confirms a previously offered progress-PR or milestone-delivery
+step, for example one that the `oat-project-implement` closeout or the router
+offered. Do NOT auto-invoke merely because a phase review passed, a milestone
+reached `delivering`, or project state otherwise looks ready for a PR.
+
+Invocability changes who may start this skill, not who decides. Every
+confirmation and choice the steps below ask for still needs the user's answer,
+including opening the PR outside goal mode (Step 6) and any waiver of a pending
+required review (Step 3.5).
 
 ## Mode Assertion
 
