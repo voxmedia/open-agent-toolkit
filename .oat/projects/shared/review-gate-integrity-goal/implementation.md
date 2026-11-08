@@ -3066,6 +3066,19 @@ The configured `oat-project-implement` exit gate (run `10ed9157-0fdf-4981-b9b1-1
 
 - Gate `oat-project-implement` (code, m03 exit, run `10ed9157-0fdf-4981-b9b1-1ca3dffc673f`, `--review-scope p08-p16`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/2/0, receive-eligible, received 2026-11-08; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m03.exit` (`oat project delivery check --subject m03`: `undeliverable`, exit `missing`, source `milestone-carrier`).
 
+### Review Received: p08-p16 (m03 exit gate rerun)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-08T054348Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+The exit gate rerun (run `9c23d08c-eb00-40f7-930d-082fe2eece46`, scope `p08-p16` under the operator routing, default selection `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family) reviewed m03 (`p08, p14, p15, p16`) at the advanced p16 head `b2f6b3b44`, narrowed to the delta from the prior gate-reviewed head `b538b09ea`. It found the first run's M1 and M2 resolved, with no new findings.
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m03 exit rerun, run `9c23d08c-eb00-40f7-930d-082fe2eece46`, `--review-scope p08-p16`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-08; no attempt consumed. `oat_milestone_gates.m03.exit` written `allowed`/`passed`, `resolution: configured`, `reviewed_head` `b2f6b3b44c072f78f916990037be1a0fac59a7fd`, subject `code` [p08, p14, p15, p16], `config_fingerprint` `sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2` (the m02 exit carrier's method; unchanged gate config). The configured `--review-scope final` was replaced by the m03 phase range under the operator routing above.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

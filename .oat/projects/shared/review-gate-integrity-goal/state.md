@@ -142,6 +142,18 @@ oat_milestone_gates:
         scope: [p08, p14, p15, p16]
         ref: e38f33e5e58e4b9fd30f84240d250a3c2555febf
       decided_at: '2026-11-06T23:34:45Z'
+    exit:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2'
+      reviewed_head: b2f6b3b44c072f78f916990037be1a0fac59a7fd
+      subject:
+        kind: code
+        scope: [p08, p14, p15, p16]
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-08T05:46:47Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
@@ -296,7 +308,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/403' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-08T05:38:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-08T05:46:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
