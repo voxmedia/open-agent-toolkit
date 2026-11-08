@@ -3079,6 +3079,21 @@ The exit gate rerun (run `9c23d08c-eb00-40f7-930d-082fe2eece46`, scope `p08-p16`
 
 - Gate `oat-project-implement` (code, m03 exit rerun, run `9c23d08c-eb00-40f7-930d-082fe2eece46`, `--review-scope p08-p16`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-08; no attempt consumed. `oat_milestone_gates.m03.exit` written `allowed`/`passed`, `resolution: configured`, `reviewed_head` `b2f6b3b44c072f78f916990037be1a0fac59a7fd`, subject `code` [p08, p14, p15, p16], `config_fingerprint` `sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2` (the m02 exit carrier's method; unchanged gate config). The configured `--review-scope final` was replaced by the m03 phase range under the operator routing above.
 
+### Review Received: m03 (integrated milestone review)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/m03-review-2026-11-08T055143Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+**Finding classes:** L1 bookkeeping · L2 bookkeeping
+
+The integrated m03 review (manual, native `oat-reviewer-claude-claude-opus-5-5-high`, reconnaissance not attempted) covered `p08, p14, p15, p16` over `241b12a95..b2f6b3b44` (68 commits, 63 paths). It found the four phases compose into Outcomes 5 and 7: p14's complexity-review fallback reads the log tokens p08's convergence writes, p15's single-phase state-selected `final` now joins its milestone sequence (p16-t04/t05), and every receive path in p14's inventory states the classes and routing. Release readiness: lockstep versions at 0.3.47 against `origin/main` 0.3.46, `check:skill-bumps` and `release:check-versions` exit 0 (15 skills, one bump each), docs index fresh, sync dry-run clean. Probes: p08 m02 sequence and p15 goal-exit scope exit 0; gate, review, shared-contract and validation suites 1857/1857.
+
+- L1 (Low): `## Deferred Findings` still listed the m02 integrated review L1 and the PR #403 Warp suggestion as open (trigger p16 start) after p16 closed them → fixed at receive (bookkeeping): appended one m03 closure line naming p16-t01 and p16-t02; no recorded line rewritten.
+- L2 (Low): the Reviews row for exit gate run `10ed9157` still read `fixes_added` after its fixes landed and the rerun passed → fixed at receive (bookkeeping): that row's Status moved `fixes_added → fixes_completed` (monotonic; Reviewed Head unchanged).
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/m03-review-2026-11-08T055143Z.md)
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -3117,6 +3132,7 @@ The exit gate rerun (run `9c23d08c-eb00-40f7-930d-082fe2eece46`, scope `p08-p16`
   - p10 review L1: kept deferred. No contract source requires the record to change; integrated reviews carry no gate convergence marks, and the fallback reads the unchanged receipt's classes. Trigger: the first real stale fallback after a bookkeeping-only receive.
 - p14 review L1, L2, L3, L5 (Low): the routing snippet's edge cases (a missing finding produces no output), the complexity-review fallback's narrower contract-source list, pre-p08 gate runs without convergence tokens in the fallback, and where plan-writing's classes line is recorded. Cut by the operator on 2026-11-08 (fix round limited to M1 as unwanted hardening across m03). Trigger: a real receive or complexity-review run that misroutes because of one of them.
 - p14 review round 2 L1 (Low): review-receive does not state the review status when an autonomous Medium recorded `awaiting operator` is the only open Critical/High/Medium finding (the pass rule still counts it). Deferred under the same operator cut. Trigger: the first autonomous receive that reaches this state, or the next edit of review-receive Step 2.6.
+- m03 closures (recorded at the m03 integrated review receive, 2026-11-08): m02 integrated review L1 (review-table row numbering) closed by p16-t01 (`df4961ef2`), which numbers `check` and `resolve` rows by data line like `pending`; the PR #403 Warp suggestion (test-local row writer) closed by p16-t02 (`337ad7ac3`), which removed the writer and kept the Step 9 prose pin.
 
 ## Deviations from Plan / Design
 

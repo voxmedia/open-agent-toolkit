@@ -386,11 +386,11 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 | p14        | code     | passed          | 2026-11-08 | reviews/archived/p14-review-2026-11-08T014245Z.md           | 27f118621b1c2eff195d4c04e84b137761790b7e | implement-phase | -                    |
 | p15        | code     | passed          | 2026-11-08 | reviews/archived/p15-review-2026-11-08T020653Z.md           | a7e16e0a109d86ea8402cc530eb30363f920a955 | implement-phase | -                    |
 | p16        | code     | passed          | 2026-11-08 | reviews/archived/p16-review-2026-11-08T022148Z.md           | b538b09ea910171a766846d520cfba274b1be3a7 | implement-phase | -                    |
-| p08-p16    | code     | fixes_added     | 2026-11-08 | reviews/archived/range-review-2026-11-08T051752Z.md         | b538b09ea910171a766846d520cfba274b1be3a7 | gate            | codex-6-sol-xhigh    |
+| p08-p16    | code     | fixes_completed | 2026-11-08 | reviews/archived/range-review-2026-11-08T051752Z.md         | b538b09ea910171a766846d520cfba274b1be3a7 | gate            | codex-6-sol-xhigh    |
 | p16        | code     | fixes_completed | 2026-11-08 | reviews/archived/p16-review-2026-11-08T053439Z.md           | e638186b0d71109e2cfd5e526278816819d9f616 | implement-phase | -                    |
 | p16        | code     | passed          | 2026-11-08 | reviews/archived/p16-review-2026-11-08T053807Z.md           | b2f6b3b44c072f78f916990037be1a0fac59a7fd | implement-phase | -                    |
 | p08-p16    | code     | passed          | 2026-11-08 | reviews/archived/range-review-2026-11-08T054348Z.md         | b2f6b3b44c072f78f916990037be1a0fac59a7fd | gate            | codex-6-sol-xhigh    |
-| m03        | code     | received        | 2026-11-08 | reviews/m03-review-2026-11-08T055143Z.md                    | b2f6b3b44c072f78f916990037be1a0fac59a7fd | manual          | -                    |
+| m03        | code     | passed          | 2026-11-08 | reviews/archived/m03-review-2026-11-08T055143Z.md           | b2f6b3b44c072f78f916990037be1a0fac59a7fd | manual          | -                    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
