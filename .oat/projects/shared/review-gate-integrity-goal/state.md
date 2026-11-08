@@ -268,7 +268,7 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/407
         base: '9da04ef1c05c4ff07fd7042065373cc9ffc48048'
         reviewed_head: 'b2f6b3b44c072f78f916990037be1a0fac59a7fd'
-        observed_head: d4e17874c08dfc5cf2e594aa4050a2d648be2fbb
+        observed_head: 2d929afc65fb6d4ee44f44a266101dac025506fa
         observed_base: 9da04ef1c05c4ff07fd7042065373cc9ffc48048
         status: open
     integrated_review:
