@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.14
+  version: 1.1.15
 ---
 
 # Lite Project
@@ -459,6 +459,15 @@ review ...` without the global `--json` placement. Reusable declarations
    satisfied the gate: skip `onFailure`, count no attempt toward the configured
    limit, and do not re-run the gate. A result with any finding that is not
    bookkeeping follows the policies above unchanged.
+
+   Review-receive records one class per finding of the gate result, in its
+   Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it
+   routes to the operator (`new-hardening`, or an `accepted-requirement` that
+   cites no source) gets no remediation edit until the operator decides it;
+   under `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10` for a Critical
+   or High one and records a Medium or Low one `awaiting operator` without
+   stopping. The `onFailure` policy and the attempt count apply to the result
+   unchanged, whatever the operator decides.
 
 Operational, validation, targeting, launch, and receive failures never inherit
 `onFailure` continuation semantics.

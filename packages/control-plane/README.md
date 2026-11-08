@@ -112,8 +112,9 @@ option is off by default, and `ProjectState.reviews` never carries the field.
 `parseReviewTable(planContent, { dataLine: true })` also returns each row's
 1-based position among the table's data lines as `dataLine`, counted before
 rows with an empty required cell are dropped, so a dropped row keeps its slot
-and never shifts the number of a later row. `oat review pending` reports this
-number as a row's `row` and matches a waiver's `**Row:**` against it. The option
+and never shifts the number of a later row. `oat review pending`, `oat review
+check` and `oat review resolve` report this number as a row's `row`, and
+`pending` matches a waiver's `**Row:**` against it. The option
 is off by default, and `ProjectState.reviews` never carries the field.
 
 A row may also carry `superseded: true`, a read-side mark that is never a

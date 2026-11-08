@@ -153,6 +153,12 @@ the note `bookkeeping-only fixes applied at receive`, no re-review and no
 review cycle, and for a gate no attempt and no rerun. That settlement is not a
 correction round and turns no other finding into acceptance.
 
+Every receive on this ladder records one class per finding under that
+definition's "Finding classes at receive" section. A finding no contract
+source requires (`new-hardening`) returns to the user before any fix work
+exists for it, as a material finding does; the brief is the contract it is
+judged against, except when the brief itself is under review.
+
 Goal mode runs this ladder once for the brief and once for each amendment, and
 reorders the end of the implementation ladder for milestone delivery (section
 12.5).

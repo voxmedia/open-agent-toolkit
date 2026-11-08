@@ -3,7 +3,7 @@ oat_template: false
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-11-03
+oat_last_updated: 2026-11-06
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
@@ -55,8 +55,9 @@ This goal delivers, one merged milestone at a time: a prose rule under which
 bookkeeping-only findings are fixed at receive with no re-review, no new review
 cycle and no gate relaunch, on every project review and gate path; exact-event
 consistency for every review row and gate receipt; convergence visibility for
-repeated gate attempts; and non-goal closeout freshness for every required
-receipt. Throughout, independent review keeps its authority: raw findings,
+repeated gate runs and finding classification at receive; goal milestone exit
+gates that scope themselves to the milestone; and non-goal closeout freshness
+for every required receipt. Throughout, independent review keeps its authority: raw findings,
 severities, counts and verdicts are never rewritten, and any finding that is
 not bookkeeping follows today's flow.
 
@@ -78,8 +79,9 @@ Verified starting facts: `references/research/current-main-facts.md`.
 2. **Bookkeeping is defined narrowly, once (m01).** One shared definition says a finding is bookkeeping when it only asks to correct a record of existing evidence or state: a stale Reviews row cell or status label, an archived-artifact path reference, a derived counter, a task-SHA list, a progress label, or provenance wording. It is never bookkeeping when it asks for a missing review, a requirement change, an approval, a new receipt, completion of unfinished work, or an edit to a `**Status:**` acceptance marker, a Reviews row's `Reviewed Head`, or a set-once delivery field (brief contract section 12.8). Three limits apply to the fix itself: it touches only the project's own tracking files under `.oat/projects/<scope>/<project>/`; on goal paths it is a change section 12.8 permits (a correcting journal line is appended rather than a recorded one rewritten, approved brief sections are never edited, and Reviews-row edits are limited to status and date cells or a move to the archived counterpart artifact); and a Reviews Status cell is set to `passed` only by the bookkeeping-only receive branch for the review being received. A finding whose fix would break a limit is not bookkeeping. Reviewers may mark a finding `(bookkeeping)` inside its bold title; the mark is advisory, the receiver decides, and a doubtful finding is not bookkeeping. — Evidence: the definition, its exclusions and its three limits are pinned by a contract test; a branch-build probe shows a section 12.8-permitted bookkeeping fix after a goal integrated review leaves `oat project delivery check` ok, while a control that rewrites a recorded journal line reports stale; `oat-reviewer.md` documents the marker; a parser test shows a marked finding yields the same counts, severities and verdict as its unmarked twin.
 3. **Verdict findings are identified, not tallied (m01).** The gate verdict parser accepts the captured #339 finding shape (an explicit bold finding-title marker followed by column-zero detail bullets with closed, exact labels) as one finding per title. It keeps genuinely distinct list-item findings as separate findings, refuses with a structured, receive-ineligible failure when ownership of a detail bullet is ambiguous rather than guessing, keeps the existing all-source refusal when declared and body counts disagree, and emits per-finding records (#339 parser slice). — Evidence: two fixtures with provenance headers, neither with invented content. The first is the issue #339 reproduction exactly as published; its header records that the issue text is abbreviated, so the original 2 Medium / 3 Low result cannot be reproduced from it. Its body tally changes from 6 Medium / 2 Low to 2 Medium / 1 Low, because detail bullets are no longer counted as findings. With its declared count line it is still refused for disagreement (3 Low declared against 1 in the abbreviated body), which is correct. The second is the reviewer's returned message from the backlog-wave-5 exit-gate r1 run, extracted from gate stderr with the JSONL events stripped. It yields the categorical outcome (counts or a structured refusal) recorded in its header before the grammar change, and serves as real-output evidence for the bold title marker and detail labels. A genuine disagreement is still refused. A body-only undercount control keeps a genuinely separate finding that follows a bold-title finding, even when its title starts with a detail-like word. An orphan detail item is refused, never ignored.
 4. **Exact-event consistency (m02, re-aligned 2026-11-03).** Every review row and gate receipt binds to exactly one ledger event. An event's key is Scope + Type + Artifact filename for a row that names an artifact, read from ledger cells alone; its Reviewed Head and the artifact's `oat_gate_run_id` corroborate the key when the artifact file and a non-placeholder head exist, and are reported unavailable, never a mismatch, otherwise; and a row whose Artifact is `-` (a placeholder or a structured review that writes no artifact) never forms a duplicate key. No column or status is added. One writer records each event: the plan template carries a `plan` placeholder row, quick, import and lite scaffolds carry no unused `spec`/`design` rows, and the lifecycle skills update the row the gate child or the provide step wrote instead of adding a second one. A `received` row is superseded by a later row of the same Scope, Type and Invocation class that records a review (not a `pending` placeholder) at the same or a descendant Reviewed Head. The classes are gate (any Gate Target) and lifecycle (`manual` or `auto`); this deliberately differs from review-provide's target-qualified narrowing lineage, which is unchanged. Rows of different classes never supersede each other, and a row whose Invocation or Reviewed Head is `-` is never superseded and stays live, as today. Readers that select a review event ignore a superseded row, and a read-only, advisory CLI check reports superseded rows and duplicate keys through structured diagnostics. Nothing edits, promotes or deletes a superseded row. The gate result adds `reviewedHead`; receive consumes the event the gate result names (its scope, type, artifact path, run ID and reviewed head) instead of the newest artifact, and fails closed with structured diagnostics on a mismatch; artifact-gate rows record their gate target. Before PR creation, pr-progress and pr-final list required reviews still `pending`, and the user runs them, waives them with a recorded reason or stops; a non-interactive run stops at a boundary. — Evidence: a repeated-blocking-gate fixture (`BL-260820-bind-each-gate-review`) leaves no live stranded event after each disposition; the check reports a pinned copy of this project's superseded `final` row (failed Sol rerun `48f5553c`) and a duplicate-key fixture, and reports nothing for its distinct artifact-less `plan` rows or an unclaimed placeholder; a mismatched handoff fails closed while a matching one is consumed (branch-build probes with negative controls); quick, import and lite scaffolds have no `spec`/`design` rows; and a fixture with pending required rows is listed before PR creation while a fully reviewed one is not.
-5. **Gate convergence visibility (m03, refined at re-alignment).** For every gate attempt after the first, each finding is marked new or carried over, the result reports new, carried-over and resolved counts per attempt, and findings carry the contract classification (accepted-requirement, regression, new-hardening), with bookkeeping findings reported as their own class under m01's definition. These feed the existing exhaustion stop and complexity review. — Evidence: settled at re-alignment; at minimum a converging, a stuck and a reworded-carried-over attempt sequence.
+5. **Gate convergence visibility and classification (m03, re-aligned 2026-11-06).** A sequence is the successive runs of one configured gate on one subject: a goal milestone exit gate's subject is the milestone, whatever scope token a run used; a goal milestone plan gate's subject is settled by p08 so that runs on different amendments never share a sequence; and elsewhere the subject is the review scope; reruns after fixes count as well as reruns in a blocked gate's remediation loop. For every run after the first in its sequence, each finding is marked new or carried over, with the earlier run's finding reference, through a documented, deterministic stable finding key over p01's per-finding records. An unmatched finding is new and is never silently merged. The gate result and the gate's record of the review report new, carried-over and resolved counts per run, without rewriting the reviewer's findings. The first run on a subject carries no convergence fields. Separately, every review and gate receive path in p14's inventory records one class per finding: accepted-requirement (citing the contract source that requires it), regression, new-hardening, or bookkeeping under m01's definition. A new-hardening finding reaches the operator before any fix task exists, and the complexity-review fallback starts from the recorded classes. Both feed the existing exhaustion stop and complexity review; no authorization record or extra-cycle allowance is added. — Evidence: fixture run sequences (converging, stuck, and a reworded carried-over finding) are reported correctly in the gate JSON and the gate's record of the review; a first run's gate output carries no convergence fields and is otherwise unchanged, apart from the parser-identity changes p08 records for its deferred items (each with a before and after control); fixtures derived, with provenance headers, from this project's three local m02 exit-gate runs (`range-review-2026-11-03T215601Z.md`, `range-review-2026-11-03T224623Z.md`, `range-review-2026-11-04T015726Z.md`) are linked and reported as one m02 sequence by the branch build; every receive path in the inventory records a class with its contract source; a test fixture whose finding cites no contract source (classed new-hardening) reaches the operator rather than becoming a fix task, while an accepted-requirement control still becomes one; and the complexity-review fallback reads the recorded classes.
 6. **Non-goal closeout freshness (m04, refined at re-alignment).** Outside goal mode, closeout refuses absent or stale evidence for every required review, check and gate receipt against the current head, through a documented bookkeeping rule rather than a broad exemption. — Evidence: settled at re-alignment; at minimum the RP-03 late-documentation case from `BL-260820-track-pr-closeout-evidence`.
+7. **Goal milestone exit gates scope themselves (m03, added at m03 re-alignment 2026-11-06).** In a goal milestone closeout, the unchanged configured implement exit gate (`--review-scope final` with the state-selection prompt) reviews exactly the active milestone's ordered accepted phases, records the original `final` hint and the resolved phase set, and no longer refuses on a squash-merged earlier milestone's anchors. An explicit whole-project `code final` request keeps its whole-project meaning (`BL-261104-goal-mode-exit-gate-resolve`). — Evidence: a branch-build probe on a goal fixture whose earlier milestone was squash-merged resolves the state-selected `final` to the active milestone's phases with the branch's skills installed in an isolated HOME (or a branch-build CLI helper), while the released install refuses the same fixture (negative control); an explicit whole-project request still expands to the whole project; contract tests pin the rule.
 
 ## Approach
 
@@ -127,6 +129,18 @@ definition and its limits are unchanged and goal-path Reviews rows are never
 edited for it. The released `0.3.45` toolchain, with m01's rule, governs m02's
 own reviews and gates.
 
+**m03 (re-aligned 2026-11-06).** Four phases, in order. p08 adds convergence
+marking in the gate CLI over p01's per-finding records: a run is linked to the
+earlier runs of the same configured gate on the same subject (a goal exit
+gate's subject is the milestone, whatever scope token a run used; a goal plan
+gate's subject is settled by p08 so amendments never share a sequence;
+elsewhere the scope) through existing records, with no new evidence store, and the
+reviewer's findings text is never rewritten. p14 records a class per finding
+in the receive skills, reusing m01's bookkeeping definition. p15 extends
+review-provide's state-selected `final` rule from a recovery record to the
+active milestone. p16 is m02 upkeep. The released toolchain governs m03's own
+reviews and gates, so m03's exit gate is still routed to its phase range.
+
 ## Constraints and Out of Scope
 
 - **Constraint:** Raw reviewer findings, severities, counts and verdicts are never rewritten; a bookkeeping-only review is recorded `passed` only with its note, and the gate receipt keeps the raw verdict.
@@ -165,6 +179,7 @@ own reviews and gates.
 - **Marker inside the bold title.** The optional `(bookkeeping)` mark goes inside the finding's bold title, because the parser's closed detail labels admit no new `Kind:` line and a mark after the bold would break location parsing.
 - **Planning setup (2026-11-01, amended 2026-11-02).** Dispatch policy High (recorded in `state.md`). No optional phase gates. Both configured lifecycle gates (`oat-project-goal`, `oat-project-implement`) are kept.
 - **m02 re-alignment (2026-11-03, operator).** (1) Split p07 into three phases: p07 one row per event plus a read-only detector, p12 exact-event consumption, p13 the pending-review listing. Rejected: one phase (one large review across templates, prose and CLI), and dropping the listing. (2) A `received` row followed by a later recorded round of the same Scope, Type and Invocation class, at the same or a descendant head, is superseded on the read side (cross-lane rows never supersede, so a manual round cannot hide an unreceived gate row): readers ignore it and a read-only, advisory check reports it. This replaces the operator's first choice, a bookkeeping-receive repair, after the amendment review showed that repair would promote another event to `passed`, which m01 limit 3 forbids, and would dispose of the failed Sol rerun `48f5553c`, which the operator ruled receives no further disposition. Rejected: prevention only (stranded rows with active artifacts route to receive and stale events block closeout, #194), a named exception to limit 3, a repair capped below `passed` (no status means superseded), and a mutating repair command. (3) Provenance is gap-only: what exact consumption needs, plus the gate target on artifact-gate rows. Rejected: the full #202 envelope (no consumer yet), and the #305 Invocation mismatch check (not in the backlog criteria). (4) Install the released `0.3.45` CLI and user-scope skills before activating m02, so m01's rule governs m02. Not adopted: opening the m02 PR as a draft before the integrated review.
+- **m03 re-alignment (2026-11-06, operator).** (1) Split p08: p08 marks findings new or carried over in the gate CLI and owns the parser identity deferrals; p14 records classes at receive in the skills. Rejected: one phase with one review over a mixed CLI and skill diff. (2) Add Outcome 7 and p15 for `BL-261104-goal-mode-exit-gate-resolve`, filed at this re-alignment. It takes effect only once released and installed, so m03's own exit gate is still routed to the milestone's phase range. Rejected: leaving it in the backlog. (3) The two m02 review-ledger follow-ups deferred to p08 go to their own phase, p16. Rejected: folding them into p08 or p15. (4) Outcome 5's evidence is settled as recorded there, including fixtures derived from the real m02 exit-gate runs. Rejected: invented fixtures only. Synthetic converging, stuck and reworded sequences are key-rule fixtures over per-finding records, or are edited from real captured findings with provenance; any artifact text fed to the parser follows the real-output fixture Constraint. (5) Amendment review (H1): a convergence sequence is the successive runs of one configured gate on one subject (the milestone for a goal exit gate, otherwise the scope), including reruns after fixes. Rejected: only reruns inside one blocked gate's remediation loop, which leaves this project's fix-driven reruns unmarked. Phases run in order p08, p14, p15, p16, sequentially. The endpoint is unchanged: merged.
 - **Goal workflow fit.** Several deliveries over time, each merged and re-aligned. The first milestone is concrete; later milestones depend on what m01 teaches. Quick mode would require an approved up-front task plan the operator did not ask for.
 
 ## Known Unknowns
@@ -177,7 +192,9 @@ own reviews and gates.
 - How quick, import and lite scaffolds drop the unused `spec`/`design` rows while spec-driven keeps them (a separate template or a post-copy edit) — Settled by: p07
 - How receive is given the gate's event (an explicit artifact and head argument, or the gate JSON) and which gate paths adopt it (implement's exit gate, the phase gate, the goal milestone exit gate, the planning gates) — Settled by: p12
 - Which pending rows count as required, and where a waiver is recorded without a new column or status (an existing Reviews cell, or the journal's `## Reviews and Gates` slot with the row left `pending`); if neither works, p13 stops for an operator amendment — Settled by: p13
-- The stable finding key rule for carried-over matching — Settled by: p08
+- The stable finding key rule for carried-over matching; how a run is linked to the earlier runs of the same gate on the same subject through existing records, without a new evidence store; how the gate's record of the review carries the marks without rewriting the reviewer's findings (for example a gate-written section the parser ignores, or the gate result and its receipt only); the subject of a goal milestone's plan gate (each amendment's gate runs on scope `plan`, so it must not join an earlier amendment's runs); and how a goal exit run with a `final` token is attributed to its milestone without depending on p15's hint record — Settled by: p08
+- Where each receive records a finding's class without a new Reviews column or status, and the inventory of receive paths that must adopt it — Settled by: p14
+- How the state-selected `final` hint tells a goal milestone closeout from an explicit whole-project review — Settled by: p15
 - Which non-goal receipt classes are required, and how self-advancing summary, document and PR outputs are bound — Settled by: p09
 
 ## Delivery endpoint and authority
@@ -187,6 +204,7 @@ own reviews and gates.
 - **Brief approved:** 2026-11-01 by user at cbc8836c7ca14d56742831a13fc0cd8e1fba2057
 - **Milestone m01 approved:** 2026-11-02 by user at b2a38a09005e35818eccfa4191ad97444316e020
 - **Milestone m02 approved:** 2026-11-03 by user at ee377dd7bcbedec4e0c66cc8d12a754c45c1587d
+- **Milestone m03 approved:** 2026-11-06 by user at e38f33e5e58e4b9fd30f84240d250a3c2555febf
 
 ## Milestones
 
@@ -196,7 +214,7 @@ own reviews and gates.
 | --------- | ------------------------------------- |
 | m01       | p01, p02, p10, p11                    |
 | m02       | p07, p12, p13, p-rev1, p-rev2, p-rev3 |
-| m03       | p08                                   |
+| m03       | p08, p14, p15, p16                    |
 | m04       | p09                                   |
 
 ## Phase p01: Verdict parser finding identification
@@ -270,11 +288,29 @@ Neutralizing the ownership and title-precedence guard breaks the undercount asse
 **Exit evidence:** Unit tests at the pending-listing boundary: waiver, then a recorded review, then a new `pending` row lists the key as pending (the gate's reproduction); an active waiver over a pending row still reads `waived`; a waiver after a recorded review with no later row is inert; a fresh waiver written after the new pending row applies. A guard-can-fail control. The PR skills, CLI reference and reviews docs match the rule.
 **Provisional:** no
 
-## Phase p08: Gate convergence visibility and classification reporting
+## Phase p08: Gate convergence marking and the stable finding key
 
-**Intent:** Mark each finding new or carried over for every gate attempt after the first, using a documented stable finding key over p01's per-finding records. Report new, carried-over and resolved counts per attempt. Record the contract classification (accepted-requirement, regression, new-hardening) at receive, with bookkeeping findings classed under m01's definition, so the existing exhaustion stop and complexity review start from recorded classes (`BL-260927-mark-gate-findings-as-new-or`, `BL-261013-classify-review-findings`). Refined at m03 re-alignment.
-**Exit evidence:** Converging, stuck and reworded-carried-over attempt sequences are reported correctly; first attempts and single-attempt gates are unchanged; and a finding with no contract source reaches the operator rather than becoming a fix task. Refined at re-alignment.
-**Provisional:** yes
+**Intent:** Mark each gate finding new or carried over for every run after the first in its sequence (the successive runs of one configured gate on one subject, as Outcome 5 defines), and report new, carried-over and resolved counts per run in the gate result and the gate's record of the review (`BL-260927-mark-gate-findings-as-new-or`, Outcome 5). Document the stable finding key over p01's per-finding records and how a run is linked to the earlier runs of its sequence. First settle the parser identity items deferred to p08 (Deferred Findings: p01 review L2 and L3, p01 review round 2 L1 and L2, and the PR #400 self-review C1 bundle with T2, T3/C3 and T4/C2), keeping or removing each unused refusal according to what the key needs.
+**Exit evidence:** Converging, stuck and reworded-carried-over fixture sequences are reported correctly in the gate JSON and the gate's record of the review; a first run carries no convergence fields and is otherwise unchanged apart from the recorded parser-identity changes, each with a before and after control; the branch build links the fixtures derived from the three m02 exit-gate runs as one m02 sequence; each deferred item named in the Intent is fixed, removed or closed with a recorded reason; guard-can-fail controls show the matching rule's tests can fail.
+**Provisional:** no
+
+## Phase p14: Finding classification at receive
+
+**Intent:** Record one class per finding at every review and gate receive: accepted-requirement (citing its contract source), regression, new-hardening, or bookkeeping under m01's shared definition. Route a new-hardening finding to the operator before any fix task exists, and make the classes visible to the complexity-review fallback (`BL-261013-classify-review-findings`, Outcome 5). Inventory the receive paths that must adopt it. Disposition the deferrals this work triggers: p10 review L1 (a stale fallback after a bookkeeping-only integrated-review receive), p12 review L2 (planning and phase gates hand the gate event to receive only in-session) and the m01 exit gate L1 (limit 1 wording in the shared bookkeeping definition).
+**Exit evidence:** Each receive path in the inventory states the classification and the routing, pinned by contract tests; a test fixture whose finding cites no contract source (classed new-hardening) reaches the operator rather than becoming a plan task, while an accepted-requirement control still becomes one; p10 review L1, p12 review L2 and m01 exit gate L1 are each fixed or kept deferred with a recorded reason; the complexity-review fallback starts from recorded classes; the autonomy inventory and contract suites pass.
+**Provisional:** no
+
+## Phase p15: Goal milestone exit gate scope
+
+**Intent:** Resolve a state-selected `final` hint in a goal milestone closeout to the active milestone's ordered accepted phases, as the recovery-exit rule already does for `oat_goal_recovery`, so the unchanged configured exit gate needs no operator scope routing after a squash-merged milestone. An explicit whole-project `code final` keeps its meaning (`BL-261104-goal-mode-exit-gate-resolve`, Outcome 7).
+**Exit evidence:** Contract tests pin the rule and are the primary evidence. One corroborating probe runs a goal fixture with a squash-merged earlier milestone using the branch build CLI and the branch's skills installed inside one `scripts/with-isolated-home.sh` invocation, either exercising review-provide's scope-resolution step (the anchor check) directly without dispatching a model, or passing the provider runtime's configuration through explicitly: it resolves the state-selected `final` to the active milestone's phases and records (or, without a dispatched model, prints) the hint and the resolved set, while the released install refuses the same fixture (negative control); when the probe dispatches no model, the contract tests evidence the recording itself; if p15 moves the resolution into a CLI helper, the branch build (`node packages/cli/dist/index.js`) probes it deterministically instead. An explicit whole-project request still expands to the whole project.
+**Provisional:** no
+
+## Phase p16: m02 review-ledger follow-ups
+
+**Intent:** Close the two m02 review-ledger follow-ups the operator deferred to m03 (Outcome 4 upkeep). Make `oat review check`, `oat review resolve` and `oat review pending` number Reviews rows the same way, by physical data line, or document the difference in the CLI reference (m02 integrated review L1). Remove the test-local row writer and its post-write cases from `review-event-row-contracts.test.ts`, keeping the Step 9 prose pin and the real `scaffoldProject` checks (PR #403 Warp suggestion).
+**Exit evidence:** A fixture with an unparsed row above a parsed one reports the same row number from all three commands, or the CLI reference states the difference; the contract test file no longer simulates a writer and its remaining pins pass; the CLI and skill contract suites pass.
+**Provisional:** no
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
@@ -301,46 +337,60 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 
 ## Reviews
 
-| Scope      | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
-| ---------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| plan       | artifact | fixes_completed | 2026-11-01 | -                                                           | 6769eba80b12d80acdddea66b32ab8c21b1fd87a | -          | -                    |
-| p01        | code     | fixes_completed | 2026-11-01 | reviews/archived/p01-review-2026-11-01T220753Z.md           | ffa8f869881fea4fbf51b7e31105b4a1f033ec63 | manual     | -                    |
-| p01        | code     | passed          | 2026-11-01 | reviews/archived/p01-review-2026-11-01T222248Z.md           | ded0985d59ee8039415ad163c750cb9abe2f2c08 | manual     | -                    |
-| p02        | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T224642Z.md           | 09d8f57b55dbf2ab0b2d8f5c9183d212e86974ae | manual     | -                    |
-| p02        | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T232603Z.md           | 4497d05f532e3d52984efaf7fde684c65f008b71 | manual     | -                    |
-| p02        | code     | passed          | 2026-11-01 | reviews/archived/p02-review-2026-11-02T001304Z.md           | 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c | manual     | -                    |
-| p02        | code     | passed          | 2026-11-02 | reviews/archived/p02-review-2026-11-02T162147Z.md           | 8427732e8bfd661a536997096ed43af0bc5376d1 | manual     | -                    |
-| p10        | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T170200Z.md           | 73b277434f24cb95f785ac4fa36618b09b6d20e7 | manual     | -                    |
-| p10        | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T172814Z.md           | 2eca1422aaee6e93a0b7be53e6b86aa5c2d34b9c | manual     | -                    |
-| p10        | code     | passed          | 2026-11-02 | reviews/archived/p10-review-2026-11-02T193214Z.md           | cf26ae9c9f9dc7df0ed17be40f99822ae63ad6e9 | manual     | -                    |
-| p11        | code     | passed          | 2026-11-02 | reviews/archived/p11-review-2026-11-02T210607Z.md           | 204a24f697c61947b64176a4516f33904f3261bf | manual     | -                    |
-| final      | code     | fixes_completed | 2026-11-02 | reviews/archived/final-review-2026-11-02T211656Z.md         | 8a97fe85dbaa5d47f4450fa46703403097f71a88 | gate       | claude-opus-5-5-high |
-| plan       | artifact | passed          | 2026-11-01 | reviews/archived/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -          | -                    |
-| plan       | artifact | fixes_completed | 2026-11-02 | -                                                           | d09ac39c581ad4fe26b8c006a27266cd6c4a79e3 | -          | -                    |
-| plan       | artifact | passed          | 2026-11-02 | reviews/archived/artifact-plan-review-2026-11-02T155547Z.md | -                                        | -          | -                    |
-| final      | code     | received        | 2026-11-02 | reviews/archived/final-review-2026-11-02T213631Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | codex-6-sol-xhigh    |
-| final      | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233110Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate       | claude-opus-5-5-high |
-| final      | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233729Z.md         | 1a5a37684f05492470952fdc54359a082ac9cc58 | gate       | claude-opus-5-5-high |
-| m01        | code     | fixes_completed | 2026-11-02 | reviews/archived/m01-review-2026-11-02T234808Z.md           | 1a5a37684f05492470952fdc54359a082ac9cc58 | manual     | -                    |
-| final      | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T235632Z.md         | 5599af21d4927c7d39c668b9d1662509e5d3b403 | gate       | claude-opus-5-5-high |
-| m01        | code     | passed          | 2026-11-03 | reviews/archived/m01-review-2026-11-03T000239Z.md           | 5599af21d4927c7d39c668b9d1662509e5d3b403 | manual     | -                    |
-| p07        | code     | fixes_completed | 2026-11-03 | reviews/archived/p07-review-2026-11-03T184519Z.md           | 6598a6e76555c884fdca27b3ee4f5b1e70cafdb8 | manual     | -                    |
-| p07        | code     | passed          | 2026-11-03 | reviews/archived/p07-review-2026-11-03T190319Z.md           | 34ebd3ef9c02d90a6797ece84d69b6ab7b54d201 | manual     | -                    |
-| p12        | code     | fixes_completed | 2026-11-03 | reviews/archived/p12-review-2026-11-03T200007Z.md           | c92b11dfbf631e16ab9be77999555669fdbef8d2 | manual     | -                    |
-| p12        | code     | passed          | 2026-11-03 | reviews/archived/p12-review-2026-11-03T201925Z.md           | 8016d7d98f8799010d40ff497aa526b180508dbf | manual     | -                    |
-| p13        | code     | fixes_completed | 2026-11-03 | reviews/archived/p13-review-2026-11-03T210640Z.md           | 2f1dae7a099dc37d5196f7cc008712d8681249f1 | manual     | -                    |
-| p13        | code     | passed          | 2026-11-03 | reviews/archived/p13-review-2026-11-03T213802Z.md           | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | manual     | -                    |
-| plan       | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -          | -                    |
-| plan       | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate       | codex-6-sol-xhigh    |
-| p07-p13    | code     | fixes_completed | 2026-11-03 | reviews/archived/range-review-2026-11-03T215601Z.md         | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate       | codex-6-sol-xhigh    |
-| p-rev1     | code     | passed          | 2026-11-03 | reviews/archived/p-rev1-review-2026-11-03T221746Z.md        | 2c341cff58b74a8cb13ff9e80c4e27690ea27210 | manual     | -                    |
-| p-rev2     | code     | passed          | 2026-11-03 | reviews/archived/p-rev2-review-2026-11-03T223853Z.md        | d128a41181d86d258be802500c4129bf45ed0fa0 | manual     | -                    |
-| p07-p-rev2 | code     | fixes_completed | 2026-11-03 | reviews/archived/range-review-2026-11-03T224623Z.md         | d128a41181d86d258be802500c4129bf45ed0fa0 | gate       | codex-6-sol-xhigh    |
-| p-rev3     | code     | fixes_completed | 2026-11-03 | reviews/archived/p-rev3-review-2026-11-03T231519Z.md        | 8ce9e2a540bded95953b383ff9d81032690ee4b3 | manual     | -                    |
-| p-rev3     | code     | fixes_completed | 2026-11-03 | reviews/archived/p-rev3-review-2026-11-03T233325Z.md        | 08a2dc6d5bb1aa43dcec48c32ca72ffd8acc5f39 | manual     | -                    |
-| p-rev3     | code     | fixes_completed | 2026-11-03 | reviews/archived/p-rev3-review-2026-11-03T234849Z.md        | edc4b4eee83e0ebd9cfa41d94808da559699fd85 | manual     | -                    |
-| p07-p-rev3 | code     | passed          | 2026-11-03 | reviews/archived/range-review-2026-11-04T015726Z.md         | c08b2c054d95dda0691fc3a247b70c5acdaa8007 | gate       | codex-6-sol-xhigh    |
-| m02        | code     | passed          | 2026-11-04 | reviews/archived/m02-review-2026-11-04T020725Z.md           | c08b2c054d95dda0691fc3a247b70c5acdaa8007 | manual     | -                    |
+| Scope      | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation      | Gate Target          |
+| ---------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | --------------- | -------------------- |
+| plan       | artifact | fixes_completed | 2026-11-01 | -                                                           | 6769eba80b12d80acdddea66b32ab8c21b1fd87a | -               | -                    |
+| p01        | code     | fixes_completed | 2026-11-01 | reviews/archived/p01-review-2026-11-01T220753Z.md           | ffa8f869881fea4fbf51b7e31105b4a1f033ec63 | manual          | -                    |
+| p01        | code     | passed          | 2026-11-01 | reviews/archived/p01-review-2026-11-01T222248Z.md           | ded0985d59ee8039415ad163c750cb9abe2f2c08 | manual          | -                    |
+| p02        | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T224642Z.md           | 09d8f57b55dbf2ab0b2d8f5c9183d212e86974ae | manual          | -                    |
+| p02        | code     | fixes_completed | 2026-11-01 | reviews/archived/p02-review-2026-11-01T232603Z.md           | 4497d05f532e3d52984efaf7fde684c65f008b71 | manual          | -                    |
+| p02        | code     | passed          | 2026-11-01 | reviews/archived/p02-review-2026-11-02T001304Z.md           | 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c | manual          | -                    |
+| p02        | code     | passed          | 2026-11-02 | reviews/archived/p02-review-2026-11-02T162147Z.md           | 8427732e8bfd661a536997096ed43af0bc5376d1 | manual          | -                    |
+| p10        | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T170200Z.md           | 73b277434f24cb95f785ac4fa36618b09b6d20e7 | manual          | -                    |
+| p10        | code     | fixes_completed | 2026-11-02 | reviews/archived/p10-review-2026-11-02T172814Z.md           | 2eca1422aaee6e93a0b7be53e6b86aa5c2d34b9c | manual          | -                    |
+| p10        | code     | passed          | 2026-11-02 | reviews/archived/p10-review-2026-11-02T193214Z.md           | cf26ae9c9f9dc7df0ed17be40f99822ae63ad6e9 | manual          | -                    |
+| p11        | code     | passed          | 2026-11-02 | reviews/archived/p11-review-2026-11-02T210607Z.md           | 204a24f697c61947b64176a4516f33904f3261bf | manual          | -                    |
+| final      | code     | fixes_completed | 2026-11-02 | reviews/archived/final-review-2026-11-02T211656Z.md         | 8a97fe85dbaa5d47f4450fa46703403097f71a88 | gate            | claude-opus-5-5-high |
+| plan       | artifact | passed          | 2026-11-01 | reviews/archived/artifact-plan-review-2026-11-01T214129Z.md | -                                        | -               | -                    |
+| plan       | artifact | fixes_completed | 2026-11-02 | -                                                           | d09ac39c581ad4fe26b8c006a27266cd6c4a79e3 | -               | -                    |
+| plan       | artifact | passed          | 2026-11-02 | reviews/archived/artifact-plan-review-2026-11-02T155547Z.md | -                                        | -               | -                    |
+| final      | code     | received        | 2026-11-02 | reviews/archived/final-review-2026-11-02T213631Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate            | codex-6-sol-xhigh    |
+| final      | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233110Z.md         | 395b90677db9487e42f01d31b045f4819f3d85ae | gate            | claude-opus-5-5-high |
+| final      | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T233729Z.md         | 1a5a37684f05492470952fdc54359a082ac9cc58 | gate            | claude-opus-5-5-high |
+| m01        | code     | fixes_completed | 2026-11-02 | reviews/archived/m01-review-2026-11-02T234808Z.md           | 1a5a37684f05492470952fdc54359a082ac9cc58 | manual          | -                    |
+| final      | code     | passed          | 2026-11-02 | reviews/archived/final-review-2026-11-02T235632Z.md         | 5599af21d4927c7d39c668b9d1662509e5d3b403 | gate            | claude-opus-5-5-high |
+| m01        | code     | passed          | 2026-11-03 | reviews/archived/m01-review-2026-11-03T000239Z.md           | 5599af21d4927c7d39c668b9d1662509e5d3b403 | manual          | -                    |
+| p07        | code     | fixes_completed | 2026-11-03 | reviews/archived/p07-review-2026-11-03T184519Z.md           | 6598a6e76555c884fdca27b3ee4f5b1e70cafdb8 | manual          | -                    |
+| p07        | code     | passed          | 2026-11-03 | reviews/archived/p07-review-2026-11-03T190319Z.md           | 34ebd3ef9c02d90a6797ece84d69b6ab7b54d201 | manual          | -                    |
+| p12        | code     | fixes_completed | 2026-11-03 | reviews/archived/p12-review-2026-11-03T200007Z.md           | c92b11dfbf631e16ab9be77999555669fdbef8d2 | manual          | -                    |
+| p12        | code     | passed          | 2026-11-03 | reviews/archived/p12-review-2026-11-03T201925Z.md           | 8016d7d98f8799010d40ff497aa526b180508dbf | manual          | -                    |
+| p13        | code     | fixes_completed | 2026-11-03 | reviews/archived/p13-review-2026-11-03T210640Z.md           | 2f1dae7a099dc37d5196f7cc008712d8681249f1 | manual          | -                    |
+| p13        | code     | passed          | 2026-11-03 | reviews/archived/p13-review-2026-11-03T213802Z.md           | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | manual          | -                    |
+| plan       | artifact | fixes_completed | 2026-11-03 | -                                                           | f293a58775dd4408fdcf360a3c00028aba2a5c5f | -               | -                    |
+| plan       | artifact | passed          | 2026-11-03 | reviews/archived/artifact-plan-review-2026-11-03T023206Z.md | -                                        | gate            | codex-6-sol-xhigh    |
+| p07-p13    | code     | fixes_completed | 2026-11-03 | reviews/archived/range-review-2026-11-03T215601Z.md         | 2375b77bd1b1326b5feec60ae7258f3bbeb7556a | gate            | codex-6-sol-xhigh    |
+| p-rev1     | code     | passed          | 2026-11-03 | reviews/archived/p-rev1-review-2026-11-03T221746Z.md        | 2c341cff58b74a8cb13ff9e80c4e27690ea27210 | manual          | -                    |
+| p-rev2     | code     | passed          | 2026-11-03 | reviews/archived/p-rev2-review-2026-11-03T223853Z.md        | d128a41181d86d258be802500c4129bf45ed0fa0 | manual          | -                    |
+| p07-p-rev2 | code     | fixes_completed | 2026-11-03 | reviews/archived/range-review-2026-11-03T224623Z.md         | d128a41181d86d258be802500c4129bf45ed0fa0 | gate            | codex-6-sol-xhigh    |
+| p-rev3     | code     | fixes_completed | 2026-11-03 | reviews/archived/p-rev3-review-2026-11-03T231519Z.md        | 8ce9e2a540bded95953b383ff9d81032690ee4b3 | manual          | -                    |
+| p-rev3     | code     | fixes_completed | 2026-11-03 | reviews/archived/p-rev3-review-2026-11-03T233325Z.md        | 08a2dc6d5bb1aa43dcec48c32ca72ffd8acc5f39 | manual          | -                    |
+| p-rev3     | code     | fixes_completed | 2026-11-03 | reviews/archived/p-rev3-review-2026-11-03T234849Z.md        | edc4b4eee83e0ebd9cfa41d94808da559699fd85 | manual          | -                    |
+| p07-p-rev3 | code     | passed          | 2026-11-03 | reviews/archived/range-review-2026-11-04T015726Z.md         | c08b2c054d95dda0691fc3a247b70c5acdaa8007 | gate            | codex-6-sol-xhigh    |
+| m02        | code     | passed          | 2026-11-04 | reviews/archived/m02-review-2026-11-04T020725Z.md           | c08b2c054d95dda0691fc3a247b70c5acdaa8007 | manual          | -                    |
+| plan       | artifact | fixes_completed | 2026-11-06 | -                                                           | 2666257febe06b43b9229b71fb602b8ac071d015 | -               | -                    |
+| plan       | artifact | passed          | 2026-11-06 | reviews/archived/artifact-plan-review-2026-11-06T222001Z.md | -                                        | gate            | codex-6-sol-xhigh    |
+| p08        | code     | fixes_completed | 2026-11-07 | reviews/archived/p08-review-2026-11-07T233955Z.md           | 9eebbd39ce7dc2dc7cfa1b47ad061b6b0a690dab | implement-phase | -                    |
+| p08        | code     | fixes_completed | 2026-11-08 | reviews/archived/p08-review-2026-11-08T001015Z.md           | d23563aeefcd8881be6591a91920bdc68be1bb17 | implement-phase | -                    |
+| p08        | code     | passed          | 2026-11-08 | reviews/archived/p08-review-2026-11-08T002049Z.md           | dc43fa5b93a85ede751ba1df052239fc099eef25 | implement-phase | -                    |
+| p14        | code     | fixes_completed | 2026-11-08 | reviews/archived/p14-review-2026-11-08T011039Z.md           | 9e9c3083ced3eea68f9a50b3e503fd2be75554fa | implement-phase | -                    |
+| p14        | code     | passed          | 2026-11-08 | reviews/archived/p14-review-2026-11-08T014245Z.md           | 27f118621b1c2eff195d4c04e84b137761790b7e | implement-phase | -                    |
+| p15        | code     | passed          | 2026-11-08 | reviews/archived/p15-review-2026-11-08T020653Z.md           | a7e16e0a109d86ea8402cc530eb30363f920a955 | implement-phase | -                    |
+| p16        | code     | passed          | 2026-11-08 | reviews/archived/p16-review-2026-11-08T022148Z.md           | b538b09ea910171a766846d520cfba274b1be3a7 | implement-phase | -                    |
+| p08-p16    | code     | fixes_completed | 2026-11-08 | reviews/archived/range-review-2026-11-08T051752Z.md         | b538b09ea910171a766846d520cfba274b1be3a7 | gate            | codex-6-sol-xhigh    |
+| p16        | code     | fixes_completed | 2026-11-08 | reviews/archived/p16-review-2026-11-08T053439Z.md           | e638186b0d71109e2cfd5e526278816819d9f616 | implement-phase | -                    |
+| p16        | code     | passed          | 2026-11-08 | reviews/archived/p16-review-2026-11-08T053807Z.md           | b2f6b3b44c072f78f916990037be1a0fac59a7fd | implement-phase | -                    |
+| p08-p16    | code     | passed          | 2026-11-08 | reviews/archived/range-review-2026-11-08T054348Z.md         | b2f6b3b44c072f78f916990037be1a0fac59a7fd | gate            | codex-6-sol-xhigh    |
+| m03        | code     | passed          | 2026-11-08 | reviews/archived/m03-review-2026-11-08T055143Z.md           | b2f6b3b44c072f78f916990037be1a0fac59a7fd | manual          | -                    |
 
 **Plan artifact review disposition (2026-11-01):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
 
@@ -351,6 +401,12 @@ sequential: p11 names the definition and mirrors the branch that p10 writes.
 The `oat-project-goal` gate reviews the resulting bundle. There are no residual unaddressed findings.
 
 **m01 amendment artifact review disposition (2026-11-02):** one structured attempt by `oat-reviewer-claude-opus-5-5-high` on `d09ac39c5`, as the operator directed (no retries), with no review artifact written: 0 Critical, 1 High, 3 Medium, 5 Low. M1 (discover and design gates, `IMPORT-08/09`), M3 (a per-phase review for the p02 revert) and L1 to L5 were folded as artifact-local. H1 (bookkeeping fixes that would stale goal delivery evidence under section 12.8) and M2 (a fix promoting a Reviews Status to `passed`) changed Outcome 2 and were realigned with the operator, who approved the three limits now in Outcome 2, the delivery-check fallback and p10's branch-build probe. No artifact review re-ran after the fixes; the `oat-project-goal` gate reviews the resulting bundle. The reviewer also noted that `origin/main` has since changed `oat-project-review-receive`, the autonomy contract and brief contract section 12.8 (#396, #397); p10 reconciles them at phase start.
+
+**m03 amendment artifact review disposition (2026-11-06):** three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, now exhausted), with no review artifact written.
+
+- Attempt 1 (`13bae0a7a`): 0 Critical, 1 High, 3 Medium, 6 Low. H1 (Outcome 5 marked only attempts after the first, yet required three separate m02 exit-gate runs to read as one sequence) changed Outcome 5 and went to the operator, who chose a sequence of successive runs of one configured gate on one subject, recorded as Decision (5). M1 to M3 and L2 to L6 were folded as artifact-local (`060923361`). L1 (re-routing the journal deferrals and phase headings) is journal work, done when the journal is extended.
+- Attempt 2 (`060923361`): 0 Critical, 0 High, 1 Medium, 4 Low, all folded (`2666257fe`): Outcome 5's evidence wording, p08 Known Unknowns for the goal plan-gate subject and for attributing a `final`-token exit run, p15's isolated-HOME probe mechanics, and the phase total.
+- Attempt 3 (`2666257fe`): 0 Critical, 0 High, 0 Medium, 2 Low, verdict ready to approve. Both Lows (the goal plan-gate subject in Outcome 5 and the Approach, and how a no-model p15 probe evidences the recording) were folded after the last attempt, so no artifact review covers them; the `oat-project-goal` gate reviews the resulting bundle.
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
@@ -366,7 +422,7 @@ Writers must preserve every existing row and every unknown trailing cell.
 
 - Filled at terminal closeout.
 
-**Total: 9 phases**
+**Total: 15 phases**
 
 ---
 

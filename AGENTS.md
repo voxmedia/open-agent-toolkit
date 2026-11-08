@@ -380,7 +380,7 @@ When executing an OAT project implementation or OAT project review workflow, do 
 
 Status summaries, completed bookkeeping, and "clean boundary" pauses are not completion criteria. After updating tracking artifacts, continue execution until one of the allowed stop conditions applies.
 
-Before turning a review or gate finding into a fix task, check that `discovery.md`, `spec.md`, `design.md`, or a decision record requires the guarantee the finding demands. A finding that adds a new requirement, rather than reporting a regression or a gap in an accepted one, goes to the operator before any fix task exists. In `artifact-cleanup` the exit gate asked for safety between two simultaneous archive runs of one project, which no contract source named; four fix rounds built an ownership protocol that the operator then had deleted.
+Before turning a review or gate finding into a fix task, check that `discovery.md`, `spec.md`, `design.md`, or a decision record requires the guarantee the finding demands. A finding that adds a new requirement, rather than reporting a regression or a gap in an accepted one, goes to the operator before any fix task exists. In `artifact-cleanup` the exit gate asked for safety between two simultaneous archive runs of one project, which no contract source named; four fix rounds built an ownership protocol that the operator then had deleted. Every project review and gate receive applies this rule through the finding classes in `.agents/docs/bookkeeping-findings.md`: it records one class per finding in its receipt, and a `new-hardening` finding (no contract source) reaches the operator before any fix work exists for it.
 
 ### Project Structure
 

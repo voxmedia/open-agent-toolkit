@@ -327,7 +327,10 @@ export async function resolveReviewEvent(
   } else {
     // The raw Reviewed Head cell: the parser's `reviewedHead` omits a `-`
     // placeholder and an abbreviated or malformed head alike.
-    const rows = parseReviewTable(planContent, { rawReviewedHead: true });
+    const rows = parseReviewTable(planContent, {
+      rawReviewedHead: true,
+      dataLine: true,
+    });
     const eventKey = reviewEventKey(
       event.scope,
       event.type,
@@ -367,7 +370,7 @@ export async function resolveReviewEvent(
           'duplicate_event_key',
           'ledger',
           '1 row',
-          `${bound.length} rows (${bound.map((entry) => entry.index + 1).join(', ')})`,
+          `${bound.length} rows (${bound.map((entry) => entry.row.dataLine ?? entry.index + 1).join(', ')})`,
           `${bound.length} Reviews rows claim the event key ${event.scope}/${event.type}/${artifactFilename}; one event must have one row.`,
         ),
       );
@@ -389,6 +392,7 @@ export async function resolveReviewEvent(
         target.row,
         target.index,
       );
+      const rowNumber = row.row;
       const rowScopeAgrees = sameCell(target.row.scope, event.scope);
       const rowTypeAgrees = sameCell(target.row.type, event.type);
       if (!rowScopeAgrees) {
@@ -398,7 +402,7 @@ export async function resolveReviewEvent(
             'row',
             event.scope,
             target.row.scope,
-            `Reviews row ${target.index + 1} records Scope ${target.row.scope}, not the event scope ${event.scope}.`,
+            `Reviews row ${rowNumber} records Scope ${target.row.scope}, not the event scope ${event.scope}.`,
           ),
         );
       }
@@ -409,7 +413,7 @@ export async function resolveReviewEvent(
             'row',
             event.type,
             target.row.type,
-            `Reviews row ${target.index + 1} records Type ${target.row.type}, not the event type ${event.type}.`,
+            `Reviews row ${rowNumber} records Type ${target.row.type}, not the event type ${event.type}.`,
           ),
         );
       }
@@ -428,7 +432,7 @@ export async function resolveReviewEvent(
             'row',
             projectRelativeArtifact,
             rowArtifact,
-            `Reviews row ${target.index + 1} names ${rowArtifact}, not the event artifact ${projectRelativeArtifact}.`,
+            `Reviews row ${rowNumber} names ${rowArtifact}, not the event artifact ${projectRelativeArtifact}.`,
           ),
         );
       }
@@ -446,7 +450,7 @@ export async function resolveReviewEvent(
             'row',
             eventHead,
             rowHeadCell ?? null,
-            `Reviews row ${target.index + 1}'s Reviewed Head "${rowHeadCell}" is neither a full 40-character commit SHA nor \`-\`, so it cannot equal the event's reviewed head ${eventHead}.`,
+            `Reviews row ${rowNumber}'s Reviewed Head "${rowHeadCell}" is neither a full 40-character commit SHA nor \`-\`, so it cannot equal the event's reviewed head ${eventHead}.`,
           ),
         );
       } else if (rowHead === eventHead) {
@@ -459,7 +463,7 @@ export async function resolveReviewEvent(
             'row',
             eventHead,
             rowHead,
-            `Reviews row ${target.index + 1}'s Reviewed Head ${rowHead} is not the event's reviewed head ${eventHead}.`,
+            `Reviews row ${rowNumber}'s Reviewed Head ${rowHead} is not the event's reviewed head ${eventHead}.`,
           ),
         );
       }
@@ -475,7 +479,7 @@ export async function resolveReviewEvent(
             'row',
             'received',
             target.row.status,
-            `Reviews row ${target.index + 1} is ${target.row.status}, not received: the event was already processed or never recorded.`,
+            `Reviews row ${rowNumber} is ${target.row.status}, not received: the event was already processed or never recorded.`,
           ),
         );
       } else {
@@ -503,7 +507,7 @@ export async function resolveReviewEvent(
               'row',
               'current',
               `row ${supersededBy.row}`,
-              `Reviews row ${target.index + 1} is superseded by ${describeReviewLedgerRow(supersededBy)} at ${entry.relation === 'same-head' ? 'the same' : 'a descendant'} head; readers ignore it, so receive must not consume this event.`,
+              `Reviews row ${rowNumber} is superseded by ${describeReviewLedgerRow(supersededBy)} at ${entry.relation === 'same-head' ? 'the same' : 'a descendant'} head; readers ignore it, so receive must not consume this event.`,
             ),
             supersededBy,
           });

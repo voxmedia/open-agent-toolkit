@@ -178,14 +178,18 @@ export function reviewEventKey(
   ].join('\u0000');
 }
 
-/** One ledger row as `oat review check` and `oat review resolve` report it. */
+/**
+ * One ledger row as `oat review check` and `oat review resolve` report it.
+ * `row` is the physical data-line number when the rows were parsed with
+ * `dataLine: true`, the number `oat review pending` reports.
+ */
 export async function buildReviewLedgerRowReport(
   absoluteProjectPath: string,
   row: ReviewStatus,
   index: number,
 ): Promise<ReviewLedgerRowReport> {
   return {
-    row: index + 1,
+    row: row.dataLine ?? index + 1,
     scope: row.scope,
     type: row.type,
     status: row.status,
@@ -252,7 +256,7 @@ export async function checkReviewLedger(
     join(absoluteProjectPath, 'plan.md'),
     'utf8',
   );
-  const rows = parseReviewTable(planContent);
+  const rows = parseReviewTable(planContent, { dataLine: true });
 
   const reports = await Promise.all(
     rows.map((row, index) =>

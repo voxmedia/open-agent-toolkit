@@ -218,7 +218,14 @@ entries without asking agents to edit `project-log.md`:
 - `oat gate review` records exactly one entry for every terminal outcome,
   including successful and blocking verdicts, child failure, timeout,
   targeting-correlation failure, and artifact-validation failure. A log append
-  failure produces a warning but never changes the gate result.
+  failure produces a warning but never changes the gate result. For a run after
+  the first in its
+  [gate sequence](../../advanced/workflow-gates.md#convergence-across-a-gate-sequence),
+  the entry's one-line body adds
+  `convergence=new:N,carried:N,resolved:N sequence=<kind>:<value> sequence_run=N previous_run=<prefix>`
+  before `run=`. When the runs cannot be compared, `unavailable:<reason>`
+  replaces the counts. The previous run is named by the first eight characters
+  of its run ID, so the entry is never mistaken for that run's own entry.
 - `oat-project-summary` checks for entries, offers append-only promotion of
   reusable project judgments, and invokes `rollup` after authoring
   `summary.md`.

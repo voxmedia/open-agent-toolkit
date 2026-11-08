@@ -7,7 +7,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.5
+  version: 1.0.6
 ---
 
 # Goal Project
@@ -33,9 +33,10 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 This skill is model-invokable only for an explicit goal ask, such as "start a
 goal project for …", "re-align", "activate m02", or "declare the goal met", or
 when the user accepts a previously offered goal step, for example the
-re-alignment the router offers once a milestone is delivered. Do NOT auto-invoke merely because a milestone reached
-`delivered` or `aligning`, or because new work looks like it needs several
-deliveries: choosing goal mode for new work stays the user's decision.
+re-alignment the router offers once a milestone is delivered. Do NOT
+auto-invoke merely because a milestone reached `delivered` or `aligning`, or
+because new work looks like it needs several deliveries: choosing goal mode for
+new work stays the user's decision.
 
 Invocability changes who may start this skill, not who decides. Every decision
 the steps below put to the user still needs the user's explicit answer in this
@@ -473,7 +474,11 @@ Outcome, the Approach, a Decision, a phase boundary, milestone membership, the
 endpoint, or the authority) back to the user as a short, focused realignment
 and re-run the loop on the new commit. Under autonomy apply only unambiguous
 artifact-local fixes and stop on an unresolved Critical finding or material
-ambiguity.
+ambiguity. Each finding carries the class the shared loop records under
+`references/docs/bookkeeping-findings.md`; a finding no contract source
+requires (`new-hardening`) is a material finding that goes back to the user
+before any edit. Under autonomy a Critical or High one stops the loop, and a
+Medium or Low one is recorded `awaiting operator` with no edit.
 
 When every finding is bookkeeping under
 `references/docs/bookkeeping-findings.md`, the shared loop's bookkeeping-only
@@ -554,6 +559,15 @@ review ...` without the global `--json` placement. Reusable declarations
    and do not re-run the gate. Hold it as an allowed `passed` outcome for Step
    3.7. A result with any finding that is not bookkeeping follows the policies
    above unchanged.
+
+   Review-receive records one class per finding of the gate result, in its
+   Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it
+   routes to the operator (`new-hardening`, or an `accepted-requirement` that
+   cites no source) gets no remediation edit until the operator decides it;
+   under `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10` for a Critical
+   or High one and records a Medium or Low one `awaiting operator` without
+   stopping. The `onFailure` policy and the attempt count apply to the result
+   unchanged, whatever the operator decides.
 
 Operational, validation, targeting, launch, and receive failures never inherit
 `onFailure` continuation semantics.

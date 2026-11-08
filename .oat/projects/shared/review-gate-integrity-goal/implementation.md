@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-03
-oat_current_task_id: null
+oat_last_updated: 2026-11-06
+oat_current_task_id: p16
 oat_generated: false
 oat_template: false
 ---
@@ -51,10 +51,13 @@ oat_template: false
 | p-rev1 | completed | 1     | 1/1      |
 | p-rev2 | completed | 1     | 1/1      |
 | p-rev3 | completed | 1     | 1/1      |
-| p08    | pending   | 1     | 0/1      |
+| p08    | completed | 1     | 1/1      |
+| p14    | completed | 1     | 1/1      |
+| p15    | completed | 1     | 1/1      |
+| p16    | completed | 1     | 1/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 10/12 phases accepted
+**Total:** 14/15 phases accepted
 
 ---
 
@@ -1944,7 +1947,795 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
-**Status:** pending
+**Status:** completed
+**Base:** 241b12a95bc3022ce8e4f8589699f90e31d22417
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Head:** dc43fa5b93a85ede751ba1df052239fc099eef25
+
+Phase verification (2026-11-07, at the head above, exit codes captured per gate):
+
+- `pnpm check` exit 0, with 0 of 11 tasks cached.
+- `pnpm type-check` exit 0, with 5 of 11 tasks cached.
+- `pnpm test` exit 0. Every test task was a cache miss and ran.
+- `pnpm build` exit 0. It was fully cached, replaying the builds `pnpm test` had just run on the same inputs.
+- `pnpm run check:skill-bumps` exit 0; no skill or agent role changed.
+- `git fetch origin main`, then `pnpm release:check-versions` exit 0.
+- `pnpm release:validate` exit 0 for 5 packages at 0.3.47.
+- `pnpm build:docs` exit 0. It was cached from the docs build that `pnpm test` had just run.
+- `docs generate-index` exit 0, and `git diff --exit-code -- apps/oat-docs/index.md` exit 0.
+- `pnpm test:evidence` exit 0, with 0 of 12 tasks cached. The CLI ran 9,564 tests and control-plane 317.
+- `pnpm lint` and `pnpm format` both exit 0. No `.agents/skills` or `tools/smoke` file changed.
+- `oat project journal check --at review --scope p08` returned `ok`.
+
+Review-fix round 1 (`rgi-p08-fix-20261107-01`, p08-t04 to p08-t06). Head advanced from `9eebbd39c` to the commit above under the late-fix rule; base unchanged. Verification at that head, exit codes captured per gate:
+
+- `pnpm check` exit 0, with 0 of 11 tasks cached.
+- `pnpm type-check` exit 0, with 5 of 11 tasks cached.
+- `pnpm build` exit 0. It was fully cached; `packages/cli/dist` was confirmed to contain the p08-t05 and p08-t06 code.
+- `pnpm test:evidence` exit 0, with 0 of 12 tasks cached. The CLI ran 9,576 tests and control-plane 317.
+- `pnpm run check:skill-bumps` exit 0.
+- `git fetch origin main`, then `pnpm release:check-versions` exit 0.
+- `pnpm release:validate` exit 0.
+- `pnpm build:docs` exit 0. It was cached from the docs build `pnpm test:evidence` had just run.
+- `docs generate-index` exit 0, and the `index.md` diff exit 0.
+- The m02 sequence probe on the rebuilt branch build exited 0 and gave the same results as p08-t02: r1 absent, r2 1/0/2, r3 0/0/1, stuck 0/2/0, reworded 0/2/0.
+- The real-records probe places `5e3ad377` as undetermined and the other three plan runs in separate amendments.
+- `oat project journal check --at review --scope p08` returned `ok`.
+
+Review-fix round 2 (`rgi-p08-fix-20261107-02`, p08-t07). The head advanced from `d23563aee` to the commit above under the late-fix rule; the base is unchanged. Verification at that head:
+
+- `src/commands/gate` passed 512 tests, exit 0.
+- `pnpm check` exit 0, with 0 of 11 tasks cached.
+- `pnpm type-check` exit 0, with 5 of 11 cached.
+- `pnpm build` exit 0. It was cached, and `dist` was checked to contain the new rule.
+- `pnpm build:docs` exit 0; the docs build ran.
+- Index regeneration and its diff both exit 0.
+- The m02 sequence probe gave the same results as before.
+- `oat project journal check --at review --scope p08` returned `ok`.
+
+Phase start 2026-11-07, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the stable finding key, run linkage and the convergence fields feed one gate result and one record of the review: no two slices are independent. The work adds new surfaces and settles open design (p08's Known Unknowns), so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p08 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c` in the gate, review, review-provide, review-receive and reviewer paths.
+
+### Task p08-t01: Settle the parser identity deferrals for the stable finding key
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Handle:** direct:rgi-p08-impl-20261107-01:p08-t01
+**Intent:** Settle the deferred parser identity items before the key exists, keeping or removing each refusal according to what the stable finding key needs: p01 review L2 and L3, p01 review round 2 L1 and L2, and the PR #400 self-review C1 bundle with T2, T3/C3 and T4/C2.
+**Files:** `packages/cli/src/commands/gate/review-verdict.ts`, `packages/cli/src/commands/gate/review-verdict.test.ts`, `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `packages/cli/src/commands/gate/__fixtures__/convergence/m02-exit-r{1,2,3}-range-review-*.md` (captured output, provenance headers), `.oxfmtrc.jsonc` (formatter ignore for those byte-for-byte fixtures, the existing captured-fixture precedent), `references/probes/p08-parser-identity-controls.mjs`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts`
+**Commit:** 2f8f90617f02d2f5aad9431de082e7141ce388b4
+
+What the key needs (decided here, used by p08-t02): the stable finding key reads only a finding's severity, title and location, never a reviewer ID; a carried-over mark needs an ID that names exactly one record of its run; and comparing two runs needs records that cover their counts (`findingsComplete`). Dispositions:
+
+- **p01 review L2 — fixed.** List items whose bold lead carries a reviewer ID now yield that ID and a clean title: `- **M1: title** (loc)` (the shape of all three m02 exit-gate artifacts) and `- **L1:** text` (the backlog-wave-5 returned message). Both shapes come from captured output. Counting is unchanged. The key needs it: otherwise the same finding titled `M1: X` in one run and `M2: X` in the next would never match.
+- **p01 review round 2 L2 — fixed.** Explicit IDs are reserved artifact-wide before any ID is generated, so a plain finding before `**M1 — …**` gets `M2` instead of causing a refusal.
+- **C1 duplicate-ID refusal — removed; C1 ID-prefix/severity refusal — removed.** The key never reads IDs, and IDs are now unique by construction: an explicit ID is kept at its first use when its prefix matches its section; a repeat or mismatched ID gets the next free generated ID for its section. Neither shape is refused any more, so a review whose counts agree is no longer rejected for its labels.
+- **C1 `findingsComplete` — kept.** Convergence marking reads it: a run whose records do not cover its counts cannot be compared, so p08-t02 reports it `unavailable`.
+- **T4/C2 — fixed.** `ReviewVerdictValidationError`'s unused `kind`, `status` and `receiveEligible` fields and the assertions on them are gone; `code` stays.
+- **T2 — fixed.** New negative test: near-miss labels (`Fixes:`, an unlisted bold `**Recommendation:**`, lower-case `issue:`) are separate list findings (Medium 4), never details of the title above them.
+- **T3/C3 — fixed.** Removed `relies on the effective-delta v2 exclusion of project tracking paths` and the git-level `effective-delta v2 exclusions leave a tracking-only fix out of the delta (p11)` block from `bookkeeping-findings-contracts.test.ts`; `post-implement-sequence-contracts.test.ts` pins the same sentence (it reads `completion-and-closeout.md` through `readImplementSkill`) and runs the same v2 exclusion git test (`excludes project and repository records from effective-delta-v2 only`).
+- **p01 review round 2 L1 (and T1) — closed, message clarified, grammar unchanged.** A search of all 371 review artifacts under the six local worktrees found no wrapped or nested detail line under an explicit title, so accepting one would add grammar no captured output uses (the real-output fixture Constraint, the R1 narrow-grammar Decision and Feature Planning Triage). The shape still fails closed; the orphaned-detail refusal now says an intervening indented or wrapped line ends the detail run, which removes the misleading cause. Reopen with captured output if a real gate run is refused this way.
+- **p01 review L3 — closed without action.** No consumer branches on the refusal code: convergence reads only accepted verdicts, and the `artifact_validation_failed` envelope's message names the cause. Adding a field no one reads is the speculative complexity Feature Planning Triage rules out; refile when a consumer appears.
+
+Before/after controls (parser identity; the gate's first-run envelope is controlled in p08-t02). Probe: `node .oat/projects/shared/review-gate-integrity-goal/references/probes/p08-parser-identity-controls.mjs <cli-dist> .`, run against a build of the phase base `2c7ab359b` (copied to `/tmp/rgi-p08/base-dist`) and against the branch build. Counts are identical in every accepted case.
+
+| Control                                                   | Base `2c7ab359b`                                                                   | Branch                                                                        |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| wave-5 captured `**L1:**`/`**L2:**` Lows in a Low section | accepted, ids L1/L2, titles `L1:` / `L2:`                                          | accepted 0/0/0/2, ids L1/L2, titles are the finding text                      |
+| real m02 run 1 (`**M1: …**`)                              | accepted 0/0/2/0, titles `M1: Preserve …`, `M2: Resolve …`                         | accepted 0/0/2/0, titles `Preserve …`, `Resolve …`, same locations            |
+| plain list finding before `**M1 — …**`                    | refused `finding_id_duplicate`                                                     | accepted, M2 (plain) and M1 (explicit)                                        |
+| two `**H1 — …**` titles                                   | refused `finding_id_duplicate`                                                     | accepted, H1 and H2                                                           |
+| `**H1 — …**` under Medium                                 | refused `finding_title_severity_mismatch`                                          | accepted, M1                                                                  |
+| wrapped detail line under a title                         | refused `finding_detail_orphaned`; error carried `kind`/`status`/`receiveEligible` | refused `finding_detail_orphaned` with the clarified message; no extra fields |
+
+Guard-can-fail (each neutralized in the working tree, suite rerun, then restored from a copy; restored suite exit 0, 78/78):
+
+- `LIST_TITLE_ID_IN_BOLD` made unmatchable: `reads the reviewer ID from captured …` and `gives an explicit ID whose prefix names another severity …` failed (exit 1).
+- `LIST_TITLE_ID_ONLY_BOLD` made unmatchable: `reads the reviewer ID from captured …` failed (exit 1).
+- Explicit-ID reservation disabled (`&& false` on the pass-one test): `assigns IDs independently of …`, `skips explicit IDs when generating …` and the prefix test failed (exit 1).
+- First-use check dropped so a repeated explicit ID is kept: `keeps a repeated explicit finding ID unique …` failed (exit 1).
+
+Verification: focused verdict suite 78/78 exit 0; `src/commands/gate` plus `bookkeeping-findings-contracts.test.ts` under `scripts/with-isolated-home.sh`, 10 files 550 tests, exit 0; `pnpm --filter @open-agent-toolkit/cli check` exit 0; CLI `tsc --noEmit` exit 0; CLI build exit 0. The three m02 fixtures still match their archived artifacts byte for byte below the header after the commit hook.
+
+### Task p08-t02: Mark gate findings new or carried over across a sequence
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Handle:** direct:rgi-p08-impl-20261107-01:p08-t02
+**Intent:** Settle the Known Unknowns (finding key, run linkage, mark carrier, plan-gate subject, `final`-token exit attribution) and mark every finding of a run after the first in its sequence new or carried over, with new, carried-over and resolved counts in the gate JSON and in the gate's project-log record of the review; a first run stays unchanged.
+**Files:** `packages/cli/src/commands/gate/convergence.ts` (new), `packages/cli/src/commands/gate/convergence.test.ts` (new), `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/src/commands/gate/__fixtures__/convergence/m02-exit-r1-{stuck,reworded}-rerun.md` (derived from captured run 1, edits recorded in their headers), `references/probes/p08-m02-sequence-probe.mjs`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** 805ddf52d6924c3edb3aa35758a5aa3dca788fcf
+
+Known Unknown decisions (none changes an Outcome, Constraint, Decision or the Approach):
+
+- **Stable finding key.** `<location key or ->::<title key>`. The location key is the reviewer's location without a trailing line reference (`:430`, `:534-544`, `:12:3`, `#L10-L20`), lower-cased. The title key drops the advisory `(bookkeeping)` mark, applies NFKC and lower-case, and collapses every run of non-letter, non-digit characters to one space. Reviewer IDs and severity are not in the key: reviewers renumber on every run (p08-t01) and may regrade. Matching is deterministic and never merges. The exact pass pairs findings whose key is unique among the unmatched findings of each run. The location pass then pairs a reworded finding through a unique (severity, location key) on each side; a finding without a location never matches in it. Everything else is new or resolved. Reason: line numbers move between fix rounds, while file and wording identify the finding; ambiguity is reported as new and resolved instead of guessed.
+- **Run linkage, without a new store.** The earlier runs are the project's gate-run review artifacts, active (`reviews/`) and archived (`reviews/archived/`), that carry `oat_review_invocation: gate`, an `oat_gate_run_id` and a valid `oat_generated_at`, were written before this run, and have the same (review type, subject). The previous run is the latest of them; it is the only run compared, and the sequence position is its count plus one. The gate target is not part of the identity, because one configured gate may select another target on a rerun. Limitation, to be documented in p08-t03: review artifacts are local-only, so a checkout without the earlier artifacts reports a first run.
+- **Mark carrier.** The gate JSON result's `convergence` object (sequence, status, counts, per-finding marks with the previous run's finding reference, resolved findings), plus tokens in the gate's one-line project-log record of the review: ` convergence=new:N,carried:N,resolved:N sequence=<kind>:<value> sequence_run=N previous_run=<8-char prefix>`, before ` run=`. The reviewer's artifact is never rewritten. The previous run is named by its 8-character prefix because the log's idempotency scan treats any word containing a full run ID as that run's entry. A previous run whose artifact cannot be parsed, or either run whose records do not cover its counts, gives `status: unavailable` with a reason instead of counts, and never a guessed all-new result. A failure to read earlier runs is a `gate-convergence-unavailable` diagnostic (a warning in human mode), and the result is emitted without convergence fields, unchanged otherwise. The post-selection recovery path reports convergence the same way.
+- **Goal plan-gate subject.** The plan amendment open when the run was written: an `artifact` run on scope `plan` in a goal project has subject `plan-amendment` bounded by the latest recorded plan approval (`oat_milestone_gates.<m>.plan.decided_at`) before it. Each run's boundary is derived from its own time, so two plan runs share a sequence only when no plan approval was recorded between them.
+- **`final`-token exit attribution, without p15.** A goal `code` run whose scope is `final`, or whose artifact names more than one phase in `oat_review_phase_ids`, belongs to the milestone when every named phase is in that one milestone of `plan.md`'s Milestones table; the scope token does not matter. A single-phase phase gate, a cross-milestone run, a run without phase IDs, and every run outside goal mode stay on their review scope.
+
+Exit evidence:
+
+- **Converging, stuck and reworded sequences (gate JSON and project-log record).** In the `index.test.ts` block `gate convergence (p08)`:
+  - m02 r2 after r1 gives run 2, subject `milestone:m02`, new 1, carried 0, resolved 2. r3 after r1 and r2 gives run 3, previous run `d738cd0e…`, 0/0/1.
+  - The stuck rerun gives carried 2 with the earlier M1/M2 references.
+  - The reworded rerun gives carried 2, with M2 matched by the location pass.
+  - An unparsable previous run gives `unavailable: previous_artifact_unparsable` with the verdict unchanged.
+  - The post-selection recovered result carries the same convergence.
+
+  Every case also asserts the log body tokens.
+
+- **First run unchanged.** The test asserts no `convergence` key and a log body matching the pre-p08 shape exactly. Branch-build control: `node .oat/projects/shared/review-gate-integrity-goal/references/probes/p08-m02-sequence-probe.mjs <cli-entry> .`, run with `packages/cli/dist/index.js` (branch) and `/tmp/rgi-p08/base-dist/index.js` (a build of phase base `2c7ab359b`, with `assets` linked). The masked first-run JSON envelopes are identical, and the first-run log bodies of all three scratch projects are identical. The base build reports no convergence on any later run. The parser-identity changes do not reach the first-run envelope; they are the before/after table in p08-t01.
+- **Branch build links the m02 runs as one sequence.** The same probe with the branch build gives these real `oat --json gate review` runs (exit 0, status ok):
+  - r1: convergence absent.
+  - r2: `milestone:m02` run 2, `M1:new`, resolved M1/M2, counts 1/0/2.
+  - r3: run 3, resolved M1, counts 0/0/1.
+  - stuck: run 2, `M1:carried_over<-M1`, `M2:carried_over<-M2`, counts 0/2/0.
+  - reworded: run 2, same marks, counts 0/2/0.
+
+  Each later run's log line carries the convergence tokens.
+
+- **Real project records.** The branch build's `listGateRunArtifacts` and `sequenceSubject`, run over this project's own artifacts, group the three m02 exit runs as `code milestone:m02` and the five m01 `final` runs as `code milestone:m01`. They split the four plan runs into three amendments: the two runs before the m01 approval (`2026-11-02T16:13:30Z`), one run after it, and one after the m02 approval (`2026-11-03T03:17:46Z`). Probe:
+
+  ```bash
+  node --input-type=module -e "const m=await import('./packages/cli/dist/commands/gate/convergence.js');const p='.oat/projects/shared/review-gate-integrity-goal';const r=await m.readSequenceProjectRecords(p);for(const run of await m.listGateRunArtifacts('.',p)){const s=m.sequenceSubject(run,r);console.log(run.reviewType,s.kind+':'+s.value,s.amendmentAfter??'',run.path.split('/').pop())}"
+  ```
+
+- **Correction (p08-t04, review round 1 H1).** The plan-run grouping above was wrong. The two runs before the m01 approval are the original brief's plan gate (`5e3ad377`, 2026-11-01) and the m01 amendment's (`803a6f3e`, 2026-11-02), two different amendments. The m01 re-approval had overwritten the brief approval's carrier time. p08-t04 bounds amendments by every approval line. With that fix, the four plan runs give: `5e3ad377` unplaced (never linked), then three separate amendments after `cbc8836c`, `b2a38a09` and `ee377dd7`.
+
+Guard-can-fail. Each rule was neutralized in the working tree, the convergence tests were rerun, and the file was restored from a copy, verified with `cmp`. The restored suites passed (exit 0, 310 tests).
+
+- Exact pass removed: `keeps a regraded finding carried over …` failed.
+- Location pass removed: both `carries over a reworded finding …` tests (unit and gate) failed.
+- Uniqueness guard removed: `leaves two identical findings … unmatched` and `never merges: …` failed.
+- Milestone attribution removed: six tests failed, including the m02 sequence (unit and gate) and both attribution tests.
+- Plan-approval boundary removed: `separates goal plan gate runs at every recorded plan approval` failed.
+- First-run `null` replaced with a run-1 object: the first-run gate test, both non-linking tests and the m02 unit sequence failed.
+- Full previous run ID in the log tokens: the prefix test and two gate log assertions failed.
+- Recovery-path convergence set to `undefined`: `reports convergence on a post-selection recovered result` failed.
+- Log tokens left out of the record body: five gate tests failed.
+
+Verification: `src/commands/gate` under `scripts/with-isolated-home.sh` passed 10 files and 499 tests, exit 0. `pnpm --filter @open-agent-toolkit/cli check` exit 0; CLI `tsc --noEmit` exit 0; CLI build exit 0.
+
+### Task p08-t03: Document gate convergence and the stable finding key
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-impl-20261107-01
+**Handle:** direct:rgi-p08-impl-20261107-01:p08-t03
+**Intent:** Document the stable finding key, how runs are linked into a sequence, the `convergence` result field and the project-log tokens, and bump the lockstep public package versions for the shipped CLI change.
+**Files:** `apps/oat-docs/docs/workflows/advanced/workflow-gates.md` (new section "Convergence across a gate sequence", plus the tokens under "Project log finalization"), `apps/oat-docs/docs/workflows/projects/execution/project-log.md` (gate entry tokens), `apps/oat-docs/docs/reference/cli-reference.md` (`oat gate review`), `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` and `packages/cli/assets/public-package-versions.json` (0.3.46 to 0.3.47)
+**Proof command:** `pnpm release:check-versions`, plus `markdownlint-cli2` over the three changed pages
+**Commit:** 26ed56e7d6682acff76597a7ed9ff97dc9727921
+
+No skill or agent-role file changed, so no `metadata.version` or `version:` bump is due. No README or instruction file describes gate result fields, so none needed an update. Checks:
+
+- `pnpm release:check-versions` passed, exit 0, after `git fetch origin main`.
+- markdownlint over the three pages reported 0 errors.
+- `docs generate-index` left `apps/oat-docs/index.md` unchanged.
+
+The first commit attempt was refused by commitlint (header longer than 100 characters) before any commit was made. The same identity and paths were retried with a shorter message.
+
+### Task p08-t04: (review) Bound goal plan-gate amendments by every recorded approval
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-01
+**Handle:** direct:rgi-p08-fix-20261107-01:p08-t04
+**Source review:** p08-review-2026-11-07T233955Z.md, H1
+**Intent:** Runs on different plan amendments never share a sequence, even when a re-approval of the same milestone has overwritten that milestone's plan carrier.
+**Files:** `packages/cli/src/commands/gate/convergence.ts`, `packages/cli/src/commands/gate/convergence.test.ts`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts`
+**Commit:** d218c3d712f223f218c7657953520bf233d19072
+
+Decision: the amendment boundary is the set of plan approvals recorded before the run. The approvals come from records that already exist and that a re-approval does not overwrite: the brief's `**Brief approved:**` and `**Milestone mNN approved:**` lines under `## Delivery endpoint and authority` (written by `oat-project-goal` step 3; each names the approved commit).
+
+- **Timing.** A line is timed by the `oat_milestone_gates.<m>.plan` carrier's `decided_at` while that carrier's `subject.ref` (else `reviewed_head`) still names the line's commit. Otherwise the line's date is read as that whole day in any time zone, `[D − 14h, D + 1 day + 12h)`. The skill does not record which zone the date uses.
+- **Unplaced runs.** A plan run inside such a window is undetermined. It reports as a first run and is never linked.
+- **Unnamed carriers.** A carrier that no line names still counts as an approval at its `decided_at`.
+- **`amendmentAfter`.** It is now the commit the latest earlier approval approved. That identifies the whole set, because a later run's approvals include every earlier run's approvals.
+
+Alternatives rejected:
+
+- **The plan artifacts' reviewed head.** Plan-gate artifacts carry no `oat_review_head_sha`.
+- **Git ancestry of the approved commits.** It needs git in convergence, and it fails where a milestone branch was squash-merged and the approved commits are gone.
+- **The commit time of the commit that added each approval line.** It needs git history.
+
+Evidence:
+
+- **Before (pre-fix build at `db61151ed`, copied to `/tmp/rgi-p08/prefix-dist`).** `5e3ad377` and `803a6f3e` both resolve to `plan-amendment:plan` with an empty `amendmentAfter`, which is one sequence.
+- **After (branch build).** `5e3ad377` is undetermined. `803a6f3e`, `6cf18b35` and `0d1fa309` fall after `cbc8836c…`, `b2a38a09…` and `ee377dd7…` respectively. The m01 and m02 code groupings are unchanged.
+- **Probe.** `/tmp/rgi-p08/real-records.mjs <dist>`, the p08-t02 probe with the run ID and `undetermined` printed:
+
+  ```bash
+  node --input-type=module -e "const m=await import('./packages/cli/dist/commands/gate/convergence.js');const p='.oat/projects/shared/review-gate-integrity-goal';const r=await m.readSequenceProjectRecords(p);for(const run of await m.listGateRunArtifacts('.',p)){const s=m.sequenceSubject(run,r);console.log(run.reviewType,s.kind+':'+s.value,s.undetermined?'undetermined':(s.amendmentAfter??''),run.runId.slice(0,8))}"
+  ```
+
+New tests in `goal plan-gate amendments from this project's own records`. They use the carriers and approval lines copied verbatim from this project's `state.md` and `plan.md`, and the four real plan-run IDs and times:
+
+- each run's subject is placed as above;
+- the m01 amendment's run and the brief's run each report a first run, even with a run before every approval archived;
+- a rerun inside the m03 amendment links to `0d1fa309` as run 2;
+- runs before any approval link.
+
+Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restored and compared against a copy. The restored suite passed: exit 0, 314 tests.
+
+- Approval lines ignored: both amendment tests failed.
+- Date-window ambiguity ignored: both failed.
+- Undetermined runs given a sequence key: the never-links test failed.
+- Carrier timing not matched to lines: both failed.
+
+Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0, CLI build exit 0, and markdownlint on `workflow-gates.md` reported 0 errors.
+
+### Task p08-t05: (review) Require corroboration before carrying over a reworded finding
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-01
+**Handle:** direct:rgi-p08-fix-20261107-01:p08-t05
+**Source review:** p08-review-2026-11-07T233955Z.md, M1
+**Intent:** An unmatched finding is new and is never silently merged. Two unrelated findings that only share a file and severity are no longer reported as carried over, while the reworded-carried-over case still matches.
+**Files:** `packages/cli/src/commands/gate/convergence.ts`, `packages/cli/src/commands/gate/convergence.test.ts`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** d84765508e36d55c0564797501ba11933899cf5b
+
+Decision: the location pass still pairs findings with a unique (severity, file) on each side, but a pair is accepted only when the rewording is corroborated.
+
+- **Title words.** The titles share at least two significant words. A significant word is a title-key word of three or more characters outside a short list of common words.
+- **Line distance.** When both locations give a line, the lines are at most 20 apart. A location without a line skips this check.
+- **Reason for the bounds.** The captured-derived reworded case shares `review` and `ancestry` and moved 6 lines (65 to 71). The review's counterexample shares no word. Two words rather than one stops a single domain word (`gate`, `review`) from linking unrelated findings. 20 lines allows the usual movement of a fix round. A finding that misses the bounds is reported as new and resolved, which follows the rule that ambiguity is never merged.
+
+Before and after control with `node /tmp/rgi-p08/m1-control.mjs <dist>`. The before build is the pre-fix build at `db61151ed`; the after build is the branch build.
+
+| Case                                                                                                                                            | Before                | After          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------- |
+| Review counterexample: Medium `Plan gate subject merges two amendments` (`plan.md:120`) against `Outcome 3 lacks named evidence` (`plan.md:80`) | `carried_over`, 0/1/0 | `new`, 1/0/1   |
+| Reworded fixture pair                                                                                                                           | `carried_over`        | `carried_over` |
+| Accepted control without a location                                                                                                             | `new`, 1/0/1          | `new`, 1/0/1   |
+
+Run with `node /tmp/rgi-p08/real-seq.mjs <dist>`, the real m01 and m02 sequences give the same counts with both builds. Only the pre-fix build linked plan runs; that was H1.
+
+New tests:
+
+- the review's counterexample;
+- the two-shared-words boundary;
+- the 20-line boundary at 30 and 31, plus a location without a line;
+- `findingLocationLine`.
+
+Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restored and compared against a copy. The restored suites passed: exit 0, 318 tests.
+
+- Corroboration removed: the counterexample, word and line tests failed.
+- One shared word accepted: the two-word test failed.
+- Line distance ignored: the line test failed.
+- Corroboration always refusing: the unit and gate reworded tests failed, along with the word and line tests.
+
+Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0, CLI build exit 0, and markdownlint on `workflow-gates.md` reported 0 errors.
+
+### Task p08-t06: (review) Cover the incomplete-record and unreadable-sequence convergence paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-01
+**Handle:** direct:rgi-p08-fix-20261107-01:p08-t06
+**Source review:** p08-review-2026-11-07T233955Z.md, M2 and L1
+**Intent:** A test fails if either `findingsComplete` branch is removed, and the `gate-convergence-unavailable` diagnostic path is covered. L1: the Deferred Findings slot records the p08 closures.
+**Files:** `packages/cli/src/commands/gate/convergence.test.ts`, `packages/cli/src/commands/gate/index.test.ts`, `packages/cli/src/commands/gate/index.ts` (convergence becomes an injectable `GateCommandDependencies.computeGateConvergence`, default unchanged, so the unreadable-sequence path can be driven)
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** c70f73f2e535c0a380cb248adf10e04966320838
+
+What the evidence showed: the gate's own parses run with missing-section normalization. That normalization refuses an artifact whose records cannot cover its counts, such as a count-line-only artifact or a nonzero severity whose section is missing. So through `oat gate review`:
+
+- such a previous run reaches convergence as `previous_artifact_unparsable`, which is still `unavailable` and never all-new;
+- such a current run fails validation before convergence runs.
+
+The `findingsComplete` branches guard the exported `computeGateConvergence`, whose caller-supplied `parsePrevious` may accept such a run. The unit tests drive the branches there.
+
+New tests:
+
+- **Unit test.** In `reports either run as unavailable when its records do not cover its counts`, a count-line-only previous run gives `previous_findings_incomplete`, and a count-line-only current run gives `findings_incomplete`. Both come from the captured m02 runs with their `## Findings` section removed, and neither carries counts.
+- **Gate test, count-line-only previous run.** The gate reports `unavailable` with `previous_artifact_unparsable`, no counts or findings, and the matching log token.
+- **Gate test, count-line-only current run.** The gate returns `artifact_validation_failed`, with no `convergence` and no log token.
+- **Gate test, unreadable sequence (JSON mode).** It emits exactly one `gate-convergence-unavailable` diagnostic with the run ID, project and message. The result keeps `status: ok`, `receiveEligible: true` and its counts, with no `convergence` and no log token.
+- **Gate test, unreadable sequence (human mode).** It emits the documented warning.
+
+Guard-can-fail. Each rule was neutralized, the tests rerun, and the file restored and compared against a copy. The restored suites passed: exit 0, 323 tests.
+
+- Previous-run `findingsComplete` branch disabled: the unit test failed.
+- Current-run branch disabled: the unit test failed.
+- Previous-parse catch removed: the unit unparsable test and both gate unparsable tests failed.
+- `gate-convergence-unavailable` write replaced with a no-op: the diagnostic test failed.
+- Human-mode warning replaced with a no-op: the warning test failed.
+
+An earlier attempt at the last two neutralizations did not compile. The guard script still restored and verified the file, and the effective no-op form above is the one recorded.
+
+Verification: `pnpm --filter @open-agent-toolkit/cli check` exit 0, CLI `tsc --noEmit` exit 0.
+
+### Task p08-t07: (review) Keep IDs from corroborating rewordings and state the gate's reasons accurately
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p08-fix-20261107-02
+**Handle:** direct:rgi-p08-fix-20261107-02:p08-t07
+**Source review:** p08-review-2026-11-08T001015Z.md, L1 and L2
+**Intent:**
+
+- L1: a word with a digit (a phase, milestone or task ID, or a number) never corroborates a reworded finding, so two distinct findings about one phase are not merged.
+- L2: the gate docs name the reasons `oat gate review` actually emits for incomplete finding records.
+
+**Files:** `packages/cli/src/commands/gate/convergence.ts`, `packages/cli/src/commands/gate/convergence.test.ts`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence.test.ts src/commands/gate/index.test.ts`
+**Commit:** 588208ed1f5776c908b97172e347ccd9babff25a
+
+L1:
+
+- **Rule.** `significantTitleWords` now drops any title-key word that contains a digit (`\p{N}`). Words such as `p08`, `t04` and `m03` and plain numbers no longer count; status words like `stale` still do.
+- **Test, written first.** It covers the review's counterexample: two Low findings, `p08 journal Head line is stale` at `implementation.md:1953` and `p08 Reviews row date is stale` at `implementation.md:1960`. It also covers `p08-t04 step 12 …`. The test failed before the fix (1 failed, 28 passed) and passed after.
+- **Results that must not change, all on the branch build.**
+  - The m02 sequence probe: m02 1/0/2 then 0/0/1, stuck 0/2/0, reworded 0/2/0.
+  - `/tmp/rgi-p08/m1-control.mjs`: the reworded fixture pair is still carried over.
+  - `/tmp/rgi-p08/real-seq.mjs`: the real m01 and m02 sequence counts are unchanged.
+- **Docs.** The docs now say "three or more characters" and that a word with a digit does not count.
+
+L2: `workflow-gates.md` now says that through `oat gate review`:
+
+- an earlier run whose records do not cover its counts is reported as `previous_artifact_unparsable`;
+- an incomplete current run fails validation before convergence runs;
+- `previous_findings_incomplete` and `findings_incomplete` come only from convergence-API callers that supply a more lenient parser.
+
+Guard-can-fail: with the digit filter replaced by `true`, the new test failed. The file was restored and compared against a copy, and the restored suites passed: exit 0, 324 tests.
+
+Verification:
+
+| Check                                                     | Exit  | Notes                                                    |
+| --------------------------------------------------------- | ----- | -------------------------------------------------------- |
+| `src/commands/gate` under `scripts/with-isolated-home.sh` | 0     | 10 files, 512 tests                                      |
+| `pnpm check`                                              | 0     | 0 of 11 tasks cached                                     |
+| `pnpm type-check`                                         | 0     | 5 of 11 cached                                           |
+| `pnpm build`                                              | 0     | fully cached; `dist` confirmed to contain the digit rule |
+| `pnpm build:docs`                                         | 0     | the docs build ran (cache miss)                          |
+| index regeneration plus diff                              | 0 / 0 |                                                          |
+| markdownlint and `oxfmt --check` on `workflow-gates.md`   | clean |                                                          |
+
+`pnpm test:evidence` was not rerun, because only these three files changed.
+
+### Review Received: p08
+
+**Date:** 2026-11-07
+**Review artifact (local-only):** reviews/archived/p08-review-2026-11-07T233955Z.md
+
+**Findings:** Critical 0 · High 1 · Medium 2 · Low 1
+
+Scope: `241b12a95..9eebbd39c` (p08-t01 to p08-t03), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p08-rev-20261107-01`, reconnaissance not attempted). Every finding is a gap in an accepted requirement (Outcome 5, p08 exit evidence), none bookkeeping-only, so the bounded fix loop ran (round 1 of 2) on the original handle (`rgi-p08-fix-20261107-01`).
+
+- H1 (High): plan-gate runs from different amendments shared one sequence because re-approval overwrites `oat_milestone_gates.<m>.plan.decided_at`, and the p08-t02 record wrongly claimed that grouping was validated → fix task p08-t04 (amendments bounded by every recorded plan approval; journal correction line appended).
+- M1 (Medium): the location-plus-severity pass merged unrelated same-file, same-severity findings → fix task p08-t05 (corroboration required).
+- M2 (Medium): the `findingsComplete` guard and the `gate-convergence-unavailable` path had no failing test → fix task p08-t06.
+- L1 (Low): Deferred Findings lacked closure lines for the items p08 closed → fixed in p08-t06's record (append-only closure entry).
+
+**Outcome:** fixes queued: p08-t04, p08-t05, p08-t06; completed (head `d23563aee`); re-reviewed in round 2
+
+### Review Received: p08 (re-review of p08-t04 to p08-t06)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p08-review-2026-11-08T001015Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Scope: `241b12a95..d23563aee`, fix delta `a2afa719c..d23563aee`, fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p08-rev-20261107-02`, reconnaissance not attempted). Round-1 H1, M1, M2 and L1 resolved, reproduced against this project's real records (m01 and m02 exit sequences unchanged; six guards proved able to fail). Verdict pass.
+
+- L1 (Low): title corroboration counted digit-bearing tokens, so two unrelated findings sharing a phase ID and one word still carried over; a remaining gap in Outcome 5's "never silently merged" → fix task p08-t07.
+- L2 (Low): `workflow-gates.md` named convergence reasons the gate path cannot emit (Definition of Done docs clause) → fix task p08-t07.
+
+**Outcome:** fixes queued: p08-t07 (`rgi-p08-fix-20261107-02`, after a passing round; no retry round consumed); completed (head `dc43fa5b9`); re-reviewed in round 3
+
+### Review Received: p08 (re-review of p08-t07)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p08-review-2026-11-08T002049Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: `241b12a95..dc43fa5b9`, fix delta `174be01c4..dc43fa5b9` (p08-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p08-rev-20261107-03`, reconnaissance not attempted). Round-2 L1 and L2 resolved: the counterexample is `new`, m02 fixtures and real m01/m02 sequences unchanged, the digit filter proved able to fail, and dropping digit words fails safe (only to `new`). Reviewer observation, not a finding: titles differing only by an ID in the same file, severity and line still pair as one carried-over finding; blocking that would be a new requirement and was not adopted.
+
+**Outcome:** passed; p08 accepted at head `dc43fa5b9` after three review cycles (fix loop: one blocking round, retry 1 of 2)
+
+## Phase p14: Finding classification at receive
+
+**Status:** completed
+**Base:** 1ebb004cb49edd8772797e50d3fdb55b1b3935e5
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Head:** 27f118621b1c2eff195d4c04e84b137761790b7e
+
+Phase verification (2026-11-08, at the head above, each exit code captured): `pnpm check` 0 (0 of 11 cached); `pnpm type-check` 0; `pnpm test` 0 (every test task a cache miss; CLI 9623/9623); `pnpm build` 0 (full cache replay); `pnpm run check:skill-bumps` 0 (14 changed skills); `git fetch origin main` then `pnpm release:check-versions` 0 (main unchanged since the merge base); `pnpm release:validate` 0 (5 packages at 0.3.47); `pnpm build:docs` 0 (cache replay; the docs build ran uncached under `pnpm test`); docs index regenerated, `git diff --exit-code` 0; `pnpm test:evidence` 0 (0 of 12 cached); `pnpm lint` 0; `pnpm format` 0; `pnpm oat:validate-skills` 0; `pnpm test:smoke` 165/165, `pnpm test:skills` 721/721, `pnpm test:scripts` 7/7; isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`, autonomy inventory included) 1249/1249, exit 0; `oat sync --scope project --dry-run` no changes; `oat project journal check --at review --scope p14` passed. No recovery attempt used; `pending_attempt` null.
+
+Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the class vocabulary, the new-hardening routing and the complexity-review fallback's input are one contract shared by every receive path in the inventory: no two slices are independent. The work changes skill contracts across several receive paths and settles open routing design, so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p14 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c`.
+
+**Scope note (operator, 2026-11-08):** Outcome 5 says the convergence marks and the recorded classes "both feed the existing exhaustion stop and complexity review", and no phase's exit evidence covered the convergence half. The operator assigned it to p14 as a journal scope note, without amending `plan.md`: p14 also makes the existing exhaustion stop and the complexity review read the convergence marks that p08 records (the gate result's `convergence` field and the record's convergence tokens) when a gate sequence has them. Added exit check: a contract test pins that the complexity-review fallback starts from the recorded classes and, for gate rounds, the convergence counts of the exhausted loop's runs. Outcome 5's limit holds: no authorization record or extra-cycle allowance is added.
+
+### Task p14-t01: Inventory the review and gate receive paths
+
+**Status:** no-change
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t01
+**Intent:** Settle the inventory half of the p14 Known Unknown: every place a project review or gate result's findings are dispositioned into fix work, edits or deferrals, where its receipt already lives, and which exhaustion stops read the result.
+**Files:** none (journal record only)
+**Proof command:** `grep -rn 'bookkeeping-findings.md\|review resolve\|complexity-review-fallback.md' .agents/skills/*/SKILL.md .agents/skills/*/references/*.md` and `find .agents/skills -type l -lname '*bookkeeping-findings.md'`, read against the p11-t01/t02 path list
+
+Adopting receive paths. Every one records its classes in the receipt it already writes, so no Reviews column, status or new record is added:
+
+| #   | Receive path                                                                              | Owner and place                                                                     | Class record                         | Routing owner                  |
+| --- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------ |
+| 1   | Code review, manual or `auto`                                                             | `oat-project-review-receive` Steps 2 to 11                                          | Step 7 `### Review Received` receipt | review-receive Step 2.6        |
+| 2   | Code review from a blocking gate (auto-disposition mode)                                  | review-receive                                                                      | Step 7 receipt                       | review-receive Step 2.6        |
+| 3   | Code review from a passing gate (judgment-sweep mode)                                     | review-receive                                                                      | Step 7 receipt                       | review-receive Step 2.6        |
+| 4   | Artifact review, manual or gate                                                           | review-receive (artifact mode, Step 10A)                                            | Step 7 receipt                       | review-receive Step 2.6        |
+| 5   | Goal integrated milestone or delivery review                                              | review-receive Step 3 (goal)                                                        | Step 7 receipt                       | review-receive Step 2.6        |
+| 6   | Per-phase review round                                                                    | `oat-project-implement` `phase-execution.md`, Bounded Fix and Re-Review Loop        | the phase's review receipt (Step 7b) | the root, before the fix child |
+| 7   | Optional phase review gate                                                                | implement `phase-execution.md`, Optional External Phase Review Gate                 | review-receive receipt (rows 2, 3)   | review-receive                 |
+| 8   | Final review, autonomous and interactive routes                                           | implement `completion-and-closeout.md` Step 13                                      | review-receive receipt               | review-receive                 |
+| 9   | Implementation exit gate                                                                  | implement `completion-and-closeout.md` Step 14                                      | review-receive receipt               | review-receive                 |
+| 10  | Goal milestone exit gate                                                                  | implement Goal Milestone Closeout step 1 (delegates to Step 14)                     | review-receive receipt               | review-receive                 |
+| 11  | Structured plan artifact-review loop (`plan` target)                                      | `oat-project-plan-writing` Auto Artifact-Review Loop, loaded by six planning skills | the loop's step 6 outcome record     | plan-writing step 4            |
+| 12  | Brief and goal artifact-review dispositions                                               | `oat-project-brief` and `oat-project-goal` Step 3.6 (restate row 11)                | row 11                               | row 11, as a material finding  |
+| 13  | Lifecycle gates of discover, design, quick-start, plan, import-plan, brief, goal and lite | each skill's Gate Execution, which hands the gate event to review-receive           | review-receive receipt               | review-receive                 |
+
+Exhaustion stops that read the recorded classes and, for gate loops, the convergence marks (the complexity-review fallback's When table): phase-review retry exhaustion (review loop), phase gate retry exhaustion (gate loop), final review cap (review loop), implement exit gate at `maxAttempts` (gate loop; the goal milestone exit gate delegates to it), the review-receive three-cycle cap (review loop whose history includes gate artifacts), and the quick-start plan gate at `maxAttempts` (gate loop).
+
+Not adopted, with reasons:
+
+- `oat-project-review-receive-remote` (GitHub PR comments into plan tasks): the brief's Out of Scope excludes remote reviews, and m01's path list (Outcome 1) did not include it. Reported to the operator as a possible follow-up.
+- `oat-review-receive` and `oat-review-receive-remote`: ad-hoc, non-project reviews (Out of Scope).
+- plan-writing's `analysis` target: docs and instruction analysis, not a project review event; p11 left it out of the bookkeeping branch for the same reason.
+- Saved complexity reports: not review events (the fallback's own rule).
+
+### Task p14-t02: Shared finding classes, operator routing and review-receive
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t02
+**Intent:** Define the four classes, the contract sources, the receipt record and the operator routing once, beside m01's bookkeeping definition; make review-receive (inventory rows 1 to 5, and through it rows 7 to 10 and 13) record a class per finding and route an uncited finding to the operator; add `REVIEWRECEIVE-10`; fix m01 exit gate L1; bump every skill that vendors the changed shared docs.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-review-receive/SKILL.md`, the `metadata.version` of 14 skills (review-receive 1.6.17, implement 2.3.28, quick-start 2.3.26, plan 1.4.22, import-plan 1.4.24, brief 1.0.9, goal 1.0.5, lite 1.1.15, discover 2.2.14, design 2.3.11, plan-writing 1.2.41, document 1.8.15, pr-final 1.6.18, autonomous 1.0.26), `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts` (new), `packages/cli/src/commands/init/tools/shared/bookkeeping-findings-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (version pins)
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** d317617ccb30bca7ce4c3aa8351b7d94309fc84a
+
+Known Unknown decisions (none changes an Outcome, Constraint, Decision or the Approach):
+
+- **Where a class is recorded.** One `**Finding classes:**` line beside the `**Findings:**` line of the receipt each path already writes (`H1 accepted-requirement (spec.md FR3) · M2 new-hardening · …`). Reason: the receipt is the durable record every receive already writes, stands without the local-only review file, and is what the complexity-review fallback's loop history already reads; it adds no Reviews column, status or new store (Outcome 4, Constraints).
+- **One shared place.** The classes live in a new section of `.agents/docs/bookkeeping-findings.md`, whose `bookkeeping` class is m01's definition unchanged. Reason: Decision "One definition (Round 1 Q1)" rejects a second classifier, and that doc is already vendored into every receiving skill, so no new link, bundle input or coverage row is needed.
+- **Precedence and doubt.** One class per finding, first match in the order `bookkeeping`, `regression`, `accepted-requirement`, `new-hardening`; a finding the receiver cannot tie to a contract source is `new-hardening`. Reason: Outcome 5 requires one class; doubt routes to the operator, the safe direction, as doubt routes away from bookkeeping in m01.
+- **Contract sources.** The fallback's existing list (backlog items, `discovery.md`, `spec.md`, `design.md`, decision records), plus the requirement sections of `plan.md` in lite, brief and goal modes, the imported plan, the approved plan's tasks or phase blocks for a code review, and the applicable `AGENTS.md` instructions; a reviewed artifact never cites itself. Reason: without the brief, lite and plan sources every brief-mode finding would read as new-hardening, and without `AGENTS.md` a Definition of Done finding (docs, version bump) would; the self-citation bar is the fallback's own "a plan cannot justify its own machinery".
+- **Routing is a mechanical partition.** A finding becomes fix work only when its recorded class is `bookkeeping`, `regression`, or `accepted-requirement` with a source in parentheses; anything else reaches the operator, who accepts it as a requirement, defers it or rejects it (the BL-261013 criterion). The partition ships as an `awk` snippet in the shared doc so the exit-evidence fixture executes the shipped rule rather than a copy of it. Reason: a citation-less `accepted-requirement` is the AGENTS.md incident's failure mode, and the snippet makes "cites no source" testable.
+- **Every mode, including non-pausing ones.** The auto-disposition and judgment-sweep defaults never decide an operator-routed finding; under `OAT_AUTONOMOUS=1` the receive commits its bookkeeping and stops at a `product-judgment` boundary (`REVIEWRECEIVE-10`). Reason: the backlog criterion gives the operator the defer and reject choices too, so a receiver-chosen deferral would decide the scope question the AGENTS.md rule assigns to the operator. Accepted cost: a passing gate's uncited Low stops an autonomous run.
+- **No allowance (Outcome 5's limit).** Routing changes no count, severity, verdict, status rule, review-cycle count or gate attempt; a blocking gate stays blocked under its `onFailure` and attempts.
+
+Deferred item fixed here: **m01 exit gate L1.** Limit 1 no longer lists review artifacts among the tracking files; it says they are not tracking files, that a fix may move one as receive does when archiving, and never edits one. Pinned (old phrase asserted absent).
+
+Exit evidence (fixture, executed against the shipped snippet in `finding-classes-contracts.test.ts`): `H1 new-hardening · M1 accepted-requirement (discovery.md Requirements: …)`, derived from the artifact-cleanup incident BL-261013 records, routes `operator H1` and `fix M1` (the H1 finding never becomes a plan task; the accepted-requirement control does). Controls: an `accepted-requirement` with no or empty citation routes to the operator; `regression` and `bookkeeping` route to fix work; an unknown or missing class routes to the operator. The snippet was also run by hand under BSD awk 20200816 and gawk with the same result.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t02.sh`: each neutralized in the working tree, the two contract files run, then restored from a copy and checked with `cmp`):
+
+1. Snippet routes `new-hardening` to fix work: 2 failed (the incident and its control), exit 1.
+2. Snippet drops the citation requirement: 1 failed (uncited `accepted-requirement`), exit 1.
+3. review-receive Step 5 guard sentence removed: 1 failed, exit 1.
+4. `REVIEWRECEIVE-10` row removed: 1 failed, exit 1.
+5. Limit 1 old wording restored: 1 failed, exit 1.
+
+Restored: 94/94, exit 0.
+
+Verification: isolated-HOME contract suites (`src/commands/init/tools/shared`, `src/validation`) 1219/1219, exit 0, including `autonomy-gate-inventory.test.ts` (no new line in an inventory root matches the prompt scan); oxfmt check and oxlint on the changed files exit 0; `pnpm run check:skill-bumps` after the commit exit 0 (14 changed skill bumps against `origin/main`).
+
+### Task p14-t03: Classes on implement's review and gate paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t03
+**Intent:** State the classification and routing on inventory rows 6 to 10: the per-phase review round (the root classifies before the fix child), the optional phase gate, the final review on both routes, the implement exit gate and the goal milestone exit gate; add `IMPLEMENT-21` for the per-phase stop.
+**Files:** `.agents/skills/oat-project-implement/references/phase-execution.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `.agents/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** f9573882d771cd1758cc189f00a499fb3dd0c0de
+
+Shape (each beside today's text, which stays as it was):
+
+- **Per-phase round.** A "Finding classes (every round, before step 1)" paragraph after the bookkeeping-only round: only fix-routed findings enter step 2's bounded findings; a Critical or High routed to the operator holds the fix child until the operator decides, and under autonomy the root commits the receipt and stops (`IMPLEMENT-21`, `boundary:product-judgment`). The per-phase round is the one receive path that does not run through review-receive, so it needs its own autonomy row. Retry limit, pass rule and cycle cap unchanged.
+- **Phase gate.** One paragraph after the outcome bullets: only fix-routed findings reach the phase implementer; an operator-routed one holds the gate's fix round (`REVIEWRECEIVE-10`); verdict and retry limit unchanged.
+- **Step 7b.** Either per-phase record carries the round's `**Finding classes:**` line.
+- **Final review.** One bullet on each route: an operator-routed finding gets no fix task; the autonomous run stops at receive's boundary.
+- **Exit gate.** One Structured-outcomes bullet: routing changes no envelope status, `on_failure` or `attempts_completed`.
+- **Goal milestone exit gate.** One sentence in step 2: receive routes as Step 14 states; carrier rules unchanged.
+
+The `IMPLEMENT-21` cell was kept narrower than the table's widest prompt cell, so oxfmt did not re-pad the gate inventory table (1 line added).
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t03.sh`, each neutralized, run, restored and checked with `cmp`): loop filter sentence removed (1 failed); "dispatch no fix child … until the operator decides it" changed to "dispatch the fix child" (1 failed); exit-gate "changes no envelope status, `on_failure` policy or `attempts_completed`" changed to "consumes one attempt" (1 failed); milestone sentence removed (1 failed); `IMPLEMENT-21` row removed (1 failed). Each exit 1; restored 23/23, exit 0.
+
+Verification: isolated-HOME contract suites 1226/1226, exit 0 (autonomy inventory included); oxfmt check exit 0. No new version bump: implement keeps its p14-t02 bump (2.3.28).
+
+### Task p14-t04: Classes on the planning review and gate paths
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t04
+**Intent:** State the classification and routing on inventory rows 11 to 13: plan-writing's structured `plan` artifact-review loop, the brief and goal Step 3.6 dispositions and the brief contract's review ladder, and the Gate Execution of discover, design, quick-start, plan, import-plan, brief, goal and lite; extend the six artifact-review autonomy rows.
+**Files:** `.agents/skills/oat-project-plan-writing/SKILL.md`, `.agents/skills/oat-project-{quick-start,plan,import-plan,brief,goal,lite,discover,design}/SKILL.md`, `.agents/skills/oat-project-brief/references/brief-contract.md`, `.agents/docs/autonomy-contract.md`, `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 0208538020ca7118e50706bc151527c81365c308
+
+Shape (beside today's text):
+
+- **Gate Execution (eight skills).** One identical paragraph after the bookkeeping-only settlement: review-receive records the classes; an operator-routed finding gets no remediation edit until the operator decides (`REVIEWRECEIVE-10` under autonomy); `onFailure` and the attempt count apply unchanged.
+- **plan-writing step 4.** A "Finding classes (`plan` target, every result)" bullet after the bookkeeping-only bullet: classify before applying or offering any fix; the severity bullets apply only to fix-routed findings; an operator-routed finding is never a default Critical/High fix or a routine Medium/Low offer, and under autonomy the loop stops at `product-judgment`; a reviewed plan never cites itself. Step 6 records the `**Finding classes:**` line with the outcome. The `analysis` target is untouched (inventory exclusion).
+- **Brief and goal Step 3.6.** A `new-hardening` finding is a material finding: it goes back to the user before any edit (their existing realignment route). The brief contract's section 5 ladder says the same.
+- **Autonomy rows.** QS-11, LITE-08, BRIEF-09, GOAL-09, PLAN-09 and IMPORT-08 gain the stop clause and `boundary:product-judgment`. The boundary cell grew past the column's widest cell, so oxfmt re-padded the gate inventory table: 147 lines changed, 7 with `git diff -w` (the six rows and the separator row). The planning gate rows (QS-12, PLAN-11 and the rest) and IMPLEMENT-12/18 need no change: their stop happens in receive, under `REVIEWRECEIVE-10`.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t04.sh`, each neutralized, run, restored and checked with `cmp`): discover's gate paragraph removed (1 failed); plan-writing's "bullets below apply only to findings that section routes to fix work" removed (1 failed); goal's Step 3.6 sentence removed (1 failed); QS-11's clause removed (1 failed); the brief contract paragraph removed (1 failed). Each exit 1; restored 42/42, exit 0.
+
+Verification: isolated-HOME contract suites 1245/1245, exit 0 (autonomy inventory included); oxfmt check exit 0. No new version bump: every skill touched here carries its p14-t02 bump.
+
+### Task p14-t05: The complexity-review fallback starts from recorded classes and gate convergence
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t05
+**Intent:** Make the complexity-review fallback start from the recorded classes (Outcome 5) and, under the operator's 2026-11-08 scope note, make the exhaustion stop and the complexity review read the convergence marks p08 records (the gate result's `convergence` object and the gate record's `convergence= sequence= sequence_run= previous_run=` tokens) for a gate loop.
+**Files:** `.agents/docs/complexity-review-fallback.md` (vendored into implement, quick-start and review-receive, all bumped in p14-t02), `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Commit:** 3a901e74555e97f013f79c5dae2faf9958afb022
+
+Shape:
+
+- **Reviewer brief.** Two loop-history bullets: the `**Finding classes:**` line of each receipt in the loop plus the operator's decisions, and, for gate loops, each run's convergence marks.
+- **Convergence of a gate loop** (new subsection under Dispatch). For a run whose gate result the root still holds, the marks are its `convergence` object; otherwise the shipped snippet reads the tokens of the run's `project-log.md` entry by its `run=<runId>` token, for each `oat_gate_run_id` in the loop history. A run with no marks (a first run, or earlier runs unreadable) and `convergence=unavailable:<reason>` are reported as they are, never as zero counts. Nothing recomputes or rewrites the marks, and p08's computation is unchanged.
+- **Open findings.** Start from each receipt's recorded class, including `bookkeeping` and the cited source; classify only an unclassified finding and mark it `unrecorded`; a disagreement is a note, never a rewrite; for a gate loop the recurring families include the findings its marks carry over.
+- **Exhaustion stop.** The decision message's "why the loop stopped" lists the still-blocking findings with their recorded classes and, for a gate loop, each run's new, carried-over and resolved counts; with no reviewer route, the loop-stop reasons still carry them. Every owning step already shows this decision message, so no owning skill changed.
+
+Exit evidence (scope note's added check, `finding-classes-contracts.test.ts`, "complexity-review fallback …" block): prose pins for the brief, Open findings and the decision message, and an executed fixture. The fixture's log entries are this project's three real m02 exit-gate entries (`project-log.md`, run IDs from the archived range-review artifacts), with runs 2 and 3 carrying the tokens p08's own `convergenceLogTokens` produces for the counts p08's m02 probe recorded. The shipped snippet reads: r1 `no convergence marks`, r2 `convergence=new:1,carried:0,resolved:2 sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1`, r3 `convergence=new:0,carried:0,resolved:1 … sequence_run=3 previous_run=d738cd0e`. Controls: a stuck run (`carried:2`), an `unavailable:previous_artifact_unparsable` run, and a run with no log entry (`no convergence marks`). Because the tokens come from p08's formatter, a later change to its token format fails this test.
+
+Real-artifact probe: the shipped snippet run against this project's real `project-log.md` for the three m02 run IDs prints `no convergence marks` for each, exit 0. That is correct, because the released 0.3.45 gate that wrote them predates p08's tokens, and it shows the stop reports missing marks rather than zero counts.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t05.sh`, each neutralized, run, restored and checked with `cmp`): `sequence_run` dropped from the token pattern (1 failed); missing marks reported as zero counts (1 failed); Open findings reverted to re-deriving the classes (1 failed); the decision message's convergence clause removed (1 failed); the Recorded classes bullet removed (1 failed). Each exit 1; restored 46/46, exit 0.
+
+Verification: isolated-HOME contract suites 1249/1249, exit 0; CLI `pnpm run type-check` exit 0; oxlint and oxfmt check exit 0.
+
+### Task p14-t06: Human docs, root instructions and the three deferrals
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t06
+**Intent:** Document the finding classes, the operator routing and the fallback's new inputs on the reader pages the changed behavior touches; make root `AGENTS.md`'s existing "before turning a finding into a fix task" rule point to the shared classes; disposition p10 review L1, p12 review L2 and m01 exit gate L1.
+**Files:** `AGENTS.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/advanced/autonomy.md`, `apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md`
+**Proof command:** `pnpm exec markdownlint-cli2` over the four pages, `pnpm docs:validate`, `pnpm docs:check` (no warning on a changed line), `pnpm exec oxfmt --check` over the five files
+**Commit:** ff6ff4803f5bd2fa051307e88b716240364af33b
+
+Shape:
+
+- **Reviews page.** A new "Finding classes at receive" section (the four classes, precedence, the receipt line, routing, the operator decisions, the autonomy stop, no allowance); the complexity-review bullets now say the reviewer starts from recorded classes and gate convergence marks.
+- **Workflow gates page.** A classes paragraph beside `onFailure`, convergence in the `maxAttempts` text, and an exhaustion paragraph in the convergence section.
+- **Autonomy and implementation-execution pages.** The new-hardening stop and the per-phase round's routing.
+- **Root `AGENTS.md`.** One sentence appended to the existing Execution Continuation rule; no instruction file was created, renamed or re-globbed, so the instruction index is unchanged.
+
+Deferral dispositions (the Deferred Findings section records each):
+
+- **m01 exit gate L1: fixed** in p14-t02 (`d317617cc`): the shared definition's limit 1 no longer lists review artifacts among tracking files, pinned in `bookkeeping-findings-contracts.test.ts` with the old phrase asserted absent.
+- **p12 review L2: kept deferred.** Persisting the planning and phase gate event across an interruption is a new requirement that no contract source names, so under p14's own rule it is `new-hardening` and belongs to the operator, not to a fix task. No interrupted handoff has been observed; p14 only adds sentences beside the in-session handoff. Trigger unchanged: the first observed interrupted gate→receive handoff.
+- **p10 review L1: kept deferred.** No contract source requires the record to change after a stale delivery check. Integrated reviews are manual, not gate runs, so they carry no p08 convergence marks; the fallback now reads the unchanged receipt's recorded classes correctly. Trigger: the first real stale fallback after a bookkeeping-only receive.
+
+Verification: markdownlint 0 errors on the four pages; `pnpm docs:validate` exit 0; `pnpm docs:check` exit 0 with no warning on a changed line (the page warnings predate p14); oxfmt check exit 0.
+
+### Task p14-t07: (review) Autonomous routing by severity, review-receive defaults and the pass rule after a decision
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-fix-20261108-01
+**Handle:** direct:rgi-p14-fix-20261108-01:p14-t07
+**Source review:** p14-review-2026-11-08T011039Z.md (M1, M2, L4, L6)
+**Intent:** Apply the operator's M2 decision on every adopted receive path and in every doc that states the stop, make review-receive's conversion defaults defer to `REVIEWRECEIVE-10`, and state that a decision on a blocking finding leaves the pass rule unmet.
+**Files:** `.agents/docs/bookkeeping-findings.md`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-review-receive/SKILL.md`, `.agents/skills/oat-project-implement/references/{phase-execution,completion-and-closeout}.md`, `.agents/skills/oat-project-{quick-start,plan,import-plan,brief,goal,lite,discover,design}/SKILL.md`, `.agents/skills/oat-project-plan-writing/SKILL.md`, `apps/oat-docs/docs/workflows/{advanced/autonomy,advanced/workflow-gates,projects/execution/implementation-execution,projects/reviews/index}.md`, `packages/cli/src/commands/init/tools/shared/finding-classes-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** d616e8a65ff9f54c96faa3a05f995deea733839f
+
+**Operator decision (2026-11-08, p14 review round 1 M2, relayed by the root in fix request `rgi-p14-fix-20261108-01`; settles M1):** under autonomy, an uncited Medium or Low finding (`new-hardening`, an `accepted-requirement` with no source, or unclassified) does not stop the run. It gets no fix task, its entry in the receipt's `**Finding classes:**` line is recorded `awaiting operator`, and the run lists it at its next stop or in its boundary report. Only an uncited Critical or High finding halts the run, at `REVIEWRECEIVE-10` or `IMPLEMENT-21`; the `product-judgment` stop class is not stretched to Medium or Low. Interactive runs still put the finding to the operator in-session before any fix task. This replaces the p14-t02 choice to stop on every routed finding.
+
+Shape:
+
+- **Shared definition.** The operator-decision paragraph now splits by severity: Critical or High stops at `product-judgment`; Medium or Low ends its entry with `, awaiting operator` and is listed at the next stop or boundary report; the classes line is never rewritten. An added sentence (L6): the operator's decision changes no count either, so a rejected or deferred Critical or High finding leaves the pass rule unmet and a blocking gate blocked, and the run continues through the existing retry limit and exhaustion stop; only accepting it makes it fix work. No allowance is added.
+- **Paths.** The same split on review-receive Step 2.6 (plus the Step 7 `awaiting operator` disposition and both Step 11 summaries), the per-phase round, the phase gate, the final review, the exit gate (outcome stays `block` after a rejection), the eight planning Gate Executions, plan-writing step 4, and brief and goal Step 3.6. The goal milestone exit gate delegates to Step 14 and needed no change.
+- **Autonomy rows.** `REVIEWRECEIVE-10`, `IMPLEMENT-21` and the six artifact-review rows carry the split; `REVIEWRECEIVE-03`, `-04` and `-05` convert only fix-routed findings and leave the rest to `REVIEWRECEIVE-10` (L4). Each edited cell stays narrower than the column's widest cell, so the table was not re-padded (11 lines changed).
+- **Docs.** The reviews page, autonomy page, workflow-gates page and implementation-execution page say the same thing. Root `AGENTS.md` already says only that such a finding reaches the operator before fix work, which still holds.
+
+Guard-can-fail (`bash /tmp/rgi-p14/gcf/t07.sh`, each neutralized, run, restored and checked with `cmp`): shared Medium/Low bullet changed to "the run stops" (1 failed); per-phase Medium/Low sentence replaced (1 failed); `REVIEWRECEIVE-04` reverted to "Default to conversion;" (1 failed); the L6 sentence changed (1 failed); review-receive's Medium/Low sentence changed to stop (1 failed); lite's Gate Execution split removed (1 failed); plan-writing's Medium/Low clause changed to stop (1 failed); `IMPLEMENT-21`'s Medium/Low clause changed to stop (1 failed). Each exit 1; restored 51/51, exit 0.
+
+Verification: isolated-HOME contract suites 1254/1254, exit 0 (autonomy inventory and complexity-review contracts included; one ordering pin in `complexity-review-contracts.test.ts` first caught an `OAT_AUTONOMOUS=1 … boundary report` sentence ahead of the per-phase dispatch, reworded to "in an autonomous run"); oxfmt check exit 0; markdownlint 0 errors on the four pages. No version bump: every touched skill already carries its p14 bump against `origin/main`.
+
+### Review Received: p14
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p14-review-2026-11-08T011039Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 6
+
+**Finding classes:** M1 accepted-requirement (plan.md Outcome 5) · M2 new-hardening · L1 accepted-requirement (plan.md Outcome 5) · L2 accepted-requirement (plan.md Outcome 5) · L3 accepted-requirement (p14 operator scope note) · L4 accepted-requirement (plan.md p14 exit evidence) · L5 accepted-requirement (plan.md Outcome 5) · L6 accepted-requirement (plan.md Outcome 5)
+
+Scope: `1ebb004cb..9e9c3083c` (p14-t01 to p14-t06), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p14-rev-20261108-01`, reconnaissance not attempted). M2 (stopping an autonomous run on every uncited finding) was a new requirement and went to the operator before any fix work: the operator decided that only an uncited Critical or High finding stops an autonomous run, and an uncited Medium or Low is recorded `awaiting operator` and listed at the next stop; that decision also settles M1. The operator then cut the fix round to M1 on 2026-11-08, citing over-engineering across m03: L1, L2, L3 and L5 were dropped (see Deferred Findings); L4 and L6 had already landed in p14-t07 and were kept.
+
+- M1 (Medium): the per-phase round's autonomous stop covered only Critical/High while the shared rule stopped on every routed finding → fixed in p14-t07 per the operator's M2 decision.
+- M2 (Medium): stop on every uncited finding was unrequested product behavior → operator decision, applied in p14-t07.
+- L4, L6 (Low): fixed in p14-t07.
+- L1, L2, L3, L5 (Low): not fixed; operator cut.
+
+**Outcome:** fixes queued: p14-t07 (`rgi-p14-fix-20261108-01`, round 1 of 2); completed (head `27f118621`); re-reviewed in round 2
+
+### Review Received: p14 (re-review of p14-t07)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p14-review-2026-11-08T014245Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+**Finding classes:** L1 accepted-requirement (operator decision, p14-t07 record)
+
+Scope: fix delta `c2be1b84d..27f118621` (p14-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p14-rev-20261108-02`, reconnaissance not attempted). M1 and M2 resolved and stated consistently on every touched surface; L4 and L6 correct. Reviewer ran the isolated-HOME contract suites (1254/1254, exit 0), `pnpm run check:skill-bumps` (exit 0), oxfmt on the 20 changed files (exit 0), markdownlint on the four docs pages (0 errors) and docs index regeneration (no diff). The phase-wide gate list recorded above ran at `9e9c3083c`; the prose-only t07 delta was verified by those checks and the full list runs again at the m03 exit.
+
+- L1 (Low): review-receive does not say what status a review takes when an autonomous Medium marked `awaiting operator` is its only open blocking-count finding → deferred (see Deferred Findings).
+
+**Outcome:** passed; p14 accepted at head `27f118621` after two review cycles (fix loop: one round, retry 1 of 2)
+
+## Phase p15: Goal milestone exit gate scope
+
+**Status:** completed
+**Base:** d4f00d2ee622ce76bca9e42d1ca8e2aef6107018
+**Executor:** phase-implementer:rgi-p15-impl-20261108-01
+**Head:** a7e16e0a109d86ea8402cc530eb30363f920a955
+
+Verification at head (phase implementer, explicit exit codes): `pnpm check` 0 (0/11 cached), `pnpm type-check` 0, `pnpm test` 0 (every test task a cache miss; cli 447 files passed), `pnpm build` 0 (replayed; `turbo run build --force` 0, 0/6 cached), `pnpm run check:skill-bumps` 0 (15 checks), `git fetch origin main` then `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0 (replay of the forced run's same six tasks), docs `generate-index` 0 and `git diff --exit-code -- apps/oat-docs/index.md` 0, `pnpm lint` 0, `pnpm format` 0, `pnpm oat:validate-skills` 0, isolated-HOME contract suites 0 (31 files, 1262 tests). Guard-can-fail 8/8 clauses; probe (p15-t02) exit 0 with the expected branch, explicit-`final` and released outcomes.
+
+Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`); one rule in review-provide's scope resolution with its contract tests and one probe, so no fan-out. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`. Phase recovery: default limit 10, no p15 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base.
+
+**Scope note (operator, 2026-11-08):** after p14 the operator asked that m03 stop growing hardening. p15 implements the brief's intent and exit evidence and nothing beyond them: no robustness for malformed inputs or extra pins that no contract source requires; a finding that asks for more goes to the operator as `new-hardening`.
+
+### Task p15-t01: State-selected goal milestone exit hint in review-provide
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p15-impl-20261108-01
+**Handle:** direct:rgi-p15-impl-20261108-01:p15-t01
+**Intent:** Add a review-provide Step 1 rule, mirroring the recovery-exit hint, that resolves a state-selected `final` hint in a goal milestone closeout to the active milestone's ordered accepted phases; keep explicit whole-project `code final`; pin it with contract tests; state it in implement's milestone closeout and the gates docs page.
+**Files:** `.agents/skills/oat-project-review-provide/SKILL.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `packages/cli/src/commands/init/tools/shared/goal-exit-scope-contracts.test.ts` (new), `packages/cli/src/validation/skills.test.ts` (version pins)
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** c02e6e7eb3b58d575e088943047286cc4f5be8ea
+
+Also changed: `.agents/docs/autonomy-contract.md` (HEAD prompt-site coverage: the edited gate-originated sentence `e516f72a0c53` remapped to `6707ebf7af52 -> NG`, plus `3baf9489fd2e`, `521648e9ac44`, `56b37f7cd17b` and closeout `10a78dc75cbf` as `NG`, as the recovery hint's sites are) and `.oat/sync/manifest.json` (`oat sync --scope project` refreshed `oatVersion` only; skill views are symlinks). Skill bump: review-provide 1.5.18 → 1.5.19; implement and every skill vendoring the autonomy contract were already bumped on this branch relative to `origin/main`. No CLI helper: the rule reuses the existing token selection and the Step 3.0 resolver, and the probe (p15-t02) shows the prose rule resolves correctly.
+
+Known Unknown decision (no Outcome, Constraint, Decision or Approach changes): a state-selected `final` hint means a goal milestone closeout when the goal is `oat_goal_status: active` and no `oat_goal_recovery` record is pending; it keeps its whole-project meaning when the request carries no state-selection instruction (explicit `code final`) or once `oat_goal_status` is `declared_met`. Reason: terminal closeout, the only goal path that reviews the whole project, runs after the declaration (`completion-and-closeout.md`: Steps 11–16 run only after a valid declaration), and the gate's own prompt reserves the whole-project review for a complete project, which an undeclared goal is not. A pending recovery keeps today's recovery-exit rule (at `exit_gate`) or the normal rules, so the two hints never overlap. Milestone status is not used because a stale exit carrier can route back to closeout from `implementing` or `reviewing`.
+
+Guard-can-fail (one mutation per pinned clause, inside `scripts/with-isolated-home.sh`, `vitest -t <test>` on `goal-exit-scope-contracts.test.ts`): removing `` `oat_goal_status` is `active`; `` / the argv sentence / the `declared_met` clause / `Read the active milestone (`oat_milestone`)` / `or widen it to the whole project` / `so earlier milestones' anchors are not read` / `the exact milestone set in `oat_review_phase_ids``(SKILL.md, searched from the hint heading) and`With no recovery pending`(closeout) each turned its test red (exit 1, 1 failed); each file was restored and`cmp`matched; both files'`shasum -c` matched the pre-run hashes; the restored suite passed 8/8. Proof suites: 31 files, 1262 tests, exit 0 (direct vitest, no Turborepo cache).
+
+### Task p15-t02: Corroborating squash-merge probe for the milestone exit hint
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p15-impl-20261108-01
+**Handle:** direct:rgi-p15-impl-20261108-01:p15-t02
+**Intent:** One probe, inside one `scripts/with-isolated-home.sh` invocation, that installs the branch build's skills and the released CLI's skills into separate isolated HOMEs and runs each installed review-provide Step 3.0 anchor resolver (no model dispatched) on a goal fixture whose m01 was squash-merged: the branch rule resolves the state-selected `final` to m02's phases and prints the hint and set; the released install refuses; an explicit `code final` still expands to the whole project.
+**Files:** `.oat/projects/shared/review-gate-integrity-goal/references/probes/p15-goal-exit-scope-probe.sh` (new)
+**Proof command:** `bash scripts/with-isolated-home.sh bash .oat/projects/shared/review-gate-integrity-goal/references/probes/p15-goal-exit-scope-probe.sh`
+**Commit:** b0c2bafb6e5913ae15a7d923d9d7e00f4da6f950
+
+Run after `pnpm --filter @open-agent-toolkit/cli build` (branch CLI 0.3.47, bundled review-provide 1.5.19) with the released `oat` 0.3.46 on PATH; exit 0. The fixture squash-merges m01 (p01, p02) into `main` and builds m02 (p03, p04) on the squash commit; the branch CLI's `project status` reports `goal=active recovery=none milestone=m02 members=p03,p04`. Output (SHAs vary per run):
+
+- `branch install: state-selected hint=final -> token=p03-p04`
+- `branch state-selected: scope=p03-p04 phase_ids=p03,p04 verdict=accepted` and `resolved set equals milestone m02 set (p03,p04)`
+- `branch explicit code final: scope=final phase_ids=p01,p02,p03,p04 verdict=reconcile` (still the whole project; the squash makes it refuse, as before p15)
+- negative control `released install: state-selected hint=final -> token=final` then `released state-selected: scope=final phase_ids=p01,p02,p03,p04 verdict=reconcile reason="sequential continuity: p03 base does not equal or descend from the previous head"`, the m02 incident's refusal.
+
+No model is dispatched: the probe runs each installed skill's Step 3.0 resolver verbatim and applies that install's Step 1 token selection, so the artifact recording (`oat_review_requested_scope: final`, scope token, `oat_review_phase_ids`) is evidenced by the p15-t01 contract tests.
+
+### Review Received: p15
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p15-review-2026-11-08T020653Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: `d4f00d2ee..a7e16e0a1` (p15-t01, p15-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p15-rev-20261108-01`, reconnaissance not attempted). The reviewer re-ran the isolated-HOME probe (branch resolves the state-selected `final` to m02's `p03-p04`; explicit `code final` stays whole-project; the released 0.3.46 install refuses with the m02 sequential-continuity error) and the contract suites (1262/1262, exit 0). Reviewer observations, not findings: a whole-project `final` after `declared_met` would still hit the squash-merge refusal at terminal closeout (outside Outcome 7; not adopted); the probe's exit code does not encode correctness, its output is read against the expected lines in its header.
+
+**Outcome:** passed; p15 accepted at head `a7e16e0a1` after one review cycle (no fix loop)
+
+## Phase p16: m02 review-ledger follow-ups
+
+**Status:** completed
+**Base:** e6975c460ce4622330e660f6cf4af4fcc54f5dc5
+**Executor:** phase-implementer:rgi-p16-impl-20261108-01
+**Head:** b2f6b3b44c072f78f916990037be1a0fac59a7fd
+
+Verification at the head: `pnpm check`, `pnpm type-check`, `pnpm test` (all test tasks executed; CLI 9635/9635), `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions` (after `git fetch origin main`), `pnpm release:validate`, `pnpm build:docs` and the docs-index regeneration plus `git diff --exit-code` all exit 0. `pnpm build` and `pnpm build:docs` replayed builds that ran fresh earlier in the same sequence. CLI and skill contract suites 1260/1260. `oat project journal check --at review --scope p16` passed. No skill changed, so no skill bump.
+
+Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`); two small upkeep items, no fan-out. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`. Phase recovery: default limit 10, no p16 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base.
+
+**Scope note (operator, 2026-11-08):** the operator asked that m03 stop growing hardening. p16 takes the cheaper exit the brief allows for each item: where making the three commands number rows the same way is more than a small change, the CLI reference states the difference instead; the test-local row writer is removed, not replaced.
+
+### Task p16-t01: Number Reviews rows by data line in check and resolve
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-01
+**Handle:** direct:rgi-p16-impl-20261108-01:p16-t01
+**Intent:** Close m02 integrated review L1 by the code exit. `oat review check` and `oat review resolve` share `buildReviewLedgerRowReport`; reading rows with `parseReviewTable(..., { dataLine: true })` and taking `row` from `dataLine` makes both report the physical data-line number `oat review pending` reports. One test runs all three commands on one fixture with an unparsed row above parsed ones; the CLI reference and control-plane README say the three commands share the numbering.
+**Files:** `packages/cli/src/commands/review/check.ts`, `packages/cli/src/commands/review/resolve.ts`, `packages/cli/src/commands/review/__tests__/resolve.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `packages/control-plane/README.md`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review`
+**Commit:** df4961ef2d0a73d3d4bd73c5dcb967ab723672c5
+
+Exit option: the code change, because it was small and local: one line in the shared `buildReviewLedgerRowReport` (`row: row.dataLine ?? index + 1`), `dataLine: true` on the two `parseReviewTable` calls, and resolve's row messages reading the report's number. No new helper. Proof: review suites 83/83 (exit 0). The new test (data line 1 has a blank Date; rows 2 and 3 are same-head gate rows) gets row 2 and superseding row 3 from `oat review check` and `oat review resolve`, and row 3 from `oat review pending`. Can-fail control: setting the shared line back to `index + 1` failed the test (expected 2 and 3, got 1 and 2; exit 1); restored. CLI type-check and oxlint exit 0.
+
+### Task p16-t02: Remove the simulated review-provide row writer from the contract test
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-01
+**Handle:** direct:rgi-p16-impl-20261108-01:p16-t02
+**Intent:** Close the PR #403 Warp suggestion. Delete the test-local `recordReviewEvent` writer, its `artifactRows` helper and the two post-write `it.each` cases from `review-event-row-contracts.test.ts`, and the imports only they used. Keep the Step 9 prose pin; the real `scaffoldProject` checks in `scaffold.test.ts` stay as they are. Nothing replaces them.
+**Files:** `packages/cli/src/commands/init/tools/shared/review-event-row-contracts.test.ts`
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+**Commit:** 337ad7ac3dc380b6c4b1293d02fdaf833dda40c4
+
+76 lines removed: the writer, `artifactRows`, the two `it.each` cases, and the `applyTemplateReplacements` and `WorkflowMode` imports. The kept pin moved into a block titled for the Step 9 rule, since its old title named the simulation. Proof: contract suites 1260/1260 (exit 0), the file 30/30.
+
+### Review Received: p16
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p16-review-2026-11-08T022148Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: `e6975c460..b538b09ea` (p16-t01, p16-t02), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p16-rev-20261108-01`, reconnaissance not attempted). The reviewer confirmed `check`, `resolve` and `pending` report the same data-line row on a scratch project with an unparsed first row, the other `parseReviewTable` callers are unchanged, and the removed writer's one real assertion stays covered by `scaffold.test.ts`; review and contract suites 113/113 and 1260/1260, exit 0.
+
+**Outcome:** passed; p16 accepted at head `b538b09ea` after one review cycle (no fix loop)
+
+### Task p16-t03: (review) Exclude blocked plan carriers from amendment approval boundaries
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-02
+**Handle:** direct:rgi-p16-impl-20261108-02:p16-t03
+**Commit:** a42076f45e1d350275ce078d54cf34fdd6d08ab2
+**Source review:** reviews/archived/range-review-2026-11-08T051752Z.md (M1)
+
+Intent: m03 exit gate M1. `readPlanApprovals` (`packages/cli/src/commands/gate/convergence.ts:607`) treats every timestamped plan carrier as an approval, including a `status: blocked, disposition: null` carrier, which is never approval (brief contract 12.4). A resumed rerun of the same amendment then gets a different `amendmentAfter` than the first run and loses convergence. Count only approved carriers (`status: allowed`) as approval boundaries, in both the line-matched path and the unmatched-carrier fallback. Add one convergence-boundary test for the resumed blocked-plan case beside the existing approved-carrier control; no other hardening (operator direction for m03).
+Files: `packages/cli/src/commands/gate/convergence.ts`, its convergence test
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+
+`readPlanApprovals` now skips any plan carrier whose `status` is not `allowed` when it collects carriers, so a blocked carrier neither times an approval line nor enters the unmatched-carrier fallback (5 production lines: the guard condition plus a doc-comment sentence). One test in the captured-m02 block adapts the real m02 run-1 fixture's frontmatter to two `plan` artifact runs around a `status: blocked, disposition: null` m02 carrier and expects run 2 in the m01 amendment with 2 carried over; it shares two small test-local helpers (`adaptedR1`, `rerun`) that p16-t04 reuses. The existing approved-carrier and different-amendment tests pass unchanged. One added sentence in `workflow-gates.md` states that only an allowed carrier counts. Proof: gate suites 513/513 (exit 0). Can-fail control: replacing the status guard with `false` failed the new test with `expected null` (exit 1), the reviewer's observed outcome; restored.
+
+### Task p16-t04: (review) Keep milestone identity when a state-selected final resolves to one phase
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p16-impl-20261108-02
+**Handle:** direct:rgi-p16-impl-20261108-02:p16-t04
+**Commit:** c653bc0bf210c6d5c5631dbbfab5695499bf869e
+**Source review:** reviews/archived/range-review-2026-11-08T051752Z.md (M2)
+
+Intent: m03 exit gate M2. `sequenceSubject` (`packages/cli/src/commands/gate/convergence.ts:461`) makes a goal code run a milestone sequence only when its resolved scope is literally `final` or it has more than one phase, so p15's single-phase resolution of a state-selected `final` (which keeps `oat_review_requested_scope: final`) reads as a `scope:pNN` sequence. Carry the artifact's `oat_review_requested_scope` on `SequenceRun` (current and prior-run readers) and treat a requested `final` like a resolved `final` for the milestone subject. Ordinary single-phase review gates keep their scope sequence. Add one convergence-boundary test using p15-shaped frontmatter beside the existing ordinary-phase and literal-final controls; no other hardening.
+Files: `packages/cli/src/commands/gate/convergence.ts`, its convergence test
+Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate`
+
+`SequenceRun` gains an optional `requestedScope`, filled from `oat_review_requested_scope` by both readers (the current run in `computeGateConvergence` and each prior run in `listGateRunArtifacts`, via a new `GateRunArtifact.requestedScope`), and `sequenceSubject` treats a requested `final` like a resolved `final` for the milestone subject; the existing one-milestone and non-empty-phase conditions still apply, so ordinary single-phase gates and an explicit whole-project `final` keep their scope sequence (12 insertions, 4 deletions in production code). One test in the captured-m02 block adapts the real m02 run-1 fixture to a `final` run followed by a p15-shaped run (`oat_review_scope: p02`, `oat_review_requested_scope: final`, `oat_review_phase_ids: [p02]`) on singleton milestone m02 and expects milestone m02 run 2 with 2 carried over; the existing ordinary-phase and literal-final `sequenceSubject` controls pass unchanged. The subject table row in `workflow-gates.md` names the requested scope. Proof: gate suites 514/514 (exit 0). Can-fail control: replacing the requested-scope condition with `false` failed the new test with `expected null` (exit 1); restored.
+
+### Task p16-t05: (review) Cover the prior-run requested-scope reader and document both sequence rules
+
+**Status:** completed
+**Executor:** root-inline:rgi-p16-t05-20261108
+**Source review:** reviews/archived/p16-review-2026-11-08T053439Z.md (L1, L2)
+**Intent:** p16 re-review L1: the p16-t04 test's first run used a literal `final`, so the prior-run reader of `oat_review_requested_scope` (`convergence.ts:759`) was never exercised; make both runs p15-shaped (`p02` scope, requested `final`). L2: the module doc comment that `sequenceSubject` names as its definition did not state either new rule; update it.
+**Files:** `packages/cli/src/commands/gate/convergence.test.ts`, `packages/cli/src/commands/gate/convergence.ts` (comment only)
+**Proof command:** `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/convergence`
+**Commit:** cfa5ec8af24fcf5b83b63c18c1fa66c2a7c7631b
+
+31/31 convergence tests pass; `pnpm --filter @open-agent-toolkit/cli check` and `type-check` exit 0. Guard can fail: with the prior-run reader's `requestedScope` set to `''`, the strengthened test fails (1 failed, 30 passed); restored.
+
+### Review Received: p16 (m03 exit gate fixes)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p16-review-2026-11-08T053439Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+**Finding classes:** L1 accepted-requirement (plan.md p08 Exit evidence: guard-can-fail controls show the matching rule's tests can fail) · L2 accepted-requirement (AGENTS.md: instructions and documentation stay true; the module comment is the definition `sequenceSubject` names)
+
+Scope: the fix delta `b538b09ea..e638186b0` (p16-t03, p16-t04), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p16-rev-20261108-02`, reconnaissance not attempted). The reviewer re-ran the exit gate's reproduction on a fresh build: all four cases return run 2 with two carried over, and disabling either fix returns `null` again. Exit gate M1 and M2 are resolved, and the approved-carrier, different-amendment, ordinary single-phase, literal `final` and whole-project `final` controls hold.
+
+- L1 (Low): the p16-t04 test's first run used a literal `final`, leaving the prior-run requested-scope reader untested → fix record p16-t05 (`cfa5ec8af`), guard can fail.
+- L2 (Low): the module doc comment did not state either new rule → fix record p16-t05.
+
+Round 2 (confirmation, same reviewer, delta `e638186b0..b2f6b3b44`, artifact `reviews/archived/p16-review-2026-11-08T053807Z.md`): Critical 0 · High 0 · Medium 0 · Low 0. L1 and L2 resolved; the reviewer reproduced the guard-can-fail result on a `git archive` copy.
+
+**Outcome:** passed; p16 accepted again at head `b2f6b3b44` after two review cycles. The m03 exit gate reruns over `p08-p16`.
 
 ## Phase p09: Non-goal closeout freshness for every required receipt
 
@@ -2004,6 +2795,23 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 - run/v1 · request=rgi-prev3-fix-20261103-02 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
 - run/v1 · request=rgi-prev3-rev-20261103-03 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-prev3-fix-20261103-03 · scope=p-rev3-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-prev3-impl-20261103-01 · observed=~ · match=~
+- run/v1 · request=rgi-p08-impl-20261107-01 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p08-rev-20261107-01 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p08-fix-20261107-01 · scope=p08-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p08-impl-20261107-01 · observed=~ · match=~
+- run/v1 · request=rgi-p08-rev-20261107-02 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p08-fix-20261107-02 · scope=p08-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p08-impl-20261107-01 · observed=~ · match=~
+- run/v1 · request=rgi-p08-rev-20261107-03 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p14-impl-20261108-01 · scope=p14 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p14-rev-20261108-01 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p14-fix-20261108-01 · scope=p14-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p14-impl-20261108-01 · observed=~ · match=~
+- run/v1 · request=rgi-p14-rev-20261108-02 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p15-impl-20261108-01 · scope=p15 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p15 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p15-rev-20261108-01 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p16-impl-20261108-01 · scope=p16 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p16-rev-20261108-01 · scope=p16 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p16-impl-20261108-02 · scope=p16 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p16 (fix record p16-t05 only), reason: two Low re-review findings, a one-line test change and a doc comment, fixed in the root per the small-fix rule; root model claude-opus-5-5
+- run/v1 · request=rgi-p16-rev-20261108-02 · scope=p16 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p16 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -2224,6 +3032,68 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 
 - m02 delivery check after receive (2026-11-04): `status: ok`, exit carrier and integrated review fresh at `c08b2c054`; m02 moved `reviewing → delivering`. A first check reported both stale because the backlog commit filing `BL-261104-goal-mode-exit-gate-resolve` (after the reviewed head, under `.oat/repo/pjm/backlog/`) is not permitted bookkeeping; by operator decision that unpushed commit was dropped from the branch and the item will be refiled on a separate branch off main.
 
+### Review Received: plan (m03 amendment gate)
+
+**Date:** 2026-11-06
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-11-06T222001Z.md
+**Gate:** `oat-project-goal` configured gate, target `codex-6-sol-xhigh` (gpt-6.1-sol, xhigh), run `0d1fa309-a0e6-45a0-b4a9-c319f0fe3fa3`, reviewed head `e38f33e5e58e4b9fd30f84240d250a3c2555febf`, threshold high, status ok, `review_completed_gate_passed`
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- L1 (Low): `state.md` readable Current Phase, Progress and Next Milestone text still described m02 implementation at p07 → fixed at receive (bookkeeping): rewrote that text from recorded facts (d02 merged, m03 amendment awaiting approval); no tracked state field changed. Operator confirmed the edit.
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/artifact-plan-review-2026-11-06T222001Z.md)
+
+- m03 amendment artifact review (2026-11-06): three structured attempts by `oat-reviewer-claude-opus-5-5-high` (retry bound 2, exhausted), dispositions in `plan.md` under the Reviews table. H1 (what counts as a convergence sequence) went to the operator, who chose successive runs of one configured gate on one subject (brief Decisions, m03 (5)).
+- Gate `oat-project-goal` (plan, m03 amendment, run `0d1fa309-a0e6-45a0-b4a9-c319f0fe3fa3`, target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family from the declared `claude-opus-5-5` producer; installed CLI 0.3.45, inline Codex route): `ok`, `review_completed_gate_passed`, threshold `high`, raw counts 0/0/0/1, receive-eligible, received 2026-11-06 with the bookkeeping-only fix above; no attempt consumed.
+- Approval (m03 amendment): approved 2026-11-06 by user at `e38f33e5e58e4b9fd30f84240d250a3c2555febf` (the gate-reviewed bundle). `oat_milestone_gates.m03.plan` written `allowed`/`passed`, subject `plan` [p08, p14, p15, p16], `config_fingerprint` `sha256:28b8b9f6da5833e6ea531f943c006778961c25070c434ebba17124cffc317b75` = sha256 of the compact JSON of `oat gate resolve oat-project-goal` `effectiveGate` (the m02 method; the declaration is unchanged since m02).
+- Operator routing (m03 exit gate, 2026-11-07): run the configured gate with `--review-scope p08-p16` (target, threshold and prompt unchanged), which resolves to exactly m03's phases p08, p14, p15, p16 in brief order, the scope `oat project delivery check --subject m03` expects. The installed CLI (0.3.46) predates p15's state-selected exit hint, and a literal `final` refuses on m01's and m02's squash-merged anchors, as at m02. One-off routing for this run and its reruns, not a configuration change.
+
+### Review Received: p08-p16 (m03 exit gate)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-08T051752Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 0
+**Finding classes:** M1 accepted-requirement (plan.md Outcome 5: reruns in a blocked gate's remediation loop stay one sequence; brief contract 12.4: a blocked carrier is not approval) · M2 accepted-requirement (plan.md Outcome 5: a goal milestone exit gate's subject is the milestone, whatever scope token a run used)
+
+The configured `oat-project-implement` exit gate (run `10ed9157-0fdf-4981-b9b1-1ca3dffc673f`, scope `p08-p16` under the operator routing above, default selection `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family: m03 was produced by Opus 5.5) reviewed m03 (`p08, p14, p15, p16`) over `241b12a95..b538b09ea`. It reproduced both findings on the branch build with valid controls; p14, p15 and p16 were found implemented, and p08 partial only through M1 and M2.
+
+- M1 (Medium): a `status: blocked` plan carrier is counted as an amendment approval, splitting a resumed rerun of one amendment into two sequences → fix task p16-t03; Outcome 5 requires it.
+- M2 (Medium): a state-selected `final` resolved to a single phase is sequenced by scope rather than milestone → fix task p16-t04; Outcome 5 requires it, and m04 is a single-phase milestone.
+
+**Outcome:** fixes queued: p16-t03, p16-t04 (gate passed its threshold; under the late-fix rule the fixes go under p16, and the exit gate reruns over `p08-p16` after p16 is accepted again)
+
+- Gate `oat-project-implement` (code, m03 exit, run `10ed9157-0fdf-4981-b9b1-1ca3dffc673f`, `--review-scope p08-p16`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/2/0, receive-eligible, received 2026-11-08; no attempt consumed (not blocked). No carrier written: queued fixes require the rerun, which writes `oat_milestone_gates.m03.exit` (`oat project delivery check --subject m03`: `undeliverable`, exit `missing`, source `milestone-carrier`).
+
+### Review Received: p08-p16 (m03 exit gate rerun)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/range-review-2026-11-08T054348Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+The exit gate rerun (run `9c23d08c-eb00-40f7-930d-082fe2eece46`, scope `p08-p16` under the operator routing, default selection `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, cross-family) reviewed m03 (`p08, p14, p15, p16`) at the advanced p16 head `b2f6b3b44`, narrowed to the delta from the prior gate-reviewed head `b538b09ea`. It found the first run's M1 and M2 resolved, with no new findings.
+
+**Outcome:** passed
+
+- Gate `oat-project-implement` (code, m03 exit rerun, run `9c23d08c-eb00-40f7-930d-082fe2eece46`, `--review-scope p08-p16`): `ok`, `review_completed_gate_passed`, threshold `high`, counts 0/0/0/0, receive-eligible, received 2026-11-08; no attempt consumed. `oat_milestone_gates.m03.exit` written `allowed`/`passed`, `resolution: configured`, `reviewed_head` `b2f6b3b44c072f78f916990037be1a0fac59a7fd`, subject `code` [p08, p14, p15, p16], `config_fingerprint` `sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2` (the m02 exit carrier's method; unchanged gate config). The configured `--review-scope final` was replaced by the m03 phase range under the operator routing above.
+
+### Review Received: m03 (integrated milestone review)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/m03-review-2026-11-08T055143Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+**Finding classes:** L1 bookkeeping · L2 bookkeeping
+
+The integrated m03 review (manual, native `oat-reviewer-claude-claude-opus-5-5-high`, reconnaissance not attempted) covered `p08, p14, p15, p16` over `241b12a95..b2f6b3b44` (68 commits, 63 paths). It found the four phases compose into Outcomes 5 and 7: p14's complexity-review fallback reads the log tokens p08's convergence writes, p15's single-phase state-selected `final` now joins its milestone sequence (p16-t04/t05), and every receive path in p14's inventory states the classes and routing. Release readiness: lockstep versions at 0.3.47 against `origin/main` 0.3.46, `check:skill-bumps` and `release:check-versions` exit 0 (15 skills, one bump each), docs index fresh, sync dry-run clean. Probes: p08 m02 sequence and p15 goal-exit scope exit 0; gate, review, shared-contract and validation suites 1857/1857.
+
+- L1 (Low): `## Deferred Findings` still listed the m02 integrated review L1 and the PR #403 Warp suggestion as open (trigger p16 start) after p16 closed them → fixed at receive (bookkeeping): appended one m03 closure line naming p16-t01 and p16-t02; no recorded line rewritten.
+- L2 (Low): the Reviews row for exit gate run `10ed9157` still read `fixes_added` after its fixes landed and the rerun passed → fixed at receive (bookkeeping): that row's Status moved `fixes_added → fixes_completed` (monotonic; Reviewed Head unchanged).
+
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/m03-review-2026-11-08T055143Z.md)
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -2246,6 +3116,25 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
 - p07 re-review L1 (Low) closure: resolved by p12-t03 (`19fb8190d`), which rewrote the receive CLI-unavailable fallback to skip a candidate only when its own row is `received` and to name the gate and lifecycle Invocation classes, pinned in `review-event-row-contracts.test.ts`. Recorded at the m02 integrated review receive (finding L2), 2026-11-04.
 - m02 integrated review L1 (Low): `oat review check` and `oat review resolve` number Reviews rows by position among parsed rows, while `oat review pending` numbers physical data lines, so one row can read as two numbers when an unparsed row sits above it. Nothing fails open: waiver `**Row:**` values are copied from `pending`. Deferred by operator decision on 2026-11-04 (fixing it now would reopen m02's exit gate and integrated review). Trigger: p08 start (m03), which owns review-table identity; number all three commands by physical data line, or document the difference in the CLI reference.
 - PR #403 Warp review suggestion (nonblocking, [thread](https://github.com/voxmedia/open-agent-toolkit/pull/403#discussion_r4475162750)): `review-event-row-contracts.test.ts` builds the asserted row with a test-local `recordReviewEvent` writer, so that assertion cannot detect a regression in the real review-provide step; the Step 9 prose pin and the real `scaffoldProject` checks in `scaffold.test.ts` keep their coverage. Valid; test hygiene, not a defect. Deferred by operator decision on 2026-11-06 (fixing it now would change test code after reviewed head `c08b2c054` and stale d02's exit gate and integrated review). Trigger: p08 start (m03); remove the simulated writer and its post-write cases.
+- m03 re-alignment (2026-11-06) re-routing: m02 integrated review L1 (review-table row numbering) and the PR #403 Warp suggestion (test-local row writer) move from p08 to p16 by operator decision (brief Decisions, m03 (3)); trigger: p16 start. p10 review L1, p12 review L2 and m01 exit gate L1 are dispositioned by p14 (its Exit evidence). The p08 journal heading keeps its scaffolded name; the brief's p08 name is now "Gate convergence marking and the stable finding key".
+- p08 closures (recorded by p08-t06 for p08 review round 1 finding L1, 2026-11-07). These are the dispositions from p08-t01 (`2f8f90617`), whose record gives the reasons:
+  - p01 review L2: fixed. Reviewer IDs are read from `**M1: title**` and `**L1:** text` list items.
+  - p01 review round 2 L2: fixed. Explicit IDs are reserved before generation, so order no longer matters.
+  - p01 review round 2 L1 (and PR #400 T1): closed. No captured output has the shape; it still fails closed; the refusal message was clarified. Reopen with a captured refusal.
+  - p01 review L3: closed without action, because no consumer branches on the refusal code.
+  - PR #400 C1: the duplicate-ID and ID-prefix/severity refusals were removed. `findingsComplete` was kept for convergence; p08-t06 covers it.
+  - PR #400 T2: fixed with a negative test for near-miss labels.
+  - PR #400 T3/C3: fixed by removing the duplicate effective-delta tests; `post-implement-sequence-contracts.test.ts` keeps the coverage.
+  - PR #400 T4/C2: fixed by removing the unused error fields and their assertions.
+- p14 dispositions (p14-t06, 2026-11-08), for the three deferrals m03's re-alignment routed to p14:
+  - m01 exit gate L1: fixed in p14-t02 (`d317617cc`); limit 1 of `.agents/docs/bookkeeping-findings.md` no longer lists review artifacts as tracking files.
+  - p12 review L2: kept deferred. Persisting the gate event across interruption is a new requirement no contract source names (`new-hardening` under p14's classes), and no interrupted handoff has been observed. Trigger unchanged: the first observed interrupted gate→receive handoff.
+  - p10 review L1: kept deferred. No contract source requires the record to change; integrated reviews carry no gate convergence marks, and the fallback reads the unchanged receipt's classes. Trigger: the first real stale fallback after a bookkeeping-only receive.
+- p14 review L1, L2, L3, L5 (Low): the routing snippet's edge cases (a missing finding produces no output), the complexity-review fallback's narrower contract-source list, pre-p08 gate runs without convergence tokens in the fallback, and where plan-writing's classes line is recorded. Cut by the operator on 2026-11-08 (fix round limited to M1 as unwanted hardening across m03). Trigger: a real receive or complexity-review run that misroutes because of one of them.
+- p14 review round 2 L1 (Low): review-receive does not state the review status when an autonomous Medium recorded `awaiting operator` is the only open Critical/High/Medium finding (the pass rule still counts it). Deferred under the same operator cut. Trigger: the first autonomous receive that reaches this state, or the next edit of review-receive Step 2.6.
+- m03 closures (recorded at the m03 integrated review receive, 2026-11-08): m02 integrated review L1 (review-table row numbering) closed by p16-t01 (`df4961ef2`), which numbers `check` and `resolve` rows by data line like `pending`; the PR #403 Warp suggestion (test-local row writer) closed by p16-t02 (`337ad7ac3`), which removed the writer and kept the Step 9 prose pin.
+- PR #407 self-review (testing and complexity lenses, fresh Opus 5.5 reviewer over `9da04ef1c..b2f6b3b44`, 0 blocking): C1 plan-gate amendment inference in `gate/convergence.ts` (about 150 source and 300 test lines; no plan gate has rerun within one amendment; simpler: the gate records its subject at dispatch), C2 the 8-line finding-routing paragraph copied into 8 planning skills and 6 autonomy rows (replace with a pointer to `bookkeeping-findings.md`), C3/T2 the awk routing snippet in `bookkeeping-findings.md` that only its own test runs (delete it and its tests; restate p14's routing evidence as prose pins), T1 convergence cases tested in both `convergence.test.ts` and `index.test.ts`, T3 two near-copy m02 fixtures, T4 the reworded-match threshold rests on one invented case. Deferred by the operator on 2026-11-08 (option 1: merge m03 as is) so the m03 exit gate and integrated review stay fresh; one simplification backlog item is filed at m03 re-alignment, which weighs it against p09 for m04. Trigger: m03 re-alignment.
+- PR #407 Cursor Bugbot (Medium, [thread](https://github.com/voxmedia/open-agent-toolkit/pull/407#discussion_r4506779723)): `bookkeeping-findings.md` says the `**Finding classes:**` line is never rewritten, while review-receive Step 5 says an operator-accepted finding's entry reads `accepted-requirement` citing that decision; neither names where the decision is recorded, so a resumed receive rereading the frozen line would route an accepted finding back to the operator. Confirmed real. Deferred by the operator on 2026-11-08 (land #407 without re-running the m03 exit gate and integrated review); folded into the m03 re-alignment simplification item, which already reworks this doc (C2/C3). Fix: record each operator decision as an appended line beside the classes line, and have routing read the latest decision before the class. Trigger: m03 re-alignment.
 
 ## Deviations from Plan / Design
 

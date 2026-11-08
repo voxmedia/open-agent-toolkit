@@ -36,6 +36,10 @@ describe('parseReviewGateVerdict', () => {
     );
   }
 
+  function stripFixtureHeader(fixture: string): string {
+    return fixture.replace(/^<!--[\s\S]*?-->\n\n/, '');
+  }
+
   function issue339Reproduction(fixture: string): string {
     const match = /```markdown\n([\s\S]*?)\n```/.exec(fixture);
     if (!match?.[1]) {
@@ -237,8 +241,6 @@ oat_review_low_count: 4
     expect(error).toBeInstanceOf(ReviewVerdictValidationError);
     expect(error).toMatchObject({
       code: 'finding_count_disagreement',
-      status: 'artifact_validation_failed',
-      receiveEligible: false,
     });
     expect((error as Error).message).toMatch(
       /contradicts itself about finding counts \(low\)[\s\S]*3 low[\s\S]*1 low/i,
@@ -251,8 +253,6 @@ oat_review_low_count: 4
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'findings_unrecognizable',
-      status: 'artifact_validation_failed',
-      receiveEligible: false,
     });
   });
 
@@ -952,7 +952,6 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_orphaned',
-      receiveEligible: false,
     });
   });
 
@@ -982,7 +981,6 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_ambiguous',
-      receiveEligible: false,
     });
   });
 
@@ -1010,7 +1008,6 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_ambiguous',
-      receiveEligible: false,
     });
   });
 
@@ -1037,7 +1034,6 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_orphaned',
-      receiveEligible: false,
     });
   });
 
@@ -1063,7 +1059,6 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_orphaned',
-      receiveEligible: false,
     });
   });
 
@@ -1122,11 +1117,13 @@ None
 
     await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
       code: 'finding_detail_orphaned',
-      receiveEligible: false,
     });
   });
 
-  it('refuses duplicate explicit finding IDs across the artifact', async () => {
+  it('keeps a repeated explicit finding ID unique by giving the repeat the next free ID', async () => {
+    // Before p08 this artifact was refused as `finding_id_duplicate` although
+    // its counts agree; the stable finding key reads no IDs, so the repeat now
+    // takes the next free ID for its severity instead.
     const artifactPath = await writeArtifact(`## Findings
 
 ### Critical
@@ -1147,9 +1144,51 @@ None
 None
 `);
 
-    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
-      code: 'finding_id_duplicate',
-      receiveEligible: false,
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 2, medium: 0, low: 0 },
+      findings: [
+        { id: 'H1', title: 'First use' },
+        { id: 'H2', title: 'Duplicate use' },
+      ],
+    });
+  });
+
+  it('gives an explicit ID whose prefix names another severity a generated ID for its section', async () => {
+    // Before p08: refused as `finding_title_severity_mismatch`.
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**H1 — A High-prefixed title written under Medium**
+- **M1: A list finding that claims M1**
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 2, low: 0 },
+      findings: [
+        {
+          id: 'M2',
+          severity: 'medium',
+          title: 'A High-prefixed title written under Medium',
+        },
+        {
+          id: 'M1',
+          severity: 'medium',
+          title: 'A list finding that claims M1',
+        },
+      ],
     });
   });
 
@@ -1183,8 +1222,11 @@ None
     });
   });
 
-  it('refuses an explicit ID that collides with an earlier generated ID', async () => {
-    const artifactPath = await writeArtifact(`## Findings
+  it('assigns IDs independently of whether an unlabeled finding precedes an explicit one', async () => {
+    // Before p08 the plain finding took H1 first and the explicit H1 that
+    // followed was refused as a duplicate (p01 review round 2 L2): the result
+    // depended on order. Explicit IDs are now reserved before any is generated.
+    const plainFirst = await writeArtifact(`## Findings
 
 ### Critical
 
@@ -1192,8 +1234,27 @@ None
 
 ### High
 
-- The list finding receives H1.
-**H1 — Explicit collision**
+- The list finding no longer takes H1.
+**H1 — Explicit after a plain finding**
+
+### Medium
+
+None
+
+### Low
+
+None
+`);
+    const explicitFirst = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+**H1 — Explicit after a plain finding**
+- The list finding no longer takes H1.
 
 ### Medium
 
@@ -1204,10 +1265,85 @@ None
 None
 `);
 
-    await expect(parseReviewGateVerdict(artifactPath)).rejects.toMatchObject({
-      code: 'finding_id_duplicate',
-      receiveEligible: false,
+    const plain = await parseReviewGateVerdict(plainFirst);
+    const explicit = await parseReviewGateVerdict(explicitFirst);
+    const byTitle = (verdict: typeof plain) =>
+      Object.fromEntries(
+        verdict.findings.map((finding) => [finding.title, finding.id]),
+      );
+
+    expect(byTitle(plain)).toEqual({
+      'The list finding no longer takes H1.': 'H2',
+      'Explicit after a plain finding': 'H1',
     });
+    expect(byTitle(explicit)).toEqual(byTitle(plain));
+  });
+
+  it('reads the reviewer ID from captured `**M1: title**` and `**L1:** text` list items', async () => {
+    // p01 review L2: these list items used to keep the ID inside the title
+    // (`L1:`, `M1: Preserve …`). Both shapes are captured reviewer output.
+    const m02Run1 = stripFixtureHeader(
+      await readFixture(
+        'convergence/m02-exit-r1-range-review-2026-11-03T215601Z.md',
+      ),
+    );
+    const waveFive = await readFixture('backlog-wave-5-exit-gate-r1-return.md');
+    const waveFiveLows = waveFive
+      .split('\n')
+      .filter((line) => /^- \*\*L[12]:\*\*/.test(line));
+    expect(waveFiveLows).toHaveLength(2);
+
+    await expect(
+      parseReviewGateVerdict(await writeArtifact(m02Run1)),
+    ).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 2, low: 0 },
+      findingsComplete: true,
+      findings: [
+        {
+          id: 'M1',
+          severity: 'medium',
+          title:
+            'Preserve invalid Reviewed Head cells for exact-event validation',
+          location: 'packages/cli/src/commands/review/resolve.ts:430',
+        },
+        {
+          id: 'M2',
+          severity: 'medium',
+          title:
+            'Resolve synced-project review ancestry in the source repository',
+          location: 'packages/cli/src/commands/review/head-ancestry.ts:65',
+        },
+      ],
+    });
+
+    const lows = await parseReviewGateVerdict(
+      await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+None
+
+### Low
+
+${waveFiveLows.join('\n')}
+`),
+    );
+    expect(lows.counts).toEqual({ critical: 0, high: 0, medium: 0, low: 2 });
+    expect(lows.findings.map((finding) => finding.id)).toEqual(['L1', 'L2']);
+    expect(lows.findings[0]?.title).toMatch(
+      /^the promotion commit identity is fixed per project path/,
+    );
+    expect(lows.findings[1]?.title).toMatch(
+      /^the scaffold failure message refers to/,
+    );
   });
 
   it('accepts only the captured plain and bold closed detail labels', async () => {
@@ -1258,6 +1394,81 @@ None
         },
       ],
     });
+  });
+
+  it('counts a list item whose label is not one of the closed detail labels as its own finding', async () => {
+    // T2: the closed-label test above asserts only acceptance. Near-miss labels
+    // that captured output never used are not details, so each is a separate
+    // list finding rather than part of the title that precedes it.
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**M1 — Title followed by near-miss labels**
+
+- Issue: an exact closed label owned by M1
+- Fixes: a plural near-miss
+- **Recommendation:** an unlisted bold label
+- issue: a lower-case near-miss
+
+### Low
+
+None
+`);
+
+    await expect(parseReviewGateVerdict(artifactPath)).resolves.toMatchObject({
+      counts: { critical: 0, high: 0, medium: 4, low: 0 },
+      findings: [
+        { id: 'M1', title: 'Title followed by near-miss labels' },
+        { id: 'M2', title: 'Fixes: a plural near-miss' },
+        { id: 'M3', title: 'Recommendation:' },
+        { id: 'M4', title: 'issue: a lower-case near-miss' },
+      ],
+    });
+  });
+
+  it('names an intervening indented line as what ended a detail run when it refuses an orphan', async () => {
+    // p01 review round 2 L1: a wrapped detail line still ends ownership (no
+    // captured reviewer output uses that shape), but the refusal now says so.
+    const artifactPath = await writeArtifact(`## Findings
+
+### Critical
+
+None
+
+### High
+
+None
+
+### Medium
+
+**M1 — Wrapped detail**
+
+- Issue: first line
+  wrapped continuation
+- Fix: second detail
+
+### Low
+
+None
+`);
+
+    const error = await parseReviewGateVerdict(artifactPath).then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+    expect(error).toMatchObject({ code: 'finding_detail_orphaned' });
+    expect((error as Error).message).toContain(
+      'including an indented or wrapped continuation line, ends that title',
+    );
   });
 
   it('ignores markdown headings inside fenced code blocks while finding severity sections', async () => {
@@ -1478,8 +1689,6 @@ None
     );
     expect(error).toMatchObject({
       code: 'finding_count_disagreement',
-      status: 'artifact_validation_failed',
-      receiveEligible: false,
     });
     expect((error as Error).message).toMatch(
       /contradicts itself about finding counts \(high\)[\s\S]*2 high[\s\S]*1 high/i,
@@ -1524,8 +1733,6 @@ None
     );
     expect(error).toMatchObject({
       code: 'finding_count_disagreement',
-      status: 'artifact_validation_failed',
-      receiveEligible: false,
     });
     expect((error as Error).message).toMatch(
       /contradicts itself about finding counts \(high\)[\s\S]*frontmatter count fields[\s\S]*Findings sections/i,
