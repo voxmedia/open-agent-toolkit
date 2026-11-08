@@ -251,6 +251,42 @@ oat_deliveries:
           head: 247bdb3db2a3439969b58a9195d097dc99edc9eb
           base: c42fd95bd1f5e8382b3cf836130ab2f5e0b17a2b
           status: merged
+  - delivery_id: d03
+    milestone: m03
+    scope: [p08, p14, p15, p16]
+    endpoint: merged
+    kind: pr
+    status: registering
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: goal/review-gate-integrity-m03
+      head_sha_at_registration: '2b6198884e5b251356e7debe76adefc4b4afca5b'
+    members: []
+    integrated_review:
+      artifact: reviews/archived/m03-review-2026-11-08T055143Z.md
+      scope: [p08, p14, p15, p16]
+      bound_revisions:
+        [
+          {
+            member: 0,
+            base: '9da04ef1c05c4ff07fd7042065373cc9ffc48048',
+            head: 'b2f6b3b44c072f78f916990037be1a0fac59a7fd',
+          },
+        ]
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: passed
+      resolution: configured
+      config_fingerprint: 'sha256:4a7d07613c30a9959be11df812eb1822a6fad44d2a6052a002a2f654754ae7e2'
+      reviewed_head: b2f6b3b44c072f78f916990037be1a0fac59a7fd
+      subject: { kind: code, scope: [p08, p14, p15, p16] }
+      freshness: fresh
+      decided_at: '2026-11-08T05:46:47Z'
+    endpoint_attainment: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -308,7 +344,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/403' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-01T15:56:18.680Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-08T05:53:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-08T15:14:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
