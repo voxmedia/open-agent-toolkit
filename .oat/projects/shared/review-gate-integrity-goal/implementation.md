@@ -2488,6 +2488,31 @@ Guard-can-fail (`bash /tmp/rgi-p14/gcf/t05.sh`, each neutralized, run, restored 
 
 Verification: isolated-HOME contract suites 1249/1249, exit 0; CLI `pnpm run type-check` exit 0; oxlint and oxfmt check exit 0.
 
+### Task p14-t06: Human docs, root instructions and the three deferrals
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+**Handle:** direct:rgi-p14-impl-20261108-01:p14-t06
+**Intent:** Document the finding classes, the operator routing and the fallback's new inputs on the reader pages the changed behavior touches; make root `AGENTS.md`'s existing "before turning a finding into a fix task" rule point to the shared classes; disposition p10 review L1, p12 review L2 and m01 exit gate L1.
+**Files:** `AGENTS.md`, `apps/oat-docs/docs/workflows/projects/reviews/index.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/advanced/autonomy.md`, `apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md`
+**Proof command:** `pnpm exec markdownlint-cli2` over the four pages, `pnpm docs:validate`, `pnpm docs:check` (no warning on a changed line), `pnpm exec oxfmt --check` over the five files
+**Commit:** ff6ff4803f5bd2fa051307e88b716240364af33b
+
+Shape:
+
+- **Reviews page.** A new "Finding classes at receive" section (the four classes, precedence, the receipt line, routing, the operator decisions, the autonomy stop, no allowance); the complexity-review bullets now say the reviewer starts from recorded classes and gate convergence marks.
+- **Workflow gates page.** A classes paragraph beside `onFailure`, convergence in the `maxAttempts` text, and an exhaustion paragraph in the convergence section.
+- **Autonomy and implementation-execution pages.** The new-hardening stop and the per-phase round's routing.
+- **Root `AGENTS.md`.** One sentence appended to the existing Execution Continuation rule; no instruction file was created, renamed or re-globbed, so the instruction index is unchanged.
+
+Deferral dispositions (the Deferred Findings section records each):
+
+- **m01 exit gate L1: fixed** in p14-t02 (`d317617cc`): the shared definition's limit 1 no longer lists review artifacts among tracking files, pinned in `bookkeeping-findings-contracts.test.ts` with the old phrase asserted absent.
+- **p12 review L2: kept deferred.** Persisting the planning and phase gate event across an interruption is a new requirement that no contract source names, so under p14's own rule it is `new-hardening` and belongs to the operator, not to a fix task. No interrupted handoff has been observed; p14 only adds sentences beside the in-session handoff. Trigger unchanged: the first observed interrupted gate→receive handoff.
+- **p10 review L1: kept deferred.** No contract source requires the record to change after a stale delivery check. Integrated reviews are manual, not gate runs, so they carry no p08 convergence marks; the fallback now reads the unchanged receipt's recorded classes correctly. Trigger: the first real stale fallback after a bookkeeping-only receive.
+
+Verification: markdownlint 0 errors on the four pages; `pnpm docs:validate` exit 0; `pnpm docs:check` exit 0 with no warning on a changed line (the page warnings predate p14); oxfmt check exit 0.
+
 ## Phase p15: Goal milestone exit gate scope
 
 **Status:** pending
@@ -2828,6 +2853,10 @@ The integrated m02 review (manual, native `oat-reviewer-claude-claude-opus-5-5-h
   - PR #400 T2: fixed with a negative test for near-miss labels.
   - PR #400 T3/C3: fixed by removing the duplicate effective-delta tests; `post-implement-sequence-contracts.test.ts` keeps the coverage.
   - PR #400 T4/C2: fixed by removing the unused error fields and their assertions.
+- p14 dispositions (p14-t06, 2026-11-08), for the three deferrals m03's re-alignment routed to p14:
+  - m01 exit gate L1: fixed in p14-t02 (`d317617cc`); limit 1 of `.agents/docs/bookkeeping-findings.md` no longer lists review artifacts as tracking files.
+  - p12 review L2: kept deferred. Persisting the gate event across interruption is a new requirement no contract source names (`new-hardening` under p14's classes), and no interrupted handoff has been observed. Trigger unchanged: the first observed interrupted gate→receive handoff.
+  - p10 review L1: kept deferred. No contract source requires the record to change; integrated reviews carry no gate convergence marks, and the fallback reads the unchanged receipt's classes. Trigger: the first real stale fallback after a bookkeeping-only receive.
 
 ## Deviations from Plan / Design
 
