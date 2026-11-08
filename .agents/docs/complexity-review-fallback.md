@@ -98,6 +98,41 @@ The brief names the scope:
 - **Loop history:** every review artifact of the exhausted loop, active and
   archived, gate artifacts included, plus the dispositions recorded for them
   in `implementation.md` or `plan.md`.
+- **Recorded classes:** the `**Finding classes:**` line of each receipt in the
+  loop, which records one class per finding under the "Finding classes at
+  receive" section of `bookkeeping-findings.md` (`bookkeeping`, `regression`,
+  `accepted-requirement` with its contract source, or `new-hardening`), and
+  each operator decision recorded for an operator-routed finding.
+- **Convergence (gate loops):** for each gate run of the loop, its convergence
+  marks, read as [Convergence of a gate loop](#convergence-of-a-gate-loop)
+  describes.
+
+### Convergence of a gate loop
+
+When the exhausted loop is a gate loop (a phase review gate, the
+implementation or goal milestone exit gate, or the quick-start plan gate), the
+root reads the convergence marks the gate recorded for each of the loop's runs:
+the new, carried-over and resolved counts against the run before it. For a run
+whose gate result the root still holds, they are its `convergence` object.
+Otherwise they are the tokens of that run's entry in `project-log.md`, matched
+by its `run=<runId>` token, with `GATE_RUN_IDS` holding the `oat_gate_run_id`
+of each gate artifact in the loop history, oldest first:
+
+```bash
+for RUN_ID in "${GATE_RUN_IDS[@]}"; do
+  ENTRY=$(grep -F -- "run=$RUN_ID" "$PROJECT_PATH/project-log.md" 2>/dev/null | tail -n 1)
+  MARKS=$(printf '%s\n' "$ENTRY" | grep -oE '(convergence|sequence|sequence_run|previous_run)=[^ ]+' | paste -sd ' ' -)
+  printf '%s %s\n' "${RUN_ID:0:8}" "${MARKS:-no convergence marks}"
+done
+```
+
+A run with no marks is the first run of its sequence, or one whose earlier
+runs the gate could not read; `convergence=unavailable:<reason>` means the
+runs could not be compared. Report such runs as they are, never as zero
+counts. Both the decision message and the reviewer brief carry these counts,
+so a loop whose findings keep carrying over reads as stuck and one whose new
+findings keep arriving reads as drifting. The marks are read only; nothing
+recomputes or rewrites them.
 
 ### Routing outside implement
 
@@ -126,7 +161,7 @@ exhausted loop belongs to `oat-project-quick-start` or to a standalone
 
 When no reviewer route is available, the root says so in the decision message
 (`Complexity review unavailable: <reason>`) and presents the decision with the
-loop-stop reasons alone. It never substitutes a weaker reviewer class and never
+loop-stop reasons alone, recorded classes and convergence counts included. It never substitutes a weaker reviewer class and never
 blocks the decision on the missing review.
 
 ## Condensed method
@@ -210,11 +245,15 @@ Both paths add these sections to the report:
 - **REQUIRES-OPERATOR:** mark each ledger row that only the operator can settle
   (a contract question, a scope or product call, accepting a risk) with
   `REQUIRES-OPERATOR` and state the question in plain terms.
-- **Open findings:** classify each finding still open in the exhausted loop as
-  `accepted-requirement` (the contract requires it), `regression` (the change
-  broke something that worked), or `new-hardening` (a new demand beyond the
-  contract). Call out recurring families: the same kind of finding returning
-  across rounds.
+- **Open findings:** start from the class each finding's receipt recorded:
+  `bookkeeping`, `accepted-requirement` (the contract requires it; carry its
+  cited source), `regression` (the change broke something that worked), or
+  `new-hardening` (a new demand beyond the contract). Classify only a finding
+  no receipt classified, and mark it `unrecorded`. Where the evidence
+  contradicts a recorded class, keep the recorded class and add the
+  disagreement as a note; never rewrite it. Call out recurring families: the
+  same kind of finding returning across rounds, and for a gate loop the
+  findings its convergence marks carry over from run to run.
 - **Dissolvable findings:** list the open findings that a recommended Simplify,
   Defer, or Delete would dissolve.
 - **Recommended disposition:** one of `extra cycles` (more fix and review
@@ -239,7 +278,9 @@ The root, never the reviewer:
    commit it with the decision bookkeeping.
 2. Shows one decision message containing:
    - why the loop stopped: the budget, the count reached, and the findings still
-     blocking;
+     blocking with their recorded classes; for a gate loop, also each run's
+     new, carried-over and resolved counts from
+     [Convergence of a gate loop](#convergence-of-a-gate-loop);
    - the verdict and the ledger highlights;
    - the dissolvable findings;
    - each REQUIRES-OPERATOR item, in plain terms;

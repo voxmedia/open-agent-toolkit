@@ -38,6 +38,7 @@ import type {
 } from './activity-probes';
 import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { extractStructuredRefusal } from './child-process';
+import { computeGateConvergence as computeGateConvergenceFromDisk } from './convergence';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -51,6 +52,7 @@ interface HarnessOptions {
   createGateActivityProbe?: () => Promise<GateActivityProbe | null>;
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  computeGateConvergence?: typeof computeGateConvergenceFromDisk;
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: (
     path: string,
@@ -169,6 +171,9 @@ function createHarness(options: HarnessOptions): {
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
+      : {}),
+    ...(options.computeGateConvergence
+      ? { computeGateConvergence: options.computeGateConvergence }
       : {}),
     ...(options.writeGateRunMarker
       ? { writeGateRunMarker: options.writeGateRunMarker }
@@ -401,6 +406,7 @@ async function runReviewGate(options: {
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  computeGateConvergence?: HarnessOptions['computeGateConvergence'];
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
@@ -420,6 +426,7 @@ async function runReviewGate(options: {
     processEnv: options.processEnv,
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
+    computeGateConvergence: options.computeGateConvergence,
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
@@ -11319,5 +11326,540 @@ describe('oat gate', () => {
       ),
     });
     expect(process.exitCode).toBe(1);
+  });
+  describe('gate convergence (p08)', () => {
+    // The m02 exit-gate runs are captured reviewer output (provenance in each
+    // fixture's header); the stuck and reworded reruns are derived from run 1
+    // as their headers record. The header is stripped before use, and the
+    // current run's gate invocation lines are replaced with the values this
+    // dispatch issued, as a real reviewer copies them from the prompt.
+    const projectPath = '.oat/projects/shared/review-gate-integrity-goal';
+    const m02Phases = ['p07', 'p12', 'p13', 'p-rev1', 'p-rev2', 'p-rev3'];
+
+    async function convergenceFixture(name: string): Promise<string> {
+      const text = await readFile(
+        new URL(`./__fixtures__/convergence/${name}`, import.meta.url),
+        'utf8',
+      );
+      return text.replace(/^<!--[\s\S]*?-->\n\n/, '');
+    }
+
+    async function writeGoalProject(
+      root: string,
+      workflowMode = 'goal',
+    ): Promise<void> {
+      await mkdir(join(root, projectPath, 'reviews', 'archived'), {
+        recursive: true,
+      });
+      await writeFile(
+        join(root, projectPath, 'state.md'),
+        [
+          '---',
+          'oat_kind: implementation',
+          `oat_workflow_mode: ${workflowMode}`,
+          '---',
+          '',
+          '# State',
+        ].join('\n'),
+        'utf8',
+      );
+      await writeFile(
+        join(root, projectPath, 'plan.md'),
+        [
+          '# Project Brief',
+          '',
+          '## Milestones',
+          '',
+          '| Milestone | Phases |',
+          '| --------- | ------ |',
+          `| m02 | ${m02Phases.join(', ')} |`,
+          '',
+          ...m02Phases.flatMap((id) => [
+            `## Phase ${id}: Work`,
+            '',
+            '**Intent:** work',
+            '**Exit evidence:** done',
+            '**Provisional:** no',
+            '',
+          ]),
+        ].join('\n'),
+        'utf8',
+      );
+      await writeActiveProject(root, projectPath);
+    }
+
+    async function archive(
+      root: string,
+      name: string,
+      edit: (content: string) => string = (content) => content,
+    ): Promise<void> {
+      await writeFile(
+        join(root, projectPath, 'reviews', 'archived', name),
+        edit(await convergenceFixture(name)),
+        'utf8',
+      );
+    }
+
+    async function runConvergenceGate(
+      root: string,
+      home: string,
+      current: string,
+      scope: string,
+      parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk,
+      extra: {
+        edit?: (content: string) => string;
+        computeGateConvergence?: typeof computeGateConvergenceFromDisk;
+        writeDiagnostic?: (message: string) => void;
+        globalArgs?: string[];
+      } = {},
+    ): Promise<{
+      payload: Record<string, unknown>;
+      body: string;
+      capture: LoggerCapture;
+    }> {
+      const bodies: string[] = [];
+      const appendProjectLog = vi.fn(
+        async (
+          input: AppendProjectLogInput,
+        ): Promise<ProjectLogAppendResult> => {
+          bodies.push(input.body ?? '');
+          return {
+            status: 'appended',
+            logPath: join(root, projectPath, 'project-log.md'),
+            heading: `### 2026-11-07 · structural · oat gate review · ${scope}`,
+            created: false,
+          };
+        },
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          let content = await convergenceFixture(current);
+          for (const key of [
+            'oat_gate_run_id',
+            'oat_gate_target',
+            'oat_gate_runtime',
+            'oat_invocation_model',
+            'oat_invocation_reasoning_effort',
+            'oat_invocation_source',
+          ]) {
+            const value = lastExecutePrompt.match(
+              new RegExp(`^${key}: (.+)$`, 'm'),
+            )?.[1];
+            content = content.replace(
+              new RegExp(`^${key}: .+$`, 'm'),
+              `${key}: ${value ?? 'unknown'}`,
+            );
+          }
+          await writeFile(
+            join(root, projectPath, 'reviews', current),
+            extra.edit ? extra.edit(content) : content,
+            'utf8',
+          );
+        },
+      });
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        appendProjectLog,
+        parseReviewGateVerdict,
+        computeGateConvergence: extra.computeGateConvergence,
+        writeDiagnostic: extra.writeDiagnostic,
+        args: ['--target', 'codex-default', '--review-scope', scope, 'Review'],
+        globalArgs: extra.globalArgs,
+      });
+      expect(appendProjectLog).toHaveBeenCalledTimes(1);
+      return {
+        payload: capture.jsonPayloads[0] as Record<string, unknown>,
+        body: bodies[0] ?? '',
+        capture,
+      };
+    }
+
+    it('links the captured m02 exit-gate runs as one milestone sequence', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(root, 'm02-exit-r1-range-review-2026-11-03T215601Z.md');
+
+      const second = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+      );
+      expect(second.payload).toMatchObject({
+        status: 'ok',
+        counts: { critical: 0, high: 0, medium: 1, low: 0 },
+        convergence: {
+          sequence: {
+            reviewType: 'code',
+            subject: { kind: 'milestone', value: 'm02' },
+            run: 2,
+            previousRun: {
+              runId: '93e1b0a1-9b04-4c31-9aa2-e032b9820a9d',
+              artifactPath: `${projectPath}/reviews/archived/m02-exit-r1-range-review-2026-11-03T215601Z.md`,
+              generatedAt: '2026-11-03T21:56:01Z',
+            },
+          },
+          status: 'compared',
+          counts: { new: 1, carriedOver: 0, resolved: 2 },
+          findings: [
+            {
+              id: 'M1',
+              mark: 'new',
+              location: 'packages/cli/src/commands/review/pending.ts:329',
+            },
+          ],
+          resolved: [{ id: 'M1' }, { id: 'M2' }],
+        },
+      });
+      expect(second.body).toContain(
+        ' convergence=new:1,carried:0,resolved:2 sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1 run=',
+      );
+      expect(process.exitCode).toBe(0);
+
+      await rm(
+        join(
+          root,
+          projectPath,
+          'reviews',
+          'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        ),
+      );
+      await archive(root, 'm02-exit-r2-range-review-2026-11-03T224623Z.md');
+      const third = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r3-range-review-2026-11-04T015726Z.md',
+        'p07-p-rev3',
+      );
+      expect(third.payload).toMatchObject({
+        status: 'ok',
+        convergence: {
+          sequence: {
+            subject: { kind: 'milestone', value: 'm02' },
+            run: 3,
+            previousRun: { runId: 'd738cd0e-5795-48ef-a387-e3ec184f90e5' },
+          },
+          status: 'compared',
+          counts: { new: 0, carriedOver: 0, resolved: 1 },
+          findings: [],
+        },
+      });
+      expect(third.body).toContain(
+        ' convergence=new:0,carried:0,resolved:1 sequence=milestone:m02 sequence_run=3 previous_run=d738cd0e run=',
+      );
+    });
+
+    it('reports convergence on a post-selection recovered result', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(root, 'm02-exit-r1-range-review-2026-11-03T215601Z.md');
+      const transient = createTransientPostSelectionParse();
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+        transient.parse,
+      );
+      expect(payload).toMatchObject({
+        status: 'ok',
+        postSelectionRecovery: true,
+        convergence: {
+          sequence: { subject: { kind: 'milestone', value: 'm02' }, run: 2 },
+          status: 'compared',
+          counts: { new: 1, carriedOver: 0, resolved: 2 },
+        },
+      });
+      expect(body).toContain(
+        ' convergence=new:1,carried:0,resolved:2 sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1 run=',
+      );
+    });
+
+    // A count-line-only artifact: the reviewer's count line stays and the
+    // finding records are gone, so its records cannot cover its counts. The
+    // gate parses with missing-section normalization, which refuses such an
+    // artifact, so through the gate it surfaces as unparsable (previous run)
+    // or as a failed validation (current run), never as an all-new comparison.
+    // `convergence.test.ts` covers the `findingsComplete` branches of the
+    // module API, whose `parsePrevious` may accept such a run.
+    const countLineOnly = (content: string): string =>
+      content.slice(0, content.indexOf('\n## Findings') + 1);
+
+    it('never compares against a previous run whose records do not cover its counts', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(
+        root,
+        'm02-exit-r1-range-review-2026-11-03T215601Z.md',
+        countLineOnly,
+      );
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+      );
+      expect(payload).toMatchObject({
+        status: 'ok',
+        counts: { critical: 0, high: 0, medium: 1, low: 0 },
+        convergence: {
+          sequence: { run: 2 },
+          status: 'unavailable',
+          reason: 'previous_artifact_unparsable',
+        },
+      });
+      expect(payload.convergence).not.toHaveProperty('counts');
+      expect(payload.convergence).not.toHaveProperty('findings');
+      expect(body).toContain(
+        ' convergence=unavailable:previous_artifact_unparsable sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1 run=',
+      );
+    });
+
+    it('computes no convergence for a current run the gate does not validate', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(root, 'm02-exit-r1-range-review-2026-11-03T215601Z.md');
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+        undefined,
+        { edit: countLineOnly },
+      );
+      expect(payload).toMatchObject({ status: 'artifact_validation_failed' });
+      expect(payload).not.toHaveProperty('convergence');
+      expect(body).not.toContain('convergence=');
+    });
+
+    it('emits a diagnostic and an unchanged result when earlier runs cannot be read', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(root, 'm02-exit-r1-range-review-2026-11-03T215601Z.md');
+      const diagnostics: string[] = [];
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+        undefined,
+        {
+          computeGateConvergence: async () => {
+            throw new Error('reviews directory unreadable');
+          },
+          writeDiagnostic: (message) => diagnostics.push(message),
+        },
+      );
+      expect(payload).toMatchObject({
+        status: 'ok',
+        counts: { critical: 0, high: 0, medium: 1, low: 0 },
+        receiveEligible: true,
+      });
+      expect(payload).not.toHaveProperty('convergence');
+      expect(body).not.toContain('convergence=');
+      const convergenceDiagnostics = diagnostics
+        .map((line) => JSON.parse(line) as Record<string, unknown>)
+        .filter((entry) => entry.type === 'gate-convergence-unavailable');
+      expect(convergenceDiagnostics).toEqual([
+        {
+          type: 'gate-convergence-unavailable',
+          runId: payload.runId,
+          project: projectPath,
+          message: 'reviews directory unreadable',
+        },
+      ]);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('warns in human mode when earlier runs cannot be read', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+
+      const { capture, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+        undefined,
+        {
+          computeGateConvergence: async () => {
+            throw new Error('reviews directory unreadable');
+          },
+          globalArgs: [],
+        },
+      );
+      expect(capture.warn).toContain(
+        'Warning: gate convergence could not be computed: reviews directory unreadable. Gate result is unchanged.',
+      );
+      expect(body).not.toContain('convergence=');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports a stuck rerun with every finding carried over', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(root, 'm02-exit-r1-range-review-2026-11-03T215601Z.md');
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r1-stuck-rerun.md',
+        'p07-p13',
+      );
+      expect(payload).toMatchObject({
+        convergence: {
+          sequence: { run: 2 },
+          status: 'compared',
+          counts: { new: 0, carriedOver: 2, resolved: 0 },
+          findings: [
+            {
+              id: 'M1',
+              mark: 'carried_over',
+              previous: {
+                runId: '93e1b0a1-9b04-4c31-9aa2-e032b9820a9d',
+                id: 'M1',
+                severity: 'medium',
+              },
+            },
+            { id: 'M2', mark: 'carried_over', previous: { id: 'M2' } },
+          ],
+          resolved: [],
+        },
+      });
+      expect(body).toContain('convergence=new:0,carried:2,resolved:0');
+    });
+
+    it('carries over a reworded finding at the same location and severity', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(root, 'm02-exit-r1-range-review-2026-11-03T215601Z.md');
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r1-reworded-rerun.md',
+        'p07-p13',
+      );
+      expect(payload).toMatchObject({
+        convergence: {
+          status: 'compared',
+          counts: { new: 0, carriedOver: 2, resolved: 0 },
+          findings: [
+            { id: 'M1', mark: 'carried_over', previous: { id: 'M1' } },
+            {
+              id: 'M2',
+              title:
+                'Status still runs review ancestry in the nested tracking checkout',
+              mark: 'carried_over',
+              previous: { id: 'M2' },
+            },
+          ],
+        },
+      });
+      expect(body).toContain('convergence=new:0,carried:2,resolved:0');
+    });
+
+    it('leaves a first run without convergence fields or log tokens', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r1-range-review-2026-11-03T215601Z.md',
+        'p07-p13',
+      );
+      expect(payload).toMatchObject({
+        status: 'ok',
+        counts: { critical: 0, high: 0, medium: 2, low: 0 },
+      });
+      expect(payload).not.toHaveProperty('convergence');
+      expect(body).not.toMatch(/convergence=|sequence=|previous_run=/);
+      expect(body).toMatch(
+        /^target=codex-default threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=\S+ run=\S+$/,
+      );
+    });
+
+    it('does not link runs of another subject or outside goal mode', async () => {
+      const single = await setup();
+      await writeGoalProject(single.root);
+      // A single-phase gate on p07 is its own scope sequence, not m02's.
+      await archive(
+        single.root,
+        'm02-exit-r1-range-review-2026-11-03T215601Z.md',
+        (content) =>
+          content
+            .replace(/^oat_review_scope: .+$/m, 'oat_review_scope: p07')
+            .replace(
+              /^oat_review_phase_ids: .+$/m,
+              'oat_review_phase_ids: [p07]',
+            ),
+      );
+      const scoped = await runConvergenceGate(
+        single.root,
+        single.home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+      );
+      expect(scoped.payload).not.toHaveProperty('convergence');
+
+      const quick = await setup();
+      await writeGoalProject(quick.root, 'quick');
+      await archive(
+        quick.root,
+        'm02-exit-r1-range-review-2026-11-03T215601Z.md',
+      );
+      const nonGoal = await runConvergenceGate(
+        quick.root,
+        quick.home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+      );
+      expect(nonGoal.payload).not.toHaveProperty('convergence');
+      expect(nonGoal.body).not.toContain('convergence=');
+    });
+
+    it('reports an unparsable previous run as unavailable and leaves the verdict unchanged', async () => {
+      const { root, home } = await setup();
+      await writeGoalProject(root);
+      await archive(
+        root,
+        'm02-exit-r1-range-review-2026-11-03T215601Z.md',
+        (content) =>
+          content.replace(
+            'Findings by severity: 0 critical, 0 high, 2 medium, 0 low',
+            'Findings by severity: 0 critical, 0 high, 5 medium, 0 low',
+          ),
+      );
+
+      const { payload, body } = await runConvergenceGate(
+        root,
+        home,
+        'm02-exit-r2-range-review-2026-11-03T224623Z.md',
+        'p07-p-rev2',
+      );
+      expect(payload).toMatchObject({
+        status: 'ok',
+        counts: { critical: 0, high: 0, medium: 1, low: 0 },
+        convergence: {
+          sequence: { run: 2 },
+          status: 'unavailable',
+          reason: 'previous_artifact_unparsable',
+        },
+      });
+      expect(
+        (payload.convergence as Record<string, unknown>).counts,
+      ).toBeUndefined();
+      expect(body).toContain(
+        ' convergence=unavailable:previous_artifact_unparsable sequence=milestone:m02 sequence_run=2 previous_run=93e1b0a1 run=',
+      );
+      expect(process.exitCode).toBe(0);
+    });
   });
 });

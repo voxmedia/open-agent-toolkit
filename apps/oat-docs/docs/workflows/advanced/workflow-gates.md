@@ -103,6 +103,19 @@ in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
 
+### Goal milestone exit scope
+
+In a goal milestone closeout, the configured implement exit gate runs
+unchanged with `--review-scope final`. When its prompt explicitly asks to
+select review scope from project state, the goal is still `active` and no
+recovery is pending, the reviewer resolves the `final` hint to the active
+milestone's ordered accepted phases (a single phase or the matching contiguous
+phase range) instead of the whole project, so an earlier milestone that was
+squash-merged does not make the gate refuse on its phase anchors. The artifact
+records the original `final` hint, the selected scope and the exact phase set.
+An explicit whole-project `code final` request, and a state-selected `final`
+after the goal is declared met, keep the whole-project meaning.
+
 ### Goal recovery scope
 
 For a goal project's recovery exit, a gate prompt that explicitly asks to
@@ -671,6 +684,119 @@ oat --json gate review \
 Read the resulting envelope and exit code; that is the whole completion
 contract.
 
+### Convergence across a gate sequence
+
+A gate sequence is the successive runs of one configured gate on one subject,
+reruns after fixes included. For every `ok` or `blocked` run after the first in
+its sequence, the result carries an additive `convergence` object that marks
+each of this run's findings `new` or `carried_over` relative to the previous
+run, and counts the previous run's findings that no longer appear as resolved.
+The first run of a sequence carries no `convergence` field. The gate never
+rewrites the reviewer's artifact.
+
+The subject depends on the run:
+
+| Run                                                                                                                                                                                                            | Subject                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Goal project, `code` review whose scope or requested scope (`oat_review_requested_scope`) is `final` or whose artifact names more than one phase, all of them in one milestone of `plan.md`'s Milestones table | That milestone (`milestone:m02`), whatever scope token the run used |
+| Goal project, `artifact` review on scope `plan`                                                                                                                                                                | The plan amendment: the plan approvals recorded before this run     |
+| Every other run, and every run outside goal mode                                                                                                                                                               | The review scope (`scope:p03`)                                      |
+
+A plan run's approvals come from records that survive a re-approval of the same
+milestone. Each `**Brief approved:**` or `**Milestone mNN approved:**` line under
+the brief's `## Delivery endpoint and authority` is one approval. It is timed by
+the `oat_milestone_gates.<m>.plan` carrier's `decided_at` while that carrier
+still names the approved commit. Otherwise only the line's date is known, and it
+is read as that whole day in any time zone. A run that falls inside such a day
+cannot be placed in an amendment: it reports as a first run, and no later run
+links to it. A carrier that no approval line names also counts as an approval.
+Only an approved carrier (`status: allowed`) counts; a blocked carrier is never
+an approval.
+
+Runs are linked through records that already exist; no new store is written.
+The earlier runs are the project's gate-run review artifacts, in `reviews/` and
+`reviews/archived/`, that carry `oat_review_invocation: gate`, a gate run ID and
+a valid `oat_generated_at`, were written before this run, and have the same
+review type and subject. The latest of them is the previous run and the only
+run compared. The gate target is not part of the identity. Review artifacts are
+local-only, so a checkout that lacks the earlier artifacts reports a first run.
+
+Findings are matched by the stable finding key,
+`<location>::<title>`. The location is the reviewer's location without a
+trailing line reference (`:430`, `:534-544`, `#L10-L20`), lower-cased. The title
+drops the advisory `(bookkeeping)` mark and is lower-cased with every run of
+characters other than letters and digits collapsed to one space. Reviewer IDs
+and severity are not part of the key. Matching runs in two passes and never
+merges findings:
+
+1. A current and a previous finding with the same key match when that key
+   occurs once among each run's unmatched findings.
+2. A reworded finding matches a remaining previous finding with the same
+   location and severity, when that pair occurs once on each side and the
+   rewording is corroborated. The two titles must share at least two words of
+   three or more characters. Common words such as `the` or `with` do not count,
+   and neither does any word containing a digit, such as a phase or task ID
+   (`p08`, `t04`) or a number.
+   When both locations give a line, the lines must be at most 20 apart. Sharing
+   a file is never enough on its own. A finding without a location never
+   matches in this pass.
+
+Everything left over is `new` (current) or resolved (previous).
+
+```json
+"convergence": {
+  "sequence": {
+    "reviewType": "code",
+    "subject": { "kind": "milestone", "value": "m02" },
+    "run": 2,
+    "previousRun": {
+      "runId": "93e1b0a1-…",
+      "artifactPath": "….md",
+      "generatedAt": "2026-11-03T21:56:01Z"
+    }
+  },
+  "status": "compared",
+  "counts": { "new": 1, "carriedOver": 0, "resolved": 2 },
+  "findings": [
+    {
+      "id": "M1",
+      "severity": "medium",
+      "title": "…",
+      "location": "…",
+      "key": "…",
+      "mark": "new"
+    }
+  ],
+  "resolved": [{ "id": "M1", "severity": "medium", "title": "…", "location": "…", "key": "…" }]
+}
+```
+
+A carried-over finding also carries `previous: { runId, id, severity }`.
+`subject.kind` is `milestone`, `plan-amendment` (with `amendmentAfter`, the
+commit the latest earlier plan approval approved, or `null`), or `scope`.
+
+When the previous run's artifact no longer parses, `status` is `unavailable`
+with `reason: previous_artifact_unparsable` and no counts. The gate parses
+earlier runs the way it validates its own, so an earlier run whose finding
+records do not cover its counts (a count-line-only artifact, for example) is
+also reported as `previous_artifact_unparsable`. A current run like that fails
+validation before convergence runs. The reasons `previous_findings_incomplete`
+and `findings_incomplete` come only from callers of the convergence API that
+supply a more lenient parser; `oat gate review` does not emit them. When the
+earlier runs cannot be read at all, the gate emits a
+`gate-convergence-unavailable` diagnostic and returns the result without
+`convergence`. Convergence never changes `status`, `blocking`,
+`receiveEligible`, or `handoff`.
+
+When a gate loop exhausts its attempts, the exhaustion stop and the
+[complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
+read these marks for each run of the loop, from the result or from the run's
+project-log entry. A run without marks is reported as such, never as zero
+counts.
+
+The gate's project-log record of the run carries the same counts. See
+[Project Log](../projects/execution/project-log.md).
+
 ### Project log finalization
 
 After the envelope is written, the gate appends one structural entry to the
@@ -679,6 +805,12 @@ worktree for whatever executes next. The entry body ends with
 `run=<runId>` — the same run id the envelope carries. That token is the entry's
 stable identity: a retry or a later recovery recognizes the entry it already
 wrote instead of appending a second one.
+For a run after the first in its
+[gate sequence](#convergence-across-a-gate-sequence), the body adds
+`convergence=new:N,carried:N,resolved:N sequence=<kind>:<value> sequence_run=N previous_run=<prefix>`
+before `run=`, or `convergence=unavailable:<reason>` when the runs cannot be
+compared. The previous run is named by the first eight characters of its run
+ID, never the whole ID, so the entry never reads as that run's own entry.
 
 Staging and committing the log retries **three attempts** separated by two
 waits (250 ms, then 500 ms) when, and only when, git itself reports index-lock
@@ -1071,10 +1203,20 @@ the project's tracking files and records the review `passed` with a note. The
 gate counts as satisfied (`allowed`/`passed`), no attempt is counted, and the
 gate is not relaunched. The receipt keeps the raw verdict and counts.
 
+Receive also records one [class](../projects/reviews/index.md#finding-classes-at-receive)
+per finding. A finding no contract source requires reaches the operator before
+any remediation work exists for it; under `OAT_AUTONOMOUS=1` a Critical or High
+one stops the run and a Medium or Low one is recorded `awaiting operator`
+without a stop. The gate's status, `onFailure` policy and attempt count are
+unchanged by that routing and by the operator's decision: a rejected or
+deferred blocking finding leaves the gate blocked until `maxAttempts`.
+
 When `block` still fails after `maxAttempts`, the implementation exit gate and
 the quick-start plan gate run a
 [complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
-before escalating, and show it with the accumulated feedback. The operator
+before escalating, and show it with the accumulated feedback. The stop reasons
+include each run's new, carried-over and resolved counts from its
+[convergence](#convergence-across-a-gate-sequence) marks. The operator
 chooses how to proceed, including **simplify**; agents never choose for them.
 
 `cross-provider-exec` does fallback only before dispatch, while selecting an

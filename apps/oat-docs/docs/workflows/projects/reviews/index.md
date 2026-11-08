@@ -442,6 +442,61 @@ Under `OAT_AUTONOMOUS=1` the rule applies without a stop. A bookkeeping repair
 never infers task or phase completion, waives a HiLL checkpoint, grants an
 approval, or accepts an unresolved Critical finding.
 
+## Finding classes at receive
+
+Every project review and gate receive records one class for each finding
+before it creates a fix task, an artifact edit or a deferral for it:
+
+| Class                  | Applies when                                                               | Recorded with       |
+| ---------------------- | -------------------------------------------------------------------------- | ------------------- |
+| `bookkeeping`          | The finding meets the [bookkeeping definition](#bookkeeping-only-findings) | -                   |
+| `regression`           | The reviewed change broke behavior that worked before it                   | What broke          |
+| `accepted-requirement` | A contract source requires what the finding asks for                       | The contract source |
+| `new-hardening`        | No contract source requires it                                             | -                   |
+
+When more than one class fits, the first in that order wins. Contract sources
+are the project's requirement artifacts (`discovery.md`, `spec.md`,
+`design.md`, the imported plan, and the requirement sections of `plan.md` in
+lite, brief and goal modes), the approved plan's tasks or phase blocks for a
+code review, the backlog items the project closes, decision records, and the
+applicable `AGENTS.md` instructions. A reviewed artifact never cites itself.
+
+The classes are one line in the receipt the path already writes, beside its
+`**Findings:**` line. No Reviews column or status is added:
+
+```markdown
+**Finding classes:** H1 accepted-requirement (spec.md FR3) · M1 regression (first-run gate envelope) · M2 new-hardening · L1 bookkeeping
+```
+
+**Routing.** Only a `bookkeeping` or `regression` finding, or an
+`accepted-requirement` finding that names its source, becomes fix work. A
+`new-hardening` finding, an `accepted-requirement` with no source, or an
+unclassified finding goes to the operator first, who accepts it as a
+requirement, defers it, or rejects it. No receive mode decides it by default.
+Under `OAT_AUTONOMOUS=1` the run records the class and creates no fix work for
+the finding, and its severity decides the rest:
+
+- A Critical or High finding stops the run. The receive's bookkeeping is
+  committed and the run stops at a product-judgment boundary
+  (`REVIEWRECEIVE-10`, or `IMPLEMENT-21` for a per-phase review round).
+- A Medium or Low finding does not stop the run. Its entry in the classes line
+  ends with `, awaiting operator`, and the run lists it at its next stop or in
+  its boundary report.
+
+Routing changes no count, severity, verdict, review-cycle count or gate
+attempt, and adds no allowance: a blocking gate stays blocked under its
+`onFailure` policy. The operator's decision does not change them either. A
+rejected or deferred Critical or High finding leaves the pass rule unmet, so
+the run continues through the existing retry limit and exhaustion stop; only
+accepting it as a requirement makes it fix work.
+
+It applies on the same paths as the bookkeeping rule above: review-receive in
+every mode, the per-phase review round, the optional phase gate, the final
+review, the implementation and goal milestone exit gates, the plan
+artifact-review loop, and the lifecycle gates of the planning skills. The
+definition lives beside the bookkeeping definition in
+`.agents/docs/bookkeeping-findings.md`.
+
 ## Complexity review at budget exhaustion
 
 When a review or gate budget runs out, another round of the same review is
@@ -481,8 +536,11 @@ How it runs:
   `Deletion-rule compliant`, `Partially compliant`, or `Not compliant`.
 - **Read-only reviewer.** One reviewer-class subagent at the resolved reviewer
   ceiling reads the reviewed target, the contract sources (backlog items,
-  discovery, spec, design, and decision records), and every review artifact of
-  the exhausted loop. It writes nothing and returns its report to the root.
+  discovery, spec, design, and decision records), every review artifact of
+  the exhausted loop, the [classes](#finding-classes-at-receive) its receipts
+  recorded, and, for a gate loop, each run's
+  [convergence](../../advanced/workflow-gates.md#convergence-across-a-gate-sequence)
+  counts. It writes nothing and returns its report to the root.
   Outside an implement run (quick-start, or a standalone review-receive), the
   root loads the project dispatch skills and resolves the reviewer ceiling with
   `oat project dispatch-ceiling resolve --role reviewer`.
@@ -490,10 +548,10 @@ How it runs:
   than every review artifact of that scope is reused, so re-entering a capped
   receive does not dispatch a second review.
 - **OAT additions.** The report marks rows only the operator can settle as
-  `REQUIRES-OPERATOR`, classifies each open finding as an accepted
-  requirement, a regression, or new hardening, lists the findings a
-  simplification would dissolve, and recommends a disposition: extra cycles,
-  proceed with override, corrective revision, or **simplify**.
+  `REQUIRES-OPERATOR`, carries over the class each open finding's receipt
+  recorded (classifying only a finding no receipt classified), lists the
+  findings a simplification would dissolve, and recommends a disposition:
+  extra cycles, proceed with override, corrective revision, or **simplify**.
 - **Decision message.** The root saves the report as
   `reviews/archived/complexity-<scope>-<timestamp>.md` (outside the top-level
   `reviews/` directory, so routers never mistake it for an unprocessed review,

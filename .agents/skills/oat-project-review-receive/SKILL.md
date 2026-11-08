@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.16
+  version: 1.6.17
 ---
 
 # Receive Review
@@ -303,6 +303,10 @@ For each finding, build a structured register entry:
 - ID, severity, title, file/line (if available)
 - Reviewer finding (issue + suggested fix)
 - Agent analysis (agree/disagree + why)
+- Class: exactly one of `bookkeeping`, `regression` (naming what broke),
+  `accepted-requirement` (citing its contract source) or `new-hardening`,
+  under the "Finding classes at receive" section of
+  `references/docs/bookkeeping-findings.md`
 - Recommendation (convert to task now vs defer with rationale)
 - Task Scope (`Large` | `Moderate` | `Minor` | `Negligible`)
 - Drift disposition, when applicable:
@@ -349,6 +353,7 @@ Critical Findings:
 - `{ID}` `{title}` (`{file}:{line}` if known)
   - Reviewer finding: {issue + reviewer fix guidance}
   - Finding analysis: {why you agree/disagree; practical risk if not fixed}
+  - Class: {bookkeeping | regression ({what broke}) | accepted-requirement ({contract source}) | new-hardening}
   - Recommendation: {convert_to_task | defer_with_rationale}
   - Task Scope: {Large | Moderate | Minor | Negligible}
 
@@ -368,6 +373,7 @@ Rules:
 - Keep each analysis concise and decision-oriented.
 - Use finding IDs in every section and in every later user choice prompt.
 - Every finding must include exactly one `Task Scope` line using: `Large`, `Moderate`, `Minor`, or `Negligible`.
+- Every finding must include exactly one `Class` line. A finding that Step 2.6 routes to the operator says so in place of a conversion recommendation.
 - Scope meaning:
   - `Large`: likely multi-file or cross-module behavior change
   - `Moderate`: bounded implementation in one area with some verification breadth
@@ -421,6 +427,28 @@ them, as the artifact bullet below requires; the branch removes only the
 re-review. A result with any finding that is not bookkeeping skips this mode
 entirely and follows the modes below for every finding, the bookkeeping ones
 included.
+
+**Finding classes and operator routing (every result, every mode).** Record
+one class per finding under the "Finding classes at receive" section of
+`references/docs/bookkeeping-findings.md`: `bookkeeping`, `regression`,
+`accepted-requirement` citing its contract source, or `new-hardening`. A
+bookkeeping-only result records every finding as `bookkeeping`. In every mode
+below, a finding becomes fix work (a fix task, an execution record or an
+artifact edit) only when that section's routing sends it there. A
+`new-hardening` finding, an `accepted-requirement` that cites no source, or a
+finding with no recorded class reaches the operator before any fix work, edit
+or deferral exists for it; the auto-disposition and judgment-sweep defaults
+never decide it. The operator accepts it as a requirement, defers it or
+rejects it. Under `OAT_AUTONOMOUS=1` (`REVIEWRECEIVE-10`), create no fix work
+for it. When such a finding is Critical or High, finish and commit the receive
+bookkeeping (Steps 7 to 7.6) and stop at a `product-judgment` boundary that
+lists each such finding with its missing source. A Medium or Low one does not
+stop the run: record its entry `awaiting operator`, continue with the result's
+other findings, and list it in the Step 11 summary and at the run's next stop
+or in its boundary report. Routing changes no count, severity, verdict, status
+rule, review-cycle count or gate attempt, and neither does the operator's
+decision: a rejected or deferred Critical or High finding leaves the pass rule
+unmet, so the existing cycle cap and exhaustion stop apply.
 
 - If `oat_review_type == artifact`:
   - Present findings and proposed artifact edits/dispositions to the user first.
@@ -619,6 +647,11 @@ edit and appends the exact files at their producers, including removals and
 both rename sides. Carry that task-owned list and stable request/task identity
 into its Commit step; never infer ownership from the staged index.
 
+Only findings that Step 2.6's class routing sends to fix work become tasks. A
+finding routed to the operator gets no task until the operator accepts it as a
+requirement, after which its receipt entry reads `accepted-requirement` citing
+that decision.
+
 **For each Critical, High, and Medium finding (default):**
 
 Create a plan task entry:
@@ -785,6 +818,7 @@ path is never a completion defect):
 **Review artifact (local-only):** reviews/archived/$REVIEW_FILENAME
 
 **Findings:** Critical {N} · High {N} · Medium {N} · Low {N}
+**Finding classes:** {finding_id} {class} ({contract source | what broke}) · {finding_id} {class} · …
 
 - {finding_id} ({severity}): {one-line substance} → {disposition: fix task {task_id} | approved deferral (see Deferred Findings) | rejected | accepted drift}; {rationale}
 
@@ -797,6 +831,15 @@ path is never a completion defect):
 
 Each approved deferral is also one line under `## Deferred Findings`, and each
 fix task is a plan task whose journal block lands in its phase as usual.
+
+The `**Finding classes:**` line follows the shared definition's record format:
+one entry per finding, in finding-ID order, separated by `·`. A finding
+routed to the operator records the operator's decision as its disposition
+(`operator: accepted as a requirement`, `operator: deferred` or
+`operator: rejected`, with the operator's reason), or `awaiting operator` when
+the operator has not decided it yet: the run stopped at the `REVIEWRECEIVE-10`
+boundary, or, for a Medium or Low finding under autonomy, the run continued and
+the finding's `**Finding classes:**` entry ends with `, awaiting operator`.
 
 After the fix tasks are complete:
 
@@ -1102,6 +1145,8 @@ Actions taken:
 - Deferred/accepted Medium findings: {N}
 - Low findings dispositioned: {N} converted (default), {N} deferred-with-rationale (explicit user decision required for final scope)
 - Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
+- Finding classes: {ID -> class (citation)}
+- Routed to the operator: {IDs and classes, each `awaiting operator` or with its decision, or none}
 
 Review cycle: {N} of 3
 
@@ -1128,6 +1173,8 @@ Actions taken:
 - Archived review artifact to `reviews/archived/$REVIEW_FILENAME`
 - No plan tasks created
 - Finding disposition map: {ID -> resolve_in_artifact|rejected_with_rationale|needs_user_direction}
+- Finding classes: {ID -> class (citation)}
+- Routed to the operator: {IDs and classes, each `awaiting operator` or with its decision, or none}
 
 Next: {re-review artifact or continue phase, per user choice}
 ```
@@ -1153,6 +1200,8 @@ This prevents reviewing already-approved code and focuses the reviewer on just t
 - Active review artifact located and read
 - Findings parsed and categorized
 - Findings overview + per-finding analysis presented to user before disposition choices
+- One class recorded per finding (`bookkeeping`, `regression`, `accepted-requirement` with its contract source, or `new-hardening`) in the receipt's `**Finding classes:**` line
+- No fix task, edit or deferral for a finding routed to the operator until the operator decides it
 - Fix tasks created for Critical/High/Medium findings by default
 - A bookkeeping-only result settled at receive instead: one fix commit, a note per finding, the review `passed` with `bookkeeping-only fixes applied at receive`, no reviewer dispatch, no review cycle, and no gate attempt
 - Plan.md updated with new tasks
