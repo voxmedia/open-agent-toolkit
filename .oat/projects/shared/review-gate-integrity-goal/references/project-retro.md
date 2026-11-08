@@ -116,12 +116,12 @@ merging.
 
 ## Current State
 
-- **Promotions:** `partial`. RP-01 and RP-02 are `applied` (AGENTS.md);
-  RP-03 and RP-04 are `proposed`.
+- **Promotions:** `partial`. RP-01 through RP-03 are `applied` (AGENTS.md);
+  RP-04 is `proposed`.
 - **Filing:** `proposed`. UP-01 through UP-03 are `proposed` with no
   destination.
 - **Unsettled items:**
-  - RP-03 and RP-04: apply.
+  - RP-04: apply.
   - UP-01 through UP-03: file through `oat-project-retro-file`.
 
 ## What Went Well
@@ -378,9 +378,9 @@ same cause:
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** AGENTS.md
-- **Applied-ref:** —
+- **Applied-ref:** AGENTS.md
 - **Disposition-note:** —
 
 **Problem.** m03 added hardening phases (p08, p14) at re-alignment without the

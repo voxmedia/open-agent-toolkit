@@ -290,6 +290,11 @@ safeguards. Do not silently expand scope for theoretical robustness, flexibility
 or scale. Ordinary regression tests and required checks still apply, as do
 established correctness, security, and durability requirements.
 
+A goal re-alignment or brief amendment that adds or widens a phase is a
+planning change under this rule. Its proposal names the observed incident each
+new or widened phase addresses, and its estimated size, before the operator is
+asked to approve it.
+
 ### Workflow Mode Change Inventory
 
 Treat a workflow-mode change as a cross-surface compatibility change. Before
