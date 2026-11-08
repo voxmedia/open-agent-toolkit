@@ -400,7 +400,8 @@ Disposition of findings (`BRIEF-09`):
 - Each finding carries the class the shared loop records under
   `references/docs/bookkeeping-findings.md`. A finding no contract source
   requires (`new-hardening`) is a material finding: it goes back to the user
-  before any edit, and under autonomy the loop stops.
+  before any edit. Under autonomy a Critical or High one stops the loop, and a
+  Medium or Low one is recorded `awaiting operator` with no edit.
 - When every finding is bookkeeping under
   `references/docs/bookkeeping-findings.md`, the shared loop's bookkeeping-only
   branch applies: one tracking-file commit, a note per finding, the `plan` row
@@ -481,11 +482,13 @@ review ...` without the global `--json` placement. Reusable declarations
    unchanged.
 
    Review-receive records one class per finding of the gate result, in its
-   Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it routes to
-   the operator (`new-hardening`, or an `accepted-requirement` that cites no
-   source) gets no remediation edit until the operator decides it; under
-   `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10`. The `onFailure`
-   policy and the attempt count apply to the result unchanged.
+   Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it
+   routes to the operator (`new-hardening`, or an `accepted-requirement` that
+   cites no source) gets no remediation edit until the operator decides it;
+   under `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10` for a Critical
+   or High one and records a Medium or Low one `awaiting operator` without
+   stopping. The `onFailure` policy and the attempt count apply to the result
+   unchanged, whatever the operator decides.
 
 Operational, validation, targeting, launch, and receive failures never inherit
 `onFailure` continuation semantics.

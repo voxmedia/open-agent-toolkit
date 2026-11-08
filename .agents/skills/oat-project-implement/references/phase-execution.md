@@ -964,8 +964,13 @@ High finding routes to the operator (a `new-hardening` finding, an
 class), dispatch no fix child for the round until the operator decides it;
 under `OAT_AUTONOMOUS=1` (`IMPLEMENT-21`), commit the receipt and stop at a
 `product-judgment` boundary. A Medium or Low finding routed there gets no fix
-task or deferral until the operator decides it. The retry limit, the pass rule
-and the review-cycle cap are unchanged.
+task or deferral until the operator decides it, and it does not stop the run:
+in an autonomous run its receipt entry ends with `, awaiting operator`, and the
+root lists it at the run's next stop or in its boundary report. The retry
+limit, the pass rule and the review-cycle cap are unchanged. A Critical or High
+finding the operator rejects or defers still fails the pass rule, so the round
+continues through the retry limit to the exhaustion stop below; only accepting
+it as a requirement gives the fix child work.
 
 On Critical/High findings:
 
@@ -1046,9 +1051,12 @@ mismatch instead of selecting the newest review.
 
 Receive records one class per finding of an `ok` or `blocked` result, in its
 Step 2.6. Only findings it routes to fix work go to the phase implementer; a
-finding it routes to the operator holds the gate's fix round until the
-operator decides it (`REVIEWRECEIVE-10` under autonomy). The gate verdict and
-the gate retry limit apply as before.
+Critical or High finding it routes to the operator holds the gate's fix round
+until the operator decides it (`REVIEWRECEIVE-10` under autonomy), and a
+routed Medium or Low gets no fix work and is recorded `awaiting operator`
+under autonomy without stopping the run. The gate verdict and the gate retry
+limit apply as before: a rejected or deferred blocking finding leaves the gate
+blocked, so the gate's retry limit and exhaustion stop apply.
 
 The phase row stays `in_progress` until this gate passes and every review
 disposition is settled; the bookkeeping that records the passing gate sets it

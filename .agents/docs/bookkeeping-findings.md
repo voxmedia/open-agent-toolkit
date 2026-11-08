@@ -190,15 +190,31 @@ any other), defer it (one `## Deferred Findings` line that names the
 operator), or reject it (recorded with the operator's reason). No receive mode
 decides such a finding by its own defaults. In an interactive run the receiver
 puts the question to the operator before creating fix work for it. Under
-`OAT_AUTONOMOUS=1`, or with no operator channel, the receiver records the class,
-creates no fix work for that finding, commits the receive's bookkeeping and
-stops at a `product-judgment` boundary that lists each such finding with its
-missing source; the operator's decision is recorded on resume. The result's
-other findings follow their path unchanged.
+`OAT_AUTONOMOUS=1`, or with no operator channel, the receiver records the class
+and creates no fix work for that finding; what happens next depends on its
+severity:
+
+- **Critical or High:** the run stops. The receiver commits the receive's
+  bookkeeping and stops at a `product-judgment` boundary that lists each such
+  finding with its missing source.
+- **Medium or Low:** the run does not stop. The finding's entry in the
+  `**Finding classes:**` line ends with `, awaiting operator` (for example
+  `L2 new-hardening, awaiting operator`), it gets no fix task, edit or
+  deferral, and the run lists it at its next stop or in its boundary report.
+
+The operator's decision is recorded when it is made, on resume or at that
+report; the classes line is never rewritten. The result's other findings
+follow their path unchanged.
 
 Routing a finding to the operator changes no count, severity, verdict,
 Reviews status rule, review-cycle count or gate attempt, and adds no
 allowance: a blocking gate stays blocked, and its `onFailure` policy and
-attempt count apply to the result as before. When a review or gate budget runs
-out, the complexity review in `complexity-review-fallback.md` starts from these
-recorded classes.
+attempt count apply to the result as before. Nor does the operator's decision
+change them. Rejecting or deferring a Critical or High finding leaves the
+review's pass rule unmet and a blocking gate blocked, so the run continues
+through the path's existing retry limit and exhaustion stop, where the
+operator decides the disposition (for example `proceed with override`); only
+accepting it as a requirement makes it fix work.
+
+When a review or gate budget runs out, the complexity review in
+`complexity-review-fallback.md` starts from these recorded classes.

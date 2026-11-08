@@ -521,7 +521,9 @@ round or a gate rerun
 
 The root records one class per finding of every review round before it
 dispatches a fix child. A Critical or High finding that no contract source
-requires holds the round for the operator
+requires holds the round for the operator; a Medium or Low one gets no fix
+work and, under `OAT_AUTONOMOUS=1`, is recorded `awaiting operator` and listed
+at the run's next stop or in its boundary report
 ([Finding classes at receive](../reviews/index.md#finding-classes-at-receive)).
 
 ## Parallel Phase Groups

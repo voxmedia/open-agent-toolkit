@@ -473,11 +473,22 @@ The classes are one line in the receipt the path already writes, beside its
 `new-hardening` finding, an `accepted-requirement` with no source, or an
 unclassified finding goes to the operator first, who accepts it as a
 requirement, defers it, or rejects it. No receive mode decides it by default.
-Under `OAT_AUTONOMOUS=1` the run records the class, commits the receive's
-bookkeeping and stops at a product-judgment boundary (`REVIEWRECEIVE-10`, or
-`IMPLEMENT-21` for a per-phase review round). Routing changes no count,
-severity, verdict, review-cycle count or gate attempt, and adds no allowance: a
-blocking gate stays blocked under its `onFailure` policy.
+Under `OAT_AUTONOMOUS=1` the run records the class and creates no fix work for
+the finding, and its severity decides the rest:
+
+- A Critical or High finding stops the run. The receive's bookkeeping is
+  committed and the run stops at a product-judgment boundary
+  (`REVIEWRECEIVE-10`, or `IMPLEMENT-21` for a per-phase review round).
+- A Medium or Low finding does not stop the run. Its entry in the classes line
+  ends with `, awaiting operator`, and the run lists it at its next stop or in
+  its boundary report.
+
+Routing changes no count, severity, verdict, review-cycle count or gate
+attempt, and adds no allowance: a blocking gate stays blocked under its
+`onFailure` policy. The operator's decision does not change them either. A
+rejected or deferred Critical or High finding leaves the pass rule unmet, so
+the run continues through the existing retry limit and exhaustion stop; only
+accepting it as a requirement makes it fix work.
 
 It applies on the same paths as the bookkeeping rule above: review-receive in
 every mode, the per-phase review round, the optional phase gate, the final

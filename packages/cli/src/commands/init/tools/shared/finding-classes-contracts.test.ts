@@ -154,13 +154,29 @@ describe('shared finding classes (p14)', () => {
       'No receive mode decides such a finding by its own defaults.',
     );
     expect(classes).toContain(
-      "Under `OAT_AUTONOMOUS=1`, or with no operator channel, the receiver records the class, creates no fix work for that finding, commits the receive's bookkeeping and stops at a `product-judgment` boundary",
+      'Under `OAT_AUTONOMOUS=1`, or with no operator channel, the receiver records the class and creates no fix work for that finding; what happens next depends on its severity:',
     );
+  });
+
+  it('stops an autonomous run only for an uncited Critical or High finding (operator decision, 2026-11-08)', () => {
+    expect(classes).toContain(
+      "- **Critical or High:** the run stops. The receiver commits the receive's bookkeeping and stops at a `product-judgment` boundary that lists each such finding with its missing source.",
+    );
+    expect(classes).toContain(
+      "- **Medium or Low:** the run does not stop. The finding's entry in the `**Finding classes:**` line ends with `, awaiting operator` (for example `L2 new-hardening, awaiting operator`), it gets no fix task, edit or deferral, and the run lists it at its next stop or in its boundary report.",
+    );
+    expect(classes).toContain('the classes line is never rewritten.');
   });
 
   it('adds no allowance and leaves counts, verdicts, cycles and gate attempts unchanged', () => {
     expect(classes).toContain(
       'Routing a finding to the operator changes no count, severity, verdict, Reviews status rule, review-cycle count or gate attempt, and adds no allowance: a blocking gate stays blocked, and its `onFailure` policy and attempt count apply to the result as before.',
+    );
+  });
+
+  it('leaves the pass rule unmet after a rejected or deferred blocking finding', () => {
+    expect(classes).toContain(
+      "Nor does the operator's decision change them. Rejecting or deferring a Critical or High finding leaves the review's pass rule unmet and a blocking gate blocked, so the run continues through the path's existing retry limit and exhaustion stop, where the operator decides the disposition (for example `proceed with override`); only accepting it as a requirement makes it fix work.",
     );
   });
 });
@@ -245,10 +261,13 @@ describe('review-receive records classes and routes to the operator (p14)', () =
       'A `new-hardening` finding, an `accepted-requirement` that cites no source, or a finding with no recorded class reaches the operator before any fix work, edit or deferral exists for it; the auto-disposition and judgment-sweep defaults never decide it.',
     );
     expect(step26).toContain(
-      'Under `OAT_AUTONOMOUS=1` (`REVIEWRECEIVE-10`), create no fix work for it, finish and commit the receive bookkeeping (Steps 7 to 7.6), and stop at a `product-judgment` boundary',
+      'Under `OAT_AUTONOMOUS=1` (`REVIEWRECEIVE-10`), create no fix work for it. When such a finding is Critical or High, finish and commit the receive bookkeeping (Steps 7 to 7.6) and stop at a `product-judgment` boundary',
     );
     expect(step26).toContain(
-      'Routing changes no count, severity, verdict, status rule, review-cycle count or gate attempt.',
+      "A Medium or Low one does not stop the run: record its entry `awaiting operator`, continue with the result's other findings, and list it in the Step 11 summary and at the run's next stop or in its boundary report.",
+    );
+    expect(step26).toContain(
+      "Routing changes no count, severity, verdict, status rule, review-cycle count or gate attempt, and neither does the operator's decision: a rejected or deferred Critical or High finding leaves the pass rule unmet, so the existing cycle cap and exhaustion stop apply.",
     );
   });
 
@@ -275,7 +294,7 @@ describe('review-receive records classes and routes to the operator (p14)', () =
       '**Findings:** Critical {N} · High {N} · Medium {N} · Low {N}\n**Finding classes:** {finding_id} {class} ({contract source | what broke}) · {finding_id} {class} · …',
     );
     expect(normalize(step7)).toContain(
-      "A finding routed to the operator records the operator's decision as its disposition (`operator: accepted as a requirement`, `operator: deferred` or `operator: rejected`, with the operator's reason), or `awaiting operator` when the run stopped at the `REVIEWRECEIVE-10` boundary.",
+      "A finding routed to the operator records the operator's decision as its disposition (`operator: accepted as a requirement`, `operator: deferred` or `operator: rejected`, with the operator's reason), or `awaiting operator` when the operator has not decided it yet: the run stopped at the `REVIEWRECEIVE-10` boundary, or, for a Medium or Low finding under autonomy, the run continued and the finding's `**Finding classes:**` entry ends with `, awaiting operator`.",
     );
   });
 
@@ -289,18 +308,40 @@ describe('review-receive records classes and routes to the operator (p14)', () =
       step11.split('- Finding classes: {ID -> class (citation)}'),
     ).toHaveLength(3);
     expect(
-      step11.split('- Routed to the operator: {IDs and classes, or none}'),
+      step11.split(
+        '- Routed to the operator: {IDs and classes, each `awaiting operator` or with its decision, or none}',
+      ),
     ).toHaveLength(3);
   });
 
-  it('REVIEWRECEIVE-10 stops at a product-judgment boundary', () => {
+  it('REVIEWRECEIVE-10 stops only for a Critical or High finding at a product-judgment boundary', () => {
     const row = autonomyRow(readRepoFile(AUTONOMY), 'REVIEWRECEIVE-10');
     expect(row).toContain('Finding routed to the operator');
     expect(row).toContain('Accept as a requirement, defer, or reject');
     expect(row).toContain(
       'create no fix task, edit or deferral for a `new-hardening` finding, an `accepted-requirement` that cites no source, or an unclassified finding',
     );
+    expect(row).toContain(
+      'for a Critical or High one, commit the receive bookkeeping and stop, listing each such finding with its missing source; a Medium or Low one does not stop the run: record it `awaiting operator` and list it at the next stop or boundary report; a rejected or deferred Critical or High one leaves the pass rule unmet;',
+    );
     expect(row).toContain('`boundary:product-judgment`');
+  });
+
+  it.each([
+    [
+      'REVIEWRECEIVE-03',
+      'Convert valid fix-routed findings to fix tasks (`REVIEWRECEIVE-10` decides the rest);',
+    ],
+    [
+      'REVIEWRECEIVE-04',
+      'Default to conversion of fix-routed findings only (`REVIEWRECEIVE-10`);',
+    ],
+    [
+      'REVIEWRECEIVE-05',
+      'Convert in-scope fix-routed Lows by default (`REVIEWRECEIVE-10` decides the rest);',
+    ],
+  ])('%s converts only fix-routed findings by default', (id, clause) => {
+    expect(autonomyRow(readRepoFile(AUTONOMY), id)).toContain(clause);
   });
 });
 
@@ -330,7 +371,13 @@ describe('implement review and gate paths record classes (p14)', () => {
       'dispatch no fix child for the round until the operator decides it; under `OAT_AUTONOMOUS=1` (`IMPLEMENT-21`), commit the receipt and stop at a `product-judgment` boundary.',
     );
     expect(loop).toContain(
+      "A Medium or Low finding routed there gets no fix task or deferral until the operator decides it, and it does not stop the run: in an autonomous run its receipt entry ends with `, awaiting operator`, and the root lists it at the run's next stop or in its boundary report.",
+    );
+    expect(loop).toContain(
       'The retry limit, the pass rule and the review-cycle cap are unchanged.',
+    );
+    expect(loop).toContain(
+      'A Critical or High finding the operator rejects or defers still fails the pass rule, so the round continues through the retry limit to the exhaustion stop below; only accepting it as a requirement gives the fix child work.',
     );
   });
 
@@ -343,7 +390,7 @@ describe('implement review and gate paths record classes (p14)', () => {
       ),
     );
     expect(gate).toContain(
-      "Only findings it routes to fix work go to the phase implementer; a finding it routes to the operator holds the gate's fix round until the operator decides it (`REVIEWRECEIVE-10` under autonomy). The gate verdict and the gate retry limit apply as before.",
+      "Only findings it routes to fix work go to the phase implementer; a Critical or High finding it routes to the operator holds the gate's fix round until the operator decides it (`REVIEWRECEIVE-10` under autonomy), and a routed Medium or Low gets no fix work and is recorded `awaiting operator` under autonomy without stopping the run. The gate verdict and the gate retry limit apply as before: a rejected or deferred blocking finding leaves the gate blocked, so the gate's retry limit and exhaustion stop apply.",
     );
   });
 
@@ -369,7 +416,7 @@ describe('implement review and gate paths record classes (p14)', () => {
       ),
     );
     expect(step13).toContain(
-      "A finding it routes to the operator gets no fix task, and the run stops at receive's `REVIEWRECEIVE-10` boundary until the operator decides it.",
+      "A finding it routes to the operator gets no fix task. For a Critical or High one, the run stops at receive's `REVIEWRECEIVE-10` boundary until the operator decides it; a Medium or Low one is recorded `awaiting operator`, the run continues, and the finding is listed at the run's next stop or in its boundary report.",
     );
     expect(step13).toContain(
       'a finding no contract source requires reaches the operator before any fix task exists for it',
@@ -385,7 +432,10 @@ describe('implement review and gate paths record classes (p14)', () => {
       ),
     );
     expect(step14).toContain(
-      'A finding it routes to the operator gets no remediation work until the operator decides it. That routing changes no envelope status, `on_failure` policy or `attempts_completed`; an attempt is consumed only as the `block` rule below states.',
+      'A finding it routes to the operator gets no remediation work until the operator decides it (a Medium or Low one is recorded `awaiting operator` under autonomy without a stop). That routing changes no envelope status, `on_failure` policy or `attempts_completed`; an attempt is consumed only as the `block` rule below states.',
+    );
+    expect(step14).toContain(
+      "Neither does the operator's decision: a rejected or deferred blocking finding leaves the outcome `block`, so `maxAttempts` and the exhaustion stop apply.",
     );
   });
 
@@ -407,6 +457,9 @@ describe('implement review and gate paths record classes (p14)', () => {
     expect(row).toContain('Phase review finding for the operator');
     expect(row).toContain(
       'dispatch no fix child for a round whose Critical or High finding is `new-hardening`, an `accepted-requirement` that cites no source, or unclassified',
+    );
+    expect(row).toContain(
+      'a routed Medium or Low gets no fix task and no stop: record it `awaiting operator` and list it at the next stop or boundary report; a rejected or deferred Critical or High one leaves the pass rule unmet;',
     );
     expect(row).toContain('`boundary:product-judgment`');
   });
@@ -431,7 +484,7 @@ describe('planning review and gate paths record classes (p14)', () => {
         readRepoFile(`.agents/skills/${skill}/SKILL.md`),
       );
       const paragraph =
-        'Review-receive records one class per finding of the gate result, in its Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it routes to the operator (`new-hardening`, or an `accepted-requirement` that cites no source) gets no remediation edit until the operator decides it; under `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10`. The `onFailure` policy and the attempt count apply to the result unchanged.';
+        'Review-receive records one class per finding of the gate result, in its Step 2.6 under `references/docs/bookkeeping-findings.md`. A finding it routes to the operator (`new-hardening`, or an `accepted-requirement` that cites no source) gets no remediation edit until the operator decides it; under `OAT_AUTONOMOUS=1` receive stops at `REVIEWRECEIVE-10` for a Critical or High one and records a Medium or Low one `awaiting operator` without stopping. The `onFailure` policy and the attempt count apply to the result unchanged, whatever the operator decides.';
       expect(content).toContain(paragraph);
       // Beside the bookkeeping-only settlement, inside Gate Execution.
       expect(content.indexOf(paragraph)).toBeGreaterThan(
@@ -454,7 +507,7 @@ describe('planning review and gate paths record classes (p14)', () => {
       '- Finding classes (`plan` target, every result): before applying or offering any fix, record one class per finding under the "Finding classes at receive" section of `references/docs/bookkeeping-findings.md`. The bullets below apply only to findings that section routes to fix work.',
     );
     expect(loop).toContain(
-      'is never applied as a Critical or High default fix or offered as a routine Medium or Low edit: it goes to the operator before any edit for it, and under `OAT_AUTONOMOUS=1` the loop stops at a `product-judgment` boundary.',
+      'is never applied as a Critical or High default fix or offered as a routine Medium or Low edit: it goes to the operator before any edit for it. Under `OAT_AUTONOMOUS=1` a Critical or High one stops the loop at a `product-judgment` boundary, and a Medium or Low one is recorded `awaiting operator` with no edit and the loop continues.',
     );
     expect(loop).toContain('A reviewed plan is never its own contract source.');
   });
@@ -479,7 +532,7 @@ describe('planning review and gate paths record classes (p14)', () => {
         readRepoFile(`.agents/skills/${skill}/SKILL.md`),
       );
       expect(content).toMatch(
-        /a finding no contract source requires \(`new-hardening`\) (is a material finding: it goes back to the user before any edit|is a material finding that goes back to the user before any edit), and under autonomy the loop stops\./i,
+        /a finding no contract source requires \(`new-hardening`\) (is a material finding: it goes back to the user before any edit|is a material finding that goes back to the user before any edit)\. Under autonomy a Critical or High one stops the loop, and a Medium or Low one is recorded `awaiting operator` with no edit\./i,
       );
     },
   );
@@ -499,11 +552,11 @@ describe('planning review and gate paths record classes (p14)', () => {
   });
 
   it.each(['QS-11', 'LITE-08', 'BRIEF-09', 'GOAL-09', 'PLAN-09', 'IMPORT-08'])(
-    '%s stops an operator-routed artifact-review finding at product-judgment',
+    '%s stops only an operator-routed Critical or High artifact-review finding',
     (id) => {
       const row = autonomyRow(readRepoFile(AUTONOMY), id);
       expect(row).toContain(
-        'a finding routed to the operator under `bookkeeping-findings.md` (`new-hardening`, or an `accepted-requirement` that cites no source) stops before any edit for it',
+        'a Critical or High finding routed to the operator under `bookkeeping-findings.md` (`new-hardening`, or an `accepted-requirement` that cites no source) stops before any edit for it; a routed Medium or Low gets no edit, is recorded `awaiting operator` and is listed at the next stop or boundary report',
       );
       expect(row).toContain('`boundary:product-judgment`');
     },

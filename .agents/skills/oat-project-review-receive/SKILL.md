@@ -440,10 +440,15 @@ finding with no recorded class reaches the operator before any fix work, edit
 or deferral exists for it; the auto-disposition and judgment-sweep defaults
 never decide it. The operator accepts it as a requirement, defers it or
 rejects it. Under `OAT_AUTONOMOUS=1` (`REVIEWRECEIVE-10`), create no fix work
-for it, finish and commit the receive bookkeeping (Steps 7 to 7.6), and stop at
-a `product-judgment` boundary that lists each such finding with its missing
-source. Routing changes no count, severity, verdict, status rule, review-cycle
-count or gate attempt.
+for it. When such a finding is Critical or High, finish and commit the receive
+bookkeeping (Steps 7 to 7.6) and stop at a `product-judgment` boundary that
+lists each such finding with its missing source. A Medium or Low one does not
+stop the run: record its entry `awaiting operator`, continue with the result's
+other findings, and list it in the Step 11 summary and at the run's next stop
+or in its boundary report. Routing changes no count, severity, verdict, status
+rule, review-cycle count or gate attempt, and neither does the operator's
+decision: a rejected or deferred Critical or High finding leaves the pass rule
+unmet, so the existing cycle cap and exhaustion stop apply.
 
 - If `oat_review_type == artifact`:
   - Present findings and proposed artifact edits/dispositions to the user first.
@@ -832,7 +837,9 @@ one entry per finding, in finding-ID order, separated by `·`. A finding
 routed to the operator records the operator's decision as its disposition
 (`operator: accepted as a requirement`, `operator: deferred` or
 `operator: rejected`, with the operator's reason), or `awaiting operator` when
-the run stopped at the `REVIEWRECEIVE-10` boundary.
+the operator has not decided it yet: the run stopped at the `REVIEWRECEIVE-10`
+boundary, or, for a Medium or Low finding under autonomy, the run continued and
+the finding's `**Finding classes:**` entry ends with `, awaiting operator`.
 
 After the fix tasks are complete:
 
@@ -1139,7 +1146,7 @@ Actions taken:
 - Low findings dispositioned: {N} converted (default), {N} deferred-with-rationale (explicit user decision required for final scope)
 - Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
 - Finding classes: {ID -> class (citation)}
-- Routed to the operator: {IDs and classes, or none}
+- Routed to the operator: {IDs and classes, each `awaiting operator` or with its decision, or none}
 
 Review cycle: {N} of 3
 
@@ -1167,7 +1174,7 @@ Actions taken:
 - No plan tasks created
 - Finding disposition map: {ID -> resolve_in_artifact|rejected_with_rationale|needs_user_direction}
 - Finding classes: {ID -> class (citation)}
-- Routed to the operator: {IDs and classes, or none}
+- Routed to the operator: {IDs and classes, each `awaiting operator` or with its decision, or none}
 
 Next: {re-review artifact or continue phase, per user choice}
 ```

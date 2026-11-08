@@ -331,8 +331,10 @@ remembered review or receive outcome does not satisfy this step.
 - If receive creates fix tasks, return through the normal bounded implement and
   re-review loop.
 - Receive records one class per finding (its Step 2.6). A finding it routes to
-  the operator gets no fix task, and the run stops at receive's
-  `REVIEWRECEIVE-10` boundary until the operator decides it.
+  the operator gets no fix task. For a Critical or High one, the run stops at
+  receive's `REVIEWRECEIVE-10` boundary until the operator decides it; a
+  Medium or Low one is recorded `awaiting operator`, the run continues, and the
+  finding is listed at the run's next stop or in its boundary report.
 - A bookkeeping-only result (review-receive Step 2.6, under
   `references/docs/bookkeeping-findings.md`) creates no fix tasks and records
   the final Reviews row `passed` with the note
@@ -717,9 +719,12 @@ disposition.
   goes stale and follows the stale-generation rule.
 - Receive records one class per finding of an `ok` or `blocked` envelope
   (review-receive Step 2.6). A finding it routes to the operator gets no
-  remediation work until the operator decides it. That routing changes no
-  envelope status, `on_failure` policy or `attempts_completed`; an attempt is
-  consumed only as the `block` rule below states.
+  remediation work until the operator decides it (a Medium or Low one is
+  recorded `awaiting operator` under autonomy without a stop). That routing
+  changes no envelope status, `on_failure` policy or `attempts_completed`; an
+  attempt is consumed only as the `block` rule below states. Neither does the
+  operator's decision: a rejected or deferred blocking finding leaves the
+  outcome `block`, so `maxAttempts` and the exhaustion stop apply.
 - `block` outcomes consume remediation attempts only after a valid configured
   gate result and its eligible receive disposition are durably processed.
   Increment `attempts_completed` before remediation/rerun. Below

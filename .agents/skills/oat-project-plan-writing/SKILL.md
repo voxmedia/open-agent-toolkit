@@ -560,10 +560,11 @@ Use this loop after an artifact has been written and before the calling skill ha
      finding it routes to the operator (`new-hardening`, or an
      `accepted-requirement` that cites no source) is never applied as a
      Critical or High default fix or offered as a routine Medium or Low edit:
-     it goes to the operator before any edit for it, and under
-     `OAT_AUTONOMOUS=1` the loop stops at a `product-judgment` boundary. A
-     reviewed plan is never its own contract source. The retry bound is
-     unchanged.
+     it goes to the operator before any edit for it. Under
+     `OAT_AUTONOMOUS=1` a Critical or High one stops the loop at a
+     `product-judgment` boundary, and a Medium or Low one is recorded
+     `awaiting operator` with no edit and the loop continues. A reviewed plan
+     is never its own contract source. The retry bound is unchanged.
    - Apply Critical and High fixes by default when they are local to the reviewed artifact and the fix is unambiguous.
    - Offer Medium and Low fixes to the user instead of applying them silently.
    - If a finding cannot be fixed within the artifact boundary, preserve it as residual and surface it before handoff.

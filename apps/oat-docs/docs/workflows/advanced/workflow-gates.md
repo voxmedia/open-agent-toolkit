@@ -1190,8 +1190,11 @@ gate is not relaunched. The receipt keeps the raw verdict and counts.
 
 Receive also records one [class](../projects/reviews/index.md#finding-classes-at-receive)
 per finding. A finding no contract source requires reaches the operator before
-any remediation work exists for it; the gate's status, `onFailure` policy and
-attempt count are unchanged by that routing.
+any remediation work exists for it; under `OAT_AUTONOMOUS=1` a Critical or High
+one stops the run and a Medium or Low one is recorded `awaiting operator`
+without a stop. The gate's status, `onFailure` policy and attempt count are
+unchanged by that routing and by the operator's decision: a rejected or
+deferred blocking finding leaves the gate blocked until `maxAttempts`.
 
 When `block` still fails after `maxAttempts`, the implementation exit gate and
 the quick-start plan gate run a

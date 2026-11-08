@@ -86,8 +86,10 @@ finding is bookkeeping spends no review-fix round and no gate attempt, and is
 settled without a stop
 ([Bookkeeping-only findings](../projects/reviews/index.md#bookkeeping-only-findings)).
 A finding that no contract source requires is the opposite case: receive
-records it as `new-hardening`, creates no fix work for it, and the run stops at
-a product-judgment boundary
+records it as `new-hardening` and creates no fix work for it. A Critical or
+High one stops the run at a product-judgment boundary; a Medium or Low one is
+recorded `awaiting operator`, and the run continues and lists it at its next
+stop or in its boundary report
 ([Finding classes at receive](../projects/reviews/index.md#finding-classes-at-receive)).
 
 Kickoff also names the applicable owning hard stops: recovery eligibility or
