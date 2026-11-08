@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p10    | completed | 1     | 1/1      |
-| p11    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p12    | completed | 1     | 1/1      |
-| p13    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p08    | completed | 1     | 1/1      |
-| p14    | pending   | 1     | 0/1      |
-| p15    | pending   | 1     | 0/1      |
-| p16    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p10    | completed   | 1     | 1/1      |
+| p11    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p12    | completed   | 1     | 1/1      |
+| p13    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p08    | completed   | 1     | 1/1      |
+| p14    | in_progress | 1     | 0/1      |
+| p15    | pending     | 1     | 0/1      |
+| p16    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 11/15 phases accepted
 
@@ -2337,7 +2337,13 @@ Scope: `241b12a95..dc43fa5b9`, fix delta `174be01c4..dc43fa5b9` (p08-t07), fresh
 
 ## Phase p14: Finding classification at receive
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 1ebb004cb49edd8772797e50d3fdb55b1b3935e5
+**Executor:** phase-implementer:rgi-p14-impl-20261108-01
+
+Phase start 2026-11-08, m03, on worktree `goal-review-gate-integrity` (branch `goal/review-gate-integrity-m03`); the phase implementer is the committing owner. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`). No root fan-out, because the class vocabulary, the new-hardening routing and the complexity-review fallback's input are one contract shared by every receive path in the inventory: no two slices are independent. The work changes skill contracts across several receive paths and settles open routing design, so the inline exception does not apply. One phase implementer, `oat-phase-implementer-claude-claude-opus-5-5-high`, classed hard-reasoning. Phase recovery: default limit 10, no p14 override, 0 attempts used, no pending attempt. Review-fix retry limit 2 (default). `git fetch origin main` showed no main commits since the merge base `9da04ef1c`.
+
+**Scope note (operator, 2026-11-08):** Outcome 5 says the convergence marks and the recorded classes "both feed the existing exhaustion stop and complexity review", and no phase's exit evidence covered the convergence half. The operator assigned it to p14 as a journal scope note, without amending `plan.md`: p14 also makes the existing exhaustion stop and the complexity review read the convergence marks that p08 records (the gate result's `convergence` field and the record's convergence tokens) when a gate sequence has them. Added exit check: a contract test pins that the complexity-review fallback starts from the recorded classes and, for gate rounds, the convergence counts of the exhausted loop's runs. Outcome 5's limit holds: no authorization record or extra-cycle allowance is added.
 
 ## Phase p15: Goal milestone exit gate scope
 
