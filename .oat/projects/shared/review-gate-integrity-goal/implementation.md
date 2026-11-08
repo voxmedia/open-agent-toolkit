@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p10    | completed   | 1     | 1/1      |
-| p11    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p12    | completed   | 1     | 1/1      |
-| p13    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p08    | in_progress | 1     | 0/1      |
-| p14    | pending     | 1     | 0/1      |
-| p15    | pending     | 1     | 0/1      |
-| p16    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p10    | completed | 1     | 1/1      |
+| p11    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p12    | completed | 1     | 1/1      |
+| p13    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p14    | pending   | 1     | 0/1      |
+| p15    | pending   | 1     | 0/1      |
+| p16    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 10/15 phases accepted
+**Total:** 11/15 phases accepted
 
 ---
 
@@ -1947,7 +1947,7 @@ Scope: `08a2dc6d5..edc4b4eee` (p-rev3-t03), fresh `oat-reviewer-claude-claude-op
 
 ## Phase p08: Gate convergence visibility and classification reporting
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 241b12a95bc3022ce8e4f8589699f90e31d22417
 **Executor:** phase-implementer:rgi-p08-impl-20261107-01
 **Head:** dc43fa5b93a85ede751ba1df052239fc099eef25
@@ -2294,6 +2294,47 @@ Verification:
 
 `pnpm test:evidence` was not rerun, because only these three files changed.
 
+### Review Received: p08
+
+**Date:** 2026-11-07
+**Review artifact (local-only):** reviews/archived/p08-review-2026-11-07T233955Z.md
+
+**Findings:** Critical 0 · High 1 · Medium 2 · Low 1
+
+Scope: `241b12a95..9eebbd39c` (p08-t01 to p08-t03), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p08-rev-20261107-01`, reconnaissance not attempted). Every finding is a gap in an accepted requirement (Outcome 5, p08 exit evidence), none bookkeeping-only, so the bounded fix loop ran (round 1 of 2) on the original handle (`rgi-p08-fix-20261107-01`).
+
+- H1 (High): plan-gate runs from different amendments shared one sequence because re-approval overwrites `oat_milestone_gates.<m>.plan.decided_at`, and the p08-t02 record wrongly claimed that grouping was validated → fix task p08-t04 (amendments bounded by every recorded plan approval; journal correction line appended).
+- M1 (Medium): the location-plus-severity pass merged unrelated same-file, same-severity findings → fix task p08-t05 (corroboration required).
+- M2 (Medium): the `findingsComplete` guard and the `gate-convergence-unavailable` path had no failing test → fix task p08-t06.
+- L1 (Low): Deferred Findings lacked closure lines for the items p08 closed → fixed in p08-t06's record (append-only closure entry).
+
+**Outcome:** fixes queued: p08-t04, p08-t05, p08-t06; completed (head `d23563aee`); re-reviewed in round 2
+
+### Review Received: p08 (re-review of p08-t04 to p08-t06)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p08-review-2026-11-08T001015Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Scope: `241b12a95..d23563aee`, fix delta `a2afa719c..d23563aee`, fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p08-rev-20261107-02`, reconnaissance not attempted). Round-1 H1, M1, M2 and L1 resolved, reproduced against this project's real records (m01 and m02 exit sequences unchanged; six guards proved able to fail). Verdict pass.
+
+- L1 (Low): title corroboration counted digit-bearing tokens, so two unrelated findings sharing a phase ID and one word still carried over; a remaining gap in Outcome 5's "never silently merged" → fix task p08-t07.
+- L2 (Low): `workflow-gates.md` named convergence reasons the gate path cannot emit (Definition of Done docs clause) → fix task p08-t07.
+
+**Outcome:** fixes queued: p08-t07 (`rgi-p08-fix-20261107-02`, after a passing round; no retry round consumed); completed (head `dc43fa5b9`); re-reviewed in round 3
+
+### Review Received: p08 (re-review of p08-t07)
+
+**Date:** 2026-11-08
+**Review artifact (local-only):** reviews/archived/p08-review-2026-11-08T002049Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Scope: `241b12a95..dc43fa5b9`, fix delta `174be01c4..dc43fa5b9` (p08-t07), fresh `oat-reviewer-claude-claude-opus-5-5-high` (request `rgi-p08-rev-20261107-03`, reconnaissance not attempted). Round-2 L1 and L2 resolved: the counterexample is `new`, m02 fixtures and real m01/m02 sequences unchanged, the digit filter proved able to fail, and dropping digit words fails safe (only to `new`). Reviewer observation, not a finding: titles differing only by an ID in the same file, severity and line still pair as one carried-over finding; blocking that would be a new requirement and was not adopted.
+
+**Outcome:** passed; p08 accepted at head `dc43fa5b9` after three review cycles (fix loop: one blocking round, retry 1 of 2)
+
 ## Phase p14: Finding classification at receive
 
 **Status:** pending
@@ -2367,6 +2408,9 @@ Verification:
 - run/v1 · request=rgi-p08-impl-20261107-01 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p08-rev-20261107-01 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=rgi-p08-fix-20261107-01 · scope=p08-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p08-impl-20261107-01 · observed=~ · match=~
+- run/v1 · request=rgi-p08-rev-20261107-02 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p08-fix-20261107-02 · scope=p08-fix · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=rgi-p08-impl-20261107-01 · observed=~ · match=~
+- run/v1 · request=rgi-p08-rev-20261107-03 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
