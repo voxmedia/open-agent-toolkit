@@ -302,6 +302,10 @@ p16 accepted (m02 review-ledger follow-ups, Outcome 4 upkeep): one review cycle,
 
 Review .oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-08T051752Z.md used one awaited intelligent-recon wave (gpt-6.1-terra medium); root reconciled its observations and independently reproduced 2 Medium convergence defects. 10ed9157-p14-recon-1
 
+### 2026-11-08 · structural · oat gate review · p08-p16
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-08T051752Z.md run=10ed9157-0fdf-4981-b9b1-1ca3dffc673f
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
