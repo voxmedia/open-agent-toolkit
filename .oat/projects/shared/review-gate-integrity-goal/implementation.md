@@ -2634,10 +2634,10 @@ Scope: `d4f00d2ee..a7e16e0a1` (p15-t01, p15-t02), fresh `oat-reviewer-claude-cla
 
 ## Phase p16: m02 review-ledger follow-ups
 
-**Status:** in_progress
+**Status:** completed
 **Base:** e6975c460ce4622330e660f6cf4af4fcc54f5dc5
 **Executor:** phase-implementer:rgi-p16-impl-20261108-01
-**Head:** b538b09ea910171a766846d520cfba274b1be3a7
+**Head:** e638186b0d71109e2cfd5e526278816819d9f616
 
 Verification at the head: `pnpm check`, `pnpm type-check`, `pnpm test` (all test tasks executed; CLI 9635/9635), `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions` (after `git fetch origin main`), `pnpm release:validate`, `pnpm build:docs` and the docs-index regeneration plus `git diff --exit-code` all exit 0. `pnpm build` and `pnpm build:docs` replayed builds that ran fresh earlier in the same sequence. CLI and skill contract suites 1260/1260. `oat project journal check --at review --scope p16` passed. No skill changed, so no skill bump.
 
