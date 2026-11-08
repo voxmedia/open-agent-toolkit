@@ -2599,6 +2599,25 @@ Known Unknown decision (no Outcome, Constraint, Decision or Approach changes): a
 
 Guard-can-fail (one mutation per pinned clause, inside `scripts/with-isolated-home.sh`, `vitest -t <test>` on `goal-exit-scope-contracts.test.ts`): removing `` `oat_goal_status` is `active`; `` / the argv sentence / the `declared_met` clause / `Read the active milestone (`oat_milestone`)` / `or widen it to the whole project` / `so earlier milestones' anchors are not read` / `the exact milestone set in `oat_review_phase_ids``(SKILL.md, searched from the hint heading) and`With no recovery pending`(closeout) each turned its test red (exit 1, 1 failed); each file was restored and`cmp`matched; both files'`shasum -c` matched the pre-run hashes; the restored suite passed 8/8. Proof suites: 31 files, 1262 tests, exit 0 (direct vitest, no Turborepo cache).
 
+### Task p15-t02: Corroborating squash-merge probe for the milestone exit hint
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p15-impl-20261108-01
+**Handle:** direct:rgi-p15-impl-20261108-01:p15-t02
+**Intent:** One probe, inside one `scripts/with-isolated-home.sh` invocation, that installs the branch build's skills and the released CLI's skills into separate isolated HOMEs and runs each installed review-provide Step 3.0 anchor resolver (no model dispatched) on a goal fixture whose m01 was squash-merged: the branch rule resolves the state-selected `final` to m02's phases and prints the hint and set; the released install refuses; an explicit `code final` still expands to the whole project.
+**Files:** `.oat/projects/shared/review-gate-integrity-goal/references/probes/p15-goal-exit-scope-probe.sh` (new)
+**Proof command:** `bash scripts/with-isolated-home.sh bash .oat/projects/shared/review-gate-integrity-goal/references/probes/p15-goal-exit-scope-probe.sh`
+**Commit:** b0c2bafb6e5913ae15a7d923d9d7e00f4da6f950
+
+Run after `pnpm --filter @open-agent-toolkit/cli build` (branch CLI 0.3.47, bundled review-provide 1.5.19) with the released `oat` 0.3.46 on PATH; exit 0. The fixture squash-merges m01 (p01, p02) into `main` and builds m02 (p03, p04) on the squash commit; the branch CLI's `project status` reports `goal=active recovery=none milestone=m02 members=p03,p04`. Output (SHAs vary per run):
+
+- `branch install: state-selected hint=final -> token=p03-p04`
+- `branch state-selected: scope=p03-p04 phase_ids=p03,p04 verdict=accepted` and `resolved set equals milestone m02 set (p03,p04)`
+- `branch explicit code final: scope=final phase_ids=p01,p02,p03,p04 verdict=reconcile` (still the whole project; the squash makes it refuse, as before p15)
+- negative control `released install: state-selected hint=final -> token=final` then `released state-selected: scope=final phase_ids=p01,p02,p03,p04 verdict=reconcile reason="sequential continuity: p03 base does not equal or descend from the previous head"`, the m02 incident's refusal.
+
+No model is dispatched: the probe runs each installed skill's Step 3.0 resolver verbatim and applies that install's Step 1 token selection, so the artifact recording (`oat_review_requested_scope: final`, scope token, `oat_review_phase_ids`) is evidenced by the p15-t01 contract tests.
+
 ## Phase p16: m02 review-ledger follow-ups
 
 **Status:** pending
