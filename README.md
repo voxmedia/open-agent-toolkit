@@ -13,9 +13,9 @@ Start with the part that solves your problem; combine others when useful:
 
 Provider sync does not require project workflows. Standalone skills do not require an active OAT project; project-specific skills state their prerequisites in their guides.
 
-<img alt="Four independent starting points: Provider Sync, Reusable Skills, Workflows and Docs Tooling. Terminal commands use explicit project or user scope; agent skills appear separately as /name." src=".github/assets/readme/adoption-light.svg">
+<img alt="Skills, agents and rules in .agents/ flow through oat sync to provider views; optional tool packs and tracked projects work on their own or together" src=".github/assets/readme/oat-at-a-glance.svg">
 
-The image shows terminal commands and agent skills separately. Invoke `/name` in slash-based agents or `$name` in Codex, not in a shell. Project scope targets repository assets; the core pack, when installed, is user-only. New tracked projects default to synced scope, which stores project files on a separate Git ref and pushes that ref to your `origin` remote, so they require an `origin` Git remote; choose local project storage if you do not want remote-backed project state.
+You edit canonical skills, agents, and rules once; `oat sync` writes each coding tool's view, and some tools read `.agents/` directly. Tool packs and tracked projects are optional. Pack skills run inside your coding agent: invoke `/name` in slash-based agents or `$name` in Codex, not in a shell. Packs install at project scope (this repository) or user scope (your home directory); the core pack, when installed, is user-only. New tracked projects default to synced scope, which stores project files on a separate Git ref and pushes that ref to your `origin` remote, so they require an `origin` Git remote; choose local project storage if you do not want remote-backed project state.
 
 ## First Success: Inspect a Repository
 

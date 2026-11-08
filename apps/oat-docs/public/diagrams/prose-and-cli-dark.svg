@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 404" width="720" height="404" role="img" aria-labelledby="pc-title pc-desc">
+  <title id="pc-title">Skills decide, the CLI enforces</title>
+  <desc id="pc-desc">Skills decide: discovery depth, design choices and review findings. Skills call the oat CLI, which enforces the contract instead of skills hand-parsing state. The CLI reads project state as JSON with oat project status, runs boundary checks that refuse an invalid plan, journal or closeout, and writes the records it owns: the project log, decisions and the completed state. A dashed branch: when oat is missing, autonomous and cloud runs restore oat or stop, never approximating state or transitions.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .o { fill: var(--optional); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="pc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="pc-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="404" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- SKILL -> CLI -->
+    <path class="edge" d="M 190 116 L 190 179" marker-end="url(#pc-arrow)"/>
+    <!-- CLI trunk -->
+    <path class="edge" d="M 190 248 L 190 276"/>
+    <!-- CLI -> READ -->
+    <path class="edge" d="M 190 276 L 132 276 Q 124 276 124 284 L 124 303" marker-end="url(#pc-arrow)"/>
+    <!-- CLI -> CHECK -->
+    <path class="edge" d="M 190 276 L 352 276 Q 360 276 360 284 L 360 303" marker-end="url(#pc-arrow)"/>
+    <!-- CLI -> WRITE -->
+    <path class="edge" d="M 190 276 L 588 276 Q 596 276 596 284 L 596 303" marker-end="url(#pc-arrow)"/>
+    <!-- SKILL -.-> STOP -->
+    <path class="edge-opt" d="M 340 74 L 550 74 Q 558 74 558 82 L 558 179" marker-end="url(#pc-arrow-opt)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <text class="sans o" x="202" y="152" text-anchor="start">calls</text>
+  <text class="sans o" x="364" y="64" text-anchor="start"><tspan class="mono">oat</tspan> missing</text>
+  <text class="sans o" x="364" y="98" text-anchor="start">autonomous, cloud runs</text>
+
+  <!-- SKILL -->
+  <rect class="node" x="40" y="32" width="300" height="84" rx="8" ry="8"/>
+  <text class="sans t" x="190" y="60" text-anchor="middle">Skills decide</text>
+  <text class="sans s" x="190" y="82" text-anchor="middle">discovery depth, design choices,</text>
+  <text class="sans s" x="190" y="101" text-anchor="middle">review findings</text>
+
+  <!-- CLI: main idea -->
+  <rect class="node-em" x="40" y="180" width="300" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="190" y="208" text-anchor="middle">The CLI enforces</text>
+  <text class="sans s" x="190" y="230" text-anchor="middle">skills call it instead of hand-parsing</text>
+
+  <!-- STOP -->
+  <rect class="node" x="408" y="180" width="300" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="558" y="208" text-anchor="middle">Restore <tspan class="mono">oat</tspan> or stop</text>
+  <text class="sans s" x="558" y="230" text-anchor="middle">never approximate state or transitions</text>
+
+  <!-- READ -->
+  <rect class="node" x="16" y="304" width="216" height="84" rx="8" ry="8"/>
+  <text class="mono t" x="124" y="332" text-anchor="middle">oat project status</text>
+  <text class="sans s" x="124" y="354" text-anchor="middle">reads project state</text>
+  <text class="sans s" x="124" y="373" text-anchor="middle">as JSON</text>
+
+  <!-- CHECK -->
+  <rect class="node" x="252" y="304" width="216" height="84" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="332" text-anchor="middle">Boundary checks</text>
+  <text class="sans s" x="360" y="354" text-anchor="middle">refuse an invalid plan,</text>
+  <text class="sans s" x="360" y="373" text-anchor="middle">journal or closeout</text>
+
+  <!-- WRITE -->
+  <rect class="node" x="488" y="304" width="216" height="84" rx="8" ry="8"/>
+  <text class="sans t" x="596" y="332" text-anchor="middle">Records it owns</text>
+  <text class="sans s" x="596" y="354" text-anchor="middle">project log, decisions,</text>
+  <text class="sans s" x="596" y="373" text-anchor="middle">completed state</text>
+</svg>
