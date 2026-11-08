@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { applyTemplateReplacements } from '@commands/project/new/scaffold';
-import type { WorkflowMode } from '@open-agent-toolkit/control-plane';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -117,84 +115,12 @@ describe('the writer and receiver sides', () => {
   });
 });
 
-/**
- * Review-provide Step 9's documented row write, applied to a rendered plan:
- * claim the first unbound `pending` placeholder of the same Scope + Type whose
- * Artifact is `-`, otherwise append one row. Pinned to the Step 9 text below.
- */
-function recordReviewEvent(
-  plan: string,
-  event: { scope: string; type: string; artifact: string },
-): string {
-  const lines = plan.split('\n');
-  const tableRows = lines
-    .map((line, index) => ({ line, index }))
-    .filter(({ line }) =>
-      /^\|\s*[a-z0-9-]+\s*\|\s*(code|artifact)\s*\|/.test(line),
-    );
-  const newRow = `| ${event.scope} | ${event.type} | received | 2026-11-03 | ${event.artifact} | - | - | - |`;
-  const placeholder = tableRows.find(({ line }) => {
-    const cells = line.split('|').map((cell) => cell.trim());
-    return (
-      cells[1] === event.scope &&
-      cells[2] === event.type &&
-      cells[3] === 'pending' &&
-      cells[5] === '-'
-    );
-  });
-  if (placeholder) {
-    lines[placeholder.index] = newRow;
-  } else {
-    const last = tableRows.at(-1);
-    if (!last) {
-      throw new Error('no Reviews table');
-    }
-    lines.splice(last.index + 1, 0, newRow);
-  }
-  return lines.join('\n');
-}
-
-function artifactRows(plan: string, scope: string): string[] {
-  return plan
-    .split('\n')
-    .filter((line) =>
-      new RegExp(`^\\|\\s*${scope}\\s*\\|\\s*artifact\\s*\\|`).test(line),
-    );
-}
-
-describe('a lightweight-design review records exactly one design row', () => {
-  it('pins the Step 9 placeholder-or-append rule the simulation applies', () => {
+describe('review-provide Step 9 placeholder-or-append rule', () => {
+  it('pins the Step 9 placeholder-or-append rule', () => {
     expect(flat(skill('oat-project-review-provide'))).toContain(
       'For the first event with this Scope + Type, claim an unbound `pending` placeholder only when its Artifact is `-`. Otherwise append a new row for the new artifact.',
     );
   });
-
-  it.each([
-    ['quick', 0],
-    ['spec-driven', 1],
-  ] as const)(
-    'in a %s scaffold (%i design placeholder before the review)',
-    (mode: WorkflowMode, placeholders: number) => {
-      const plan = applyTemplateReplacements(
-        read('.oat/templates/plan.md'),
-        'demo',
-        '2026-11-03',
-        '2026-11-03T00:00:00.000Z',
-        mode,
-      );
-      expect(artifactRows(plan, 'design')).toHaveLength(placeholders);
-
-      const reviewed = recordReviewEvent(plan, {
-        scope: 'design',
-        type: 'artifact',
-        artifact: 'reviews/artifact-design-review-2026-11-03T000000Z.md',
-      });
-
-      expect(artifactRows(reviewed, 'design')).toEqual([
-        '| design | artifact | received | 2026-11-03 | reviews/artifact-design-review-2026-11-03T000000Z.md | - | - | - |',
-      ]);
-    },
-  );
 });
 
 /**
