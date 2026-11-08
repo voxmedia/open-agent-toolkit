@@ -314,6 +314,10 @@ m03 exit gate run 10ed9157 (p08-p16, codex-6-sol-xhigh) received: 0/0/2/0, both 
 
 p16 re-accepted at b2f6b3b44 after m03 exit gate fixes (p16-t03, p16-t04) and a root-inline Low fix (p16-t05); 2 review cycles, round 2 0/0/0/0; rgi-p16-outcome-r2-20261108
 
+### 2026-11-08 · structural · oat gate review · p08-p16
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/review-gate-integrity-goal/reviews/range-review-2026-11-08T054348Z.md run=9c23d08c-eb00-40f7-930d-082fe2eece46
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
