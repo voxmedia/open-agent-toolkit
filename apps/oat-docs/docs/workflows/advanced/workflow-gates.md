@@ -773,6 +773,12 @@ earlier runs cannot be read at all, the gate emits a
 `convergence`. Convergence never changes `status`, `blocking`,
 `receiveEligible`, or `handoff`.
 
+When a gate loop exhausts its attempts, the exhaustion stop and the
+[complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
+read these marks for each run of the loop, from the result or from the run's
+project-log entry. A run without marks is reported as such, never as zero
+counts.
+
 The gate's project-log record of the run carries the same counts. See
 [Project Log](../projects/execution/project-log.md).
 
@@ -1182,10 +1188,17 @@ the project's tracking files and records the review `passed` with a note. The
 gate counts as satisfied (`allowed`/`passed`), no attempt is counted, and the
 gate is not relaunched. The receipt keeps the raw verdict and counts.
 
+Receive also records one [class](../projects/reviews/index.md#finding-classes-at-receive)
+per finding. A finding no contract source requires reaches the operator before
+any remediation work exists for it; the gate's status, `onFailure` policy and
+attempt count are unchanged by that routing.
+
 When `block` still fails after `maxAttempts`, the implementation exit gate and
 the quick-start plan gate run a
 [complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
-before escalating, and show it with the accumulated feedback. The operator
+before escalating, and show it with the accumulated feedback. The stop reasons
+include each run's new, carried-over and resolved counts from its
+[convergence](#convergence-across-a-gate-sequence) marks. The operator
 chooses how to proceed, including **simplify**; agents never choose for them.
 
 `cross-provider-exec` does fallback only before dispatch, while selecting an

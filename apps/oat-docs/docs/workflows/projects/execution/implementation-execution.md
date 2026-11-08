@@ -506,6 +506,8 @@ the final review at its three-cycle cap, and the configured exit gate at
 [complexity review](../reviews/index.md#complexity-review-at-budget-exhaustion) before
 escalating, saves its report under `reviews/archived/`, and shows a decision
 message with the stop reasons, the verdict, and the recommended disposition.
+The stop reasons carry the classes the loop's receipts recorded and, for a
+gate loop, each run's convergence counts.
 The operator chooses: extra cycles, proceed with override, corrective revision,
 or **simplify**. The choice and the report path are recorded in
 `implementation.md`. Agents never select the disposition; under
@@ -516,6 +518,11 @@ these budgets. The root fixes it in one tracking-file commit, records the
 review `passed` with a note, and continues without a fix child, a new review
 round or a gate rerun
 ([Bookkeeping-only findings](../reviews/index.md#bookkeeping-only-findings)).
+
+The root records one class per finding of every review round before it
+dispatches a fix child. A Critical or High finding that no contract source
+requires holds the round for the operator
+([Finding classes at receive](../reviews/index.md#finding-classes-at-receive)).
 
 ## Parallel Phase Groups
 

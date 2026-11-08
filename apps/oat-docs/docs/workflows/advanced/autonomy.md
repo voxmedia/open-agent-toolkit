@@ -85,6 +85,10 @@ changes no limit and grants no permission. A review or gate result whose every
 finding is bookkeeping spends no review-fix round and no gate attempt, and is
 settled without a stop
 ([Bookkeeping-only findings](../projects/reviews/index.md#bookkeeping-only-findings)).
+A finding that no contract source requires is the opposite case: receive
+records it as `new-hardening`, creates no fix work for it, and the run stops at
+a product-judgment boundary
+([Finding classes at receive](../projects/reviews/index.md#finding-classes-at-receive)).
 
 Kickoff also names the applicable owning hard stops: recovery eligibility or
 proof failure, new-attempt budget exhaustion, malformed ledger or unresolved
