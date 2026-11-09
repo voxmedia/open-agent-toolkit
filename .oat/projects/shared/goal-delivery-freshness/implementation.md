@@ -169,7 +169,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 **Status:** completed
 **Base:** a650db90a6fb468499f6881075b526da92c0b896
-**Head:** d4d42840ea176350cd8847dccb631beeea2d308d
+**Head:** e65188c7b3ddf4fa3432ccb84d3b26a4b8936cbb
 **Executor:** phase-implementer:gdf-p03-impl-20261109
 
 Phase verification at `4ad61dccb` (clean tree), Definition of Done in order, each exit code captured: `pnpm check` exit 0 (11 tasks, 0 cached); `pnpm type-check` exit 0 (11 tasks, 5 cached: the unchanged docs packages); `pnpm test:evidence` exit 0 (forced, 12 tasks, 0 cached; cli 449 files / 9688 tests, control-plane 14 / 320, docs-config 5 / 22, docs-theme 3 / 25, docs-transforms 3 / 38); `pnpm build` exit 0 (5 cached, replaying the forced builds `test:evidence` had just run at the same inputs); `pnpm run check:skill-bumps` exit 0 (4 changed skills validated against `origin/main`); `git fetch origin main`, then `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.49); `pnpm build:docs` exit 0 (6 cached), then re-run uncached as `pnpm exec turbo run build --filter=oat-docs --force` exit 0 (0 cached); docs index regeneration exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `pnpm lint` exit 0 and `pnpm format` exit 0 (5 untouched docs packages replayed; cli, control-plane, root oxlint and `format:root` ran). Skill bumps: oat-project-brief 1.0.10, oat-project-goal 1.0.7, oat-project-implement 2.3.29, oat-project-pr-progress 1.3.10; lockstep packages 0.3.49.
@@ -334,6 +334,22 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 ## Reviews and Gates
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+### Review Received: final (exit gate attempt 2)
+
+**Date:** 2026-11-09
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-09T053644Z.md
+**Review:** configured `oat-project-implement` exit gate, run `bdd9fc61-d888-40d7-ba05-657343d3ba6a`, target `codex-6-sol-xhigh` (different family), code `final` (p01–p03), gate generation reviewed head `e12ed2d93`.
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 0
+**Reconnaissance:** not-attempted.
+
+- Attempt-1 H1 and M1: confirmed resolved by the gate.
+- M1 (Medium, class: regression in the p03-t07 guard; Outcome 2 and contract 12.7/12.8): the `.oat/config.json` guard compared a stack's tip carrier with an unchanged lower member, refusing a valid head-movement waiver → addressed now (passing-gate judgment sweep) as p03-t09 (`320f394e2`) via continuation `gdf-gate-fix-2` of `gdf-gate-fix-1-20261109`: comparisons follow the judged walk pairs (each member's review→observed, a stack carrier's review→tip only); new stacked accepted control and stacked tip-config negative control; can-fail proof (old anchor set fails the accepted control). Delivery suites (170), skill-contract suites (1270), `pnpm check`, type-check, lint, format, build, `check:skill-bumps`, docs build and index check exit 0; built-CLI probe confirmed both cases.
+- Bookkeeping repair: `a323ee7ce` wrote the receive correlation under the commented template line, breaking `state.md` YAML; corrected in this receive commit (no field values changed).
+
+**Outcome:** passed (gate `ok`); M1 fixed at receive as p03-t09; no re-review (address-now sweep rule).
+
+**Gate:** oat-project-implement exit · **Scope:** final · **Outcome:** passed (0/0/1/0, `codex-6-sol-xhigh`) · attempt 2 of 2; M1 addressed as p03-t09 after the gate
 
 ### Review Received: final (fix re-review)
 

@@ -76,13 +76,7 @@ oat_workflow_origin: native # native | imported
 #   artifact: null
 #   handoff: null
 #   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation:
-    gate_run_id: 'bdd9fc61-d888-40d7-ba05-657343d3ba6a'
-    handoff: 'oat-project-review-receive'
-    source_artifact: 'reviews/final-review-2026-11-09T053644Z.md'
-    scope: 'final'
-    type: 'code'
-    source_filename: 'final-review-2026-11-09T053644Z.md'
+#   receive_correlation: null
 #   receive_source_artifact: null
 #   receive_archived_artifact: null
 #   receive_event_identity: null
@@ -139,7 +133,13 @@ oat_implement_exit_gate:
   artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md to disposition them before marking the final review row passed.'
   receive_state: 'intent_persisted'
-  receive_correlation: null
+  receive_correlation:
+    gate_run_id: 'bdd9fc61-d888-40d7-ba05-657343d3ba6a'
+    handoff: 'oat-project-review-receive'
+    source_artifact: 'reviews/final-review-2026-11-09T053644Z.md'
+    scope: 'final'
+    type: 'code'
+    source_filename: 'final-review-2026-11-09T053644Z.md'
   receive_source_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md'
   receive_archived_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/final-review-2026-11-09T053644Z.md'
   receive_event_identity: 'final|code|final-review-2026-11-09T053644Z.md'

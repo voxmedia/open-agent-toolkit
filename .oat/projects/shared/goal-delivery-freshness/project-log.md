@@ -71,6 +71,10 @@ Fix re-review gdf-final-rereview-20261109 passed (0/0/0/1 Low, fixed in ebe95958
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md run=bdd9fc61-d888-40d7-ba05-657343d3ba6a
 
+### 2026-11-09 · structural · oat-project-implement · final
+
+Exit gate attempt 2 (run gdf-gate2-bdd9fc61, codex-6-sol-xhigh) passed 0/0/1/0; M1 stacked-carrier regression addressed as p03-t09 (320f394e2); fix loops: 2.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
