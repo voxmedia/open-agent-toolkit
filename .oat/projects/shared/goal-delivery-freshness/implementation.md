@@ -308,27 +308,46 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **What shipped:**
 
-- [capability 1]
+- Workflow-owned writes stay bookkeeping: a goal delivery's integrated review and exit carrier stay fresh across successor commits that touch only admitted bookkeeping, now including any file directly under the project's `reviews/` or `reviews/archived/` and any path under `.oat/repo/pjm/backlog/` (p01).
+- Head-bound operator waiver: `oat project delivery waive --project <path> --delivery dNN --reason <text> [--by <name>]` appends an entry to the delivery's append-only `freshness_waivers`, records the live observations, restores the stored `integrated_review.disposition: passed`, restores the milestone working carrier's freshness for the milestone's latest delivery, and clears a targeting `oat_goal_recovery`, in one `state.md` write. The freshness evaluator re-anchors the successor walk on the waived head only while no newer review or carrier supersedes it (p02).
+- Prevention and routing: `oat-project-pr-progress` tells whoever merges a milestone PR to run `oat project delivery check --subject dNN` first and re-gate or waive when stale; its items 3a and 8 offer the waiver (by explicit user choice only) for a delivery stale past its endpoint; `oat-project-goal` hands back to it (p03).
 
 **Behavioral changes (user-facing):**
 
-- [bullet]
+- Review-receive archival and backlog writes after a milestone gate no longer make the delivery stale.
+- New `oat project delivery waive` command; refuses under `OAT_AUTONOMOUS=1`, on live-observation failure, for a fresh delivery, unless the governing Reviews row is `passed` with the recorded artifact and every judged carrier is `allowed`, and when staleness is not head movement (`not-head-movement`), with stable `--json` codes.
+- `closeout-check --json` (success and refusal) and `complete-state --json` (success) carry `waivers`; human output prints one line per waiver.
+- Released versions: lockstep packages 0.3.49; skills oat-project-brief 1.0.10, oat-project-goal 1.0.7, oat-project-implement 2.3.29, oat-project-pr-progress 1.3.10.
 
 **Key files / modules:**
 
-- `[path]` - [purpose]
+- `packages/cli/src/commands/project/delivery/evidence.ts` - bookkeeping path classification, waiver re-anchoring, append-only waiver record rule.
+- `packages/cli/src/commands/project/delivery/waive.ts` - the `delivery waive` command.
+- `packages/cli/src/commands/project/closeout-check/index.ts`, `complete-state/index.ts` - waiver listing.
+- `packages/control-plane/src/types.ts`, `state/parser.ts` - `GoalDelivery.freshness_waivers`.
+- `.agents/skills/oat-project-brief/references/brief-contract.md` - sections 12.6–12.9.
+- `.agents/skills/oat-project-pr-progress/SKILL.md`, `oat-project-goal/SKILL.md`, `oat-project-implement/references/completion-and-closeout.md` - pre-merge check, waiver routing, path-rule alignment.
+- `apps/oat-docs/docs/` - CLI reference, project artifacts and state machine, workflow gates, closeout skills, PR flow, lifecycle.
 
 **Verification performed:**
 
-- [tests/lint/typecheck/build/manual steps]
+- Full Definition of Done at `4ad61dccb` (p03): `pnpm check`, `pnpm type-check`, `pnpm test:evidence` (forced; cli 9688, control-plane 320, docs packages 85 tests), `pnpm build`, `check:skill-bumps`, `release:check-versions`, `release:validate`, forced docs build, docs index freshness, `pnpm lint`, `pnpm format`: all exit 0. After the prose-only p03-t06 fix: skill-contract suites, `pnpm check`, lint, format, skill bumps, forced docs build and index freshness exit 0.
+- Negative controls with can-fail proofs per clause (p01, p02); branch-build probes against released 0.3.46 showing the pre-fix bad state is refused before and accepted after (p01 mixed bookkeeping commit; p02 squash-merged stale delivery waived through to `complete-state`).
+- Per-phase reviews p01, p02, p03 passed (0 Critical/High/Medium).
 
 **Outcomes audit:**
 
-- Outcome 1: [observed evidence (accepted phase, commit, or verification result) or the recorded deferral]
+- Outcome 1: p01 accepted (`5606c3a0e`, `10a67cd00`); `evidence.test.ts` sibling, backlog, mixed and stale controls through `deliveryEvidenceScope`; can-fail proofs; built-CLI probe vs 0.3.46.
+- Outcome 2: p02 accepted (`36687c582`, `c79c2059e`, `271d990b8`) plus p03-t01 (`0420cde65`); every listed negative control, router and `complete-state` fixtures, closeout listing assertion, branch-build probe through `complete-state`.
+- Outcome 3: p03 accepted (`c2a7ef5f6`, `ef10c5cb7`, `7a0452569`); `goal-delivery-waiver-contracts.test.ts` pins the pre-merge, registration, 3a/8 waiver-offer and decline sentences.
+- Outcome 4: brief contract 12.6–12.9 updated in p01/p02/p03; docs updated in p03-t03 and p03-t06; docs build and index freshness green.
 
 **Brief deltas (if any):**
 
-- [what changed vs plan.md and why]
+- KU2 settled as closeout output (`waivers`), not `oat_goal_outcome_audit` (Deviations row p02 (KU2)).
+- Extra `not-head-movement` and input refusals on `delivery waive` (Deviations row p02).
+- Waivers appear in the regenerated local progress PR description and closeout output, not in `oat-project-summary` or `oat-project-pr-final` (Deviations row p03 (L3)).
+- Not built, reported to the operator: letting `delivery waive` restore a delivery whose stored disposition is stale while live evidence reads fresh (`new-hardening`); the refusal message now names the review recovery instead.
 
 ## References
 

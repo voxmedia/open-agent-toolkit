@@ -273,9 +273,11 @@ Writers must preserve every existing row and every unknown trailing cell.
 
 **Summary:**
 
-- Phase p01: [Description]
+- Phase p01: Workflow-owned writes stay bookkeeping (accepted 2026-11-09; review passed).
+- Phase p02: Head-bound freshness waiver (accepted 2026-11-09; review passed).
+- Phase p03: Pre-merge prose, waiver routing and docs (accepted 2026-11-09; review passed, Low fixes in p03-t06).
 
-**Total: [N] phases**
+**Total: 3 phases**
 
 Ready for final code review and PR preparation.
 
