@@ -2481,4 +2481,386 @@ Recorded rewritten.
       expect(result.reason).toContain('delivery d01');
     });
   });
+
+  describe('operator freshness waiver (head-bound re-anchoring, p02)', () => {
+    const URL = 'https://github.com/owner/name/pull/7';
+    const expected = { kind: 'code' as const, scope: ['p01', 'p02'] };
+    const configured = (reviewedHead: string, status = 'allowed') =>
+      carrier({
+        status,
+        resolution: 'configured',
+        disposition: 'passed',
+        reviewed_head: reviewedHead,
+      });
+
+    function waiver(heads: Record<string, string>, reason = 'post-gate fix') {
+      return {
+        waived_by: 'Operator',
+        reason,
+        waived_at: '2026-11-09T12:00:00.000Z',
+        members: Object.entries(heads).map(([url, waived_head]) => ({
+          url,
+          waived_head,
+        })),
+      };
+    }
+
+    /** d01 reviewed at R, observed at `observed`, with optional waivers. */
+    function waived(
+      target: GoalRepo,
+      reviewed: string,
+      observed: string,
+      waivers: ReturnType<typeof waiver>[] = [],
+      observedBase = target.baseSha,
+    ): GoalDelivery {
+      const entry = delivery({
+        url: URL,
+        base: target.baseSha,
+        reviewed_head: reviewed,
+        observed_head: observed,
+        observed_base: observedBase,
+      });
+      entry.freshness_waivers = waivers;
+      return entry;
+    }
+
+    /** R, then a substantive post-gate fix F (the squash-merged PR head). */
+    async function postGateFix(target: GoalRepo) {
+      const chain = await bookkeepingChain(target);
+      await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const fix = target.commitAll('fix: post-gate change');
+      return { reviewed: chain.reviewed, fix };
+    }
+
+    async function judge(target: GoalRepo, entry: GoalDelivery) {
+      const scope = scopeFor(target);
+      return {
+        review: await evaluateDeliveryReview(git, scope, entry, ['p01', 'p02']),
+        exit: await evaluateDeliveryExitCarrier(
+          configured(entry.members[0]!.reviewed_head!),
+          expected,
+          { git, scope, delivery: entry },
+        ),
+      };
+    }
+
+    it('unwaived control: a substantive head movement stales review and carrier', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const verdict = await judge(repo, waived(repo, reviewed, fix));
+      expect(verdict.review.fresh).toBe(false);
+      expect(verdict.review.reason).toMatch(/disallowed-path.*src\/app\.ts/);
+      expect(verdict.exit).toMatchObject({
+        outcome: 'allowed',
+        freshness: 'stale',
+      });
+    });
+
+    it('re-anchors the review and carrier walks on the waived observed head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, fix, [waiver({ [URL]: fix })]),
+      );
+      expect(verdict.review).toMatchObject({ fresh: true, reason: null });
+      expect(verdict.exit).toMatchObject({
+        outcome: 'allowed',
+        freshness: 'fresh',
+      });
+    });
+
+    it('keeps a bookkeeping successor of the waived head fresh', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.write('implementation.md', goalJournal(reviewed, 'completed'));
+      const recorded = repo.commitAll('chore(oat): record after waiver');
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, recorded, [waiver({ [URL]: fix })]),
+      );
+      expect(verdict.review.fresh).toBe(true);
+      expect(verdict.exit.freshness).toBe('fresh');
+    });
+
+    it('stales again on a later substantive commit after the waived head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const later = repo.commitAll('feat: pushed after the waiver');
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, later, [waiver({ [URL]: fix })]),
+      );
+      expect(verdict.review.fresh).toBe(false);
+      expect(verdict.review.reason).toMatch(/disallowed-path.*src\/app\.ts/);
+      expect(verdict.review.reason).toContain(later);
+      expect(verdict.exit.freshness).toBe('stale');
+    });
+
+    it('never covers a waived head that is not the observed head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const observed = repo.commitAll('feat: second unreviewed change');
+      // An intermediate head: the walk from it still meets `observed`.
+      const intermediate = await judge(
+        repo,
+        waived(repo, reviewed, observed, [waiver({ [URL]: fix })]),
+      );
+      expect(intermediate.review.reason).toMatch(/disallowed-path/);
+
+      // An unrelated head the reviewed revision is not an ancestor of: the
+      // waiver does not apply and the walk keeps the reviewed anchor.
+      repo.git(['checkout', '-q', '-b', 'unrelated', repo.baseSha]);
+      await repo.writeRepo('src/other.ts', 'export const other = 1;\n');
+      const unrelated = repo.commitAll('feat: unrelated');
+      repo.git(['checkout', '-q', 'main']);
+      const foreign = await judge(
+        repo,
+        waived(repo, reviewed, observed, [waiver({ [URL]: unrelated })]),
+      );
+      expect(foreign.review.reason).toMatch(/disallowed-path/);
+      expect(foreign.exit.freshness).toBe('stale');
+
+      // A waived head missing locally fails closed.
+      const missing = await judge(
+        repo,
+        waived(repo, reviewed, fix, [waiver({ [URL]: 'f'.repeat(40) })]),
+      );
+      expect(missing.review.reason).toMatch(
+        /missing-object: waived head f{40}/,
+      );
+      expect(missing.exit.reason).toMatch(/missing-object/);
+    });
+
+    it('honors only the latest waiver', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, fix, [
+          waiver({ [URL]: fix }),
+          waiver({ [URL]: reviewed }, 'later, narrower waiver'),
+        ]),
+      );
+      expect(verdict.review.fresh).toBe(false);
+    });
+
+    it('never applies a sibling delivery waiver on a shared member', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const own = waived(repo, reviewed, fix);
+      const sibling = waived(repo, reviewed, fix, [waiver({ [URL]: fix })]);
+      sibling.delivery_id = 'd02';
+      sibling.milestone = 'm02';
+      expect((await judge(repo, own)).review.fresh).toBe(false);
+      expect((await judge(repo, sibling)).review.fresh).toBe(true);
+    });
+
+    it('never covers a base change, a narrow review or a blocked carrier', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const rebased = await judge(
+        repo,
+        waived(repo, reviewed, fix, [waiver({ [URL]: fix })], fix),
+      );
+      expect(rebased.review.reason).toMatch(/base-changed/);
+
+      const entry = waived(repo, reviewed, fix, [waiver({ [URL]: fix })]);
+      const narrow = await evaluateDeliveryReview(git, scopeFor(repo), entry, [
+        'p01',
+        'p02',
+        'p03',
+      ]);
+      expect(narrow.reason).toMatch(/review-scope-narrow/);
+
+      const blocked = await evaluateDeliveryExitCarrier(
+        configured(reviewed, 'blocked'),
+        expected,
+        { git, scope: scopeFor(repo), delivery: entry },
+      );
+      expect(blocked.outcome).toBe('blocked');
+    });
+
+    it('judges a later passed review at a descendant head from its own reviewed head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const rereviewed = repo.commitAll('fix: re-reviewed change');
+      await repo.write(
+        'implementation.md',
+        goalJournal(rereviewed, 'completed'),
+      );
+      const recorded = repo.commitAll('chore(oat): record the new review');
+
+      const entry = waived(repo, rereviewed, recorded, [
+        waiver({ [URL]: fix }),
+      ]);
+      entry.integrated_review!.bound_revisions = [
+        { member: 0, base: repo.baseSha, head: rereviewed },
+      ];
+      const verdict = await judge(repo, entry);
+      // The waived head predates the new review, which supersedes it.
+      expect(verdict.review).toMatchObject({ fresh: true, reason: null });
+      expect(verdict.exit.freshness).toBe('fresh');
+      expect(reviewed).not.toBe(rereviewed);
+    });
+
+    it('re-anchors a stack carrier on the tip member waiver', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const tip = repo.commitAll('feat: tip layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const moved = repo.commitAll('fix: tip moved after the gate');
+      const stack = deliveryWithHeads('stack', [lower, moved], repo.baseSha);
+      const tipUrl = stack.members[1]!.url!;
+
+      const unwaived = await evaluateDeliveryExitCarrier(
+        configured(tip),
+        expected,
+        { git, scope: scopeFor(repo), delivery: stack },
+      );
+      expect(unwaived.freshness).toBe('stale');
+      stack.freshness_waivers = [waiver({ [tipUrl]: moved })];
+      await expect(
+        evaluateDeliveryExitCarrier(configured(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: stack,
+        }),
+      ).resolves.toMatchObject({ freshness: 'fresh', reason: null });
+    });
+
+    describe('waiver entries in the delivery record', () => {
+      const waiverYaml = (
+        head: string,
+        reason = 'post-gate fix',
+      ) => `      - waived_by: Operator
+        reason: ${reason}
+        waived_at: '2026-11-09T12:00:00.000Z'
+        members:
+          - url: ${URL}
+            waived_head: '${head}'`;
+      const withWaivers = (
+        reviewed: string,
+        base: string,
+        waivers: string[],
+        observedHead: string,
+      ) =>
+        goalState(
+          `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+            reviewed,
+            base,
+            observedHead,
+            observedBase: base,
+          }).replace(
+            'oat_milestone_gates:',
+            `    freshness_waivers:\n${waivers.join('\n')}\noat_milestone_gates:`,
+          )}`,
+        );
+
+      it('admits an appended waiver with its restored record and refuses an edited or removed earlier entry', async () => {
+        repo = await createGoalRepo();
+        const { reviewed, fix } = await postGateFix(repo);
+        // The waiver commit: observations, the waiver and the restored
+        // disposition in one state.md write, pushed after the waived head.
+        await repo.write(
+          'state.md',
+          withWaivers(reviewed, repo.baseSha, [waiverYaml(fix)], fix),
+        );
+        const waivedCommit = repo.commitAll('chore(oat): waive d01');
+        const state = await getProjectState(repo.projectPath);
+        const recorded = state.deliveries!.find(
+          (entry) => entry.delivery_id === 'd01',
+        )!;
+        expect(recorded.freshness_waivers?.[0]?.members[0]?.waived_head).toBe(
+          fix,
+        );
+        const observedAtWaiver = {
+          ...recorded,
+          members: recorded.members.map((member) => ({
+            ...member,
+            observed_head: waivedCommit,
+          })),
+        };
+        await expect(
+          evaluateDeliveryReview(
+            git,
+            await productionScope(repo, 'd01'),
+            observedAtWaiver,
+            ['p01', 'p02'],
+          ),
+        ).resolves.toMatchObject({ fresh: true });
+
+        await repo.write(
+          'state.md',
+          withWaivers(
+            reviewed,
+            repo.baseSha,
+            [waiverYaml(fix), waiverYaml(fix, 'second look')],
+            fix,
+          ),
+        );
+        const appended = repo.commitAll('chore(oat): waive d01 again');
+        await expect(
+          evaluateSuccessor(
+            git,
+            await productionScope(repo, 'd01'),
+            fix,
+            appended,
+          ),
+        ).resolves.toMatchObject({ fresh: true });
+
+        await repo.write(
+          'state.md',
+          withWaivers(
+            reviewed,
+            repo.baseSha,
+            [
+              waiverYaml(fix, 'rewritten reason'),
+              waiverYaml(fix, 'second look'),
+            ],
+            fix,
+          ),
+        );
+        const edited = repo.commitAll('chore(oat): edit the first waiver');
+        const editVerdict = await evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          appended,
+          edited,
+        );
+        expect(editVerdict).toMatchObject({
+          fresh: false,
+          code: 'substantive-change',
+        });
+        expect(editVerdict.reason).toContain(
+          'delivery d01 edited earlier freshness waiver 0',
+        );
+
+        await repo.write(
+          'state.md',
+          withWaivers(
+            reviewed,
+            repo.baseSha,
+            [waiverYaml(fix, 'rewritten reason')],
+            fix,
+          ),
+        );
+        const removed = repo.commitAll('chore(oat): drop the second waiver');
+        const removeVerdict = await evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          edited,
+          removed,
+        );
+        expect(removeVerdict.reason).toContain(
+          'delivery d01 removed earlier freshness waiver 1',
+        );
+      });
+    });
+  });
 });

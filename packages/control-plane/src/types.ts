@@ -406,6 +406,18 @@ export interface DeliveryEndpointAttainment {
   }[];
 }
 
+/**
+ * One operator freshness waiver on a delivery (`oat project delivery waive`,
+ * following DR-260927-operator-waiver-for-test-only). It is bound to the exact
+ * member heads observed when it was written and covers head movement only.
+ */
+export interface DeliveryFreshnessWaiver {
+  waived_by: string | null;
+  reason: string | null;
+  waived_at: string | null;
+  members: { url: string | null; waived_head: string | null }[];
+}
+
 /** One `oat_deliveries` registry entry. */
 export interface GoalDelivery {
   delivery_id: string;
@@ -431,6 +443,11 @@ export interface GoalDelivery {
   /** The accepted exit-gate binding persisted with the delivery's evidence. */
   exit_gate: MilestoneGateCarrier | null;
   endpoint_attainment: DeliveryEndpointAttainment | null;
+  /**
+   * Append-only operator waivers, oldest first. Only the latest entry
+   * re-anchors freshness; the reader always supplies a list (empty when none).
+   */
+  freshness_waivers?: DeliveryFreshnessWaiver[];
 }
 
 export interface ProjectState {

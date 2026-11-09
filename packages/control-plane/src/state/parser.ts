@@ -390,6 +390,19 @@ function parseDelivery(value: unknown): GoalDelivery | null {
           }))
         : [],
     },
+    freshness_waivers: Array.isArray(value.freshness_waivers)
+      ? value.freshness_waivers.filter(isPlainRecord).map((waiver) => ({
+          waived_by: readString(waiver.waived_by),
+          reason: readString(waiver.reason),
+          waived_at: readString(waiver.waived_at),
+          members: Array.isArray(waiver.members)
+            ? waiver.members.filter(isPlainRecord).map((member) => ({
+                url: readString(member.url),
+                waived_head: readString(member.waived_head),
+              }))
+            : [],
+        }))
+      : [],
   };
 }
 
