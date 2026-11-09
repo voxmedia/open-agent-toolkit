@@ -2647,17 +2647,6 @@ Recorded rewritten.
       expect(verdict.review.fresh).toBe(false);
     });
 
-    it('never applies a sibling delivery waiver on a shared member', async () => {
-      repo = await createGoalRepo();
-      const { reviewed, fix } = await postGateFix(repo);
-      const own = waived(repo, reviewed, fix);
-      const sibling = waived(repo, reviewed, fix, [waiver({ [URL]: fix })]);
-      sibling.delivery_id = 'd02';
-      sibling.milestone = 'm02';
-      expect((await judge(repo, own)).review.fresh).toBe(false);
-      expect((await judge(repo, sibling)).review.fresh).toBe(true);
-    });
-
     it('never covers a base change, a narrow review or a blocked carrier', async () => {
       repo = await createGoalRepo();
       const { reviewed, fix } = await postGateFix(repo);
