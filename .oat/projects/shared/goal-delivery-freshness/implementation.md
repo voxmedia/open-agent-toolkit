@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-09
-oat_current_task_id: p01
+oat_current_task_id: p02
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | in_progress | 1     | 0/1      |
-| p02   | pending     | 1     | 0/1      |
-| p03   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | pending   | 1     | 0/1      |
+| p03   | pending   | 1     | 0/1      |
 
-**Total:** 0/3 phases accepted
+**Total:** 1/3 phases accepted
 
 ---
 
 ## Phase p01: Workflow-owned writes stay bookkeeping
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 6989fdfb7217864378a7d2721cb942b26c07a653
 **Head:** 7b061c1af55fdca4a71526401d1e04c32b25c0e7
 **Executor:** phase-implementer:gdf-p01-impl-20261109
@@ -86,6 +86,17 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, `pnpm lint`, `pnpm format`.
 - Result: skill-contract suites exit 0 (31 files, 1260 tests); `pnpm lint` exit 0; `pnpm format` exit 0; `pnpm oat:validate-skills` exit 0. The gate-row shared-evidence sentence is kept, now framed as evidence-scope membership rather than path admission.
 
+### Review Received: p01
+
+**Review:** `gdf-p01-review-20261109` (oat-reviewer-claude-claude-opus-5-5-high), code `p01` on anchors `6989fdfb..7b061c1a`; artifact `reviews/archived/p01-review-2026-11-09T032005Z.md` (local-only).
+**Findings:** 0 critical, 0 high, 0 medium, 1 low.
+**Reconnaissance:** not-attempted.
+
+- L1 (Low): three docstrings in `delivery/evidence.ts` (`EvidenceScope.evidenceArtifacts`, `deliveryEvidenceArtifacts`, `gateEvidenceArtifacts`) still describe the evidence-artifact list as the review-path allowlist; wording only, no behavior change → deferred to p02, which edits `evidence.ts` (trigger: p02's first `evidence.ts` record rewords them).
+- Reviewer confirmed the ten flipped negative-control tests are sanctioned by Outcome 1 (each asserted only path refusal; the own/shared-evidence protection is still asserted), re-ran the focused and skill-contract suites and the built-CLI probes against released 0.3.46.
+
+**Outcome:** passed (no Critical/High/Medium). Phase accepted.
+
 ---
 
 ## Phase p02: Head-bound freshness waiver
@@ -107,6 +118,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 <!-- orchestration-runs-start -->
 
 - run/v1 · request=gdf-p01-impl-20261109 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=gdf-p01-review-20261109 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -117,6 +129,9 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
+
+- p01 review L1 (Low, stale `evidence.ts` docstrings): deferred to p02 because p02 edits the same file; root disposition at receive (Low, non-blocking); trigger: p02's first `evidence.ts` record.
+- p01 implementer concern: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` step 1 still says gate artifacts are "admitted as carrier bookkeeping only when" the reviewed head matches; carried into p03's docs alignment (it needs its own skill bump).
 
 ## Deviations from Plan / Design
 
