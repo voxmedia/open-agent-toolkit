@@ -238,6 +238,19 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - Handle: gdf-p03-impl-20261109.
 - Result: skill-contract suites exit 0 (32 files, 1270 tests); oxfmt clean.
 
+### Task p03-t06: (review) Waiver listing and declined-waiver wording
+
+**Status:** completed
+**Commit:** 7a0452569ce5a29347620fdb08d2a46b958e35a1
+**Executor:** phase-implementer:gdf-p03-impl-20261109
+**Source review:** reviews/p03-review-2026-11-09T042943Z.md (L1, L2)
+
+- Intent: prose only. L1: the posted PR body is written while the delivery is `registering`, before any waiver can exist, and is never rewritten, so pr-progress (template bullet, waived-delivery paragraph, success criterion), `closeout-skills.md` and `pr-flow.md` now say waivers appear in a locally regenerated progress PR description and in closeout output. L2: the goal hand-back, `lifecycle.md` and `closeout-skills.md` reuse the t05 rationale (a recovery that queues fixes cannot land them on that pull request; declining keeps the ordinary recovery path), and the interactive options are "waive, or decline (continue as the item says...)" so item 3a's decline clearly applies item 3. No skill bump (PR-scoped bumps already landed).
+- Files: `.agents/skills/oat-project-pr-progress/SKILL.md`, `.agents/skills/oat-project-goal/SKILL.md`, `apps/oat-docs/docs/workflows/projects/lifecycle.md`, `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`, `packages/cli/src/commands/init/tools/shared/goal-delivery-waiver-contracts.test.ts`.
+- Proof: skill-contract suites, `pnpm check`, `pnpm lint`, `pnpm format`, forced docs build, docs index freshness, `pnpm run check:skill-bumps` after commit.
+- Handle: gdf-p03-impl-20261109 (continuation gdf-p03-fix-1).
+- Result at `7a0452569` (clean apart from the untracked local review file): skill-contract suites exit 0 (32 files, 1270 tests; goal and waived-delivery pins updated, decline option pinned and "waive, or stop" pinned absent); `pnpm check` exit 0 (0 cached); `pnpm lint` exit 0 and `pnpm format` exit 0 (5 untouched docs packages replayed); `pnpm run check:skill-bumps` exit 0; forced `turbo run build --filter=oat-docs...` exit 0 (0 cached); docs index regeneration exit 0 with `git diff --exit-code -- apps/oat-docs/index.md` exit 0. The p03 (L3) Deviations row is root-owned and was not edited.
+
 ---
 
 ## Orchestration Runs
