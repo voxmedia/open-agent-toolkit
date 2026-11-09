@@ -102,26 +102,26 @@ Review and gate cycles spent reviewer runs and gate attempts on findings that co
 
 ### Agent-instruction updates
 
-- Apply Feature Planning Triage at each phase start of a goal milestone, and include a complexity lens in per-phase reviews. p08's plan-gate amendment inference and p14's copied routing paragraph were found only at PR self-review, after both gates had passed. Source: oat-project:review-gate-integrity-goal#2026-11-08-feedback-m03-p08-was-over-built-before-the-hardening-stop-1
-- Children must prefix `HOME=$(mktemp -d)` inline and never export `HOME`. The root should check `$HOME` after a child returns, before resolver calls and commits. A leaked `HOME` broke the dispatch resolver and gave one commit a fallback author. Source: oat-project:review-gate-integrity-goal#2026-11-01-friction-temporary-home-leaked-into-the-root-shell-1
-- After merging a newer main, regenerate provider views with the branch build (`node packages/cli/dist/index.js sync`). The installed `oat sync` deleted newer Codex views. Source: oat-project:review-gate-integrity-goal#2026-11-02-friction-oat-sync-from-installed-cli-deletes-newer-provider-views-1
+- Apply Feature Planning Triage at each phase start of a goal milestone, and include a complexity lens in per-phase reviews. p08's plan-gate amendment inference and p14's copied routing paragraph were found only at PR self-review, after both gates had passed. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-08-feedback-m03-p08-was-over-built-before-the-hardening-stop-1
+- Children must prefix `HOME=$(mktemp -d)` inline and never export `HOME`. The root should check `$HOME` after a child returns, before resolver calls and commits. A leaked `HOME` broke the dispatch resolver and gave one commit a fallback author. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-01-friction-temporary-home-leaked-into-the-root-shell-1
+- After merging a newer main, regenerate provider views with the branch build (`node packages/cli/dist/index.js sync`). The installed `oat sync` deleted newer Codex views. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-02-friction-oat-sync-from-installed-cli-deletes-newer-provider-views-1
 
 ### Code follow-ups
 
-- Fix the Codex gate target's missing route receipt (`OAT_GATE_ROUTE_RECEIPT_PATH` was empty after a completed Sol run). Until it is fixed, cross-family Sol gating falls back to same-family Opus. Source: oat-project:review-gate-integrity-goal#2026-11-02-bug-codex-gate-target-loses-the-branch-local-route-receipt-1
-- Consider admitting `.oat/repo` paths as section 12.8 bookkeeping successors. A backlog commit after m02's reviewed head staled its evidence. Whether this is intended is unverified. Source: oat-project:review-gate-integrity-goal#2026-11-04-friction-repo-records-after-a-reviewed-head-stale-goal-milestone-evidence-1
+- Fix the Codex gate target's missing route receipt (`OAT_GATE_ROUTE_RECEIPT_PATH` was empty after a completed Sol run). Until it is fixed, cross-family Sol gating falls back to same-family Opus. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-02-bug-codex-gate-target-loses-the-branch-local-route-receipt-1
+- Consider admitting `.oat/repo` paths as section 12.8 bookkeeping successors. A backlog commit after m02's reviewed head staled its evidence. Whether this is intended is unverified. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-04-friction-repo-records-after-a-reviewed-head-stale-goal-milestone-evidence-1
 
 ### Workflow issues
 
 - Re-gate any post-gate fix before a goal milestone PR merges, or record a waiver at that time. Fold PR-bot findings into the reviewed head (for example by opening the PR as a draft before the integrated review), and defer nonblocking ones in the journal. Closeout has no later recovery path for a squash-merged delivery. Sources:
-  - oat-project:review-gate-integrity-goal#2026-11-08-friction-a-squash-merged-delivery-cannot-be-re-gated-1
-  - oat-project:review-gate-integrity-goal#2026-11-03-friction-pr-bots-review-after-the-milestone-gates-and-can-force-post-gate-fixes-1
-  - oat-project:review-gate-integrity-goal#2026-11-06-worked-well-deferring-nonblocking-pr-bot-findings-keeps-delivery-evidence-fresh-through-merge-1
+  - oat-archive:20261109-review-gate-integrity-goal#2026-11-08-friction-a-squash-merged-delivery-cannot-be-re-gated-1
+  - oat-archive:20261109-review-gate-integrity-goal#2026-11-03-friction-pr-bots-review-after-the-milestone-gates-and-can-force-post-gate-fixes-1
+  - oat-archive:20261109-review-gate-integrity-goal#2026-11-06-worked-well-deferring-nonblocking-pr-bot-findings-keeps-delivery-evidence-fresh-through-merge-1
 - After each squash merge, cut the next milestone branch from `origin/main`. Release and run `oat tools update` before re-alignment, so the goal's own fixes govern its next milestone. Sources:
-  - oat-project:review-gate-integrity-goal#2026-11-03-friction-squash-merge-requires-a-fresh-branch-for-the-next-milestone-1
-  - oat-project:review-gate-integrity-goal#2026-11-08-friction-released-toolchain-lags-the-goal-s-own-fixes-1
-- Advance a phase head before running the milestone exit gate. A gate artifact committed after a later reviewed head stales the exit carrier until the gate reruns. Source: oat-project:review-gate-integrity-goal#2026-11-02-friction-gate-committed-artifacts-break-freshness-after-a-late-head-advance-1
-- Until a release carries p15, route each goal exit gate to the milestone's phase range and record the routing. Source: oat-project:review-gate-integrity-goal#2026-11-06-friction-the-configured-exit-gate-s-final-scope-refuses-after-a-squash-merged-milestone-1
+  - oat-archive:20261109-review-gate-integrity-goal#2026-11-03-friction-squash-merge-requires-a-fresh-branch-for-the-next-milestone-1
+  - oat-archive:20261109-review-gate-integrity-goal#2026-11-08-friction-released-toolchain-lags-the-goal-s-own-fixes-1
+- Advance a phase head before running the milestone exit gate. A gate artifact committed after a later reviewed head stales the exit carrier until the gate reruns. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-02-friction-gate-committed-artifacts-break-freshness-after-a-late-head-advance-1
+- Until a release carries p15, route each goal exit gate to the milestone's phase range and record the routing. Source: oat-archive:20261109-review-gate-integrity-goal#2026-11-06-friction-the-configured-exit-gate-s-final-scope-refuses-after-a-squash-merged-milestone-1
 
 ## Follow-up Items
 
@@ -154,32 +154,32 @@ Review and gate cycles spent reviewer runs and gate attempts on findings that co
 
 ## Workflow Observations
 
-- **2026-11-08 · feedback · m03 p08 was over-built before the hardening stop** (project, decision) `oat-project:review-gate-integrity-goal#2026-11-08-feedback-m03-p08-was-over-built-before-the-hardening-stop-1`
+- **2026-11-08 · feedback · m03 p08 was over-built before the hardening stop** (project, decision) `oat-archive:20261109-review-gate-integrity-goal#2026-11-08-feedback-m03-p08-was-over-built-before-the-hardening-stop-1`
   p08 shipped plan-gate amendment inference (about 150 source and 300 test lines in gate/convergence.ts) for a case no recorded plan gate has hit, and p14 copied one routing paragraph into 8 planning skills; the operator stopped hardening only after p14, and the PR #407 self-review's testing and complexity lenses found the cost after both gates had passed.
   Uncertainty: per-phase reviews were not briefed with the complexity-review standard, so it is unknown whether they would have caught it earlier.
-- **2026-11-08 · friction · A squash-merged delivery cannot be re-gated** (project, gotcha) `oat-project:review-gate-integrity-goal#2026-11-08-friction-a-squash-merged-delivery-cannot-be-re-gated-1`
+- **2026-11-08 · friction · A squash-merged delivery cannot be re-gated** (project, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-08-friction-a-squash-merged-delivery-cannot-be-re-gated-1`
   d01's post-gate fix 4a870d471 staled its integrated review and exit gate, and recovery needs evidence bound to that exact head, which after a squash merge exists only on the merged branch and is not an ancestor of main; the recovery record owner (oat-project-pr-progress) is also not model-invokable.
-- **2026-11-08 · friction · Released toolchain lags the goal's own fixes** (project, environment-limited) `oat-project:review-gate-integrity-goal#2026-11-08-friction-released-toolchain-lags-the-goal-s-own-fixes-1`
+- **2026-11-08 · friction · Released toolchain lags the goal's own fixes** (project, environment-limited) `oat-archive:20261109-review-gate-integrity-goal#2026-11-08-friction-released-toolchain-lags-the-goal-s-own-fixes-1`
   the m03 exit gate needed operator scope routing (p08-p16) because installed CLI 0.3.46 predates p15's milestone-scoped final; oat-project-pr-progress and oat-project-goal are not model-invokable, so each milestone handoff stopped for the user to type a slash command.
-- **2026-11-06 · friction · The configured exit gate's final scope refuses after a squash-merged milestone** (project, gotcha) `oat-project:review-gate-integrity-goal#2026-11-06-friction-the-configured-exit-gate-s-final-scope-refuses-after-a-squash-merged-milestone-1`
+- **2026-11-06 · friction · The configured exit gate's final scope refuses after a squash-merged milestone** (project, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-06-friction-the-configured-exit-gate-s-final-scope-refuses-after-a-squash-merged-milestone-1`
   m02's configured implement exit gate (--review-scope final with the state-selection prompt) expanded to the whole project and refused on m01's squash-merged phase anchors (run 788ae91a); each m02 exit run had to be routed to an explicit phase range (p07-p13, p07-p-rev2, p07-p-rev3).
   Uncertainty: a fix in m03 only helps gates from the release that carries it, because gates run the installed CLI.
-- **2026-11-06 · worked-well · Deferring nonblocking PR-bot findings keeps delivery evidence fresh through merge** (project, efficiency) `oat-project:review-gate-integrity-goal#2026-11-06-worked-well-deferring-nonblocking-pr-bot-findings-keeps-delivery-evidence-fresh-through-merge-1`
+- **2026-11-06 · worked-well · Deferring nonblocking PR-bot findings keeps delivery evidence fresh through merge** (project, efficiency) `oat-archive:20261109-review-gate-integrity-goal#2026-11-06-worked-well-deferring-nonblocking-pr-bot-findings-keeps-delivery-evidence-fresh-through-merge-1`
   PR 403's only post-gate bot finding (a nonblocking Warp test-hygiene suggestion) was deferred to p08 by the operator and recorded in a journal-only commit; oat project delivery check stayed ok and d02 merged with its exit gate and integrated review fresh, unlike d01, where post-gate Bugbot fixes staled both.
-- **2026-11-04 · friction · Repo records after a reviewed head stale goal milestone evidence** (project, gotcha) `oat-project:review-gate-integrity-goal#2026-11-04-friction-repo-records-after-a-reviewed-head-stale-goal-milestone-evidence-1`
+- **2026-11-04 · friction · Repo records after a reviewed head stale goal milestone evidence** (project, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-04-friction-repo-records-after-a-reviewed-head-stale-goal-milestone-evidence-1`
   a commit filing a backlog item (.oat/repo/pjm/backlog/) after m02's reviewed head made oat project delivery check report the exit carrier and integrated review stale (disallowed-path), although the implementation fingerprint excludes .oat/repo.
   Uncertainty: whether excluding .oat/repo from the successor rule is intended.
-- **2026-11-03 · friction · PR bots review after the milestone gates and can force post-gate fixes** (project, gotcha) `oat-project:review-gate-integrity-goal#2026-11-03-friction-pr-bots-review-after-the-milestone-gates-and-can-force-post-gate-fixes-1`
+- **2026-11-03 · friction · PR bots review after the milestone gates and can force post-gate fixes** (project, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-03-friction-pr-bots-review-after-the-milestone-gates-and-can-force-post-gate-fixes-1`
   Cursor Bugbot reviewed PR 400 after the m01 exit gate and cycle-2 integrated review had passed with no findings, and raised two valid skill-prose findings (one High).
-- **2026-11-03 · friction · Squash merge requires a fresh branch for the next milestone** (project, gotcha) `oat-project:review-gate-integrity-goal#2026-11-03-friction-squash-merge-requires-a-fresh-branch-for-the-next-milestone-1`
+- **2026-11-03 · friction · Squash merge requires a fresh branch for the next milestone** (project, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-03-friction-squash-merge-requires-a-fresh-branch-for-the-next-milestone-1`
   PR 400 was squash-merged, so the 126 goal-branch commits are not ancestors of main even though the trees match.
-- **2026-11-02 · bug · Codex gate target loses the branch-local route receipt** (general, gotcha) `oat-project:review-gate-integrity-goal#2026-11-02-bug-codex-gate-target-loses-the-branch-local-route-receipt-1`
+- **2026-11-02 · bug · Codex gate target loses the branch-local route receipt** (general, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-02-bug-codex-gate-target-loses-the-branch-local-route-receipt-1`
   oat gate review --target codex-6-sol-xhigh (installed CLI 0.3.42) ran the Sol reviewer to completion and committed a 0/0/0/0 artifact, then failed review_failed at target-dispatch: 'Branch-local gate route did not return JSON.' The route receipt at OAT_GATE_ROUTE_RECEIPT_PATH was missing or empty after the child exited (run 48f5553c).
-- **2026-11-02 · friction · Gate-committed artifacts break freshness after a late head advance** (general, gotcha) `oat-project:review-gate-integrity-goal#2026-11-02-friction-gate-committed-artifacts-break-freshness-after-a-late-head-advance-1`
+- **2026-11-02 · friction · Gate-committed artifacts break freshness after a late head advance** (general, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-02-friction-gate-committed-artifacts-break-freshness-after-a-late-head-advance-1`
   The gate CLI commits its review artifact right after each run.
-- **2026-11-02 · friction · oat sync from installed CLI deletes newer provider views** (general, gotcha) `oat-project:review-gate-integrity-goal#2026-11-02-friction-oat-sync-from-installed-cli-deletes-newer-provider-views-1`
+- **2026-11-02 · friction · oat sync from installed CLI deletes newer provider views** (general, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-02-friction-oat-sync-from-installed-cli-deletes-newer-provider-views-1`
   Running the installed oat sync on a branch that merged a newer main deleted main's gpt-6-1-terra Codex views and left four reviewer views stale; regenerating with the branch build (node packages/cli/dist/index.js sync) was correct.
-- **2026-11-01 · friction · Temporary HOME leaked into the root shell** (general, gotcha) `oat-project:review-gate-integrity-goal#2026-11-01-friction-temporary-home-leaked-into-the-root-shell-1`
+- **2026-11-01 · friction · Temporary HOME leaked into the root shell** (general, gotcha) `oat-archive:20261109-review-gate-integrity-goal#2026-11-01-friction-temporary-home-leaked-into-the-root-shell-1`
   after the p01 phase implementer ran isolated-HOME test suites, the root shell's HOME pointed at a mktemp directory, so the dispatch resolver lost the user-scope ladder and one root commit got a hostname fallback author email.
 
 Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.
