@@ -39,11 +39,11 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | pending   | 1     | 0/1      |
-| p03   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
+| p03   | pending     | 1     | 0/1      |
 
 **Total:** 1/3 phases accepted
 
@@ -166,6 +166,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 - run/v1 · request=gdf-p01-impl-20261109 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-p01-review-20261109 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=gdf-p02-impl-20261109 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -184,9 +185,10 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 Document any intentional deviations from the brief. Include accepted review findings where the shipped implementation is source of truth and the brief needs alignment.
 
-| Phase / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| -------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -              | -               | -                    | -                 | -      | -               | -         |
+| Phase / Review | Source Artifact                                            | Planned / Documented                                                  | Actual / Accepted                                                                                                                                                                                                                                                                      | Reason                                                                                                                                                    | Source of Truth | Follow-up                         |
+| -------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------- |
+| p02 (KU2)      | plan.md Outcome 2; BL-261108-give-goal-closeout-a-recorded | Closeout lists the waiver (backlog criterion named the outcome audit) | `closeout-check --json` and `complete-state --json` carry `waivers`, and both human outputs print one line per waiver; `oat_goal_outcome_audit` is unchanged                                                                                                                           | KU2 settled by p02: closeout output is where the waiver is read at completion; the outcome audit records per-outcome dispositions, not delivery freshness | implementation  | p03 docs name the `waivers` field |
+| p02            | plan.md Outcome 2 refusals                                 | Refusals listed in Outcome 2                                          | Waive also refuses `not-head-movement` (a consumer would still read the delivery stale after the observed heads are waived, e.g. a base change) plus input refusals (`unknown-delivery`, `delivery-not-observable`, `reason-missing`, `author-missing`, recorded `failed` disposition) | Follows from "covers head movement only" and "restores the stored record": writing `passed`/`fresh` while still stale would record a false state          | implementation  | none                              |
 
 ## Final Summary (for PR/docs)
 
