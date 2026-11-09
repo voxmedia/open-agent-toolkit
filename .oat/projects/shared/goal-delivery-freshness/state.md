@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: d3b44aa40
+oat_last_commit: a029b75f4
 oat_blockers: []
 associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
   - type: backlog
@@ -129,18 +129,18 @@ oat_phase_recovery_policy:
 
 # Project State: goal-delivery-freshness
 
-**Status:** Plan
+**Status:** Implementation
 **Started:** 2026-11-09
 **Last Updated:** 2026-11-09
 
 ## Current Phase
 
-Implementation - Phase-units complete; awaiting final review.
+Implementation - Phase-units complete; final review passed; awaiting the implementation exit gate.
 
 ## Artifacts
 
 - **Plan:** `plan.md` (Project Brief approved 2026-11-09; ready for oat-project-implement)
-- **Implementation:** `implementation.md` (scaffolded brief journal template — not started)
+- **Implementation:** `implementation.md` (p01–p03 accepted; final review passed)
 - **Research:** `references/research/` (empty)
 
 ## Progress
@@ -153,7 +153,8 @@ Implementation - Phase-units complete; awaiting final review.
 - ✓ p02 head-bound freshness waiver (accepted 2026-11-09)
 - ✓ p03 pre-merge prose, waiver routing and docs (accepted 2026-11-09)
 - ✓ All phase-units accepted
-- ⧗ Awaiting final review
+- ✓ Final review passed (2026-11-09; 1 Low fixed)
+- ⧗ Implementation exit gate
 
 ## Blockers
 
@@ -161,4 +162,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-brief` to author and approve the brief
+Run the configured `oat-project-implement` exit gate, then the final closeout

@@ -279,12 +279,23 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - run/v1 · request=gdf-p02-review-20261109 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-p03-impl-20261109 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-medium · model=claude-opus-5-5 · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-p03-review-20261109 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=gdf-final-review-20261109 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+### Review Received: final
+
+**Review:** `gdf-final-review-20261109` (oat-reviewer-claude-claude-opus-5-5-high), code `final` (p01–p03) on `6989fdfb..36b1fe5b`; artifact `reviews/archived/final-review-2026-11-09T044130Z.md` (local-only).
+**Findings:** 0 critical, 0 high, 0 medium, 1 low.
+**Reconnaissance:** not-attempted.
+
+- L1 (Low, class: regression-gap in the p03 L1 fix): the Step 5.5 preamble did not say when a waiver written in item 3a or 8 reaches the regenerated local progress PR description → fixed in `a029b75f4` with the reviewer's one-clause wording (no regeneration step added); the verbatim pin in `goal-delivery-waiver-contracts.test.ts` updated with it. Skill-contract suites (1270), `pnpm check`, lint, format and `check:skill-bumps` exit 0. Lows only, so no re-review round.
+
+**Outcome:** passed (no Critical/High/Medium); Low fix completed.
 
 ## Deferred Findings
 
