@@ -57,6 +57,31 @@ oat_template: false
 
 Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1), and p01's slices (`classifyPath` change, its tests, contract 12.8 prose) share `delivery/evidence.ts` and its test file, so they fail the independence test for a root fan-out (rung 2). The phase adds new evaluator branches with negative controls, so the inline exception (rung 4) does not hold.
 
+### Task p01-t01: Admit project review files and backlog paths as bookkeeping
+
+**Status:** completed
+**Commit:** 5606c3a0e9ce69020426f35a87e10eaf050251be
+**Executor:** phase-implementer:gdf-p01-impl-20261109
+
+- Intent: `classifyPath` returns `review-artifact` for any single file directly under this project's `reviews/` or `reviews/archived/`, and a new `backlog` kind (checked before the project-directory check) for paths under `.oat/repo/pjm/backlog/`; `judgeBookkeepingChange` accepts add/modify/delete for `backlog`. Own-evidence and review-row identity guards unchanged.
+- Files: `packages/cli/src/commands/project/delivery/evidence.ts`, `packages/cli/src/commands/project/delivery/evidence.test.ts`, plus existing delivery/closeout tests whose expectations encoded the old reviews/ allowlist.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery src/commands/project/closeout-check`, can-fail proofs per new branch, and a built-CLI probe on a scratch goal repo.
+- Result: focused delivery and closeout suites exit 0 (7 files, 226 tests, 11 new); `pnpm --filter @open-agent-toolkit/cli type-check` and `lint` exit 0.
+- Changed expectations: ten existing tests encoded the old rule that an unlisted file under `reviews/` is a disallowed path (a gate artifact whose row is manual, mismatched, placeholder or artifact-typed; an unlisted `reviews/other-review.md`). Under Outcome 1 they now read fresh: `evidence.test.ts` gate-admission cases still assert the scope builder keeps those artifacts out of shared and own evidence; `check.test.ts` (3), `refresh.test.ts` (1) and `goal-boundary.test.ts` (1) flip to ok/fresh/complete; the unknown-path control now uses nested `reviews/nested/…`, `reviews/archived/nested/…` and another project's `reviews/` file. The `design.md` gate-row control stays disallowed.
+- Can-fail proofs (each neutralized in `evidence.ts`, `evidence.test.ts` run, file restored byte-identical): review-file branch disabled → sibling-artifact, mixed, gate-admission and stale cases fail (12); backlog classification disabled → backlog, mixed and stale cases fail (7); backlog judged as refused → the same 7 fail; review regex widened to any depth under `reviews/` → nested unknown-path control fails; backlog prefix widened to `.oat/repo/` → decision-record, other `.oat/repo` and prefix-sibling stale cases fail; backlog prefix without its trailing slash → `.oat/repo/pjm/backlog-notes.md` stale case fails; identity guard's own-artifact requirement removed → the new sibling-identity case and three existing identity cases fail.
+- Built-CLI probe (`pnpm build` exit 0, then `node packages/cli/dist/index.js --json project delivery check --project .oat/projects/shared/goal --subject d01` in scratch goal repos under the session scratchpad, built from the `__tests__/goal-repo.ts` fixtures with the member's observation committed; released `oat` 0.3.46 run beside it): accepted control (observed head = reviewed) → branch `ok` exit 0, released `ok`; mixed commit (state.md routing + `reviews/archived/d02-review.md` + backlog item and index) → branch `ok` exit 0, released `undeliverable` exit 1 (`disallowed-path … reviews/archived/d02-review.md`), the pre-fix bad state; same plus `src/app.ts` → branch `undeliverable` exit 1 `disallowed-path … src/app.ts`; same plus `.oat/repo/reference/decisions/DR-261109-demo.md` → branch `undeliverable` exit 1 `disallowed-path … DR-261109-demo.md`; sibling d02 artifact and row recorded while d01's pointer and heads move to an unreviewed fix → branch `undeliverable` exit 1 `substantive-change … state.md: delivery d01 member 0 changed its reviewed_head without recording a new review artifact`.
+- KU1 (settled): `oat backlog regenerate-index` writes only `backlog/index.md`; `oat backlog new` writes `backlog/items/<id>.md` and the index; `oat backlog archive` moves `items/<id>.md` to `archived/<id>.md` and writes `completed.md` and the index, all under `.oat/repo/pjm/backlog/`, but it also rewrites inbound references to the item in Markdown anywhere under `.oat/repo` (`backlog/rewrite-references.ts`, scan root `.oat/repo`). Those reference rewrites outside the backlog stay substantive, as the brief's constraint on other `.oat/repo` paths requires.
+
+### Task p01-t02: Brief contract 12.8 bookkeeping paths
+
+**Status:** in_progress
+**Executor:** phase-implementer:gdf-p01-impl-20261109
+**Handle:** phase-implementer:gdf-p01-impl-20261109 (this session)
+
+- Intent: section 12.8 Paths names any file directly under `reviews/` or `reviews/archived/` and paths under `.oat/repo/pjm/backlog/`, keeping decision records and other `.oat/repo` paths substantive and the identity rules unchanged. No skill version bump (p03).
+- Files: `.agents/skills/oat-project-brief/references/brief-contract.md`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, `pnpm lint`, `pnpm format`.
+
 ---
 
 ## Phase p02: Head-bound freshness waiver
