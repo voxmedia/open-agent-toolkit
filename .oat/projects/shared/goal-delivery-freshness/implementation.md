@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-09
@@ -349,7 +349,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 **Outcome:** passed (gate `ok`); M1 fixed at receive as p03-t09; no re-review (address-now sweep rule).
 
-**Gate:** oat-project-implement exit · **Scope:** final · **Outcome:** passed (0/0/1/0, `codex-6-sol-xhigh`) · attempt 2 of 2; M1 addressed as p03-t09 after the gate
+**Gate:** oat-project-implement exit · **Scope:** final · **Outcome:** passed (0/0/1/0, `codex-6-sol-xhigh`) · attempt 2 of 2; M1 addressed as p03-t09 after the gate; operator waiver (Thomas Stang) covers `a323ee7ce..320f394e2`
 
 ### Review Received: final (fix re-review)
 

@@ -75,6 +75,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:
 
 Exit gate attempt 2 (run gdf-gate2-bdd9fc61, codex-6-sol-xhigh) passed 0/0/1/0; M1 stacked-carrier regression addressed as p03-t09 (320f394e2); fix loops: 2.
 
+### 2026-11-09 · structural · oat-project-implement · implement
+
+Implementation complete (gdf-implement-complete-20261109): exit gate allowed (attempt 2, waived p03-t09), closeout sequence summary/document/pr complete, PR #417 open.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
