@@ -629,6 +629,42 @@ oat_goal_recovery:
       );
     });
 
+    it('refuses a delivery that is not open or at its endpoint', async () => {
+      repo = await createGoalRepo();
+      const { gh } = await staleDelivery(repo);
+      const state = await repo.read('state.md');
+      const superseded = state.replace(
+        /^ {4}status: (?:open|at_endpoint)$/m,
+        '    status: superseded',
+      );
+      expect(deliveryRecord(superseded)['status']).toBe('superseded');
+      await repo.write('state.md', superseded);
+      repo.commitAll('chore(oat): supersede d01');
+      const before = await repo.read('state.md');
+      await expectRefused(
+        repo,
+        await waive(repo, gh),
+        'delivery-not-observable',
+        before,
+      );
+    });
+
+    it('refuses no_gate carriers when an untracked local config now configures the gate', async () => {
+      // The tracked-file comparison cannot see `.oat/config.local.json`; the
+      // resolution check must.
+      repo = await createGoalRepo();
+      const { gh } = await staleDelivery(repo, { noGate: true });
+      await repo.writeRepo('.oat/config.local.json', exitGateConfig('false'));
+      const before = await repo.read('state.md');
+      const result = await waive(repo, gh);
+      await expectRefused(repo, result, 'configuration-changed', before);
+      const message = String(result.payload['message']);
+      expect(message).toContain(
+        'the gate now resolves as configured, not no_gate',
+      );
+      expect(message).not.toContain('.oat/config.json changed between');
+    });
+
     it('refuses an unknown delivery', async () => {
       repo = await createGoalRepo();
       const { gh } = await staleDelivery(repo);
@@ -768,6 +804,116 @@ oat_goal_recovery:
     );
     expect(await repo.read('state.md')).toBe(before);
   });
+
+  /**
+   * Carriers bound to an earlier head C, `.oat/config.json` changed in C..R,
+   * the integrated review (and each member's `reviewed_head`) at R, then a
+   * source-only move to F. Only the carrier's own C..F walk spans the change.
+   */
+  async function carrierBeforeReconfiguration(
+    target: GoalRepo,
+    kind: 'pr' | 'stack',
+  ) {
+    await target.writeRepo('.oat/config.json', exitGateConfig('true'));
+    let lower: string | null = null;
+    if (kind === 'stack') {
+      await target.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      lower = target.commitAll('feat: lower layer');
+    }
+    await target.writeRepo('src/gated.ts', 'export const gated = 1;\n');
+    const carrierHead = target.commitAll(
+      'feat: the change the exit gate ran on',
+    );
+    await target.writeRepo('.oat/config.json', exitGateConfig('false'));
+    target.commitAll('chore: reconfigure the exit gate before the review');
+    const lowerUrl = 'https://github.com/owner/name/pull/6';
+    await bookkeepingChain(target, {
+      register: (reviewed) =>
+        `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+          reviewed,
+          base: target.baseSha,
+          kind,
+          ...(lower === null
+            ? {}
+            : {
+                members: [
+                  {
+                    url: lowerUrl,
+                    base: target.baseSha,
+                    reviewedHead: lower,
+                    observedHead: lower,
+                    observedBase: target.baseSha,
+                  },
+                  {
+                    url: MEMBER_URL,
+                    base: lower,
+                    reviewedHead: reviewed,
+                    observedHead: reviewed,
+                    observedBase: lower,
+                  },
+                ],
+              }),
+          deliveryExitGate: configuredCarrier(carrierHead),
+          exit: configuredCarrier(carrierHead),
+        })}`,
+    });
+    await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+    const fix = target.commitAll('fix: post-review change');
+    const observed: Record<string, Observation> = {
+      [MEMBER_URL]: {
+        state: 'OPEN',
+        head: fix,
+        base: lower ?? target.baseSha,
+      },
+      ...(lower === null
+        ? {}
+        : {
+            [lowerUrl]: {
+              state: 'OPEN' as const,
+              head: lower,
+              base: target.baseSha,
+            },
+          }),
+    };
+    const gh: GhRunner = {
+      run: (args) => {
+        const observation = observed[args.find((arg) => arg in observed)!]!;
+        return Promise.resolve({
+          code: 0,
+          stdout: JSON.stringify({
+            state: observation.state,
+            headRefOid: observation.head,
+            baseRefOid: observation.base,
+          }),
+          stderr: '',
+        });
+      },
+    };
+    expect((await refresh(target, gh)).exitCode).toBe(0);
+    target.commitAll('chore(oat): record the observations');
+    return { carrierHead, gh };
+  }
+
+  for (const kind of ['pr', 'stack'] as const) {
+    it(`refuses a ${kind} whose carrier walk alone spans a gate reconfiguration`, async () => {
+      repo = await createGoalRepo();
+      const { carrierHead, gh } = await carrierBeforeReconfiguration(
+        repo,
+        kind,
+      );
+      const before = await repo.read('state.md');
+      const result = await waive(repo, gh);
+      expect(result.exitCode).toBe(1);
+      expect(result.payload).toMatchObject({
+        status: 'refused',
+        code: 'configuration-changed',
+      });
+      expect(String(result.payload['message'])).toContain(
+        `.oat/config.json changed between ${carrierHead}`,
+      );
+      expect(await repo.read('state.md')).toBe(before);
+    });
+  }
 
   it('waives only the named delivery on a shared member PR, never its sibling', async () => {
     repo = await createGoalRepo();

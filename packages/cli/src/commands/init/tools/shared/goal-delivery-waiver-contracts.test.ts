@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { WAIVE_REFUSAL_CODES } from '@commands/project/delivery/waive';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -150,20 +151,7 @@ describe('brief contract and implement closeout alignment', () => {
       '**Operator waiver.** `oat project delivery waive --project',
       '### 12.8 Bookkeeping-successor freshness',
     );
-    for (const code of [
-      'autonomous',
-      'reason-missing',
-      'author-missing',
-      'unknown-delivery',
-      'delivery-not-observable',
-      'observation-failed',
-      'missing-object',
-      'review-not-passed',
-      'carrier-not-allowed',
-      'configuration-changed',
-      'already-fresh',
-      'not-head-movement',
-    ]) {
+    for (const code of WAIVE_REFUSAL_CODES) {
       expect(waiver).toContain(`(\`${code}\``);
     }
     expect(waiver).toContain(

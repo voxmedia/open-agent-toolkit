@@ -61,19 +61,23 @@ import {
  * revision, a member base or an earlier waiver, and it never commits.
  */
 
-export type WaiveRefusalCode =
-  | 'autonomous'
-  | 'reason-missing'
-  | 'author-missing'
-  | 'unknown-delivery'
-  | 'delivery-not-observable'
-  | 'observation-failed'
-  | 'missing-object'
-  | 'review-not-passed'
-  | 'carrier-not-allowed'
-  | 'configuration-changed'
-  | 'already-fresh'
-  | 'not-head-movement';
+/** Every stable `--json` refusal code `delivery waive` can return. */
+export const WAIVE_REFUSAL_CODES = [
+  'autonomous',
+  'reason-missing',
+  'author-missing',
+  'unknown-delivery',
+  'delivery-not-observable',
+  'observation-failed',
+  'missing-object',
+  'review-not-passed',
+  'carrier-not-allowed',
+  'configuration-changed',
+  'already-fresh',
+  'not-head-movement',
+] as const;
+
+export type WaiveRefusalCode = (typeof WAIVE_REFUSAL_CODES)[number];
 
 export interface WaiveRefusal {
   code: WaiveRefusalCode;
@@ -254,8 +258,10 @@ async function judgeDelivery(
  * A waived head would also skip a commit that changed the tracked shared gate
  * configuration, which no recorded resolution can reveal when a configured
  * gate stays configured. Compare `.oat/config.json` across exactly the walks
- * the freshness evaluators judge and the waiver would move: each member's own
- * reviewed head to its observed head (the integrated review), and a configured
+ * the freshness evaluators judge and the waiver would move: each member's
+ * reviewed head (its `reviewed_head`, else its bound revision in
+ * `integrated_review.bound_revisions`, as the review walk anchors it) to its
+ * observed head (the integrated review), and a configured
  * carrier's reviewed head to the tip member's observed head for a stack, or to
  * every member's observed head for any other kind (`evaluateDeliveryExitCarrier`).
  * Returns the reason to refuse, or `null` when the file is unchanged; an
@@ -269,9 +275,15 @@ async function sharedGateConfigurationChange(
   carriers: readonly (GoalDelivery['exit_gate'] | null)[],
 ): Promise<string | null> {
   const pairs: { anchor: string; head: string }[] = [];
-  for (const member of members) {
-    if (member.reviewed_head && member.observed_head) {
-      pairs.push({ anchor: member.reviewed_head, head: member.observed_head });
+  for (const [index, member] of members.entries()) {
+    const anchor =
+      member.reviewed_head ??
+      delivery.integrated_review?.bound_revisions.find(
+        (revision) => revision.member === index,
+      )?.head ??
+      null;
+    if (anchor && member.observed_head) {
+      pairs.push({ anchor, head: member.observed_head });
     }
   }
   const carrierMembers =
