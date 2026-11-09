@@ -147,3 +147,19 @@ oat gate review --target codex-6-sol-xhigh (installed CLI 0.3.42) ran the Sol re
 **Recorded:** 2026-11-02T23:39:20Z
 
 The gate CLI commits its review artifact right after each run. When a phase head is advanced past a fix commit that predates an earlier gate run, that earlier artifact commit lands after the new reviewed head; section 12.8 admits a gate artifact only when its row's Reviewed Head equals the carrier's, so the exit carrier reads stale until the head advances past every gate commit and the gate reruns. Advance a phase head before running the milestone exit gate. rgi-m01-gate-artifact-freshness
+
+### 2026-11-09 · general · worked-well · delivery evidence allowlist changes
+
+**Category:** gotcha
+**Source:** gdf-p01-flipped-controls
+**Recorded:** 2026-11-09T03:21:37Z
+
+gdf-p01-flipped-controls: widening a path allowlist in delivery/evidence.ts flipped ten existing negative controls from stale to fresh with no identity risk. Run the delivery, check, refresh and closeout suites before writing new tests, then rename each flipped test to say what it still proves.
+
+### 2026-11-09 · general · worked-well · can-fail proofs on refusal fixtures
+
+**Category:** gotcha
+**Source:** gdf-p02-weak-fixture
+**Recorded:** 2026-11-09T04:04:30Z
+
+gdf-p02-weak-fixture: disabling each refusal clause one at a time exposed a fixture that refused for a different reason than the one it was named for. When proving a refusal can fail, check which refusal the fixture actually trips, not only that it refuses.
