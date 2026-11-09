@@ -62,25 +62,20 @@ close out after a post-gate fix was squash-merged
 2. **Operator waiver for head-movement staleness.** `oat project delivery
 waive` appends a waiver to one registered delivery (who, why, when, and the
    waived head for each member, observed live) and, in the same `state.md`
-   write, restores that delivery's stored `integrated_review.disposition` to
-   `passed` and its exit carrier freshness to `fresh`, and clears an
+   write, restores that delivery's stored `integrated_review.disposition` to `passed`, records the live observations it made, sets `oat_milestone_gates[mNN].exit.freshness` to `fresh` (clearing `freshness_reason`) when the delivery is its milestone's latest registered delivery, never touches the set-once `exit_gate`, and clears an
    `oat_goal_recovery` record that targets it. It refuses under
    `OAT_AUTONOMOUS=1`, when live observation fails, for a delivery that is
    already fresh, and unless the delivery's governing Reviews row names its
-   recorded integrated-review artifact with status `passed` and its exit
-   carrier's outcome is `allowed`. The freshness evaluator then judges commits
+   recorded integrated-review artifact with status `passed` and every carrier a consumer judges for it (the milestone working carrier and the delivery's `exit_gate`) has outcome `allowed`. Refusals carry a stable code under `--json`. The freshness evaluator then judges commits
    after the reviewed head from the waived head instead, leaving every other
    check unchanged, so a waiver covers head movement only and never a missing
    or failed review or a missing, blocked or reconfigured carrier. With no
    further change, `delivery check --subject dNN` reports `status: ok`, the
    router stops routing the delivery to recovery, and `closeout-check` and
-   `complete-state` succeed; closeout lists the waiver. A later commit after a
-   waived head that is not bookkeeping, or a later review that queues fixes,
-   stales the delivery again. Evidence: evaluator and CLI tests with negative
+   `complete-state` succeed; closeout lists the waiver. A later commit after a waived head that is not bookkeeping, or a later review that queues fixes, stales the delivery again; a later passed review or carrier at a descendant head is judged from its own reviewed head as today. Evidence: evaluator and CLI tests with negative
    controls (a later substantive commit, a waived head that is not the observed
    head, an autonomous run, a waiver on a sibling delivery, a governing row
-   with fixes queued, a blocked carrier, a base change, an edited earlier
-   waiver entry, plus an unwaived control), a can-fail proof per clause, and a
+   with fixes queued, a blocked carrier, a base change, an edited earlier waiver entry, a waiver followed by a new passed review at a descendant head that stays fresh, plus an unwaived control), a can-fail proof per clause, and a
    branch-build probe that refreshes a squash-merged stale delivery, waives it,
    checks that the router and closeout clear, and completes the project.
 3. **Prevention and routing.** `oat-project-pr-progress` tells whoever merges
@@ -129,8 +124,7 @@ it is written, so the readers of that record (the control-plane router, the
   substantive. For a merged delivery, whose member range no longer changes,
   git history is the audit trail.
 - **Waiver consumption (p02).** In the review and exit-carrier freshness
-  evaluations, when the latest waiver names a member, the successor walk for
-  that member starts at its `waived_head` instead of the reviewed head. All
+  evaluations, when the latest waiver names a member and the walk's own anchor (the member's reviewed head, or the carrier's reviewed head) equals or is an ancestor of its `waived_head`, the successor walk for that member starts at the `waived_head`; otherwise a newer review or carrier supersedes the waiver and the walk starts at its own anchor, as today. All
   other checks (review presence, scope, bound revisions, base, carrier
   outcome, subject, override and configuration) run unchanged, for the
   carrier each consumer already judges (the working carrier for `delivery
@@ -139,8 +133,7 @@ check` and `refresh`, the delivery's `exit_gate` for closeout). The waiver
   unregistered milestone and has no waiver.
 - **Waive command (p02).** `oat project delivery waive --project <path>
 --delivery dNN --reason <text> [--by <name>]` observes the members live, as
-  `delivery refresh` does, checks the refusals in Outcome 2, and writes the
-  waiver and the restored record in one `state.md` write. A missing local
+  `delivery refresh` does, checks the refusals in Outcome 2, and writes the waiver, the observations and the restored record in one `state.md` write. A missing local
   object for a member head refuses with a hint to fetch the PR head.
 
 ## Constraints and Out of Scope
@@ -229,8 +222,8 @@ check` and `refresh`, the delivery's `exit_gate` for closeout). The waiver
 
 ## Phase p02: Head-bound freshness waiver
 
-**Intent:** Add `freshness_waivers` to the delivery schema and parser; re-anchor the review and exit-carrier successor walks on a member's waived head; admit an appended waiver with its restored record as bookkeeping; add the operator-only `oat project delivery waive` command that appends the waiver, restores the stored disposition and carrier freshness and clears a targeting recovery; and update brief contract sections 12.6, 12.7 and 12.9. Incident: d01 (#400) could never close out. Size: M.
-**Exit evidence:** Evaluator and CLI tests with the Outcome 2 negative controls, a can-fail proof per clause, router and `complete-state` tests on a fixture whose only refusal was a waived delivery, the skill-contract vitest suites green, and a branch-build probe that refreshes a squash-merged stale delivery, waives it, and completes the project.
+**Intent:** Add `freshness_waivers` to the delivery schema and parser; re-anchor the review and exit-carrier successor walks on a member's waived head; admit an appended waiver with its restored record as bookkeeping; add the operator-only `oat project delivery waive` command that appends the waiver, restores the stored disposition and, for the milestone's latest delivery, the working carrier's freshness, and clears a targeting recovery; and update brief contract sections 12.6, 12.7 and 12.9. Incident: d01 (#400) could never close out. Size: M.
+**Exit evidence:** Evaluator and CLI tests with the Outcome 2 negative controls, a can-fail proof per clause, router and `complete-state` tests on a fixture whose only refusal was a waived delivery, the skill-contract vitest suites green, and a closeout-output assertion that names the waiver, and a branch-build probe that refreshes a squash-merged stale delivery, waives it, and completes the project.
 **Provisional:** yes
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
@@ -257,11 +250,11 @@ Default is `[]` (fully sequential, no worktrees).
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status          | Date       | Artifact                                                                                                                               | Reviewed Head | Invocation | Gate Target                              |
+| ----- | -------- | --------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ---------------------------------------- |
+| plan  | artifact | fixes_completed | 2026-11-09 | structured (3 attempts, retry bound reached; round 3 H1 waiver re-anchor, M1 carrier write, L1-L3 folded; verified by configured gate) | 5358b2a8a     | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p01   | code     | pending         | -          | -                                                                                                                                      | -             | -          | -                                        |
+| final | code     | pending         | -          | -                                                                                                                                      | -             | -          | -                                        |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
