@@ -31,6 +31,18 @@ gdf-p01-flipped-controls: widening a path allowlist in delivery/evidence.ts flip
 
 p02 made concrete before dispatch: Provisional set to no; Intent adds KU2 settlement and the p01 review L1 docstring rewording, both within Outcome 2 and the Approach; p02 code row added to Reviews.
 
+### 2026-11-09 · structural · oat-project-implement · p02
+
+p02 outcome: passed on first review round (0 C/H/M, 3 Low deferred to p03); fix loops: 0; implementer gdf-p02-impl-20261109, reviewer gdf-p02-review-20261109. p03 made concrete: Intent adds the completion-and-closeout.md alignment and the p02 review Lows; p03 code row added.
+
+### 2026-11-09 · general · worked-well · can-fail proofs on refusal fixtures
+
+**Category:** gotcha
+**Source:** gdf-p02-weak-fixture
+**Recorded:** 2026-11-09T04:04:30Z
+
+gdf-p02-weak-fixture: disabling each refusal clause one at a time exposed a fixture that refused for a different reason than the one it was named for. When proving a refusal can fail, check which refusal the fixture actually trips, not only that it refuses.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

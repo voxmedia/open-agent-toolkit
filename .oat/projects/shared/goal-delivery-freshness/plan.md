@@ -230,9 +230,9 @@ check` and `refresh`, the delivery's `exit_gate` for closeout). The waiver
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
 
-**Intent:** Add the pre-merge `delivery check` instruction to `oat-project-pr-progress` (registration report and milestone PR body), accept a waived delivery in its registration, 3a and recovery-target steps, route a delivery that is stale past its endpoint to the waiver, update the delivery and closeout docs and CLI reference, and make the skill and lockstep version bumps. Incident: d01. Size: S.
+**Intent:** Add the pre-merge `delivery check` instruction to `oat-project-pr-progress` (registration report and milestone PR body), accept a waived delivery in its registration, 3a and recovery-target steps, route a delivery that is stale past its endpoint to the waiver, update the delivery and closeout docs and CLI reference, align `oat-project-implement`'s `completion-and-closeout.md` step 1 with p01's path rule (p01 implementer concern), fix the p02 review Lows (L1 waive refusal message and contract 12.7 wording for a stored-stale but live-fresh delivery; L2 contract 12.7 refusal codes, 12.9 complete-state listing and the control-plane README; L3 mention waivers in the summary and PR body), and make the skill and lockstep version bumps. Incident: d01. Size: S.
 **Exit evidence:** Skill contract tests pinning the new sentences, the doc diffs, and the full Definition of Done gate list green.
-**Provisional:** yes
+**Provisional:** no
 
 ---
 
@@ -256,7 +256,8 @@ Default is `[]` (fully sequential, no worktrees).
 | ----- | -------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
 | plan  | artifact | passed  | 2026-11-09 | structured (3 attempts, retry bound reached; round 3 H1 waiver re-anchor, M1 carrier write, L1-L3 folded; verified by configured gate (passed 0/0/0/0)) | 5358b2a8a                                | auto       | oat-reviewer-claude-claude-opus-5-5-high |
 | p01   | code     | passed  | 2026-11-09 | reviews/archived/p01-review-2026-11-09T032005Z.md                                                                                                       | 7b061c1af55fdca4a71526401d1e04c32b25c0e7 | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| p02   | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
+| p02   | code     | passed  | 2026-11-09 | reviews/archived/p02-review-2026-11-09T040231Z.md                                                                                                       | 7e84086e245cd4428d40c0a4019ad6a92a5909ee | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p03   | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
 | final | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
 | plan  | artifact | passed  | 2026-11-09 | reviews/archived/artifact-plan-review-2026-11-09T024116Z.md                                                                                             | 03985c62aa51ed152bd2c5ea04e0cd071df7c451 | gate       | codex-6-sol-xhigh                        |
 

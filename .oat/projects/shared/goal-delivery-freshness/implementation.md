@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-09
-oat_current_task_id: p02
+oat_current_task_id: p03
 oat_generated: false
 oat_template: false
 ---
@@ -39,13 +39,13 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
-| p03   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
+| p03   | pending   | 1     | 0/1      |
 
-**Total:** 1/3 phases accepted
+**Total:** 2/3 phases accepted
 
 ---
 
@@ -101,7 +101,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 ## Phase p02: Head-bound freshness waiver
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 80557f121f03b31fb49cead40788f9e35bb60200
 **Head:** 7e84086e245cd4428d40c0a4019ad6a92a5909ee
 **Executor:** phase-implementer:gdf-p02-impl-20261109
@@ -150,6 +150,19 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, `pnpm lint`, `pnpm format`.
 - Result: skill-contract suites exit 0 (31 files, 1260 tests); `pnpm oat:validate-skills` exit 0 (68 skills); `oxfmt` clean. 12.6 adds the waive command's recovery clearing beside refresh's never-writes sentence; 12.7 adds `freshness_waivers` to the entry, a waived delivery's "deliverable" reading, and the Operator waiver bullet (every refusal code, the one write, the only sanctioned writer restoring `passed`/`fresh`); 12.8 adds the Operator waiver paragraph (latest-entry re-anchoring with supersession, missing waived head fails closed, stack tip, unchanged checks per consumer, `dNN` only, append-only record); 12.9 says closeout lists waivers and the audit does not.
 
+### Review Received: p02
+
+**Review:** `gdf-p02-review-20261109` (oat-reviewer-claude-claude-opus-5-5-high), code `p02` on anchors `80557f12..7e84086e`; artifact `reviews/archived/p02-review-2026-11-09T040231Z.md` (local-only).
+**Findings:** 0 critical, 0 high, 0 medium, 3 low.
+**Reconnaissance:** not-attempted.
+
+- L1 (Low): a delivery whose stored disposition is `stale` while its live evidence reads fresh gets `undeliverable` from `delivery check` and "nothing to waive" from `delivery waive` → in-scope part (refusal message and contract 12.7 wording) deferred to p03; letting waive restore the record in that state has no contract source (`new-hardening`) and goes to the operator, not built.
+- L2 (Low): contract 12.9 says both commands list waivers but `complete-state` lists them only on success; 12.7 omits four refusal codes (`unknown-delivery`, `delivery-not-observable`, `reason-missing`, `author-missing`); the control-plane README says only the evaluator reads `freshness_waivers` → deferred to p03 (docs/contract alignment).
+- L3 (Low): the p02-t02 hand-off that p03 mentions waivers in the summary and PR body lived only in the journal → folded into p03's Intent.
+- Reviewer judged `not-head-movement` a consequence of Outcome 2 (not new hardening) and the KU2 closeout-output settlement acceptable; reran the focused CLI (369), control-plane (320) and skill-contract (1260) suites and the branch-build probe.
+
+**Outcome:** passed (no Critical/High/Medium). Phase accepted.
+
 ---
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
@@ -167,6 +180,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - run/v1 · request=gdf-p01-impl-20261109 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-p01-review-20261109 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-p02-impl-20261109 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=gdf-p02-review-20261109 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -178,6 +192,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
+- p02 review L1 in-scope part, L2 and L3 (Low): deferred to p03's docs and contract alignment, which edits the same contract and docs; trigger: p03 records. L1's restore-on-stale-but-live-fresh option is `new-hardening`, reported to the operator, not scheduled.
 - p01 review L1 (Low, stale `evidence.ts` docstrings): deferred to p02 because p02 edits the same file; root disposition at receive (Low, non-blocking); trigger: p02's first `evidence.ts` record.
 - p01 implementer concern: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` step 1 still says gate artifacts are "admitted as carrier bookkeeping only when" the reviewed head matches; carried into p03's docs alignment (it needs its own skill bump).
 
