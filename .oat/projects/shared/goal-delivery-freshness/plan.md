@@ -224,9 +224,9 @@ check` and `refresh`, the delivery's `exit_gate` for closeout). The waiver
 
 ## Phase p02: Head-bound freshness waiver
 
-**Intent:** Add `freshness_waivers` to the delivery schema and parser; re-anchor the review and exit-carrier successor walks on a member's waived head; admit an appended waiver with its restored record as bookkeeping; add the operator-only `oat project delivery waive` command that appends the waiver, restores the stored disposition and, for the milestone's latest delivery, the working carrier's freshness, and clears a targeting recovery; and update brief contract sections 12.6, 12.7 and 12.9. Incident: d01 (#400) could never close out. Size: M.
+**Intent:** Add `freshness_waivers` to the delivery schema and parser; re-anchor the review and exit-carrier successor walks on a member's waived head; admit an appended waiver with its restored record as bookkeeping; add the operator-only `oat project delivery waive` command that appends the waiver, restores the stored disposition and, for the milestone's latest delivery, the working carrier's freshness, and clears a targeting recovery; update brief contract sections 12.6, 12.7 and 12.9; settle KU2 (where closeout lists the waiver); and reword the three `evidence.ts` evidence-artifact docstrings that still call that list the review-path allowlist (p01 review L1). Incident: d01 (#400) could never close out. Size: M.
 **Exit evidence:** Evaluator and CLI tests with the Outcome 2 negative controls, a can-fail proof per clause, router and `complete-state` tests on a fixture whose only refusal was a waived delivery, the skill-contract vitest suites green, and a closeout-output assertion that names the waiver, and a branch-build probe that refreshes a squash-merged stale delivery, waives it, and completes the project.
-**Provisional:** yes
+**Provisional:** no
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
 
@@ -256,6 +256,7 @@ Default is `[]` (fully sequential, no worktrees).
 | ----- | -------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
 | plan  | artifact | passed  | 2026-11-09 | structured (3 attempts, retry bound reached; round 3 H1 waiver re-anchor, M1 carrier write, L1-L3 folded; verified by configured gate (passed 0/0/0/0)) | 5358b2a8a                                | auto       | oat-reviewer-claude-claude-opus-5-5-high |
 | p01   | code     | passed  | 2026-11-09 | reviews/archived/p01-review-2026-11-09T032005Z.md                                                                                                       | 7b061c1af55fdca4a71526401d1e04c32b25c0e7 | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p02   | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
 | final | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
 | plan  | artifact | passed  | 2026-11-09 | reviews/archived/artifact-plan-review-2026-11-09T024116Z.md                                                                                             | 03985c62aa51ed152bd2c5ea04e0cd071df7c451 | gate       | codex-6-sol-xhigh                        |
 

@@ -27,6 +27,10 @@ p01 outcome: passed on first review round (0 C/H/M, 1 Low deferred to p02); fix 
 
 gdf-p01-flipped-controls: widening a path allowlist in delivery/evidence.ts flipped ten existing negative controls from stale to fresh with no identity risk. Run the delivery, check, refresh and closeout suites before writing new tests, then rename each flipped test to say what it still proves.
 
+### 2026-11-09 · structural · oat-project-implement · p02
+
+p02 made concrete before dispatch: Provisional set to no; Intent adds KU2 settlement and the p01 review L1 docstring rewording, both within Outcome 2 and the Approach; p02 code row added to Reviews.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
