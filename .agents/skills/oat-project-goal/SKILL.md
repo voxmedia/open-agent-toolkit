@@ -7,7 +7,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.6
+  version: 1.0.7
 ---
 
 # Goal Project
@@ -699,6 +699,10 @@ agreed endpoint (brief contract sections 12.3 and 12.10).
    Commit the persisted observations as bookkeeping. Refresh never writes
    milestone status or recovery; when it reports stale evidence for the
    delivered milestone, stop and report `oat-project-pr-progress` as the owner.
+   When that delivery is stale past its endpoint (observed `at_endpoint` with
+   its members merged), say so in the report: the owner's re-check offers the
+   operator the freshness waiver (`oat project delivery waive`) instead of a
+   recovery that cannot complete. Never run the waiver from this skill.
 2. **Log the entry.** Append the re-alignment structural entry (Project Log).
 3. **Capture learnings.** Call `oat_record_learning` (Project Log) at least
    once for what the delivered milestone taught. This write is the

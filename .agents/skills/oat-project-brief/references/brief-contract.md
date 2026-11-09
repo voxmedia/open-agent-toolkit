@@ -640,18 +640,26 @@ dNN --reason <text> [--by <name>]` is the one sanctioned writer that moves a
   blocked, invalid or reconfigured carrier, and it never covers a base change.
   The command observes the delivery's members live, as refresh does, and
   refuses, writing nothing and with a stable `code` under `--json`: under
-  `OAT_AUTONOMOUS=1` (`autonomous`); when a member cannot be observed
-  (`observation-failed`) or an observed head is not available locally
-  (`missing-object`, with a hint to fetch the pull request head); for an
-  unknown or unobservable delivery; unless the governing Reviews row (the
+  `OAT_AUTONOMOUS=1` (`autonomous`); without a reason (`reason-missing`) or
+  an author (`author-missing`; `--by` defaults to `git config user.name`);
+  for a delivery the registry does not hold (`unknown-delivery`) or one that
+  is neither `open` nor `at_endpoint` (`delivery-not-observable`); when a
+  member cannot be observed (`observation-failed`) or an observed head is not
+  available locally (`missing-object`, with a hint to fetch the pull request
+  head); unless the governing Reviews row (the
   newest `code` row labelled with the delivery or its milestone, section 12.6)
   names the delivery's recorded integrated-review artifact with status
   `passed` and the recorded disposition is not `failed`
   (`review-not-passed`); unless every carrier a consumer judges for it, the
   milestone working carrier and the delivery's `exit_gate`, has outcome
-  `allowed` (`carrier-not-allowed`); for a delivery every consumer already
-  reads fresh (`already-fresh`); and when, with the observed heads waived, any
-  consumer would still read it stale (`not-head-movement`). Otherwise, in one
+  `allowed` (`carrier-not-allowed`); for a delivery whose every consumer's
+  live evaluation already reads fresh (`already-fresh`: there is no head
+  movement to waive; when its recorded disposition is nonetheless `stale`,
+  the refusal says so and names the recovery, a new integrated review
+  received clean, because refresh never writes `passed` and the waiver does
+  not restore a record whose evidence is already fresh); and when, with the
+  observed heads waived, any consumer would still read it stale
+  (`not-head-movement`). Otherwise, in one
   `state.md` write, it records the member observations (and, as refresh
   derives them, `status: at_endpoint` and the first `endpoint_attainment`),
   appends a waiver with `waived_head` equal to each member's observed head,
@@ -840,8 +848,10 @@ declaration, an exhaustive audit and delivery coverage before either
 snapshot success or `not_required`, refuse without writing on unreadable
 inputs or a failed member observation, and name the next owner in
 `nextOwner.skill`. Both list every freshness waiver on the terminal deliveries
-they judged (`waivers` under `--json`, one line per waiver otherwise), so a
-waived delivery never closes out silently; the outcome audit does not record
+they judged (`waivers` under `--json`, one line per waiver otherwise):
+`closeout-check` on success and on refusal, `complete-state` on success,
+since its refusal writes nothing and completes nothing. A waived delivery
+therefore never closes out silently; the outcome audit does not record
 waivers.
 
 **Snapshot `pr` step.** When execution of the configured post-implement

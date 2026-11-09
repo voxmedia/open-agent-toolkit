@@ -69,8 +69,8 @@ also carries `milestone`, `milestoneStatus`, `goalStatus`, `goalOutcomeAudit`
 with `goalOutcomeAuditValidation`, `goalRecovery`, `deliveries`,
 `milestoneGates`, `milestoneMembership` and `planParallelGroups`; every other
 mode omits them. Each delivery carries its append-only `freshness_waivers`
-(an empty list when none), which only the CLI's delivery-evidence evaluator
-reads. `recommendSkill` routes goal projects through a goal priority
+(an empty list when none), which the CLI's delivery-evidence evaluator and
+its closeout waiver listing (`closeout-check` and `complete-state`) read. `recommendSkill` routes goal projects through a goal priority
 block (terminal declaration, review feedback and recovery records, membership,
 then the milestone status table) that reads only this persisted state.
 
