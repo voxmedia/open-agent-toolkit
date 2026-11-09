@@ -374,9 +374,16 @@ export async function planDeliveryWaiver(
     }
   }
   if (staleReasons(before).length === 0) {
+    // Every consumer's live evaluation reads fresh. A stored `stale`
+    // disposition then still makes `delivery check` report the delivery
+    // undeliverable, and refresh never writes `passed`, so name the recovery
+    // instead of a bare refusal. The waiver does not restore that record: it
+    // covers head movement only.
     return refusal(
       'already-fresh',
-      `${delivery.delivery_id} is already fresh for every consumer; there is nothing to waive.`,
+      recorded.disposition === 'passed'
+        ? `${delivery.delivery_id} is already fresh for every consumer; there is nothing to waive.`
+        : `${delivery.delivery_id}'s live evidence already reads fresh for every consumer, so there is no head movement to waive, but its recorded integrated_review.disposition is ${recorded.disposition}, so delivery check still reports it undeliverable. Record a new integrated review of ${delivery.delivery_id} and receive it clean (oat-project-review-provide, then oat-project-review-receive), which rewrites the disposition to passed; delivery refresh never restores it.`,
     );
   }
 

@@ -462,6 +462,41 @@ oat_goal_recovery:
       await expectRefused(repo, await waive(repo, gh), 'already-fresh', before);
     });
 
+    it('names the review recovery when the stored disposition is stale but live evidence reads fresh', async () => {
+      repo = await createGoalRepo();
+      const { gh } = await staleDelivery(repo, { unmoved: true });
+      // A record staled earlier (for example while the PR head had moved)
+      // whose live evidence reads fresh again.
+      const state = await repo.read('state.md');
+      const record = deliveryRecord(state);
+      expect(record['integrated_review']).toMatchObject({
+        disposition: 'passed',
+      });
+      const staled = state.replace(
+        /(integrated_review:\n(?: {6}.*\n)*? {6}disposition: )passed/,
+        '$1stale',
+      );
+      expect(deliveryRecord(staled)['integrated_review']).toMatchObject({
+        disposition: 'stale',
+      });
+      await repo.write('state.md', staled);
+      repo.commitAll('chore(oat): record a stale disposition');
+      expect((await check(repo)).payload).toMatchObject({
+        status: 'undeliverable',
+      });
+      const before = await repo.read('state.md');
+      const result = await waive(repo, gh);
+      await expectRefused(repo, result, 'already-fresh', before);
+      const message = String(result.payload['message']);
+      expect(message).toContain(
+        'recorded integrated_review.disposition is stale',
+      );
+      expect(message).toContain(
+        'oat-project-review-provide, then oat-project-review-receive',
+      );
+      expect(message).not.toContain('nothing to waive');
+    });
+
     it('refuses when the governing review row has fixes queued', async () => {
       repo = await createGoalRepo();
       const { reviewed, gh } = await staleDelivery(repo);
