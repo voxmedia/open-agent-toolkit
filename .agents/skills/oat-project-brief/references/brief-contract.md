@@ -633,22 +633,33 @@ ancestor of H and every intervening commit, merge-introduced changes included,
 changes only permitted bookkeeping:
 
 - **Paths:** this project's `state.md`, `plan.md`, `implementation.md`,
-  `project-log.md`, `summary.md`, and the exact review artifacts belonging to
-  the evidence being recorded or archived, and, for a delivery whose member
-  pull request is shared (12.7, Shared members), the review artifacts recorded
-  for the deliveries that share it; each delivery is still judged on its own
-  frozen scope, reviewed revisions and `exit_gate`. The artifact of a Reviews
-  row with Type `code`, Invocation `gate`, and a non-placeholder Reviewed Head
-  equal to the judged carrier's `reviewed_head` is also admitted in evidence
-  scopes built for that carrier (its review and exit evaluations), provided
-  its project-relative artifact path is under `reviews/` (including
-  `reviews/archived/`). The gate row is never integrated-review evidence and
-  its artifact never joins a delivery's own review-artifact set, so it cannot
-  unlock set-once fields. `summary.md` is derived
-  institutional memory, never the authority for outcomes, approach,
+  `project-log.md` and `summary.md`; any single file directly under this
+  project's `reviews/` or `reviews/archived/`, whichever evidence it belongs
+  to (the evidence being recorded or archived, a delivery sharing its member
+  pull request (12.7, Shared members), a sibling delivery, or a gate run),
+  but not a file in a deeper directory or another project's `reviews/`; any
+  other exact review artifact the evidence records; and any path under
+  `.oat/repo/pjm/backlog/` (items, the archive, `completed.md` and the
+  generated index, which are tracking records that never ship). Review and
+  backlog files may be added, modified or deleted; an archival move is a
+  deletion plus an addition. Decision records and every other `.oat/repo`
+  path stay substantive, including the inbound-reference rewrites that
+  `oat backlog archive` makes outside the backlog. Each changed path is judged
+  on its own, so one commit may mix these paths. Path membership admits a
+  commit; it never makes an artifact a delivery's evidence. Each delivery is
+  still judged on its own frozen scope, reviewed revisions and `exit_gate`,
+  and only its own review artifacts (below) move its set-once fields. The
+  evidence scope built for a judged carrier (its review and exit evaluations)
+  also lists, as shared evidence, the artifact of a Reviews row with Type
+  `code`, Invocation `gate`, and a non-placeholder Reviewed Head equal to the
+  carrier's `reviewed_head`, provided its project-relative artifact path is
+  under `reviews/` (including `reviews/archived/`). The gate row is never
+  integrated-review evidence and its artifact never joins a delivery's own
+  review-artifact set, so it cannot unlock set-once fields. `summary.md` is
+  derived institutional memory, never the authority for outcomes, approach,
   constraints, decisions or endpoint, which live in the brief; any change to
-  it is bookkeeping. Path membership alone is insufficient for the other
-  paths.
+  it is bookkeeping. Path membership alone is insufficient for `state.md`,
+  `plan.md`, `implementation.md` and `project-log.md`.
 - **Permitted changes:** routing and progress updates, evidence recording,
   review dispositions, registration and observation metadata, and append-only
   execution observations.
