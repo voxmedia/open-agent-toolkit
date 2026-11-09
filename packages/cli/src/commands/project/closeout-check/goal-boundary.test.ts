@@ -13,8 +13,10 @@ import {
   sharedMemberScenario,
   type GoalRepo,
 } from '@commands/project/delivery/__tests__/goal-repo';
+import { createProjectDeliveryWaiveCommand } from '@commands/project/delivery/waive';
 import type { GhRunner } from '@commands/project/links/refresh';
 import { getProjectState } from '@open-agent-toolkit/control-plane';
+import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { contextFactory, runProjectSubcommand } from './__tests__/fixtures';
@@ -265,7 +267,7 @@ interface Scenario {
  */
 async function scenario(
   options: Partial<Omit<StateOptions, 'reviewed' | 'base'>> & {
-    gateArtifact?: 'matching' | 'mismatched';
+    gateArtifact?: boolean;
   } = {},
 ): Promise<Scenario> {
   const repo = await createGoalRepo('oat-goal-boundary-');
@@ -301,13 +303,13 @@ async function scenario(
       reviewed,
       base: repo.baseSha,
       ...stateOptions,
-      ...(gateArtifact === undefined ? {} : { exitGate: configuredCarrier }),
+      ...(gateArtifact === true ? { exitGate: configuredCarrier } : {}),
     }),
   );
   let published = repo.commitAll(
     'chore(oat): record, receive and register d02',
   );
-  if (gateArtifact !== undefined) {
+  if (gateArtifact === true) {
     await repo.write(
       GATE_REVIEW_ARTIFACT,
       '# final gate review\n\nNo findings.\n',
@@ -317,7 +319,7 @@ async function scenario(
       plan(
         [
           `| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${reviewed} | auto |`,
-          `| final | code | passed | 2026-10-11 | ${GATE_REVIEW_ARTIFACT} | ${gateArtifact === 'matching' ? reviewed : published} | gate |`,
+          `| final | code | passed | 2026-10-11 | ${GATE_REVIEW_ARTIFACT} | ${reviewed} | gate |`,
         ].join('\n'),
       ),
     );
@@ -604,27 +606,13 @@ describe('goal closeout boundary (end to end)', () => {
   });
 
   it('keeps a delivery exit binding fresh across its matching gate artifact commit', async () => {
-    const built = await scenario({ gateArtifact: 'matching' });
+    const built = await scenario({ gateArtifact: true });
     repo = built.repo;
 
     const checked = await closeoutCheck(observed(() => built.published));
 
     expect(checked.payload).toMatchObject({ status: 'complete' });
     expect(checked.exitCode).toBe(0);
-  });
-
-  it('rejects a delivery gate artifact whose reviewed head differs from the binding', async () => {
-    const built = await scenario({ gateArtifact: 'mismatched' });
-    repo = built.repo;
-
-    const checked = await closeoutCheck(observed(() => built.published));
-
-    expect(checked.payload).toMatchObject({
-      status: 'incomplete',
-      invariant: 'goal_coverage_incomplete',
-    });
-    expect(JSON.stringify(checked.payload)).toContain('disallowed-path');
-    expect(checked.exitCode).toBe(1);
   });
 
   it('refuses a substantive successor of the reviewed revision and names the review owner', async () => {
@@ -637,6 +625,124 @@ describe('goal closeout boundary (end to end)', () => {
       status: 'incomplete',
       invariant: 'goal_coverage_incomplete',
       route: 'oat-project-review-provide',
+    });
+  });
+
+  describe('operator freshness waiver (p02)', () => {
+    async function waiveD02(gh: GhRunner) {
+      const capture = createLoggerCapture();
+      process.exitCode = undefined;
+      const delivery = new Command('delivery').addCommand(
+        createProjectDeliveryWaiveCommand({
+          buildCommandContext: contextFactory(
+            { root: repo!.root, home: repo!.root },
+            capture,
+          ),
+          resolveProjectRoot: async () => repo!.root,
+          gh,
+          env: {},
+          now: () => new Date('2026-11-09T12:00:00.000Z'),
+        }),
+      );
+      await runProjectSubcommand(
+        delivery,
+        'delivery',
+        [
+          'waive',
+          '--project',
+          PROJECT_REL,
+          '--delivery',
+          'd02',
+          '--reason',
+          'post-gate fix squash-merged',
+          '--by',
+          'Operator',
+        ],
+        ['--json'],
+      );
+      return {
+        payload: capture.jsonPayloads[0] as Record<string, unknown>,
+        exitCode: process.exitCode as number | undefined,
+      };
+    }
+
+    it('completes a goal whose only refusal was a waived head movement, and lists the waiver', async () => {
+      const built = await scenario();
+      repo = built.repo;
+      // Give m01 a fresh working carrier over d02's effective scope, so the
+      // squash-merged post-gate fix is the closeout's only refusal.
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          `      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-10T11:00:00Z'
+      freshness: stale
+      freshness_reason: 'review-receive: fixes queued from the d01 review'`,
+          `      subject: { kind: code, scope: [p01, p02, p03] }
+      decided_at: '2026-10-10T11:00:00Z'
+      freshness: fresh
+      freshness_reason: null`,
+        ),
+      );
+      repo.commitAll('chore(oat): fresh m01 working carrier');
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const fix = repo.commitAll('fix: post-gate change squash-merged');
+      const gh = observed(() => fix);
+
+      const refused = await closeoutCheck(gh);
+      expect(refused.payload).toMatchObject({
+        status: 'incomplete',
+        invariant: 'goal_coverage_incomplete',
+        waivers: [],
+      });
+      expect(String(refused.payload['message'])).toContain('review-not-fresh');
+
+      const waived = await waiveD02(gh);
+      expect(waived).toMatchObject({
+        payload: { status: 'waived', deliveryId: 'd02' },
+        exitCode: 0,
+      });
+      repo.commitAll('chore(oat): waive d02');
+
+      const waiver = {
+        delivery_id: 'd02',
+        waived_by: 'Operator',
+        reason: 'post-gate fix squash-merged',
+        waived_at: '2026-11-09T12:00:00.000Z',
+        members: [
+          { url: 'https://github.com/owner/name/pull/2', waived_head: fix },
+        ],
+      };
+      const checked = await closeoutCheck(gh);
+      expect(checked).toMatchObject({
+        payload: { status: 'complete', waivers: [waiver] },
+        exitCode: 0,
+      });
+
+      // The human closeout output names the waiver too.
+      const capture = createLoggerCapture();
+      process.exitCode = undefined;
+      await runProjectSubcommand(
+        createProjectCloseoutCheckCommand({
+          ...dependencies(gh),
+          buildCommandContext: contextFactory(
+            { root: repo.root, home: repo.root },
+            capture,
+          ),
+        }),
+        'closeout-check',
+        [PROJECT_REL],
+      );
+      expect(capture.info.join('\n')).toContain(
+        `freshness waiver on d02: Operator at 2026-11-09T12:00:00.000Z, post-gate fix squash-merged (https://github.com/owner/name/pull/2 @ ${fix})`,
+      );
+
+      const completed = await completeState(gh);
+      expect(completed).toMatchObject({
+        payload: { status: 'ok', waivers: [waiver] },
+        exitCode: 0,
+      });
+      expect(await repo.read('state.md')).toContain('oat_lifecycle: complete');
     });
   });
 

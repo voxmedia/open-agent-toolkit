@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { mkdir } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 
 import { appendProjectLog } from '@commands/project/log/append';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
@@ -700,13 +701,15 @@ Recorded rewritten.
       ).resolves.toMatchObject({ fresh: false, code: 'inspection-failed' });
     });
 
-    it('rejects unknown paths, including another project and unlisted review files', async () => {
+    it('rejects unknown paths, including another project and nested review files', async () => {
       repo = await createGoalRepo();
       const chain = await bookkeepingChain(repo);
       for (const path of [
         `${PROJECT_REL}/notes.md`,
-        `${PROJECT_REL}/reviews/other-review.md`,
+        `${PROJECT_REL}/reviews/nested/other-review.md`,
+        `${PROJECT_REL}/reviews/archived/nested/other-review.md`,
         '.oat/projects/shared/other/state.md',
+        '.oat/projects/shared/other/reviews/other-review.md',
       ]) {
         await repo.writeRepo(path, 'x\n');
         const published = repo.commitAll(`chore: ${path}`);
@@ -1780,20 +1783,30 @@ Recorded rewritten.
       ['mismatched reviewed head', { reviewedHead: 'mismatched' as const }],
       ['placeholder reviewed head', { reviewedHead: 'placeholder' as const }],
       ['artifact-type gate row', { type: 'artifact' }],
-    ])('does not admit a %s', async (_label, options) => {
-      repo = await createGoalRepo();
-      const chain = await gateArtifactScenario(repo, options);
-      const scope = await productionScope(repo, 'd01', true);
+    ])(
+      'keeps a %s out of shared evidence while its review file stays bookkeeping',
+      async (_label, options) => {
+        repo = await createGoalRepo();
+        const chain = await gateArtifactScenario(repo, options);
+        const scope = await productionScope(repo, 'd01', true);
 
-      expect(scope.evidenceArtifacts).not.toContain(GATE_REVIEW_ARTIFACT);
-      await expect(
-        evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
-      ).resolves.toMatchObject({
-        fresh: false,
-        code: 'disallowed-path',
-        path: `${PROJECT_REL}/${GATE_REVIEW_ARTIFACT}`,
-      });
-    });
+        // The scope builder still admits only a matching gate artifact into
+        // shared evidence, and never into own evidence...
+        expect(scope.evidenceArtifacts).not.toContain(GATE_REVIEW_ARTIFACT);
+        expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(
+          GATE_REVIEW_ARTIFACT,
+        );
+        // ...but any file directly under the project's reviews/ is a
+        // bookkeeping path (brief contract 12.8), so the commit adding it does
+        // not stale the evidence it follows.
+        await expect(
+          evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
+        ).resolves.toMatchObject({
+          fresh: true,
+          code: 'bookkeeping-successor',
+        });
+      },
+    );
 
     it('does not admit a matching gate row that names design.md as its artifact', async () => {
       repo = await createGoalRepo();
@@ -2237,6 +2250,605 @@ Recorded rewritten.
       ).resolves.toMatchObject({
         freshness: 'stale',
         reason: expect.stringMatching(/^member-missing/),
+      });
+    });
+  });
+
+  describe('workflow-owned bookkeeping paths: project review files and the backlog', () => {
+    const SIBLING_ARTIFACT = 'reviews/archived/d02-review.md';
+    const BACKLOG = '.oat/repo/pjm/backlog';
+
+    /** A backlog item added with the regenerated index, as `oat backlog new` writes. */
+    async function ensureDir(target: GoalRepo, repoRelative: string) {
+      await mkdir(join(target.root, dirname(repoRelative)), {
+        recursive: true,
+      });
+    }
+
+    async function addBacklogItem(target: GoalRepo, id: string) {
+      await target.writeRepo(
+        `${BACKLOG}/items/${id}.md`,
+        `---\nid: ${id}\nstatus: open\n---\n\n# ${id}\n`,
+      );
+      await target.writeRepo(`${BACKLOG}/index.md`, `# Backlog\n\n- ${id}\n`);
+    }
+
+    it('keeps evidence fresh across a sibling review artifact added, edited, archived and deleted', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      const scope = await productionScope(repo, 'd01');
+      // Not this delivery's evidence: no Reviews row and no registry pointer.
+      expect(scope.evidenceArtifacts).not.toContain(SIBLING_ARTIFACT);
+      expect(scope.evidenceArtifacts).not.toContain('reviews/d02-review.md');
+
+      await repo.write('reviews/d02-review.md', '# d02 review\n');
+      const added = repo.commitAll('chore(oat): record d02 review');
+      await repo.write('reviews/d02-review.md', '# d02 review\n\nEdited.\n');
+      repo.commitAll('chore(oat): edit d02 review');
+      await ensureDir(repo, `${PROJECT_REL}/${SIBLING_ARTIFACT}`);
+      repo.git([
+        'mv',
+        `${PROJECT_REL}/reviews/d02-review.md`,
+        `${PROJECT_REL}/${SIBLING_ARTIFACT}`,
+      ]);
+      repo.commitAll('chore(oat): archive d02 review');
+      repo.git(['rm', '-q', `${PROJECT_REL}/${SIBLING_ARTIFACT}`]);
+      const published = repo.commitAll('chore(oat): drop d02 review');
+
+      const result = await evaluateSuccessor(
+        git,
+        await productionScope(repo, 'd01'),
+        chain.reviewed,
+        published,
+      );
+      expect(result).toMatchObject({
+        fresh: true,
+        code: 'bookkeeping-successor',
+      });
+      expect(result.fresh && result.inspected).toContain(added);
+    });
+
+    it('keeps evidence fresh across a backlog add and a backlog archive', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+
+      await addBacklogItem(repo, 'BL-1');
+      const added = repo.commitAll('chore(backlog): add BL-1');
+      // `oat backlog archive`: the item moves (a deletion plus an addition
+      // under --no-renames), completed.md records it, the index regenerates.
+      await ensureDir(repo, `${BACKLOG}/archived/BL-1.md`);
+      repo.git([
+        'mv',
+        `${BACKLOG}/items/BL-1.md`,
+        `${BACKLOG}/archived/BL-1.md`,
+      ]);
+      await repo.writeRepo(
+        `${BACKLOG}/completed.md`,
+        '# Completed\n\n- BL-1\n',
+      );
+      await repo.writeRepo(`${BACKLOG}/index.md`, '# Backlog\n');
+      const archived = repo.commitAll('chore(backlog): archive BL-1');
+
+      const result = await evaluateSuccessor(
+        git,
+        await productionScope(repo, 'd01'),
+        chain.reviewed,
+        archived,
+      );
+      expect(result).toMatchObject({
+        fresh: true,
+        code: 'bookkeeping-successor',
+      });
+      expect(result.fresh && result.inspected.slice(-2)).toEqual([
+        added,
+        archived,
+      ]);
+    });
+
+    it('keeps evidence fresh across one commit of state.md, a sibling artifact and a backlog add', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          'oat_current_task: null',
+          'oat_current_task: p03',
+        ),
+      );
+      await repo.write(SIBLING_ARTIFACT, '# d02 review\n');
+      await addBacklogItem(repo, 'BL-2');
+      const mixed = repo.commitAll('chore(oat): route, record d02, file BL-2');
+      expect(
+        repo
+          .git(['diff', '--no-renames', '--name-only', chain.registered, mixed])
+          .split('\n')
+          .sort(),
+      ).toEqual(
+        [
+          `${BACKLOG}/index.md`,
+          `${BACKLOG}/items/BL-2.md`,
+          `${PROJECT_REL}/${SIBLING_ARTIFACT}`,
+          `${PROJECT_REL}/state.md`,
+        ].sort(),
+      );
+
+      await expect(
+        evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          chain.reviewed,
+          mixed,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+    });
+
+    it.each([
+      ['code', 'src/app.ts', 'export const value = 9;\n'],
+      ['a test', 'src/app.test.ts', 'it.todo("x");\n'],
+      ['a skill', '.agents/skills/demo/SKILL.md', '# demo\n'],
+      ['product documentation', 'apps/oat-docs/docs/index.md', '# docs\n'],
+      [
+        'a decision record',
+        '.oat/repo/reference/decisions/DR-261109-demo.md',
+        '# decision\n',
+      ],
+      ['another .oat/repo path', '.oat/repo/pjm/roadmap.md', '# roadmap\n'],
+      ['a backlog-prefixed sibling', '.oat/repo/pjm/backlog-notes.md', 'x\n'],
+    ])(
+      'keeps a successor stale when it also touches %s',
+      async (_label, path, content) => {
+        repo = await createGoalRepo();
+        const chain = await bookkeepingChain(repo);
+
+        await repo.write(SIBLING_ARTIFACT, '# d02 review\n');
+        await addBacklogItem(repo, 'BL-3');
+        await repo.writeRepo(path, content);
+        const published = repo.commitAll('chore: bookkeeping plus more');
+
+        await expect(
+          evaluateSuccessor(
+            git,
+            await productionScope(repo, 'd01'),
+            chain.reviewed,
+            published,
+          ),
+        ).resolves.toMatchObject({
+          fresh: false,
+          code: 'disallowed-path',
+          commit: published,
+          path,
+        });
+      },
+    );
+
+    it('admits a sibling artifact as a path but never lets it move review identity', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const fixed = repo.commitAll('fix: unreviewed change');
+
+      // The sibling d02 records its own review: artifact plus its Reviews row.
+      await repo.write(SIBLING_ARTIFACT, '# d02 review\n\nNo findings.\n');
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+            reviewRow('passed', SIBLING_ARTIFACT, fixed, 'd02'),
+          ].join('\n'),
+        }),
+      );
+      const recorded = repo.commitAll('chore(oat): record d02 review');
+
+      // Accepted control: recording the sibling's review is bookkeeping.
+      await expect(
+        evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          fixed,
+          recorded,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+
+      // Pointing d01 at the sibling's artifact, with its revisions moved to
+      // the unreviewed fix, stays a substantive change.
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md'))
+          .replace(
+            `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+            `artifact: ${SIBLING_ARTIFACT}`,
+          )
+          .replace(`head: '${chain.reviewed}' }]`, `head: '${fixed}' }]`)
+          .replace(
+            `reviewed_head: '${chain.reviewed}'`,
+            `reviewed_head: '${fixed}'`,
+          ),
+      );
+      const swapped = repo.commitAll('chore(oat): point d01 at the d02 review');
+
+      const scope = await productionScope(repo, 'd01');
+      expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(
+        SIBLING_ARTIFACT,
+      );
+      const result = await evaluateSuccessor(git, scope, fixed, swapped);
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        path: `${PROJECT_REL}/state.md`,
+      });
+      expect(result.reason).toContain('delivery d01');
+    });
+  });
+
+  describe('operator freshness waiver (head-bound re-anchoring, p02)', () => {
+    const URL = 'https://github.com/owner/name/pull/7';
+    const expected = { kind: 'code' as const, scope: ['p01', 'p02'] };
+    const configured = (reviewedHead: string, status = 'allowed') =>
+      carrier({
+        status,
+        resolution: 'configured',
+        disposition: 'passed',
+        reviewed_head: reviewedHead,
+      });
+
+    function waiver(heads: Record<string, string>, reason = 'post-gate fix') {
+      return {
+        waived_by: 'Operator',
+        reason,
+        waived_at: '2026-11-09T12:00:00.000Z',
+        members: Object.entries(heads).map(([url, waived_head]) => ({
+          url,
+          waived_head,
+        })),
+      };
+    }
+
+    /** d01 reviewed at R, observed at `observed`, with optional waivers. */
+    function waived(
+      target: GoalRepo,
+      reviewed: string,
+      observed: string,
+      waivers: ReturnType<typeof waiver>[] = [],
+      observedBase = target.baseSha,
+    ): GoalDelivery {
+      const entry = delivery({
+        url: URL,
+        base: target.baseSha,
+        reviewed_head: reviewed,
+        observed_head: observed,
+        observed_base: observedBase,
+      });
+      entry.freshness_waivers = waivers;
+      return entry;
+    }
+
+    /** R, then a substantive post-gate fix F (the squash-merged PR head). */
+    async function postGateFix(target: GoalRepo) {
+      const chain = await bookkeepingChain(target);
+      await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const fix = target.commitAll('fix: post-gate change');
+      return { reviewed: chain.reviewed, fix };
+    }
+
+    async function judge(target: GoalRepo, entry: GoalDelivery) {
+      const scope = scopeFor(target);
+      return {
+        review: await evaluateDeliveryReview(git, scope, entry, ['p01', 'p02']),
+        exit: await evaluateDeliveryExitCarrier(
+          configured(entry.members[0]!.reviewed_head!),
+          expected,
+          { git, scope, delivery: entry },
+        ),
+      };
+    }
+
+    it('unwaived control: a substantive head movement stales review and carrier', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const verdict = await judge(repo, waived(repo, reviewed, fix));
+      expect(verdict.review.fresh).toBe(false);
+      expect(verdict.review.reason).toMatch(/disallowed-path.*src\/app\.ts/);
+      expect(verdict.exit).toMatchObject({
+        outcome: 'allowed',
+        freshness: 'stale',
+      });
+    });
+
+    it('re-anchors the review and carrier walks on the waived observed head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, fix, [waiver({ [URL]: fix })]),
+      );
+      expect(verdict.review).toMatchObject({ fresh: true, reason: null });
+      expect(verdict.exit).toMatchObject({
+        outcome: 'allowed',
+        freshness: 'fresh',
+      });
+    });
+
+    it('keeps a bookkeeping successor of the waived head fresh', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.write('implementation.md', goalJournal(reviewed, 'completed'));
+      const recorded = repo.commitAll('chore(oat): record after waiver');
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, recorded, [waiver({ [URL]: fix })]),
+      );
+      expect(verdict.review.fresh).toBe(true);
+      expect(verdict.exit.freshness).toBe('fresh');
+    });
+
+    it('stales again on a later substantive commit after the waived head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const later = repo.commitAll('feat: pushed after the waiver');
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, later, [waiver({ [URL]: fix })]),
+      );
+      expect(verdict.review.fresh).toBe(false);
+      expect(verdict.review.reason).toMatch(/disallowed-path.*src\/app\.ts/);
+      expect(verdict.review.reason).toContain(later);
+      expect(verdict.exit.freshness).toBe('stale');
+    });
+
+    it('never covers a waived head that is not the observed head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const observed = repo.commitAll('feat: second unreviewed change');
+      // An intermediate head: the walk from it still meets `observed`.
+      const intermediate = await judge(
+        repo,
+        waived(repo, reviewed, observed, [waiver({ [URL]: fix })]),
+      );
+      expect(intermediate.review.reason).toMatch(/disallowed-path/);
+
+      // An unrelated head the reviewed revision is not an ancestor of: the
+      // waiver does not apply and the walk keeps the reviewed anchor.
+      repo.git(['checkout', '-q', '-b', 'unrelated', repo.baseSha]);
+      await repo.writeRepo('src/other.ts', 'export const other = 1;\n');
+      const unrelated = repo.commitAll('feat: unrelated');
+      repo.git(['checkout', '-q', 'main']);
+      const foreign = await judge(
+        repo,
+        waived(repo, reviewed, observed, [waiver({ [URL]: unrelated })]),
+      );
+      expect(foreign.review.reason).toMatch(/disallowed-path/);
+      expect(foreign.exit.freshness).toBe('stale');
+
+      // A waived head missing locally fails closed.
+      const missing = await judge(
+        repo,
+        waived(repo, reviewed, fix, [waiver({ [URL]: 'f'.repeat(40) })]),
+      );
+      expect(missing.review.reason).toMatch(
+        /missing-object: waived head f{40}/,
+      );
+      expect(missing.exit.reason).toMatch(/missing-object/);
+    });
+
+    it('honors only the latest waiver', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const verdict = await judge(
+        repo,
+        waived(repo, reviewed, fix, [
+          waiver({ [URL]: fix }),
+          waiver({ [URL]: reviewed }, 'later, narrower waiver'),
+        ]),
+      );
+      expect(verdict.review.fresh).toBe(false);
+    });
+
+    it('never covers a base change, a narrow review or a blocked carrier', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      const rebased = await judge(
+        repo,
+        waived(repo, reviewed, fix, [waiver({ [URL]: fix })], fix),
+      );
+      expect(rebased.review.reason).toMatch(/base-changed/);
+
+      const entry = waived(repo, reviewed, fix, [waiver({ [URL]: fix })]);
+      const narrow = await evaluateDeliveryReview(git, scopeFor(repo), entry, [
+        'p01',
+        'p02',
+        'p03',
+      ]);
+      expect(narrow.reason).toMatch(/review-scope-narrow/);
+
+      const blocked = await evaluateDeliveryExitCarrier(
+        configured(reviewed, 'blocked'),
+        expected,
+        { git, scope: scopeFor(repo), delivery: entry },
+      );
+      expect(blocked.outcome).toBe('blocked');
+    });
+
+    it('judges a later passed review at a descendant head from its own reviewed head', async () => {
+      repo = await createGoalRepo();
+      const { reviewed, fix } = await postGateFix(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const rereviewed = repo.commitAll('fix: re-reviewed change');
+      await repo.write(
+        'implementation.md',
+        goalJournal(rereviewed, 'completed'),
+      );
+      const recorded = repo.commitAll('chore(oat): record the new review');
+
+      const entry = waived(repo, rereviewed, recorded, [
+        waiver({ [URL]: fix }),
+      ]);
+      entry.integrated_review!.bound_revisions = [
+        { member: 0, base: repo.baseSha, head: rereviewed },
+      ];
+      const verdict = await judge(repo, entry);
+      // The waived head predates the new review, which supersedes it.
+      expect(verdict.review).toMatchObject({ fresh: true, reason: null });
+      expect(verdict.exit.freshness).toBe('fresh');
+      expect(reviewed).not.toBe(rereviewed);
+    });
+
+    it('re-anchors a stack carrier on the tip member waiver', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const tip = repo.commitAll('feat: tip layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const moved = repo.commitAll('fix: tip moved after the gate');
+      const stack = deliveryWithHeads('stack', [lower, moved], repo.baseSha);
+      const tipUrl = stack.members[1]!.url!;
+
+      const unwaived = await evaluateDeliveryExitCarrier(
+        configured(tip),
+        expected,
+        { git, scope: scopeFor(repo), delivery: stack },
+      );
+      expect(unwaived.freshness).toBe('stale');
+      stack.freshness_waivers = [waiver({ [tipUrl]: moved })];
+      await expect(
+        evaluateDeliveryExitCarrier(configured(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: stack,
+        }),
+      ).resolves.toMatchObject({ freshness: 'fresh', reason: null });
+    });
+
+    describe('waiver entries in the delivery record', () => {
+      const waiverYaml = (
+        head: string,
+        reason = 'post-gate fix',
+      ) => `      - waived_by: Operator
+        reason: ${reason}
+        waived_at: '2026-11-09T12:00:00.000Z'
+        members:
+          - url: ${URL}
+            waived_head: '${head}'`;
+      const withWaivers = (
+        reviewed: string,
+        base: string,
+        waivers: string[],
+        observedHead: string,
+      ) =>
+        goalState(
+          `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+            reviewed,
+            base,
+            observedHead,
+            observedBase: base,
+          }).replace(
+            'oat_milestone_gates:',
+            `    freshness_waivers:\n${waivers.join('\n')}\noat_milestone_gates:`,
+          )}`,
+        );
+
+      it('admits an appended waiver with its restored record and refuses an edited or removed earlier entry', async () => {
+        repo = await createGoalRepo();
+        const { reviewed, fix } = await postGateFix(repo);
+        // The waiver commit: observations, the waiver and the restored
+        // disposition in one state.md write, pushed after the waived head.
+        await repo.write(
+          'state.md',
+          withWaivers(reviewed, repo.baseSha, [waiverYaml(fix)], fix),
+        );
+        const waivedCommit = repo.commitAll('chore(oat): waive d01');
+        const state = await getProjectState(repo.projectPath);
+        const recorded = state.deliveries!.find(
+          (entry) => entry.delivery_id === 'd01',
+        )!;
+        expect(recorded.freshness_waivers?.[0]?.members[0]?.waived_head).toBe(
+          fix,
+        );
+        const observedAtWaiver = {
+          ...recorded,
+          members: recorded.members.map((member) => ({
+            ...member,
+            observed_head: waivedCommit,
+          })),
+        };
+        await expect(
+          evaluateDeliveryReview(
+            git,
+            await productionScope(repo, 'd01'),
+            observedAtWaiver,
+            ['p01', 'p02'],
+          ),
+        ).resolves.toMatchObject({ fresh: true });
+
+        await repo.write(
+          'state.md',
+          withWaivers(
+            reviewed,
+            repo.baseSha,
+            [waiverYaml(fix), waiverYaml(fix, 'second look')],
+            fix,
+          ),
+        );
+        const appended = repo.commitAll('chore(oat): waive d01 again');
+        await expect(
+          evaluateSuccessor(
+            git,
+            await productionScope(repo, 'd01'),
+            fix,
+            appended,
+          ),
+        ).resolves.toMatchObject({ fresh: true });
+
+        await repo.write(
+          'state.md',
+          withWaivers(
+            reviewed,
+            repo.baseSha,
+            [
+              waiverYaml(fix, 'rewritten reason'),
+              waiverYaml(fix, 'second look'),
+            ],
+            fix,
+          ),
+        );
+        const edited = repo.commitAll('chore(oat): edit the first waiver');
+        const editVerdict = await evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          appended,
+          edited,
+        );
+        expect(editVerdict).toMatchObject({
+          fresh: false,
+          code: 'substantive-change',
+        });
+        expect(editVerdict.reason).toContain(
+          'delivery d01 edited earlier freshness waiver 0',
+        );
+
+        await repo.write(
+          'state.md',
+          withWaivers(
+            reviewed,
+            repo.baseSha,
+            [waiverYaml(fix, 'rewritten reason')],
+            fix,
+          ),
+        );
+        const removed = repo.commitAll('chore(oat): drop the second waiver');
+        const removeVerdict = await evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          edited,
+          removed,
+        );
+        expect(removeVerdict.reason).toContain(
+          'delivery d01 removed earlier freshness waiver 1',
+        );
       });
     });
   });

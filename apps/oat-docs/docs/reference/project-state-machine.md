@@ -130,6 +130,9 @@ older milestone's delivery is recorded in `oat_goal_recovery` and never moves
 milestone from `delivered` or `delivering` to `implementing` for inline
 feedback. The router reads only these persisted fields; delivery freshness
 comes from `oat project delivery refresh` and `oat project delivery check`.
+`oat project delivery waive` restores a delivery stale only through head
+movement and clears a recovery record that targets it, so the router stops
+routing that delivery to recovery without any waiver logic of its own.
 
 `delivered` and the registry's `at_endpoint` are different: `delivered` means
 the pull request is registered and open, `at_endpoint` means it has reached

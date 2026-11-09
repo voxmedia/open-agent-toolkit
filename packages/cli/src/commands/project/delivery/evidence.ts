@@ -31,22 +31,25 @@ export interface EvidenceScope {
   /** Repository-relative POSIX path of the project directory. */
   projectDir: string;
   /**
-   * Project-relative review artifacts belonging to the evidence being
-   * recorded or archived (`reviews/…`). Each also permits its archived
-   * counterpart (`reviews/archived/<name>`), so receive's archival move is
-   * bookkeeping.
+   * The shared evidence set: project-relative review artifacts belonging to
+   * the evidence being recorded or archived, each together with its archived
+   * counterpart (`reviews/archived/<name>`). The identity guards in
+   * `judgeDeliveries` read it to tell a review recorded for this evidence
+   * from any other file. It no longer decides path admission for files
+   * directly under `reviews/` or `reviews/archived/`, which are bookkeeping
+   * whichever evidence they belong to (brief contract 12.8); only an exact
+   * artifact elsewhere in the project is admitted through it.
    */
   evidenceArtifacts: readonly string[];
   /**
    * Each delivery's OWN review artifacts: the artifacts its own Reviews rows
    * record (Scope cell = the delivery ID or its milestone), keyed by delivery
-   * ID and kept apart from the shared allowlist above. Never derived from the
-   * registry's `integrated_review.artifact`, which is the very pointer a
+   * ID and kept apart from the shared evidence set above. Never derived from
+   * the registry's `integrated_review.artifact`, which is the very pointer a
    * judged commit may rewrite. Only a new artifact from this set may replace a
    * delivery's review identity or member revisions, so a sharing sibling's
-   * artifact (admitted by the allowlist as bookkeeping) or an artifact no
-   * Reviews row records never unlocks them. A delivery with no entry unlocks
-   * nothing.
+   * artifact (admitted as bookkeeping by its path) or an artifact no Reviews
+   * row records never unlocks them. A delivery with no entry unlocks nothing.
    */
   ownEvidenceArtifacts?: ReadonlyMap<string, readonly string[]>;
 }
@@ -117,12 +120,19 @@ async function readBlob(
 /**
  * Whether `published` covers evidence reviewed at `reviewed` under the
  * bookkeeping-successor contract.
+ *
+ * `waivedHead` is the head an operator freshness waiver recorded for this
+ * walk's member (brief contract 12.8, Operator waiver). When the reviewed
+ * anchor equals or is an ancestor of it, the walk starts at the waived head
+ * instead; otherwise a newer review or carrier supersedes the waiver and the
+ * walk starts at its own anchor. Every other rule is unchanged.
  */
 export async function evaluateSuccessor(
   git: GitRunner,
   scope: EvidenceScope,
   reviewed: string | null | undefined,
   published: string | null | undefined,
+  waivedHead: string | null = null,
 ): Promise<SuccessorResult> {
   if (!reviewed || !published) {
     return {
@@ -149,25 +159,37 @@ export async function evaluateSuccessor(
       reason: `commit ${reviewedSha === null ? reviewed : published} is not available locally`,
     };
   }
-  if (reviewedSha === publishedSha) {
+
+  let anchorSha = reviewedSha;
+  let anchorLabel = 'reviewed revision';
+  if (waivedHead !== null) {
+    const waived = await waiverAnchor(git, scope, reviewedSha, waivedHead);
+    if ('failure' in waived) return waived.failure;
+    if (waived.anchor !== null) {
+      anchorSha = waived.anchor;
+      anchorLabel = 'waived head';
+    }
+  }
+
+  if (anchorSha === publishedSha) {
     return {
       fresh: true,
       code: 'identical',
-      reason: 'the published head is the reviewed revision',
+      reason: `the published head is the ${anchorLabel}`,
       inspected: [],
     };
   }
 
   try {
     const ancestry = await git.run(
-      ['merge-base', '--is-ancestor', reviewedSha, publishedSha],
+      ['merge-base', '--is-ancestor', anchorSha, publishedSha],
       { cwd: scope.repoRoot, allowFailure: true },
     );
     if (ancestry.code === 1) {
       return {
         fresh: false,
         code: 'not-ancestor',
-        reason: `reviewed revision ${reviewedSha} is not an ancestor of ${publishedSha}`,
+        reason: `${anchorLabel} ${anchorSha} is not an ancestor of ${publishedSha}`,
       };
     }
     if (ancestry.code !== 0) {
@@ -184,7 +206,7 @@ export async function evaluateSuccessor(
         '--reverse',
         '--topo-order',
         '--parents',
-        `${reviewedSha}..${publishedSha}`,
+        `${anchorSha}..${publishedSha}`,
       ],
       { cwd: scope.repoRoot, allowFailure: true },
     );
@@ -218,12 +240,69 @@ export async function evaluateSuccessor(
     return {
       fresh: true,
       code: 'bookkeeping-successor',
-      reason: `every commit after the reviewed revision is permitted bookkeeping (${inspected.length} inspected)`,
+      reason: `every commit after the ${anchorLabel} is permitted bookkeeping (${inspected.length} inspected)`,
       inspected,
     };
   } catch (error) {
     return inspectionFailed(error);
   }
+}
+
+/**
+ * Where a waiver moves the walk: to the waived head when the reviewed anchor
+ * equals or is an ancestor of it, or nowhere (`anchor: null`) when the anchor
+ * is newer. A waived head that is missing locally or cannot be inspected
+ * fails closed.
+ */
+async function waiverAnchor(
+  git: GitRunner,
+  scope: EvidenceScope,
+  reviewedSha: string,
+  waivedHead: string,
+): Promise<{ anchor: string | null } | { failure: SuccessorResult }> {
+  try {
+    const waivedSha = await resolveCommit(git, scope.repoRoot, waivedHead);
+    if (waivedSha === null) {
+      return {
+        failure: {
+          fresh: false,
+          code: 'missing-object',
+          reason: `waived head ${waivedHead} is not available locally`,
+        },
+      };
+    }
+    if (waivedSha === reviewedSha) return { anchor: waivedSha };
+    const ancestry = await git.run(
+      ['merge-base', '--is-ancestor', reviewedSha, waivedSha],
+      { cwd: scope.repoRoot, allowFailure: true },
+    );
+    if (ancestry.code === 0) return { anchor: waivedSha };
+    if (ancestry.code === 1) return { anchor: null };
+    return {
+      failure: {
+        fresh: false,
+        code: 'inspection-failed',
+        reason: `waiver ancestry inspection failed: ${ancestry.stderr || `git exited ${ancestry.code}`}`,
+      },
+    };
+  } catch (error) {
+    return { failure: inspectionFailed(error) };
+  }
+}
+
+/**
+ * The head the delivery's latest freshness waiver records for each member,
+ * matched by member URL, or null where it names none. Earlier waivers never
+ * re-anchor: a later waiver replaces them.
+ */
+export function latestWaivedHeads(delivery: GoalDelivery): (string | null)[] {
+  const latest = delivery.freshness_waivers?.at(-1);
+  return delivery.members.map((member) =>
+    latest === undefined || member.url === null
+      ? null
+      : (latest.members.find((entry) => entry.url === member.url)
+          ?.waived_head ?? null),
+  );
 }
 
 function inspectionFailed(error: unknown): SuccessorResult {
@@ -314,7 +393,17 @@ export type BookkeepingPathKind =
   | 'implementation'
   | 'project-log'
   | 'summary'
-  | 'review-artifact';
+  | 'review-artifact'
+  | 'backlog';
+
+/**
+ * The repository's backlog: items, the archive, the completed log and the
+ * generated index are tracking records that never ship (brief contract 12.8).
+ */
+const BACKLOG_PREFIX = '.oat/repo/pjm/backlog/';
+
+/** One file directly under the project's `reviews/` or `reviews/archived/`. */
+const PROJECT_REVIEW_FILE = /^reviews\/(?:archived\/)?[^/]+$/;
 
 function projectRelative(projectDir: string, artifact: string): string {
   const trimmed = artifact.replace(/^\.\//, '');
@@ -335,15 +424,23 @@ function artifactVariants(artifact: string): string[] {
 
 /**
  * The bookkeeping kind of a repository-relative path, or `null` when the
- * path is outside the allowlist: this project's `state.md`, `plan.md`,
- * `implementation.md`, `project-log.md`, `summary.md`, and the exact review
- * artifacts of the evidence being recorded or archived (including those of
- * deliveries that share its member pull request).
+ * path is outside the allowlist: any path under `.oat/repo/pjm/backlog/`;
+ * this project's `state.md`, `plan.md`, `implementation.md`,
+ * `project-log.md`, `summary.md`; any single file directly under this
+ * project's `reviews/` or `reviews/archived/`, whichever evidence it belongs
+ * to; and the exact review artifacts of the evidence being recorded or
+ * archived (including those of deliveries that share its member pull
+ * request). Path membership admits a commit; the identity guards in
+ * `judgeDeliveries` still read only the scope's own and shared artifact
+ * sets, so an admitted sibling artifact never moves review identity.
  */
 export function classifyPath(
   scope: EvidenceScope,
   repoPath: string,
 ): BookkeepingPathKind | null {
+  if (repoPath.startsWith(BACKLOG_PREFIX)) {
+    return 'backlog';
+  }
   const projectDir = scope.projectDir.replace(/\/$/, '');
   if (!repoPath.startsWith(`${projectDir}/`)) {
     return null;
@@ -360,6 +457,9 @@ export function classifyPath(
       return 'project-log';
     case 'summary.md':
       return 'summary';
+  }
+  if (PROJECT_REVIEW_FILE.test(relative)) {
+    return 'review-artifact';
   }
   const permitted = scope.evidenceArtifacts.flatMap((artifact) =>
     artifactVariants(projectRelative(projectDir, artifact)),
@@ -380,7 +480,9 @@ function judgeBookkeepingChange(
   if (kind === 'summary') {
     return OK;
   }
-  if (kind === 'review-artifact') {
+  // Backlog writes add, edit, archive (a deletion plus an addition under
+  // `--no-renames`) and regenerate tracking records only.
+  if (kind === 'review-artifact' || kind === 'backlog') {
     return status === 'A' || status === 'M' || status === 'D'
       ? OK
       : refuse(`unsupported change type ${status}`);
@@ -581,6 +683,16 @@ function judgeDeliveries(
         return refuse(`delivery ${id} changed its recorded ${field}`);
       }
     }
+    // Freshness waivers are append-only: a new entry, written with the record
+    // it restores, is bookkeeping; any edit to or removal of an earlier entry
+    // rewrites the audit trail.
+    const waivers = judgeWaiverAppend(
+      previous['freshness_waivers'],
+      next['freshness_waivers'],
+    );
+    if (waivers !== null) {
+      return refuse(`delivery ${id} ${waivers}`);
+    }
 
     const review = previous['integrated_review'];
     const nextReview = next['integrated_review'];
@@ -675,6 +787,19 @@ function judgeDeliveries(
 }
 
 const REVIEW_IDENTITY_FIELDS = ['artifact', 'scope', 'bound_revisions'];
+
+/** Why a waiver-list change is not an append, or null when it is one. */
+function judgeWaiverAppend(before: unknown, after: unknown): string | null {
+  if (isUnset(before)) return null;
+  if (!Array.isArray(before) || !Array.isArray(after)) {
+    return 'changed its freshness_waivers record';
+  }
+  const changed = before.findIndex(
+    (entry: unknown, index) => stable(entry) !== stable(after[index]),
+  );
+  if (changed < 0) return null;
+  return `${changed < after.length ? 'edited' : 'removed'} earlier freshness waiver ${changed}`;
+}
 
 /** The head a review record binds for one member, or null. */
 function boundHeadFor(review: unknown, member: number): string | null {
@@ -1059,6 +1184,8 @@ function sameScope(left: readonly string[], right: readonly string[]): boolean {
  * keeps its actual reviewed revision and must cover every published head as
  * a bookkeeping successor. A plan carrier binds the approved brief and
  * membership at activation, so implementation commits never stale it.
+ * `waivedHeads`, parallel to `publishedHeads`, re-anchors each walk on a
+ * delivery waiver's head (see `evaluateSuccessor`); nothing else reads it.
  */
 export async function evaluateGateCarrier(
   carrier: MilestoneGateCarrier | null,
@@ -1067,6 +1194,7 @@ export async function evaluateGateCarrier(
     git: GitRunner;
     scope: EvidenceScope;
     publishedHeads: readonly (string | null)[];
+    waivedHeads?: readonly (string | null)[];
   },
 ): Promise<CarrierEvaluation> {
   if (carrier === null) {
@@ -1145,12 +1273,13 @@ export async function evaluateGateCarrier(
   if (successor === undefined) {
     return stale('unobserved: no published head was supplied');
   }
-  for (const head of successor.publishedHeads) {
+  for (const [index, head] of successor.publishedHeads.entries()) {
     const result = await evaluateSuccessor(
       successor.git,
       successor.scope,
       carrier.reviewed_head,
       head,
+      successor.waivedHeads?.[index] ?? null,
     );
     if (!result.fresh) {
       return stale(`${result.code}: ${result.reason}`);
@@ -1164,7 +1293,8 @@ export async function evaluateGateCarrier(
  * topology. A stack is recorded base to tip: every lower observed head must
  * be the tip or its ancestor, then only the tip is published to the carrier.
  * Missing and unreviewed carriers delegate before topology because they are
- * not head-bound. Other delivery kinds retain every-member evaluation.
+ * not head-bound. Other delivery kinds retain every-member evaluation. The
+ * delivery's latest freshness waiver re-anchors each judged member's walk.
  */
 export async function evaluateDeliveryExitCarrier(
   carrier: MilestoneGateCarrier | null,
@@ -1177,11 +1307,13 @@ export async function evaluateDeliveryExitCarrier(
 ): Promise<CarrierEvaluation> {
   const { delivery, git, scope } = successor;
   const publishedHeads = delivery.members.map((member) => member.observed_head);
+  const waivedHeads = latestWaivedHeads(delivery);
   if (carrier === null || isUnreviewedResolution(carrier)) {
     return evaluateGateCarrier(carrier, expected, {
       git,
       scope,
       publishedHeads,
+      waivedHeads,
     });
   }
   if (delivery.kind !== 'stack') {
@@ -1189,6 +1321,7 @@ export async function evaluateDeliveryExitCarrier(
       git,
       scope,
       publishedHeads,
+      waivedHeads,
     });
   }
 
@@ -1250,6 +1383,7 @@ export async function evaluateDeliveryExitCarrier(
     git,
     scope,
     publishedHeads: [tip],
+    waivedHeads: [waivedHeads.at(-1) ?? null],
   });
 }
 
@@ -1418,7 +1552,9 @@ async function evaluateBaseRebindProvenance(
  * as a bookkeeping successor, and a member base change invalidates the
  * evidence independently. The review must bind every phase of
  * `requiredScope`. Historical deliveries are judged against their own
- * observed revisions, never the branch's latest head.
+ * observed revisions, never the branch's latest head. The delivery's latest
+ * freshness waiver re-anchors a member's walk on its waived head; it never
+ * relaxes the scope, member, bound-revision or base checks.
  */
 export async function evaluateDeliveryReview(
   git: GitRunner,
@@ -1478,6 +1614,7 @@ export async function evaluateDeliveryReview(
   }
 
   const members: ReviewEvaluation['members'] = [];
+  const waivedHeads = latestWaivedHeads(delivery);
   for (const [index, member] of delivery.members.entries()) {
     const bound = review.bound_revisions.find(
       (revision) => revision.member === index,
@@ -1517,6 +1654,7 @@ export async function evaluateDeliveryReview(
         scope,
         reviewedHead,
         member.observed_head,
+        waivedHeads[index] ?? null,
       );
       verdict = successor.fresh
         ? { fresh: true, reason: null }
@@ -1532,11 +1670,11 @@ export async function evaluateDeliveryReview(
 }
 
 /**
- * Review artifacts a delivery's evidence records, for the bookkeeping
- * allowlist. `sharing` lists the deliveries that share one of its member pull
+ * Review artifacts a delivery's evidence records, for the evidence scope's
+ * shared evidence set (`EvidenceScope.evidenceArtifacts`). `sharing` lists the deliveries that share one of its member pull
  * requests (terminal deliveries registered from one head branch, brief
  * contract 12.7 "Shared members"): their review artifacts are recorded on the
- * same member head, so they are bookkeeping for this delivery as well. Each
+ * same member head, so they are shared evidence for this delivery as well. Each
  * delivery is still judged on its own frozen scope and bound revisions.
  */
 export function deliveryEvidenceArtifacts(
@@ -1572,7 +1710,7 @@ export function reviewRowsFor(
 
 /**
  * Artifacts emitted by the configured gate run that produced `carrier`.
- * These join the shared bookkeeping allowlist only; they never join a
+ * These join the scope's shared evidence set only; they never join a
  * delivery's own evidence set or integrated-review selection.
  */
 export function gateEvidenceArtifacts(

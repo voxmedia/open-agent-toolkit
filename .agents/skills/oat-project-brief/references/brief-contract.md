@@ -546,7 +546,11 @@ root commits shared routing, registry, gate and acceptance records.
 | `oat-project-reconcile`      | Repairs an interrupted record; never creates one for the active milestone.                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 `oat project delivery refresh` never writes `oat_milestone_status` or
-`oat_goal_recovery`.
+`oat_goal_recovery`. `oat project delivery waive` (section 12.7, Operator
+waiver) clears an `oat_goal_recovery` whose `delivery_id` names the waived
+delivery in the same write that restores its record, and for the active
+milestone's own delivery writes `oat_milestone_status: delivered` in that
+write, as pr-progress's clearing does; it leaves any other record untouched.
 
 ### 12.7 Delivery registry
 
@@ -559,7 +563,10 @@ supersession links `superseded_by` and `covers_scope_of`, an additive
 `head_sha_at_registration`), `members` (`url`, `base`, `reviewed_head`,
 `observed_head`, `observed_base`, `status`), the `integrated_review`
 (`artifact`, `scope`, `bound_revisions`, `disposition`), the accepted exit-gate
-binding `exit_gate`, and the first observed `endpoint_attainment`.
+binding `exit_gate`, the first observed `endpoint_attainment`, and the
+append-only operator `freshness_waivers`
+(`{ waived_by, reason, waived_at, members: [{ url, waived_head }] }`, oldest
+first).
 
 - **Idempotent registration.** The registration owner writes the entry with
   `status: registering` and its `lookup` keys. For `kind: pr`, it commits
@@ -587,7 +594,10 @@ binding `exit_gate`, and the first observed `endpoint_attainment`.
   `oat project delivery check --project <path> --subject <mNN|dNN> --json`; it
   registers only when the check reports `status: ok` (deliverable: a passed,
   fresh integrated review and an allowed, fresh exit carrier). An undeliverable
-  subject reports `status: undeliverable` with the full report and exits 1.
+  subject reports `status: undeliverable` with the full report and exits 1. A
+  waived delivery is deliverable on the same terms: its restored record reads
+  `passed` and its evidence is fresh when judged from the waived heads
+  (section 12.8, Operator waiver); readers need no waiver logic of their own.
 - **Supersession.** A replacement names its one direct predecessor in
   `covers_scope_of`, and that predecessor's `superseded_by` points back; the
   registration owner writes both links together. Only a delivery that never
@@ -622,6 +632,53 @@ binding `exit_gate`, and the first observed `endpoint_attainment`.
   revision, a member base or the first endpoint attainment, and never
   manufactures a passed review or a fresh carrier. The closeout boundary obtains
   the same observations read-only.
+- **Operator waiver.** `oat project delivery waive --project <path> --delivery
+dNN --reason <text> [--by <name>]` is the one sanctioned writer that moves a
+  stale `integrated_review.disposition` back to `passed` and a stale working
+  carrier back to `fresh`. A waiver is operator-only and covers head movement
+  only: it never replaces a missing, failed or unpassed review or a missing,
+  blocked, invalid or reconfigured carrier, and it never covers a base change.
+  The command observes the delivery's members live, as refresh does, and
+  refuses, writing nothing and with a stable `code` under `--json`: under
+  `OAT_AUTONOMOUS=1` (`autonomous`); without a reason (`reason-missing`) or
+  an author (`author-missing`; `--by` defaults to `git config user.name`);
+  for a delivery the registry does not hold (`unknown-delivery`) or one that
+  is neither `open` nor `at_endpoint` (`delivery-not-observable`); when a
+  member cannot be observed (`observation-failed`) or an observed head is not
+  available locally (`missing-object`, with a hint to fetch the pull request
+  head); unless the governing Reviews row (the
+  newest `code` row labelled with the delivery or its milestone, section 12.6)
+  names the delivery's recorded integrated-review artifact with status
+  `passed` and the recorded disposition is not `failed`
+  (`review-not-passed`); unless every carrier a consumer judges for it, the
+  milestone working carrier and the delivery's `exit_gate`, has outcome
+  `allowed` (`carrier-not-allowed`); when either carrier no longer matches
+  the gate configuration, because the milestone exit gate no longer resolves
+  as the carrier recorded it or the tracked `.oat/config.json`
+  differs between a reviewed head the waiver would move and the observed head
+  its walk judges (each member's own head for the integrated review, a
+  stack's exit carrier only at its tip),
+  or that comparison cannot be made
+  (`configuration-changed`: a reconfigured carrier needs the milestone exit
+  gate run again); for a delivery whose every consumer's
+  live evaluation already reads fresh (`already-fresh`: there is no head
+  movement to waive; when its recorded disposition is nonetheless `stale`,
+  the refusal says so and names the recovery, a new integrated review
+  received clean, because refresh never writes `passed` and the waiver does
+  not restore a record whose evidence is already fresh); and when, with the
+  observed heads waived, any consumer would still read it stale
+  (`not-head-movement`). Otherwise, in one
+  `state.md` write, it records the member observations (and, as refresh
+  derives them, `status: at_endpoint` and the first `endpoint_attainment`),
+  appends a waiver with `waived_head` equal to each member's observed head,
+  restores `integrated_review.disposition: passed`, sets
+  `oat_milestone_gates[mNN].exit.freshness: fresh` and clears
+  `freshness_reason` only when the delivery is its milestone's latest
+  registered delivery, and clears a targeting `oat_goal_recovery`
+  (section 12.6). It never writes the set-once `exit_gate`, a reviewed
+  revision, a member base, review identity or an earlier waiver, and it never
+  commits. The consumers do not tell a command-written entry from a
+  hand-written one.
 
 ### 12.8 Bookkeeping-successor freshness
 
@@ -633,22 +690,33 @@ ancestor of H and every intervening commit, merge-introduced changes included,
 changes only permitted bookkeeping:
 
 - **Paths:** this project's `state.md`, `plan.md`, `implementation.md`,
-  `project-log.md`, `summary.md`, and the exact review artifacts belonging to
-  the evidence being recorded or archived, and, for a delivery whose member
-  pull request is shared (12.7, Shared members), the review artifacts recorded
-  for the deliveries that share it; each delivery is still judged on its own
-  frozen scope, reviewed revisions and `exit_gate`. The artifact of a Reviews
-  row with Type `code`, Invocation `gate`, and a non-placeholder Reviewed Head
-  equal to the judged carrier's `reviewed_head` is also admitted in evidence
-  scopes built for that carrier (its review and exit evaluations), provided
-  its project-relative artifact path is under `reviews/` (including
-  `reviews/archived/`). The gate row is never integrated-review evidence and
-  its artifact never joins a delivery's own review-artifact set, so it cannot
-  unlock set-once fields. `summary.md` is derived
-  institutional memory, never the authority for outcomes, approach,
+  `project-log.md` and `summary.md`; any single file directly under this
+  project's `reviews/` or `reviews/archived/`, whichever evidence it belongs
+  to (the evidence being recorded or archived, a delivery sharing its member
+  pull request (12.7, Shared members), a sibling delivery, or a gate run),
+  but not a file in a deeper directory or another project's `reviews/`; any
+  other exact review artifact the evidence records; and any path under
+  `.oat/repo/pjm/backlog/` (items, the archive, `completed.md` and the
+  generated index, which are tracking records that never ship). Review and
+  backlog files may be added, modified or deleted; an archival move is a
+  deletion plus an addition. Decision records and every other `.oat/repo`
+  path stay substantive, including the inbound-reference rewrites that
+  `oat backlog archive` makes outside the backlog. Each changed path is judged
+  on its own, so one commit may mix these paths. Path membership admits a
+  commit; it never makes an artifact a delivery's evidence. Each delivery is
+  still judged on its own frozen scope, reviewed revisions and `exit_gate`,
+  and only its own review artifacts (below) move its set-once fields. The
+  evidence scope built for a judged carrier (its review and exit evaluations)
+  also lists, as shared evidence, the artifact of a Reviews row with Type
+  `code`, Invocation `gate`, and a non-placeholder Reviewed Head equal to the
+  carrier's `reviewed_head`, provided its project-relative artifact path is
+  under `reviews/` (including `reviews/archived/`). The gate row is never
+  integrated-review evidence and its artifact never joins a delivery's own
+  review-artifact set, so it cannot unlock set-once fields. `summary.md` is
+  derived institutional memory, never the authority for outcomes, approach,
   constraints, decisions or endpoint, which live in the brief; any change to
-  it is bookkeeping. Path membership alone is insufficient for the other
-  paths.
+  it is bookkeeping. Path membership alone is insufficient for `state.md`,
+  `plan.md`, `implementation.md` and `project-log.md`.
 - **Permitted changes:** routing and progress updates, evidence recording,
   review dispositions, registration and observation metadata, and append-only
   execution observations.
@@ -695,6 +763,28 @@ is read only from the delivery's append-only Reviews rows, never from
 commit can rewrite; bound revisions, member reviewed heads and the exit gate
 move only with that unlock. Negative controls for this rule run through the
 production scope builder and the built CLI, not a hand-assembled scope.
+
+**Operator waiver.** A delivery's `freshness_waivers` (section 12.7) are
+judged as follows. When the latest entry names a member by URL and the walk's
+own anchor (the member's `reviewed_head` for the integrated review, the
+carrier's `reviewed_head` for the exit carrier) equals or is an ancestor of
+that entry's `waived_head`, the successor walk for that member starts at the
+`waived_head`; otherwise a newer review or carrier supersedes the waiver and
+the walk starts at its own anchor. A `waived_head` missing locally fails
+closed. Earlier entries never re-anchor. For a stack the exit carrier uses the
+tip member's waived head. Every other check runs unchanged: review presence
+and scope, members, bound revisions, the base, and the carrier's outcome,
+subject, override and configuration, for the carrier each consumer already
+judges (the working carrier for `delivery check` and `refresh`, the delivery's
+`exit_gate` for closeout). A later commit after the waived head that is not
+bookkeeping stales the delivery again. Waivers are honored for registered
+deliveries only (`--subject dNN`); the `--subject mNN` path judges an
+unregistered milestone and has none. In the registry, `freshness_waivers` is
+append-only: a commit that appends an entry, together with the restored
+disposition, the observations and the working carrier's freshness, is
+bookkeeping; a commit that edits or removes an earlier entry is substantive.
+For a merged delivery, whose member range no longer changes, Git history is
+the audit trail.
 
 The shared evaluator (`delivery/evidence.ts`) implements this rule for
 `delivery check`, `delivery refresh` and the closeout boundary. It accepts two
@@ -765,7 +855,12 @@ ordinary progress counts. Declaration opens closeout; coverage completes it:
 declaration, an exhaustive audit and delivery coverage before either
 snapshot success or `not_required`, refuse without writing on unreadable
 inputs or a failed member observation, and name the next owner in
-`nextOwner.skill`.
+`nextOwner.skill`. Both list every freshness waiver on the terminal deliveries
+they judged (`waivers` under `--json`, one line per waiver otherwise):
+`closeout-check` on success and on refusal, `complete-state` on success,
+since its refusal writes nothing and completes nothing. A waived delivery
+therefore never closes out silently; the outcome audit does not record
+waivers.
 
 **Snapshot `pr` step.** When execution of the configured post-implement
 sequence reaches the `pr` step's position and coverage holds, implement's

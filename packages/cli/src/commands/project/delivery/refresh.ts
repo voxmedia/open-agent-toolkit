@@ -230,6 +230,127 @@ export function endpointSatisfied(
       );
 }
 
+/**
+ * Observe every member of one delivery live. A member without a URL or with
+ * a failed observation yields `null` at its index and a failure message;
+ * `delivery refresh` and `delivery waive` share these messages.
+ */
+export async function observeDeliveryMembers(
+  gh: GhRunner,
+  delivery: GoalDelivery,
+): Promise<{ observed: (MemberObservation | null)[]; failures: string[] }> {
+  const observed: (MemberObservation | null)[] = [];
+  const failures: string[] = [];
+  for (const member of delivery.members) {
+    if (member.url === null) {
+      failures.push(`${delivery.delivery_id}: a member has no URL to observe`);
+      observed.push(null);
+      continue;
+    }
+    const result = await observeMember(gh, member.url);
+    if (typeof result === 'string') {
+      failures.push(`${delivery.delivery_id} ${member.url}: ${result}`);
+      observed.push(null);
+    } else {
+      observed.push(result);
+    }
+  }
+  return { observed, failures };
+}
+
+/**
+ * Overlay live observations on a delivery's members and derive endpoint
+ * satisfaction and the resulting status (`open` becomes `at_endpoint` once
+ * the endpoint is met; any other status is kept).
+ */
+export function deriveObservedDelivery(
+  delivery: GoalDelivery,
+  observed: readonly (MemberObservation | null)[],
+): {
+  members: DeliveryMember[];
+  satisfied: boolean;
+  status: GoalDelivery['status'];
+} {
+  const members: DeliveryMember[] = delivery.members.map((member, index) => {
+    const observation = observed[index];
+    return observation
+      ? {
+          ...member,
+          observed_head: observation.head,
+          observed_base: observation.base,
+          status: observation.status,
+        }
+      : member;
+  });
+  const satisfied = endpointSatisfied(delivery.endpoint, members);
+  const status =
+    satisfied && delivery.status === 'open' ? 'at_endpoint' : delivery.status;
+  return { members, satisfied, status };
+}
+
+/**
+ * The observation writes for one delivery: each observed member's head, base
+ * and status, `status: at_endpoint` when the endpoint is newly met, and the
+ * first `endpoint_attainment` (a `once` write, never replaced).
+ * `observedAt` is read only when the endpoint is met.
+ */
+export function deliveryObservationWrites(
+  delivery: GoalDelivery,
+  observed: readonly (MemberObservation | null)[],
+  derived: { members: readonly DeliveryMember[]; satisfied: boolean },
+  observedAt: () => string,
+): ObservationWrite[] {
+  const deliveryPath: ObservationPathSegment[] = [
+    'oat_deliveries',
+    { deliveryId: delivery.delivery_id },
+  ];
+  const writes: ObservationWrite[] = [];
+  for (const [index, observation] of observed.entries()) {
+    if (!observation) continue;
+    const memberPath = [...deliveryPath, 'members', index];
+    writes.push(
+      {
+        path: [...memberPath, 'observed_head'],
+        value: observation.head,
+        mode: 'observe',
+      },
+      {
+        path: [...memberPath, 'observed_base'],
+        value: observation.base,
+        mode: 'observe',
+      },
+      {
+        path: [...memberPath, 'status'],
+        value: observation.status,
+        mode: 'observe',
+      },
+    );
+  }
+  if (derived.satisfied) {
+    if (delivery.status === 'open') {
+      writes.push({
+        path: [...deliveryPath, 'status'],
+        value: 'at_endpoint',
+        mode: 'observe',
+      });
+    }
+    writes.push({
+      path: [...deliveryPath, 'endpoint_attainment'],
+      value: {
+        observed_at: observedAt(),
+        members: derived.members.map((member) => ({
+          url: member.url,
+          head: member.observed_head,
+          base: member.observed_base,
+          status: member.status,
+        })),
+      },
+      mode: 'once',
+    });
+  }
+  return writes;
+}
+
 /** Deliveries a refresh observes: registered and not replaced. */
 function isObservable(delivery: GoalDelivery): boolean {
   return delivery.status === 'open' || delivery.status === 'at_endpoint';
@@ -249,24 +370,9 @@ export async function planDeliveryRefresh(
   const failures: string[] = [];
 
   for (const delivery of deliveries.filter(isObservable)) {
-    const observed: (MemberObservation | null)[] = [];
-    for (const member of delivery.members) {
-      if (member.url === null) {
-        failures.push(
-          `${delivery.delivery_id}: a member has no URL to observe`,
-        );
-        observed.push(null);
-        continue;
-      }
-      const result = await observeMember(runners.gh, member.url);
-      if (typeof result === 'string') {
-        failures.push(`${delivery.delivery_id} ${member.url}: ${result}`);
-        observed.push(null);
-      } else {
-        observed.push(result);
-      }
-    }
-    observations.set(delivery.delivery_id, observed);
+    const result = await observeDeliveryMembers(runners.gh, delivery);
+    failures.push(...result.failures);
+    observations.set(delivery.delivery_id, result.observed);
   }
   if (failures.length > 0) {
     // Failure to observe a required member is never endpoint success, and a
@@ -284,64 +390,13 @@ export async function planDeliveryRefresh(
 
   for (const delivery of deliveries.filter(isObservable)) {
     const observed = observations.get(delivery.delivery_id) ?? [];
-    const members: DeliveryMember[] = delivery.members.map((member, index) => {
-      const observation = observed[index];
-      return observation
-        ? {
-            ...member,
-            observed_head: observation.head,
-            observed_base: observation.base,
-            status: observation.status,
-          }
-        : member;
-    });
-    for (const [index, observation] of observed.entries()) {
-      if (!observation) continue;
-      const memberPath = [...deliveryPath(delivery), 'members', index];
-      writes.push(
-        {
-          path: [...memberPath, 'observed_head'],
-          value: observation.head,
-          mode: 'observe',
-        },
-        {
-          path: [...memberPath, 'observed_base'],
-          value: observation.base,
-          mode: 'observe',
-        },
-        {
-          path: [...memberPath, 'status'],
-          value: observation.status,
-          mode: 'observe',
-        },
-      );
-    }
-
-    const satisfied = endpointSatisfied(delivery.endpoint, members);
-    let status = delivery.status;
-    if (satisfied) {
-      if (status === 'open') {
-        status = 'at_endpoint';
-        writes.push({
-          path: [...deliveryPath(delivery), 'status'],
-          value: 'at_endpoint',
-          mode: 'observe',
-        });
-      }
-      writes.push({
-        path: [...deliveryPath(delivery), 'endpoint_attainment'],
-        value: {
-          observed_at: runners.now().toISOString(),
-          members: members.map((member) => ({
-            url: member.url,
-            head: member.observed_head,
-            base: member.observed_base,
-            status: member.status,
-          })),
-        },
-        mode: 'once',
-      });
-    }
+    const derived = deriveObservedDelivery(delivery, observed);
+    const { members, satisfied, status } = derived;
+    writes.push(
+      ...deliveryObservationWrites(delivery, observed, derived, () =>
+        runners.now().toISOString(),
+      ),
+    );
 
     const observedDelivery: GoalDelivery = { ...delivery, members, status };
     observedById.set(delivery.delivery_id, observedDelivery);
@@ -450,7 +505,7 @@ function evidenceScope(
 // Applying writes to state.md frontmatter
 // ---------------------------------------------------------------------------
 
-function isUnsetNode(value: unknown): boolean {
+export function isUnsetNode(value: unknown): boolean {
   return (
     value === undefined ||
     value === null ||
@@ -463,7 +518,7 @@ function isUnsetNode(value: unknown): boolean {
  * the raw YAML indices and keys, so a write lands on the entry the reader
  * parsed even when the raw list holds unparseable entries or `m1` spelling.
  */
-function resolvePath(
+export function resolvePath(
   document: YAML.Document,
   path: readonly ObservationPathSegment[],
 ): (string | number)[] | null {
@@ -518,6 +573,27 @@ export function applyObservationWrites(
     );
   }
 
+  const applied = applyObservationWritesToDocument(document, writes);
+  if (applied.length === 0) {
+    return { content: stateContent, changed: false, applied };
+  }
+  const nextBlock = document.toString({ lineWidth: 0 }).replace(/\n$/, '');
+  return {
+    content: replaceFrontmatter(stateContent, nextBlock),
+    changed: true,
+    applied,
+  };
+}
+
+/**
+ * Apply observation writes to a parsed `state.md` frontmatter document under
+ * the never-overwrite rule (`mayReplaceStoredValue`); returns the writes that
+ * changed it. `delivery waive` applies its observations through this too.
+ */
+export function applyObservationWritesToDocument(
+  document: YAML.Document,
+  writes: readonly ObservationWrite[],
+): ObservationWrite[] {
   const applied: ObservationWrite[] = [];
   for (const write of writes) {
     const [root] = write.path;
@@ -545,16 +621,7 @@ export function applyObservationWrites(
     document.setIn(path, document.createNode(write.value, { flow: false }));
     applied.push({ ...write, path });
   }
-
-  if (applied.length === 0) {
-    return { content: stateContent, changed: false, applied };
-  }
-  const nextBlock = document.toString({ lineWidth: 0 }).replace(/\n$/, '');
-  return {
-    content: replaceFrontmatter(stateContent, nextBlock),
-    changed: true,
-    applied,
-  };
+  return applied;
 }
 
 // ---------------------------------------------------------------------------

@@ -409,6 +409,48 @@ oat_milestone_gates:
     expect(brief).not.toHaveProperty('deliveries');
   });
 
+  it('reads delivery freshness waivers in order and defaults to an empty list', () => {
+    const goal = parseStateFrontmatter(`---
+oat_workflow_mode: goal
+oat_deliveries:
+  - delivery_id: d01
+    milestone: m01
+    freshness_waivers:
+      - waived_by: Operator
+        reason: squash-merged post-gate fix
+        waived_at: '2026-11-09T12:00:00.000Z'
+        members:
+          - url: https://example.com/pull/1
+            waived_head: ${'d'.repeat(40)}
+          - not-a-member
+      - not-a-waiver
+      - waived_by: Second
+        reason: later push
+        waived_at: '2026-11-10T12:00:00.000Z'
+        members: nope
+  - delivery_id: d02
+    milestone: m02
+---
+`);
+    expect(goal.deliveries?.[0]?.freshness_waivers).toEqual([
+      {
+        waived_by: 'Operator',
+        reason: 'squash-merged post-gate fix',
+        waived_at: '2026-11-09T12:00:00.000Z',
+        members: [
+          { url: 'https://example.com/pull/1', waived_head: 'd'.repeat(40) },
+        ],
+      },
+      {
+        waived_by: 'Second',
+        reason: 'later push',
+        waived_at: '2026-11-10T12:00:00.000Z',
+        members: [],
+      },
+    ]);
+    expect(goal.deliveries?.[1]?.freshness_waivers).toEqual([]);
+  });
+
   it('normalizes persisted phase-id lists and drops rejected tokens', () => {
     const goal = parseStateFrontmatter(`---
 oat_workflow_mode: goal

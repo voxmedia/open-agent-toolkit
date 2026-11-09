@@ -618,13 +618,35 @@ stack.
 
 **Freshness.** Evidence keeps the revision actually reviewed. Commits after it
 count as bookkeeping only when they touch the project's tracking files in
-permitted ways (routing, progress, evidence, project-log appends); a code
-change, an edit to approved brief content such as Outcomes or a phase's Intent,
-or a substantive change followed by its revert stales the delivery.
+permitted ways (routing, progress, evidence, project-log appends), files
+directly under the project's `reviews/` or `reviews/archived/`, or backlog
+records under `.oat/repo/pjm/backlog/`; a code change, a decision record, an
+edit to approved brief content such as Outcomes or a phase's Intent, or a
+substantive change followed by its revert stales the delivery.
 `oat project delivery refresh` observes each member pull request with
 `gh pr view` and records staleness; it never writes milestone status or
 recovery. Because the project branch is the delivery's head branch, do not
-push a brief amendment while that delivery is still open.
+push a brief amendment while that delivery is still open. Before merging a
+milestone pull request, run `oat project delivery refresh` immediately before
+`oat project delivery check --subject dNN`: the check reads the recorded
+observations, so only a refresh sees a later push. Stop when the refresh fails
+to observe a member; when the check reports the delivery stale, re-gate it or,
+for head movement you accept, waive it.
+
+**Freshness waiver.** `oat project delivery waive --project <path> --delivery
+dNN --reason <text>` records an operator's acceptance of a delivery that is
+stale only because its member heads moved, for example a post-gate fix that was
+squash-merged. It is operator-only (it refuses under `OAT_AUTONOMOUS=1`),
+binds the waiver to each member's observed head, and never covers a missing or
+failed review, a missing, blocked, invalid or reconfigured exit carrier, or a base
+change. The waiver restores the stored record, so `delivery check`, the router
+and closeout read the delivery as deliverable with no further change;
+`closeout-check` lists every waiver, and `complete-state` lists them on
+success. `oat-project-pr-progress` offers it when a
+re-check finds a delivery stale past its endpoint, where a recovery that
+queues fixes cannot land them on the merged pull request, and runs it only on
+your explicit choice and reason; declining it keeps the ordinary recovery
+path.
 
 **Recovery.** Stale evidence on the active milestone's delivery returns it to
 `reviewing`. Fixes or inline feedback for an older milestone open an

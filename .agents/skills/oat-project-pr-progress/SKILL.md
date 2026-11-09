@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.9
+  version: 1.3.10
 ---
 
 # Progress PR
@@ -413,6 +413,12 @@ oat_project: { PROJECT_PATH }
 
 {phase review row from plan.md Reviews table, if available}
 
+{goal only, when this description is regenerated for a registered delivery: one bullet per entry in its `freshness_waivers`, oldest first: who waived, when, the reason and each member's waived head; omit when there are none}
+
+## Before Merging
+
+{goal only: the Step 5.5 pre-merge instruction for this delivery, naming its `dNN`: `delivery refresh` immediately before `delivery check`; omit outside goal mode}
+
 ## References
 
 Only include links to artifacts that actually exist in the project. Omit any that are absent.
@@ -433,6 +439,14 @@ this step states only the order. It never writes review dispositions, exit
 gate outcomes, or `oat_milestone` itself, and it never registers a delivery
 without passing evidence. Step 3.5's pending-review listing runs before item 4
 writes a `registering` entry; a stop there registers nothing.
+
+A waived delivery is judged like any other. When the check for a registered
+`dNN` reports `status: ok` and the delivery carries `freshness_waivers`
+(written by `oat project delivery waive`, section 12.7), take the item's
+`status: ok` branch: never re-register, re-gate or route it to recovery
+because it carries a waiver. When this run regenerates the local progress PR description for that delivery, list its waivers there (a waiver written later in this run, in item 3a or 8, appears the next time the description is regenerated); the posted PR body was
+written at creation, before any waiver could exist, and is not rewritten, so
+closeout output (section 12.9) is where waivers are read.
 
 1. **Refresh.** When `oat_deliveries` has entries, run
    `oat project delivery refresh --project "$PROJECT_PATH" --json` and commit
@@ -468,8 +482,10 @@ milestone, run items 1–2 for that `dNN` instead of registering. On
 targets it, write `oat_milestone_status: delivered`, and project
 `oat_pr_status` and `oat_pr_url` from its latest member's observed status.
 Register nothing, create no pull request, and append no log entry. On a
-not-fresh report, apply item 3 (active milestone's delivery). A `registering`
-entry is not registered yet and resumes at item 5.
+not-fresh report for a delivery stale past its endpoint, first offer the
+waiver (below); otherwise, or when the waiver is declined or refused, apply
+item 3 (active milestone's delivery). A `registering` entry is not registered
+yet and resumes at item 5.
 
 4. **Idempotent registration.** When the active milestone has no
    non-superseded registered delivery (item 3a), allocate the next unused
@@ -514,11 +530,55 @@ entry is not registered yet and resumes at item 5.
 8. **Recovery targets.** For a pending `oat_goal_recovery` at stage
    `delivering`, push the targeted delivery's fixes to its existing member,
    run steps 1–2 for that `dNN`, and on `status: ok` clear the record
-   (`oat_goal_recovery: null`). When the record's milestone is not
+   (`oat_goal_recovery: null`). A delivery stale past its endpoint can take no
+   pushed fix: offer the waiver (below) instead of a recovery that cannot
+   complete, and when the waiver is declined or refused, leave the record and
+   stop, reporting its stage owner. When the record's milestone is not
    `oat_milestone` (an older delivery), that is the whole write: the active
    milestone stays untouched. When it targets the active milestone's own
    delivery, fall through to item 3a, which clears the record and writes
    `delivered` in one step.
+
+**Stale past its endpoint: offer the waiver.** A delivery is stale past its
+endpoint when refresh observes it `at_endpoint` with its members merged, so no
+fix can be pushed to them, and its `dNN` check still reports the integrated
+review or the `exit` carrier not fresh. A recovery that queues fixes cannot
+land them on that pull request, so items 3a and 8 offer the waiver before
+starting one; declining it keeps the item's ordinary recovery path. The
+waiver is operator-only (section 12.7, Operator
+waiver): it covers head movement only, and this skill never issues one on its
+own.
+
+- **Interactive run:** report the check's stale reasons and offer two
+  options: waive, or decline (continue as the item says for a declined
+  waiver: item 3a applies item 3, item 8 leaves the record and stops). Only on the user's explicit choice and with the
+  reason the user gives, run
+  `oat project delivery waive --project "$PROJECT_PATH" --delivery <dNN> --reason "<reason>" --json`,
+  commit `state.md` as bookkeeping
+  (`chore(oat): record freshness waiver <dNN>`; a `synced` project uses
+  `oat project push` with that message), then re-run items 1–2 for that
+  `dNN` and take the item's `status: ok` branch. The command writes the
+  waiver, restores the record and clears a targeting `oat_goal_recovery` in
+  one write. A refusal (for example `not-head-movement` for a base change, or
+  `review-not-passed`) writes nothing: report its `code` and message and
+  continue as the item says for a declined waiver.
+- **Non-interactive run** (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`):
+  never run the waiver. Continue as the item says for a declined waiver, and
+  report that the operator may waive the delivery with
+  `oat project delivery waive`.
+
+**Before merging.** A goal milestone pull request merges outside OAT, and a
+commit pushed after the review or exit gate can stale its evidence. For a
+registered delivery, `delivery check` reads the member observations recorded
+in `state.md`, so it cannot see a later push until a refresh records it. In
+the registration report and in the milestone PR body (the template's
+`## Before Merging` section), tell whoever merges it to run
+`oat project delivery refresh --project "$PROJECT_PATH"` immediately before
+`oat project delivery check --project "$PROJECT_PATH" --subject <dNN>`, to
+stop without merging when the refresh fails to observe a member, and, when
+the check reports the delivery stale, to re-gate it (re-run the exit gate and
+the integrated review) or, for head movement the operator accepts, to waive
+it with `oat project delivery waive` before merging.
 
 `delivered` means registered, open and review-ready. Activation of the next
 milestone belongs to `oat-project-goal` once the delivery reaches its agreed
@@ -601,4 +661,6 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
 - Goal mode: the delivery was registered only on a deliverable `delivery check`, idempotently, with its exit-gate result captured and one structural log entry per registration
+- Goal mode: the registration report and the milestone PR body tell whoever merges to run `oat project delivery refresh` immediately before `oat project delivery check --subject <dNN>`, and a progress PR description regenerated for a registered delivery lists its freshness waivers
+- Goal mode: a delivery stale past its endpoint was offered the operator waiver, never waived by this skill on its own
 - User has clear next step to open PR (manual or gh)

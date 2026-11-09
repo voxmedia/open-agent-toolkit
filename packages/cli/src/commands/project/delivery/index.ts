@@ -2,6 +2,7 @@ import { Command } from 'commander';
 
 import { createProjectDeliveryCheckCommand } from './check';
 import { createProjectDeliveryRefreshCommand } from './refresh';
+import { createProjectDeliveryWaiveCommand } from './waive';
 
 export {
   createProjectDeliveryCheckCommand,
@@ -15,6 +16,12 @@ export {
   endpointSatisfied,
   planDeliveryRefresh,
 } from './refresh';
+export {
+  applyWaiverPlan,
+  createProjectDeliveryWaiveCommand,
+  planDeliveryWaiver,
+  type WaiveRefusalCode,
+} from './waive';
 export {
   classifyPath,
   evaluateDeliveryReview,
@@ -31,8 +38,9 @@ export {
 export function createProjectDeliveryCommand(): Command {
   return new Command('delivery')
     .description(
-      'Observe goal delivery registry members and check delivery evidence freshness',
+      'Observe goal delivery registry members, check delivery evidence freshness, and record operator freshness waivers',
     )
     .addCommand(createProjectDeliveryRefreshCommand())
-    .addCommand(createProjectDeliveryCheckCommand());
+    .addCommand(createProjectDeliveryCheckCommand())
+    .addCommand(createProjectDeliveryWaiveCommand());
 }

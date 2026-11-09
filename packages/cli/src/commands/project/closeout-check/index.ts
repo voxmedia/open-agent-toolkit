@@ -22,6 +22,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import {
   getProjectState,
   parsePhaseMarkers,
+  type DeliveryFreshnessWaiver,
   type GoalDelivery,
   type ProjectState,
 } from '@open-agent-toolkit/control-plane';
@@ -312,12 +313,47 @@ export async function loadGoalCloseoutInputs(
   return inputs;
 }
 
+/** One operator freshness waiver recorded on a delivery the closeout judged. */
+export interface CloseoutWaiver extends DeliveryFreshnessWaiver {
+  delivery_id: string;
+}
+
 export interface ProjectCloseoutCheck {
   repoRoot: string;
   targetProjectPath: string;
   statePath: string;
   stateContent: string;
   result: CloseoutResult;
+  /**
+   * Goal only: every freshness waiver, oldest first, on the terminal
+   * deliveries whose evidence the boundary evaluated. The closeout output
+   * lists them so a waived delivery never closes out silently.
+   */
+  waivers: CloseoutWaiver[];
+}
+
+/** The waivers on the terminal deliveries the goal boundary evaluated. */
+export function closeoutWaivers(
+  goal: GoalCloseoutInputs | undefined,
+): CloseoutWaiver[] {
+  return (goal?.deliveries ?? []).flatMap((delivery) =>
+    delivery.delivery_id in (goal?.evidence ?? {})
+      ? (delivery.freshness_waivers ?? []).map((waiver) => ({
+          delivery_id: delivery.delivery_id,
+          ...waiver,
+        }))
+      : [],
+  );
+}
+
+/** One human-readable line per waiver, for closeout output. */
+export function formatCloseoutWaivers(
+  waivers: readonly CloseoutWaiver[],
+): string[] {
+  return waivers.map(
+    (waiver) =>
+      `  freshness waiver on ${waiver.delivery_id}: ${waiver.waived_by ?? 'unknown'} at ${waiver.waived_at ?? 'unknown time'}, ${waiver.reason ?? 'no reason'} (${waiver.members.map((member) => `${member.url ?? 'no url'} @ ${member.waived_head ?? 'no head'}`).join(', ')})`,
+  );
 }
 
 /**
@@ -365,7 +401,14 @@ export async function checkProjectCloseout(
     },
   });
 
-  return { repoRoot, targetProjectPath, statePath, stateContent, result };
+  return {
+    repoRoot,
+    targetProjectPath,
+    statePath,
+    stateContent,
+    result,
+    waivers: closeoutWaivers(goal),
+  };
 }
 
 async function runCloseoutCheck(
@@ -375,7 +418,7 @@ async function runCloseoutCheck(
   dependencies: CloseoutCheckDependencies,
 ): Promise<void> {
   try {
-    const { result } = await checkProjectCloseout(
+    const { result, waivers } = await checkProjectCloseout(
       projectPath,
       { autonomous: options.autonomous ?? false },
       context,
@@ -393,10 +436,13 @@ async function runCloseoutCheck(
           route: result.route,
           nextOwner: result.nextOwner,
           inputs: result.inputs,
+          waivers,
           message,
         });
       } else {
-        context.logger.info(message);
+        context.logger.info(
+          [message, ...formatCloseoutWaivers(waivers)].join('\n'),
+        );
       }
       // Fail closed: a caller that ignores the JSON still stops.
       process.exitCode = 1;
@@ -411,14 +457,21 @@ async function runCloseoutCheck(
         route: null,
         nextOwner: null,
         inputs: result.inputs,
+        waivers,
       });
     } else if (result.status === 'complete') {
       context.logger.info(
-        `Closeout invariant satisfied for ${projectPath}: every stored step and the approval are recorded complete.`,
+        [
+          `Closeout invariant satisfied for ${projectPath}: every stored step and the approval are recorded complete.`,
+          ...formatCloseoutWaivers(waivers),
+        ].join('\n'),
       );
     } else {
       context.logger.info(
-        `Closeout invariant not required for ${projectPath}: no snapshot, and the closeout is not configured, autonomous, or lite.`,
+        [
+          `Closeout invariant not required for ${projectPath}: no snapshot, and the closeout is not configured, autonomous, or lite.`,
+          ...formatCloseoutWaivers(waivers),
+        ].join('\n'),
       );
     }
     process.exitCode = 0;

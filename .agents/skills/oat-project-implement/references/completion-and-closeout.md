@@ -78,15 +78,19 @@ oat-project-implement --project "$PROJECT_PATH" --json`, canonical
    a wider review, or retry an unchanged command to resolve that mismatch.
    The carrier subject records the exact ordered milestone or
    recovery phase set actually reviewed. The goal ladder exception applies:
-   this gate precedes the integrated delivery review, and queued fixes require it to run again. The gate's own
-   Reviews row is admitted as carrier bookkeeping only when it has Type
+   this gate precedes the integrated delivery review, and queued fixes require it to run again. The gate's
+   artifact commit is bookkeeping by path: any single file directly under
+   this project's `reviews/` or `reviews/archived/` is a permitted
+   bookkeeping path (brief contract section 12.8, Paths), whatever evidence
+   it belongs to. Separately, the carrier's evidence scope lists the gate's
+   Reviews row artifact as shared evidence only when the row has Type
    `code`, Invocation `gate`, and a non-placeholder Reviewed Head equal to the
-   carrier's `reviewed_head`; its non-placeholder artifact is admitted with
-   that row only when its project-relative path is under `reviews/` (including
-   `reviews/archived/`). This row never serves as the milestone or delivery
-   integrated review and never joins a delivery's own evidence artifacts, so
-   it cannot unlock set-once delivery fields. Do not create a placeholder
-   Reviews row before the gate runs.
+   carrier's `reviewed_head`, and its non-placeholder artifact's
+   project-relative path is under `reviews/` (including `reviews/archived/`).
+   This row never serves as the milestone or delivery integrated review and
+   never joins a delivery's own evidence artifacts, so it cannot unlock
+   set-once delivery fields. Do not create a placeholder Reviews row before
+   the gate runs.
 2. **Write the milestone carrier.** Record `oat_milestone_gates[mNN].exit`
    with the gate approval record core, `resolution` (`configured`, `no_gate`,
    or `project_disabled`), `subject: { kind: code, scope: [ordered phase
