@@ -522,6 +522,7 @@
 | BL-260830-cli-flag-help-p2-p3-cleanup    | Re-audit CLI grammar across current command tree                                                     | open   | medium   | task    | M        |
 | BL-261002-re-review-a-phase-only-after   | Re-review a phase only after Critical or High findings                                               | open   | medium   | feature | M        |
 | BL-261003-reconcile-oat-tracking-commit  | Reconcile OAT tracking commit cadence with resumable phase/group batching                            | open   | medium   | bug     | M        |
+| BL-261109-recover-invalid-review         | Recover invalid review artifacts under bounded autonomous authority                                  | open   | medium   | feature | M        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                         | open   | medium   | task    | S        |
 | BL-261030-report-gate-project-log        | Report gate project-log finalization in the terminal JSON envelope                                   | open   | medium   | feature | M        |
 | BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail       | open   | medium   | task    | M        |

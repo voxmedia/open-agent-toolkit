@@ -109,6 +109,8 @@ Source: [GitHub #344](https://github.com/voxmedia/open-agent-toolkit/issues/344)
 
 Keep the existing finding-disposition criteria above. Add a distinct invalid-artifact recovery slice under the same owner, with separate recovery evidence and explicit updates to the owning autonomous boundary contracts. Neither slice fabricates a reviewer pass.
 
+**Moved (2026-11-09):** this slice was not delivered by review-gate-integrity (its brief excluded it); its criteria are tracked in `BL-261109-recover-invalid-review`.
+
 ### Additional acceptance criteria
 
 - Grant bounded standing authority for defined, mechanically verified artifact-formatting repairs and unambiguous ledger/reference corrections to uniquely identifiable existing evidence.
