@@ -250,12 +250,12 @@ Default is `[]` (fully sequential, no worktrees).
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                                                                                                               | Reviewed Head | Invocation | Gate Target                              |
-| ----- | -------- | --------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ---------------------------------------- |
-| plan  | artifact | fixes_completed | 2026-11-09 | structured (3 attempts, retry bound reached; round 3 H1 waiver re-anchor, M1 carrier write, L1-L3 folded; verified by configured gate) | 5358b2a8a     | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| p01   | code     | pending         | -          | -                                                                                                                                      | -             | -          | -                                        |
-| final | code     | pending         | -          | -                                                                                                                                      | -             | -          | -                                        |
-| plan  | artifact | received        | 2026-11-09 | reviews/artifact-plan-review-2026-11-09T024116Z.md                                                                                     | -             | gate       | codex-6-sol-xhigh                        |
+| Scope | Type     | Status  | Date       | Artifact                                                                                                                                                | Reviewed Head                            | Invocation | Gate Target                              |
+| ----- | -------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
+| plan  | artifact | passed  | 2026-11-09 | structured (3 attempts, retry bound reached; round 3 H1 waiver re-anchor, M1 carrier write, L1-L3 folded; verified by configured gate (passed 0/0/0/0)) | 5358b2a8a                                | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p01   | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
+| final | code     | pending | -          | -                                                                                                                                                       | -                                        | -          | -                                        |
+| plan  | artifact | passed  | 2026-11-09 | reviews/archived/artifact-plan-review-2026-11-09T024116Z.md                                                                                             | 03985c62aa51ed152bd2c5ea04e0cd071df7c451 | gate       | codex-6-sol-xhigh                        |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.

@@ -104,8 +104,14 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-09T02:00:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-09T02:44:20Z'
 oat_generated: false
+oat_brief_gate:
+  status: allowed
+  disposition: passed
+  config_fingerprint: 'sha256:b2c9c1792edadaf75fb0abfcc63dbaa83662a97a664134db96e5bcb06b6cee94'
+  reviewed_head: '03985c62aa51ed152bd2c5ea04e0cd071df7c451'
+  decided_at: '2026-11-09T02:44:20Z'
 ---
 
 # Project State: goal-delivery-freshness
