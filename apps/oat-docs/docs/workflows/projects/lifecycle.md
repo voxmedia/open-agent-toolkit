@@ -638,7 +638,7 @@ dNN --reason <text>` records an operator's acceptance of a delivery that is
 stale only because its member heads moved, for example a post-gate fix that was
 squash-merged. It is operator-only (it refuses under `OAT_AUTONOMOUS=1`),
 binds the waiver to each member's observed head, and never covers a missing or
-failed review, a missing, blocked or reconfigured exit carrier, or a base
+failed review, a missing, blocked, invalid or reconfigured exit carrier, or a base
 change. The waiver restores the stored record, so `delivery check`, the router
 and closeout read the delivery as deliverable with no further change;
 `closeout-check` lists every waiver, and `complete-state` lists them on
