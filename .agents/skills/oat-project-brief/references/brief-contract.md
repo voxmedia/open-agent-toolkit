@@ -652,7 +652,12 @@ dNN --reason <text> [--by <name>]` is the one sanctioned writer that moves a
   `passed` and the recorded disposition is not `failed`
   (`review-not-passed`); unless every carrier a consumer judges for it, the
   milestone working carrier and the delivery's `exit_gate`, has outcome
-  `allowed` (`carrier-not-allowed`); for a delivery whose every consumer's
+  `allowed` (`carrier-not-allowed`); when either carrier no longer matches
+  the gate configuration, because the milestone exit gate no longer resolves
+  as the carrier recorded it or the tracked `.oat/config.json`
+  differs between a reviewed head the waiver would move and an observed head
+  (`configuration-changed`: a reconfigured carrier needs the milestone exit
+  gate run again); for a delivery whose every consumer's
   live evaluation already reads fresh (`already-fresh`: there is no head
   movement to waive; when its recorded disposition is nonetheless `stale`,
   the refusal says so and names the recovery, a new integrated review

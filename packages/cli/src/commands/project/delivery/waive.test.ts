@@ -127,6 +127,29 @@ function configuredCarrier(reviewed: string, status = 'allowed'): string {
       freshness_reason: null`;
 }
 
+/** An unreviewed `no_gate` exit carrier (YAML under its key). */
+const NO_GATE_CARRIER = `      status: allowed
+      resolution: no_gate
+      disposition: no_gate
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`;
+
+/** `.oat/config.json` configuring the exit gate (`oat-project-implement`). */
+function exitGateConfig(command: string): string {
+  return `${JSON.stringify({
+    version: 1,
+    workflow: {
+      gates: {
+        skills: { 'oat-project-implement': { command, onFailure: 'block' } },
+      },
+    },
+  })}\n`;
+}
+
 describe('oat project delivery waive', () => {
   let repo: GoalRepo | undefined;
   let originalExitCode: number | undefined;
@@ -208,25 +231,34 @@ describe('oat project delivery waive', () => {
     prState?: Observation['state'];
     /** Leave the delivery unmoved (observed head = reviewed revision). */
     unmoved?: boolean;
+    /** Record `no_gate` carriers in a repository that configures no gate. */
+    noGate?: boolean;
+    /** The post-gate fix rewrites `.oat/config.json` to this content. */
+    gateConfigChange?: string;
   }
 
   /**
    * d01 reviewed at R and registered with a configured working carrier and
-   * exit_gate bound to R; a substantive post-gate fix F then lands on the
-   * member PR, refresh records the staleness, and pr-progress routes d01 to
-   * recovery (stage exit_gate) and commits.
+   * exit_gate bound to R (the repository configures that gate); a substantive
+   * post-gate fix F then lands on the member PR, refresh records the
+   * staleness, and pr-progress routes d01 to recovery (stage exit_gate) and
+   * commits. `noGate` records `no_gate` carriers with no gate configured.
    */
   async function staleDelivery(target: GoalRepo, options: StaleOptions = {}) {
+    await target.writeRepo(
+      '.oat/config.json',
+      options.noGate ? '{ "version": 1 }\n' : exitGateConfig('true'),
+    );
+    target.commitAll('chore: configure the workflow gates');
     const chain = await bookkeepingChain(target, {
       register: (reviewed) => {
         const registry = registryYaml({
           reviewed,
           base: target.baseSha,
-          deliveryExitGate: configuredCarrier(
-            reviewed,
-            options.bindingStatus ?? 'allowed',
-          ),
-          exit: configuredCarrier(reviewed),
+          deliveryExitGate: options.noGate
+            ? NO_GATE_CARRIER
+            : configuredCarrier(reviewed, options.bindingStatus ?? 'allowed'),
+          exit: options.noGate ? NO_GATE_CARRIER : configuredCarrier(reviewed),
         });
         return `oat_milestone: m01\noat_milestone_status: delivered\n${
           options.laterDelivery
@@ -254,7 +286,11 @@ oat_milestone_gates:`,
     });
     let fix = chain.reviewed;
     if (!options.unmoved) {
-      await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+      if (options.gateConfigChange === undefined) {
+        await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+      } else {
+        await target.writeRepo('.oat/config.json', options.gateConfigChange);
+      }
       fix = target.commitAll('fix: post-gate change on the member PR');
     }
     const gh = stubGh(() => ({
@@ -557,6 +593,42 @@ oat_goal_recovery:
       expect(String(result.payload['message'])).toMatch(/base-changed/);
     });
 
+    it('refuses a no_gate carrier after a later commit configures the gate', async () => {
+      // The final exit gate's H1 probe: the unwaived delivery is stale, and
+      // the waiver would also skip the commit that configured a blocking gate
+      // that never ran.
+      repo = await createGoalRepo();
+      const { gh } = await staleDelivery(repo, {
+        noGate: true,
+        gateConfigChange: exitGateConfig('false'),
+      });
+      const before = await repo.read('state.md');
+      expect((await check(repo)).payload).toMatchObject({
+        status: 'undeliverable',
+      });
+      const result = await waive(repo, gh);
+      await expectRefused(repo, result, 'configuration-changed', before);
+      expect(String(result.payload['message'])).toContain(
+        'the gate now resolves as configured, not no_gate',
+      );
+      expect((await check(repo)).payload).toMatchObject({
+        status: 'undeliverable',
+      });
+    });
+
+    it('refuses a configured carrier after a later commit changes the gate command', async () => {
+      repo = await createGoalRepo();
+      const { gh } = await staleDelivery(repo, {
+        gateConfigChange: exitGateConfig('false'),
+      });
+      const before = await repo.read('state.md');
+      const result = await waive(repo, gh);
+      await expectRefused(repo, result, 'configuration-changed', before);
+      expect(String(result.payload['message'])).toContain(
+        '.oat/config.json changed between',
+      );
+    });
+
     it('refuses an unknown delivery', async () => {
       repo = await createGoalRepo();
       const { gh } = await staleDelivery(repo);
@@ -568,6 +640,22 @@ oat_goal_recovery:
         before,
       );
     });
+  });
+
+  it('waives head movement over no_gate carriers while no gate is configured', async () => {
+    // The accepted control for the configuration refusals.
+    repo = await createGoalRepo();
+    const { fix, gh } = await staleDelivery(repo, { noGate: true });
+    const waived = await waive(repo, gh);
+    expect(waived).toMatchObject({
+      exitCode: 0,
+      payload: {
+        status: 'waived',
+        waiver: { members: [{ url: MEMBER_URL, waived_head: fix }] },
+      },
+    });
+    repo.commitAll('chore(oat): record the d01 freshness waiver');
+    expect((await check(repo)).payload).toMatchObject({ status: 'ok' });
   });
 
   it('waives only the named delivery on a shared member PR, never its sibling', async () => {

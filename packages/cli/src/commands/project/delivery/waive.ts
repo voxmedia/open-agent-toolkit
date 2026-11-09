@@ -1,4 +1,5 @@
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import {
   buildCommandContext,
@@ -13,6 +14,7 @@ import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { resolveEffectiveConfig, resolveGate } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
 import type {
   DeliveryFreshnessWaiver,
@@ -25,6 +27,7 @@ import YAML, { isMap, isScalar, isSeq } from 'yaml';
 import {
   DEFAULT_DELIVERY_PROJECT_DEPENDENCIES,
   deliveryEffectiveScope,
+  EXIT_GATE_SKILL,
   loadGoalDeliveryProject,
   type DeliveryProjectDependencies,
   type GoalDeliveryProject,
@@ -68,6 +71,7 @@ export type WaiveRefusalCode =
   | 'missing-object'
   | 'review-not-passed'
   | 'carrier-not-allowed'
+  | 'configuration-changed'
   | 'already-fresh'
   | 'not-head-movement';
 
@@ -114,6 +118,43 @@ export interface WaiveRunners {
   git: GitRunner;
   now: () => Date;
   env: NodeJS.ProcessEnv;
+  /**
+   * The exit gate's current resolution in carrier vocabulary (see
+   * `exitGateCarrierResolution`): the carriers' recorded `resolution` must
+   * equal it. `null` when a project override disables a configured gate,
+   * which the override guard judges instead.
+   */
+  exitGateResolution: ExitGateCarrierResolution;
+}
+
+export type ExitGateCarrierResolution = 'configured' | 'no_gate' | null;
+
+/** The shared, tracked gate configuration file the resolver reads. */
+const SHARED_GATE_CONFIG_PATH = '.oat/config.json';
+
+/**
+ * Map the current resolution of `oat-project-implement`'s gate (the gate the
+ * milestone exit carrier and each delivery's `exit_gate` record) onto the
+ * carrier vocabulary, as the gate resolver decides it: no gate resolves as
+ * `no_gate` (`not_configured`), a configured gate as `configured`, and a
+ * configured gate the project override disables yields `null`
+ * (`configured_disabled_by_project`), which producers record either as
+ * `resolution: project_disabled` or as `disposition: project_disabled`, so
+ * the evaluator's override guard judges it.
+ */
+export async function exitGateCarrierResolution(
+  repoRoot: string,
+  userConfigDir: string,
+  env: NodeJS.ProcessEnv,
+  exitGateDisabled: boolean,
+  resolve: typeof resolveEffectiveConfig = resolveEffectiveConfig,
+): Promise<ExitGateCarrierResolution> {
+  const gate = resolveGate(
+    await resolve(repoRoot, userConfigDir, env),
+    EXIT_GATE_SKILL,
+  );
+  if (gate === null) return 'no_gate';
+  return exitGateDisabled ? null : 'configured';
 }
 
 const AUTONOMOUS_MESSAGE =
@@ -164,6 +205,7 @@ async function judgeDelivery(
   deliveries: readonly GoalDelivery[],
   delivery: GoalDelivery,
   git: GitRunner,
+  resolution: ExitGateCarrierResolution,
 ): Promise<WaiverEvidence> {
   const scope = deliveryEffectiveScope(deliveries, delivery);
   const working =
@@ -175,6 +217,7 @@ async function judgeDelivery(
     scope,
     match: 'covers' as const,
     overrideDisabled: project.exitGateDisabled,
+    resolution,
   };
   const workingScope = deliveryEvidenceScope(
     { ...project, evidenceCarrier: working },
@@ -205,6 +248,48 @@ async function judgeDelivery(
       { git, scope: bindingScope, delivery },
     ),
   };
+}
+
+/**
+ * A waived head would also skip a commit that changed the tracked shared gate
+ * configuration, which no recorded resolution can reveal when a configured
+ * gate stays configured. Compare `.oat/config.json` between each walk anchor
+ * the waiver would move (the member's reviewed head and a configured
+ * carrier's reviewed head) and the member's observed head. Returns the reason
+ * to refuse, or `null` when the file is unchanged; an inspection failure
+ * refuses.
+ */
+async function sharedGateConfigurationChange(
+  git: GitRunner,
+  repoRoot: string,
+  delivery: GoalDelivery,
+  members: readonly DeliveryMember[],
+  carriers: readonly (GoalDelivery['exit_gate'] | null)[],
+): Promise<string | null> {
+  const carrierAnchors = carriers.flatMap((carrier) =>
+    carrier?.reviewed_head ? [carrier.reviewed_head] : [],
+  );
+  for (const member of members) {
+    const head = member.observed_head;
+    if (head === null) continue;
+    const anchors = [
+      ...(member.reviewed_head ? [member.reviewed_head] : []),
+      ...carrierAnchors,
+    ];
+    for (const anchor of new Set(anchors)) {
+      const diff = await git.run(
+        ['diff', '--name-only', anchor, head, '--', SHARED_GATE_CONFIG_PATH],
+        { cwd: repoRoot, allowFailure: true },
+      );
+      if (diff.code !== 0) {
+        return `Cannot confirm ${SHARED_GATE_CONFIG_PATH} is unchanged between ${anchor} and ${delivery.delivery_id}'s observed head ${head}: ${diff.stderr.trim() || `git exited ${diff.code}`}`;
+      }
+      if (diff.stdout.trim() !== '') {
+        return `${SHARED_GATE_CONFIG_PATH} changed between ${anchor} and ${delivery.delivery_id}'s observed head ${head}, so the gate configuration may differ from what the carriers recorded`;
+      }
+    }
+  }
+  return null;
 }
 
 function staleReasons(evidence: WaiverEvidence): string[] {
@@ -356,11 +441,16 @@ export async function planDeliveryWaiver(
     );
   }
 
+  const working =
+    delivery.milestone === null
+      ? null
+      : (project.state.milestoneGates?.[delivery.milestone]?.exit ?? null);
   const before = await judgeDelivery(
     project,
     observedDeliveries,
     observedDelivery,
     runners.git,
+    runners.exitGateResolution,
   );
   for (const [label, evaluation] of [
     ['milestone exit carrier', before.workingCarrier],
@@ -370,6 +460,19 @@ export async function planDeliveryWaiver(
       return refusal(
         'carrier-not-allowed',
         `The ${label} for ${delivery.delivery_id} is ${evaluation.outcome}${evaluation.reason ? ` (${evaluation.reason})` : ''}; a waiver never covers a missing, blocked or invalid carrier.`,
+      );
+    }
+  }
+  // A waiver never covers a reconfigured carrier: the gate must still
+  // resolve as each carrier recorded it.
+  for (const [label, evaluation] of [
+    ['milestone exit carrier', before.workingCarrier],
+    ['delivery exit_gate', before.deliveryBinding],
+  ] as const) {
+    if (evaluation.reason?.startsWith('configuration-changed') === true) {
+      return refusal(
+        'configuration-changed',
+        `The ${label} for ${delivery.delivery_id} no longer matches the gate configuration (${evaluation.reason}); a waiver never covers a reconfigured carrier. Run the milestone exit gate again.`,
       );
     }
   }
@@ -384,6 +487,20 @@ export async function planDeliveryWaiver(
       recorded.disposition === 'passed'
         ? `${delivery.delivery_id} is already fresh for every consumer; there is nothing to waive.`
         : `${delivery.delivery_id}'s live evidence already reads fresh for every consumer, so there is no head movement to waive, but its recorded integrated_review.disposition is ${recorded.disposition}, so delivery check still reports it undeliverable. Record a new integrated review of ${delivery.delivery_id} and receive it clean (oat-project-review-provide, then oat-project-review-receive), which rewrites the disposition to passed; delivery refresh never restores it.`,
+    );
+  }
+
+  const changedConfiguration = await sharedGateConfigurationChange(
+    runners.git,
+    project.repoRoot,
+    delivery,
+    members,
+    [working, delivery.exit_gate],
+  );
+  if (changedConfiguration !== null) {
+    return refusal(
+      'configuration-changed',
+      `${changedConfiguration}; a waiver never covers a reconfigured carrier. Run the milestone exit gate again.`,
     );
   }
 
@@ -407,6 +524,7 @@ export async function planDeliveryWaiver(
     ),
     waivedDelivery,
     runners.git,
+    runners.exitGateResolution,
   );
   const remaining = staleReasons(after);
   if (remaining.length > 0) {
@@ -563,6 +681,7 @@ export interface DeliveryWaiveDependencies extends DeliveryProjectDependencies {
   writeFile: (path: string, content: string) => Promise<void>;
   now: () => Date;
   env: NodeJS.ProcessEnv;
+  resolveEffectiveConfig: typeof resolveEffectiveConfig;
 }
 
 const DEFAULT_WAIVE_DEPENDENCIES: DeliveryWaiveDependencies = {
@@ -573,6 +692,7 @@ const DEFAULT_WAIVE_DEPENDENCIES: DeliveryWaiveDependencies = {
   writeFile: (path, content) => writeFile(path, content, 'utf8'),
   now: () => new Date(),
   env: process.env,
+  resolveEffectiveConfig,
 };
 
 export async function waiveDelivery(
@@ -580,6 +700,7 @@ export async function waiveDelivery(
   cwd: string,
   input: WaiveInput,
   dependencies: DeliveryWaiveDependencies,
+  userConfigDir: string,
 ): Promise<
   { plan: WaiverPlan; statePath: string } | { refusal: WaiveRefusal }
 > {
@@ -592,7 +713,17 @@ export async function waiveDelivery(
     cwd,
     dependencies,
   );
-  const planned = await planDeliveryWaiver(project, input, dependencies);
+  const exitGateResolution = await exitGateCarrierResolution(
+    project.repoRoot,
+    userConfigDir,
+    dependencies.env,
+    project.exitGateDisabled,
+    dependencies.resolveEffectiveConfig,
+  );
+  const planned = await planDeliveryWaiver(project, input, {
+    ...dependencies,
+    exitGateResolution,
+  });
   if ('refusal' in planned) return planned;
   await dependencies.writeFile(
     project.statePath,
@@ -636,6 +767,7 @@ export function createProjectDeliveryWaiveCommand(
               by: options.by ?? null,
             },
             dependencies,
+            join(context.home, '.oat'),
           );
           if ('refusal' in result) {
             if (context.json) {

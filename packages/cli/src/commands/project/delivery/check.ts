@@ -44,7 +44,7 @@ import {
 } from './evidence';
 
 /** The skill whose gate the milestone exit carrier records. */
-const EXIT_GATE_SKILL = 'oat-project-implement';
+export const EXIT_GATE_SKILL = 'oat-project-implement';
 
 export interface GoalDeliveryProject {
   repoRoot: string;

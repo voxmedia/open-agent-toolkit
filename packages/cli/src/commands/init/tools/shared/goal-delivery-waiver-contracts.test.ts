@@ -155,6 +155,7 @@ describe('brief contract and implement closeout alignment', () => {
       'missing-object',
       'review-not-passed',
       'carrier-not-allowed',
+      'configuration-changed',
       'already-fresh',
       'not-head-movement',
     ]) {
