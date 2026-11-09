@@ -540,9 +540,10 @@ yet and resumes at item 5.
 **Stale past its endpoint: offer the waiver.** A delivery is stale past its
 endpoint when refresh observes it `at_endpoint` with its members merged, so no
 fix can be pushed to them, and its `dNN` check still reports the integrated
-review or the `exit` carrier not fresh. Re-review and re-gating then cannot
-produce a deliverable record for that pull request, so items 3a and 8 offer
-the waiver instead. The waiver is operator-only (section 12.7, Operator
+review or the `exit` carrier not fresh. A recovery that queues fixes cannot
+land them on that pull request, so items 3a and 8 offer the waiver before
+starting one; declining it keeps the item's ordinary recovery path. The
+waiver is operator-only (section 12.7, Operator
 waiver): it covers head movement only, and this skill never issues one on its
 own.
 
