@@ -99,6 +99,8 @@ not edit `plan.md`, `implementation.md`, or project state.
 
     ```mermaid
     sequenceDiagram
+      accTitle: Phase dispatch sequence
+      accDescr: The root passes phase and lifecycle authority to the adapter, the adapter sends a provider-neutral request to the engine, the engine returns the exact route and request ID, the root sends the phase scope, records the accepted or blocked result, and receives the phase report and commits.
       participant Root as Project root
       participant Adapter as Project adapter
       participant Engine as Dispatch engine

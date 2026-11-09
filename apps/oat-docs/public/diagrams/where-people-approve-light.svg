@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1002" width="720" height="1002" role="img" aria-labelledby="wpa-title wpa-desc">
+  <title id="wpa-title">Where a person approves in an interactive project</title>
+  <desc id="wpa-desc">Interactive quick, spec-driven and imported projects. You confirm requirements, and a design if the mode has one; an imported plan has no such step. Planning ends with an automatic plan review in which the agent fixes Critical and High findings and offers Medium and Low ones to you. Planning then stops: reading plan.md is your plan approval, and nothing records it. Each phase runs an implementer and a reviewer agent, and a Critical or High finding adds a fix round; at each non-final checkpoint phase you chose, asked on the first run or configured, you approve before the run continues. Only non-final checkpoints pause here; the final checkpoint occurs in the selected ending, after the final review and any gate. The final review always runs, and you may be asked how to run it. If a gate is configured, a separate reviewer agent runs it, and it must be allowed before the PR opens and before you approve. Then workflow.postImplementSequence decides when the PR opens: with pr before approval, the PR opens and then you approve the final checkpoint; with pr after approval, you approve and the PR then opens by itself; with no pr step, you approve and then run /oat-project-pr-final, which the agent offers when the setting is unset.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="wpa-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="wpa-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="1002" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- REQ -> PLAN -->
+    <path class="edge" d="M 195 126 L 195 165" marker-end="url(#wpa-arrow)"/>
+    <!-- PLAN -> STOP -->
+    <path class="edge" d="M 195 252 L 195 291" marker-end="url(#wpa-arrow)"/>
+    <!-- STOP -> PH -->
+    <path class="edge" d="M 195 378 L 195 417" marker-end="url(#wpa-arrow)"/>
+    <!-- PH -> FIN -->
+    <path class="edge" d="M 195 504 L 195 561" marker-end="url(#wpa-arrow)"/>
+    <!-- PH -> CK (if chosen) -->
+    <path class="edge-opt" d="M 350 461 L 429 461" marker-end="url(#wpa-arrow-opt)"/>
+    <!-- FIN -> GATE (if configured) -->
+    <path class="edge-opt" d="M 350 596 L 449 596" marker-end="url(#wpa-arrow-opt)"/>
+    <!-- FIN -> SEQ (no gate) -->
+    <path class="edge" d="M 195 630 L 195 699" marker-end="url(#wpa-arrow)"/>
+    <!-- GATE -> SEQ (when allowed) -->
+    <path class="edge-opt" d="M 565 648 L 565 699" marker-end="url(#wpa-arrow-opt)"/>
+    <!-- SEQ -> L (pr before approval) -->
+    <path class="edge" d="M 250 768 L 250 788 Q 250 796 242 796 L 148 796 Q 140 796 140 804 L 140 839" marker-end="url(#wpa-arrow)"/>
+    <!-- SEQ -> M (pr after approval) -->
+    <path class="edge" d="M 360 768 L 360 839" marker-end="url(#wpa-arrow)"/>
+    <!-- SEQ -> R (no pr step) -->
+    <path class="edge" d="M 470 768 L 470 788 Q 470 796 478 796 L 572 796 Q 580 796 580 804 L 580 839" marker-end="url(#wpa-arrow)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <text class="sans s" x="390" y="453" text-anchor="middle">if chosen</text>
+  <text class="sans s" x="400" y="588" text-anchor="middle">if configured</text>
+  <text class="sans s" x="187" y="670" text-anchor="end">no gate</text>
+  <text class="sans s" x="577" y="678" text-anchor="start">when allowed</text>
+  <text class="sans s" x="148" y="826" text-anchor="start">pr before approval</text>
+  <text class="sans s" x="368" y="826" text-anchor="start">pr after approval</text>
+  <text class="sans s" x="588" y="826" text-anchor="start">no pr step</text>
+
+  <!-- REQ: Requirements and design -->
+  <rect class="node" x="40" y="40" width="310" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="68" text-anchor="middle">Requirements and design</text>
+  <text class="sans s" x="195" y="90" text-anchor="middle">you confirm requirements (and design,</text>
+  <text class="sans s" x="195" y="108" text-anchor="middle">if any); an imported plan has no such step</text>
+
+  <!-- PLAN: Plan and automatic review -->
+  <rect class="node" x="40" y="166" width="310" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="194" text-anchor="middle">Plan and automatic review</text>
+  <text class="sans s" x="195" y="216" text-anchor="middle">the agent fixes Critical and High;</text>
+  <text class="sans s" x="195" y="234" text-anchor="middle">Medium and Low are offered to you</text>
+
+  <!-- STOP: Planning stops -->
+  <rect class="node-em" x="40" y="292" width="310" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="320" text-anchor="middle">Planning stops</text>
+  <text class="sans s" x="195" y="342" text-anchor="middle">read <tspan class="mono">plan.md</tspan> now: this is your</text>
+  <text class="sans s" x="195" y="360" text-anchor="middle">plan approval, and nothing records it</text>
+
+  <!-- PH: Each phase -->
+  <rect class="node" x="40" y="418" width="310" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="446" text-anchor="middle">Each phase</text>
+  <text class="sans s" x="195" y="468" text-anchor="middle">an implementer and a reviewer agent;</text>
+  <text class="sans s" x="195" y="486" text-anchor="middle">Critical or High adds a fix round</text>
+
+  <!-- CK: Non-final checkpoint pause -->
+  <rect class="node" x="430" y="418" width="250" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="555" y="446" text-anchor="middle">Non-final checkpoint pause</text>
+  <text class="sans s" x="555" y="468" text-anchor="middle">you approve at chosen</text>
+  <text class="sans s" x="555" y="486" text-anchor="middle">non-final checkpoint phases</text>
+
+  <!-- FIN: Final review -->
+  <rect class="node" x="40" y="562" width="310" height="68" rx="8" ry="8"/>
+  <text class="sans t" x="195" y="590" text-anchor="middle">Final review</text>
+  <text class="sans s" x="195" y="612" text-anchor="middle">always runs; you may be asked how</text>
+
+  <!-- GATE: Gate -->
+  <rect class="node" x="450" y="562" width="230" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="565" y="590" text-anchor="middle">Gate</text>
+  <text class="sans s" x="565" y="612" text-anchor="middle">a separate reviewer agent,</text>
+  <text class="sans s" x="565" y="630" text-anchor="middle">before the PR and your approval</text>
+
+  <!-- SEQ: workflow.postImplementSequence -->
+  <rect class="node" x="140" y="700" width="440" height="68" rx="8" ry="8"/>
+  <text class="mono t" x="360" y="728" text-anchor="middle">workflow.postImplementSequence</text>
+  <text class="sans s" x="360" y="750" text-anchor="middle">decides when the PR opens</text>
+
+  <!-- L: PR opens first -->
+  <rect class="node" x="40" y="840" width="200" height="122" rx="8" ry="8"/>
+  <text class="sans t" x="140" y="868" text-anchor="middle">PR opens first</text>
+  <text class="sans s" x="140" y="890" text-anchor="middle">the PR opens, then you</text>
+  <text class="sans s" x="140" y="908" text-anchor="middle">approve the final checkpoint</text>
+
+  <!-- M: PR opens after -->
+  <rect class="node" x="260" y="840" width="200" height="122" rx="8" ry="8"/>
+  <text class="sans t" x="360" y="868" text-anchor="middle">PR opens after</text>
+  <text class="sans s" x="360" y="890" text-anchor="middle">you approve the final</text>
+  <text class="sans s" x="360" y="908" text-anchor="middle">checkpoint, then the PR</text>
+  <text class="sans s" x="360" y="926" text-anchor="middle">opens by itself</text>
+
+  <!-- R: You start the PR -->
+  <rect class="node" x="480" y="840" width="200" height="122" rx="8" ry="8"/>
+  <text class="sans t" x="580" y="868" text-anchor="middle">You start the PR</text>
+  <text class="sans s" x="580" y="890" text-anchor="middle">you approve the final</text>
+  <text class="sans s" x="580" y="908" text-anchor="middle">checkpoint, then run</text>
+  <text class="sans s" x="580" y="926" text-anchor="middle"><tspan class="mono">/oat-project-pr-final</tspan></text>
+  <text class="sans s" x="580" y="944" text-anchor="middle">(unset: the agent offers it)</text>
+
+</svg>

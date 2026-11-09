@@ -211,14 +211,53 @@ oat instructions sync
 
 `oat instructions validate` and `oat instructions sync --dry-run` work from the same scan model.
 
-| State              | Meaning                                                                                                                                                          |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ok`               | The directory matches the effective strategy (under `none`: no `CLAUDE.md` beside `AGENTS.md`).                                                                  |
-| `missing`          | Shim strategies only: `AGENTS.md` exists but sibling `CLAUDE.md` is missing. Under `none` a missing `CLAUDE.md` is correct, never drift.                         |
-| `content_mismatch` | `CLAUDE.md` exists but has the wrong shape/content, or an instruction file is unreadable/broken.                                                                 |
-| `stray`            | `CLAUDE.md` exists without sibling `AGENTS.md` and the Claude file is readable enough to adopt.                                                                  |
-| `managed_shim`     | `none` only: a `CLAUDE.md` in an exact shape OAT writes. Drift; sync removes it unless [a `CLAUDE.md` with content blocks removal](#all-or-nothing).             |
-| `unmanaged`        | `none` only: a `CLAUDE.md` that is not an exact managed shape (hand-written, modified, or a symlink elsewhere). Reported and kept, never deleted, and not drift. |
+Which states can appear depends on the effective strategy: `none` reports
+`managed_shim` and `unmanaged` but never `missing`, and a shim strategy reports
+`missing` but never `managed_shim` or `unmanaged`. `stray` and an unreadable
+file's `content_mismatch` appear under either, except that under `none` a
+broken or unreadable `CLAUDE.md` symlink is reported `unmanaged`. Under a shim
+strategy, `--force` repairs a paired `CLAUDE.md` in `content_mismatch`, broken
+or unreadable ones included, but a `CLAUDE.md` that an `AGENTS.md` resolves to
+is kept and its link must be repaired by hand. An unreadable canonical
+`AGENTS.md` or lone `CLAUDE.md` is always repaired by hand, and under `none`
+sync never rewrites a `CLAUDE.md`, so every `content_mismatch` there is
+repaired by hand.
+
+=== "Diagram"
+
+    ![AGENTS.md is canonical; the effective strategy picks none or a CLAUDE.md shim, and each reports its own states, with stray adopted in either](/diagrams/instruction-sync-light.svg)
+    ![AGENTS.md is canonical; the effective strategy picks none or a CLAUDE.md shim, and each reports its own states, with stray adopted in either](/diagrams/instruction-sync-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Instruction sync strategies and states
+      accDescr: AGENTS.md is canonical. The effective strategy is the --strategy flag, then instructions.claude.shims, then the default none. Under none, ok means no CLAUDE.md, managed_shim is removed all or nothing, unmanaged is kept with a warning, and a broken or unreadable CLAUDE.md symlink is reported unmanaged. Under pointer, symlink or copy, ok means the shim has that shape, missing is created, and content_mismatch is repaired with --force for repairable shims: a mismatched, broken or unreadable paired CLAUDE.md may be rewritten with --force, but a CLAUDE.md that an AGENTS.md resolves to is kept and its link must be repaired by hand. In either, a stray CLAUDE.md is adopted into AGENTS.md, and an unreadable canonical AGENTS.md or lone CLAUDE.md is content_mismatch, repaired by hand; under none every content_mismatch is repaired by hand.
+      CANON["AGENTS.md is canonical\nin every directory the scan reaches"]
+      STRAT["Effective strategy\n--strategy, then instructions.claude.shims,\nthen the default none"]
+      NONE["none (default)\nno CLAUDE.md beside AGENTS.md"]
+      SHIM["pointer, symlink or copy\na CLAUDE.md shim in that shape"]
+      NS["States under none\nok: no CLAUDE.md\nmanaged_shim: removed, all or nothing\nunmanaged: kept, with a warning\nunreadable CLAUDE.md symlink: unmanaged"]
+      SS["States under a shim\nok: the shim has that shape\nmissing: sync creates it\ncontent_mismatch:\n--force for repairable shims"]
+      STR["In either strategy\nstray (a lone CLAUDE.md): adopted into AGENTS.md,\nthen removed (none, unless blocked) or rewritten as a shim\nAGENTS.md or lone CLAUDE.md unreadable (content_mismatch): repair by hand\nunder none, repair every content_mismatch by hand"]
+      CANON --> STRAT
+      STRAT --> NONE
+      STRAT --> SHIM
+      NONE --> NS
+      SHIM --> SS
+      NS --> STR
+      SS --> STR
+    ```
+
+| State              | Meaning                                                                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ok`               | The directory matches the effective strategy (under `none`: no `CLAUDE.md` beside `AGENTS.md`).                                                                                    |
+| `missing`          | Shim strategies only: `AGENTS.md` exists but sibling `CLAUDE.md` is missing. Under `none` a missing `CLAUDE.md` is correct, never drift.                                           |
+| `content_mismatch` | `CLAUDE.md` exists but has the wrong shape/content, or an instruction file is unreadable/broken (under `none`, a broken or unreadable `CLAUDE.md` symlink is `unmanaged` instead). |
+| `stray`            | `CLAUDE.md` exists without sibling `AGENTS.md` and the Claude file is readable enough to adopt.                                                                                    |
+| `managed_shim`     | `none` only: a `CLAUDE.md` in an exact shape OAT writes. Drift; sync removes it unless [a `CLAUDE.md` with content blocks removal](#all-or-nothing).                               |
+| `unmanaged`        | `none` only: a `CLAUDE.md` that is not an exact managed shape (hand-written, modified, or a symlink elsewhere). Reported and kept, never deleted, and not drift.                   |
 
 ## Removing OAT-Managed Shims
 
@@ -425,9 +464,9 @@ Examples:
 - unreadable canonical `AGENTS.md`
 - broken or unreadable `AGENTS.md` symlink targets
 - unreadable Claude-only sources
-- broken or unreadable paired `CLAUDE.md` symlink targets
+- a `CLAUDE.md` that an `AGENTS.md` resolves to, which `--force` keeps under every shim strategy (any broken or unreadable paired `CLAUDE.md` symlink is replaced by `--force` under a shim strategy, and reported `unmanaged` and kept under `none`)
 
-In these cases, sync reports a manual-repair skip instead of guessing at destructive recovery.
+In these cases, sync reports a skip instead of guessing at destructive recovery: `repair manually` for an unreadable source, and `kept` for a `CLAUDE.md` that an `AGENTS.md` resolves to.
 
 ## Example Workflow
 

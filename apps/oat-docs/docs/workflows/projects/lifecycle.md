@@ -365,21 +365,59 @@ See [Implementation Execution](execution/implementation-execution.md) for the fu
 
 ## Lane diagrams
 
-### Spec-Driven workflow lane
+Each row is one lane, read left to right through the same stage columns. The
+highlighted box is where the lane starts, and a blank column is a stage that
+lane does not run; capture runs no stage before review because the work is
+already done. Promotion branches for quick, lite, brief and goal stay in
+each lane's own diagram below.
 
 === "Diagram"
 
-    ![Spec-driven lane: discover, spec, design, plan, implement, review, PR, optional docs, complete](/diagrams/project-lifecycle-2-spec-driven-light.svg)
-    ![Spec-driven lane: discover, spec, design, plan, implement, review, PR, optional docs, complete](/diagrams/project-lifecycle-2-spec-driven-dark.svg)
+    ![Lanes compared: spec-driven runs every stage; quick skips spec, design optional; lite, brief, goal and import start at plan; capture joins at review or PR](/diagrams/project-lanes-light.svg)
+    ![Lanes compared: spec-driven runs every stage; quick skips spec, design optional; lite, brief, goal and import start at plan; capture joins at review or PR](/diagrams/project-lanes-dark.svg)
 
 === "Mermaid source"
 
     ```mermaid
-    flowchart LR
-      D["Discover"] --> S["Spec"] --> G["Design"] --> P["Plan"]
-      P --> I["Implement (oat-project-implement)"]
-      I --> R["Review"] --> PR["PR"] --> Doc["Docs (optional)"] --> C["Complete"]
+    flowchart TD
+      accTitle: Project lanes compared
+      accDescr: One row per lane across the same stages. Spec-driven runs every stage; quick skips spec with optional design; lite, brief, goal and import start at plan; goal loops per milestone; capture joins at review or PR with work already done.
+      subgraph SDL["Spec-driven · oat-project-new"]
+        direction LR
+        SD1["Discovery"] --> SD2["Spec"] --> SD3["Design"] --> SD4["Plan"] --> SD5["Implement"] --> SD6["Review / PR"]
+      end
+      subgraph QKL["Quick · oat-project-quick-start"]
+        direction LR
+        Q1["Discovery"] --> Q4["Plan"]
+        Q1 -.->|optional| Q3["Design"] -.-> Q4
+        Q4 --> Q5["Implement"] --> Q6["Review / PR"]
+      end
+      subgraph LTL["Lite · oat-project-lite"]
+        direction LR
+        L4["Plan"] --> L5["Implement"] --> L6["Review / PR"]
+      end
+      subgraph BRL["Brief · oat-project-brief"]
+        direction LR
+        B4["Plan"] --> B5["Implement"] --> B6["Review / PR"]
+      end
+      subgraph GLL["Goal · oat-project-goal"]
+        direction LR
+        G4["Plan"] --> G5["Implement"] --> G6["Review / PR"]
+        G6 -->|"next milestone (re-align)"| G4
+      end
+      subgraph IML["Import · oat-project-import-plan"]
+        direction LR
+        I4["Plan"] --> I5["Implement"] --> I6["Review / PR"]
+      end
+      subgraph CPL["Capture · oat-project-capture"]
+        direction LR
+        CW["Existing branch work\n(discovery.md, implementation.md recorded)"] -->|ready for review| C6["Review / PR"]
+      end
     ```
+
+### Spec-Driven workflow lane
+
+The spec-driven row above runs every stage; it is the [Lifecycle Map](#lifecycle-map) path.
 
 During the Design step, `oat-project-design` asks how to work through the document unless a mode was selected by argument, environment, or `workflow.designMode`. The three full-design choices are collaborative, selective collaborative, and draft-and-review.
 
@@ -684,35 +722,16 @@ original brief. `oat-project-quick-start` resumes the promoted project.
 
 ### Import lane
 
-=== "Diagram"
-
-    ![Import lane: import a plan, implement, then review and PR](/diagrams/project-lifecycle-6-import-lane-light.svg)
-    ![Import lane: import a plan, implement, then review and PR](/diagrams/project-lifecycle-6-import-lane-dark.svg)
-
-=== "Mermaid source"
-
-    ```mermaid
-    flowchart LR
-      I["Import Plan"] --> II1["Implement (oat-project-implement)"]
-      II1 --> IR["Review / PR"]
-    ```
+The import row in the [lane comparison](#lane-diagrams) starts at Plan with
+`oat-project-import-plan` and skips discovery, spec, and design.
 
 ### Capture lane
 
 Retroactive project creation for work done outside the OAT project workflow. Common scenario: mobile/cloud sessions where you brainstorm and implement with an agent, then want to open a PR and review from your desktop.
 
-=== "Diagram"
-
-    ![Capture lane: work on a branch without a project, run oat-project-capture, then review and PR](/diagrams/project-lifecycle-7-capture-lane-light.svg)
-    ![Capture lane: work on a branch without a project, run oat-project-capture, then review and PR](/diagrams/project-lifecycle-7-capture-lane-dark.svg)
-
-=== "Mermaid source"
-
-    ```mermaid
-    flowchart LR
-      W["Work on branch\n(no project)"] --> Cap["oat-project-capture"]
-      Cap --> R["Review / PR"]
-    ```
+In the [lane comparison](#lane-diagrams), capture runs no discovery, plan, or
+implementation stage: it records the existing work and joins at review or PR
+when you mark it ready for review.
 
 Entry point: `/oat-project-capture` (skill-only, no CLI command — requires agent conversation context).
 

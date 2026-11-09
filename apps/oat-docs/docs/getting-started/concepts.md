@@ -9,23 +9,27 @@ OAT combines a provider-sync layer, reusable skills and CLI tooling, and an opti
 
 ## Choose What to Adopt
 
+OAT has one core path and two optional parts. You edit canonical skills, agents, and rules once and `oat sync` writes the provider views your coding tools need; tool packs (such as `workflows` and `docs`) install more skills, and tracked projects keep a record under `.oat/projects/` by default, in the storage scope you choose.
+
 === "Diagram"
 
-    ![Four independent starting points: align coding tools with Provider Sync, help with one task with reusable skills, resume longer work with workflows, or maintain documentation; add another path whenever useful](/diagrams/adoption-paths-light.svg)
-    ![Four independent starting points: align coding tools with Provider Sync, help with one task with reusable skills, resume longer work with workflows, or maintain documentation; add another path whenever useful](/diagrams/adoption-paths-dark.svg)
+    ![Skills, agents and rules in .agents/ flow through oat sync to provider views; optional tool packs and tracked projects work on their own or together](/diagrams/oat-at-a-glance-light.svg)
+    ![Skills, agents and rules in .agents/ flow through oat sync to provider views; optional tool packs and tracked projects work on their own or together](/diagrams/oat-at-a-glance-dark.svg)
 
 === "Mermaid source"
 
     ```mermaid
-    flowchart LR
-      GOAL["What do you\nneed first?"] --> SYNC["Align coding tools\nProvider Sync"]
-      GOAL --> SKILLS["Help with one task\nReusable Skills"]
-      GOAL --> WORK["Resume longer work\nWorkflows"]
-      GOAL --> DOCS["Maintain documentation\nMarkdown or a docs site"]
-      SYNC -.-> LATER["Add another path\nwhenever useful"]
-      SKILLS -.-> LATER
-      WORK -.-> LATER
-      DOCS -.-> LATER
+    flowchart TD
+      accTitle: OAT at a glance
+      accDescr: Canonical skills, agents and rules in .agents/ flow through oat sync into provider views, and some providers read .agents/ directly. Tool packs install skills and agents into .agents/ or ~/.agents/. Tracked projects keep a record under .oat/projects/ by default, in one storage scope: synced by default, shared or local. Use any part on its own.
+      CANON["Canonical assets\n.agents/\nskills · agents · rules"] --> SYNC["oat sync\ngenerate views"]
+      SYNC --> VIEWS["Provider views\n.claude/ .cursor/\n.github/ .codex/"]
+      CANON -.->|"some providers read .agents/ directly"| VIEWS
+      PACKS["Tool packs\noat tools install\nproject or user scope · core is user-only"] -.->|"installs skills and agents into\n.agents/ or ~/.agents/"| CANON
+      PROJECTS["Tracked projects\nworkflows-pack skills keep a record\n.oat/projects/ by default"] -.->|"one storage scope per project"| SYNCED["synced (default)\nown Git ref, pushed to origin\nneeds an origin remote"]
+      PROJECTS -.-> SHARED["shared\ncommitted on the current branch"]
+      PROJECTS -.-> LOCAL["local\nthis machine only, gitignored"]
+      %% Footer in the SVGs: Use any part on its own; combine them when useful.
     ```
 
 - **Provider Sync:** `oat init --scope project`, choose providers, then `oat sync --scope project`.
@@ -43,23 +47,7 @@ Continue with [Provider Sync](../provider-sync/index.md), [Tool Packs](tool-pack
 
 OAT keeps canonical assets in repo-controlled locations and projects provider-specific views from that source of truth. The canonical form is what you edit and review directly; provider views are synchronized outputs that let Claude Code, Cursor, Copilot, Gemini, and Codex consume the same intent in their native layouts.
 
-=== "Diagram"
-
-    ![Canonical skills, agents and rules in .agents/ flow through oat sync into provider views under .claude/, .cursor/, .github/ and .codex/](/diagrams/provider-views-light.svg)
-    ![Canonical skills, agents and rules in .agents/ flow through oat sync into provider views under .claude/, .cursor/, .github/ and .codex/](/diagrams/provider-views-dark.svg)
-
-=== "Mermaid source"
-
-    ```mermaid
-    flowchart LR
-      SKILLS[".agents/skills/"] --> OAT["oat sync"]
-      AGENTS[".agents/agents/"] --> OAT
-      RULES[".agents/rules/"] --> OAT
-      OAT --> CLAUDE[".claude/"]
-      OAT --> CURSOR[".cursor/"]
-      OAT --> COPILOT[".github/"]
-      OAT --> CODEX[".codex/"]
-    ```
+The top row of the diagram in [Choose What to Adopt](#choose-what-to-adopt) shows this flow: `oat sync` writes provider views under `.claude/`, `.cursor/`, `.github/`, and `.codex/` from canonical skills, agents, and rules in `.agents/`, and some providers read `.agents/` directly (Cursor, Copilot, and Codex read skills from `.agents/skills`).
 
 Gemini CLI is a native read-only consumer; OAT does not generate a `.gemini/` view through sync.
 
@@ -89,6 +77,26 @@ Use these docs next:
 ## Skills and CLI Commands
 
 Skills are structured workflow instructions stored in `.agents/skills`, while CLI commands provide direct operational entry points like `oat init`, `oat sync`, or `oat docs init`. Some capabilities are primarily CLI-driven, some are primarily skill-driven, and some combine both. As a rule: use the CLI for direct system actions and use skills when you want guided lifecycle execution.
+
+In tracked projects the two divide the work. Skills make the judgment calls; they read project state through `oat project status` instead of parsing files, rely on CLI checks that refuse an invalid plan, journal, or closeout, and write some records only through the CLI. When `oat` is missing, autonomous and cloud runs restore it or stop rather than approximate state.
+
+=== "Diagram"
+
+    ![Skills decide discovery, design and review findings; they call the oat CLI, which reads project state, checks boundaries and writes owned records](/diagrams/prose-and-cli-light.svg)
+    ![Skills decide discovery, design and review findings; they call the oat CLI, which reads project state, checks boundaries and writes owned records](/diagrams/prose-and-cli-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Skills decide, the CLI enforces
+      accDescr: Skills decide discovery depth, design choices and review findings, then call the oat CLI instead of hand-parsing state. The CLI reads project state for skills, runs boundary checks that refuse an invalid plan, journal or closeout, and writes the records it owns. When oat is missing, autonomous and cloud runs restore it or stop rather than approximate state.
+      SKILL["Skills decide\ndiscovery depth, design choices,\nreview findings"] -->|calls| CLI["The CLI enforces\nskills call it instead of hand-parsing"]
+      CLI --> READ["oat project status\nreads project state\nfor skills"]
+      CLI --> CHECK["Boundary checks\nrefuse an invalid plan,\njournal or closeout"]
+      CLI --> WRITE["Records it owns\nproject log,\ncompleted state"]
+      SKILL -.->|"oat missing\nautonomous, cloud runs"| STOP["Restore oat or stop\nnever approximate state or transitions"]
+    ```
 
 Use these docs next:
 

@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 724" width="760" height="724" role="img" aria-labelledby="pl-title pl-desc">
+  <title id="pl-title">Project lanes compared</title>
+  <desc id="pl-desc">Lane comparison across six stage columns: Discovery, Spec, Design, Plan, Implement, Review / PR. Spec-driven (oat-project-new) runs every stage from Discovery. Quick (oat-project-quick-start) starts at Discovery and goes to Plan, with an optional dashed path through Design; it skips Spec; then Implement and Review / PR. Lite (oat-project-lite), Brief (oat-project-brief), Goal (oat-project-goal) and Import (oat-project-import-plan) start at Plan and run Implement and Review / PR, skipping Discovery, Spec and Design. Goal loops from Review / PR back to Plan for the next milestone. Capture (oat-project-capture) runs no stage before review: existing branch work, with discovery.md and implementation.md recorded, goes to Review / PR when it is ready for review. The highlighted box in each row is where that lane starts.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --optional: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="pl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="pl-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="724" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- Spec-driven -->
+    <path class="edge" d="M 128 70 H 151" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 248 70 H 271" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 368 70 H 391" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 488 70 H 511" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 608 70 H 631" marker-end="url(#pl-arrow)"/>
+    <!-- Quick -->
+    <path class="edge" d="M 128 150 H 391" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 488 150 H 511" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 608 150 H 631" marker-end="url(#pl-arrow)"/>
+    <path class="edge-opt" d="M 80 168 V 174 Q 80 182 88 182 H 271" marker-end="url(#pl-arrow-opt)"/>
+    <path class="edge-opt" d="M 368 182 H 432 Q 440 182 440 174 V 169" marker-end="url(#pl-arrow-opt)"/>
+    <!-- Lite -->
+    <path class="edge" d="M 488 266 H 511" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 608 266 H 631" marker-end="url(#pl-arrow)"/>
+    <!-- Brief -->
+    <path class="edge" d="M 488 346 H 511" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 608 346 H 631" marker-end="url(#pl-arrow)"/>
+    <!-- Goal -->
+    <path class="edge" d="M 488 426 H 511" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 608 426 H 631" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 680 444 V 458 Q 680 466 672 466 H 448 Q 440 466 440 458 V 445" marker-end="url(#pl-arrow)"/>
+    <!-- Import -->
+    <path class="edge" d="M 488 550 H 511" marker-end="url(#pl-arrow)"/>
+    <path class="edge" d="M 608 550 H 631" marker-end="url(#pl-arrow)"/>
+    <!-- Capture -->
+    <path class="edge" d="M 376 630 H 631" marker-end="url(#pl-arrow)"/>
+  </g>
+
+  <!-- Stage boxes -->
+  <rect class="node-em" x="32" y="52" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="80" y="75" text-anchor="middle">Discovery</text>
+  <rect class="node" x="152" y="52" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="200" y="75" text-anchor="middle">Spec</text>
+  <rect class="node" x="272" y="52" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="320" y="75" text-anchor="middle">Design</text>
+  <rect class="node" x="392" y="52" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="75" text-anchor="middle">Plan</text>
+  <rect class="node" x="512" y="52" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="560" y="75" text-anchor="middle">Implement</text>
+  <rect class="node" x="632" y="52" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="75" text-anchor="middle">Review / PR</text>
+  <rect class="node-em" x="32" y="132" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="80" y="155" text-anchor="middle">Discovery</text>
+  <rect class="node" x="392" y="132" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="155" text-anchor="middle">Plan</text>
+  <rect class="node" x="512" y="132" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="560" y="155" text-anchor="middle">Implement</text>
+  <rect class="node" x="632" y="132" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="155" text-anchor="middle">Review / PR</text>
+  <rect class="node" x="272" y="164" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="320" y="187" text-anchor="middle">Design</text>
+  <rect class="node-em" x="392" y="248" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="271" text-anchor="middle">Plan</text>
+  <rect class="node" x="512" y="248" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="560" y="271" text-anchor="middle">Implement</text>
+  <rect class="node" x="632" y="248" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="271" text-anchor="middle">Review / PR</text>
+  <rect class="node-em" x="392" y="328" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="351" text-anchor="middle">Plan</text>
+  <rect class="node" x="512" y="328" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="560" y="351" text-anchor="middle">Implement</text>
+  <rect class="node" x="632" y="328" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="351" text-anchor="middle">Review / PR</text>
+  <rect class="node-em" x="392" y="408" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="431" text-anchor="middle">Plan</text>
+  <rect class="node" x="512" y="408" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="560" y="431" text-anchor="middle">Implement</text>
+  <rect class="node" x="632" y="408" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="431" text-anchor="middle">Review / PR</text>
+  <rect class="node-em" x="392" y="532" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="440" y="555" text-anchor="middle">Plan</text>
+  <rect class="node" x="512" y="532" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="560" y="555" text-anchor="middle">Implement</text>
+  <rect class="node" x="632" y="532" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="555" text-anchor="middle">Review / PR</text>
+  <rect class="node-em" x="632" y="612" width="96" height="36" rx="8" ry="8"/>
+  <text class="sans t" x="680" y="635" text-anchor="middle">Review / PR</text>
+
+  <!-- Lane titles and labels -->
+  <text class="sans t" x="32" y="40">Spec-driven</text>
+  <text class="mono s" x="142" y="40">oat-project-new</text>
+  <text class="sans t" x="32" y="120">Quick</text>
+  <text class="mono s" x="142" y="120">oat-project-quick-start</text>
+  <text class="sans s" x="200" y="176" text-anchor="middle">optional</text>
+  <text class="sans t" x="32" y="236">Lite</text>
+  <text class="mono s" x="142" y="236">oat-project-lite</text>
+  <text class="sans t" x="32" y="316">Brief</text>
+  <text class="mono s" x="142" y="316">oat-project-brief</text>
+  <text class="sans t" x="32" y="396">Goal</text>
+  <text class="mono s" x="142" y="396">oat-project-goal</text>
+  <text class="sans s" x="560" y="484" text-anchor="middle">next milestone (re-align)</text>
+  <text class="sans t" x="32" y="520">Import</text>
+  <text class="mono s" x="142" y="520">oat-project-import-plan</text>
+  <text class="sans t" x="32" y="600">Capture</text>
+  <text class="mono s" x="142" y="600">oat-project-capture</text>
+  <text class="sans t" x="32" y="626">Existing branch work</text>
+  <text class="sans s" x="32" y="644">(<tspan class="mono">discovery.md</tspan>, <tspan class="mono">implementation.md</tspan> recorded)</text>
+  <text class="sans s" x="504" y="622" text-anchor="middle">ready for review</text>
+
+  <!-- Key -->
+  <text class="sans s" x="32" y="688">Highlighted box: the stage where the lane starts. Blank column: a stage the</text>
+  <text class="sans s" x="32" y="706">lane does not run. Dashed: optional.</text>
+</svg>

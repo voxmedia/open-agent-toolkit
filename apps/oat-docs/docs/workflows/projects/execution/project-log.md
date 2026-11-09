@@ -15,6 +15,38 @@ entries or the synthesis section by hand. A new log starts with a two-line
 header that links to this page; the entry contract lives here and in
 `oat project log append --help` rather than in every log.
 
+## Where the log's learnings go
+
+The log feeds several closeout branches in parallel rather than one pipeline.
+The summary rolls judgments into `summary.md` and the ledger, and completion
+requires that roll-up when the log has entries but only warns about a pending
+synthesis. An optional retrospective reads the log first; applying its repo
+changes and filing its issues or backlog items (the separate
+`oat-project-retro-file` skill) each need consent, given interactively or in
+`workflow.retro` config (see [Project Retrospectives](../closeout/retro.md)).
+
+=== "Diagram"
+
+    ![project-log.md feeds optional synthesis, the summary with a roll-up completion requires, and an optional retro whose apply and file need consent](/diagrams/learning-loop-light.svg)
+    ![project-log.md feeds optional synthesis, the summary with a roll-up completion requires, and an optional retro whose apply and file need consent](/diagrams/learning-loop-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Where project-log learnings go
+      accDescr: Lifecycle surfaces append entries to project-log.md. The log feeds synthesis when it is run, the summary, and an optional retro in parallel. The summary's roll-up writes a digest into summary.md and general judgments to the ledger, and completion requires it when the log has entries. Completion only warns when synthesis is pending. The retro's apply step and filing, which is the separate oat-project-retro-file skill, each need consent.
+      SURF["Lifecycle surfaces\nimplement, reviews, gates"] -->|"log append"| LOG["project-log.md\njudgment and structural entries"]
+      LOG -.->|"when run"| SYN["Synthesis\nlog synthesize\nend-of-run, in the log"]
+      LOG --> SUM["Summary\noat-project-summary\noffers promotion"]
+      LOG -.->|"optional"| RET["Retro\noat-project-retro\nreferences/project-retro.md"]
+      SUM -->|"after summary.md"| ROLL["Roll-up\nlog rollup\ndigest to summary.md, ledger"]
+      RET -.->|"with consent"| APPLY["Apply\nrepo changes"]
+      RET -.->|"with consent"| FILE["File\noat-project-retro-file\nissues, backlog"]
+      ROLL -->|"required"| DONE["oat-project-complete\nrequires the roll-up if the log has entries\nthen appends the seal"]
+      SYN -.->|"warn if pending"| DONE
+    ```
+
 ## Configure project logs
 
 Four workflow keys control the feature:

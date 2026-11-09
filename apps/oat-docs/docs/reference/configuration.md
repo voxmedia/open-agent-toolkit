@@ -35,6 +35,52 @@ The main split is:
 - `.oat/sync/config.json` for project provider sync
 - `~/.oat/sync/config.json` for user provider sync
 
+For one key, OAT checks an environment override first (only a few keys have
+one), then `.oat/config.local.json`, `.oat/config.json` and
+`~/.oat/config.json`, and falls back to the built-in default; the first surface
+that holds a value wins and names the [source label](#source-labels). The two
+sync configs are not part of that chain: each sync scope reads its own file.
+
+=== "Diagram"
+
+    ![Config keys resolve from env, then local, shared and user config, then the default; sync config is read per scope from .oat/sync or ~/.oat/sync](/diagrams/config-precedence-light.svg)
+    ![Config keys resolve from env, then local, shared and user config, then the default; sync config is read per scope from .oat/sync or ~/.oat/sync](/diagrams/config-precedence-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Config surfaces and precedence
+      accDescr: To resolve one general config key, OAT checks an environment override (only projects.root, projects.defaultScope and worktrees.root), then .oat/config.local.json, .oat/config.json and ~/.oat/config.json, then the built-in default; the first surface that holds a value wins and is reported as the source label env, local, shared, user or default. Separately, oat sync and oat status read .oat/sync/config.json for project scope and ~/.oat/sync/config.json for user scope, and oat status project scans also read the user known strays.
+      subgraph general["General config: each key resolves top-down"]
+        Q["Resolve one key\nThe first surface that holds a value wins"]
+        ENV["Environment override\nOnly for projects.root, projects.defaultScope\nand worktrees.root"]
+        LOCAL[".oat/config.local.json\nRepo-local, per developer"]
+        SHARED[".oat/config.json\nShared repo config"]
+        USER["~/.oat/config.json\nUser config"]
+        DEF["Built-in default\nnull when the CLI has no default"]
+        OUT["Resolved value\nand its source label"]
+        Q --> ENV
+        ENV -->|"not set"| LOCAL
+        LOCAL -->|"not set"| SHARED
+        SHARED -->|"not set"| USER
+        USER -->|"not set"| DEF
+        ENV -->|"env"| OUT
+        LOCAL -->|"local"| OUT
+        SHARED -->|"shared"| OUT
+        USER -->|"user"| OUT
+        DEF -->|"default"| OUT
+      end
+      subgraph sync["Provider sync config: chosen by scope, not layered"]
+        S["oat sync · oat status\nEach scope reads its own sync config"]
+        PS[".oat/sync/config.json\nProject sync config"]
+        US["~/.oat/sync/config.json\nUser sync config"]
+        S -->|"project scope"| PS
+        S -->|"user scope"| US
+        US -.->|"oat status also reads user known strays"| PS
+      end
+    ```
+
 ## The fastest way to inspect config
 
 Use `oat config` as the primary discovery surface:

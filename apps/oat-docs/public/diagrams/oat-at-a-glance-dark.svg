@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 576" width="760" height="576" role="img" aria-labelledby="glance-title glance-desc">
+  <title id="glance-title">OAT at a glance</title>
+  <desc id="glance-desc">Core path: canonical assets in .agents/ (skills, agents and rules) feed oat sync, which generates provider views under .claude/, .cursor/, .github/ and .codex/. A dashed path shows that some providers read .agents/ directly instead. Below, two optional parts: tool packs, installed with oat tools install at project or user scope (the core pack is user-only), install skills and agents into .agents/ or ~/.agents/ along a dashed path; tracked projects, whose workflows-pack skills keep a record under .oat/projects/ by default, use one storage scope per project: synced (the default, its own Git ref pushed to origin, needs an origin remote), shared (committed on the current branch) or local (this machine only, gitignored). A footer says to use any part on its own and combine them when useful.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="glance-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="glance-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="576" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- CANON -> SYNC -->
+    <path class="edge" d="M 244 104 L 289 104" marker-end="url(#glance-arrow)"/>
+    <!-- SYNC -> VIEWS -->
+    <path class="edge" d="M 460 104 L 505 104" marker-end="url(#glance-arrow)"/>
+    <!-- CANON -.-> VIEWS (native read) -->
+    <path class="edge-opt" d="M 180 56 L 180 46 Q 180 38 188 38 L 572 38 Q 580 38 580 46 L 580 55" marker-end="url(#glance-arrow-opt)"/>
+    <!-- PACKS -.-> CANON -->
+    <path class="edge-opt" d="M 134 268 L 134 153" marker-end="url(#glance-arrow-opt)"/>
+    <!-- PROJECTS -.-> scope bus -->
+    <path class="edge-opt" d="M 564 364 L 564 392"/>
+    <!-- bus -> SYNCED -->
+    <path class="edge-opt" d="M 564 392 L 145 392 Q 137 392 137 400 L 137 419" marker-end="url(#glance-arrow-opt)"/>
+    <!-- bus -> SHARED -->
+    <path class="edge-opt" d="M 380 392 L 380 419" marker-end="url(#glance-arrow-opt)"/>
+    <!-- bus -> LOCAL -->
+    <path class="edge-opt" d="M 564 392 L 615 392 Q 623 392 623 400 L 623 419" marker-end="url(#glance-arrow-opt)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <text class="sans s" x="380" y="28" text-anchor="middle">some providers read <tspan class="mono">.agents/</tspan> directly</text>
+  <text class="sans s" x="146" y="204" text-anchor="start">installs skills and agents into</text>
+  <text class="mono s" x="146" y="222" text-anchor="start">.agents/ or ~/.agents/</text>
+  <text class="sans s" x="554" y="385" text-anchor="end">one storage scope per project</text>
+
+  <!-- CANON: main idea -->
+  <rect class="node-em" x="24" y="56" width="220" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="134" y="90" text-anchor="middle">Canonical assets</text>
+  <text class="mono s" x="134" y="112" text-anchor="middle">.agents/</text>
+  <text class="sans s" x="134" y="132" text-anchor="middle">skills · agents · rules</text>
+
+  <!-- SYNC -->
+  <rect class="node" x="290" y="72" width="170" height="64" rx="8" ry="8"/>
+  <text class="mono t" x="375" y="99" text-anchor="middle">oat sync</text>
+  <text class="sans s" x="375" y="120" text-anchor="middle">generate views</text>
+
+  <!-- VIEWS -->
+  <rect class="node" x="506" y="56" width="230" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="621" y="90" text-anchor="middle">Provider views</text>
+  <text class="mono s" x="621" y="112" text-anchor="middle">.claude/  .cursor/</text>
+  <text class="mono s" x="621" y="132" text-anchor="middle">.github/  .codex/</text>
+
+  <!-- PACKS (optional) -->
+  <rect class="node" x="24" y="268" width="344" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="196" y="302" text-anchor="middle">Tool packs</text>
+  <text class="mono s" x="196" y="324" text-anchor="middle">oat tools install</text>
+  <text class="sans s" x="196" y="344" text-anchor="middle">project or user scope · core is user-only</text>
+
+  <!-- PROJECTS (optional) -->
+  <rect class="node" x="392" y="268" width="344" height="96" rx="8" ry="8"/>
+  <text class="sans t" x="564" y="302" text-anchor="middle">Tracked projects</text>
+  <text class="sans s" x="564" y="324" text-anchor="middle">workflows-pack skills keep a record</text>
+  <text class="mono s" x="564" y="344" text-anchor="middle">.oat/projects/ <tspan class="sans">by default</tspan></text>
+
+  <!-- SYNCED -->
+  <rect class="node" x="24" y="420" width="226" height="84" rx="8" ry="8"/>
+  <text class="mono t" x="137" y="448" text-anchor="middle">synced <tspan class="sans s">(default)</tspan></text>
+  <text class="sans s" x="137" y="470" text-anchor="middle">own Git ref, pushed to origin</text>
+  <text class="sans s" x="137" y="489" text-anchor="middle">needs an origin remote</text>
+
+  <!-- SHARED -->
+  <rect class="node" x="267" y="420" width="226" height="84" rx="8" ry="8"/>
+  <text class="mono t" x="380" y="456" text-anchor="middle">shared</text>
+  <text class="sans s" x="380" y="478" text-anchor="middle">committed on the current branch</text>
+
+  <!-- LOCAL -->
+  <rect class="node" x="510" y="420" width="226" height="84" rx="8" ry="8"/>
+  <text class="mono t" x="623" y="456" text-anchor="middle">local</text>
+  <text class="sans s" x="623" y="478" text-anchor="middle">this machine only, gitignored</text>
+
+  <!-- Footer -->
+  <text class="sans s" x="380" y="546" text-anchor="middle">Use any part on its own; combine them when useful.</text>
+</svg>

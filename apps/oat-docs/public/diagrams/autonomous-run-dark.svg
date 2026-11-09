@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 796" width="720" height="796" role="img" aria-labelledby="ar-title ar-desc">
+  <title id="ar-title">An autonomous project run</title>
+  <desc id="ar-desc">oat-project-autonomous sets OAT_AUTONOMOUS=1 and OAT_NON_INTERACTIVE=1 for this session only. It resolves the project: an explicit project, then the active project, then a new project derived from your goal, created as lite, brief, quick or spec-driven. A goal-mode project or unclear input stops at a boundary. A preflight checks delegation and a kickoff report lists limits, used attempts and hard stops; a failed preflight or an unusable policy or ledger stops at a boundary. Lifecycle skills then run, and every interactive gate either auto-resolves or stops at a boundary. Checkpoints are reviewed instead of waited on, and the final checkpoint is approved after the final review passes, unless a stop applies. A complete run opens the final PR by default and never merges it; the branch is pushed after each lifecycle step, without force. A boundary stop reports evidence and the action a person must take. A person can then take over, starting a session without the signals and resuming the owning skill, or invoke oat-project-autonomous again.</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="ar-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="ar-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="720" height="796" rx="12" ry="12"/>
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <!-- ACT -> RES -->
+    <path class="edge" d="M 215 126 L 215 165" marker-end="url(#ar-arrow)"/>
+    <!-- RES -> KICK -->
+    <path class="edge" d="M 215 252 L 215 291" marker-end="url(#ar-arrow)"/>
+    <!-- KICK -> LIFE -->
+    <path class="edge" d="M 215 378 L 215 417" marker-end="url(#ar-arrow)"/>
+    <!-- LIFE -> CLOSE -->
+    <path class="edge" d="M 215 504 L 215 543" marker-end="url(#ar-arrow)"/>
+    <!-- CLOSE -> DONE -->
+    <path class="edge" d="M 215 630 L 215 669" marker-end="url(#ar-arrow)"/>
+    <!-- RES -> BND (goal-mode project or unclear input) -->
+    <path class="edge" d="M 390 209 L 612 209 Q 620 209 620 217 L 620 417" marker-end="url(#ar-arrow)"/>
+    <!-- KICK -> BND (stop) -->
+    <path class="edge" d="M 390 335 L 492 335 Q 500 335 500 343 L 500 417" marker-end="url(#ar-arrow)"/>
+    <!-- LIFE -> BND (stop) -->
+    <path class="edge" d="M 390 461 L 429 461" marker-end="url(#ar-arrow)"/>
+    <!-- CLOSE -> BND (stop), enters BND bottom -->
+    <path class="edge" d="M 390 587 L 462 587 Q 470 587 470 579 L 470 505" marker-end="url(#ar-arrow)"/>
+    <!-- BND -> TAKE (you choose) -->
+    <path class="edge-opt" d="M 600 504 L 600 597" marker-end="url(#ar-arrow-opt)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <text class="sans s" x="612" y="296" text-anchor="end">goal-mode project</text>
+  <text class="sans s" x="612" y="314" text-anchor="end">or unclear input</text>
+  <text class="sans s" x="445" y="327" text-anchor="middle">stop</text>
+  <text class="sans s" x="410" y="453" text-anchor="middle">stop</text>
+  <text class="sans s" x="430" y="580" text-anchor="middle">stop</text>
+  <text class="sans s" x="612" y="556" text-anchor="start">you choose</text>
+
+  <!-- ACT: oat-project-autonomous -->
+  <rect class="node" x="40" y="40" width="350" height="86" rx="8" ry="8"/>
+  <text class="mono t" x="215" y="68" text-anchor="middle">oat-project-autonomous</text>
+  <text class="sans s" x="215" y="90" text-anchor="middle">sets <tspan class="mono">OAT_AUTONOMOUS=1</tspan> and</text>
+  <text class="sans s" x="215" y="108" text-anchor="middle"><tspan class="mono">OAT_NON_INTERACTIVE=1</tspan> for this session</text>
+
+  <!-- RES: Resolve the project -->
+  <rect class="node" x="40" y="166" width="350" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="215" y="194" text-anchor="middle">Resolve the project</text>
+  <text class="sans s" x="215" y="216" text-anchor="middle">explicit, then active, then a new project</text>
+  <text class="sans s" x="215" y="234" text-anchor="middle">from your goal: lite, brief, quick or spec-driven</text>
+
+  <!-- KICK: Preflight and kickoff report -->
+  <rect class="node" x="40" y="292" width="350" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="215" y="320" text-anchor="middle">Preflight and kickoff report</text>
+  <text class="sans s" x="215" y="342" text-anchor="middle">delegation checked; limits, used</text>
+  <text class="sans s" x="215" y="360" text-anchor="middle">attempts and hard stops reported</text>
+
+  <!-- LIFE: Lifecycle skills run -->
+  <rect class="node-em" x="40" y="418" width="350" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="215" y="446" text-anchor="middle">Lifecycle skills run</text>
+  <text class="sans s" x="215" y="468" text-anchor="middle">every interactive gate auto-resolves</text>
+  <text class="sans s" x="215" y="486" text-anchor="middle">or stops at a boundary</text>
+
+  <!-- CLOSE: Checkpoints and closeout -->
+  <rect class="node" x="40" y="544" width="350" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="215" y="572" text-anchor="middle">Checkpoints and closeout</text>
+  <text class="sans s" x="215" y="594" text-anchor="middle">checkpoints reviewed, not waited on;</text>
+  <text class="sans s" x="215" y="612" text-anchor="middle">final approval after final review passes</text>
+
+  <!-- DONE: Run complete -->
+  <rect class="node" x="40" y="670" width="350" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="215" y="698" text-anchor="middle">Run complete</text>
+  <text class="sans s" x="215" y="720" text-anchor="middle">final PR by default; never merged;</text>
+  <text class="sans s" x="215" y="738" text-anchor="middle">branch pushed after each lifecycle step, no force</text>
+
+  <!-- BND: Boundary stop -->
+  <rect class="node" x="430" y="418" width="250" height="86" rx="8" ry="8"/>
+  <text class="sans t" x="555" y="446" text-anchor="middle">Boundary stop</text>
+  <text class="sans s" x="555" y="468" text-anchor="middle">reports evidence and the</text>
+  <text class="sans s" x="555" y="486" text-anchor="middle">action a person must take</text>
+
+  <!-- TAKE: Take over or resume -->
+  <rect class="node" x="430" y="598" width="250" height="122" rx="8" ry="8"/>
+  <text class="sans t" x="555" y="626" text-anchor="middle">Take over or resume</text>
+  <text class="sans s" x="555" y="648" text-anchor="middle">take over: start a session without</text>
+  <text class="sans s" x="555" y="666" text-anchor="middle">the signals and resume the owning</text>
+  <text class="sans s" x="555" y="684" text-anchor="middle">skill; or invoke</text>
+  <text class="sans s" x="555" y="702" text-anchor="middle"><tspan class="mono">oat-project-autonomous</tspan> again</text>
+
+</svg>

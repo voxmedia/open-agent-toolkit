@@ -35,6 +35,34 @@ constraints:
   [Where the ladder lives](#where-the-ladder-lives). Most other sections are
   the detailed resolution contract.
 
+The diagram shows how OAT settles on one policy and how a capped phase
+launches at or below it. A policy in any config file wins over the one the
+project chose in `state.md`. For what each dispatch records as evidence, see
+[Evidence Layers](evidence-layers.md).
+
+=== "Diagram"
+
+    ![Dispatch policy: config wins over state.md; a capped tier sets each phase maximum, an exact candidate at or below it launches, above it is rejected](/diagrams/dispatch-ceiling-light.svg)
+    ![Dispatch policy: config wins over state.md; a capped tier sets each phase maximum, an exact candidate at or below it launches, above it is rejected](/diagrams/dispatch-ceiling-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: How a dispatch ceiling is resolved and applied
+      accDescr: A config dispatch policy wins over the project policy in state.md, which applies only when no config policy is set. With neither, an interactive run asks and a non-interactive run stops. A capped tier gives each phase a maximum, the project cap or a narrower Dispatch Profile row, passed as --ceiling-tier. Under it the root requests one exact candidate with --candidate-model and, where the provider takes it, --candidate-effort (required for Codex, optional for Claude, omitted for Cursor and others); at or below the cap the phase launches, above it the request is rejected. Uncapped allows any configured candidate; Inherit Host Defaults passes no model or effort.
+      CFG["Config policy\nworkflow.dispatchPolicy\nlocal #gt; shared #gt; user"] --> RES["Policy resolution\nconfig wins over state.md"]
+      PRJ["Project policy\noat_dispatch_policy\nstate.md, chosen at planning"] -.->|"if no config policy"| RES
+      RES -.->|"neither set"| NONE["No policy\ninteractive: asks\nnon-interactive: stops"]
+      RES --> CAP["Capped tier\nEconomy to Frontier"]
+      RES --> UNC["Uncapped\nany configured candidate"]
+      RES --> INH["Inherit Host Defaults\nOAT passes no model or effort"]
+      CAP -->|"each phase"| PM["Phase maximum\nproject cap, or narrower\nplan Dispatch Profile row\npassed as --ceiling-tier"]
+      PM --> EX["Exact candidate\n--candidate-model\n--candidate-effort:\nrequired for Codex,\noptional for Claude,\nomitted for Cursor, others"]
+      EX -->|"≤ cap"| LA["Launch the phase\nCodex, Claude: enforced\nCursor: pinned, not verified\nothers: advisory"]
+      EX -.->|"above the cap"| REJ["Rejected\nabove-cap candidate"]
+    ```
+
 The CLI command remains `oat project dispatch-ceiling resolve` for compatibility.
 Legacy `workflow.dispatchCeiling.*` and `oat_dispatch_ceiling` values remain
 readable, but new projects use ordered candidates plus `oat_dispatch_policy`.

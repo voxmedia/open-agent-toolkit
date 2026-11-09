@@ -74,6 +74,34 @@ The `core` pack can only live under your home directory:
   pack at a time with `oat tools remove --pack <pack> --scope project`, and
   remove the home-directory copies with `oat tools remove --all --scope user`.
 
+The requested scope decides where a pack's assets land. `core` never lands in
+the repository, and an install with no `--scope` keeps an installed pack where
+it is; an interactive install of several packs asks per pack instead. For a
+non-core pack, an explicit `--scope all` writes both scopes, which the diagram
+leaves out.
+
+=== "Diagram"
+
+    ![Project scope installs every pack but core in the repo; user scope, or no scope for a new pack, installs at home; an installed pack keeps its placement](/diagrams/pack-scope-light.svg)
+    ![Project scope installs every pack but core in the repo; user scope, or no scope for a new pack, installs at home; an installed pack keeps its placement](/diagrams/pack-scope-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      accTitle: Requested install scope and where pack assets land
+      accDescr: oat tools install with an optional pack name. With --scope project, every pack but core lands in the repository under .agents/skills/, .agents/agents/, .oat/templates/ and .oat/scripts/. With --scope project, core is not installed: it is skipped when no pack is named and the command exits 1 when core is named. With --scope user, or no --scope for a pack not yet installed, assets land in the home directory under ~/.agents/ and ~/.oat/, including ~/.oat/docs/ for core. With no --scope, an installed pack keeps its current placement.
+      ROOT["oat tools install [pack]\nRequested --scope"]
+      PROJ["Repository\n.agents/skills/\n.agents/agents/\n.oat/templates/\n.oat/scripts/"]
+      CORE["core not installed\nNo pack name: core is skipped\ncore named: exit 1"]
+      USER["Home directory\n~/.agents/skills/\n~/.agents/agents/\n~/.oat/templates/\n~/.oat/scripts/\n~/.oat/docs/ (core)"]
+      KEEP["Current placement\nProject, user or both,\nas already installed"]
+      ROOT -->|"--scope project, any pack but core"| PROJ
+      ROOT -->|"--scope project, core"| CORE
+      ROOT -->|"--scope user, or no --scope, new pack"| USER
+      ROOT -->|"no --scope, pack installed"| KEEP
+    ```
+
 On a **re-install**, existing placement wins. A pack already installed at
 project scope stays at project scope; the fresh-install default never migrates
 an existing install. Use [`oat tools migrate`](#oat-tools-migrate) when you

@@ -128,3 +128,48 @@ is what holds the planning conversation, so start with the skill.
   implementation starts.
 - If you already have an approved plan from another tool, import it rather than
   repeating discovery and design.
+
+### Where each way in joins the lifecycle
+
+Every tracked mode joins the same lifecycle; what differs is the stage it
+starts at. Spec-driven and quick start at discovery (quick skips the spec);
+lite, brief, goal and import start at the plan. Capture
+(`/oat-project-capture`) is not a mode: it records work already done as a
+quick-mode project. Once the work is ready, it joins at review, or you open a
+PR directly; while the work is still in progress, keep working, then re-run
+capture or use `oat-project-reconcile`.
+
+=== "Diagram"
+
+    ![Ways in beside the shared lifecycle: spec-driven and quick join at discovery, lite, brief, goal and import at plan, capture at review or PR](/diagrams/choose-a-way-in-light.svg)
+    ![Ways in beside the shared lifecycle: spec-driven and quick join at discovery, lite, brief, goal and import at plan, capture at review or PR](/diagrams/choose-a-way-in-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart LR
+      accTitle: Ways into the shared lifecycle
+      accDescr: Spec-driven and quick join the shared lifecycle at Discovery; quick skips the spec and has an optional design. Lite, brief, goal and import join at Plan. Capture joins at Review when the work is ready, for a review or a PR directly; work still in progress keeps going, then re-runs capture or uses oat-project-reconcile. No project stays outside the lifecycle.
+      subgraph WAY["Way in"]
+        direction TB
+        SD["Spec-driven\noat-project-new"]
+        Q["Quick\noat-project-quick-start"]
+        L["Lite\noat-project-lite"]
+        B["Brief\noat-project-brief"]
+        G["Goal\noat-project-goal"]
+        IM["Import\noat-project-import-plan"]
+        CAP["Capture\noat-project-capture\nstill in progress: keep working,\nthen re-run capture, or\noat-project-reconcile"]
+        NP["No project\nask your agent or run CLI commands\nstays outside the lifecycle"]
+      end
+      subgraph LC["Shared lifecycle"]
+        direction TB
+        D["Discovery"] --> S["Spec"] --> DE["Design"] --> P["Plan\nplan.md"] --> I["Implement"] --> R["Review"] --> PR["PR"] --> C["Complete"]
+      end
+      SD --> D
+      Q -->|"no spec, design optional"| D
+      L --> P
+      B --> P
+      G --> P
+      IM --> P
+      CAP -->|"ready: review,\nor PR directly"| R
+    ```

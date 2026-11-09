@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 930" width="760" height="930" role="img" aria-labelledby="cp-title cp-desc">
+  <title id="cp-title">Config surfaces and precedence</title>
+  <desc id="cp-desc">Two parts. General config: to resolve one key, OAT checks surfaces top-down and the first that holds a value wins. An environment override applies only to projects.root, projects.defaultScope and worktrees.root; if not set, .oat/config.local.json (repo-local, per developer); if not set, .oat/config.json (shared repo config); if not set, ~/.oat/config.json (user config); if not set, the built-in default, or null when the CLI has none. Each surface that holds the value yields the resolved value with its source label: env, local, shared, user or default. Provider sync config: oat sync and oat status read .oat/sync/config.json for project scope and ~/.oat/sync/config.json for user scope; oat status project scans also read the user known strays (dashed edge).</desc>
+  <style>
+    svg {
+      --bg: #161d27;
+      --node: #1d2633;
+      --node-em: #1f2d42;
+      --border: #2b3646;
+      --text: #dde4ee;
+      --text-2: #9ba7b8;
+      --accent: #8fb6ee;
+      --optional: #8693a5;
+      --warn: #f0a868;
+    }
+    .canvas { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .edge-opt { fill: none; stroke: var(--optional); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; }
+    .arrow { fill: var(--accent); }
+    .arrow-opt { fill: var(--optional); }
+    .label-bg { fill: var(--bg); }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+    .t { fill: var(--text); font-size: 15px; font-weight: 600; }
+    .s { fill: var(--text-2); font-size: 13px; }
+    .el { fill: var(--text-2); font-size: 13px; }
+  </style>
+  <defs>
+    <marker id="cp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+    <marker id="cp-arrow-opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path class="arrow-opt" d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="760" height="930" rx="12" ry="12"/>
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g class="edges">
+    <path class="edge" d="M 240 116 L 240 147" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 240 226 L 240 261" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 240 322 L 240 357" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 240 418 L 240 453" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 240 514 L 240 549" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 450 187 L 529 187" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 450 292 L 529 292" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 450 388 L 529 388" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 450 484 L 529 484" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 450 580 L 529 580" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 330 734 L 330 770 Q 330 778 322 778 L 203 778 Q 195 778 195 786 L 195 813" marker-end="url(#cp-arrow)"/>
+    <path class="edge" d="M 430 734 L 430 770 Q 430 778 438 778 L 557 778 Q 565 778 565 786 L 565 813" marker-end="url(#cp-arrow)"/>
+    <path class="edge-opt" d="M 565 874 L 565 892 Q 565 900 557 900 L 203 900 Q 195 900 195 892 L 195 875" marker-end="url(#cp-arrow-opt)"/>
+  </g>
+
+  <!-- Edge labels -->
+  <rect class="label-bg" x="208" y="233" width="64" height="22" rx="4" ry="4"/>
+  <text class="sans el" x="240" y="248.5" text-anchor="middle">not set</text>
+  <rect class="label-bg" x="208" y="329" width="64" height="22" rx="4" ry="4"/>
+  <text class="sans el" x="240" y="344.5" text-anchor="middle">not set</text>
+  <rect class="label-bg" x="208" y="425" width="64" height="22" rx="4" ry="4"/>
+  <text class="sans el" x="240" y="440.5" text-anchor="middle">not set</text>
+  <rect class="label-bg" x="208" y="521" width="64" height="22" rx="4" ry="4"/>
+  <text class="sans el" x="240" y="536.5" text-anchor="middle">not set</text>
+  <rect class="label-bg" x="470" y="176" width="40" height="22" rx="4" ry="4"/>
+  <text class="mono el" x="490" y="191.5" text-anchor="middle">env</text>
+  <rect class="label-bg" x="464" y="281" width="52" height="22" rx="4" ry="4"/>
+  <text class="mono el" x="490" y="296.5" text-anchor="middle">local</text>
+  <rect class="label-bg" x="460" y="377" width="60" height="22" rx="4" ry="4"/>
+  <text class="mono el" x="490" y="392.5" text-anchor="middle">shared</text>
+  <rect class="label-bg" x="467" y="473" width="46" height="22" rx="4" ry="4"/>
+  <text class="mono el" x="490" y="488.5" text-anchor="middle">user</text>
+  <rect class="label-bg" x="457" y="569" width="66" height="22" rx="4" ry="4"/>
+  <text class="mono el" x="490" y="584.5" text-anchor="middle">default</text>
+  <text class="sans el" x="262" y="770" text-anchor="middle">project scope</text>
+  <text class="sans el" x="498" y="770" text-anchor="middle">user scope</text>
+  <rect class="label-bg" x="230" y="889" width="300" height="22" rx="4" ry="4"/>
+  <text class="sans el" x="380" y="904.5" text-anchor="middle">oat status also reads user known strays</text>
+
+  <!-- Section captions -->
+  <text class="sans s" x="30" y="36">General config: each key resolves top-down</text>
+  <text class="sans s" x="30" y="654">Provider sync config: chosen by scope, not layered</text>
+
+  <!-- ROOT: Resolve one key -->
+  <rect class="node-em" x="30" y="52" width="420" height="64" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="79" text-anchor="middle">Resolve one key</text>
+  <text class="sans s" x="240" y="101" text-anchor="middle">The first surface that holds a value wins</text>
+
+  <!-- ENV -->
+  <rect class="node" x="30" y="148" width="420" height="78" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="173" text-anchor="middle">Environment override</text>
+  <text class="sans s" x="240" y="194" text-anchor="middle">Only for <tspan class="mono">projects.root</tspan>, <tspan class="mono">projects.defaultScope</tspan></text>
+  <text class="sans s" x="240" y="213" text-anchor="middle">and <tspan class="mono">worktrees.root</tspan></text>
+
+  <!-- LOCAL -->
+  <rect class="node" x="30" y="262" width="420" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="240" y="287" text-anchor="middle">.oat/config.local.json</text>
+  <text class="sans s" x="240" y="308" text-anchor="middle">Repo-local, per developer</text>
+
+  <!-- SHARED -->
+  <rect class="node" x="30" y="358" width="420" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="240" y="383" text-anchor="middle">.oat/config.json</text>
+  <text class="sans s" x="240" y="404" text-anchor="middle">Shared repo config</text>
+
+  <!-- USER -->
+  <rect class="node" x="30" y="454" width="420" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="240" y="479" text-anchor="middle">~/.oat/config.json</text>
+  <text class="sans s" x="240" y="500" text-anchor="middle">User config</text>
+
+  <!-- DEFAULT -->
+  <rect class="node" x="30" y="550" width="420" height="60" rx="8" ry="8"/>
+  <text class="sans t" x="240" y="575" text-anchor="middle">Built-in default</text>
+  <text class="sans s" x="240" y="596" text-anchor="middle"><tspan class="mono">null</tspan> when the CLI has no default</text>
+
+  <!-- OUT: Resolved value -->
+  <rect class="node" x="530" y="148" width="200" height="462" rx="8" ry="8"/>
+  <text class="sans t" x="630" y="371" text-anchor="middle">Resolved value</text>
+  <text class="sans s" x="630" y="393" text-anchor="middle">and its source label</text>
+
+  <!-- SYNC -->
+  <rect class="node" x="170" y="670" width="420" height="64" rx="8" ry="8"/>
+  <text class="mono t" x="380" y="697" text-anchor="middle">oat sync · oat status</text>
+  <text class="sans s" x="380" y="719" text-anchor="middle">Each scope reads its own sync config</text>
+
+  <!-- PSYNC -->
+  <rect class="node" x="30" y="814" width="330" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="195" y="839" text-anchor="middle">.oat/sync/config.json</text>
+  <text class="sans s" x="195" y="860" text-anchor="middle">Project sync config</text>
+
+  <!-- USYNC -->
+  <rect class="node" x="400" y="814" width="330" height="60" rx="8" ry="8"/>
+  <text class="mono t" x="565" y="839" text-anchor="middle">~/.oat/sync/config.json</text>
+  <text class="sans s" x="565" y="860" text-anchor="middle">User sync config</text>
+</svg>
