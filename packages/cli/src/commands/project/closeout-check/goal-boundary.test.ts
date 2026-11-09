@@ -267,7 +267,7 @@ interface Scenario {
  */
 async function scenario(
   options: Partial<Omit<StateOptions, 'reviewed' | 'base'>> & {
-    gateArtifact?: 'matching' | 'mismatched';
+    gateArtifact?: boolean;
   } = {},
 ): Promise<Scenario> {
   const repo = await createGoalRepo('oat-goal-boundary-');
@@ -303,13 +303,13 @@ async function scenario(
       reviewed,
       base: repo.baseSha,
       ...stateOptions,
-      ...(gateArtifact === undefined ? {} : { exitGate: configuredCarrier }),
+      ...(gateArtifact === true ? { exitGate: configuredCarrier } : {}),
     }),
   );
   let published = repo.commitAll(
     'chore(oat): record, receive and register d02',
   );
-  if (gateArtifact !== undefined) {
+  if (gateArtifact === true) {
     await repo.write(
       GATE_REVIEW_ARTIFACT,
       '# final gate review\n\nNo findings.\n',
@@ -319,7 +319,7 @@ async function scenario(
       plan(
         [
           `| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${reviewed} | auto |`,
-          `| final | code | passed | 2026-10-11 | ${GATE_REVIEW_ARTIFACT} | ${gateArtifact === 'matching' ? reviewed : published} | gate |`,
+          `| final | code | passed | 2026-10-11 | ${GATE_REVIEW_ARTIFACT} | ${reviewed} | gate |`,
         ].join('\n'),
       ),
     );
@@ -606,7 +606,7 @@ describe('goal closeout boundary (end to end)', () => {
   });
 
   it('keeps a delivery exit binding fresh across its matching gate artifact commit', async () => {
-    const built = await scenario({ gateArtifact: 'matching' });
+    const built = await scenario({ gateArtifact: true });
     repo = built.repo;
 
     const checked = await closeoutCheck(observed(() => built.published));

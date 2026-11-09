@@ -1005,6 +1005,41 @@ oat_goal_recovery:
     expect((await check(repo)).payload).toMatchObject({ status: 'ok' });
   });
 
+  it('records the first endpoint attainment itself when the member merged after refresh last saw it open', async () => {
+    repo = await createGoalRepo();
+    const { fix } = await staleDelivery(repo, { prState: 'OPEN' });
+    const before = deliveryRecord(await repo.read('state.md'));
+    expect(before['status']).toBe('open');
+    expect(before['endpoint_attainment'] ?? null).toBeNull();
+
+    const merged = stubGh(() => ({
+      state: 'MERGED',
+      head: fix,
+      base: repo!.baseSha,
+    }));
+    expect((await waive(repo, merged)).exitCode).toBe(0);
+    const attained = {
+      status: 'at_endpoint',
+      endpoint_attainment: {
+        observed_at: NOW,
+        members: [
+          {
+            url: MEMBER_URL,
+            head: fix,
+            base: repo.baseSha,
+            status: 'merged',
+          },
+        ],
+      },
+    };
+    expect(deliveryRecord(await repo.read('state.md'))).toMatchObject(attained);
+
+    // A later refresh never rewrites the attainment waive recorded first.
+    repo.commitAll('chore(oat): waive d01');
+    expect((await refresh(repo, merged)).exitCode).toBe(0);
+    expect(deliveryRecord(await repo.read('state.md'))).toMatchObject(attained);
+  });
+
   it('restores the working carrier only for the milestone latest delivery', async () => {
     repo = await createGoalRepo();
     const { gh } = await staleDelivery(repo, { laterDelivery: true });
