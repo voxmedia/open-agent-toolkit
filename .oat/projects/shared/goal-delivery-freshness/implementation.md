@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-09
-oat_current_task_id: null
+oat_current_task_id: p03
 oat_generated: false
 oat_template: false
 ---
@@ -39,11 +39,11 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p03   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | completed   | 1     | 1/1      |
+| p03   | in_progress | 1     | 1/1      |
 
 **Total:** 3/3 phases accepted
 
@@ -167,7 +167,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a650db90a6fb468499f6881075b526da92c0b896
 **Head:** 36b1fe5ba5c24fa8a1613ed851fad5d64546adb5
 **Executor:** phase-implementer:gdf-p03-impl-20261109
@@ -286,6 +286,22 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 ## Reviews and Gates
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+### Review Received: final (exit gate)
+
+**Date:** 2026-11-09
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-09T045339Z.md
+**Review:** configured `oat-project-implement` exit gate, run `fc15f453-f1de-4eaa-8e09-14a298005bfd`, target `codex-6-sol-xhigh` (different family from the Claude producer), code `final` (p01–p03) on `6989fdfb..36b1fe5b`, verified at `94accc1fc`.
+**Findings:** Critical 0 · High 1 · Medium 1 · Low 0
+**Reconnaissance:** attempted (Review Orchestration: one mechanical-recon worker ran the focused CLI and control-plane suites; the reviewer owns both findings).
+
+- H1 (High, class: contract-gap in Outcome 2): `waive`'s `judgeDelivery` passes no current gate resolution or configuration fingerprint to the carrier evaluator, so a carrier reconfigured after the reviewed head is waived as head movement; Outcome 2 says a waiver never covers a reconfigured carrier → fix record p03-t07.
+- M1 (Medium, class: contract-gap in Outcome 3): the pre-merge instruction runs only `delivery check`, which reads stored observations, so a commit pushed after review stays unseen until a refresh → fix record p03-t08 (run `delivery refresh` before `delivery check`; no merge block).
+- Deferred-Medium ledger (Step 8.5): no deferred Medium findings exist.
+
+**Outcome:** fixes queued: p03-t07, p03-t08 (exit-gate remediation attempt 1 of 2).
+
+**Gate:** oat-project-implement exit · **Scope:** final · **Outcome:** blocked (0/1/1/0, `codex-6-sol-xhigh`) · attempt 1 of 2 consumed; remediation p03-t07..t08 queued
 
 ### Review Received: final
 

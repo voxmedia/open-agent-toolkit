@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p03
 oat_last_commit: a029b75f4
 oat_blockers: []
 associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -104,7 +104,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-09T04:35:35Z'
+oat_project_state_updated: '2026-11-09T04:58:22Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: 'pending'
@@ -179,7 +179,7 @@ oat_phase_recovery_policy:
 
 ## Current Phase
 
-Implementation - Phase-units complete; final review passed; awaiting the implementation exit gate.
+Implementation - Exit gate blocked (H1, M1); p03 reopened for remediation p03-t07..t08.
 
 ## Artifacts
 
@@ -198,7 +198,8 @@ Implementation - Phase-units complete; final review passed; awaiting the impleme
 - ✓ p03 pre-merge prose, waiver routing and docs (accepted 2026-11-09)
 - ✓ All phase-units accepted
 - ✓ Final review passed (2026-11-09; 1 Low fixed)
-- ⧗ Implementation exit gate
+- ✗ Implementation exit gate attempt 1 blocked (1 High, 1 Medium)
+- ⧗ p03 remediation p03-t07..t08, then final review and exit gate attempt 2
 
 ## Blockers
 
@@ -206,4 +207,4 @@ None
 
 ## Next Milestone
 
-Run the configured `oat-project-implement` exit gate, then the final closeout
+Remediate p03-t07..t08, rerun the final review, then exit gate attempt 2
