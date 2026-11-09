@@ -60,32 +60,36 @@ close out after a post-gate fix was squash-merged
    for each, including one mixed-path commit; a can-fail proof for the new
    branches; and a branch-build probe on a scratch goal repo.
 2. **Operator waiver for head-movement staleness.** `oat project delivery
-waive` appends a waiver to one delivery (who, why, when, and the waived
-   head for each member, observed live). A waiver covers only evidence that
-   passed at its reviewed head and went stale from later commits: an
-   integrated review recorded `passed` (or `stale` after refresh) and an exit
-   carrier whose outcome is `allowed`. It never stands in for a missing or
-   failed review or a missing, blocked or invalid exit carrier. `delivery
-check` (status `ok`, `waived: true`, exit 0), `delivery refresh` and
-   `closeout-check` treat a covered delivery as deliverable and print the
-   waiver; a commit after a waived head that is not bookkeeping stales it
-   again. The command refuses under `OAT_AUTONOMOUS=1`, when live observation
-   fails, for a delivery that is already fresh, and for non-waivable failures.
-   `oat project complete-state` succeeds on a project whose only closeout
-   refusals were covered deliveries. Evidence: evaluator and CLI tests with
-   negative controls (a later substantive commit, a waived head that is not
-   the observed head, an autonomous run, a waiver on a sibling delivery, a
-   missing review and a blocked carrier, plus an unwaived control), a can-fail
-   proof per clause, and a branch-build probe that refreshes a squash-merged
-   stale delivery, waives it and completes the project.
+waive` appends a waiver to one registered delivery (who, why, when, and the
+   waived head for each member, observed live) and, in the same `state.md`
+   write, restores that delivery's stored `integrated_review.disposition` to
+   `passed` and its exit carrier freshness to `fresh`, and clears an
+   `oat_goal_recovery` record that targets it. It refuses under
+   `OAT_AUTONOMOUS=1`, when live observation fails, for a delivery that is
+   already fresh, and unless the delivery's governing Reviews row names its
+   recorded integrated-review artifact with status `passed` and its exit
+   carrier's outcome is `allowed`. The freshness evaluator then judges commits
+   after the reviewed head from the waived head instead, leaving every other
+   check unchanged, so a waiver covers head movement only and never a missing
+   or failed review or a missing, blocked or reconfigured carrier. With no
+   further change, `delivery check --subject dNN` reports `status: ok`, the
+   router stops routing the delivery to recovery, and `closeout-check` and
+   `complete-state` succeed; closeout lists the waiver. A later commit after a
+   waived head that is not bookkeeping, or a later review that queues fixes,
+   stales the delivery again. Evidence: evaluator and CLI tests with negative
+   controls (a later substantive commit, a waived head that is not the observed
+   head, an autonomous run, a waiver on a sibling delivery, a governing row
+   with fixes queued, a blocked carrier, a base change, an edited earlier
+   waiver entry, plus an unwaived control), a can-fail proof per clause, and a
+   branch-build probe that refreshes a squash-merged stale delivery, waives it,
+   checks that the router and closeout clear, and completes the project.
 3. **Prevention and routing.** `oat-project-pr-progress` tells whoever merges
    a goal milestone PR to run `oat project delivery check --subject dNN`
    first and re-gate or waive when it is stale, in its registration report and
-   in the milestone PR body. Its registration, already-registered (3a) and
-   recovery-target (8) steps accept a waived delivery, and a delivery that is
-   stale past its endpoint is routed to the waiver instead of a recovery that
-   cannot complete. Evidence: skill contract tests over the new sentences, and
-   the routed skill prose.
+   in the milestone PR body. Where its `dNN` re-checks (items 3a and 8) find a
+   delivery stale past its endpoint, they offer the operator the waiver instead
+   of a recovery that cannot complete. Evidence: skill contract tests over the
+   new sentences, and the routed skill prose.
 4. **Contracts and docs agree.** Brief contract sections 12.6 (recovery
    clearing), 12.7 (the delivery entry and "deliverable"), 12.8 (bookkeeping
    paths) and 12.9 (closeout coverage), the delivery and closeout docs pages
@@ -95,15 +99,14 @@ check` (status `ok`, `waived: true`, exit 0), `delivery refresh` and
 
 ## Approach
 
-Bookkeeping admission (p01) lives in the shared delivery-evidence evaluator
+Both changes sit in the shared delivery-evidence evaluator
 (`packages/cli/src/commands/project/delivery/evidence.ts`), which `delivery
-check`, `delivery refresh` and `closeout-check` all route through. The waiver
-(p02) is computed once in that evaluator and then honored at every place that
-today requires a stored `passed` disposition or a fresh carrier:
-`evaluateGoalCoverage` in `closeout-check/closeout-invariant.ts`, the
-`deliverable` predicate in `delivery/check.ts`, and the stale-disposition and
-carrier writes in `delivery/refresh.ts`. `complete-state` refuses through
-`checkProjectCloseout`, so it needs no change of its own.
+check`, `delivery refresh` and `closeout-check` all route through, plus the new
+`delivery waive` command. The waiver restores the delivery's stored record when
+it is written, so the readers of that record (the control-plane router, the
+`deliverable` predicate in `delivery/check.ts`, `evaluateGoalCoverage` in
+`closeout-check/closeout-invariant.ts`, and `complete-state` through
+`checkProjectCloseout`) need no waiver logic of their own.
 
 ### Design
 
@@ -119,23 +122,26 @@ carrier writes in `delivery/refresh.ts`. `complete-state` refuses through
   to the delivery record.
 - **Waiver record (p02).** `GoalDelivery.freshness_waivers` is an append-only
   list of `{ waived_by, reason, waived_at, members: [{ url, waived_head }] }`,
-  following `DR-260927-operator-waiver-for-test-only`; the latest entry whose
-  heads cover the observed heads governs. The control-plane types and state
-  parser carry it, and the evaluator's delivery-record rules admit appending
-  an entry as a bookkeeping change while refusing edits to earlier entries.
-- **Waiver consumption (p02).** For each delivery the evaluator returns a
-  waiver verdict: covered when the only freshness failures are head movement
-  (not-ancestor, disallowed or substantive successor) of a review recorded
-  `passed` or `stale` and an `allowed` exit carrier, and every member's
-  observed head equals its waived head or descends from it through
-  bookkeeping commits only. `delivery check` returns `status: ok` with
-  `waived: true`; `delivery refresh` reports the waiver instead of writing
-  `stale` over a covered delivery's disposition; `closeout-check` counts a
-  covered delivery as covered and lists its waiver.
+  following `DR-260927-operator-waiver-for-test-only`. The control-plane types
+  and state parser carry it. The evaluator's delivery-record rules admit
+  appending an entry, together with the restored disposition and carrier
+  freshness, as a bookkeeping change, and treat an edit to an earlier entry as
+  substantive. For a merged delivery, whose member range no longer changes,
+  git history is the audit trail.
+- **Waiver consumption (p02).** In the review and exit-carrier freshness
+  evaluations, when the latest waiver names a member, the successor walk for
+  that member starts at its `waived_head` instead of the reviewed head. All
+  other checks (review presence, scope, bound revisions, base, carrier
+  outcome, subject, override and configuration) run unchanged, for the
+  carrier each consumer already judges (the working carrier for `delivery
+check` and `refresh`, the delivery's `exit_gate` for closeout). The waiver
+  is honored for `--subject dNN`; the `--subject mNN` path judges an
+  unregistered milestone and has no waiver.
 - **Waive command (p02).** `oat project delivery waive --project <path>
 --delivery dNN --reason <text> [--by <name>]` observes the members live, as
-  `delivery refresh` does, and appends a waiver for those heads, refusing as
-  Outcome 2 lists.
+  `delivery refresh` does, checks the refusals in Outcome 2, and writes the
+  waiver and the restored record in one `state.md` write. A missing local
+  object for a member head refuses with a hint to fetch the PR head.
 
 ## Constraints and Out of Scope
 
@@ -183,6 +189,11 @@ carrier writes in `delivery/refresh.ts`. `complete-state` refuses through
   prevention.
 - **A `delivery waive` command writes the waiver** (operator, 2026-11-09), so
   it is validated when it is written. Rejected: hand-editing `state.md`.
+- **The waiver restores the stored record** (operator, 2026-11-09, after brief
+  review round 2): `delivery waive` is the one sanctioned writer that moves a
+  stale disposition back to `passed`, so the router, check and closeout need
+  no waiver logic. Rejected: teaching every reader of the stale record about
+  waivers, which needed five consumers changed.
 - **One delivery: one PR to main** (operator, 2026-11-09). Rejected: shipping
   UP-02 as its own PR first.
 - **Brief workflow fits:** one delivery with a design agreed in conversation;
@@ -196,9 +207,8 @@ carrier writes in `delivery/refresh.ts`. `complete-state` refuses through
   BL-261108-give-goal-closeout-a-recorded's acceptance asks) or only in the
   closeout output, summary and PR body; any departure from the backlog
   criterion is recorded in the journal's Deviations — Settled by: p02
-- Which goal or pr-progress step hands a stale delivery that is past its
-  endpoint to recovery today, and where the waiver offer belongs — Settled
-  by: p03
+- Where in pr-progress items 3a and 8 (and `oat-project-goal`'s hand-back)
+  the waiver offer belongs — Settled by: p03
 
 ## Delivery endpoint and authority
 
@@ -214,13 +224,13 @@ carrier writes in `delivery/refresh.ts`. `complete-state` refuses through
 ## Phase p01: Workflow-owned writes stay bookkeeping
 
 **Intent:** Admit this project's `reviews/` and `reviews/archived/` files and `.oat/repo/pjm/backlog/` paths as bookkeeping successors in `classifyPath`, keeping the identity guards, and update brief contract section 12.8 to match (the skill version bump lands in p03). Incident: m01 exit run 3 (gate artifact commit) and the m02 backlog write. Size: S.
-**Exit evidence:** New `delivery/evidence.test.ts` cases (a sibling review artifact stays fresh, a backlog add or archive stays fresh, a mixed commit of `state.md`, a sibling artifact and a backlog add stays fresh, a code or decision-record successor stays stale, a sibling artifact still cannot move review identity), each new branch shown able to fail, the focused delivery and closeout suites and `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation` green, and a branch-build probe on a scratch goal repo.
+**Exit evidence:** New `delivery/evidence.test.ts` cases (a sibling review artifact stays fresh, a backlog add or archive stays fresh, a mixed commit of `state.md`, a sibling artifact and a backlog add stays fresh, a code or decision-record successor stays stale, a sibling artifact still cannot move review identity), with the identity and stale controls run through `deliveryEvidenceScope` and repeated with the built CLI (`node packages/cli/dist/index.js project delivery check`) on a scratch goal repo beside an accepted control; each new branch shown able to fail; and the focused delivery and closeout suites and `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation` green.
 **Provisional:** no
 
 ## Phase p02: Head-bound freshness waiver
 
-**Intent:** Add `freshness_waivers` to the delivery schema and parser; compute the waiver verdict in the shared evaluator and honor it in `closeout-check`, `delivery check` and `delivery refresh`; admit an appended waiver as bookkeeping; add the operator-only `oat project delivery waive` command; and update brief contract sections 12.6, 12.7 and 12.9. Incident: d01 (#400) could never close out. Size: M.
-**Exit evidence:** Evaluator and CLI tests with the Outcome 2 negative controls, a can-fail proof per clause, `complete-state` succeeding on a fixture whose only refusal is a covered delivery, the skill-contract vitest suites green, and a branch-build probe that refreshes a squash-merged stale delivery, waives it and completes the project.
+**Intent:** Add `freshness_waivers` to the delivery schema and parser; re-anchor the review and exit-carrier successor walks on a member's waived head; admit an appended waiver with its restored record as bookkeeping; add the operator-only `oat project delivery waive` command that appends the waiver, restores the stored disposition and carrier freshness and clears a targeting recovery; and update brief contract sections 12.6, 12.7 and 12.9. Incident: d01 (#400) could never close out. Size: M.
+**Exit evidence:** Evaluator and CLI tests with the Outcome 2 negative controls, a can-fail proof per clause, router and `complete-state` tests on a fixture whose only refusal was a waived delivery, the skill-contract vitest suites green, and a branch-build probe that refreshes a squash-merged stale delivery, waives it, and completes the project.
 **Provisional:** yes
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
