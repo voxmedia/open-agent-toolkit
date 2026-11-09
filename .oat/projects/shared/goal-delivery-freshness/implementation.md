@@ -335,6 +335,32 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
+### Review Received: PR #417 self-review
+
+**Date:** 2026-11-09
+**Review:** pr-self-review gap lenses, by fresh-context Opus reviewers. Correctness and documentation covered `e12ed2d93..4d5ae5d00`; testing (`deliberate-testing`) and complexity (`complexity-review`) covered `origin/main...4d5ae5d00`. One confirmation round covered `4d5ae5d00..8db132b0a`.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low/non-blocking 12; confirmation round: 2 new, both non-blocking.
+
+- Fixed:
+  - `3d527ddc5`: F1, carrier-pair negative controls with a can-fail proof; F2, the member anchor falls back to the bound revision; T3, a `delivery-not-observable` row; T4, a local-config resolution refusal; T5, `WAIVE_REFUSAL_CODES`.
+  - `4213920d9`: T1, deleted a sibling-waiver test that could not fail.
+  - `8db132b0a`: F3, `lifecycle.md` now names "invalid" carriers.
+  - The confirmation round resolved all of these.
+- Final fixes, not independently reviewed: `77d1cb270`, N1 and N2 from the confirmation round. It adds a bound-revision anchor refusal test, which fails with the fallback removed, and drops an assertion that could not fail.
+- Disclosed to the operator, not fixed:
+  - T2: redundant flipped stale→fresh tests.
+  - C1: `waive` copies refresh's observation code.
+  - C2: `judgeDelivery` mirrors three consumers.
+  - C3: the `--json` `before`/`after` fields have no reader.
+- Dismissed:
+  - T6: queued fixes reach the delivery through the stored disposition.
+  - C4: negligible unused hooks.
+- Verification at `77d1cb270`:
+  - delivery and skill-contract suites: 1444 tests, exit 0;
+  - `pnpm check`, lint, format and type-check: exit 0;
+  - earlier at `8db132b0a`: build, `check:skill-bumps`, docs build and index check, exit 0.
+- The post-completion commits `3d527ddc5..77d1cb270` are substantive descendants of the allowed exit-gate generation, so it now reads stale until the operator waives them or a new gate runs.
+
 ### Review Received: final (exit gate attempt 2)
 
 **Date:** 2026-11-09
