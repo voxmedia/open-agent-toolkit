@@ -107,9 +107,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-09T05:18:47Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: 'pending'
+  status: 'allowed'
   resolution: 'configured'
-  disposition: null
+  disposition: 'passed'
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -132,7 +132,7 @@ oat_implement_exit_gate:
   envelope_status: 'ok'
   artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md'
   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md to disposition them before marking the final review row passed.'
-  receive_state: 'intent_persisted'
+  receive_state: 'completed'
   receive_correlation:
     gate_run_id: 'bdd9fc61-d888-40d7-ba05-657343d3ba6a'
     handoff: 'oat-project-review-receive'
@@ -144,12 +144,12 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/final-review-2026-11-09T053644Z.md'
   receive_event_identity: 'final|code|final-review-2026-11-09T053644Z.md'
   receive_pre_head: 'b28ca2c5027f777321125a12cd04110d28ed7b27'
-  receive_commit: null
+  receive_commit: '205812bdbed4001c47f24abd1ab7976e63509aa4'
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-11-09T05:40:07Z'
-  decided_at: null
+  updated_at: '2026-11-09T05:47:39Z'
+  decided_at: '2026-11-09T05:47:39Z'
 oat_brief_gate:
   status: allowed
   disposition: passed
