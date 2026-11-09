@@ -106,6 +106,44 @@ oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-11-09T04:35:35Z'
 oat_generated: false
+oat_implement_exit_gate:
+  status: 'pending'
+  resolution: 'configured'
+  disposition: null
+  config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: 'block'
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: '86934322df8e13d11529ec974439609956cc8021'
+  implementation_base_ref: 'refs/remotes/origin/main'
+  implementation_fingerprint: 'sha256:effective-delta-v2:d7c6c41a3b283169412b36e4c9f260af832fe3ad888094c3874ccf689b03b951'
+  freshness_head: '86934322df8e13d11529ec974439609956cc8021'
+  freshness_fingerprint: 'sha256:effective-delta-v2:d7c6c41a3b283169412b36e4c9f260af832fe3ad888094c3874ccf689b03b951'
+  waivers: []
+  launch_state: 'intent_persisted'
+  launch_attempt_id: 'acaacb3a-554d-40c4-9019-fb0a518213cd'
+  launch_started_at: '2026-11-09T04:46:59Z'
+  launch_result_receipt: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/implement-exit-gate-acaacb3a-554d-40c4-9019-fb0a518213cd.stdout.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: 'not_started'
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-11-09T04:46:59Z'
+  decided_at: null
 oat_brief_gate:
   status: allowed
   disposition: passed
