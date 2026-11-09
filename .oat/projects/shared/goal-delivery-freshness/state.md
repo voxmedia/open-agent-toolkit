@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -100,11 +100,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/417' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-09T12:47:57Z'
+oat_project_state_updated: '2026-11-09T13:03:03Z'
 oat_generated: false
 oat_post_implement_sequence:
   status: pre_approval
@@ -196,7 +196,7 @@ oat_phase_recovery_policy:
 
 ## Current Phase
 
-Implementation - Exit-gate remediation p03-t07..t08 complete; final review and exit gate attempt 2 pending.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -217,7 +217,9 @@ Implementation - Exit-gate remediation p03-t07..t08 complete; final review and e
 - ✓ Final review passed (2026-11-09; 1 Low fixed)
 - ✗ Implementation exit gate attempt 1 blocked (1 High, 1 Medium)
 - ✓ p03 remediation p03-t07..t08 (2026-11-09)
-- ⧗ Final review and exit gate attempt 2
+- ✓ Final review and exit gate attempt 2 (passed; M1 fixed as p03-t09 under operator waiver)
+- ✓ PR created (#417)
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -225,4 +227,8 @@ None
 
 ## Next Milestone
 
-Rerun the final review, then exit gate attempt 2
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
