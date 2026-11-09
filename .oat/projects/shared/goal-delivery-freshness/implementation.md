@@ -173,6 +173,18 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1); skill prose, docs, the generated docs index, skill contract tests and the lockstep version files are coupled through the release and skill-bump gates, so slices fail the independence test (rung 2); the phase spans several surfaces and a release bump, so the inline exception (rung 4) does not hold.
 
+### Task p03-t01: Name the review recovery in waive's stored-stale refusal
+
+**Status:** completed
+**Commit:** 0420cde65b7174320351a6db0dcc53fac991b5d5
+**Executor:** phase-implementer:gdf-p03-impl-20261109
+
+- Intent: p02 review L1 in-scope part. When every consumer's live evaluation reads fresh but the stored `integrated_review.disposition` is not `passed`, `delivery waive` still refuses `already-fresh` and writes nothing, but its message says the record is stale, that `delivery check` still reports it undeliverable, and names the recovery (a new integrated review received clean); waive does not restore the record (operator `new-hardening`, not built).
+- Files: `packages/cli/src/commands/project/delivery/waive.ts`, `packages/cli/src/commands/project/delivery/waive.test.ts`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery/waive.test.ts`, a can-fail proof, CLI type-check and lint.
+- Handle: gdf-p03-impl-20261109.
+- Result: `waive.test.ts` exit 0 (17 tests, 1 new: a delivery staled earlier whose live evidence reads fresh again; `delivery check` reports it undeliverable and waive refuses `already-fresh` with the review-provide/review-receive recovery and without "nothing to waive", writing nothing); CLI `type-check` and `lint` exit 0. Can-fail: the message condition forced to the old wording → the new case fails (exit 1); file restored byte-identical by checksum. The review's suggested `delivery refresh` hint was not used: refresh never writes `passed` (contract 12.7, Observation), so the only recovery is a new review received clean (contract 12.6).
+
 ---
 
 ## Orchestration Runs
