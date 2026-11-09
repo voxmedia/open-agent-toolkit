@@ -311,12 +311,27 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - run/v1 · request=gdf-p03-review-20261109 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-final-review-20261109 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-gate-fix-1-20261109 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=gdf-final-rereview-20261109 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+### Review Received: final (fix re-review)
+
+**Date:** 2026-11-09
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-09T052753Z.md
+**Review:** `gdf-final-rereview-20261109` (oat-reviewer-claude-claude-opus-5-5-high), fix-scoped re-review of p03-t07..t08 on `066df935..d4d42840` (phase set `[p03]`), re-evaluating exit-gate H1 and M1.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+**Reconnaissance:** not-attempted.
+
+- H1 and M1: resolved. `configuration-changed` refuses before any write; the resolution mapping matches the gate CLI; the reviewer's own built-CLI probe showed an untracked-layer gate change refuses through the resolution check alone; the pre-merge refresh-then-check sequence is consistent across skill, template, contract, CLI reference and docs.
+- L1 (Low, class: documentation gap): a failed `.oat/config.json` comparison also refuses as `configuration-changed`, which the CLI reference and contract 12.7 did not say → fixed at `ebe95958a` (one clause each); skill-contract suites, `pnpm check`, format, lint, `check:skill-bumps`, `pnpm build:docs` and the docs index check exit 0.
+- Final verification (Step 12) at `2579c686f`: `pnpm build`, `pnpm test:evidence` (12/12, 0 cached), `pnpm lint` and `pnpm type-check` exit 0.
+
+**Outcome:** passed (no Critical/High/Medium); Low fix completed.
 
 ### Review Received: final (exit gate)
 
@@ -330,7 +345,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - M1 (Medium, class: contract-gap in Outcome 3): the pre-merge instruction runs only `delivery check`, which reads stored observations, so a commit pushed after review stays unseen until a refresh → fix record p03-t08 (run `delivery refresh` before `delivery check`; no merge block).
 - Deferred-Medium ledger (Step 8.5): no deferred Medium findings exist.
 
-**Outcome:** fixes completed: p03-t07 (`6f72f1d78`, refusal `configuration-changed`) and p03-t08 (`17e67a386`) by `gdf-gate-fix-1-20261109`; p03 head advanced to `d4d42840e`; final review and exit gate attempt 2 pending.
+**Outcome:** fixes completed: p03-t07 (`6f72f1d78`, refusal `configuration-changed`) and p03-t08 (`17e67a386`) by `gdf-gate-fix-1-20261109`; p03 head advanced to `d4d42840e`; re-review `gdf-final-rereview-20261109` passed (see the receipt below); exit gate attempt 2 pending.
 
 **Gate:** oat-project-implement exit · **Scope:** final · **Outcome:** blocked (0/1/1/0, `codex-6-sol-xhigh`) · attempt 1 of 2 consumed; remediation p03-t07..t08 queued
 
