@@ -199,6 +199,18 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - KU3 (settled): the waiver offer belongs in pr-progress Step 5.5, as one shared "Stale past its endpoint: offer the waiver" paragraph that items 3a and 8 call when their `dNN` re-check reads not fresh for a delivery observed `at_endpoint` with its members merged (no fix can be pushed, so re-review and re-gating cannot complete). Item 3a offers it before applying item 3; item 8 offers it instead of the push-and-recheck, leaving the record on a declined or refused waiver. `oat-project-goal` keeps pr-progress as the owner at its Step 8.1 hand-back and only names the offer; it never runs the waiver. The waiver runs only on the user's explicit choice with the user's reason; non-interactive runs never run it.
 - Scope note: the "summary and PR body" waiver mention (p02 review L3) is the pr-progress PR description (template Reviews waiver bullets); `oat-project-summary`'s `summary.md` and `oat-project-pr-final`'s body were not changed (closeout output already lists waivers, contract 12.9).
 
+### Task p03-t03: Docs for bookkeeping paths, the freshness waiver and closeout waivers
+
+**Status:** completed
+**Commit:** e8b6eadc932d33b72fabf54604c60b97b0c2b338
+**Executor:** phase-implementer:gdf-p03-impl-20261109
+
+- Intent: Outcome 4 docs. CLI reference: `delivery check` names p01's bookkeeping paths and the waiver re-anchoring, a new `delivery waive` entry (writes, refusal codes, JSON), `closeout-check` and `complete-state` name the `waivers` field (closeout-check on success and refusal, complete-state on success; KU2 Deviations follow-up). Workflow and reference pages that describe delivery freshness, bookkeeping successors and closeout (`lifecycle.md`, `workflow-gates.md`, `closeout-skills.md`, `pr-flow.md`, `project-artifacts.md`, `project-state-machine.md`) and the CLI README gain the waiver, the pre-merge check and the path rule. Docs index regenerated.
+- Files: `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/reference/project-artifacts.md`, `apps/oat-docs/docs/reference/project-state-machine.md`, `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`, `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`, `apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md`, `apps/oat-docs/docs/workflows/projects/lifecycle.md`, `packages/cli/README.md`.
+- Proof: oxfmt, `pnpm --filter oat-docs docs:check`, the docs index regeneration and `git diff --exit-code -- apps/oat-docs/index.md`.
+- Handle: gdf-p03-impl-20261109.
+- Result: oxfmt clean; `pnpm --filter oat-docs docs:check` exit 0 (0 errors; the `[provenance]` warnings on the edited reference pages are the page-wide `.oat/repo` path pattern those pages already carried); index regeneration exit 0 with no diff to `apps/oat-docs/index.md` (the generated inventory lists pages, not their body text).
+
 ---
 
 ## Orchestration Runs
