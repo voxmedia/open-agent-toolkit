@@ -123,17 +123,25 @@ goal fields:
   reached its agreed endpoint may be replaced. A correction of a delivery that
   did reach it is additive (`corrects_delivery_id`, new phase IDs, no inherited
   coverage). `oat_pr_status` and `oat_pr_url` project the latest member pull
-  request, which is the tip member for a stack.
+  request, which is the tip member for a stack. A delivery also carries its
+  append-only `freshness_waivers`, oldest first, written only by
+  `oat project delivery waive`: each entry records `waived_by`, `reason`,
+  `waived_at` and `members` (each member's `url` and `waived_head`).
 
 Delivery evidence stays fresh across later commits that change only bookkeeping:
 `state.md`, `plan.md` (outside its approved content), `implementation.md`,
-`project-log.md` appends, `summary.md`, and the review artifacts of the
-delivery and of any delivery sharing its pull request. In evidence scopes built
-for an exit carrier, the gate's own artifact also counts as bookkeeping if its
-`## Reviews` row has Type `code`, Invocation `gate` and a non-placeholder
-Reviewed Head equal to the carrier's `reviewed_head`, and the artifact is under `reviews/`
-(including `reviews/archived/`). That artifact is never integrated-review
-evidence and never one of a delivery's own review artifacts.
+`project-log.md` appends, `summary.md`, any single file directly under the
+project's `reviews/` or `reviews/archived/` (whichever delivery, sibling or
+gate run it belongs to; not a deeper directory or another project's
+`reviews/`), and any path under `.oat/repo/pjm/backlog/` (backlog items, the
+archive, `completed.md` and the generated index). Decision records and every
+other `.oat/repo` path stay substantive. Path membership only admits a commit:
+in evidence scopes built for an exit carrier, the gate's own artifact is
+listed as shared evidence if its `## Reviews` row has Type `code`, Invocation
+`gate` and a non-placeholder Reviewed Head equal to the carrier's
+`reviewed_head`, and the artifact is under `reviews/` (including
+`reviews/archived/`). That artifact is never integrated-review evidence and
+never one of a delivery's own review artifacts.
 
 A delivery's evidence identity is set once: its `exit_gate`, its
 `integrated_review` identity (`artifact`, `scope`, `bound_revisions`), and each
@@ -157,8 +165,17 @@ Git evidence inspection permits up to 64 MiB per output stream. Exceeding
 that limit is a system error; truncated output is never accepted as evidence.
 
 `oat project delivery refresh` writes only observations and derived staleness
-into `oat_deliveries` and the milestone carriers. The terminal declaration is
-recorded as one `**Goal declared met:**` line in the journal's Final Summary.
+into `oat_deliveries` and the milestone carriers. `oat project delivery waive`
+is the one writer that moves a delivery stale only through head movement back
+to `passed`: in one `state.md` write it records the live observations, appends
+a waiver bound to each member's observed head, restores the
+`integrated_review.disposition`, sets the milestone exit carrier fresh when the
+delivery is its milestone's latest, and clears an `oat_goal_recovery` that
+targets it. The freshness evaluator then judges later commits from the waived
+heads, so a later substantive commit stales the delivery again. The terminal
+declaration is recorded as one `**Goal declared met:**` line in the journal's
+Final Summary; the outcome audit records no waivers, and closeout lists them
+in its own output instead.
 
 Extraction of goal work into another project is manual. A phase moved to a
 linked project gets `**Extracted to:** <slug>` in the brief and the marker pair
