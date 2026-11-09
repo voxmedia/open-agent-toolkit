@@ -122,7 +122,13 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
   freshness_head: 'e12ed2d93791ba7fdeb3b784bf9a0027f63d9488'
   freshness_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
-  waivers: []
+  waivers:
+    - waived_by: 'Thomas Stang'
+      reason: 'address-now fix of exit gate attempt 2 Medium (stacked-carrier config regression); tested with can-fail proof and built-CLI probe'
+      from_commit: 'a323ee7ce19a84d1f3d2ae37547128cb372510fa'
+      to_commit: '320f394e2690ec57159433ac82883239ad5ab8ac'
+      covered_fingerprint: 'sha256:effective-delta-v2:b2f0e03510646d201289ce151c647d67e3a579229dc3748c234f6f9cc4f4c699'
+      waived_at: '2026-11-09T12:40:48Z'
   launch_state: 'result_persisted'
   launch_attempt_id: 'fe772316-857c-43d6-9229-91ed338d1204'
   launch_started_at: '2026-11-09T05:31:22Z'
@@ -148,7 +154,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-11-09T05:47:39Z'
+  updated_at: '2026-11-09T12:40:48Z'
   decided_at: '2026-11-09T05:47:39Z'
 oat_brief_gate:
   status: allowed
