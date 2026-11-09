@@ -79,6 +79,10 @@ Exit gate attempt 2 (run gdf-gate2-bdd9fc61, codex-6-sol-xhigh) passed 0/0/1/0; 
 
 Implementation complete (gdf-implement-complete-20261109): exit gate allowed (attempt 2, waived p03-t09), closeout sequence summary/document/pr complete, PR #417 open.
 
+### 2026-11-09 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/goal-delivery-freshness/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,lifecycle-artifacts,project-log evidence_unavailable=oat-execution-learnings,session-transcript promotions=1 upstream=3 apply=performed filing=declined
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

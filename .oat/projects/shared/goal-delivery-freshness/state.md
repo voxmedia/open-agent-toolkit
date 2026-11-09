@@ -198,6 +198,10 @@ oat_phase_recovery_policy:
     p03:
       used_attempts: 0
       pending_attempt: null
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-11-09T21:16:05.143Z'
 ---
 
 # Project State: goal-delivery-freshness
