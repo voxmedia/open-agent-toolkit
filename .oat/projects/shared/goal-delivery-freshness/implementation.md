@@ -455,6 +455,12 @@ Document any intentional deviations from the brief. Include accepted review find
 - Waivers appear in the regenerated local progress PR description and closeout output, not in `oat-project-summary` or `oat-project-pr-final` (Deviations row p03 (L3)).
 - Not built, reported to the operator: letting `delivery waive` restore a delivery whose stored disposition is stale while live evidence reads fresh (`new-hardening`); the refusal message now names the review recovery instead.
 
+**Closeout addendum (2026-11-09, after the exit gate):**
+
+- Exit gate attempt 1 (`codex-6-sol-xhigh`) blocked on H1 and M1. p03-t07 (`6f72f1d78`) makes `delivery waive` refuse `configuration-changed` for a reconfigured carrier. p03-t08 (`17e67a386`) changes the pre-merge instruction to `delivery refresh` followed by `delivery check`; the Outcome 3 line above predates this. A fix re-review passed, and its Low was fixed at `ebe95958a`.
+- Exit gate attempt 2 passed (0/0/1/0). Its Medium was a regression in the p03-t07 guard for stacked deliveries, fixed as p03-t09 (`320f394e2`). The operator (Thomas Stang) waived `a323ee7ce..320f394e2` on the allowed generation.
+- Final verification ran at `2579c686f`: `pnpm build`, `pnpm test:evidence` (12/12, 0 cached), lint and type-check exit 0. p03-t09 reran the delivery and skill-contract suites, `pnpm check`, type-check, lint, format, build, `check:skill-bumps`, the docs build and the docs index check, all exit 0.
+
 ## References
 
 - Brief: `plan.md`
