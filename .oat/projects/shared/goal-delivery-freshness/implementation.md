@@ -74,13 +74,14 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 ### Task p01-t02: Brief contract 12.8 bookkeeping paths
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 10a67cd00406ae9de4e503c4a0a55d77a12e80d3
 **Executor:** phase-implementer:gdf-p01-impl-20261109
-**Handle:** phase-implementer:gdf-p01-impl-20261109 (this session)
 
 - Intent: section 12.8 Paths names any file directly under `reviews/` or `reviews/archived/` and paths under `.oat/repo/pjm/backlog/`, keeping decision records and other `.oat/repo` paths substantive and the identity rules unchanged. No skill version bump (p03).
 - Files: `.agents/skills/oat-project-brief/references/brief-contract.md`.
 - Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, `pnpm lint`, `pnpm format`.
+- Result: skill-contract suites exit 0 (31 files, 1260 tests); `pnpm lint` exit 0; `pnpm format` exit 0; `pnpm oat:validate-skills` exit 0. The gate-row shared-evidence sentence is kept, now framed as evidence-scope membership rather than path admission.
 
 ---
 
