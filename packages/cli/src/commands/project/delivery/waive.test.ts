@@ -235,6 +235,8 @@ describe('oat project delivery waive', () => {
     noGate?: boolean;
     /** The post-gate fix rewrites `.oat/config.json` to this content. */
     gateConfigChange?: string;
+    /** Record the member with no `reviewed_head` (its bound revision stays R). */
+    unrecordedMemberHead?: boolean;
   }
 
   /**
@@ -260,9 +262,15 @@ describe('oat project delivery waive', () => {
             : configuredCarrier(reviewed, options.bindingStatus ?? 'allowed'),
           exit: options.noGate ? NO_GATE_CARRIER : configuredCarrier(reviewed),
         });
+        const recorded = options.unrecordedMemberHead
+          ? registry.replace(
+              `        reviewed_head: '${reviewed}'`,
+              '        reviewed_head: null',
+            )
+          : registry;
         return `oat_milestone: m01\noat_milestone_status: delivered\n${
           options.laterDelivery
-            ? registry.replace(
+            ? recorded.replace(
                 'oat_milestone_gates:',
                 `  - delivery_id: d02
     milestone: m01
@@ -280,7 +288,7 @@ describe('oat project delivery waive', () => {
         status: open
 oat_milestone_gates:`,
               )
-            : registry
+            : recorded
         }`;
       },
     });
@@ -662,7 +670,30 @@ oat_goal_recovery:
       expect(message).toContain(
         'the gate now resolves as configured, not no_gate',
       );
-      expect(message).not.toContain('.oat/config.json changed between');
+    });
+
+    it('refuses a config change after the bound revision of a member with no recorded reviewed_head', async () => {
+      // No carrier pair exists (`no_gate`) and the gate still resolves as
+      // `no_gate`, so only the member's bound-revision anchor spans the change.
+      repo = await createGoalRepo();
+      const { gh } = await staleDelivery(repo, {
+        noGate: true,
+        unrecordedMemberHead: true,
+        gateConfigChange: '{ "version": 1, "unrelated": true }\n',
+      });
+      const before = await repo.read('state.md');
+      const record = deliveryRecord(before);
+      const [member] = record['members'] as Record<string, unknown>[];
+      expect(member!['reviewed_head']).toBeNull();
+      const review = record['integrated_review'] as {
+        bound_revisions: { head: string | null }[];
+      };
+      expect(review.bound_revisions[0]!.head).not.toBeNull();
+      const result = await waive(repo, gh);
+      await expectRefused(repo, result, 'configuration-changed', before);
+      expect(String(result.payload['message'])).toContain(
+        '.oat/config.json changed between',
+      );
     });
 
     it('refuses an unknown delivery', async () => {
