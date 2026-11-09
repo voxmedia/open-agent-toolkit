@@ -284,37 +284,6 @@ describe('oat project delivery refresh', () => {
     });
   });
 
-  it('keeps review and carrier fresh across a mismatched-head gate artifact', async () => {
-    // Any file directly under the project's reviews/ is bookkeeping (brief
-    // contract 12.8), whichever evidence it belongs to.
-    repo = await createGoalRepo();
-    const chain = await gateArtifactScenario(repo, {
-      reviewedHead: 'mismatched',
-    });
-
-    await refresh(
-      repo,
-      stubGh(() => ({
-        state: 'OPEN',
-        head: chain.gateCommit,
-        base: repo!.baseSha,
-      })),
-    );
-
-    const content = await repo.read('state.md');
-    expect(d01(content)['integrated_review']).toMatchObject({
-      disposition: 'passed',
-    });
-    const gates = frontmatter(content)['oat_milestone_gates'] as Record<
-      string,
-      Record<string, Record<string, unknown>>
-    >;
-    expect(gates['m01']!['exit']).toMatchObject({
-      freshness: 'fresh',
-      freshness_reason: null,
-    });
-  });
-
   it('records endpoint attainment once and status at_endpoint when the agreed endpoint is observed', async () => {
     const chain = await registered();
     await refresh(

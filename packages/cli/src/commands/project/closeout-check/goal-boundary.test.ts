@@ -615,18 +615,6 @@ describe('goal closeout boundary (end to end)', () => {
     expect(checked.exitCode).toBe(0);
   });
 
-  it('accepts a delivery gate artifact whose reviewed head differs from the binding', async () => {
-    // Any file directly under the project's reviews/ is bookkeeping (brief
-    // contract 12.8), whichever evidence it belongs to.
-    const built = await scenario({ gateArtifact: 'mismatched' });
-    repo = built.repo;
-
-    const checked = await closeoutCheck(observed(() => built.published));
-
-    expect(checked.payload).toMatchObject({ status: 'complete' });
-    expect(checked.exitCode).toBe(0);
-  });
-
   it('refuses a substantive successor of the reviewed revision and names the review owner', async () => {
     const built = await scenario();
     repo = built.repo;

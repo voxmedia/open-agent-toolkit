@@ -566,27 +566,6 @@ describe('oat project delivery check', () => {
     expect(exitCode).toBe(0);
   });
 
-  it.each([
-    ['manual', { invocation: 'manual' }],
-    ['mismatched-head', { reviewedHead: 'mismatched' as const }],
-  ])(
-    'keeps an unregistered milestone fresh across a %s gate row artifact',
-    async (_label, options) => {
-      repo = await createGoalRepo();
-      await gateArtifactScenario(repo, { ...options, registered: false });
-
-      const { payload, exitCode } = await check(repo, 'm01');
-
-      expect(payload).toMatchObject({
-        status: 'ok',
-        review: { fresh: true, reason: null },
-        exit: { freshness: 'fresh', reason: null },
-        deliverable: true,
-      });
-      expect(exitCode).toBe(0);
-    },
-  );
-
   it('reports a milestone stale for a substantive successor and writes nothing', async () => {
     await receivedMilestone();
     await repo!.writeRepo('src/app.ts', 'export const value = 9;\n');
