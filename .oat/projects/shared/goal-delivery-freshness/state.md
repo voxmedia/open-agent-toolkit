@@ -76,7 +76,13 @@ oat_workflow_origin: native # native | imported
 #   artifact: null
 #   handoff: null
 #   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation: null
+#   receive_correlation:
+    gate_run_id: 'bdd9fc61-d888-40d7-ba05-657343d3ba6a'
+    handoff: 'oat-project-review-receive'
+    source_artifact: 'reviews/final-review-2026-11-09T053644Z.md'
+    scope: 'final'
+    type: 'code'
+    source_filename: 'final-review-2026-11-09T053644Z.md'
 #   receive_source_artifact: null
 #   receive_archived_artifact: null
 #   receive_event_identity: null
@@ -123,26 +129,26 @@ oat_implement_exit_gate:
   freshness_head: 'e12ed2d93791ba7fdeb3b784bf9a0027f63d9488'
   freshness_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
   waivers: []
-  launch_state: 'intent_persisted'
+  launch_state: 'result_persisted'
   launch_attempt_id: 'fe772316-857c-43d6-9229-91ed338d1204'
   launch_started_at: '2026-11-09T05:31:22Z'
   launch_result_receipt: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/implement-exit-gate-fe772316-857c-43d6-9229-91ed338d1204.stdout.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: 'not_started'
+  gate_run_marker: '/var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/bdd9fc61-d888-40d7-ba05-657343d3ba6a.json'
+  gate_run_id: 'bdd9fc61-d888-40d7-ba05-657343d3ba6a'
+  envelope_status: 'ok'
+  artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md'
+  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md to disposition them before marking the final review row passed.'
+  receive_state: 'intent_persisted'
   receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_source_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T053644Z.md'
+  receive_archived_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/final-review-2026-11-09T053644Z.md'
+  receive_event_identity: 'final|code|final-review-2026-11-09T053644Z.md'
+  receive_pre_head: 'b28ca2c5027f777321125a12cd04110d28ed7b27'
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-11-09T05:31:22Z'
+  updated_at: '2026-11-09T05:40:07Z'
   decided_at: null
 oat_brief_gate:
   status: allowed
