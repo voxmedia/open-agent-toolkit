@@ -372,6 +372,6 @@ Recommendation: re-gate any post-gate fix before a goal milestone PR merges, or 
 
 retro artifact=.oat/projects/shared/review-gate-integrity-goal/references/project-retro.md evidence_used=archived-review-markdown,gate-analysis-outputs,git-history,lifecycle-artifacts,pr-progress-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings,session-transcript-pre-handoff promotions=4 upstream=3 apply=performed filing=performed
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Verdict: goal declared met 2026-11-08 with deferrals (Outcome 6 / p09 to BL-260820). Three milestones shipped (#400, #403, #407). Closed out manually on operator direction: closeout-check and complete-state refuse on d01 (stale after post-gate fix 4a870d471 was squash-merged), so state.md was rendered to the completed shape with the CLI's own renderer and the journal pointers cleared; the completion journal check passes. Adopted adjustments: four AGENTS.md / backlog retro promotions (RP-01 to RP-04). Graduated: general learnings rolled into project-observations; follow-ups filed as BL-261108-give-goal-closeout-a-recorded, BL-261108-stop-workflow-owned-commits, BL-261108-derive-first-release-versions and BL-261108-simplify-m03-gate-convergence; BL-261103-codex-gate-target-loses stays open.

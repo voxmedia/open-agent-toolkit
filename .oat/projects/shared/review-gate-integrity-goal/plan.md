@@ -420,7 +420,8 @@ Writers must preserve every existing row and every unknown trailing cell.
 
 **Summary:**
 
-- Filled at terminal closeout.
+- Goal declared met on 2026-11-08 (`oat_goal_outcome_audit`: `met_with_deferrals`). Outcomes 1–5 and 7 shipped in m01 (#400), m02 (#403) and m03 (#407); Outcome 6 (p09) is deferred to BL-260820-track-pr-closeout-evidence.
+- Closed out manually: `oat project closeout-check` still refuses on d01 (stale evidence after the post-gate fix `4a870d471` was squash-merged in #400). The operator accepted d01 and directed a manual closeout on 2026-11-08 instead of waiting for BL-261108-give-goal-closeout-a-recorded.
 
 **Total: 15 phases**
 
