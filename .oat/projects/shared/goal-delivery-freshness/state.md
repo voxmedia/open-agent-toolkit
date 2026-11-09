@@ -107,12 +107,12 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-09T13:03:03Z'
 oat_generated: false
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
-  approval: pending
+  pre_approval_completed: [summary, document, pr]
+  approval: not_required
   approval_source: null
   post_approval: []
   post_approval_completed: []
@@ -131,8 +131,8 @@ oat_implement_exit_gate:
   reviewed_head: 'e12ed2d93791ba7fdeb3b784bf9a0027f63d9488'
   implementation_base_ref: 'refs/remotes/origin/main'
   implementation_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
-  freshness_head: 'e12ed2d93791ba7fdeb3b784bf9a0027f63d9488'
-  freshness_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
+  freshness_head: 'c95b2c2c6fd78059536b624a830ce5dfc0333745'
+  freshness_fingerprint: 'sha256:effective-delta-v2:fb60a94124b6d3456605b069f6556613daf3db165c73f6b5fd97d03c6dcf7e77'
   waivers:
     - waived_by: 'Thomas Stang'
       reason: 'address-now fix of exit gate attempt 2 Medium (stacked-carrier config regression); tested with can-fail proof and built-CLI probe'
@@ -165,7 +165,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-11-09T12:40:48Z'
+  updated_at: '2026-11-09T13:04:00Z'
   decided_at: '2026-11-09T05:47:39Z'
 oat_brief_gate:
   status: allowed
