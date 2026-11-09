@@ -39,11 +39,11 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status  | Units | Accepted |
-| ----- | ------- | ----- | -------- |
-| p01   | pending | 1     | 0/1      |
-| p02   | pending | 1     | 0/1      |
-| p03   | pending | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | in_progress | 1     | 0/1      |
+| p02   | pending     | 1     | 0/1      |
+| p03   | pending     | 1     | 0/1      |
 
 **Total:** 0/3 phases accepted
 
@@ -51,7 +51,11 @@ oat_template: false
 
 ## Phase p01: Workflow-owned writes stay bookkeeping
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 6989fdfb7217864378a7d2721cb942b26c07a653
+**Executor:** phase-implementer:gdf-p01-impl-20261109
+
+Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1), and p01's slices (`classifyPath` change, its tests, contract 12.8 prose) share `delivery/evidence.ts` and its test file, so they fail the independence test for a root fan-out (rung 2). The phase adds new evaluator branches with negative controls, so the inline exception (rung 4) does not hold.
 
 ---
 

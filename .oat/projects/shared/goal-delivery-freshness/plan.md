@@ -13,6 +13,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
+oat_auto_review_at_hill_checkpoints: false # brief: no checkpoints
 ---
 
 # Project Brief: goal-delivery-freshness
