@@ -169,10 +169,12 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 **Status:** in_progress
 **Base:** a650db90a6fb468499f6881075b526da92c0b896
-**Head:** 4ad61dccba8656f5307ff49eff32d77b1e290452
+**Head:** 36b1fe5ba5c24fa8a1613ed851fad5d64546adb5
 **Executor:** phase-implementer:gdf-p03-impl-20261109
 
 Phase verification at `4ad61dccb` (clean tree), Definition of Done in order, each exit code captured: `pnpm check` exit 0 (11 tasks, 0 cached); `pnpm type-check` exit 0 (11 tasks, 5 cached: the unchanged docs packages); `pnpm test:evidence` exit 0 (forced, 12 tasks, 0 cached; cli 449 files / 9688 tests, control-plane 14 / 320, docs-config 5 / 22, docs-theme 3 / 25, docs-transforms 3 / 38); `pnpm build` exit 0 (5 cached, replaying the forced builds `test:evidence` had just run at the same inputs); `pnpm run check:skill-bumps` exit 0 (4 changed skills validated against `origin/main`); `git fetch origin main`, then `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.49); `pnpm build:docs` exit 0 (6 cached), then re-run uncached as `pnpm exec turbo run build --filter=oat-docs --force` exit 0 (0 cached); docs index regeneration exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `pnpm lint` exit 0 and `pnpm format` exit 0 (5 untouched docs packages replayed; cli, control-plane, root oxlint and `format:root` ran). Skill bumps: oat-project-brief 1.0.10, oat-project-goal 1.0.7, oat-project-implement 2.3.29, oat-project-pr-progress 1.3.10; lockstep packages 0.3.49.
+
+Late fix (review gdf-p03-fix-1, p03-t06): `**Head:**` advanced from `4ad61dccb` to `36b1fe5ba`; prose-only re-verification is recorded in p03-t06 (skill-contract suites, `pnpm check`, `pnpm lint`, `pnpm format`, `check:skill-bumps`, forced docs build and index freshness all exit 0).
 
 Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1); skill prose, docs, the generated docs index, skill contract tests and the lockstep version files are coupled through the release and skill-bump gates, so slices fail the independence test (rung 2); the phase spans several surfaces and a release bump, so the inline exception (rung 4) does not hold.
 
