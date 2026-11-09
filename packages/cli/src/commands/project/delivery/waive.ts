@@ -22,7 +22,7 @@ import type {
   GoalDelivery,
 } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
-import YAML, { isMap, isScalar, isSeq } from 'yaml';
+import YAML, { isMap, isSeq } from 'yaml';
 
 import {
   DEFAULT_DELIVERY_PROJECT_DEPENDENCIES,
@@ -42,10 +42,14 @@ import {
   type ReviewEvaluation,
 } from './evidence';
 import {
-  endpointSatisfied,
-  observeMember,
+  applyObservationWritesToDocument,
+  deliveryObservationWrites,
+  deriveObservedDelivery,
+  isUnsetNode,
+  observeDeliveryMembers,
   resolvePath,
   type MemberObservation,
+  type ObservationWrite,
 } from './refresh';
 
 /**
@@ -101,9 +105,11 @@ export interface WaiverPlan {
   deliveryId: string;
   milestone: string | null;
   waiver: DeliveryFreshnessWaiver;
-  observations: MemberObservation[];
-  /** `status: at_endpoint` and the first attainment, as refresh derives them. */
-  endpoint: { status: GoalDelivery['status']; satisfied: boolean };
+  /**
+   * The member observations, `status: at_endpoint` and the first
+   * `endpoint_attainment`, built and applied exactly as refresh does.
+   */
+  observationWrites: ObservationWrite[];
   restoresWorkingCarrier: boolean;
   clearsRecovery: boolean;
   restoresMilestoneStatus: boolean;
@@ -395,21 +401,11 @@ export async function planDeliveryWaiver(
     );
   }
 
-  // Observe every member live; any failure writes nothing.
-  const observations: MemberObservation[] = [];
-  const failures: string[] = [];
-  for (const member of delivery.members) {
-    if (member.url === null) {
-      failures.push(`${delivery.delivery_id}: a member has no URL to observe`);
-      continue;
-    }
-    const observed = await observeMember(runners.gh, member.url);
-    if (typeof observed === 'string') {
-      failures.push(`${delivery.delivery_id} ${member.url}: ${observed}`);
-    } else {
-      observations.push(observed);
-    }
-  }
+  // Observe every member live, as refresh does; any failure writes nothing.
+  const { observed, failures } = await observeDeliveryMembers(
+    runners.gh,
+    delivery,
+  );
   if (failures.length > 0 || delivery.members.length === 0) {
     return refusal(
       'observation-failed',
@@ -417,6 +413,9 @@ export async function planDeliveryWaiver(
       failures,
     );
   }
+  const observations = observed.filter(
+    (observation): observation is MemberObservation => observation !== null,
+  );
   for (const [index, observation] of observations.entries()) {
     if (
       !(await commitExists(runners.git, project.repoRoot, observation.head))
@@ -429,15 +428,8 @@ export async function planDeliveryWaiver(
     }
   }
 
-  const members: DeliveryMember[] = delivery.members.map((member, index) => ({
-    ...member,
-    observed_head: observations[index]!.head,
-    observed_base: observations[index]!.base,
-    status: observations[index]!.status,
-  }));
-  const satisfied = endpointSatisfied(delivery.endpoint, members);
-  const status =
-    satisfied && delivery.status === 'open' ? 'at_endpoint' : delivery.status;
+  const derived = deriveObservedDelivery(delivery, observations);
+  const { members, status } = derived;
   const observedDelivery: GoalDelivery = { ...delivery, members, status };
   const observedDeliveries = deliveries.map((entry) =>
     entry.delivery_id === delivery.delivery_id ? observedDelivery : entry,
@@ -529,10 +521,11 @@ export async function planDeliveryWaiver(
     );
   }
 
+  const waivedAt = runners.now().toISOString();
   const waiver: DeliveryFreshnessWaiver = {
     waived_by: author,
     reason,
-    waived_at: runners.now().toISOString(),
+    waived_at: waivedAt,
     members: members.map((member) => ({
       url: member.url,
       waived_head: member.observed_head,
@@ -576,8 +569,12 @@ export async function planDeliveryWaiver(
       deliveryId: delivery.delivery_id,
       milestone: delivery.milestone,
       waiver,
-      observations,
-      endpoint: { status, satisfied },
+      observationWrites: deliveryObservationWrites(
+        delivery,
+        observations,
+        derived,
+        () => waivedAt,
+      ),
       restoresWorkingCarrier:
         latest?.delivery_id === delivery.delivery_id &&
         (project.state.milestoneGates?.[delivery.milestone!]?.exit ?? null) !==
@@ -591,14 +588,6 @@ export async function planDeliveryWaiver(
       after,
     },
   };
-}
-
-function isUnsetNode(value: unknown): boolean {
-  return (
-    value === undefined ||
-    value === null ||
-    (isScalar(value) && (value.value === null || value.value === ''))
-  );
 }
 
 /** Apply a waiver plan to `state.md` content in one frontmatter write. */
@@ -630,29 +619,7 @@ export function applyWaiverPlan(
   const set = (path: (string | number)[], value: unknown) =>
     document.setIn(path, document.createNode(value, { flow: false }));
 
-  for (const [index, observation] of plan.observations.entries()) {
-    const member = [...delivery, 'members', index];
-    set([...member, 'observed_head'], observation.head);
-    set([...member, 'observed_base'], observation.base);
-    set([...member, 'status'], observation.status);
-  }
-  if (plan.endpoint.status === 'at_endpoint') {
-    set([...delivery, 'status'], 'at_endpoint');
-  }
-  if (
-    plan.endpoint.satisfied &&
-    isUnsetNode(document.getIn([...delivery, 'endpoint_attainment'], true))
-  ) {
-    set([...delivery, 'endpoint_attainment'], {
-      observed_at: plan.waiver.waived_at,
-      members: plan.observations.map((observation, index) => ({
-        url: plan.waiver.members[index]?.url ?? null,
-        head: observation.head,
-        base: observation.base,
-        status: observation.status,
-      })),
-    });
-  }
+  applyObservationWritesToDocument(document, plan.observationWrites);
 
   const waivers = document.getIn([...delivery, 'freshness_waivers'], true);
   if (isSeq(waivers)) {
