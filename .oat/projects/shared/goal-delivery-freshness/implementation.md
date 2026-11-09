@@ -361,6 +361,19 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
   - earlier at `8db132b0a`: build, `check:skill-bumps`, docs build and index check, exit 0.
 - The post-completion commits `3d527ddc5..77d1cb270` are substantive descendants of the allowed exit-gate generation, so it now reads stale until the operator waives them or a new gate runs.
 
+### Review Received: PR #417 self-review, confirmation round 2
+
+**Date:** 2026-11-09
+**Review:** the same two fresh-context Opus reviewers on `0010d0330..ae491f09f`, which fixes three findings the operator chose to fix rather than track: C1 (`f4f534ddc`, refresh and waive share one member-observation path), C3 (`2ccb7725b`, `waive --json` drops `before`/`after`) and T2 (`ae491f09f`, the flipped mismatched-gate-artifact tests collapse to one CLI case).
+**Findings:** C1, C3 and T2 resolved, with no behaviour change beyond waive keeping stored quotes on unchanged SHAs (parsed YAML identical). 3 new, all non-blocking.
+
+- Final fixes, not independently reviewed:
+  - `bea5067aa`: N2, drops the unread `WaiverPlan.after`.
+  - `14ffc93e0`: N1, raised by both reviewers, adds a waive test in which waive itself writes `status: at_endpoint` and the first `endpoint_attainment` and a later refresh keeps it; the test fails with waive's observation writes dropped. N3 narrows a fixture option left dead by T2.
+- Dismissed: C2 (`judgeDelivery` mirrors three consumers whose scopes differ by contract); T6 and C4 as recorded above.
+- Verification at `14ffc93e0`: delivery and closeout-check suites, 261 tests, exit 0; CLI `check` and type-check, exit 0. Reviewers at `ae491f09f`: 1153 tests, type-check, lint and format, exit 0.
+- `f4f534ddc..14ffc93e0` landed after the second operator waiver, so the exit-gate generation reads stale again until the operator waives them or a new gate runs.
+
 ### Review Received: final (exit gate attempt 2)
 
 **Date:** 2026-11-09
