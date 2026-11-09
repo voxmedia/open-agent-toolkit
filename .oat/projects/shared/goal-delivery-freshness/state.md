@@ -146,6 +146,12 @@ oat_implement_exit_gate:
       to_commit: '77d1cb2700b10eb3ea2f1ab138b0f4655c844e00'
       covered_fingerprint: 'sha256:effective-delta-v2:5f138c05d631a14bca587e72007f6b710955401669291f9852bcd13a64cd7a8e'
       waived_at: '2026-11-09T13:41:50Z'
+    - waived_by: 'Thomas Stang'
+      reason: 'PR self-review C1/C3/T2 fixes made at operator direction, reviewed in confirmation round 2; final small fixes N1-N3 tested'
+      from_commit: '0010d03302e1b83cb024d3145c085ed3d337d295'
+      to_commit: '14ffc93e0b83886f1dbc7ee11754aa10b81afd91'
+      covered_fingerprint: 'sha256:effective-delta-v2:df99f2ff51e98717b3b90cb32ed0dd30a249caf163e152ac7ff4f925380bea02'
+      waived_at: '2026-11-09T14:02:30Z'
   launch_state: 'result_persisted'
   launch_attempt_id: 'fe772316-857c-43d6-9229-91ed338d1204'
   launch_started_at: '2026-11-09T05:31:22Z'
@@ -171,7 +177,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-11-09T13:41:50Z'
+  updated_at: '2026-11-09T14:02:30Z'
   decided_at: '2026-11-09T05:47:39Z'
 oat_brief_gate:
   status: allowed
