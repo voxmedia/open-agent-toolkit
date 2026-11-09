@@ -658,6 +658,117 @@ oat_goal_recovery:
     expect((await check(repo)).payload).toMatchObject({ status: 'ok' });
   });
 
+  /**
+   * A two-member stack: the lower layer L (no gate configured), then the
+   * upper layer configures the `oat-project-implement` gate and is reviewed
+   * at U with configured carriers bound to U; refresh observes L unchanged
+   * and the tip at a later fix F that changes `tipChange` only.
+   */
+  async function staleStack(target: GoalRepo, tipChange: [string, string]) {
+    await target.writeRepo('.oat/config.json', '{ "version": 1 }\n');
+    await target.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+    const lower = target.commitAll('feat: lower layer');
+    await target.writeRepo('.oat/config.json', exitGateConfig('true'));
+    target.commitAll('chore: configure the exit gate in the upper layer');
+    const lowerUrl = 'https://github.com/owner/name/pull/6';
+    const chain = await bookkeepingChain(target, {
+      register: (reviewed) =>
+        `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+          reviewed,
+          base: target.baseSha,
+          kind: 'stack',
+          members: [
+            {
+              url: lowerUrl,
+              base: target.baseSha,
+              reviewedHead: lower,
+              observedHead: lower,
+              observedBase: target.baseSha,
+            },
+            {
+              url: MEMBER_URL,
+              base: lower,
+              reviewedHead: reviewed,
+              observedHead: reviewed,
+              observedBase: lower,
+            },
+          ],
+          deliveryExitGate: configuredCarrier(reviewed),
+          exit: configuredCarrier(reviewed),
+        })}`,
+    });
+    await target.writeRepo(...tipChange);
+    const fix = target.commitAll('fix: post-gate change on the tip layer');
+    const observed: Record<string, Observation> = {
+      [lowerUrl]: { state: 'OPEN', head: lower, base: target.baseSha },
+      [MEMBER_URL]: { state: 'OPEN', head: fix, base: lower },
+    };
+    const gh: GhRunner = {
+      run: (args) => {
+        const observation = observed[args.find((arg) => arg in observed)!]!;
+        return Promise.resolve({
+          code: 0,
+          stdout: JSON.stringify({
+            state: observation.state,
+            headRefOid: observation.head,
+            baseRefOid: observation.base,
+          }),
+          stderr: '',
+        });
+      },
+    };
+    expect((await refresh(target, gh)).exitCode).toBe(0);
+    target.commitAll('chore(oat): record the stack observations');
+    return { reviewed: chain.reviewed, lower, fix, gh };
+  }
+
+  it('waives tip-only movement of a stack whose upper layer configured the gate', async () => {
+    // Accepted control: the tip carrier's configuration is compared with the
+    // tip only, never with the unchanged lower layer's older tree.
+    repo = await createGoalRepo();
+    const { lower, fix, gh } = await staleStack(repo, [
+      'src/app.ts',
+      'export const value = 3;\n',
+    ]);
+    expect((await check(repo)).payload).toMatchObject({
+      status: 'undeliverable',
+    });
+    const waived = await waive(repo, gh);
+    expect(waived).toMatchObject({
+      exitCode: 0,
+      payload: {
+        status: 'waived',
+        waiver: {
+          members: [
+            { waived_head: lower },
+            { url: MEMBER_URL, waived_head: fix },
+          ],
+        },
+      },
+    });
+    repo.commitAll('chore(oat): record the d01 freshness waiver');
+    expect((await check(repo)).payload).toMatchObject({ status: 'ok' });
+  });
+
+  it('refuses a stack whose tip changes the gate configuration after the carrier reviewed it', async () => {
+    repo = await createGoalRepo();
+    const { gh } = await staleStack(repo, [
+      '.oat/config.json',
+      exitGateConfig('false'),
+    ]);
+    const before = await repo.read('state.md');
+    const result = await waive(repo, gh);
+    expect(result.exitCode).toBe(1);
+    expect(result.payload).toMatchObject({
+      status: 'refused',
+      code: 'configuration-changed',
+    });
+    expect(String(result.payload['message'])).toContain(
+      '.oat/config.json changed between',
+    );
+    expect(await repo.read('state.md')).toBe(before);
+  });
+
   it('waives only the named delivery on a shared member PR, never its sibling', async () => {
     repo = await createGoalRepo();
     const shared = await sharedMemberScenario(repo);

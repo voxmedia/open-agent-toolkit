@@ -253,11 +253,13 @@ async function judgeDelivery(
 /**
  * A waived head would also skip a commit that changed the tracked shared gate
  * configuration, which no recorded resolution can reveal when a configured
- * gate stays configured. Compare `.oat/config.json` between each walk anchor
- * the waiver would move (the member's reviewed head and a configured
- * carrier's reviewed head) and the member's observed head. Returns the reason
- * to refuse, or `null` when the file is unchanged; an inspection failure
- * refuses.
+ * gate stays configured. Compare `.oat/config.json` across exactly the walks
+ * the freshness evaluators judge and the waiver would move: each member's own
+ * reviewed head to its observed head (the integrated review), and a configured
+ * carrier's reviewed head to the tip member's observed head for a stack, or to
+ * every member's observed head for any other kind (`evaluateDeliveryExitCarrier`).
+ * Returns the reason to refuse, or `null` when the file is unchanged; an
+ * inspection failure refuses.
  */
 async function sharedGateConfigurationChange(
   git: GitRunner,
@@ -266,27 +268,38 @@ async function sharedGateConfigurationChange(
   members: readonly DeliveryMember[],
   carriers: readonly (GoalDelivery['exit_gate'] | null)[],
 ): Promise<string | null> {
-  const carrierAnchors = carriers.flatMap((carrier) =>
-    carrier?.reviewed_head ? [carrier.reviewed_head] : [],
-  );
+  const pairs: { anchor: string; head: string }[] = [];
   for (const member of members) {
-    const head = member.observed_head;
-    if (head === null) continue;
-    const anchors = [
-      ...(member.reviewed_head ? [member.reviewed_head] : []),
-      ...carrierAnchors,
-    ];
-    for (const anchor of new Set(anchors)) {
-      const diff = await git.run(
-        ['diff', '--name-only', anchor, head, '--', SHARED_GATE_CONFIG_PATH],
-        { cwd: repoRoot, allowFailure: true },
-      );
-      if (diff.code !== 0) {
-        return `Cannot confirm ${SHARED_GATE_CONFIG_PATH} is unchanged between ${anchor} and ${delivery.delivery_id}'s observed head ${head}: ${diff.stderr.trim() || `git exited ${diff.code}`}`;
+    if (member.reviewed_head && member.observed_head) {
+      pairs.push({ anchor: member.reviewed_head, head: member.observed_head });
+    }
+  }
+  const carrierMembers =
+    delivery.kind === 'stack' ? members.slice(-1) : members;
+  for (const carrier of carriers) {
+    if (!carrier?.reviewed_head) continue;
+    for (const member of carrierMembers) {
+      if (member.observed_head) {
+        pairs.push({
+          anchor: carrier.reviewed_head,
+          head: member.observed_head,
+        });
       }
-      if (diff.stdout.trim() !== '') {
-        return `${SHARED_GATE_CONFIG_PATH} changed between ${anchor} and ${delivery.delivery_id}'s observed head ${head}, so the gate configuration may differ from what the carriers recorded`;
-      }
+    }
+  }
+  const judged = new Set<string>();
+  for (const { anchor, head } of pairs) {
+    if (judged.has(`${anchor}..${head}`)) continue;
+    judged.add(`${anchor}..${head}`);
+    const diff = await git.run(
+      ['diff', '--name-only', anchor, head, '--', SHARED_GATE_CONFIG_PATH],
+      { cwd: repoRoot, allowFailure: true },
+    );
+    if (diff.code !== 0) {
+      return `Cannot confirm ${SHARED_GATE_CONFIG_PATH} is unchanged between ${anchor} and ${delivery.delivery_id}'s observed head ${head}: ${diff.stderr.trim() || `git exited ${diff.code}`}`;
+    }
+    if (diff.stdout.trim() !== '') {
+      return `${SHARED_GATE_CONFIG_PATH} changed between ${anchor} and ${delivery.delivery_id}'s observed head ${head}, so the gate configuration may differ from what the carriers recorded`;
     }
   }
   return null;
