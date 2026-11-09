@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * goal-delivery-freshness p03 (brief Outcomes 3 and 4): pr-progress tells
- * whoever merges a goal milestone PR to run `delivery check` first, accepts a
+ * whoever merges a goal milestone PR to run `delivery refresh` immediately
+ * before `delivery check`, accepts a
  * waived delivery like any other, and offers the operator-only freshness
  * waiver where its `dNN` re-checks (Step 5.5 items 3a and 8) find a delivery
  * stale past its endpoint. oat-project-goal's hand-back names that offer and
@@ -99,15 +100,19 @@ describe('pr-progress goal delivery waiver and pre-merge prose', () => {
     );
   });
 
-  it('tells whoever merges to run delivery check first, in the report and the PR body', () => {
+  it('tells whoever merges to refresh immediately before delivery check, in the report and the PR body', () => {
     const merge = section(
       registration(),
       '**Before merging.**',
       '`delivered` means registered, open and review-ready.',
     );
     expect(merge).toContain(
-      'In the registration report and in the milestone PR body (the template\'s `## Before Merging` section), tell whoever merges it to run `oat project delivery check --project "$PROJECT_PATH" --subject <dNN>` first, and, when it reports the delivery stale, to re-gate it (re-run the exit gate and the integrated review) or, for head movement the operator accepts, to waive it with `oat project delivery waive` before merging.',
+      'For a registered delivery, `delivery check` reads the member observations recorded in `state.md`, so it cannot see a later push until a refresh records it.',
     );
+    expect(merge).toContain(
+      'In the registration report and in the milestone PR body (the template\'s `## Before Merging` section), tell whoever merges it to run `oat project delivery refresh --project "$PROJECT_PATH"` immediately before `oat project delivery check --project "$PROJECT_PATH" --subject <dNN>`, to stop without merging when the refresh fails to observe a member, and, when the check reports the delivery stale, to re-gate it (re-run the exit gate and the integrated review) or, for head movement the operator accepts, to waive it with `oat project delivery waive` before merging.',
+    );
+    expect(merge).not.toContain('--subject <dNN>` first');
   });
 
   it('carries the pre-merge section and the waiver listing in the PR template', () => {
@@ -120,7 +125,7 @@ describe('pr-progress goal delivery waiver and pre-merge prose', () => {
       "{goal only, when this description is regenerated for a registered delivery: one bullet per entry in its `freshness_waivers`, oldest first: who waived, when, the reason and each member's waived head; omit when there are none}",
     );
     expect(template).toContain(
-      '## Before Merging {goal only: the Step 5.5 pre-merge instruction for this delivery, naming its `dNN`; omit outside goal mode}',
+      '## Before Merging {goal only: the Step 5.5 pre-merge instruction for this delivery, naming its `dNN`: `delivery refresh` immediately before `delivery check`; omit outside goal mode}',
     );
   });
 });

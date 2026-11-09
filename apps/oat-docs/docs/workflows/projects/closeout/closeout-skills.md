@@ -171,8 +171,9 @@ queues fixes cannot land them on that pull request; it runs the waiver only on
 your explicit choice and with your reason, declining it keeps the ordinary
 recovery path, and a non-interactive run never runs it. The registration report and
 the milestone PR body's `## Before Merging` section tell whoever merges to run
-`oat project delivery check --subject dNN` first and to re-gate or waive a
-stale delivery. Waivers appear in a progress PR description regenerated
+`oat project delivery refresh` immediately before
+`oat project delivery check --subject dNN`, to stop when the refresh fails to
+observe a member, and to re-gate or waive a stale delivery. Waivers appear in a progress PR description regenerated
 locally for a registered delivery and in closeout output, not in the posted PR
 body, which is written before any waiver can exist.
 

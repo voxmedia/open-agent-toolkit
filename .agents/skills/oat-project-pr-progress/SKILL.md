@@ -417,7 +417,7 @@ oat_project: { PROJECT_PATH }
 
 ## Before Merging
 
-{goal only: the Step 5.5 pre-merge instruction for this delivery, naming its `dNN`; omit outside goal mode}
+{goal only: the Step 5.5 pre-merge instruction for this delivery, naming its `dNN`: `delivery refresh` immediately before `delivery check`; omit outside goal mode}
 
 ## References
 
@@ -568,13 +568,17 @@ own.
   `oat project delivery waive`.
 
 **Before merging.** A goal milestone pull request merges outside OAT, and a
-commit pushed after the review or exit gate can stale its evidence. In the
-registration report and in the milestone PR body (the template's
+commit pushed after the review or exit gate can stale its evidence. For a
+registered delivery, `delivery check` reads the member observations recorded
+in `state.md`, so it cannot see a later push until a refresh records it. In
+the registration report and in the milestone PR body (the template's
 `## Before Merging` section), tell whoever merges it to run
-`oat project delivery check --project "$PROJECT_PATH" --subject <dNN>` first,
-and, when it reports the delivery stale, to re-gate it (re-run the exit gate
-and the integrated review) or, for head movement the operator accepts, to
-waive it with `oat project delivery waive` before merging.
+`oat project delivery refresh --project "$PROJECT_PATH"` immediately before
+`oat project delivery check --project "$PROJECT_PATH" --subject <dNN>`, to
+stop without merging when the refresh fails to observe a member, and, when
+the check reports the delivery stale, to re-gate it (re-run the exit gate and
+the integrated review) or, for head movement the operator accepts, to waive
+it with `oat project delivery waive` before merging.
 
 `delivered` means registered, open and review-ready. Activation of the next
 milestone belongs to `oat-project-goal` once the delivery reaches its agreed
@@ -657,6 +661,6 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
 - Goal mode: the delivery was registered only on a deliverable `delivery check`, idempotently, with its exit-gate result captured and one structural log entry per registration
-- Goal mode: the registration report and the milestone PR body tell whoever merges to run `oat project delivery check --subject <dNN>` first, and a progress PR description regenerated for a registered delivery lists its freshness waivers
+- Goal mode: the registration report and the milestone PR body tell whoever merges to run `oat project delivery refresh` immediately before `oat project delivery check --subject <dNN>`, and a progress PR description regenerated for a registered delivery lists its freshness waivers
 - Goal mode: a delivery stale past its endpoint was offered the operator waiver, never waived by this skill on its own
 - User has clear next step to open PR (manual or gh)

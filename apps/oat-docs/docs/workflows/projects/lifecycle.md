@@ -627,9 +627,11 @@ substantive change followed by its revert stales the delivery.
 `gh pr view` and records staleness; it never writes milestone status or
 recovery. Because the project branch is the delivery's head branch, do not
 push a brief amendment while that delivery is still open. Before merging a
-milestone pull request, run `oat project delivery check --subject dNN`; when it
-reports the delivery stale, re-gate it or, for head movement you accept, waive
-it.
+milestone pull request, run `oat project delivery refresh` immediately before
+`oat project delivery check --subject dNN`: the check reads the recorded
+observations, so only a refresh sees a later push. Stop when the refresh fails
+to observe a member; when the check reports the delivery stale, re-gate it or,
+for head movement you accept, waive it.
 
 **Freshness waiver.** `oat project delivery waive --project <path> --delivery
 dNN --reason <text>` records an operator's acceptance of a delivery that is
