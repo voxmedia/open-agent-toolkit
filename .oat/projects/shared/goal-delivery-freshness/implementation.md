@@ -211,6 +211,18 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - Handle: gdf-p03-impl-20261109.
 - Result: oxfmt clean; `pnpm --filter oat-docs docs:check` exit 0 (0 errors; the `[provenance]` warnings on the edited reference pages are the page-wide `.oat/repo` path pattern those pages already carried); index regeneration exit 0 with no diff to `apps/oat-docs/index.md` (the generated inventory lists pages, not their body text).
 
+### Task p03-t04: Lockstep public package bump to 0.3.49
+
+**Status:** completed
+**Commit:** b823bb091ea018474bf7f95112e7b641f7322dc4
+**Executor:** phase-implementer:gdf-p03-impl-20261109
+
+- Intent: the branch changes shipped CLI and control-plane code and bundled skills and docs, so all five lockstep public packages move from `origin/main`'s 0.3.48 to 0.3.49, with the CLI's bundled `public-package-versions.json`.
+- Files: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`, `packages/cli/assets/public-package-versions.json`.
+- Proof: `git fetch origin main`, `pnpm release:check-versions`, `pnpm release:validate`.
+- Handle: gdf-p03-impl-20261109.
+- Result: after `git fetch origin main` (main unchanged since the branch base), `pnpm release:check-versions` exit 0 ("version bump check passed"); `pnpm release:validate` runs in the phase verification below.
+
 ---
 
 ## Orchestration Runs
