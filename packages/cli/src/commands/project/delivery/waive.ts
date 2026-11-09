@@ -89,7 +89,7 @@ export interface WaiveRefusal {
   failures?: string[];
 }
 
-/** The consumers' verdicts for one delivery, before or after the waiver. */
+/** The consumers' verdicts for one delivery before the waiver. */
 export interface WaiverEvidence {
   /** The review as `delivery check` and `refresh` judge it (working scope). */
   review: ReviewEvaluation;
@@ -114,7 +114,6 @@ export interface WaiverPlan {
   clearsRecovery: boolean;
   restoresMilestoneStatus: boolean;
   before: WaiverEvidence;
-  after: WaiverEvidence;
 }
 
 export interface WaiveInput {
@@ -585,7 +584,6 @@ export async function planDeliveryWaiver(
       restoresMilestoneStatus:
         clearsRecovery && project.state.milestone === delivery.milestone,
       before,
-      after,
     },
   };
 }
