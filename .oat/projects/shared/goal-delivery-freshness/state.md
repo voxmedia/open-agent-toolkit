@@ -107,7 +107,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-09T04:58:22Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: 'pending'
+  status: 'blocked'
   resolution: 'configured'
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -116,7 +116,7 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: 'block'
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: '86934322df8e13d11529ec974439609956cc8021'
   implementation_base_ref: 'refs/remotes/origin/main'
   implementation_fingerprint: 'sha256:effective-delta-v2:d7c6c41a3b283169412b36e4c9f260af832fe3ad888094c3874ccf689b03b951'
@@ -132,7 +132,7 @@ oat_implement_exit_gate:
   envelope_status: 'blocked'
   artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T045339Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T045339Z.md before treating this gate review as consumed.'
-  receive_state: 'intent_persisted'
+  receive_state: 'completed'
   receive_correlation:
     gate_run_id: 'fc15f453-f1de-4eaa-8e09-14a298005bfd'
     handoff: 'oat-project-review-receive'
@@ -144,12 +144,12 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/final-review-2026-11-09T045339Z.md'
   receive_event_identity: 'final|code|final-review-2026-11-09T045339Z.md'
   receive_pre_head: 'faa7a3569f608ae5b4faebd200f7bcef82ee8db6'
-  receive_commit: null
+  receive_commit: 'e17765bdecfc8edc39bfefae39aacef007b446dd'
   receive_eligible: true
-  receive_completed: false
-  failure: null
-  updated_at: '2026-11-09T04:57:40Z'
-  decided_at: null
+  receive_completed: true
+  failure: 'blocking findings H1 (High) and M1 (Medium); remediation attempt 1 of 2 queued as p03-t07..t08'
+  updated_at: '2026-11-09T04:58:38Z'
+  decided_at: '2026-11-09T04:58:38Z'
 oat_brief_gate:
   status: allowed
   disposition: passed
