@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01
-oat_last_commit: null
+oat_last_commit: 56aae2bdf
 oat_blockers: []
 associated_issues: # [{type: backlog|project|jira|linear, ref: "identifier"}]
   - type: backlog
@@ -104,7 +104,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-09T02:59:27Z'
+oat_project_state_updated: '2026-11-09T03:15:26Z'
 oat_generated: false
 oat_brief_gate:
   status: allowed
@@ -143,7 +143,7 @@ Plan - Authoring the Project Brief
 - ✓ Brief and implementation artifacts scaffolded
 - ✓ Alignment interview and brief authored (2026-11-09)
 - ✓ Brief artifact review, gate and approval (2026-11-09)
-- ⧗ Implementation: p01 in progress
+- ⧗ Implementation: p01 work done (head 7b061c1af), under review
 
 ## Blockers
 
