@@ -107,6 +107,19 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1); the schema/parser, evaluator re-anchoring, record-restore rules and `delivery waive` command share `delivery/evidence.ts`, the control-plane delivery types and the delivery test fixtures, so slices fail the independence test (rung 2); the phase adds a new command surface, so the inline exception (rung 4) does not hold.
 
+### Task p02-t01: Waiver record and head re-anchoring in the shared evaluator
+
+**Status:** completed
+**Commit:** 36687c58274afa794c2033431a16f8ccedc3a0b5
+**Executor:** phase-implementer:gdf-p02-impl-20261109
+
+- Intent: `GoalDelivery.freshness_waivers` (append-only `{ waived_by, reason, waived_at, members: [{ url, waived_head }] }`) in the control-plane types and parser; the review and exit-carrier successor walks start at a member's `waived_head` when the latest waiver names it and the walk's own anchor equals or is an ancestor of it; `judgeDeliveries` treats an edit to or removal of an earlier waiver entry as substantive and admits appends; reword the three evidence-artifact docstrings (p01 review L1).
+- Files: `packages/control-plane/src/types.ts`, `packages/control-plane/src/state/parser.ts`, `packages/control-plane/src/state/parser.test.ts`, `packages/cli/src/commands/project/delivery/evidence.ts`, `packages/cli/src/commands/project/delivery/evidence.test.ts`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery`, control-plane parser tests, can-fail proofs per new clause.
+- Result: focused delivery, closeout and complete-state suites exit 0 (10 files, 281 tests; 11 new waiver cases); control-plane vitest exit 0 (14 files, 318 tests; 1 new parser case); CLI and control-plane `tsc --noEmit` exit 0; oxlint 0/0.
+- Design (phase-local): `evaluateSuccessor` takes an optional `waivedHead`; a waived head missing locally fails closed (`missing-object`), an inspection error is `inspection-failed`, and only the latest entry is read (`latestWaivedHeads`, matched by member URL). The stack carrier passes the tip member's waived head. `freshness_waivers` is optional on the `GoalDelivery` type (the reader always supplies a list) so existing literal fixtures need no change. Control-plane README names the field.
+- Can-fail proofs (each neutralized in `evidence.ts`, the waiver suite run, file restored byte-identical by checksum): re-anchoring disabled → 7 fail; supersession disabled (a non-ancestor anchor still moved to the waived head) → the descendant-review and unrelated-head cases fail; missing waived object treated as no waiver → the missing-object case fails; `at(-1)` → `at(0)` → latest-only fails; carrier walk ignores waived heads → 4 fail; stack tip waiver dropped → stack case fails; review walk ignores waived heads → 6 fail; append-only rule disabled → edited/removed-entry case fails. The sibling-delivery and base-change clauses are structural (no code reads another delivery's waivers; the base check runs before the walk and is unchanged); their tests assert the outcome.
+
 ---
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
