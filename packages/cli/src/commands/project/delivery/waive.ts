@@ -785,8 +785,6 @@ export function createProjectDeliveryWaiveCommand(
               restoredMilestoneStatus: plan.restoresMilestoneStatus
                 ? 'delivered'
                 : null,
-              before: plan.before,
-              after: plan.after,
               statePath: result.statePath,
             });
           } else {
