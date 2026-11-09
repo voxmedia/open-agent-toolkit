@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { mkdir } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 
 import { appendProjectLog } from '@commands/project/log/append';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
@@ -700,13 +701,15 @@ Recorded rewritten.
       ).resolves.toMatchObject({ fresh: false, code: 'inspection-failed' });
     });
 
-    it('rejects unknown paths, including another project and unlisted review files', async () => {
+    it('rejects unknown paths, including another project and nested review files', async () => {
       repo = await createGoalRepo();
       const chain = await bookkeepingChain(repo);
       for (const path of [
         `${PROJECT_REL}/notes.md`,
-        `${PROJECT_REL}/reviews/other-review.md`,
+        `${PROJECT_REL}/reviews/nested/other-review.md`,
+        `${PROJECT_REL}/reviews/archived/nested/other-review.md`,
         '.oat/projects/shared/other/state.md',
+        '.oat/projects/shared/other/reviews/other-review.md',
       ]) {
         await repo.writeRepo(path, 'x\n');
         const published = repo.commitAll(`chore: ${path}`);
@@ -1780,20 +1783,30 @@ Recorded rewritten.
       ['mismatched reviewed head', { reviewedHead: 'mismatched' as const }],
       ['placeholder reviewed head', { reviewedHead: 'placeholder' as const }],
       ['artifact-type gate row', { type: 'artifact' }],
-    ])('does not admit a %s', async (_label, options) => {
-      repo = await createGoalRepo();
-      const chain = await gateArtifactScenario(repo, options);
-      const scope = await productionScope(repo, 'd01', true);
+    ])(
+      'keeps a %s out of shared evidence while its review file stays bookkeeping',
+      async (_label, options) => {
+        repo = await createGoalRepo();
+        const chain = await gateArtifactScenario(repo, options);
+        const scope = await productionScope(repo, 'd01', true);
 
-      expect(scope.evidenceArtifacts).not.toContain(GATE_REVIEW_ARTIFACT);
-      await expect(
-        evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
-      ).resolves.toMatchObject({
-        fresh: false,
-        code: 'disallowed-path',
-        path: `${PROJECT_REL}/${GATE_REVIEW_ARTIFACT}`,
-      });
-    });
+        // The scope builder still admits only a matching gate artifact into
+        // shared evidence, and never into own evidence...
+        expect(scope.evidenceArtifacts).not.toContain(GATE_REVIEW_ARTIFACT);
+        expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(
+          GATE_REVIEW_ARTIFACT,
+        );
+        // ...but any file directly under the project's reviews/ is a
+        // bookkeeping path (brief contract 12.8), so the commit adding it does
+        // not stale the evidence it follows.
+        await expect(
+          evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
+        ).resolves.toMatchObject({
+          fresh: true,
+          code: 'bookkeeping-successor',
+        });
+      },
+    );
 
     it('does not admit a matching gate row that names design.md as its artifact', async () => {
       repo = await createGoalRepo();
@@ -2238,6 +2251,234 @@ Recorded rewritten.
         freshness: 'stale',
         reason: expect.stringMatching(/^member-missing/),
       });
+    });
+  });
+
+  describe('workflow-owned bookkeeping paths: project review files and the backlog', () => {
+    const SIBLING_ARTIFACT = 'reviews/archived/d02-review.md';
+    const BACKLOG = '.oat/repo/pjm/backlog';
+
+    /** A backlog item added with the regenerated index, as `oat backlog new` writes. */
+    async function ensureDir(target: GoalRepo, repoRelative: string) {
+      await mkdir(join(target.root, dirname(repoRelative)), {
+        recursive: true,
+      });
+    }
+
+    async function addBacklogItem(target: GoalRepo, id: string) {
+      await target.writeRepo(
+        `${BACKLOG}/items/${id}.md`,
+        `---\nid: ${id}\nstatus: open\n---\n\n# ${id}\n`,
+      );
+      await target.writeRepo(`${BACKLOG}/index.md`, `# Backlog\n\n- ${id}\n`);
+    }
+
+    it('keeps evidence fresh across a sibling review artifact added, edited, archived and deleted', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      const scope = await productionScope(repo, 'd01');
+      // Not this delivery's evidence: no Reviews row and no registry pointer.
+      expect(scope.evidenceArtifacts).not.toContain(SIBLING_ARTIFACT);
+      expect(scope.evidenceArtifacts).not.toContain('reviews/d02-review.md');
+
+      await repo.write('reviews/d02-review.md', '# d02 review\n');
+      const added = repo.commitAll('chore(oat): record d02 review');
+      await repo.write('reviews/d02-review.md', '# d02 review\n\nEdited.\n');
+      repo.commitAll('chore(oat): edit d02 review');
+      await ensureDir(repo, `${PROJECT_REL}/${SIBLING_ARTIFACT}`);
+      repo.git([
+        'mv',
+        `${PROJECT_REL}/reviews/d02-review.md`,
+        `${PROJECT_REL}/${SIBLING_ARTIFACT}`,
+      ]);
+      repo.commitAll('chore(oat): archive d02 review');
+      repo.git(['rm', '-q', `${PROJECT_REL}/${SIBLING_ARTIFACT}`]);
+      const published = repo.commitAll('chore(oat): drop d02 review');
+
+      const result = await evaluateSuccessor(
+        git,
+        await productionScope(repo, 'd01'),
+        chain.reviewed,
+        published,
+      );
+      expect(result).toMatchObject({
+        fresh: true,
+        code: 'bookkeeping-successor',
+      });
+      expect(result.fresh && result.inspected).toContain(added);
+    });
+
+    it('keeps evidence fresh across a backlog add and a backlog archive', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+
+      await addBacklogItem(repo, 'BL-1');
+      const added = repo.commitAll('chore(backlog): add BL-1');
+      // `oat backlog archive`: the item moves (a deletion plus an addition
+      // under --no-renames), completed.md records it, the index regenerates.
+      await ensureDir(repo, `${BACKLOG}/archived/BL-1.md`);
+      repo.git([
+        'mv',
+        `${BACKLOG}/items/BL-1.md`,
+        `${BACKLOG}/archived/BL-1.md`,
+      ]);
+      await repo.writeRepo(
+        `${BACKLOG}/completed.md`,
+        '# Completed\n\n- BL-1\n',
+      );
+      await repo.writeRepo(`${BACKLOG}/index.md`, '# Backlog\n');
+      const archived = repo.commitAll('chore(backlog): archive BL-1');
+
+      const result = await evaluateSuccessor(
+        git,
+        await productionScope(repo, 'd01'),
+        chain.reviewed,
+        archived,
+      );
+      expect(result).toMatchObject({
+        fresh: true,
+        code: 'bookkeeping-successor',
+      });
+      expect(result.fresh && result.inspected.slice(-2)).toEqual([
+        added,
+        archived,
+      ]);
+    });
+
+    it('keeps evidence fresh across one commit of state.md, a sibling artifact and a backlog add', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          'oat_current_task: null',
+          'oat_current_task: p03',
+        ),
+      );
+      await repo.write(SIBLING_ARTIFACT, '# d02 review\n');
+      await addBacklogItem(repo, 'BL-2');
+      const mixed = repo.commitAll('chore(oat): route, record d02, file BL-2');
+      expect(
+        repo
+          .git(['diff', '--no-renames', '--name-only', chain.registered, mixed])
+          .split('\n')
+          .sort(),
+      ).toEqual(
+        [
+          `${BACKLOG}/index.md`,
+          `${BACKLOG}/items/BL-2.md`,
+          `${PROJECT_REL}/${SIBLING_ARTIFACT}`,
+          `${PROJECT_REL}/state.md`,
+        ].sort(),
+      );
+
+      await expect(
+        evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          chain.reviewed,
+          mixed,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+    });
+
+    it.each([
+      ['code', 'src/app.ts', 'export const value = 9;\n'],
+      ['a test', 'src/app.test.ts', 'it.todo("x");\n'],
+      ['a skill', '.agents/skills/demo/SKILL.md', '# demo\n'],
+      ['product documentation', 'apps/oat-docs/docs/index.md', '# docs\n'],
+      [
+        'a decision record',
+        '.oat/repo/reference/decisions/DR-261109-demo.md',
+        '# decision\n',
+      ],
+      ['another .oat/repo path', '.oat/repo/pjm/roadmap.md', '# roadmap\n'],
+      ['a backlog-prefixed sibling', '.oat/repo/pjm/backlog-notes.md', 'x\n'],
+    ])(
+      'keeps a successor stale when it also touches %s',
+      async (_label, path, content) => {
+        repo = await createGoalRepo();
+        const chain = await bookkeepingChain(repo);
+
+        await repo.write(SIBLING_ARTIFACT, '# d02 review\n');
+        await addBacklogItem(repo, 'BL-3');
+        await repo.writeRepo(path, content);
+        const published = repo.commitAll('chore: bookkeeping plus more');
+
+        await expect(
+          evaluateSuccessor(
+            git,
+            await productionScope(repo, 'd01'),
+            chain.reviewed,
+            published,
+          ),
+        ).resolves.toMatchObject({
+          fresh: false,
+          code: 'disallowed-path',
+          commit: published,
+          path,
+        });
+      },
+    );
+
+    it('admits a sibling artifact as a path but never lets it move review identity', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const fixed = repo.commitAll('fix: unreviewed change');
+
+      // The sibling d02 records its own review: artifact plus its Reviews row.
+      await repo.write(SIBLING_ARTIFACT, '# d02 review\n\nNo findings.\n');
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+            reviewRow('passed', SIBLING_ARTIFACT, fixed, 'd02'),
+          ].join('\n'),
+        }),
+      );
+      const recorded = repo.commitAll('chore(oat): record d02 review');
+
+      // Accepted control: recording the sibling's review is bookkeeping.
+      await expect(
+        evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          fixed,
+          recorded,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+
+      // Pointing d01 at the sibling's artifact, with its revisions moved to
+      // the unreviewed fix, stays a substantive change.
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md'))
+          .replace(
+            `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+            `artifact: ${SIBLING_ARTIFACT}`,
+          )
+          .replace(`head: '${chain.reviewed}' }]`, `head: '${fixed}' }]`)
+          .replace(
+            `reviewed_head: '${chain.reviewed}'`,
+            `reviewed_head: '${fixed}'`,
+          ),
+      );
+      const swapped = repo.commitAll('chore(oat): point d01 at the d02 review');
+
+      const scope = await productionScope(repo, 'd01');
+      expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(
+        SIBLING_ARTIFACT,
+      );
+      const result = await evaluateSuccessor(git, scope, fixed, swapped);
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        path: `${PROJECT_REL}/state.md`,
+      });
+      expect(result.reason).toContain('delivery d01');
     });
   });
 });

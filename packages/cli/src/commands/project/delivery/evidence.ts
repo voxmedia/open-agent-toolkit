@@ -314,7 +314,17 @@ export type BookkeepingPathKind =
   | 'implementation'
   | 'project-log'
   | 'summary'
-  | 'review-artifact';
+  | 'review-artifact'
+  | 'backlog';
+
+/**
+ * The repository's backlog: items, the archive, the completed log and the
+ * generated index are tracking records that never ship (brief contract 12.8).
+ */
+const BACKLOG_PREFIX = '.oat/repo/pjm/backlog/';
+
+/** One file directly under the project's `reviews/` or `reviews/archived/`. */
+const PROJECT_REVIEW_FILE = /^reviews\/(?:archived\/)?[^/]+$/;
 
 function projectRelative(projectDir: string, artifact: string): string {
   const trimmed = artifact.replace(/^\.\//, '');
@@ -335,15 +345,23 @@ function artifactVariants(artifact: string): string[] {
 
 /**
  * The bookkeeping kind of a repository-relative path, or `null` when the
- * path is outside the allowlist: this project's `state.md`, `plan.md`,
- * `implementation.md`, `project-log.md`, `summary.md`, and the exact review
- * artifacts of the evidence being recorded or archived (including those of
- * deliveries that share its member pull request).
+ * path is outside the allowlist: any path under `.oat/repo/pjm/backlog/`;
+ * this project's `state.md`, `plan.md`, `implementation.md`,
+ * `project-log.md`, `summary.md`; any single file directly under this
+ * project's `reviews/` or `reviews/archived/`, whichever evidence it belongs
+ * to; and the exact review artifacts of the evidence being recorded or
+ * archived (including those of deliveries that share its member pull
+ * request). Path membership admits a commit; the identity guards in
+ * `judgeDeliveries` still read only the scope's own and shared artifact
+ * sets, so an admitted sibling artifact never moves review identity.
  */
 export function classifyPath(
   scope: EvidenceScope,
   repoPath: string,
 ): BookkeepingPathKind | null {
+  if (repoPath.startsWith(BACKLOG_PREFIX)) {
+    return 'backlog';
+  }
   const projectDir = scope.projectDir.replace(/\/$/, '');
   if (!repoPath.startsWith(`${projectDir}/`)) {
     return null;
@@ -360,6 +378,9 @@ export function classifyPath(
       return 'project-log';
     case 'summary.md':
       return 'summary';
+  }
+  if (PROJECT_REVIEW_FILE.test(relative)) {
+    return 'review-artifact';
   }
   const permitted = scope.evidenceArtifacts.flatMap((artifact) =>
     artifactVariants(projectRelative(projectDir, artifact)),
@@ -380,7 +401,9 @@ function judgeBookkeepingChange(
   if (kind === 'summary') {
     return OK;
   }
-  if (kind === 'review-artifact') {
+  // Backlog writes add, edit, archive (a deletion plus an addition under
+  // `--no-renames`) and regenerate tracking records only.
+  if (kind === 'review-artifact' || kind === 'backlog') {
     return status === 'A' || status === 'M' || status === 'D'
       ? OK
       : refuse(`unsupported change type ${status}`);
