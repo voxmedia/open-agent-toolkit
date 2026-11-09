@@ -463,7 +463,7 @@ function isUnsetNode(value: unknown): boolean {
  * the raw YAML indices and keys, so a write lands on the entry the reader
  * parsed even when the raw list holds unparseable entries or `m1` spelling.
  */
-function resolvePath(
+export function resolvePath(
   document: YAML.Document,
   path: readonly ObservationPathSegment[],
 ): (string | number)[] | null {

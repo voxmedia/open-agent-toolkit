@@ -1272,7 +1272,7 @@ describe('help output snapshots', () => {
         closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
-        delivery                                     Observe goal delivery registry members and check delivery evidence freshness
+        delivery                                     Observe goal delivery registry members, check delivery evidence freshness, and record operator freshness waivers
         dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         journal                                      Validate the implementation journal (read-only)
@@ -1431,7 +1431,8 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat project delivery [options] [command]
 
-      Observe goal delivery registry members and check delivery evidence freshness
+      Observe goal delivery registry members, check delivery evidence freshness, and
+      record operator freshness waivers
 
       Options:
         -h, --help         display help for command
@@ -1450,6 +1451,10 @@ describe('help output snapshots', () => {
                            freshness for a goal milestone or delivery under the
                            bookkeeping-successor contract (read-only; status
                            undeliverable and exit 1 when not deliverable)
+        waive [options]    Operator only: record a head-bound freshness waiver for a
+                           registered goal delivery that is stale only through head
+                           movement, restoring its passed review in state.md (refuses
+                           under OAT_AUTONOMOUS=1)
         help [command]     display help for command
       "
     `);
@@ -1500,6 +1505,36 @@ describe('help output snapshots', () => {
                           milestone
         --project <path>  Goal project path
         --subject <id>    Milestone (mNN) or registered delivery (dNN) to evaluate
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
+      "
+    `);
+  });
+
+  it('project delivery waive --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+      'waive',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery waive [options]
+
+      Operator only: record a head-bound freshness waiver for a registered goal
+      delivery that is stale only through head movement, restoring its passed review
+      in state.md (refuses under OAT_AUTONOMOUS=1)
+
+      Options:
+        --project <path>  Goal project path
+        --delivery <id>   Registered delivery (dNN) to waive
+        --reason <text>   Why the stale delivery is accepted
+        --by <name>       Who waives it (default: git user.name)
         -h, --help        display help for command
 
       Global Options:

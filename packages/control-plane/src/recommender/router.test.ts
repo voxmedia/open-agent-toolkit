@@ -1967,6 +1967,74 @@ describe('recommendSkill goal milestones (real readers)', () => {
     });
   });
 
+  describe('a waived delivery routes on its restored record (p02)', () => {
+    const WAIVER = {
+      waived_by: 'Operator',
+      reason: 'post-gate fix squash-merged',
+      waived_at: '2026-11-09T12:00:00.000Z',
+      members: [{ url: 'https://example.com/pull/1', waived_head: SHA('d') }],
+    };
+    /** d01 at its endpoint, observed past its reviewed head. */
+    const fixture = (overrides: Record<string, unknown>) =>
+      m02Implementing({
+        journal: { p03: 'pending' },
+        state: {
+          oat_milestone: 'm01',
+          oat_milestone_status: 'delivered',
+          oat_deliveries: [
+            delivery({
+              members: [
+                {
+                  url: 'https://example.com/pull/1',
+                  base: SHA('b'),
+                  reviewed_head: SHA('c'),
+                  observed_head: SHA('d'),
+                  observed_base: SHA('b'),
+                  status: 'merged',
+                },
+              ],
+              ...overrides,
+            }),
+          ],
+        },
+      });
+
+    it('routes the waiver-restored record exactly as the same record without waivers', async () => {
+      const waived = await readGoal(fixture({ freshness_waivers: [WAIVER] }));
+      expect(waived.deliveries?.[0]?.freshness_waivers).toEqual([WAIVER]);
+      expect(waived.recommendation).toMatchObject({
+        skill: 'oat-project-goal',
+        context: 'realign m01',
+      });
+      expect(waived.recommendation).toEqual(
+        await route(fixture({ freshness_waivers: [] })),
+      );
+    });
+
+    it('still routes a waived delivery to recovery while its record is stale', async () => {
+      // The router reads the stored disposition only; a waiver entry alone
+      // never restores a stale record (delivery waive writes both together).
+      const staleOverride = {
+        freshness_waivers: [WAIVER],
+        integrated_review: {
+          artifact: 'reviews/archived/review-m01.md',
+          scope: ['p01', 'p02'],
+          bound_revisions: [],
+          disposition: 'stale',
+        },
+      };
+      const stale = fixture(staleOverride);
+      const recommendation = await route({
+        ...stale,
+        state: { ...stale.state, oat_milestone_status: 'delivering' },
+      });
+      expect(recommendation).toMatchObject({
+        skill: 'oat-project-review-provide',
+        reason: 'The integrated delivery review is stale',
+      });
+    });
+  });
+
   describe('terminal declaration (A3)', () => {
     const SNAPSHOT_COMPLETE = {
       status: 'complete',

@@ -10,6 +10,7 @@ import {
   checkProjectCloseout,
   DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES,
   formatCloseoutRefusal,
+  formatCloseoutWaivers,
   type CloseoutInputDependencies,
 } from '@commands/project/closeout-check/index';
 import {
@@ -79,6 +80,7 @@ async function runProjectCompleteState(
       statePath,
       stateContent: content,
       result,
+      waivers,
     } = await checkProjectCloseout(
       projectPath,
       { autonomous: options.autonomous ?? false },
@@ -156,9 +158,15 @@ async function runProjectCompleteState(
         projectPath,
         statePath,
         archived: options.archived ?? false,
+        waivers,
       });
     } else {
-      context.logger.info(`Updated completed project state: ${projectPath}`);
+      context.logger.info(
+        [
+          `Updated completed project state: ${projectPath}`,
+          ...formatCloseoutWaivers(waivers),
+        ].join('\n'),
+      );
     }
 
     process.exitCode = 0;
