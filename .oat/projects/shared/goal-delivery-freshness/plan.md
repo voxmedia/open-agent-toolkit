@@ -1,11 +1,11 @@
 ---
-oat_template: true
-oat_status: in_progress
-oat_ready_for: null
+oat_template: false
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-11-09
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: brief
@@ -209,6 +209,7 @@ check` and `refresh`, the delivery's `exit_gate` for closeout). The waiver
 - **Authority:** the operator approves the brief, any change to Outcomes,
   Constraints or Decisions, and the merge. The agent decides phase-local
   design inside the Approach and logs it.
+- **Brief approved:** 2026-11-09 by user at b17ce58a9cf7ed38a9a44a325b0b561a3e85ce47
 
 ## Milestones
 

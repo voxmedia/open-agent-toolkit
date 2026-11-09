@@ -5,6 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-11-09
 oat_current_task_id: p01
 oat_generated: false
+oat_template: false
 ---
 
 # Implementation: goal-delivery-freshness
@@ -42,35 +43,25 @@ oat_generated: false
 | ----- | ------- | ----- | -------- |
 | p01   | pending | 1     | 0/1      |
 | p02   | pending | 1     | 0/1      |
+| p03   | pending | 1     | 0/1      |
 
-**Total:** 0/[N] phases accepted
+**Total:** 0/3 phases accepted
 
 ---
 
-## Phase p01: [Phase Name]
+## Phase p01: Workflow-owned writes stay bookkeeping
 
 **Status:** pending
-**Base:** [full base SHA, recorded when the phase starts]
-**Head:** [full head SHA, recorded when the phase's work ends, before its review]
-**Executor:** [root | phase-implementer:<id> | worker:<id> | inline:<exception-ref> | reconciled]
-
-[Summary prose: verification, review disposition, authority changes, deviations, next action.]
-
-<!-- Execution records follow the summary. Replace this example with real records when work starts: -->
-
-```markdown
-### Task p01-t01: [Execution record name]
-
-**Status:** completed
-**Commit:** [full commit SHA]
-**Executor:** worker:w1
-
-Intent, files, proof command, result.
-```
 
 ---
 
-## Phase p02: [Phase Name]
+## Phase p02: Head-bound freshness waiver
+
+**Status:** pending
+
+---
+
+## Phase p03: Pre-merge prose, waiver routing and docs
 
 **Status:** pending
 

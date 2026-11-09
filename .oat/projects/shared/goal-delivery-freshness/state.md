@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -104,7 +104,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-09T02:44:20Z'
+oat_project_state_updated: '2026-11-09T02:56:01Z'
 oat_generated: false
 oat_brief_gate:
   status: allowed
@@ -126,7 +126,7 @@ Plan - Authoring the Project Brief
 
 ## Artifacts
 
-- **Plan:** `plan.md` (Project Brief authored; under artifact review)
+- **Plan:** `plan.md` (Project Brief approved 2026-11-09; ready for oat-project-implement)
 - **Implementation:** `implementation.md` (scaffolded brief journal template — not started)
 - **Research:** `references/research/` (empty)
 
@@ -135,7 +135,8 @@ Plan - Authoring the Project Brief
 - ✓ Brief project scaffolded
 - ✓ Brief and implementation artifacts scaffolded
 - ✓ Alignment interview and brief authored (2026-11-09)
-- ⧗ Brief artifact review, gate and approval
+- ✓ Brief artifact review, gate and approval (2026-11-09)
+- ⧗ Implementation (p01 next)
 
 ## Blockers
 
