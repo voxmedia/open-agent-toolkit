@@ -166,12 +166,15 @@ re-checked and returned to `delivered` when its evidence is fresh, never
 registered twice. A delivery that carries a freshness waiver is judged like any
 other. When a re-check finds a delivery stale past its endpoint (observed
 `at_endpoint` with its members merged, so no fix can be pushed), the skill
-offers the operator `oat project delivery waive` instead of a recovery that
-cannot complete; it runs the waiver only on your explicit choice and with your
-reason, and a non-interactive run never runs it. The registration report and
+offers the operator `oat project delivery waive`, because a recovery that
+queues fixes cannot land them on that pull request; it runs the waiver only on
+your explicit choice and with your reason, declining it keeps the ordinary
+recovery path, and a non-interactive run never runs it. The registration report and
 the milestone PR body's `## Before Merging` section tell whoever merges to run
 `oat project delivery check --subject dNN` first and to re-gate or waive a
-stale delivery; the PR body also lists the delivery's freshness waivers.
+stale delivery. Waivers appear in a progress PR description regenerated
+locally for a registered delivery and in closeout output, not in the posted PR
+body, which is written before any waiver can exist.
 
 **Next step:** Review the description and choose whether to open the progress
 PR. Continue remaining project tasks through `oat-project-implement`.

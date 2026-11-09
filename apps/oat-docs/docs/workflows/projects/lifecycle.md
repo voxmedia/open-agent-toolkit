@@ -640,8 +640,10 @@ failed review, a missing or blocked exit carrier, or a base change. The waiver
 restores the stored record, so `delivery check`, the router and closeout read
 the delivery as deliverable with no further change; `closeout-check` and
 `complete-state` list every waiver. `oat-project-pr-progress` offers it when a
-re-check finds a delivery stale past its endpoint, where a recovery cannot
-complete, and runs it only on your explicit choice and reason.
+re-check finds a delivery stale past its endpoint, where a recovery that
+queues fixes cannot land them on the merged pull request, and runs it only on
+your explicit choice and reason; declining it keeps the ordinary recovery
+path.
 
 **Recovery.** Stale evidence on the active milestone's delivery returns it to
 `reviewing`. Fixes or inline feedback for an older milestone open an

@@ -48,7 +48,7 @@ function registration(): string {
 describe('pr-progress goal delivery waiver and pre-merge prose', () => {
   it('accepts a waived delivery on the ordinary status: ok branch', () => {
     expect(registration()).toContain(
-      "A waived delivery is judged like any other. When the check for a registered `dNN` reports `status: ok` and the delivery carries `freshness_waivers` (written by `oat project delivery waive`, section 12.7), take the item's `status: ok` branch: never re-register, re-gate or route it to recovery because it carries a waiver, and list its waivers in the PR description.",
+      "A waived delivery is judged like any other. When the check for a registered `dNN` reports `status: ok` and the delivery carries `freshness_waivers` (written by `oat project delivery waive`, section 12.7), take the item's `status: ok` branch: never re-register, re-gate or route it to recovery because it carries a waiver. When this run regenerates the local progress PR description for that delivery, list its waivers there; the posted PR body was written at creation, before any waiver could exist, and is not rewritten, so closeout output (section 12.9) is where waivers are read.",
     );
   });
 
@@ -91,6 +91,10 @@ describe('pr-progress goal delivery waiver and pre-merge prose', () => {
       'Only on the user\'s explicit choice and with the reason the user gives, run `oat project delivery waive --project "$PROJECT_PATH" --delivery <dNN> --reason "<reason>" --json`, commit `state.md` as bookkeeping (`chore(oat): record freshness waiver <dNN>`;',
     );
     expect(offer).toContain(
+      'offer two options: waive, or decline (continue as the item says for a declined waiver: item 3a applies item 3, item 8 leaves the record and stops).',
+    );
+    expect(offer).not.toContain('waive, or stop');
+    expect(offer).toContain(
       '**Non-interactive run** (`OAT_NON_INTERACTIVE=1` or `OAT_AUTONOMOUS=1`): never run the waiver.',
     );
   });
@@ -113,7 +117,7 @@ describe('pr-progress goal delivery waiver and pre-merge prose', () => {
       '### Step 5.5: Goal Delivery Registration (`goal` only)',
     );
     expect(template).toContain(
-      "{goal only: one bullet per entry in the delivery's `freshness_waivers`, oldest first: who waived, when, the reason and each member's waived head; omit when there are none}",
+      "{goal only, when this description is regenerated for a registered delivery: one bullet per entry in its `freshness_waivers`, oldest first: who waived, when, the reason and each member's waived head; omit when there are none}",
     );
     expect(template).toContain(
       '## Before Merging {goal only: the Step 5.5 pre-merge instruction for this delivery, naming its `dNN`; omit outside goal mode}',
@@ -129,7 +133,7 @@ describe('oat-project-goal hand-back for a delivery stale past its endpoint', ()
       '2. **Log the entry.**',
     );
     expect(entry).toContain(
-      "When that delivery is stale past its endpoint (observed `at_endpoint` with its members merged), say so in the report: the owner's re-check offers the operator the freshness waiver (`oat project delivery waive`) instead of a recovery that cannot complete. Never run the waiver from this skill.",
+      "When that delivery is stale past its endpoint (observed `at_endpoint` with its members merged), say so in the report: the owner's re-check offers the operator the freshness waiver (`oat project delivery waive`), because a recovery that queues fixes cannot land them on that pull request; declining it keeps the owner's ordinary recovery path. Never run the waiver from this skill.",
     );
   });
 });

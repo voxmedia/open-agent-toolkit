@@ -413,7 +413,7 @@ oat_project: { PROJECT_PATH }
 
 {phase review row from plan.md Reviews table, if available}
 
-{goal only: one bullet per entry in the delivery's `freshness_waivers`, oldest first: who waived, when, the reason and each member's waived head; omit when there are none}
+{goal only, when this description is regenerated for a registered delivery: one bullet per entry in its `freshness_waivers`, oldest first: who waived, when, the reason and each member's waived head; omit when there are none}
 
 ## Before Merging
 
@@ -444,7 +444,10 @@ A waived delivery is judged like any other. When the check for a registered
 `dNN` reports `status: ok` and the delivery carries `freshness_waivers`
 (written by `oat project delivery waive`, section 12.7), take the item's
 `status: ok` branch: never re-register, re-gate or route it to recovery
-because it carries a waiver, and list its waivers in the PR description.
+because it carries a waiver. When this run regenerates the local progress PR
+description for that delivery, list its waivers there; the posted PR body was
+written at creation, before any waiver could exist, and is not rewritten, so
+closeout output (section 12.9) is where waivers are read.
 
 1. **Refresh.** When `oat_deliveries` has entries, run
    `oat project delivery refresh --project "$PROJECT_PATH" --json` and commit
@@ -548,7 +551,8 @@ waiver): it covers head movement only, and this skill never issues one on its
 own.
 
 - **Interactive run:** report the check's stale reasons and offer two
-  options: waive, or stop. Only on the user's explicit choice and with the
+  options: waive, or decline (continue as the item says for a declined
+  waiver: item 3a applies item 3, item 8 leaves the record and stops). Only on the user's explicit choice and with the
   reason the user gives, run
   `oat project delivery waive --project "$PROJECT_PATH" --delivery <dNN> --reason "<reason>" --json`,
   commit `state.md` as bookkeeping
@@ -654,6 +658,6 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
 - Goal mode: the delivery was registered only on a deliverable `delivery check`, idempotently, with its exit-gate result captured and one structural log entry per registration
-- Goal mode: the registration report and the milestone PR body tell whoever merges to run `oat project delivery check --subject <dNN>` first, and the PR body lists any freshness waivers on the delivery
+- Goal mode: the registration report and the milestone PR body tell whoever merges to run `oat project delivery check --subject <dNN>` first, and a progress PR description regenerated for a registered delivery lists its freshness waivers
 - Goal mode: a delivery stale past its endpoint was offered the operator waiver, never waived by this skill on its own
 - User has clear next step to open PR (manual or gh)
