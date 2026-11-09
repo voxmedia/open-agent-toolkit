@@ -107,7 +107,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-09T05:18:47Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: 'stale'
+  status: 'pending'
   resolution: 'configured'
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -117,39 +117,33 @@ oat_implement_exit_gate:
   on_failure: 'block'
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: '86934322df8e13d11529ec974439609956cc8021'
+  reviewed_head: 'e12ed2d93791ba7fdeb3b784bf9a0027f63d9488'
   implementation_base_ref: 'refs/remotes/origin/main'
-  implementation_fingerprint: 'sha256:effective-delta-v2:d7c6c41a3b283169412b36e4c9f260af832fe3ad888094c3874ccf689b03b951'
-  freshness_head: '86934322df8e13d11529ec974439609956cc8021'
-  freshness_fingerprint: 'sha256:effective-delta-v2:d7c6c41a3b283169412b36e4c9f260af832fe3ad888094c3874ccf689b03b951'
+  implementation_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
+  freshness_head: 'e12ed2d93791ba7fdeb3b784bf9a0027f63d9488'
+  freshness_fingerprint: 'sha256:effective-delta-v2:27803f42c0caa089a79ed3bf2a405e74b331e952707f8628d8ebfbb185dbea9f'
   waivers: []
-  launch_state: 'result_persisted'
-  launch_attempt_id: 'acaacb3a-554d-40c4-9019-fb0a518213cd'
-  launch_started_at: '2026-11-09T04:46:59Z'
-  launch_result_receipt: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/implement-exit-gate-acaacb3a-554d-40c4-9019-fb0a518213cd.stdout.json'
-  gate_run_marker: '/var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/fc15f453-f1de-4eaa-8e09-14a298005bfd.json'
-  gate_run_id: 'fc15f453-f1de-4eaa-8e09-14a298005bfd'
-  envelope_status: 'blocked'
-  artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T045339Z.md'
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T045339Z.md before treating this gate review as consumed.'
-  receive_state: 'completed'
-  receive_correlation:
-    gate_run_id: 'fc15f453-f1de-4eaa-8e09-14a298005bfd'
-    handoff: 'oat-project-review-receive'
-    source_artifact: 'reviews/final-review-2026-11-09T045339Z.md'
-    scope: 'final'
-    type: 'code'
-    source_filename: 'final-review-2026-11-09T045339Z.md'
-  receive_source_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T045339Z.md'
-  receive_archived_artifact: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/final-review-2026-11-09T045339Z.md'
-  receive_event_identity: 'final|code|final-review-2026-11-09T045339Z.md'
-  receive_pre_head: 'faa7a3569f608ae5b4faebd200f7bcef82ee8db6'
-  receive_commit: 'e17765bdecfc8edc39bfefae39aacef007b446dd'
-  receive_eligible: true
-  receive_completed: true
-  failure: 'blocking findings H1 (High) and M1 (Medium); remediation attempt 1 of 2 queued as p03-t07..t08'
-  updated_at: '2026-11-09T05:18:47Z'
-  decided_at: '2026-11-09T04:58:38Z'
+  launch_state: 'intent_persisted'
+  launch_attempt_id: 'fe772316-857c-43d6-9229-91ed338d1204'
+  launch_started_at: '2026-11-09T05:31:22Z'
+  launch_result_receipt: '.oat/projects/shared/goal-delivery-freshness/reviews/archived/implement-exit-gate-fe772316-857c-43d6-9229-91ed338d1204.stdout.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: 'not_started'
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-11-09T05:31:22Z'
+  decided_at: null
 oat_brief_gate:
   status: allowed
   disposition: passed
