@@ -655,7 +655,8 @@ dNN --reason <text> [--by <name>]` is the one sanctioned writer that moves a
   `allowed` (`carrier-not-allowed`); when either carrier no longer matches
   the gate configuration, because the milestone exit gate no longer resolves
   as the carrier recorded it or the tracked `.oat/config.json`
-  differs between a reviewed head the waiver would move and an observed head
+  differs between a reviewed head the waiver would move and an observed head,
+  or that comparison cannot be made
   (`configuration-changed`: a reconfigured carrier needs the milestone exit
   gate run again); for a delivery whose every consumer's
   live evaluation already reads fresh (`already-fresh`: there is no head
