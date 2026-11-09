@@ -39,11 +39,11 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
-| p03   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | completed   | 1     | 1/1      |
+| p03   | in_progress | 1     | 0/1      |
 
 **Total:** 2/3 phases accepted
 
@@ -167,7 +167,11 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
 
-**Status:** pending
+**Status:** in_progress
+**Base:** a650db90a6fb468499f6881075b526da92c0b896
+**Executor:** phase-implementer:gdf-p03-impl-20261109
+
+Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1); skill prose, docs, the generated docs index, skill contract tests and the lockstep version files are coupled through the release and skill-bump gates, so slices fail the independence test (rung 2); the phase spans several surfaces and a release bump, so the inline exception (rung 4) does not hold.
 
 ---
 
