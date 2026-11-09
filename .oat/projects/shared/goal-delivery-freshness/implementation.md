@@ -101,7 +101,11 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 ## Phase p02: Head-bound freshness waiver
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 80557f121f03b31fb49cead40788f9e35bb60200
+**Executor:** phase-implementer:gdf-p02-impl-20261109
+
+Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`); committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). No parallel group is declared (rung 1); the schema/parser, evaluator re-anchoring, record-restore rules and `delivery waive` command share `delivery/evidence.ts`, the control-plane delivery types and the delivery test fixtures, so slices fail the independence test (rung 2); the phase adds a new command surface, so the inline exception (rung 4) does not hold.
 
 ---
 
