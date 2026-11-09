@@ -140,7 +140,10 @@ When a test is the evidence that a P0 requirement holds, prove it can fail:
 neutralize the guard, confirm the test breaks, restore, and report that
 alongside the fix — once per clause when the requirement has several. Two
 defects shipped behind tests that could not fail; one mocked the very reader
-that dropped the field it asserted was preserved.
+that dropped the field it asserted was preserved. Confirm the test breaks
+because of the clause you neutralized — check the refusal code or reason, not
+only that it fails: a fixture named for one refusal once tripped a different
+one, so its can-fail pass proved nothing about the clause it was named for.
 
 CI runs neither `pnpm lint` nor `pnpm format` as a gate step. `pnpm check`
 covers the shared `format:root` portion of `pnpm format` (`.agents/skills`,
