@@ -24,6 +24,8 @@ Source: [GitHub #339](https://github.com/voxmedia/open-agent-toolkit/issues/339)
 
 Captured by the approved [2026-10-02 triage ledger](../../triage/2026-10-02-untriaged-issues.md). This item is ready for planning; implementation requires its normal plan approval.
 
+**Delivery status (2026-11-08):** The verdict-parser slice shipped in review-gate-integrity m01 (PR #400, p01): bold finding titles with detail bullets count as one finding, and ambiguous ownership is refused. The format-only repair revalidation part is not done; the goal ended after m03.
+
 ## Acceptance Criteria
 
 - Diagnose overcounts and permit formatting-only original-run revalidation without relaunch.
@@ -37,4 +39,4 @@ Baseline: `be168345ef4f586731c13fe849da03eb87b526ec`.
 
 packages/cli/src/commands/gate/review-verdict.ts:282,831; packages/cli/src/commands/gate/index.ts:4073,4226,4519,4774; .agents/agents/oat-reviewer.md:438. Merged PR #309 established list-item requirements but did not add post-exit revalidation.
 
-Related owner: [BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings](../items/BL-260711-skip-re-review-for-bookkeeping.md). Preserve its existing scope and acceptance criteria.
+Related owner: [BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings](../archived/BL-260711-skip-re-review-for-bookkeeping.md). Preserve its existing scope and acceptance criteria.

@@ -2,7 +2,7 @@
 id: BL-261104-goal-mode-exit-gate-resolve
 title: "Goal-mode exit gate: resolve state-selected final to the active
   milestone's phases"
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - review
 assignee: null
 created: 2026-11-04T02:00:47.760Z
-updated: 2026-11-04T02:00:47.760Z
+updated: '2026-11-08T18:20:20Z'
 associated_issues: []
 external_plans: []
 ---

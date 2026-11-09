@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261108-finding-classes-recorded-at    | 2026-11-08 | accepted   | Finding classes recorded at receive                                                                    | -       |
+| DR-261108-goal-exit-gate-resolves-final  | 2026-11-08 | accepted   | Goal exit gate resolves final to the milestone                                                         | -       |
+| DR-261106-read-side-supersession         | 2026-11-06 | accepted   | Read-side supersession of received review rows                                                         | -       |
 | DR-261102-bookkeeping-only-review        | 2026-11-02 | accepted   | Bookkeeping-only review findings settle at receive without a rerun                                     | -       |
 | DR-261101-explicit-install-scope-writes  | 2026-11-01 | accepted   | Explicit install scope writes only that scope                                                          | -       |
 | DR-261101-force-stage-only-head-tracked  | 2026-11-01 | accepted   | Force-stage only HEAD-tracked exact paths                                                              | -       |

@@ -109,3 +109,41 @@ p12 reached the three-round review cap with a one-clause prose residual (goal te
 ### 2026-10-11 · general · friction · review-cap final
 
 The final integrated review reached three rounds; each fix to the delivery-evidence evaluator surfaced an adjacent bypass (same-artifact rebind, set-once member revisions, own-artifact set from the judged state). Disposition: a known evaluator bypass cannot ship, so one more narrow fix (p12-t11, reviewer-verified counterfactual) and a round 4 limited to that guard; lesson for artifact-cleanup and future evaluators: derive trust sets from immutable records (Reviews rows), never from the state being judged.
+
+### 2026-11-01 · general · friction · Temporary HOME leaked into the root shell
+
+**Category:** gotcha
+**Source:** rgi-learning-p01-home-leak
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-01T22:25:24Z
+
+Observation: after the p01 phase implementer ran isolated-HOME test suites, the root shell's HOME pointed at a mktemp directory, so the dispatch resolver lost the user-scope ladder and one root commit got a hostname fallback author email. rgi-learning-p01-home-leak
+Impact: the fix-dispatch resolve failed with a misleading 'requires a configured high candidate ladder' error, and a commit author had to be reset.
+Recommendation: children must use an inline HOME=$(mktemp -d) prefix, never export HOME; the root should check $HOME before resolver calls and commits after a child returns.
+
+### 2026-11-02 · general · friction · oat sync from installed CLI deletes newer provider views
+
+**Category:** gotcha
+**Source:** rgi-p10-sync-gotcha
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-02T19:34:40Z
+
+Running the installed oat sync on a branch that merged a newer main deleted main's gpt-6-1-terra Codex views and left four reviewer views stale; regenerating with the branch build (node packages/cli/dist/index.js sync) was correct. rgi-p10-sync-gotcha
+
+### 2026-11-02 · general · bug · Codex gate target loses the branch-local route receipt
+
+**Category:** gotcha
+**Source:** rgi-m01-codex-route-receipt
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-02T23:39:20Z
+
+oat gate review --target codex-6-sol-xhigh (installed CLI 0.3.42) ran the Sol reviewer to completion and committed a 0/0/0/0 artifact, then failed review_failed at target-dispatch: 'Branch-local gate route did not return JSON.' The route receipt at OAT_GATE_ROUTE_RECEIPT_PATH was missing or empty after the child exited (run 48f5553c). Claude targets completed normally in the same session. rgi-m01-codex-route-receipt
+
+### 2026-11-02 · general · friction · Gate-committed artifacts break freshness after a late head advance
+
+**Category:** gotcha
+**Source:** rgi-m01-gate-artifact-freshness
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-02T23:39:20Z
+
+The gate CLI commits its review artifact right after each run. When a phase head is advanced past a fix commit that predates an earlier gate run, that earlier artifact commit lands after the new reviewed head; section 12.8 admits a gate artifact only when its row's Reviewed Head equals the carrier's, so the exit carrier reads stale until the head advances past every gate commit and the gate reruns. Advance a phase head before running the milestone exit gate. rgi-m01-gate-artifact-freshness

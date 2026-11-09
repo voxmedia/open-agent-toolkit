@@ -474,24 +474,23 @@
 
 | ID                                       | Title                                                                                                | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                  | open   | urgent   | feature | L        |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                                     | open   | high     | feature | M        |
 | BL-261002-add-an-explicit-plan-approval  | Add an explicit plan-approval step to quick and spec-driven projects                                 | open   | high     | feature | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                            | open   | high     | feature | L        |
-| BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                 | open   | high     | task    | M        |
 | BL-261025-close-docs-skill-workflow-gaps | Close docs skill workflow gaps found in the consumer rollout                                         | open   | high     | feature | L        |
 | BL-261103-codex-gate-target-loses        | Codex gate target loses the branch-local route receipt                                               | open   | high     | task    | S        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                              | open   | high     | feature | M        |
 | BL-261002-enforce-remote-planning        | Enforce remote planning approval caps, storage scope, and binding locations                          | open   | high     | task    | M        |
 | BL-261002-gitignore-project-review       | Gitignore project review artifacts instead of committing them                                        | open   | high     | task    | M        |
+| BL-261108-give-goal-closeout-a-recorded  | Give goal closeout a recorded path for a squash-merged stale delivery                                | open   | high     | feature | M        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                         | open   | high     | feature | M        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                    | open   | high     | feature | L        |
 | BL-261024-roll-out-the-shipped-oat-docs  | Roll out the shipped OAT docs front door and approval policy to consumer repositories                | open   | high     | feature | M        |
+| BL-261108-stop-workflow-owned-commits    | Stop workflow-owned commits from staling goal delivery evidence                                      | open   | high     | task    | S        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                        | open   | high     | feature | L        |
 | BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                         | open   | high     | feature | M        |
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                       | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                               | open   | medium   | feature | M        |
-| BL-261013-classify-review-findings       | Classify review findings against the contract at every receive                                       | open   | medium   | task    | M        |
 | BL-261002-commit-a-headless-rendered     | Commit a headless rendered-site QA tour for the docs app                                             | open   | medium   | task    | M        |
 | BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                  | open   | medium   | task    | S        |
 | BL-261002-decide-first-run-defaults      | Decide first-run defaults for project scope without origin and non-interactive pack install          | open   | medium   | idea    | M        |
@@ -507,7 +506,6 @@
 | BL-261002-provide-a-complete-oat         | Fix oat tools remove --all at project scope and drop stale requiredBy entries                        | open   | medium   | feature | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan       | open   | medium   | task    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                    | open   | medium   | feature | M        |
-| BL-261104-goal-mode-exit-gate-resolve    | Goal-mode exit gate: resolve state-selected final to the active milestone's phases                   | open   | medium   | task    | S        |
 | BL-261011-guard-goal-brief-amendments    | Guard goal brief amendments against an open delivery head branch                                     | open   | medium   | task    | M        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                   | open   | medium   | feature | M        |
 | BL-261002-offer-a-strict-gate-reviewer   | Keep failed planning gates blocking and align gate wording and decision records                      | open   | medium   | feature | S        |
@@ -517,7 +515,6 @@
 | BL-261002-make-the-copy-sync-strategy    | Make the copy sync strategy checkout-independent and settable from the CLI                           | open   | medium   | task    | M        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions | open   | medium   | task    | S        |
 | BL-260830-make-documentation-aware       | Make the knowledge index optional by default for discovery and planning                              | open   | medium   | feature | M        |
-| BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                           | open   | medium   | feature | M        |
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                          | open   | medium   | bug     | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                    | open   | medium   | task    | M        |
 | BL-261102-provide-a-supported-closeout   | Provide a supported closeout path for legacy-shaped projects                                         | open   | medium   | feature | M        |
@@ -525,11 +522,13 @@
 | BL-260830-cli-flag-help-p2-p3-cleanup    | Re-audit CLI grammar across current command tree                                                     | open   | medium   | task    | M        |
 | BL-261002-re-review-a-phase-only-after   | Re-review a phase only after Critical or High findings                                               | open   | medium   | feature | M        |
 | BL-261003-reconcile-oat-tracking-commit  | Reconcile OAT tracking commit cadence with resumable phase/group batching                            | open   | medium   | bug     | M        |
+| BL-261109-recover-invalid-review         | Recover invalid review artifacts under bounded autonomous authority                                  | open   | medium   | feature | M        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                         | open   | medium   | task    | S        |
 | BL-261030-report-gate-project-log        | Report gate project-log finalization in the terminal JSON envelope                                   | open   | medium   | feature | M        |
 | BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail       | open   | medium   | task    | M        |
 | BL-261002-settle-dispatch-policy         | Settle dispatch policy precedence and stop legacy presets overwriting ladder columns                 | open   | medium   | task    | M        |
 | BL-260927-give-gate-receipts-portable    | Ship the gate-receipts ignore rule from oat init and make gate receipt paths repository-relative     | open   | medium   | feature | S        |
+| BL-261108-simplify-m03-gate-convergence  | Simplify m03 gate convergence and finding-class machinery                                            | open   | medium   | task    | M        |
 | BL-261025-tighten-oat-docs-check-rules   | Tighten oat docs check rules and diagnostics                                                         | open   | medium   | feature | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                           | open   | medium   | task    | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                        | open   | medium   | task    | S        |
@@ -544,6 +543,7 @@
 | BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                               | open   | low      | task    | XS       |
 | BL-261002-decide-a-supported-permission  | Decide a supported permission setup for unattended cross-runtime review                              | open   | low      | idea    | M        |
 | BL-261030-decide-whether-a-no-op-sync    | Decide whether a no-op sync should restamp the manifest oatVersion                                   | open   | low      | task    | S        |
+| BL-261108-derive-first-release-versions  | Derive first-release versions in the project summary from tags                                       | open   | low      | task    | S        |
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                        | open   | low      | task    | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                             | open   | low      | task    | S        |
 | BL-261102-let-pr-skills-fall-back        | Let PR skills fall back to origin/HEAD when git.defaultBranch is unset                               | open   | low      | task    | S        |

@@ -1,14 +1,14 @@
 ---
 id: BL-260711-skip-re-review-for-bookkeeping
 title: 'Skip re-review for bookkeeping-only review findings'
-status: open
+status: closed
 priority: urgent
 scope: feature
 scope_estimate: L
 labels: [reviews, orchestration, gates, efficiency]
 assignee: null
 created: '2026-07-11T15:29:00Z'
-updated: 2026-10-03T19:13:37.625699+00:00
+updated: '2026-11-08T18:20:19Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/233
@@ -108,6 +108,8 @@ needs to absorb the per-phase stale-ledger class.
 Source: [GitHub #344](https://github.com/voxmedia/open-agent-toolkit/issues/344); [approved triage ledger](../../triage/2026-10-02-untriaged-issues.md#gh-344--skip-re-review-for-bookkeeping-only-review-findings).
 
 Keep the existing finding-disposition criteria above. Add a distinct invalid-artifact recovery slice under the same owner, with separate recovery evidence and explicit updates to the owning autonomous boundary contracts. Neither slice fabricates a reviewer pass.
+
+**Moved (2026-11-09):** this slice was not delivered by review-gate-integrity (its brief excluded it); its criteria are tracked in `BL-261109-recover-invalid-review`.
 
 ### Additional acceptance criteria
 

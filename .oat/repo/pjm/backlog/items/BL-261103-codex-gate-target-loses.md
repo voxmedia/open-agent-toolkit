@@ -23,6 +23,8 @@ external_plans: []
 
 Effect: cross-family Sol gating is unavailable for Claude-produced code, so the configured selection falls back to same-family Opus. Source: review-gate-integrity-goal project-log learning `rgi-m01-codex-route-receipt` and its implementation.md m01 exit-gate rerun entry.
 
+Diagnosis notes (2026-11-08, review-gate-integrity-goal retro): the failing run's stderr contains no emitted `Gate route: inline (runtime=codex…)` line, while a successful Codex control run (`goal-gate-amend-r1`) emits two. So the receipt was never written, rather than written and then lost. Whether the reviewer skipped the route step (Step 6.1) or the route command failed silently is still inconclusive.
+
 ## Acceptance Criteria
 
 - The root cause of the missing or empty route receipt after a Codex gate child exits is identified and recorded.

@@ -11,6 +11,8 @@
 - When a PR changes any bundled file of a canonical skill — anything under `.agents/skills/<name>/` except `tests/` — increase that skill's `metadata.version` in the same PR.
 - When a PR changes a canonical agent role at `.agents/agents/*.md`, increase that file's top-level `version:` in the same PR; agent roles keep the top-level field per `DR-260908-bundled-skills-declare`.
 - The version bump is PR-scoped, not edit-scoped: one bump per changed skill in the final PR diff is required, even if the skill was edited multiple times on the branch.
+- A file under `.agents/docs/` that a skill links into its tree counts as a bundled file of every skill that links it, so editing it requires a bump in each of those skills.
+- `pnpm run check:skill-bumps` diffs committed history (`origin/main...HEAD`) only; run it after committing, because a pass before the commit says nothing about uncommitted edits.
 
 </skills_system>
 
@@ -191,7 +193,10 @@ Instructions are code: keep them accurate as the repository changes.
   `npx @open-agent-toolkit/cli sync --scope project` and commit the canonical
   rules, tracked generated views, and `.oat/sync/manifest.json` together. Preserve
   ignored output policies. Codex has no generated rule views, so the index below
-  makes matching rule scopes discoverable.
+  makes matching rule scopes discoverable. On a branch that has merged a `main`
+  newer than the released CLI, run the branch build instead
+  (`pnpm build`, then `node packages/cli/dist/index.js sync --scope project`):
+  the released CLI deletes provider views it does not know.
 
 ### Instruction index
 
@@ -284,6 +289,11 @@ buy-in. This applies to production code, tests and fixtures, and operational
 safeguards. Do not silently expand scope for theoretical robustness, flexibility,
 or scale. Ordinary regression tests and required checks still apply, as do
 established correctness, security, and durability requirements.
+
+A goal re-alignment or brief amendment that adds or widens a phase is a
+planning change under this rule. Its proposal names the observed incident each
+new or widened phase addresses, and its estimated size, before the operator is
+asked to approve it.
 
 ### Workflow Mode Change Inventory
 

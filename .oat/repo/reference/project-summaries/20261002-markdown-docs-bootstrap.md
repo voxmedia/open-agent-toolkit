@@ -77,7 +77,7 @@ All three proposals strengthened existing backlog records; no upstream item or i
 
 ### RP-02: Add terminal-receipt and passing-sweep cases to exact gate binding
 
-[Exact gate binding](../../../repo/pjm/backlog/items/BL-260820-bind-each-gate-review.md) gains retained terminal acceptance proof after live-marker cleanup, fail-closed prerequisite/receive mutation, and passing-sweep controls. Preserve event identity, reviewed heads and raw counts; a passing sweep consumes no failed remediation attempt, while later source changes retire routing freshness.
+[Exact gate binding](../../pjm/backlog/archived/BL-260820-bind-each-gate-review.md) gains retained terminal acceptance proof after live-marker cleanup, fail-closed prerequisite/receive mutation, and passing-sweep controls. Preserve event identity, reviewed heads and raw counts; a passing sweep consumes no failed remediation attempt, while later source changes retire routing freshness.
 
 ### RP-03: Add a late documentation case to closeout freshness tracking
 
