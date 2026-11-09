@@ -59,6 +59,10 @@ fc15f453-f1de-4eaa-8e09-14a298005bfd-review-orchestration: awaited mechanical-re
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/goal-delivery-freshness/reviews/final-review-2026-11-09T045339Z.md run=fc15f453-f1de-4eaa-8e09-14a298005bfd
 
+### 2026-11-09 · structural · oat-project-implement · p03
+
+Exit-gate remediation gdf-gate-fix-1-20261109 completed p03-t07 (H1) and p03-t08 (M1); p03 re-accepted at d4d42840e; gate attempt 1 of 2 consumed; fix loops: 1.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

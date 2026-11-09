@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-09
-oat_current_task_id: p03
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,11 +39,11 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | completed   | 1     | 1/1      |
-| p03   | in_progress | 1     | 1/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
+| p03   | completed | 1     | 1/1      |
 
 **Total:** 3/3 phases accepted
 
@@ -167,9 +167,9 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 ## Phase p03: Pre-merge prose, waiver routing and docs
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a650db90a6fb468499f6881075b526da92c0b896
-**Head:** 36b1fe5ba5c24fa8a1613ed851fad5d64546adb5
+**Head:** d4d42840ea176350cd8847dccb631beeea2d308d
 **Executor:** phase-implementer:gdf-p03-impl-20261109
 
 Phase verification at `4ad61dccb` (clean tree), Definition of Done in order, each exit code captured: `pnpm check` exit 0 (11 tasks, 0 cached); `pnpm type-check` exit 0 (11 tasks, 5 cached: the unchanged docs packages); `pnpm test:evidence` exit 0 (forced, 12 tasks, 0 cached; cli 449 files / 9688 tests, control-plane 14 / 320, docs-config 5 / 22, docs-theme 3 / 25, docs-transforms 3 / 38); `pnpm build` exit 0 (5 cached, replaying the forced builds `test:evidence` had just run at the same inputs); `pnpm run check:skill-bumps` exit 0 (4 changed skills validated against `origin/main`); `git fetch origin main`, then `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.49); `pnpm build:docs` exit 0 (6 cached), then re-run uncached as `pnpm exec turbo run build --filter=oat-docs --force` exit 0 (0 cached); docs index regeneration exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `pnpm lint` exit 0 and `pnpm format` exit 0 (5 untouched docs packages replayed; cli, control-plane, root oxlint and `format:root` ran). Skill bumps: oat-project-brief 1.0.10, oat-project-goal 1.0.7, oat-project-implement 2.3.29, oat-project-pr-progress 1.3.10; lockstep packages 0.3.49.
@@ -310,6 +310,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - run/v1 · request=gdf-p03-impl-20261109 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-medium · model=claude-opus-5-5 · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-p03-review-20261109 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=gdf-final-review-20261109 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=gdf-gate-fix-1-20261109 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -329,7 +330,7 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - M1 (Medium, class: contract-gap in Outcome 3): the pre-merge instruction runs only `delivery check`, which reads stored observations, so a commit pushed after review stays unseen until a refresh → fix record p03-t08 (run `delivery refresh` before `delivery check`; no merge block).
 - Deferred-Medium ledger (Step 8.5): no deferred Medium findings exist.
 
-**Outcome:** fixes queued: p03-t07, p03-t08 (exit-gate remediation attempt 1 of 2).
+**Outcome:** fixes completed: p03-t07 (`6f72f1d78`, refusal `configuration-changed`) and p03-t08 (`17e67a386`) by `gdf-gate-fix-1-20261109`; p03 head advanced to `d4d42840e`; final review and exit gate attempt 2 pending.
 
 **Gate:** oat-project-implement exit · **Scope:** final · **Outcome:** blocked (0/1/1/0, `codex-6-sol-xhigh`) · attempt 1 of 2 consumed; remediation p03-t07..t08 queued
 
@@ -355,11 +356,12 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 
 Document any intentional deviations from the brief. Include accepted review findings where the shipped implementation is source of truth and the brief needs alignment.
 
-| Phase / Review | Source Artifact                                            | Planned / Documented                                                  | Actual / Accepted                                                                                                                                                                                                                                                                          | Reason                                                                                                                                                    | Source of Truth | Follow-up                                           |
-| -------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------- |
-| p02 (KU2)      | plan.md Outcome 2; BL-261108-give-goal-closeout-a-recorded | Closeout lists the waiver (backlog criterion named the outcome audit) | `closeout-check --json` and `complete-state --json` carry `waivers`, and both human outputs print one line per waiver; `oat_goal_outcome_audit` is unchanged                                                                                                                               | KU2 settled by p02: closeout output is where the waiver is read at completion; the outcome audit records per-outcome dispositions, not delivery freshness | implementation  | p03 docs name the `waivers` field                   |
-| p03 (L3)       | p02 review L3; p03 Intent                                  | Mention waivers in the summary and PR body                            | The pr-progress local progress PR description lists the delivery's waivers when regenerated for a registered delivery (the posted PR body is written before any waiver can exist); `oat-project-summary` and `oat-project-pr-final` do not, and closeout output lists them (contract 12.9) | Extending summary and pr-final adds two skills and bumps outside Outcome 3/4; closeout is where waivers are read at completion                            | implementation  | operator may request summary/pr-final listing later |
-| p02            | plan.md Outcome 2 refusals                                 | Refusals listed in Outcome 2                                          | Waive also refuses `not-head-movement` (a consumer would still read the delivery stale after the observed heads are waived, e.g. a base change) plus input refusals (`unknown-delivery`, `delivery-not-observable`, `reason-missing`, `author-missing`, recorded `failed` disposition)     | Follows from "covers head movement only" and "restores the stored record": writing `passed`/`fresh` while still stale would record a false state          | implementation  | none                                                |
+| Phase / Review | Source Artifact                                            | Planned / Documented                                                  | Actual / Accepted                                                                                                                                                                                                                                                                                                                    | Reason                                                                                                                                                    | Source of Truth | Follow-up                                           |
+| -------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------- |
+| p02 (KU2)      | plan.md Outcome 2; BL-261108-give-goal-closeout-a-recorded | Closeout lists the waiver (backlog criterion named the outcome audit) | `closeout-check --json` and `complete-state --json` carry `waivers`, and both human outputs print one line per waiver; `oat_goal_outcome_audit` is unchanged                                                                                                                                                                         | KU2 settled by p02: closeout output is where the waiver is read at completion; the outcome audit records per-outcome dispositions, not delivery freshness | implementation  | p03 docs name the `waivers` field                   |
+| p03 (L3)       | p02 review L3; p03 Intent                                  | Mention waivers in the summary and PR body                            | The pr-progress local progress PR description lists the delivery's waivers when regenerated for a registered delivery (the posted PR body is written before any waiver can exist); `oat-project-summary` and `oat-project-pr-final` do not, and closeout output lists them (contract 12.9)                                           | Extending summary and pr-final adds two skills and bumps outside Outcome 3/4; closeout is where waivers are read at completion                            | implementation  | operator may request summary/pr-final listing later |
+| p02            | plan.md Outcome 2 refusals                                 | Refusals listed in Outcome 2                                          | Waive also refuses `not-head-movement` (a consumer would still read the delivery stale after the observed heads are waived, e.g. a base change) plus input refusals (`unknown-delivery`, `delivery-not-observable`, `reason-missing`, `author-missing`, recorded `failed` disposition)                                               | Follows from "covers head movement only" and "restores the stored record": writing `passed`/`fresh` while still stale would record a false state          | implementation  | none                                                |
+| p03 (H1)       | exit gate H1; plan.md Outcome 2                            | Waiver never covers a reconfigured carrier                            | `waive` refuses `configuration-changed` when the exit gate's current resolution differs from the carriers' or when tracked `.oat/config.json` changed inside the skipped range, even for an unrelated key; a command change only in the untracked user/local layer stays undetected because the CLI computes no `config_fingerprint` | Minimal guard from the existing resolver; no new fingerprint infrastructure (stop growing hardening)                                                      | implementation  | re-gate when the config change is unrelated         |
 
 ## Final Summary (for PR/docs)
 
