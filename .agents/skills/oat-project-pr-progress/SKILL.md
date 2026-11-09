@@ -444,8 +444,7 @@ A waived delivery is judged like any other. When the check for a registered
 `dNN` reports `status: ok` and the delivery carries `freshness_waivers`
 (written by `oat project delivery waive`, section 12.7), take the item's
 `status: ok` branch: never re-register, re-gate or route it to recovery
-because it carries a waiver. When this run regenerates the local progress PR
-description for that delivery, list its waivers there; the posted PR body was
+because it carries a waiver. When this run regenerates the local progress PR description for that delivery, list its waivers there (a waiver written later in this run, in item 3a or 8, appears the next time the description is regenerated); the posted PR body was
 written at creation, before any waiver could exist, and is not rewritten, so
 closeout output (section 12.9) is where waivers are read.
 
