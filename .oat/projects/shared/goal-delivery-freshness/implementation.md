@@ -223,6 +223,18 @@ Worktree: `goal-review-gate-integrity` (branch `brief/goal-delivery-freshness`);
 - Handle: gdf-p03-impl-20261109.
 - Result: after `git fetch origin main` (main unchanged since the branch base), `pnpm release:check-versions` exit 0 ("version bump check passed"); `pnpm release:validate` runs in the phase verification below.
 
+### Task p03-t05: Correct the stale-past-endpoint rationale in pr-progress
+
+**Status:** completed
+**Commit:** ef10c5cb7240b5b809fb4547ce0495e2358fca14
+**Executor:** phase-implementer:gdf-p03-impl-20261109
+
+- Intent: self-review of p03-t02. The waiver paragraph said re-review and re-gating "cannot produce a deliverable record" for a merged delivery, which overstates: a merged head can still be re-gated when the review queues no fixes. It now says a recovery that queues fixes cannot land them on that pull request and that declining the waiver keeps the item's ordinary recovery path.
+- Files: `.agents/skills/oat-project-pr-progress/SKILL.md` (already bumped to 1.3.10 in this PR).
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, oxfmt.
+- Handle: gdf-p03-impl-20261109.
+- Result: skill-contract suites exit 0 (32 files, 1270 tests); oxfmt clean.
+
 ---
 
 ## Orchestration Runs
