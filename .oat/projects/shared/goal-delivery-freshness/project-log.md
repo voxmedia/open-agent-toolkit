@@ -43,6 +43,10 @@ p02 outcome: passed on first review round (0 C/H/M, 3 Low deferred to p03); fix 
 
 gdf-p02-weak-fixture: disabling each refusal clause one at a time exposed a fixture that refused for a different reason than the one it was named for. When proving a refusal can fail, check which refusal the fixture actually trips, not only that it refuses.
 
+### 2026-11-09 · structural · oat-project-implement · p03
+
+p03 outcome: passed on first review round (0 C/H/M, 2 Low fixed through the original handle as p03-t06, no re-review); fix loops: 0 blocking; implementer gdf-p03-impl-20261109, reviewer gdf-p03-review-20261109.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
