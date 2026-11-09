@@ -85,12 +85,16 @@ All are operator decisions from 2026-11-09, recorded in the brief.
 
 ### Agent-instruction updates
 
-- **Run the existing suites before writing new tests when widening a path allowlist in `delivery/evidence.ts`, then rename each test that flips to say what it still proves.** Widening it flipped ten existing negative controls from stale to fresh with no identity risk. oat-project:goal-delivery-freshness#2026-11-09-worked-well-delivery-evidence-allowlist-changes-1
-- **When proving that a refusal can fail, check which refusal the fixture actually trips, not only that it refuses.** Disabling the clauses one at a time exposed a fixture named for one refusal that was tripping another. oat-project:goal-delivery-freshness#2026-11-09-worked-well-can-fail-proofs-on-refusal-fixtures-1
+- **Run the existing suites before writing new tests when widening a path allowlist in `delivery/evidence.ts`, then rename each test that flips to say what it still proves.** Widening it flipped ten existing negative controls from stale to fresh with no identity risk. oat-archive:20261109-goal-delivery-freshness#2026-11-09-worked-well-delivery-evidence-allowlist-changes-1
+- **When proving that a refusal can fail, check which refusal the fixture actually trips, not only that it refuses.** Disabling the clauses one at a time exposed a fixture named for one refusal that was tripping another. oat-archive:20261109-goal-delivery-freshness#2026-11-09-worked-well-can-fail-proofs-on-refusal-fixtures-1
 
 ## Exit-Gate Waivers
 
 - `a323ee7ce..320f394e2` (effective-delta-v2) waived by Thomas Stang at 2026-11-09T12:40:48Z: address-now fix of exit gate attempt 2 Medium (stacked-carrier config regression); tested with can-fail proof and built-CLI probe
+- `4d5ae5d00..77d1cb270` (effective-delta-v2) waived by Thomas Stang at 2026-11-09T13:41:50Z: PR self-review fixes (tests, bound-revision anchor, docs), reviewed in a confirmation round
+- `0010d0330..14ffc93e0` (effective-delta-v2) waived by Thomas Stang at 2026-11-09T14:02:30Z: PR self-review C1/C3/T2 fixes made at operator direction, reviewed in confirmation round 2; final small fixes N1–N3 tested
+
+PR #417 was squash-merged to `main` as `f0793b652` on 2026-11-09.
 
 ## Follow-up Items
 
@@ -110,9 +114,9 @@ All are operator decisions from 2026-11-09, recorded in the brief.
 
 ## Workflow Observations
 
-- **2026-11-09 · worked-well · can-fail proofs on refusal fixtures** (general, gotcha) `oat-project:goal-delivery-freshness#2026-11-09-worked-well-can-fail-proofs-on-refusal-fixtures-1`
+- **2026-11-09 · worked-well · can-fail proofs on refusal fixtures** (general, gotcha) `oat-archive:20261109-goal-delivery-freshness#2026-11-09-worked-well-can-fail-proofs-on-refusal-fixtures-1`
   gdf-p02-weak-fixture: disabling each refusal clause one at a time exposed a fixture that refused for a different reason than the one it was named for.
-- **2026-11-09 · worked-well · delivery evidence allowlist changes** (general, gotcha) `oat-project:goal-delivery-freshness#2026-11-09-worked-well-delivery-evidence-allowlist-changes-1`
+- **2026-11-09 · worked-well · delivery evidence allowlist changes** (general, gotcha) `oat-archive:20261109-goal-delivery-freshness#2026-11-09-worked-well-delivery-evidence-allowlist-changes-1`
   gdf-p01-flipped-controls: widening a path allowlist in delivery/evidence.ts flipped ten existing negative controls from stale to fresh with no identity risk.
 
 Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.
