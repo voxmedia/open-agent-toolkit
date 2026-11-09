@@ -104,7 +104,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-09T01:17:37.792Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-09T04:05:04Z'
+oat_project_state_updated: '2026-11-09T04:25:01Z'
 oat_generated: false
 oat_brief_gate:
   status: allowed
@@ -151,7 +151,7 @@ Plan - Authoring the Project Brief
 - ✓ Brief artifact review, gate and approval (2026-11-09)
 - ✓ p01 workflow-owned writes stay bookkeeping (accepted 2026-11-09)
 - ✓ p02 head-bound freshness waiver (accepted 2026-11-09)
-- ⧗ Implementation: p03 in progress
+- ⧗ Implementation: p03 work done (head 4ad61dccb), under review
 
 ## Blockers
 
