@@ -120,7 +120,7 @@ Plan - Authoring the Project Brief
 
 ## Artifacts
 
-- **Plan:** `plan.md` (scaffolded Project Brief template — not started)
+- **Plan:** `plan.md` (Project Brief authored; under artifact review)
 - **Implementation:** `implementation.md` (scaffolded brief journal template — not started)
 - **Research:** `references/research/` (empty)
 
@@ -128,7 +128,8 @@ Plan - Authoring the Project Brief
 
 - ✓ Brief project scaffolded
 - ✓ Brief and implementation artifacts scaffolded
-- ⧗ Awaiting brief interview and authoring
+- ✓ Alignment interview and brief authored (2026-11-09)
+- ⧗ Brief artifact review, gate and approval
 
 ## Blockers
 
