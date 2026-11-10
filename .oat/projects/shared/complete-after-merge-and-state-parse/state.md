@@ -1,7 +1,8 @@
 ---
 oat_current_task: p01
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - 'p01 terminal failed recovery settled; resume direction required for help snapshot and autonomous skill bump'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -18,16 +19,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: 'p01-help-snapshot-20261110'
-        original_request_id: 'complete-state-parse-p01-20261110'
-        original_task_id: 'p01-t01'
-        original_commit: '180f4758c2e1a1d470a8a86e6252836c883846d0'
-        discovered_by: 'bash scripts/with-isolated-home.sh pnpm test (src/commands/help-snapshots.test.ts: project --help)'
-        dispatch_target: 'oat-phase-implementer-gpt-6-1-sol-high'
-        reservation_head: '47fb0b62cdd87a3d3549a371640a20d641921588'
-        status: 'failed'
+      pending_attempt: null
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -120,7 +112,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-10T22:35:01Z'
+oat_project_state_updated: '2026-11-10T23:30:01Z'
 oat_generated: false
 ---
 
@@ -150,7 +142,7 @@ Implementation — p01 shared strict state parsing check
 
 ## Blockers
 
-None
+p01 recovery attempt 1 failed at the required skill-bump gate. Help snapshot and oat-project-autonomous version bump remain outstanding. Failed marker settled, used=1/10; workflow requires direction before continuation.
 
 ## Next Milestone
 

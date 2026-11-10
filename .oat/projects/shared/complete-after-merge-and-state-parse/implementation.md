@@ -75,6 +75,31 @@ Execution shape: one phase implementer in the existing orchestration checkout, t
 **Probe harness concern:** first packed-install attempt omitted its own manifest/prefix; npm followed an existing synthetic `@open-agent-toolkit/cli@9.9.9` package at `/var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/package.json` and wrote the three probe tarball dependency specs and installed modules there. It did not supply installed-command evidence. The retry is correctly isolated, passes and removes its own temporary install. The prior temp-parent contents were not captured, so this run did not guess at restoration or delete another owner's files; first-attempt receipts are preserved under `first-attempt-*` in the local evidence directory. No user/global configuration was changed.
 **Recovery:** no post-commit event; used 0/10, remaining 10, pending null (authoritative absent-entry default). Prevention and probe-harness corrections consumed no recovery attempt.
 
+### Root settlement — terminal failed attempt, 2026-11-10
+
+Validated the completed same-handle report and exact-target provenance against immutable commits: implementation `180f4758c2e1a1d470a8a86e6252836c883846d0`, execution record `47fb0b62cdd87a3d3549a371640a20d641921588`, and ledger-only failure `f70c23dcece018cea9c20ba2667bfe99e4e48027`. Range from dispatch base `d1df37b4ac6bbd2a8420ac3e9530ea7e626add6d` contains exactly those three commits. The 53 implementation paths match the reported CLI, lifecycle, shared docs, tests, release and research boundary. No nested workers or successful recovery commit were reported. The tree was clean and the restored help snapshot matches the implementation commit.
+
+The committed failed marker matches event, original request/task/commit, target, reservation head and attempt 1. Root inspected the actual failed `05-skill-bumps.log` and run receipt: full forced tests exited 0 on the temporary help correction and active reservation; build exited 0 (five cached tasks); skill-bump validation exited 1 because `oat-project-autonomous` stayed at 1.0.26 despite the linked autonomy-contract change. Those passing tests do not apply to the subsequently restored snapshot. Later required checks and independent phase review remain outstanding. No phase Head or completed acceptance is written.
+
+Settlement clears only the validated failed marker, preserves used=1/10 (9 remaining), and retains the terminal-stop disposition. The workflow's BLOCKED/failed-attempt route requires stopping before continuation; the child's suggestion that no direction was needed does not override that route. Proposed bounded resume: restore the required check-state help snapshot entry, bump oat-project-autonomous with any directly pinned metadata, then complete the required verification on the same Sol high handle. No new product/design scope is proposed.
+
+Local report/evidence: `.oat/analysis/complete-state-parse-p01/phase-implementation-report.md` and `recovery-pre-infrastructure-rerun/phase-checks.json`. The earlier packed-install probe wrote into the shared temporary parent; its receipts remain local, no speculative cleanup was performed, and subsequent verification used an isolated temporary root. Source and test fixtures were not changed to conceal that environment effect.
+
+### Recovery Event p01-help-snapshot-20261110
+
+- Phase/task: p01 / p01-t01
+- Original request: complete-state-parse-p01-20261110
+- Original commit: 180f4758c2e1a1d470a8a86e6252836c883846d0
+- Defect class: test
+- Discovered by: bash scripts/with-isolated-home.sh pnpm test (project --help snapshot); recovery phase command pnpm run check:skill-bumps
+- Disposition: failed-attempt
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: -
+- Verification: focused 71 tests passed; isolated forced full suite passed on the uncommitted correction; phase version gate failed; correction restored; failed ledger parse/commit passed
+- Reason: required phase verification failed before candidate creation; canonical role requires bounded restore, failed ledger-only commit, and terminal stop. f70c23dcece018cea9c20ba2667bfe99e4e48027 records the failed ledger transition, not a successful recovery.
+
 ## Phase p02: Deliver completion bookkeeping after merge
 
 **Status:** pending
@@ -85,7 +110,7 @@ Execution shape: one phase implementer in the existing orchestration checkout, t
 
 <!-- orchestration-runs-start -->
 
-- run/v1 · request=complete-state-parse-p01-20261110 · scope=p01 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-state-parse-p01-20261110 · scope=p01 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=p01-router-resume-20261110 · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
