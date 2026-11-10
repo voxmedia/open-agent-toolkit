@@ -64,6 +64,7 @@ Run the repository Definition of Done in its required order, plus the mandated l
 - **Reuse existing authority:** operator accepted automatic fresh-branch/follow-up preparation within existing authority on 2026-11-10; rejected always asking before branch preparation.
 - **Shared strict parse check:** operator accepted a common check with stop-on-failure on 2026-11-10; rejected the larger migration to CLI setters. Semantic validation and template cleanup are excluded.
 - **Exact model choices:** operator selected GPT-6.1 Sol high for implementation and Claude Opus 5.5 high for reviews. These explicit selections override default parent inheritance and automatic model choice. Do not silently substitute another model or effort.
+- **Review posture (2026-11-10):** operator disabled additional phase gates and kept both configured lifecycle gates (`oat-project-brief` and `oat-project-implement`). Built-in phase reviews and final integrated review still run, using Opus 5.5 high.
 - **Sequential delivery:** establish the shared check first, then use it in the completion change; both phases touch completion instructions and release assets.
 
 ## Known Unknowns
