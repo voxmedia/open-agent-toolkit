@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval; [] = none for brief modes
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -106,19 +106,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-10T22:33:51Z'
+oat_project_state_updated: '2026-11-10T22:35:01Z'
 oat_generated: false
 ---
 
 # Project State: complete-after-merge-and-state-parse
 
-**Status:** Plan
+**Status:** Implementation
 **Started:** 2026-11-10
 **Last Updated:** 2026-11-10
 
 ## Current Phase
 
-Plan complete — approved Project Brief, ready for implementation
+Implementation — p01 shared strict state parsing check
 
 ## Artifacts
 
@@ -140,4 +140,4 @@ None
 
 ## Next Milestone
 
-Begin p01 through oat-project-implement with GPT-6.1 Sol high; independent reviews use Claude Opus 5.5 high.
+Complete p01 through oat-project-implement with GPT-6.1 Sol high; independent reviews use Claude Opus 5.5 high.

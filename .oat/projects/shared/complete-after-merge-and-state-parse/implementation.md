@@ -39,10 +39,10 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Units | Accepted |
-| ----- | ------- | ----- | -------- |
-| p01   | pending | 1     | 0/1      |
-| p02   | pending | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | in_progress | 1     | 0/1      |
+| p02   | pending     | 1     | 0/1      |
 
 **Total:** 0/2 phases accepted
 
@@ -50,7 +50,11 @@ oat_generated: false
 
 ## Phase p01: Validate manual lifecycle state writes
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 7e5b5bd32c5443dae06947c2fbf99fc3d02aaac9
+**Executor:** phase-implementer:complete-state-parse-p01-20261110
+
+Execution shape: one phase implementer in the existing orchestration checkout, the sole committing owner while active. No declared parallel group; slice fan-out fails the independence test because the shared check, skill references, tests, release assets and versions overlap. Tier 1 uses T3 delegation with the operator-selected GPT-6.1 Sol high; the root retains independent Opus review and phase acceptance. Recovery capacity: default 10, phase limit 10, used 0, remaining 10, pending none; source is the workflow default with no project/phase override. Remaining capacity does not authorize target changes or continuation after a terminal failure.
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
