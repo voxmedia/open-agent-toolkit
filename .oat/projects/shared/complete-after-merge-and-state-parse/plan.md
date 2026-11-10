@@ -1,0 +1,123 @@
+---
+oat_template: true
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-11-10
+oat_phase: plan
+oat_phase_status: in_progress
+oat_plan_hill_phases: [] # [] = none for brief modes
+oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
+oat_plan_source: brief
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_generated: false
+---
+
+# Project Brief: complete-after-merge-and-state-parse
+
+## Goal
+
+Make completion work after a project's PR has already merged, and catch invalid YAML immediately after manual lifecycle state writes. Deliver the two observed workflow fixes from goal-delivery-freshness retro UP-02 and UP-03 together.
+
+## Outcomes
+
+1. **Merged PRs receive truthful completion bookkeeping on a deliverable branch.** Before completion writes, observe the tracked PR live. If merged, record `oat_pr_status: merged`, keep its identity, prepare a fresh branch from the updated base, and deliver bookkeeping through a follow-up PR within existing authority. Do not sync the body of the merged PR. Evidence: exercise a stale stored `open` status with a live merged PR, verify the new branch's base and exact completion changes, and retain a valid open-PR completion control.
+2. **Malformed manual state writes stop immediately.** Every canonical lifecycle skill that directs a manual `state.md` frontmatter write invokes one shared strict check after the write and before committing or continuing the workflow. Invalid YAML is reported and the workflow stops until repaired; valid frontmatter remains usable. Evidence: a malformed fixture derived from the recorded incident, a valid commented-frontmatter control, the actual shipped check's exit results, and a reviewed inventory mapping manual write sites to the check.
+
+## Approach
+
+### Shared frontmatter check
+
+Expose one supported, read-only, shell-callable check backed by the existing YAML parsing dependency. Check the frontmatter block and YAML mapping, without validating lifecycle semantics or rewriting the file. Reuse existing strict parsing where practical; do not use `validate-plan` or dashboard refresh as substitutes, because they tolerate malformed state.
+
+Require the check at each manual lifecycle state-write boundary, including shared instructions used by multiple skills. Start with the bounded reconnaissance inventory of 21 skills and confirm all actual manual write sites during p01. CLI-owned writes remain owned by their commands. A nonzero result stops subsequent workflow effects; repair and recheck before resuming. A portable installed invocation is required, with no dependence on this repository's development dependencies or working directory.
+
+### Completion after merge
+
+In `oat-project-complete`, observe the tracked PR with GitHub before branch-sensitive completion mutations. Resolve the target base from the PR/repository instead of hardcoding `main`; this repository uses `main`. Capture the merged delivery PR separately from the follow-up bookkeeping PR so the original status and identity remain truthful.
+
+For a merged PR, fetch the base and prepare the fresh bookkeeping branch before lifecycle commits or archiving. Use the current checkout when safe. If uncommitted or unmerged work cannot be preserved safely while moving to the base, explain the conflict and stop for recovery rather than dropping work. Reuse an already prepared follow-up when resuming; do not knowingly open a duplicate. Apply the shared parse check to manual state updates and continue through the existing completion, archive, exact-path commit, and PR routines. A failed live observation is not evidence that a PR is open or merged.
+
+Respect existing task authority when preparing, publishing, and landing the follow-up PR. Do not ask again for already authorized actions. Missing authority still requires the corresponding operator decision. Preserve existing open-PR completion behavior and its archive-aware PR-body sync; skip that sync for the merged original.
+
+### Verification and release
+
+The observable boundaries are the shared parse-check invocation, lifecycle skill instructions at manual-write boundaries, and completion's Git/PR workflow. Use real local Git repositories and state files for branch and parsing behavior; substitute only external GitHub responses where needed. Reuse existing tests before adding coverage for a distinct uncovered failure. Instruction checks may verify required workflow ordering, but do not substitute them for executable parsing and branch probes.
+
+Preserve a reproducible before/after negative control for each observed failure and a valid accepted control. For UP-02 demonstrate the prior stale-status/current-branch behavior and the corrected live-status/fresh-base behavior. For UP-03 use the recorded malformed write when recoverable, otherwise label the fixture as a reconstruction of the documented incident. Do not claim prose checks prove agent execution.
+
+Run the repository Definition of Done in its required order, plus the mandated lint, format, and isolated skill-contract checks for changed skill prose. Record exact tested revision/uncommitted inputs, base, commands, exit codes, runtime, cache reuse, and unavailable checks in the journal. Update affected human documentation and instruction coverage in the same PR, bump each changed skill once, and bump the five public packages together. Format changed artifacts with `pnpm exec oxfmt --write <exact changed paths>` using the repository's documented formatter.
+
+## Constraints and Out of Scope
+
+- Preserve completion, archive durability, exact-path commit, and review/gate contracts already present on the integration base.
+- This check guarantees parseable frontmatter, not valid lifecycle transitions, receipt provenance, or correctness of field values.
+- No migration of all writes to CLI setters; no template-comment cleanup, general state editor, transactional rewrite framework, or new concurrency protocol.
+- UP-01 (exit-gate waiver writer), broader gate-freshness redesign, and reopening completed goal projects are out of scope.
+- Do not alter unrelated workspace changes or global dispatch/gate configuration.
+
+## Decisions
+
+- **Brief workflow, one delivery:** selected by the operator; one agreed design with phases of intent and evidence fits these related workflow fixes without an up-front task list.
+- **Reuse existing authority:** operator accepted automatic fresh-branch/follow-up preparation within existing authority on 2026-11-10; rejected always asking before branch preparation.
+- **Shared strict parse check:** operator accepted a common check with stop-on-failure on 2026-11-10; rejected the larger migration to CLI setters. Semantic validation and template cleanup are excluded.
+- **Exact model choices:** operator selected GPT-6.1 Sol high for implementation and Claude Opus 5.5 high for reviews. These explicit selections override default parent inheritance and automatic model choice. Do not silently substitute another model or effort.
+- **Sequential delivery:** establish the shared check first, then use it in the completion change; both phases touch completion instructions and release assets.
+
+## Known Unknowns
+
+- **KU1 — Installed entry point and coverage:** choose the smallest supported shared check entry point, confirm the complete manual-writer inventory and shared-reference bundling, and distinguish manual writes from CLI-owned writes. Settled by p01 within the agreed parse-only contract.
+- **KU2 — Post-merge resume and project scope:** reconcile the fresh-base branch path with existing shared/synced/local completion and archive-resume contracts. Confirm that the merged base contains the project inputs before mutation; preserve/report any divergent local inputs. Settled by p02, reusing existing recovery conventions.
+- **KU3 — Incident reproduction:** locate the malformed state at historical commit `a323ee7ce` and preserve only the smallest relevant probe input; document unavailable historical objects. Settled by p01.
+
+## Delivery endpoint and authority
+
+- **Endpoint:** merged — this project's PR is merged into the repository base after checks and reviews pass.
+- **Authority:** the operator approves the reviewed brief once. After that approval, the agent may implement within these boundaries, accept phases after required evidence/reviews, open and update the PR, address in-scope findings, and merge after checks and reviews pass. The operator granted merge authority on 2026-11-10; this is not yet brief approval.
+- **Product authority:** materially changed outcomes, approach, exclusions, or new hardening return to the operator. No gate or freshness waiver is implied by merge authority.
+- **Execution:** implementation uses `gpt-6.1-sol` with high reasoning effort; reviews use `claude-opus-5-5` with high effort. Root orchestration retains integration and user decisions. Model unavailability is reported without substitution.
+
+## Milestones
+
+## Phase p01: Validate manual lifecycle state writes
+
+**Intent:** ship one reusable strict frontmatter check and require it after manual state writes throughout the canonical lifecycle skills, addressing the recorded invalid-YAML incident without a state-writer redesign.
+**Exit evidence:** installed check rejects the incident-derived malformed input for a parse reason and accepts valid commented frontmatter; nonzero status prevents continuation in the representative calling sequence; the manual-writer inventory identifies each covered boundary; affected contracts, documentation, version bumps, and required checks pass.
+**Provisional:** no
+
+## Phase p02: Deliver completion bookkeeping after merge
+
+**Intent:** make completion observe the original PR live, prepare the follow-up branch from the updated base before mutation, retain truthful original-PR state, and land bookkeeping through a follow-up PR under existing authority.
+**Exit evidence:** merged-PR reproduction confirms live `merged` status, fresh-base ancestry, completion-only changes and follow-up PR routing with no merged-body sync; open-PR control retains its existing behavior; the resulting state passes p01's check; applicable scope/resume cases and full required repository gates pass; integrated review is settled.
+**Provisional:** yes
+
+## Parallelism
+
+No parallel phase groups. The completion skill, shared instructions, and package versions overlap. Bounded read-only reconnaissance may run independently; each implementation phase has one committing owner.
+
+## Reviews
+
+| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
+| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
+| plan  | artifact | pending | -    | -        | -             | -          | -           |
+| p01   | code     | pending | -    | -        | -             | -          | -           |
+| final | code     | pending | -    | -        | -             | -          | -           |
+
+Add p02's code review row when that phase becomes concrete. Preserve existing event rows.
+
+## Implementation Complete
+
+Not started. Outcome evidence will be recorded here at closeout and in `implementation.md` during execution.
+
+## References
+
+- Journal: `implementation.md`
+- Research: `references/research/`
+- Project log: `project-log.md` when enabled
+- Tracked source: `.oat/repo/reference/project-summaries/20261109-goal-delivery-freshness.md`
+- Source retro: `.oat/projects/archived/goal-delivery-freshness/references/project-retro.md`, UP-02 and UP-03 (local archive; the two problem statements and accepted direction are carried above)
+- Completion workflow: `.agents/skills/oat-project-complete/SKILL.md`
+- Existing strict parser: `packages/cli/src/validation/project-state.ts`
+- Brief contract: `.agents/skills/oat-project-brief/references/brief-contract.md`
