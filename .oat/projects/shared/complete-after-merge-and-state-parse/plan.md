@@ -42,7 +42,7 @@ For a merged PR, fetch the base and prepare the fresh bookkeeping branch before 
 
 Respect existing task authority when preparing, publishing, and landing the follow-up PR. Do not ask again for already authorized actions. Missing authority still requires the corresponding operator decision. Preserve existing open-PR completion behavior and its archive-aware PR-body sync; skip that sync for the merged original.
 
-Goal mode uses this same reuse-of-existing-authority rule. Replace completion Step 2's requirement for a new explicit bookkeeping-PR request in every run; existing authority must cover the action, and missing authority still requires an operator decision. Preserve goal delivery coverage as satisfying the delivery PR step. The separate completion bookkeeping PR is never registered in `oat_deliveries` or counted toward coverage, and it must not replace the projected original delivery PR identity.
+Goal mode uses this same reuse-of-existing-authority rule. Replace completion Step 2's requirement for a new explicit bookkeeping-PR request in every run; existing authority must cover the action, and missing authority still requires an operator decision. `workflow.createPrOnComplete` (`PR_ON_COMPLETE`) alone does not authorize a goal bookkeeping PR; that existing exclusion is preserved. Preserve goal delivery coverage as satisfying the delivery PR step. The separate completion bookkeeping PR is never registered in `oat_deliveries` or counted toward coverage, and it must not replace the projected original delivery PR identity.
 
 ### Verification and release
 
@@ -103,12 +103,12 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                        | Reviewed Head                            | Invocation | Gate Target                              |
-| ----- | -------- | --------------- | ---------- | ----------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
-| plan  | artifact | fixes_completed | 2026-11-10 | structured review; receipt in implementation.md | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| plan  | artifact | pending         | -          | -                                               | -                                        | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| p01   | code     | pending         | -          | -                                               | -                                        | -          | -                                        |
-| final | code     | pending         | -          | -                                               | -                                        | -          | -                                        |
+| Scope | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target                              |
+| ----- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
+| plan  | artifact | fixes_completed | 2026-11-10 | structured review; receipt in implementation.md                        | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| plan  | artifact | fixes_completed | 2026-11-10 | structured round 2; L1 clarified locally; receipt in implementation.md | aa04c4605e81ca88823accfca56a7cf80c4f081b | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p01   | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
+| final | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 
 Add p02's code review row when that phase becomes concrete. Preserve existing event rows.
 

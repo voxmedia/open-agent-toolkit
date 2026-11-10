@@ -107,6 +107,17 @@ Intent, files, proof command, result.
 **Operator disposition (2026-11-10):** accepted M1's proposed realignment: reuse existing authority in goal mode too, while bookkeeping PRs remain outside delivery registration/coverage. Accepted L1, L2 and L3. This decision is the requirement source for changing the old goal-mode explicit-request exception.
 **Remediation:** M1 is explicit in Approach, Constraints, Decisions and p02 exit evidence; L1 orders branch preparation before the first completion write; L2 records the candidate inventory and requires its final coverage mapping; L3 names already-rejected alternatives. All four brief edits are complete. Round 1 remains a review with findings; one correction round is used by the ensuing fresh review, and no gate attempt has been consumed.
 
+### Brief artifact review — 2026-11-10, round 2
+
+**Reviewed head:** `aa04c4605e81ca88823accfca56a7cf80c4f081b`
+**Reviewer:** Claude Opus 5.5 high; structured return via T3. Host reports executed model `claude-opus-5-5`; high effort is the configured launch setting.
+**Findings:** 0 Critical, 0 High, 0 Medium, 1 Low. All four round-1 findings resolved.
+**Finding classes:** L1 accepted-requirement (completion Step 2's existing PR_ON_COMPLETE exclusion; operator's 2026-11-10 realignment changes only the per-run request rule)
+**Disposition:** L1 clarified locally: `workflow.createPrOnComplete` alone does not authorize a goal bookkeeping PR. Existing explicit operator authority remains reusable. This preserves the existing exclusion and the narrow approved realignment, without introducing another product decision. The cosmetic research-directory description in state.md is also corrected.
+**Outcome:** fixes_completed; raw review is not a clean pass. No unresolved finding remains after this local clarification. No further artifact reviewer was dispatched for this small fix; the configured brief gate will review the resulting committed bundle. One correction/re-review round has been used in total; no gate attempt has run yet.
+**Evidence:** reviewer inspected the brief diff, seven baseline writer citations and completion Step 2. No tests/builds/gates were run by this reviewer; no implementation was verified. Root verified the preserved PR_ON_COMPLETE clause against completion Step 2. Local plan validation and frontmatter parsing are recorded with the ensuing bookkeeping commit.
+**Dispatch audit:** `Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
