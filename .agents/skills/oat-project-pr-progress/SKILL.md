@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.10
+  version: 1.3.11
 ---
 
 # Progress PR
@@ -471,6 +471,9 @@ review_artifact: null }`;
      `oat_milestone_status`, `oat_current_task_id`, and `oat_current_task`
      stay unchanged.
 
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
    Commit and stop, reporting the stage owner. Never register stale evidence.
 
 **3a. Already-registered active delivery.** When the active milestone
@@ -486,6 +489,9 @@ not-fresh report for a delivery stale past its endpoint, first offer the
 waiver (below); otherwise, or when the waiver is declined or refused, apply
 item 3 (active milestone's delivery). A `registering` entry is not registered
 yet and resumes at item 5.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 4. **Idempotent registration.** When the active milestone has no
    non-superseded registered delivery (item 3a), allocate the next unused
@@ -505,7 +511,8 @@ yet and resumes at item 5.
    delivery evidence. A replacement writes `covers_scope_of: <predecessor>`
    and the predecessor's `superseded_by: <dNN>` in the same write; an additive
    correction writes `corrects_delivery_id` instead. Commit this registration
-   record before creating anything.
+   record only after `oat project check-state "$PROJECT_PATH"` succeeds; on
+   nonzero, stop, repair and recheck before committing or creating anything.
 5. **Create or attach.** For `kind: pr`, generate the PR description (Steps
    2–5), push the branch, and create the pull request with the Step 6 commands.
    On resume, first run
@@ -521,7 +528,8 @@ yet and resumes at item 5.
    Then write `status: open`, `oat_milestone_status: delivered` for the active
    milestone, `oat_pr_status: open`, `oat_pr_url` (projected from the tip
    member for a stack), and `oat_phase_status: pr_open`; commit this
-   registration bookkeeping.
+   registration bookkeeping only after `oat project check-state "$PROJECT_PATH"`
+   succeeds. On nonzero, stop; repair and recheck before committing or continuing.
 7. **Log.** After that registration commit, append exactly one structural
    entry and commit it in this same step:
    `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-pr-progress --ref <dNN> --idempotency-key "<goal-slug>-register-<dNN>" --body "Registered <dNN> for <mNN> (<ordered phase ids>) at <url>; <goal-slug>-register-<dNN>"`.
@@ -538,6 +546,9 @@ yet and resumes at item 5.
    milestone stays untouched. When it targets the active milestone's own
    delivery, fall through to item 3a, which clears the record and writes
    `delivered` in one step.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
 
 **Stale past its endpoint: offer the waiver.** A delivery is stale past its
 endpoint when refresh observes it `at_endpoint` with its members merged, so no
@@ -598,6 +609,10 @@ For a synced project whose user chooses to open the PR, use this ordered flow:
 3. Render `oat project links "$PROJECT_PATH" --format markdown` and insert or replace its delimited block in the stripped PR body. A freshly generated summary must be present in this initial block.
 4. Push the code branch, run `gh pr create`, and capture the returned URL.
 5. Set `oat_phase_status: pr_open`, `oat_pr_status: open`, `oat_pr_url`, and `oat_project_state_updated` in `state.md`.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 6. Run `oat project push "$PROJECT_PATH" --message "chore(oat): record progress PR metadata" --json` again so push-time refresh rewrites the block to the new ref SHA. A nonzero exit stops closeout until the reported recovery is resolved and the push is retried.
 
 Resolve scope fail-closed before branching:

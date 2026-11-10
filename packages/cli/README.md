@@ -76,6 +76,7 @@ oat config set updateNotifications false --user
 Use these commands when you want structured runtime/project state out of the CLI:
 
 - `oat config dump --json` - emit merged OAT config with per-key source attribution
+- `oat project check-state <project-path> [--json]` - read-only strict YAML frontmatter mapping check for `state.md`; no lifecycle semantics or rewriting. Exit 0 means a mapping parsed, 1 means missing/non-mapping frontmatter or invalid YAML, and 2 means the file could not be read. JSON reports `valid`, `statePath`, and, on failure, `code` and `errors`. Use an absolute project path from any working directory. After every manual lifecycle frontmatter write, stop on nonzero, repair and recheck before committing or continuing. `validate-plan` and dashboard refresh do not substitute for this check.
 - `oat project status --json` - emit the active project's full parsed control-plane state
 - `oat project list --json` - emit summary state for tracked projects under the configured projects root
 - `oat project closeout-check <project-path> --json` - report whether a configured, autonomous, or lite closeout's `oat_post_implement_sequence` snapshot permits terminal completion and, for a goal project, whether the declaration, outcome audit, and delivery coverage boundary holds, and which step, approval, or skill owns it next (read-only); for a goal project it also lists the terminal deliveries' freshness waivers (`waivers` under `--json`, on success and on refusal)

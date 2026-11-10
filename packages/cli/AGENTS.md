@@ -55,6 +55,14 @@ real containment, no nested symlink traversal, bounded repo-relative exclusions,
 and searched/skipped evidence. Matches are once-decoded physical-line substrings,
 not runtime or registry verification. Preserve the guidance-only analyze command.
 
+## Manual project state writes
+
+`oat project check-state <project-path> [--json]` is the read-only strict
+frontmatter check used after manual lifecycle writes to `state.md`. It parses
+a YAML mapping only; keep lifecycle validation and command-owned state writes
+in their existing owners. Stop on nonzero, repair and recheck before committing
+or continuing. Do not replace it with tolerant plan validation or state refresh.
+
 ## Completion checks
 
 - Tests updated for changed behavior.

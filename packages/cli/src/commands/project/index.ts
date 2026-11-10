@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 
 import { createProjectArchiveCommand } from './archive';
+import { createProjectCheckStateCommand } from './check-state';
 import { createProjectCloseoutCheckCommand } from './closeout-check';
 import { createProjectCompleteDiscoveryCommand } from './complete-discovery';
 import { createProjectCompleteStateCommand } from './complete-state';
@@ -29,6 +30,7 @@ export function createProjectCommand(): Command {
   return new Command('project')
     .description('Manage OAT project workflows')
     .addCommand(createProjectArchiveCommand())
+    .addCommand(createProjectCheckStateCommand())
     .addCommand(createProjectCloseoutCheckCommand())
     .addCommand(createProjectCompleteDiscoveryCommand())
     .addCommand(createProjectCompleteStateCommand())

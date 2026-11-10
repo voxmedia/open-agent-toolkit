@@ -3,9 +3,9 @@ name: oat-project-spec
 description: Use when discovery is complete but you're not ready to design yet, and you want to formalize requirements into a structured spec.md as an optional standalone step. Independent of the design workflow — oat-project-design confirms requirements automatically and does not require this skill to be run first.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.5
+  version: 2.0.6
 ---
 
 # Specification Phase
@@ -421,6 +421,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - **If** `"spec"` is in `oat_hill_checkpoints`: append `"spec"` to `oat_hill_completed` array
 
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Update content:
 

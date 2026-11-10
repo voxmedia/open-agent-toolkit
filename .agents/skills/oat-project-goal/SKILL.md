@@ -7,7 +7,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.7
+  version: 1.0.8
 ---
 
 # Goal Project
@@ -315,6 +315,9 @@ frontmatter write immediately after the scaffold, with the same shapes and
 meaning that `oat-project-brief` records. Record them only when a
 consolidation actually happened.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 1: Set Metadata and Read Repository Knowledge
 
 Update `"$PROJECT_PATH/state.md"` frontmatter (brief contract section 12.2):
@@ -327,6 +330,9 @@ Update `"$PROJECT_PATH/state.md"` frontmatter (brief contract section 12.2):
 - `oat_goal_status: active`, `oat_goal_outcome_audit: null`,
   `oat_goal_recovery: null`, `oat_milestone_gates: {}`, `oat_deliveries: []`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Read repository instructions and the minimum durable context the interview
 needs. Start with root `AGENTS.md`/`CLAUDE.md`. If `.oat/repo/AGENTS.md`
@@ -416,6 +422,9 @@ choice rendered by `oat project dispatch-ceiling choices --format markdown`).
 Unresolved non-interactive state blocks implementation readiness. Persist the
 policy only in `"$PROJECT_PATH/state.md"`.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ```bash
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
 ```
@@ -449,6 +458,9 @@ relevant set. Persist only disabled choices to `"$PROJECT_PATH/state.md"`.
 Never modify the shared, local, or user configuration layers. In
 non-interactive planning, preserve configured gates and do not invent or write
 an override. Re-alignment skips this step.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 3.6: Run the Artifact Review Loop
 
@@ -628,6 +640,9 @@ artifact review, gate, approval, and only then the `allowed` carrier.
 ref: <reviewed commit SHA> }`;
    - `decided_at`: the decision time.
 
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 If dispatch remains unresolved, review fails closed, or the outcome cannot be
 recorded, leave the pre-review values unchanged and commit them before
 stopping. Never expose an unreviewed or unapproved brief or amendment to
@@ -639,6 +654,9 @@ Update `"$PROJECT_PATH/state.md"`: `oat_workflow_mode: goal`,
 `oat_phase: plan`, `oat_phase_status: complete`, `oat_current_task: null`,
 `oat_hill_checkpoints: []`, and `oat_project_state_updated`. Keep
 `oat_milestone_status: aligning` until activation.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 5: Initialize or Extend the Journal
 
@@ -685,6 +703,10 @@ in_progress`, project `oat_pr_status` and `oat_pr_url` from the latest
    `null` when no delivery exists yet), so a merged previous delivery no
    longer reads as a live PR, and set `oat_current_task_id` in
    `implementation.md` to the milestone's first incomplete phase ID;
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 2. append the activation structural log entry (Project Log);
 3. commit through the Artifact Persistence rule (adding
    `"$PROJECT_PATH/project-log.md"` when the append wrote it).
@@ -731,7 +753,9 @@ agreed endpoint (brief contract sections 12.3 and 12.10).
    `implementing`.
 7. **Advance and activate.** Once refresh observes the previous delivery at
    its agreed endpoint (for an `open` endpoint the same observation suffices),
-   write `oat_milestone: m(N+1)` and `oat_milestone_status: aligning`, extend
+   write `oat_milestone: m(N+1)` and `oat_milestone_status: aligning`, run
+   `oat project check-state "$PROJECT_PATH"`, and stop on nonzero until repaired
+   and rechecked. Only after success extend
    the journal (Step 5), then run Step 7. Until then, stop and report that
    activation waits for the endpoint.
 
@@ -762,7 +786,8 @@ section 12.9 is the audit contract.
    commit). Every deferral or retirement is a scope decision the user approved
    in this step.
 4. Write `oat_goal_status: declared_met` and `oat_goal_outcome_audit` in one
-   `state.md` write and commit.
+   `state.md` write, run `oat project check-state "$PROJECT_PATH"`, and commit
+   only on success. On nonzero, stop; repair and recheck before continuing.
 5. Check the declaration read-only:
    `oat project closeout-check "$PROJECT_PATH" --json`. A refusal with
    `not-declared` or `audit-invalid` (or the router's `audit` context) is this
@@ -772,8 +797,9 @@ section 12.9 is the audit contract.
    goal met.
 
 **Audit repair** (context `audit`): re-read the router's audit error codes,
-correct only the audit (never the brief's outcome text to fit the audit), and
-re-run step 5.
+correct only the audit (never the brief's outcome text to fit the audit), then
+run `oat project check-state "$PROJECT_PATH"`. On nonzero, stop; repair and
+recheck before committing or continuing. Only after success re-run step 5.
 
 ### Step 10: Output Next Action
 

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.19
+  version: 1.7.20
 ---
 
 # Complete Project
@@ -564,6 +564,9 @@ If `oat_docs_updated` is `null` or empty:
 - **If `requireForProjectCompletion` is `true`:** Hard gate — ask user to run `oat-project-document` or explicitly skip. If user chooses to skip, update `state.md` frontmatter to set `oat_docs_updated: skipped`.
 - **If `requireForProjectCompletion` is `false` (default):** Soft suggestion — inform user about `oat-project-document` and allow proceeding. If user wants to skip, set `oat_docs_updated: skipped`.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 If `oat_docs_updated` is `skipped` or `complete`: proceed normally.
 
 #### Gate Confirmation
@@ -906,6 +909,12 @@ disposition, `deferred advisory`, described below. Append the dispositions to th
 log before the roll-up runs, so the roll-up summarizes them and the seal remains
 the final entry:
 
+If a fix edits another active project's `state.md` frontmatter, bind
+`AFFECTED_PROJECT_PATH` to that file's containing project directory and run
+`oat project check-state "$AFFECTED_PROJECT_PATH"` immediately after the write.
+On nonzero, stop; repair and recheck before committing, appending the
+disposition, or continuing.
+
 ```bash
 oat project log append \
   --project "$PROJECT_PATH" \
@@ -1080,6 +1089,9 @@ fields were observed: set `oat_pr_status_observed_at: '<UTC ISO 8601 now>'` in
 `state.md` frontmatter beside `oat_pr_status` (only when `oat_pr_status` is not
 `null`). An archived `oat_pr_status`/`oat_pr_url` is an observation at that
 time, not a live PR state.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 For `synced`, keep this finalized lifecycle state in the project checkout until
 Step 7.5 publishes it together with every later pre-archive artifact write. Do

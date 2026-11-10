@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.19
+  version: 1.5.20
 ---
 
 # Request Review
@@ -1666,6 +1666,9 @@ names this scope at stage `reviewing`, advance it to `stage: receiving` and set
 `review_artifact: reviews/{filename}.md` in `state.md`; leave `oat_milestone`,
 `oat_milestone_status`, and the execution pointer unchanged. Step 9.5 then
 commits `state.md` with the review bookkeeping.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 9.5: Commit Review Bookkeeping Atomically (Required)
 

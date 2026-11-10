@@ -3,9 +3,9 @@ name: oat-project-plan-writing
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
-allowed-tools: Read, Write, Glob, Grep
+allowed-tools: Read, Write, Bash(oat project check-state:*), Glob, Grep
 metadata:
-  version: 1.2.41
+  version: 1.2.42
 ---
 
 # Plan Writing Contract
@@ -499,6 +499,9 @@ Never write an `enabled` value, a boolean, or a list. Write the map only to
 never modified. Disabling here records project posture, not gate outcome: it
 never marks a gate passed, failed, or missing.
 
+After writing the map, run `oat project check-state "$PROJECT_PATH"`. On
+nonzero, stop; repair and recheck before committing or continuing.
+
 ### 4. Handle non-interactive planning
 
 Non-interactive mode includes `OAT_NON_INTERACTIVE=1` and any environment with
@@ -613,6 +616,9 @@ Runtime routing note:
 - Project dispatch policy is a named maximum constraint. Persist interactive
   project answers to `state.md` as `oat_dispatch_policy`; never copy
   compiled provider/model targets into that project policy.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Additional frontmatter keys (`oat_phase`, `oat_phase_status`, `oat_blockers`, `oat_last_updated`, `oat_generated`, `oat_template`, `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`) are set by calling skills as needed.
 

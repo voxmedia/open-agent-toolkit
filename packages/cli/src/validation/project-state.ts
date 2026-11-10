@@ -5,7 +5,6 @@ import {
 import { basename, join } from 'node:path';
 
 import {
-  getFrontmatterBlock,
   isProjectStateKind,
   isProjectStatePhase,
   type ProjectStateKind,
@@ -415,21 +414,26 @@ function validateCoordinationParent(
   }
 }
 
-function parseFrontmatterObject(
+export function parseProjectStateFrontmatter(
   content: string,
-  filePath: string,
+  filePath = 'state.md',
 ): Record<string, unknown> {
-  const frontmatter = getFrontmatterBlock(content);
+  const frontmatter = content.match(
+    /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/,
+  )?.[1];
   if (!frontmatter) {
     throw new Error(`${filePath} is missing frontmatter`);
   }
 
-  const parsed: unknown = YAML.parse(frontmatter);
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  const document = YAML.parseDocument(frontmatter);
+  if (document.errors[0]) {
+    throw document.errors[0];
+  }
+  if (!YAML.isMap(document.contents)) {
     throw new Error(`${filePath} frontmatter must be a YAML object`);
   }
 
-  return parsed as Record<string, unknown>;
+  return document.toJS() as Record<string, unknown>;
 }
 
 export function validateProjectState(
@@ -520,7 +524,7 @@ export function assertValidProjectStateContent(
   options: AssertProjectStateContentOptions = {},
 ): void {
   const filePath = options.filePath ?? 'state.md';
-  const frontmatter = parseFrontmatterObject(content, filePath);
+  const frontmatter = parseProjectStateFrontmatter(content, filePath);
   const result = validateProjectState({
     frontmatter,
     slug: options.slug,
@@ -553,7 +557,7 @@ export async function readRelatedProjectStateSnapshots(options: {
       const content = await readFile(statePath, 'utf8');
       snapshots.push({
         slug: entry.name,
-        frontmatter: parseFrontmatterObject(content, statePath),
+        frontmatter: parseProjectStateFrontmatter(content, statePath),
       });
     } catch {
       continue;
@@ -575,7 +579,7 @@ export async function assertValidProjectStateFilesystemContent(
     readFile: options.readFile,
   });
 
-  const frontmatter = parseFrontmatterObject(
+  const frontmatter = parseProjectStateFrontmatter(
     content,
     options.filePath ?? 'state.md',
   );

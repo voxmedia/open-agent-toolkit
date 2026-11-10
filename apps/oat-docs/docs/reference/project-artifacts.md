@@ -48,6 +48,20 @@ archive metadata own terminal reachability and retry identity.
 - `implementation.md`: the execution journal — phase sections with task blocks, run lines, review and gate receipts, deferred findings, deviations, and the final summary (see [The implementation journal](#the-implementation-journal))
 - `summary.md`: institutional memory artifact — generated from project artifacts at closeout, used as PR description source and archive cover page
 
+After every manual lifecycle write to `state.md` frontmatter, run the installed
+CLI check before committing or taking another workflow step:
+
+```bash
+oat project check-state /absolute/path/to/project || exit 1
+```
+
+A nonzero result stops the workflow until the frontmatter is repaired and the
+check succeeds. The check is read-only: it requires a frontmatter block, valid
+YAML, and a mapping, without validating lifecycle transitions or field values.
+Comments remain valid and the file is never rewritten. CLI-owned state writes
+retain their command’s validation. Plan validation and dashboard refresh can
+tolerate malformed state and are not replacements.
+
 Mode-sensitive notes:
 
 - `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`, `brief`, `goal`) for routing.

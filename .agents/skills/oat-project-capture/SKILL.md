@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.6
+  version: 1.0.7
 ---
 
 # Capture Untracked Work
@@ -162,6 +162,9 @@ Then update `state.md` frontmatter to reflect capture-specific metadata:
 - `oat_hill_checkpoints: []`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 4: Synthesize Discovery
 
 Populate `discovery.md` from **conversation context** — this is the primary value of capture. The agent has context about _why_ the work was done that commits alone can't provide.
@@ -241,6 +244,9 @@ Update `state.md`:
 - `oat_phase_status: complete`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 Update `implementation.md`:
 
 - `oat_status: complete`
@@ -253,6 +259,9 @@ Update `state.md`:
 - `oat_phase: implement`
 - `oat_phase_status: in_progress`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Update `implementation.md`:
 

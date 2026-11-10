@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.6
+  version: 1.2.7
 ---
 
 # Promote Project To Spec-Driven Lifecycle
@@ -138,6 +138,9 @@ Update `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - keep `oat_workflow_origin` as-is (`native` or `imported`)
 - align `oat_phase` and `oat_phase_status` with current actual progress
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Recommended default phase after promotion:
 

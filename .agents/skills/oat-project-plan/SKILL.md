@@ -4,9 +4,9 @@ description: Use when design.md is complete and executable implementation tasks 
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.22
+  version: 1.4.23
 ---
 
 # Planning Phase
@@ -489,6 +489,9 @@ Persist this normalized shape only in `"$PROJECT_PATH/state.md"`. Never copy
 compiled provider targets into project state, and do not persist the active
 project ceiling to user config.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 `Uncapped` persists explicit managed uncapped state. `Inherit Host
 Defaults` persists explicit inherit/default state. `Leave Unresolved` is
 a planning deferral and is not implementation-ready. Do not prompt when
@@ -571,6 +574,9 @@ Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
 every gate leaves the map absent. Never modify the shared, local, or user
 configuration layers, and never prompt or write a new map in non-interactive
 mode.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 12.5: Run Plan Artifact Review Loop
 
@@ -753,6 +759,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - **If** `"plan"` is in `oat_hill_checkpoints`: append `"plan"` to `oat_hill_completed` array
 
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Update content:
 

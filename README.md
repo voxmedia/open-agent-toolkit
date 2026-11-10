@@ -14,6 +14,11 @@ Define skills, agents and rules once and use them across Claude Code, Cursor, Co
 - **Docs that stay maintained.** Set up plain Markdown or a docs site, check it for broken links, navigation and diagram errors, and have your agent analyze it and apply the changes you approve. See [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling).
 - **Planning records as plain files.** Backlog, roadmap and decision records live in the repository next to the code, and can link to GitHub, Linear or Jira. See [Backlog and Planning](https://voxmedia.github.io/open-agent-toolkit/workflows/backlog-and-planning).
 
+After manual lifecycle edits to a project’s `state.md` frontmatter, run
+`oat project check-state /path/to/project` before committing or continuing. The
+read-only check requires parseable YAML with a mapping; repair any reported
+error and rerun it.
+
 Provider sync and standalone skills need no tracked project. Start with one part and add others later.
 
 ## Tool Packs
