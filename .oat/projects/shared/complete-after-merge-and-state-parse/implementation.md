@@ -104,6 +104,9 @@ Intent, files, proof command, result.
 **Review evidence:** reviewer reports released and branch `validate-plan` passed; historical state at `a323ee7ce` fails YAML parsing with `BAD_INDENT`, while its parent parses successfully. Exact source is `.oat/projects/shared/goal-delivery-freshness/state.md` at those revisions. These are reviewer-observed probes, not implementation verification. Root independently verified the goal-mode rule and state projection. No implementation or automated test changes exist.
 **Dispatch audit:** `Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
+**Operator disposition (2026-11-10):** accepted M1's proposed realignment: reuse existing authority in goal mode too, while bookkeeping PRs remain outside delivery registration/coverage. Accepted L1, L2 and L3. This decision is the requirement source for changing the old goal-mode explicit-request exception.
+**Remediation:** M1 is explicit in Approach, Constraints, Decisions and p02 exit evidence; L1 orders branch preparation before the first completion write; L2 records the candidate inventory and requires its final coverage mapping; L3 names already-rejected alternatives. All four brief edits are complete. Round 1 remains a review with findings; one correction round is used by the ensuing fresh review, and no gate attempt has been consumed.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

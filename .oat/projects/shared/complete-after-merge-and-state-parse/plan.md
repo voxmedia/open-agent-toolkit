@@ -32,15 +32,17 @@ Make completion work after a project's PR has already merged, and catch invalid 
 
 Expose one supported, read-only, shell-callable check backed by the existing YAML parsing dependency. Check the frontmatter block and YAML mapping, without validating lifecycle semantics or rewriting the file. Reuse existing strict parsing where practical; do not use `validate-plan` or dashboard refresh as substitutes, because they tolerate malformed state.
 
-Require the check at each manual lifecycle state-write boundary, including shared instructions used by multiple skills. Start with the bounded reconnaissance inventory of 21 skills and confirm all actual manual write sites during p01. CLI-owned writes remain owned by their commands. A nonzero result stops subsequent workflow effects; repair and recheck before resuming. A portable installed invocation is required, with no dependence on this repository's development dependencies or working directory.
+Require the check at each manual lifecycle state-write boundary, including shared instructions used by multiple skills. Start with the candidate inventory in `references/research/manual-state-writers.md` and confirm all actual manual write sites during p01. Record the final per-write-site coverage mapping there, explaining additions, exclusions, and shared-contract coverage; the initial 21 skills are a starting inventory, not an exhaustive count. CLI-owned writes remain owned by their commands. A nonzero result stops subsequent workflow effects; repair and recheck before resuming. A portable installed invocation is required, with no dependence on this repository's development dependencies or working directory.
 
 ### Completion after merge
 
-In `oat-project-complete`, observe the tracked PR with GitHub before branch-sensitive completion mutations. Resolve the target base from the PR/repository instead of hardcoding `main`; this repository uses `main`. Capture the merged delivery PR separately from the follow-up bookkeeping PR so the original status and identity remain truthful.
+In `oat-project-complete`, observe the tracked PR with GitHub before the first completion write. Resolve the target base from the PR/repository instead of hardcoding `main`; this repository uses `main`. Capture the merged delivery PR separately from the follow-up bookkeeping PR so the original status and identity remain truthful.
 
-For a merged PR, fetch the base and prepare the fresh bookkeeping branch before lifecycle commits or archiving. Use the current checkout when safe. If uncommitted or unmerged work cannot be preserved safely while moving to the base, explain the conflict and stop for recovery rather than dropping work. Reuse an already prepared follow-up when resuming; do not knowingly open a duplicate. Apply the shared parse check to manual state updates and continue through the existing completion, archive, exact-path commit, and PR routines. A failed live observation is not evidence that a PR is open or merged.
+For a merged PR, fetch the base and prepare the fresh bookkeeping branch before the first completion write, including Step 3.x summary, recap, and project-log outputs. This ordering avoids producing completion changes on the old branch and then treating them as unrelated dirty work. Use the current checkout when safe. If uncommitted or unmerged work cannot be preserved safely while moving to the base, explain the conflict and stop for recovery rather than dropping work. Reuse an already prepared follow-up when resuming; do not knowingly open a duplicate. Apply the shared parse check to manual state updates and continue through the existing completion, archive, exact-path commit, and PR routines. A failed live observation is not evidence that a PR is open or merged.
 
 Respect existing task authority when preparing, publishing, and landing the follow-up PR. Do not ask again for already authorized actions. Missing authority still requires the corresponding operator decision. Preserve existing open-PR completion behavior and its archive-aware PR-body sync; skip that sync for the merged original.
+
+Goal mode uses this same reuse-of-existing-authority rule. Replace completion Step 2's requirement for a new explicit bookkeeping-PR request in every run; existing authority must cover the action, and missing authority still requires an operator decision. Preserve goal delivery coverage as satisfying the delivery PR step. The separate completion bookkeeping PR is never registered in `oat_deliveries` or counted toward coverage, and it must not replace the projected original delivery PR identity.
 
 ### Verification and release
 
@@ -52,7 +54,7 @@ Run the repository Definition of Done in its required order, plus the mandated l
 
 ## Constraints and Out of Scope
 
-- Preserve completion, archive durability, exact-path commit, and review/gate contracts already present on the integration base.
+- Preserve completion, archive durability, exact-path commit, and review/gate contracts already present on the integration base, except for the explicitly approved replacement of goal mode's per-run bookkeeping-PR request rule with reuse of existing authority.
 - This check guarantees parseable frontmatter, not valid lifecycle transitions, receipt provenance, or correctness of field values.
 - No migration of all writes to CLI setters; no template-comment cleanup, general state editor, transactional rewrite framework, or new concurrency protocol.
 - UP-01 (exit-gate waiver writer), broader gate-freshness redesign, and reopening completed goal projects are out of scope.
@@ -60,17 +62,18 @@ Run the repository Definition of Done in its required order, plus the mandated l
 
 ## Decisions
 
-- **Brief workflow, one delivery:** selected by the operator; one agreed design with phases of intent and evidence fits these related workflow fixes without an up-front task list.
+- **Brief workflow, one delivery:** selected by the operator; one agreed design with phases of intent and evidence fits these related workflow fixes without an up-front task list. Separate UP-02 and UP-03 projects/deliveries were not selected; the retro disposition groups them together.
 - **Reuse existing authority:** operator accepted automatic fresh-branch/follow-up preparation within existing authority on 2026-11-10; rejected always asking before branch preparation.
+- **Goal-mode authority realignment:** after review M1, the operator explicitly selected reuse of existing authority for goal completion too on 2026-11-10, replacing the per-run explicit-request exception. Rejected retaining that extra prompt. Bookkeeping PRs remain outside delivery registration and coverage.
 - **Shared strict parse check:** operator accepted a common check with stop-on-failure on 2026-11-10; rejected the larger migration to CLI setters. Semantic validation and template cleanup are excluded.
-- **Exact model choices:** operator selected GPT-6.1 Sol high for implementation and Claude Opus 5.5 high for reviews. These explicit selections override default parent inheritance and automatic model choice. Do not silently substitute another model or effort.
+- **Exact model choices:** operator selected GPT-6.1 Sol high for implementation and Claude Opus 5.5 high for reviews. Rejected default parent inheritance and automatic model choice in favor of these explicit selections. Do not silently substitute another model or effort.
 - **Review posture (2026-11-10):** operator disabled additional phase gates and kept both configured lifecycle gates (`oat-project-brief` and `oat-project-implement`). Built-in phase reviews and final integrated review still run, using Opus 5.5 high.
-- **Sequential delivery:** establish the shared check first, then use it in the completion change; both phases touch completion instructions and release assets.
+- **Sequential delivery:** establish the shared check first, then use it in the completion change; both phases touch completion instructions and release assets. Parallel p01/p02 execution is rejected because of those shared files and the dependency on the check.
 
 ## Known Unknowns
 
 - **KU1 — Installed entry point and coverage:** choose the smallest supported shared check entry point, confirm the complete manual-writer inventory and shared-reference bundling, and distinguish manual writes from CLI-owned writes. Settled by p01 within the agreed parse-only contract.
-- **KU2 — Post-merge resume and project scope:** reconcile the fresh-base branch path with existing shared/synced/local completion and archive-resume contracts. Confirm that the merged base contains the project inputs before mutation; preserve/report any divergent local inputs. Settled by p02, reusing existing recovery conventions.
+- **KU2 — Post-merge resume and project scope:** reconcile the fresh-base branch path with existing shared/synced/local completion and archive-resume contracts, including goal-mode completion under the authority decision above. Confirm that the merged base contains the project inputs before mutation; preserve/report any divergent local inputs. Settled by p02, reusing existing recovery conventions.
 - **KU3 — Incident reproduction:** locate the malformed state at historical commit `a323ee7ce` and preserve only the smallest relevant probe input; document unavailable historical objects. Settled by p01.
 
 ## Delivery endpoint and authority
@@ -91,7 +94,7 @@ Run the repository Definition of Done in its required order, plus the mandated l
 ## Phase p02: Deliver completion bookkeeping after merge
 
 **Intent:** make completion observe the original PR live, prepare the follow-up branch from the updated base before mutation, retain truthful original-PR state, and land bookkeeping through a follow-up PR under existing authority.
-**Exit evidence:** merged-PR reproduction confirms live `merged` status, fresh-base ancestry, completion-only changes and follow-up PR routing with no merged-body sync; open-PR control retains its existing behavior; the resulting state passes p01's check; applicable scope/resume cases and full required repository gates pass; integrated review is settled.
+**Exit evidence:** merged-PR reproduction confirms live `merged` status, fresh-base ancestry, completion-only changes and follow-up PR routing with no merged-body sync; open-PR control retains its existing behavior; the resulting state passes p01's check; a goal-mode case proves existing authority permits the follow-up without a new per-run request while bookkeeping stays outside delivery registration and coverage; applicable scope/resume cases and full required repository gates pass; integrated review is settled.
 **Provisional:** yes
 
 ## Parallelism
@@ -100,11 +103,12 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                        | Reviewed Head                            | Invocation | Gate Target                              |
-| ----- | -------- | -------- | ---------- | ----------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
-| plan  | artifact | received | 2026-11-10 | structured review; receipt in implementation.md | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| p01   | code     | pending  | -          | -                                               | -                                        | -          | -                                        |
-| final | code     | pending  | -          | -                                               | -                                        | -          | -                                        |
+| Scope | Type     | Status          | Date       | Artifact                                        | Reviewed Head                            | Invocation | Gate Target                              |
+| ----- | -------- | --------------- | ---------- | ----------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
+| plan  | artifact | fixes_completed | 2026-11-10 | structured review; receipt in implementation.md | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| plan  | artifact | pending         | -          | -                                               | -                                        | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p01   | code     | pending         | -          | -                                               | -                                        | -          | -                                        |
+| final | code     | pending         | -          | -                                               | -                                        | -          | -                                        |
 
 Add p02's code review row when that phase becomes concrete. Preserve existing event rows.
 
@@ -117,6 +121,7 @@ Not started. Outcome evidence will be recorded here at closeout and in `implemen
 - Journal: `implementation.md`
 - Research: `references/research/`
 - Project log: `project-log.md` when enabled
+- Candidate writer inventory and p01 coverage mapping: `references/research/manual-state-writers.md`
 - Tracked source: `.oat/repo/reference/project-summaries/20261109-goal-delivery-freshness.md`
 - Source retro: `.oat/projects/archived/goal-delivery-freshness/references/project-retro.md`, UP-02 and UP-03 (local archive; the two problem statements and accepted direction are carried above)
 - Completion workflow: `.agents/skills/oat-project-complete/SKILL.md`
