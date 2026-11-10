@@ -14,6 +14,20 @@ oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p01:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: 'p01-help-snapshot-20261110'
+        original_request_id: 'complete-state-parse-p01-20261110'
+        original_task_id: 'p01-t01'
+        original_commit: '180f4758c2e1a1d470a8a86e6252836c883846d0'
+        discovered_by: 'bash scripts/with-isolated-home.sh pnpm test (src/commands/help-snapshots.test.ts: project --help)'
+        dispatch_target: 'oat-phase-implementer-gpt-6-1-sol-high'
+        reservation_head: '47fb0b62cdd87a3d3549a371640a20d641921588'
+        status: 'failed'
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
