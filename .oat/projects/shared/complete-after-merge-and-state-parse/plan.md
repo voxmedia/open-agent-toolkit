@@ -107,6 +107,7 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | ----- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
 | plan  | artifact | fixes_completed | 2026-11-10 | structured review; receipt in implementation.md                        | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
 | plan  | artifact | fixes_completed | 2026-11-10 | structured round 2; L1 clarified locally; receipt in implementation.md | aa04c4605e81ca88823accfca56a7cf80c4f081b | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| plan  | artifact | received        | 2026-11-10 | reviews/artifact-plan-review-2026-11-10T215917Z.md                     | -                                        | -          | -                                        |
 | p01   | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 | final | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 
