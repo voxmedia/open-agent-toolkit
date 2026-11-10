@@ -1,11 +1,11 @@
 ---
-oat_template: true
-oat_status: in_progress
-oat_ready_for: null
+oat_template: false
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-11-10
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: brief
@@ -78,8 +78,10 @@ Run the repository Definition of Done in its required order, plus the mandated l
 
 ## Delivery endpoint and authority
 
+- **Brief approved:** 2026-11-10 by user at 0a0bc8e0d525c886ed10738ee42737cc2199cde3.
+
 - **Endpoint:** merged — this project's PR is merged into the repository base after checks and reviews pass.
-- **Authority:** the operator approves the reviewed brief once. After that approval, the agent may implement within these boundaries, accept phases after required evidence/reviews, open and update the PR, address in-scope findings, and merge after checks and reviews pass. The operator granted merge authority on 2026-11-10; this is not yet brief approval.
+- **Authority:** the operator approves the reviewed brief once. After that approval, the agent may implement within these boundaries, accept phases after required evidence/reviews, open and update the PR, address in-scope findings, and merge after checks and reviews pass. The operator granted merge authority on 2026-11-10; brief approval is recorded above.
 - **Product authority:** materially changed outcomes, approach, exclusions, or new hardening return to the operator. No gate or freshness waiver is implied by merge authority.
 - **Execution:** implementation uses `gpt-6.1-sol` with high reasoning effort; reviews use `claude-opus-5-5` with high effort. Root orchestration retains integration and user decisions. Model unavailability is reported without substitution.
 

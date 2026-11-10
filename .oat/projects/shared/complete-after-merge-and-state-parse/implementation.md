@@ -1,5 +1,6 @@
 ---
 oat_status: in_progress
+oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-10
@@ -43,38 +44,17 @@ oat_generated: false
 | p01   | pending | 1     | 0/1      |
 | p02   | pending | 1     | 0/1      |
 
-**Total:** 0/[N] phases accepted
+**Total:** 0/2 phases accepted
 
 ---
 
-## Phase p01: [Phase Name]
-
-**Status:** pending
-**Base:** [full base SHA, recorded when the phase starts]
-**Head:** [full head SHA, recorded when the phase's work ends, before its review]
-**Executor:** [root | phase-implementer:<id> | worker:<id> | inline:<exception-ref> | reconciled]
-
-[Summary prose: verification, review disposition, authority changes, deviations, next action.]
-
-<!-- Execution records follow the summary. Replace this example with real records when work starts: -->
-
-```markdown
-### Task p01-t01: [Execution record name]
-
-**Status:** completed
-**Commit:** [full commit SHA]
-**Executor:** worker:w1
-
-Intent, files, proof command, result.
-```
-
----
-
-## Phase p02: [Phase Name]
+## Phase p01: Validate manual lifecycle state writes
 
 **Status:** pending
 
----
+## Phase p02: Deliver completion bookkeeping after merge
+
+**Status:** pending
 
 ## Orchestration Runs
 
