@@ -1,21 +1,40 @@
 # Open Agent Toolkit (OAT)
 
-Define agent capabilities once, use them across coding tools, and add as much workflow structure as your team needs. Open Agent Toolkit (OAT) is an open-source CLI, skill library, and optional project workflow system—not another agent runtime.
-
-## Choose Your Starting Point
-
-Start with the part that solves your problem; combine others when useful:
-
-1. **Keep coding tools aligned.** Maintain canonical skills, agents, and rules; sync provider views and inspect drift instead of maintaining separate copies. Start with [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync).
-2. **Use skills for a task.** Research a decision or review code without adopting a tracked project lifecycle. Choose a [skill](https://voxmedia.github.io/open-agent-toolkit/skills).
-3. **Make longer work resumable.** Use plans, implementation records, reviews, and human checkpoints when you need a tracked workflow. [Choose a Workflow](https://voxmedia.github.io/open-agent-toolkit/workflows/choose-workflow) that fits the work.
-4. **Make documentation easier to maintain.** Bootstrap plain Markdown or a docs site with an optional approved IA preset and anticipated reader-page count, run read-only `oat docs check` for reader/link/navigation/diagram errors, use `oat docs literals` for bounded triad occurrence evidence, then analyze and apply improvements with [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling).
-
-Provider sync does not require project workflows. Standalone skills do not require an active OAT project; project-specific skills state their prerequisites in their guides.
+Define skills, agents and rules once and use them across Claude Code, Cursor, Codex, GitHub Copilot and Gemini CLI (rules where the tool supports them). Add as much workflow structure as your team needs. Open Agent Toolkit (OAT) is an open-source CLI, skill library and optional project workflow system, not another agent runtime.
 
 <img alt="Skills, agents and rules in .agents/ flow through oat sync to provider views; optional tool packs and tracked projects work on their own or together" src=".github/assets/readme/oat-at-a-glance.svg">
 
-You edit canonical skills, agents, and rules once; `oat sync` writes the provider views your coding tools need, and some tools read `.agents/` directly. Tool packs and tracked projects are optional. Pack skills run inside your coding agent: invoke `/name` in slash-based agents or `$name` in Codex, not in a shell. Packs install at project scope (this repository) or user scope (your home directory); the core pack, when installed, is user-only. New tracked projects default to synced scope, which stores project files on a separate Git ref and pushes that ref to your `origin` remote, so they require an `origin` Git remote; choose local project storage if you do not want remote-backed project state. For example, after `oat init --scope project`, run `oat tools install workflows --scope project` and invoke `/oat-project-quick-start` to start a tracked project, or run `oat tools install docs --scope project` and invoke `/oat-docs-bootstrap` to set up documentation.
+## What OAT Offers
+
+- **One source for every coding tool.** Edit skills, agents and rules in one place. OAT writes copies for the tools that need them, since some read the source folder directly, and reports drift when a copy no longer matches. See [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync).
+- **Ready-made skills.** Research and compare options, review code, brainstorm or capture ideas from inside your agent, without starting a tracked project. Browse the [skills](https://voxmedia.github.io/open-agent-toolkit/skills).
+- **Tracked projects that survive a new session.** Work moves through a plan, implementation, review and a pull request, with a discovery step in the fuller modes. A written record lets the next session pick up where the last one stopped. Choose how much process to use, from a one-sitting fix to a multi-milestone goal, or bring a plan you already have. See [Choose a Workflow](https://voxmedia.github.io/open-agent-toolkit/workflows/choose-workflow).
+- **Reviews and human approvals.** Reviewer agents check each phase and the final result, and the plan too by default. You approve at the checkpoints the workflow sets, and OAT never merges a pull request for you. See [Approvals and Automation](https://voxmedia.github.io/open-agent-toolkit/workflows/approvals-and-automation).
+- **Hands-off runs when you want them.** An autonomous run carries a tracked project (other than a multi-milestone goal) to a pull request. It stops and reports when it needs a person, such as for a decision, a missing credential or a blocking review finding. Waves coordinate a batch of plans you already have. See [Autonomous Execution](https://voxmedia.github.io/open-agent-toolkit/workflows/advanced/autonomy).
+- **Docs that stay maintained.** Set up plain Markdown or a docs site, check it for broken links, navigation and diagram errors, and have your agent analyze it and apply the changes you approve. See [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling).
+- **Planning records as plain files.** Backlog, roadmap and decision records live in the repository next to the code, and can link to GitHub, Linear or Jira. See [Backlog and Planning](https://voxmedia.github.io/open-agent-toolkit/workflows/backlog-and-planning).
+
+Provider sync and standalone skills need no tracked project. Start with one part and add others later.
+
+## Tool Packs
+
+Skills ship in packs that you install with the CLI. Pack skills run inside your coding agent, not your shell: type `/name` (or `$name` in Codex).
+
+| Pack               | Adds                                                        |
+| ------------------ | ----------------------------------------------------------- |
+| workflows          | Tracked projects, reviewer agents and waves (needs utility) |
+| docs               | Docs setup, analysis and upkeep                             |
+| research           | Research, comparison and synthesis                          |
+| project-management | Backlog, roadmap and decision records                       |
+| ideas              | Idea capture and promotion                                  |
+| brainstorm         | Brainstorming with a visual companion                       |
+| utility            | Code review, repo upkeep and subagent dispatch              |
+| core               | Setup diagnostics and the bundled docs                      |
+
+- **Packs install per repository or for your user account.** The core pack is user-only.
+- **Tracked projects sync to your `origin` remote by default.** Choose local storage to keep project records on this machine.
+
+[Tool Packs](https://voxmedia.github.io/open-agent-toolkit/getting-started/tool-packs) covers each pack and the install options.
 
 ## First Success: Inspect a Repository
 
@@ -30,7 +49,16 @@ oat status --scope project
 
 Initialization creates canonical directories and sync state; status reports provider assets and drift. Follow the provider prompts and skip optional guided setup if you only want sync. This does not create a tracked OAT project.
 
-Once you have canonical assets, preview changes with `oat sync --scope project --dry-run` before applying them. Pack installation has its own scope: `oat tools install <pack> --scope project` installs that pack in the repository only, and `--scope user` installs it under your home directory so you can reuse it across repositories. Without a pack name, `oat tools install --scope project` installs every pack except the user-only core pack in the repository, reports that it skipped core, and writes nothing under your home directory. See [CLI Bootstrap](https://voxmedia.github.io/open-agent-toolkit/getting-started/bootstrap) for setup details and [Tool Packs](https://voxmedia.github.io/open-agent-toolkit/getting-started/tool-packs) for the user-only core pack and other installation choices.
+Next, preview the sync or add a pack:
+
+```bash
+oat sync --scope project --dry-run
+oat tools install utility --scope project     # needed by workflows
+oat tools install workflows --scope project   # then run /oat-project-quick-start
+oat tools install docs --scope project        # then run /oat-docs-bootstrap
+```
+
+Use `--scope user` instead to install a pack for all your repositories. [CLI Bootstrap](https://voxmedia.github.io/open-agent-toolkit/getting-started/bootstrap) covers the rest of setup.
 
 ## Go Deeper
 
