@@ -73,7 +73,7 @@ Run the repository Definition of Done in its required order, plus the mandated l
 ## Known Unknowns
 
 - **KU1 — Installed entry point and coverage:** choose the smallest supported shared check entry point, confirm the complete manual-writer inventory and shared-reference bundling, and distinguish manual writes from CLI-owned writes. Settled by p01 within the agreed parse-only contract.
-- **KU2 — Post-merge resume and project scope:** reconcile the fresh-base branch path with existing shared/synced/local completion and archive-resume contracts, including goal-mode completion under the authority decision above. Confirm that the merged base contains the project inputs before mutation; preserve/report any divergent local inputs. Settled by p02, reusing existing recovery conventions.
+- **KU2 — Post-merge resume and project scope:** reconcile the fresh-base branch path with existing shared/synced/local completion and archive-resume contracts, including goal-mode completion under the authority decision above. Confirm that the merged base contains the project inputs before mutation; preserve/report any divergent local inputs. Settle the phase-local handling of failed live observation and no tracked PR, and record evidence for both alongside merged/open controls; neither case establishes an observed open or merged state. Settled by p02, reusing existing recovery conventions.
 - **KU3 — Incident reproduction:** locate the malformed state at historical commit `a323ee7ce` and preserve only the smallest relevant probe input; document unavailable historical objects. Settled by p01.
 
 ## Delivery endpoint and authority
@@ -107,11 +107,11 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | ----- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
 | plan  | artifact | fixes_completed | 2026-11-10 | structured review; receipt in implementation.md                        | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
 | plan  | artifact | fixes_completed | 2026-11-10 | structured round 2; L1 clarified locally; receipt in implementation.md | aa04c4605e81ca88823accfca56a7cf80c4f081b | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| plan  | artifact | received        | 2026-11-10 | reviews/artifact-plan-review-2026-11-10T215917Z.md                     | -                                        | -          | -                                        |
+| plan  | artifact | fixes_completed | 2026-11-10 | reviews/archived/artifact-plan-review-2026-11-10T215917Z.md            | -                                        | -          | -                                        |
 | p01   | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 | final | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 
-Add p02's code review row when that phase becomes concrete. Preserve existing event rows.
+Add p02's code review row when that phase becomes concrete. Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 

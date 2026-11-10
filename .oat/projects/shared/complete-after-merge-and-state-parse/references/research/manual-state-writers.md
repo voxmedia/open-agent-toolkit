@@ -28,6 +28,12 @@ The cited sites direct manual state writes or establish a shared instruction to 
 | oat-project-revise                | `.agents/skills/oat-project-revise/SKILL.md:291`                         | Manual instruction           | Revision phase and pointer                                                |
 | oat-project-spec                  | `.agents/skills/oat-project-spec/SKILL.md:411`                           | Manual instruction           | Specification completion state                                            |
 
+## Additional pointers from the brief gate
+
+The original baseline above remains unchanged. The gate identified another manual write at `.agents/skills/oat-project-complete/SKILL.md:1078–1081`: after CLI-owned `complete-state`, the skill directs a manual `oat_pr_status_observed_at` write. Include it in p01's per-write-site reconciliation. Root verified this instruction on 2026-11-10.
+
+For p02's required documentation update, `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md:623` restates the goal-mode per-run bookkeeping-PR request rule; update that restatement with the accepted authority realignment.
+
 ## p01 coverage reconciliation
 
 Pending implementation. Preserve the baseline above and record the final per-write-site mapping here, with added/reclassified/removed candidates, manual versus CLI-owned ownership, and the check invocation or shared instruction that covers each manual boundary. The plan-review grep reported 31 matching directories, but its broad text matching included non-lifecycle references and is not a competing authoritative count.

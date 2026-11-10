@@ -95,12 +95,18 @@ oat_workflow_origin: native # native | imported
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
+oat_brief_gate:
+  status: allowed
+  disposition: passed
+  config_fingerprint: 'sha256:f7e3a5406a8a8a184532a47f3c6ec30ffca5b79b0b4494d47f79df3b4339f2e4'
+  reviewed_head: '215d88e6ea8d3fdd9b75d4123fcfe49aede2799e'
+  decided_at: '2026-11-10T22:02:24Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-10T21:56:55.903596Z'
+oat_project_state_updated: '2026-11-10T22:02:24Z'
 oat_generated: false
 ---
 
@@ -116,7 +122,7 @@ Plan - Authoring the Project Brief
 
 ## Artifacts
 
-- **Plan:** `plan.md` (artifact review settled; configured brief gate pending)
+- **Plan:** `plan.md` (artifact reviews settled; configured brief gate passed; operator approval pending)
 - **Implementation:** `implementation.md` (scaffolded brief journal template — not started)
 - **Research:** `references/research/` (manual-writer baseline recorded)
 
@@ -125,7 +131,8 @@ Plan - Authoring the Project Brief
 - ✓ Brief project scaffolded
 - ✓ Brief and implementation artifacts scaffolded
 - ✓ Design choices and merge authority recorded
-- ⧗ Awaiting brief review and approval
+- ✓ Artifact reviews and configured brief gate completed; Low notes dispositioned
+- ⧗ Awaiting formal operator approval of the reviewed brief
 
 ## Blockers
 
@@ -133,4 +140,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-brief` to author and approve the brief
+Operator approves the reviewed brief, requests revision, or promotes to quick. Implementation has not started.

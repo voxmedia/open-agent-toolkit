@@ -118,6 +118,26 @@ Intent, files, proof command, result.
 **Evidence:** reviewer inspected the brief diff, seven baseline writer citations and completion Step 2. No tests/builds/gates were run by this reviewer; no implementation was verified. Root verified the preserved PR_ON_COMPLETE clause against completion Step 2. Local plan validation and frontmatter parsing are recorded with the ensuing bookkeeping commit.
 **Dispatch audit:** `Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
 
+### Review Received: plan
+
+**Date:** 2026-11-10
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-11-10T215917Z.md
+**Gate run:** `53f34cdc-7406-4d8a-aff6-129f00fd14ad`
+**Reviewed head:** `215d88e6ea8d3fdd9b75d4123fcfe49aede2799e` (captured before launch and explicitly named in the review body).
+**Reviewer:** configured Claude Opus 5.5 high; invocation evidence `claude-opus-5-5-high`, runtime Claude, model `claude-opus-5-5`, effort `high`.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 3
+**Finding classes:** L1 accepted-requirement (operator's 2026-11-10 live-PR observation requirement; brief contract section 4 permits phase-local choices) · L2 accepted-requirement (brief contract Reviews table convention and event preservation rule) · L3 accepted-requirement (operator's 2026-11-10 manual-writer coverage mapping decision; AGENTS.md same-PR documentation requirement)
+
+- L1 (Low): observation failure and absent tracked PR behavior were unstated → resolve_in_artifact. KU2 now explicitly assigns both cases and their evidence to p02 under the existing live-observation requirement. This does not invent an observed PR state or select a new recovery policy; p02 remains provisional and must reconcile existing completion behavior before implementation.
+- L2 (Low): older structured artifact rows use code-only metadata columns and prose artifact cells → resolve_in_artifact. Preserve those historical rows as requested; the current gate row uses an actual archived review path and `-` in code-only columns. Future artifact rows follow that shape. No reviewed-head history is rewritten.
+- L3 (Low): the candidate baseline omitted completion's manual observation timestamp write → resolve_in_artifact. Added a supplementary pointer to completion lines 1078–1081 for p01 enumeration, plus the closeout documentation restatement at `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md:623` for p02. The original baseline remains intact and explicitly non-exhaustive.
+
+**Outcome:** gate passed its High threshold; all three Low notes dispositioned locally. The review event is `fixes_completed`, preserving that the raw review had findings; no clean re-review is claimed. No implementation tasks or additional review delegation. Formal brief approval remains pending.
+**Resolution evidence:** the installed `oat review resolve` was unavailable; the existing branch build resolved this exact artifact/scope/type/run successfully. It reported reviewed-head corroboration unavailable in the artifact metadata/row; the full SHA above is independently recorded by the launch capture and review body. No latest-review fallback was used.
+**Verification:** gate exit 0, envelope `status: ok`, `receiveEligible: true`, matching handoff and run. Reviewer ran plan validation and read-only source checks; no implementation tests were claimed. Root re-read both L3 sources. Fresh `git fetch origin main` found no new commits in the planned paths. Artifact verification on parent HEAD `7aa333cdd6cf6563abc2c3b275edc0ea1802cd75` plus the exact uncommitted receive changes in plan.md, state.md, implementation.md, the writer inventory and review archival: branch `project validate-plan --json` returned valid=true (exit 0); strict YAML mapping parses for the three frontmatter-bearing artifacts passed (exit 0); scoped oxfmt and `git diff --check` passed (exit 0). Runtime Node v26.11.1 on Darwin arm64; existing installed dependencies and branch build, no cached test claim. Integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Full implementation gates are not yet applicable or claimed; only project artifacts changed.
+**Gate terminal:** `53f34cdc-7406-4d8a-aff6-129f00fd14ad` — raw outcome `review_completed_gate_passed`; Critical 0 · High 0 · Medium 0 · Low 3; attempt 1; received and allowed/passed. This is not the all-bookkeeping exception.
+**Fingerprint method:** SHA-256 of compact, key-sorted JSON containing the resolved command, description, onFailure, maxAttempts and projectOverride; declaration captured before launch.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
