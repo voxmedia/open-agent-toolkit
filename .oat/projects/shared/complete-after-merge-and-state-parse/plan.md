@@ -100,11 +100,11 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status   | Date       | Artifact                                        | Reviewed Head                            | Invocation | Gate Target                              |
+| ----- | -------- | -------- | ---------- | ----------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
+| plan  | artifact | received | 2026-11-10 | structured review; receipt in implementation.md | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| p01   | code     | pending  | -          | -                                               | -                                        | -          | -                                        |
+| final | code     | pending  | -          | -                                               | -                                        | -          | -                                        |
 
 Add p02's code review row when that phase becomes concrete. Preserve existing event rows.
 

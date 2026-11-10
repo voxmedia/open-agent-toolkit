@@ -88,6 +88,22 @@ Intent, files, proof command, result.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
+### Brief artifact review — 2026-11-10, round 1
+
+**Reviewed head:** `303910aa99c0eb63dde0cae121ce17d36576a5ab`
+**Reviewer:** Claude Opus 5.5 high; structured return via T3, no review artifact. T3 reports executed model `claude-opus-5-5`; high effort is configured launch evidence.
+**Findings:** 0 Critical, 0 High, 1 Medium, 3 Low.
+**Finding classes:** M1 accepted-requirement (operator 2026-11-10 authority alignment and existing completion Step 2 goal-coverage contract) · L1 accepted-requirement (operator 2026-11-10 accepted live observation before completion writes) · L2 accepted-requirement (AGENTS.md Workflow Guardrail and oat-project-brief Step 2 artifact persistence) · L3 accepted-requirement (brief contract section 1 Decisions)
+**Outcome:** received; awaiting operator realignment on M1 and disposition of L1–L3. No brief fixes applied, no retry consumed, no gate launched.
+
+- **M1 (Medium):** goal-mode completion projects the latest delivery into `oat_pr_status`, but completion Step 2 allows a bookkeeping PR only on an explicit request in the current run. The brief's reuse-of-authority direction needs an explicit goal-mode policy. Root verified the existing rule at `.agents/skills/oat-project-complete/SKILL.md:301` and the projection in goal/pr-progress. Proposed: apply the accepted authority rule to goal mode while keeping bookkeeping PRs outside `oat_deliveries` and coverage; awaiting operator.
+- **L1 (Low):** state explicitly that fresh-branch preparation precedes the first completion write, including Step 3.x outputs; offered to operator.
+- **L2 (Low):** persist the existing bounded 21-skill inventory and final reviewed mapping in the project's research or journal so coverage remains inspectable; offered to operator.
+- **L3 (Low):** explicitly name the rejected separate-delivery, default-model and parallel-phase alternatives without inventing operator decisions; offered to operator.
+
+**Review evidence:** reviewer reports released and branch `validate-plan` passed; historical state at `a323ee7ce` fails YAML parsing with `BAD_INDENT`, while its parent parses successfully. Exact source is `.oat/projects/shared/goal-delivery-freshness/state.md` at those revisions. These are reviewer-observed probes, not implementation verification. Root independently verified the goal-mode rule and state projection. No implementation or automated test changes exist.
+**Dispatch audit:** `Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
