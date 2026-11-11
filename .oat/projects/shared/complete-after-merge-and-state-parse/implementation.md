@@ -267,6 +267,27 @@ Root verified the clean tree at 8e231765ce151db88dedecff4a09d6450089d535, exactl
 **Commit:** dd394df379f25aba250e4e8d64d49bb0652ca72e
 **Result:** 104 completion tests and 139 focused CLI contract tests passed (exit 0). The broader isolated shared/validation run passed 1,270 with one obsolete heading assertion failing; that assertion was mechanically updated and passed in the focused run. Null shell composition and both synced-record negative cases failed before the fix and passed afterward. Removing follow-up eligibility and the goal-authority sentence each broke its targeted test; both restored. Evidence: `.oat/analysis/complete-after-merge-p02/review-fixes/` logs and `can-fail.json`. Node 22.23.3/pnpm 10.13.1, Darwin arm64; real Git and branch-built status command, substituted gh boundary. Formatting and hook-only formatting followed tests. Full verification on the combined H1 correction remains required; this task does not advance phase Head or claim phase acceptance.
 
+### Task p02-t03: (review) Compose automatic completion with authorized follow-up delivery
+
+**Status:** completed
+**Executor:** phase-implementer:complete-after-merge-p02-20261111
+**Handle:** same GPT-6.1 Sol high T3 child; native handle unavailable
+**Source review:** reviews/archived/p02-review-2026-11-11T012506Z.md — H1
+**Continuation event:** p02-h1-bounded-fix-20261111
+**Intent:** preserve complete-auto ordinary/batch composition by refusing merged completion before writes without existing per-project explicit authority, and passing authorized follow-up preparation/publication to the current completion skill; preserve open/no-PR, scope and archive-resume contracts.
+**Files:** complete-auto skill/new narrow authority helper; composing completion Git tests; matching CLI skill contracts; relevant closeout/config documentation and p02 research evidence; mechanically required skill version.
+**Proof command:** actual auto/core shell blocks over real Git/state/status with substituted gh; pre-fix reproduction and authority/publication can-fail controls; combined isolated contracts and ordered required repository gates.
+**Pre-task HEAD:** 47d83407bee1d1232f6ae724316ac887aaa3b135
+**Mechanically widened boundary:** oat-wave-execute closeout already inventories every complete-auto preflight refusal; add new preflight:8 to its existing hard-stop list so missing follow-up authority cannot fall through to lifecycle writes. Its p01 PR-scoped version bump is retained. No deferrable classification or batch membership changes.
+**Review-fix round:** 1 of 2. Separate from post-commit recovery.
+**Recovery capacity:** p02 used 0/10, remaining 10, pending null; p01 used 2/10 unchanged. No nested delegation.
+
+**Commit:** f74fdb8ac36875113b1a735671044c560270100d
+**Result:** all 108 completion tests passed, including root's C1/M1/L1/L2 regressions and four new actual complete-auto/core Git/status/shell compositions. Isolated shared/validation contracts passed 1,271; scoped oxlint, scoped CLI build, formatting and git diff check exited 0. Four can-fail probes each failed for the intended required-authority, project-binding, original-PR-binding and publication clause; helper source restored. Hook changed no source bytes; built authority helper is byte-identical to canonical source. Combined clean-candidate ordered verification follows this record.
+**Exact implementation file bounds:** complete-auto SKILL.md and scripts/resolve-followup-authority.mjs; completion tests/prepare-completion-branch.test.mjs; wave-execute SKILL.md (only preflight:8 hard-stop propagation); CLI complete-auto-contracts.test.ts and named-skill-load-contract.test.ts; closeout-skills.md and reference/configuration.md docs; references/research/completion-after-merge.md. The named-skill matrix narrowly classifies the new operator recovery-owner reference as non-executing; it does not waive a skill invocation.
+**Scope and authority:** existing explicit task sources are handed off per requested project/original URL; opt-in and PR preference grant nothing new. Ordinary merged and batch paths publish/reuse only separate bookkeeping PRs. Open/before-merge and absent-PR routes remain unchanged. Batch keeps each pushed branch, returns a clean verified checkout to its prepared base, and resets the per-member publication flag. No delivery registration, original identity/body replacement, production project write or live PR mutation occurred. Complete-auto bumps 1.0.1→1.0.2 once; wave-execute's existing 1.9.10 bump and public 0.3.50 lockstep versions remain sufficient. Root's completion production corrections, review-skill assertions and state.md remained byte-identical to dispatch base.
+**Evidence:** `.oat/analysis/complete-after-merge-p02/h1-fix/` contains combined-completion.log, isolated-contracts.log, scoped build/lint logs, source hashes, exact owned paths and can-fail.json plus the replay script. The tests execute the composing PR/authority stages and real closeout snapshot check; existing consumer suites own the rest of archive/goal closeout. Prose assertions do not prove agent obedience. Review findings remain raw 1 Critical/1 High/1 Medium/2 Low until root receives the combined correction; no acceptance or clean re-review is claimed.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
