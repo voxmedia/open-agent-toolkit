@@ -114,7 +114,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T05:56:29.721Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -172,8 +172,9 @@ oat_implement_exit_gate:
   receive_commit: 88bfeb595ef87ec86ca2f236ab71ae1e0743e46c
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: 2026-11-11T06:17:36.142Z
+  failure: p02-t11 clarifies the shipped Step 8.5 delivered-resume instruction;
+    fresh lifecycle review and gate required for changed skill source.
+  updated_at: 2026-11-11T06:18:01.505Z
   decided_at: 2026-11-11T06:17:16.102235+00:00
 oat_post_implement_sequence:
   status: in_progress

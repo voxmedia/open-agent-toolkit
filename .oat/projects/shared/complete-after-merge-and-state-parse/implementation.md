@@ -479,12 +479,12 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 ### Task p02-t11: Preserve delivered recap links on terminal resume
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** inline:gate4-recap-link-clarification
 **Intent:** settle gate4 L1 by explicitly skipping recap-link rewrites after the delivered receipt check.
 **Files:** `.agents/skills/oat-project-complete/SKILL.md`, Step 8.5 only.
 **Proof:** one bounded instruction clarification; required ordered checks and independent final review for the changed source.
-**Commit:** pending
+**Commit:** 132ad171be754378bcdf5606a9e153ba2e2d9de9
 
 ## Orchestration Runs
 
