@@ -131,21 +131,25 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: cab6f8c2ca955998987d89588ef3a2a6d0757ff1
+  reviewed_head: 1dd8a790bbb3095ae7c1fdcc39a8046365066af2
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:0ae1b7c5da2c9c83deb6d3dc02de97e78f1a470cb3da9a52287143f4b0eaa39d
-  freshness_head: cab6f8c2ca955998987d89588ef3a2a6d0757ff1
+  freshness_head: 1dd8a790bbb3095ae7c1fdcc39a8046365066af2
   freshness_fingerprint: sha256:effective-delta-v2:0ae1b7c5da2c9c83deb6d3dc02de97e78f1a470cb3da9a52287143f4b0eaa39d
   waivers: []
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 4e67007c-9f82-4699-8f16-ad18547d3584
   launch_started_at: 2026-11-11T06:10:44.865306Z
   launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-4/result.json
   gate_run_marker: /private/tmp/oat-complete-state-parse-gate-4e67007c-9f82-4699-8f16-ad18547d3584/830e5bf5-72c7-48e1-9cfd-1313aaa51b0d.json
   gate_run_id: 830e5bf5-72c7-48e1-9cfd-1313aaa51b0d
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T061345Z.md
+  handoff:
+    Gate passed at the high threshold, but the final review still contains
+    non-blocking findings (low=1). Run oat-project-review-receive for
+    .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T061345Z.md
+    to disposition them before marking the final review row passed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -153,10 +157,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: 2026-11-11T06:14:17.263Z
+  updated_at: 2026-11-11T06:16:01.950Z
   decided_at: null
 oat_post_implement_sequence:
   status: in_progress
