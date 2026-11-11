@@ -354,7 +354,7 @@ fi
 # archive-prompt-selection:end
 ```
 
-For a merged original, resolve the separate bookkeeping PR choice from existing
+For a merged original in a durable project, resolve the separate bookkeeping PR choice from existing
 explicit task authority before the preference rules above. Retain its source as
 `COMPLETION_FOLLOWUP_AUTHORITY`; do not ask again for actions it already covers.
 When that authority is absent, obtain the needed decision in this same batched
@@ -363,6 +363,11 @@ insufficient. Set `SHOULD_OPEN_PR="true"` only when follow-up publication is
 authorized, even though the goal delivery step remains satisfied by coverage.
 Publication and landing each require their corresponding existing authority;
 this skill does not add merge permission.
+
+For a local project with a merged original, set `SHOULD_OPEN_PR="false"` and
+skip the follow-up authority question regardless of the PR preference. Local
+artifacts remain ignored on the current branch; there is no tracked completion
+bookkeeping to publish. Keep the live original merged identity/status.
 
 The "Ready to mark complete?" confirmation is always asked — it is a meaningful "are you sure" moment, not a preference.
 
@@ -517,11 +522,11 @@ If `oat_pr_url` is present, show it in the completion summary.
 ### Step 2.5: Prepare Merged-PR Bookkeeping Before Writes
 
 Initialize `COMPLETION_OUTPUT_PATHS=()` now and retain each producer's exact
-paths through Step 10. For a live merged original, prepare before Step 3,
+paths through Step 10. For a durable project with a live merged original, prepare before Step 3,
 including docs-skip, summary and review-child mutations:
 
 ```bash
-if [[ "$OBSERVED_PR_STATUS" == "merged" ]]; then
+if [[ "$IS_DURABLE_PROJECT" == "true" && "$OBSERVED_PR_STATUS" == "merged" ]]; then
   COMPLETION_BRANCH_FIELDS=$(node "$COMPLETION_BRANCH_SCRIPT" --action prepare \
     --project-path "$ACTIVE_PROJECT_PATH" --scope "$PROJECT_SCOPE" \
     --pr-url "$ORIGINAL_PR_URL" \
@@ -538,7 +543,7 @@ The helper fetches the live PR's base from `origin` and creates a separate
 `oat/complete-pr-…` branch at that fetched commit. It refuses dirty staged,
 unstaged or untracked work, commits beyond the merged delivery, missing shared
 inputs on base, divergent shared inputs, or a synced checkout that differs
-from its retained ref. It preserves ignored local/synced artifacts with their
+from its retained ref. Local projects skip preparation and follow-up publication; synced artifacts retain their
 existing owner. A refusal leaves the work intact; report the conflicting inputs
 and stop for recovery, without stashing, dropping or copying work implicitly.
 An updated base may contain unrelated changes after the original merge.

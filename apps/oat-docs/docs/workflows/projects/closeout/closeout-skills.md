@@ -634,14 +634,16 @@ PR invocation because publication already exists and the remaining work is
 lifecycle finalization. An open PR is not a completion blocker. Before the first normal-path write,
 completion observes a tracked PR live. Failed observation stops without writing;
 no tracked URL keeps the ordinary path without claiming an observed status. If
-the original has merged, completion fetches its actual base and prepares a
+the original has merged for a durable project, completion fetches its actual base and prepares a
 fresh bookkeeping branch before docs-skip metadata, recap intent persistence,
 summary or lifecycle changes. It retains the original merged URL/status and
 never edits that merged PR body. Bookkeeping is delivered through a separate
 follow-up PR under existing task authority; a valid prepared branch and open
 follow-up are reused on resume. Dirty or divergent inputs that cannot be
 preserved safely stop with recovery guidance. Shared inputs must exist on the
-updated base; synced and local artifacts keep their retained owners. Existing
+updated base; synced artifacts keep their retained owner. Local merged projects
+keep their current branch and record the live original status without follow-up
+authority, push or PR: their ignored artifacts produce no tracked bookkeeping. Existing
 archive-receipt resume routes do not replay completed mutations.
 
 **Expected output:** The skill reports completed lifecycle state, bookkeeping
@@ -711,7 +713,7 @@ completion-before-merge exception in `implementation.md` when the PR is still
 open, points the active project at the project, and follows
 `oat-project-complete` with the resolved answers: archive per
 `workflow.archiveOnComplete`, a summary refresh when the summary is missing or
-stale, and no retrospective. For a live merged original, it requires existing
+stale, and no retrospective. For a durable project with a live merged original, it requires existing
 explicit authority covering preparation and publication of that project's
 separate bookkeeping PR. Missing authority refuses at preflight before any
 completion write; neither autonomous opt-in nor `workflow.createPrOnComplete`
@@ -722,7 +724,10 @@ original merged URL/status/body and goal delivery coverage stay intact. A
 tracked open PR still creates no new PR and receives the existing description
 sync when required. The completion commit body
 records the requesting step (for a synced archive, the run report does). In batch mode a refused project stays deferred
-while the others complete. Between successful merged batch members, it keeps
+while the others complete. The program-close caller routes a missing-authority
+refusal (`preflight:8`) to `oat-project-complete`; its archive/S3/pointer-clear
+checkpoint does not itself authorize a bookkeeping PR. Local merged projects
+complete on their current branch without a follow-up. Between successful merged batch members, it keeps
 the pushed bookkeeping branch/PR and returns a clean checkout to the prepared
 base before starting the next member. It never changes requested membership
 or borrows one member's authority for another. Existing absent-checkout/archive

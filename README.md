@@ -19,9 +19,10 @@ After manual lifecycle edits to a project’s `state.md` frontmatter, run
 read-only check requires parseable YAML with a mapping; repair any reported
 error and rerun it.
 Completion supports an already merged PR:
-it observes the original live, prepares bookkeeping on a fresh branch from its
+for shared and synced projects it observes the original live, prepares bookkeeping on a fresh branch from its
 updated base, and uses a separate follow-up PR within existing explicit authority.
-The original merged identity and body stay intact.
+The original merged identity and body stay intact. Local-only projects record
+the live status on their current branch without a bookkeeping PR.
 
 Provider sync and standalone skills need no tracked project. Start with one part and add others later.
 

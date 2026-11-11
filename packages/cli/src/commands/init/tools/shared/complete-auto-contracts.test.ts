@@ -992,6 +992,16 @@ describe('wave closeout invokes the companion', () => {
     );
   });
 
+  it('the program checkpoint names interactive completion for missing follow-up authority', () => {
+    const checkpoint = waveProgramCheckpoint();
+    expect(checkpoint).toContain(
+      'For `preflight:8`, keep the wrapper deferred and name `oat-project-complete` as the next owner',
+    );
+    expect(checkpoint).toContain(
+      'The checkpoint alone does not authorize a separate bookkeeping PR',
+    );
+  });
+
   it('the provenance wave-execute step 8 passes completes a reviewed wave with an open tracked PR', () => {
     const step = waveExecuteStep8();
 

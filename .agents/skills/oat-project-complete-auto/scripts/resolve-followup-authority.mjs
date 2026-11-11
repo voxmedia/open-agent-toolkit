@@ -20,7 +20,8 @@ function resolveDecision(options) {
       'Automatic completion requires a live merged or permitted tracked open PR; use oat-project-complete for absent PRs.',
     );
   }
-  if (options.prStatus === 'open') return { shouldOpen: false, authority: '' };
+  if (options.prStatus === 'open' || options.scope === 'local')
+    return { shouldOpen: false, authority: '' };
   let authorities;
   try {
     authorities = JSON.parse(options.authoritiesJson ?? '[]');
@@ -59,6 +60,7 @@ function main(argv) {
   const options = {};
   const names = {
     '--project-path': 'projectPath',
+    '--scope': 'scope',
     '--pr-url': 'prUrl',
     '--pr-status': 'prStatus',
     '--authorities-json': 'authoritiesJson',
@@ -72,6 +74,7 @@ function main(argv) {
   }
   if (
     !options.projectPath ||
+    !['shared', 'synced', 'local'].includes(options.scope) ||
     !('prStatus' in options) ||
     (options.format && options.format !== 'shell')
   )

@@ -436,7 +436,7 @@ test('dirty and divergent shared inputs remain intact and refuse preparation', (
   }
 });
 
-for (const scope of ['local', 'synced']) {
+for (const scope of ['synced']) {
   test(`${scope} retained owner and bytes survive parent fresh-base preparation`, () => {
     const f = fixture(scope);
     try {
@@ -459,7 +459,7 @@ for (const scope of ['local', 'synced']) {
 }
 
 test('resume reuses observed open follow-up; archive resume needs no retired project and cannot duplicate a closed follow-up', () => {
-  const f = fixture('local');
+  const f = fixture('synced');
   try {
     const prepared = success(f.invoke());
     const followup = {
@@ -568,6 +568,7 @@ test('shipped Step 11 creates/reuses a separate bookkeeping PR and its body sync
           FOLLOWUP_PR_URL: followup.url,
           FOLLOWUP_PR_STATUS: 'open',
           WAS_PR_OPEN_AT_START: 'false',
+          PROJECT_SCOPE: 'shared',
           IS_DURABLE_PROJECT: 'true',
           SHOULD_ARCHIVE: 'true',
         },
@@ -717,7 +718,8 @@ function autoComposition(
       ...f.env,
       PROJECT_PATH: projectRelative,
       ACTIVE_PROJECT_PATH: projectRelative,
-      PROJECT_SCOPE: 'shared',
+      PROJECT_SCOPE: f.projectRelative.split('/')[2],
+      IS_DURABLE_PROJECT: String(!f.projectRelative.includes('/local/')),
       SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
       COMPLETE_SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
       COMPLETION_BRANCH_SCRIPT: script,
@@ -1040,6 +1042,7 @@ test('complete-auto preflights all batch members before resetting each completio
               source: 'Existing task covers both bookkeeping PRs',
             })),
           ),
+          PROJECT_SCOPE: 'shared',
           IS_DURABLE_PROJECT: 'true',
           SHOULD_ARCHIVE: 'true',
           COMPLETION_FOLLOWUP: 'true',
@@ -1054,6 +1057,35 @@ test('complete-auto preflights all batch members before resetting each completio
       result.stdout,
       /second:true/,
       'reused second follow-up must sync after the first creates one',
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+
+test('local merged completion preserves its branch without authority or follow-up publication', () => {
+  const f = fixture('local', [], 'quick');
+  try {
+    const head = f.git('rev-parse', 'HEAD');
+    const prepared = success(f.invoke(['--authority', '']));
+    assert.equal(prepared.followup, false);
+    assert.equal(prepared.observedStatus, 'merged');
+    assert.equal(prepared.originalPrUrl, originalUrl);
+    assert.ok(prepared.observedAt);
+    const automatic = autoComposition(f);
+    assert.equal(automatic.status, 0, automatic.stderr);
+    assert.match(automatic.stdout, /AUTO_RESULT:false\|\|\|/);
+    assert.equal(f.git('branch', '--show-current'), 'feature');
+    assert.equal(f.git('rev-parse', 'HEAD'), head);
+    assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
+    const calls = readFileSync(f.log, 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.ok(calls.every((args) => args[0] === 'pr' && args[1] === 'view'));
+    assert.equal(
+      f.git('for-each-ref', '--format=%(refname)', 'refs/remotes/origin/oat/'),
+      '',
     );
   } finally {
     f.cleanup();

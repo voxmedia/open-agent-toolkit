@@ -138,6 +138,8 @@ export function prepareCompletionBranch(options) {
   };
   if (observation.observedStatus !== 'merged' || options.action === 'observe')
     return normal;
+  // Local artifacts are ignored: no parent-branch bookkeeping can be delivered.
+  if (options.scope === 'local') return normal;
   if (options.action !== 'resume' && !options.authority?.trim()) {
     refuse(
       'E_FOLLOWUP_AUTHORITY',

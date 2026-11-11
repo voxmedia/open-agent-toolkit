@@ -33,7 +33,8 @@ probe responses are synthetic. Logs and raw schema capture are local under
   the CLI review-skill contract test, not evaluated by the helper.
 - **Refusals:** failed observation, dirty parent/retained synced inputs,
   unmerged commits and shared inputs missing from base leave input bytes and
-  the current branch intact. The helper preserves ignored local artifacts and
+  the current branch intact. Local merged projects keep their current branch and ignored artifacts without
+  follow-up authority or publication. Preparation preserves
   a clean synced worktree whose HEAD equals `refs/oat/projects/probe`.
 - **Resume and publication:** the same deterministic prepared branch is reused;
   a recognized open follow-up is reused; an archive resume can resolve that
@@ -147,3 +148,14 @@ and merged publication decision. Each targeted test fails for its own clause
 before the green combined run. Mutation contents, expected failure reasons,
 exit codes and logs are preserved in that directory's `can-fail.json`.
 No production test hook or persistent authority store was added.
+
+## Final review corrections
+
+Local merged projects produce no tracked bookkeeping, so both interactive and
+automatic completion skip follow-up preparation/publication while retaining the
+live original status and current branch. The local control checks no authority
+is needed and no remote follow-up ref or PR creation appears; durable accepted
+controls remain. Synced scope supplies the archive-resume fixture. Program-close
+`preflight:8` names `oat-project-complete` as the next owner without broadening
+the human checkpoint grant. The caller instruction test failed before this
+routing clause was added. Three completion writer locators were refreshed.

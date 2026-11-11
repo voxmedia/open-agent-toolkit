@@ -94,11 +94,13 @@ Both completion orderings are supported:
 - **Complete before merge:** run `oat-project-complete` while the PR is open,
   then merge.
 - **Merge before completion:** merge the PR first, then run
-  `oat-project-complete`. Completion fetches the original PR's base, prepares
+  `oat-project-complete`. For shared/synced projects, completion fetches the original PR's base, prepares
   a fresh bookkeeping branch before writing, and uses a separate follow-up PR
   within existing explicit authority. It keeps the original merged status and
   URL, leaves its body unchanged, and reuses a safe existing follow-up on resume.
-  Missing authority or unsafe local inputs stop with a decision/recovery route.
+  Local-only projects keep their branch, record the live merged status and
+  create no bookkeeping PR. Missing authority or unsafe inputs for a durable
+  project stop with a decision/recovery route.
   A failed live lookup stops before writes; absent tracked URLs keep the normal path.
 
 An open PR is not a completion blocker. When completion archives project
