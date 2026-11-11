@@ -114,9 +114,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T04:37:10.375207Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -131,51 +131,33 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 09d08130659962709b68e2a8f5bcfe05f34ae725
+  reviewed_head: 93cbb814ec32249b017f8c60d818f1a71ee57122
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
-  freshness_head: 9b52c60efd242353f2ddf80e644b93ddf55e0e83
-  freshness_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
+  implementation_fingerprint: sha256:effective-delta-v2:5e8b971843b7e6a868431408969d1636623c51709767c2de39f4e69c5787d825
+  freshness_head: 93cbb814ec32249b017f8c60d818f1a71ee57122
+  freshness_fingerprint: sha256:effective-delta-v2:5e8b971843b7e6a868431408969d1636623c51709767c2de39f4e69c5787d825
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: a94b427b-2691-4630-9a12-7fe92db85f72
-  launch_started_at: 2026-11-11T04:23:42.616996Z
-  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-2/result.json
-  gate_run_marker: /private/tmp/oat-complete-state-parse-gate-a94b427b-2691-4630-9a12-7fe92db85f72/9a3a24f8-e4ea-47d4-ac64-67dc109e8d26.json
-  gate_run_id: 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26
-  envelope_status: ok
-  artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T042616Z.md
-  handoff:
-    Gate passed at the high threshold, but the final review still contains
-    non-blocking findings (low=1). Run oat-project-review-receive for
-    .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T042616Z.md
-    to disposition them before marking the final review row passed.
-  receive_state: completed
-  receive_correlation:
-    runId: 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26
-    handoff:
-      Gate passed at the high threshold, but the final review still contains
-      non-blocking findings (low=1). Run oat-project-review-receive for
-      .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T042616Z.md
-      to disposition them before marking the final review row passed.
-    artifactPath: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T042616Z.md
-    scope: final
-    reviewType: code
-    sourceFilename: final-review-2026-11-11T042616Z.md
-  receive_source_artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T042616Z.md
-  receive_archived_artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/archived/final-review-2026-11-11T042616Z.md
-  receive_event_identity:
-    scope: final
-    type: code
-    source_filename: final-review-2026-11-11T042616Z.md
-  receive_pre_head: fb65dcbd358b5fe9fd5a22fa1e8a8cbfeb29ed14
-  receive_commit: d8588c99dc2cbf05b8d1c960be4f6d475e24b6fd
-  receive_eligible: true
-  receive_completed: true
-  failure: Post-review test-only correction p02-t08 changes the effective delta;
-    fresh gate required.
-  updated_at: 2026-11-11T04:29:18.866Z
-  decided_at: 2026-11-11T04:29:18.795039Z
+  launch_state: intent_persisted
+  launch_attempt_id: 08c7d242-cfca-4f46-9f62-c83cf8bf7c83
+  launch_started_at: 2026-11-11T04:58:40.421052Z
+  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-3/result.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: 2026-11-11T04:58:40.496Z
+  decided_at: null
 oat_post_implement_sequence:
   status: pre_approval
   source: configured
