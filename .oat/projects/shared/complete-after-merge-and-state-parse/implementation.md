@@ -130,6 +130,12 @@ The operator selected "Resume these bounded corrections" after root settled the 
 - Verification: pre/post focused 1,351 tests passed; ordered Definition of Done and additional lint/format/isolated skill contracts exited 0 on clean candidate; final packed installation passed. Exact inputs/results: `.oat/analysis/complete-state-parse-p01/attempt2/`.
 - Reason: operator-authorized bounded corrections after settled failure; completed marker committed with candidate and validated by postcommit checks. Corrected one help entry, autonomous metadata.version 1.0.26 to 1.0.27, and mechanically related research counts/link mapping; no direct version pins required edits. No history rewrite or counter reset; matching completed marker retained for root settlement.
 
+### Root pre-review validation and recovery settlement
+
+Root validated the attempt-2 report, committed completed marker, exact original request/task/commit/target, immutable history, bounded correction diff and clean tree. The sole commit after tested candidate `3b260ccf51a395362ab7d832d22d5b780ffd0c3b` changes only the journal. Both anchors exist and Base is an ancestor of Head. The canonical attempt-2 event above is retained once, unchanged. Cleared the matching completed marker; used=2/10 remains monotonic, 8 available, pending=null. Attempt 1's failed disposition remains recorded.
+
+Root inspected `attempt2/postcommit-checks.json` and installed-package proof: every required command exited 0 against the clean candidate; forced full tests executed, while later builds reused their outputs. The installed historical bad state rejects with BAD_INDENT and the historical parent passes. Source evidence is reusable across subsequent journal/state bookkeeping; no duplicate source suite run. Exact Node 22.23.4 remains unavailable locally (22.23.3 used); independent review and downstream CI remain required. Phase stays in_progress with both pointers p01, pending fresh Opus 5.5 high review of the complete Base..Head range. This is not phase acceptance.
+
 ## Phase p02: Deliver completion bookkeeping after merge
 
 **Status:** pending
@@ -140,7 +146,7 @@ The operator selected "Resume these bounded corrections" after root settled the 
 
 <!-- orchestration-runs-start -->
 
-- run/v1 · request=complete-state-parse-p01-20261110 · scope=p01 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=p01-router-resume-20261110 · observed=~ · match=~
+- run/v1 · request=complete-state-parse-p01-20261110 · scope=p01 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=p01-router-resume-20261110,p01-bounded-corrections-20261110 · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01
-oat_last_commit: null
+oat_last_commit: 3b260ccf51a395362ab7d832d22d5b780ffd0c3b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -18,16 +18,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: 'p01-bounded-corrections-20261110'
-        original_request_id: 'complete-state-parse-p01-20261110'
-        original_task_id: 'p01-t01'
-        original_commit: '180f4758c2e1a1d470a8a86e6252836c883846d0'
-        discovered_by: 'pnpm test (project --help snapshot); pnpm run check:skill-bumps (linked autonomous skill)'
-        dispatch_target: 'oat-phase-implementer-gpt-6-1-sol-high'
-        reservation_head: 'b2ac3aa3fa67c52a402d2d7e4f0cc425918d5a14'
-        status: 'completed'
+      pending_attempt: null
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -120,7 +111,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T00:06:52Z'
+oat_project_state_updated: '2026-11-11T00:28:55Z'
 oat_generated: false
 ---
 
@@ -132,7 +123,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p01 shared strict state parsing check
+Implementation — p01 verified; independent phase review pending
 
 ## Artifacts
 
@@ -150,7 +141,7 @@ Implementation — p01 shared strict state parsing check
 
 ## Blockers
 
-Operator authorized the bounded p01 continuation: help snapshot, required oat-project-autonomous version bump and directly related metadata, then verification. Attempt 1 remains failed and settled; used=1/10, pending=null before the next reservation.
+None. Bounded corrections and required verification passed; attempt 2 settled, used=2/10 and pending=null. p01 remains unaccepted until independent review.
 
 ## Next Milestone
 
