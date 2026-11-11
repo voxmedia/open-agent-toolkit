@@ -106,7 +106,7 @@ oat_brief_gate:
   config_fingerprint: 'sha256:f7e3a5406a8a8a184532a47f3c6ec30ffca5b79b0b4494d47f79df3b4339f2e4'
   reviewed_head: '215d88e6ea8d3fdd9b75d4123fcfe49aede2799e'
   decided_at: '2026-11-10T22:02:24Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
