@@ -449,6 +449,17 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ## Reviews and Gates
 
+### Review Received: final — approved gate-correction continuation
+
+**Date:** 2026-11-11
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-11T042030Z.md
+**Reviewed head:** 09d08130659962709b68e2a8f5bcfe05f34ae725; final scope, accepted phases p01/p02, anchor base 7e5b5bd32c5443dae06947c2fbf99fc3d02aaac9; invocation auto.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+**Finding classes:** none. No deferred Mediums or Low dispositions; no design drift or fix tasks.
+**Outcome:** passed. The reviewer's final confirmation contains exactly one Reconnaissance not-attempted signal; artifact has no Review Orchestration section. This is the approved continuation after retirement of the incompatible gate generation; prior standard final loop ended in a clean pass. No failed fix cycle or remediation attempt consumed.
+**Evidence:** reviewer independently passed 21 completion tests (zsh ran), CLOSED/OPEN/MERGED/DRAFT observer and companion controls, all 12 push combinations in bash/zsh, syntax checks on all 46 completion shell blocks, and three inventory locators. Reused all 15 clean-candidate checks at the reviewed head, forced 12-task zero-cache tests and earlier integrated proofs. Both retired-gate regressions are resolved; original retired artifact and row remain untouched. Node22.23.3, substituted GitHub, prose cannot prove agent obedience; no live publication claimed.
+**Next:** fresh configured exit gate using branch-local CLI0.3.50; implementation stays in progress.
+
 ### Operator-approved gate recovery — 2026-11-11
 
 The operator answered **approve** to retiring the incompatible gate result and resuming with the prepared branch-local CLI 0.3.50, including the closed-PR regression and zsh guard correction. Original run `3f079d62-6a7a-45c3-b2d4-529b72754c13` is retired as a completion gate: raw outcome passed its High threshold, 0 Critical/0 High/1 Medium/1 Low, but no result reviewedHead was emitted by installed CLI 0.3.46. Its raw receipt, active artifact and received ledger event remain unaltered; no normal receive or inferred provenance is claimed. Current failure carrier remains blocked until a new generation after correction and final review. No remediation attempt consumed (0/2). Corrections are operator-directed execution record p02-t07, with no deferrals. A fresh gate will execute the same configured command through an isolated branch-local oat executable; global installation and configuration remain unchanged.
@@ -574,7 +585,7 @@ Document any intentional deviations from the brief. Include accepted review find
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- The prior final independent review passed; approved gate corrections now await renewed final review and a fresh branch-CLI gate. Implementation remains in progress before summary/document/PR closeout. Merge authority is already recorded.
+- Final independent review passed after the approved gate corrections; a fresh branch-CLI gate remains pending. Implementation remains in progress before summary/document/PR closeout. Merge authority is already recorded.
 
 ## References
 
