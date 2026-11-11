@@ -170,6 +170,59 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 **Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
+**Head:** 5d5e6caef9128835562047de5212839f45b6c8e1
+
+**Phase verification:** local implementation evidence passed on clean committed
+`5d5e6caef9128835562047de5212839f45b6c8e1`, whose source implementation is
+`4aea7c00c05963a283d62906af4a7b3107da598b`; dispatch base
+`515f630e64becdbc87a6d2cd49b46026590bee32`, unchanged integration base
+`ddd67fb5541bac2959ebb64ed82f4287f4f56698`. The phase anchor Base above is
+root-owned and unchanged. No post-commit defect/recovery event occurred:
+p02 used 0/10, remaining 10, pending null. Phase stays in_progress for root
+acceptance, independent integrated Opus review and the configured gate.
+
+All ordered commands exited 0: `pnpm check`; `pnpm type-check`;
+`pnpm test:evidence`; root `pnpm test`; `pnpm build`;
+`pnpm run check:skill-bumps`; fresh `git fetch origin main`;
+`pnpm release:check-versions`; `pnpm release:validate`; `pnpm build:docs`;
+`pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`;
+`git diff --exit-code -- apps/oat-docs/index.md`; then `pnpm lint` and
+`pnpm format`. The forced workspace run executed all 12 tasks with zero cache
+hits (9,706 CLI tests; 320 control-plane, 25 docs-theme, 38 docs-transforms,
+22 docs-config). Root test reused those workspace results and freshly ran
+165 smoke, 735 skill and 7 script tests. Type-check, later builds/docs,
+package lint and package format reused cache; check executed, and root
+format/lint passes plus direct docs index generation ran. Every gate began
+and ended with the same clean HEAD. Exact commands, exit codes, timings,
+per-command revision/tree state and cache notes are in
+`.oat/analysis/complete-after-merge-p02/ordered-checks.json` and sibling logs.
+
+Prevention evidence on the exact source bytes retained after hooks:
+101 completion skill tests; 1,270 isolated shared/validation contracts via
+`bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`;
+scoped CLI build; scoped oxlint; scoped oxfmt; diff check, all exit 0.
+The built CLI asset contains a byte-identical copy of the new helper.
+Reproducible negative/accepted controls, schema provenance and scope/resume
+limits are in `references/research/completion-after-merge.md` and the named
+executable tests. The shipped Step 11 create and Step 11.5 target-selection
+blocks are executed against real local Git and a substituted gh boundary;
+one create, no retry duplicate and no merged-original edit are asserted.
+Instruction assertions supplement those seams and do not prove agent behavior.
+Existing archive/coverage suites retain their consumer checks; the new small
+Git fixture does not claim to replay S3 or a complete audited goal closeout.
+
+Runtime: Node 22.23.3, pnpm 10.13.1, Darwin arm64 (macOS 27.0.1); exact pinned
+Node 22.23.4 was unavailable. Lockfile SHA-256
+`425ad4fa9e0b1b2dba6185a4d4fa130fa5ed0edbcfb93c165a74e6e70a866dd6` unchanged.
+Fresh disposable probes and the isolated-HOME runner used `/private/tmp`;
+no manual HOME override, dependency change, live PR publication/merge or
+remote-ref mutation was performed in this repository. The sole GitHub live
+probe was read-only schema capture. Full downstream CI, final review and root
+acceptance are not claimed. Source evidence remains reusable across this final
+journal-only head record. Final read-only journal review check reports
+status=ok, exit 0, with the expected root-owned `run-line-unresolved` warning
+while this accepted dispatch is still running. The current project's strict
+state check reports valid=true, exit 0. Root owns terminalizing the run line.
 
 Phase-local refinement (2026-11-11): p01's shared command is available and accepted. p02 is now concrete within the approved Approach: earliest normal-path write is Step 3.3, failed live lookup stops before writes, no tracked PR keeps the existing path, merged original/follow-up identities stay separate, and existing scope/receipt-resume owners stay authoritative. Required evidence explicitly covers safe input preservation/refusal, resume reuse and the goal PR_ON_COMPLETE-only exclusion. No outcome, authority, endpoint or phase-split change. Fresh origin/main fetch at ddd67fb5541bac2959ebb64ed82f4287f4f56698 found no intervening commits in planned completion, CLI contract or closeout-doc paths.
 
