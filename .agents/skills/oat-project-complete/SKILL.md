@@ -1967,13 +1967,16 @@ Show user:
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
-- Include the lifecycle bookkeeping commit hash and the single push result.
+- Include the lifecycle bookkeeping commit hash and the single push result. When
+  `COMPLETION_ARCHIVE_DELIVERED="true"`, instead report the lifecycle commit,
+  `BASE_BRANCH` and `COMPLETION_BASE_HEAD` as "already delivered; no push or
+  bookkeeping PR"; no follow-up URL is required.
 - Report the final recap outcome and tracked recap page path.
 - Report every absorbed-project retirement finding from the Step 3.7 sweep with
   its disposition. This is the required destination whenever the sweep could not
   append them to the project log — an absent log, or a resume whose log is
   already sealed — and it stays a report, never a completion failure.
-- If PR was opened: include the PR URL. For post-merge completion, report the
+- If PR was opened: include the PR URL. For post-merge completion that prepared a follow-up, report the
   original merged URL and separate bookkeeping URL/branch/base, including any
   pending authorized publication or landing; never label the original open.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.

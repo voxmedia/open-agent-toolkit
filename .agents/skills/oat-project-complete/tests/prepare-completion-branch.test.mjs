@@ -541,7 +541,12 @@ test('synced retained owner and bytes survive parent fresh-base preparation', ()
 
 // Protects the actual resume/closeout boundary: helper-only controls cannot
 // detect an unnecessary original-branch push or an early pointer clear.
-for (const outcome of ['delivered', 'missed-merge', 'changed-export']) {
+for (const outcome of [
+  'delivered',
+  'missed-merge',
+  'changed-export',
+  'divergent',
+]) {
   test(`merged-later terminal archive ${outcome}: shipped resume preserves delivery and pointer ownership`, async () => {
     const { archiveProjectOnCompletion } =
       await import('../../../../packages/cli/dist/commands/project/archive/archive-utils.js');
@@ -625,6 +630,12 @@ for (const outcome of ['delivered', 'missed-merge', 'changed-export']) {
       }
       f.git('push');
       f.git('switch', 'feature');
+      if (outcome === 'divergent') {
+        writeFileSync(join(f.repo, 'local-work.txt'), 'Unmerged local work\n');
+        f.git('add', 'local-work.txt');
+        f.git('commit', '-m', 'Preserve work after archive');
+      }
+      const resumeHead = f.git('rev-parse', 'HEAD');
       // A squash-delivered receipt deliberately is not an ancestor of base.
       assert.equal(
         spawnSync(
@@ -741,6 +752,14 @@ for (const outcome of ['delivered', 'missed-merge', 'changed-export']) {
           ]),
           'E_COMPLETION_RESUME',
         );
+      } else if (outcome === 'divergent') {
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stderr, /E_DIVERGENT_COMPLETION/);
+        assert.equal(pointer, f.projectRelative);
+        assert.equal(
+          readFileSync(join(f.repo, 'local-work.txt'), 'utf8'),
+          'Unmerged local work\n',
+        );
       } else {
         assert.equal(result.status, 1, result.stdout + result.stderr);
         assert.match(result.stderr, /E_COMPLETION_BOOKKEEPING_PENDING/);
@@ -757,7 +776,7 @@ for (const outcome of ['delivered', 'missed-merge', 'changed-export']) {
         assert.equal(pointer, f.projectRelative);
       }
       assert.equal(f.git('rev-parse', 'origin/feature'), remoteFeature);
-      assert.equal(f.git('rev-parse', 'HEAD'), lifecycle);
+      assert.equal(f.git('rev-parse', 'HEAD'), resumeHead);
       assert.equal(
         f.git('for-each-ref', '--format=%(refname)', 'refs/heads'),
         branches,
