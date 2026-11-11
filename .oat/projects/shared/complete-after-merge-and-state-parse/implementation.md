@@ -100,6 +100,10 @@ Local report/evidence: `.oat/analysis/complete-state-parse-p01/phase-implementat
 - Verification: focused 71 tests passed; isolated forced full suite passed on the uncommitted correction; phase version gate failed; correction restored; failed ledger parse/commit passed
 - Reason: required phase verification failed before candidate creation; canonical role requires bounded restore, failed ledger-only commit, and terminal stop. f70c23dcece018cea9c20ba2667bfe99e4e48027 records the failed ledger transition, not a successful recovery.
 
+### Operator-authorized bounded continuation — 2026-11-10
+
+The operator selected "Resume these bounded corrections" after root settled the terminal failure at `c66016618d2ad6c43998dcae0f34b4ff2128c761`. Resume on the same GPT-6.1 Sol high child, original request `complete-state-parse-p01-20261110`, continuation `p01-bounded-corrections-20261110`. Scope: restore the required check-state project-help snapshot entry, bump oat-project-autonomous for its changed linked autonomy contract and any directly pinned metadata, and finish required verification. This supplies direction beyond the previous terminal stop; it does not reset used=1/10, waive verification, change the target, or expand product scope. Reserve the next attempt before correction and preserve the failed first attempt. Independent Opus review and root phase acceptance remain outstanding.
+
 ## Phase p02: Deliver completion bookkeeping after merge
 
 **Status:** pending

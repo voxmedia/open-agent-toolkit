@@ -1,8 +1,7 @@
 ---
 oat_current_task: p01
 oat_last_commit: null
-oat_blockers:
-  - 'p01 terminal failed recovery settled; resume direction required for help snapshot and autonomous skill bump'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -112,7 +111,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-10T23:30:01Z'
+oat_project_state_updated: '2026-11-11T00:06:52Z'
 oat_generated: false
 ---
 
@@ -142,7 +141,7 @@ Implementation — p01 shared strict state parsing check
 
 ## Blockers
 
-p01 recovery attempt 1 failed at the required skill-bump gate. Help snapshot and oat-project-autonomous version bump remain outstanding. Failed marker settled, used=1/10; workflow requires direction before continuation.
+Operator authorized the bounded p01 continuation: help snapshot, required oat-project-autonomous version bump and directly related metadata, then verification. Attempt 1 remains failed and settled; used=1/10, pending=null before the next reservation.
 
 ## Next Milestone
 
