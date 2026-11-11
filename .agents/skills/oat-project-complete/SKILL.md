@@ -278,14 +278,26 @@ the original URL read from the archived status before Step 8.5:
 COMPLETION_BRANCH_SCRIPT="$SKILL_DIR/scripts/prepare-completion-branch.mjs"
 RESUME_PR_FIELDS=$(node "$COMPLETION_BRANCH_SCRIPT" --action resume \
   --project-path "$ACTIVE_PROJECT_PATH" --scope synced \
+  --archive-receipt "$ARCHIVE_OUTPUT" --archive-pr-status "${oat_pr_status:-}" \
   --pr-url "${oat_pr_url:-}" --format shell) || exit 1
 eval "$RESUME_PR_FIELDS" || exit 1
 ```
 
-For a merged original it validates
-and retains the existing prepared parent branch and resolves its follow-up;
-it never creates a branch from missing active inputs. Failed observation or a
-missing/mismatched preparation binding stops the resume before further writes.
+For a merged original with a prepared follow-up, it validates and retains that
+parent branch and resolves its follow-up; missing/mismatched preparation bindings
+still stop before further writes. A validated terminal synced archive whose
+archived PR status was `open` may instead have completed before any follow-up
+was prepared. Without an existing preparation binding, the helper compares the
+receipt-owned discovery-record deletion and exported files with the fetched
+base. Exact resulting trees permit squash merges without commit ancestry. A
+match sets `COMPLETION_ARCHIVE_DELIVERED="true"`: continue at Step 8.5 on the
+current branch, skip the Step 10 push and Steps 11/11.5 publication/body work,
+and clear the pointer only through the existing Step 12 finalizer. No new
+branch or PR is created. A difference stops with
+`E_COMPLETION_BOOKKEEPING_PENDING`, naming the receipt, base and pending record
+or exports. Preserve the active pointer, receipt and work for explicit delivery
+recovery; never push the merged original or replay archive. Failed live
+observation also stops before further writes.
 A shared terminal resume only validates its durable archive and clears the
 pointer as before; it performs no delivery/body work.
 
@@ -1716,13 +1728,18 @@ Rules:
   one was selected.
 - Snapshot unrelated working-tree changes and verify they remain unchanged.
 
-For every synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
-push the parent branch exactly once after the lifecycle receipt is final.
-Verify the pushed upstream contains that exact bookkeeping commit before
+For synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
+push the parent branch exactly once after the lifecycle receipt is final,
+except when Step 1.75 already verified `COMPLETION_ARCHIVE_DELIVERED="true"`.
+That merged-later terminal archive needs no original-branch push. Otherwise
+verify the pushed upstream contains that exact bookkeeping commit before
 continuing to PR closeout or claiming completion:
 
 ```bash
-if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" && \
+  "${COMPLETION_ARCHIVE_DELIVERED:-false}" == "true" ]]; then
+  echo "Completion bookkeeping already delivered on $BASE_BRANCH at $COMPLETION_BASE_HEAD: $LIFECYCLE_COMMIT; no push required."
+elif [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
   BOOKKEEPING_PUSH_COMMIT="$LIFECYCLE_COMMIT"
   test -n "$BOOKKEEPING_PUSH_COMMIT" || exit 1
   if [[ "${COMPLETION_FOLLOWUP:-false}" == "true" ]]; then

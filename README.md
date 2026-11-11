@@ -21,7 +21,7 @@ error and rerun it.
 Completion supports an already merged PR:
 for shared and synced projects it observes the original live, prepares bookkeeping on a fresh branch from its
 updated base, and uses a separate follow-up PR within existing explicit authority.
-The original merged identity and body stay intact. Local-only projects record
+The original merged identity and body stay intact. A terminal synced archive that predates the merge resumes without a push when its exact bookkeeping result is already on the updated base; otherwise completion retains its pointer and reports pending delivery for recovery. Local-only projects record
 the live status on their current branch without a bookkeeping PR.
 
 Provider sync and standalone skills need no tracked project. Start with one part and add others later.

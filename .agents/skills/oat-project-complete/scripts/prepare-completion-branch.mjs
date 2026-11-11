@@ -4,6 +4,8 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { validateSyncedArchiveTerminalReport } from './finalize-synced-archive.mjs';
+
 function refuse(code, message) {
   const error = new Error(message);
   error.code = code;
@@ -111,6 +113,88 @@ export function observeCompletionPr({ cwd, prUrl }) {
   };
 }
 
+/** Validate the archived producer's result on base without requiring merge ancestry. */
+function archivedBookkeepingDelivered(
+  root,
+  projectRelative,
+  fetchedBase,
+  options,
+) {
+  const name = projectRelative.split('/').at(-1);
+  const receipt = validateSyncedArchiveTerminalReport(
+    JSON.parse(options.archiveReceipt),
+    name,
+  );
+  const record = `${projectRelative}.json`;
+  const exports = [
+    receipt.summaryExportFile,
+    receipt.projectRecapExport?.exportRoot,
+  ]
+    .filter(Boolean)
+    .map((path) => {
+      const child = relative(root, resolve(root, path)).split(sep).join('/');
+      if (
+        !child ||
+        child === '..' ||
+        child.startsWith('../') ||
+        isAbsolute(child)
+      )
+        refuse(
+          'E_COMPLETION_RESUME',
+          'Archive export is outside this repository; preserve the receipt and recover explicitly.',
+        );
+      return child;
+    });
+  const paths = [record, ...exports];
+  if (
+    gitSucceeds(
+      root,
+      'cat-file',
+      '-e',
+      `${receipt.lifecycleCommit}:${record}`,
+    ) ||
+    exports.some(
+      (path) =>
+        !gitSucceeds(
+          root,
+          'cat-file',
+          '-e',
+          `${receipt.lifecycleCommit}:${path}`,
+        ),
+    )
+  )
+    refuse(
+      'E_COMPLETION_RESUME',
+      'Archive lifecycle commit does not match its retired record and exports; preserve the receipt and recover explicitly.',
+    );
+  const pendingPaths = git(
+    root,
+    'diff',
+    '--name-only',
+    '-z',
+    receipt.lifecycleCommit,
+    fetchedBase,
+    '--',
+    ...paths.map((path) => `:(literal)${path}`),
+  )
+    .split('\0')
+    .filter(Boolean);
+  if (pendingPaths.length)
+    refuse(
+      'E_COMPLETION_BOOKKEEPING_PENDING',
+      `Archive bookkeeping ${receipt.lifecycleCommit} is not delivered on origin/${options.baseBranch}; pending paths: ${pendingPaths.join(', ')}. Retain the active pointer, archive receipt and current branch; recover delivery explicitly before retrying completion. Do not push the merged original or replay archive.`,
+    );
+  const current = git(root, 'rev-parse', 'HEAD');
+  if (
+    current !== receipt.lifecycleCommit &&
+    !gitSucceeds(root, 'merge-base', '--is-ancestor', current, fetchedBase)
+  )
+    refuse(
+      'E_DIVERGENT_COMPLETION',
+      'Current branch has work beyond the archived lifecycle receipt and updated base; preserve/reconcile it before resuming completion.',
+    );
+}
+
 /**
  * Only prepares a parent branch. Lifecycle/archive writes, commits, pushes and
  * PR publication retain their existing owners. The local branch config binds
@@ -126,6 +210,7 @@ export function prepareCompletionBranch(options) {
   const normal = {
     ...observation,
     followup: false,
+    archiveDelivered: false,
     branch: '',
     baseHead: '',
     followupPrUrl: '',
@@ -240,11 +325,28 @@ export function prepareCompletionBranch(options) {
       );
     }
   } else {
-    if (options.action === 'resume')
+    if (options.action === 'resume') {
+      // A terminal archive completed while OPEN can predate follow-up preparation.
+      // An existing binding (even with its branch lost) or a prepared-branch
+      // checkout still belongs to the prepared follow-up recovery path.
+      if (
+        options.scope === 'synced' &&
+        options.archivePrStatus === 'open' &&
+        options.archiveReceipt &&
+        !gitSucceeds(root, 'config', '--local', '--get', configKey) &&
+        !git(root, 'branch', '--show-current').startsWith('oat/complete-pr-')
+      ) {
+        archivedBookkeepingDelivered(root, projectRelative, fetchedBase, {
+          ...options,
+          baseBranch,
+        });
+        return { ...normal, archiveDelivered: true, baseHead: fetchedBase };
+      }
       refuse(
         'E_COMPLETION_RESUME',
         'No prepared follow-up exists; do not replay archive mutations to create one.',
       );
+    }
     const current = git(root, 'rev-parse', 'HEAD');
     // A squash-merged feature head is safe even when it is not an ancestor.
     // Other commits must already be on base; never carry unmerged work across.
@@ -393,6 +495,7 @@ function shellFields(result) {
     PR_STATUS_OBSERVED_AT: result.observedAt,
     WAS_PR_OPEN_AT_START: String(result.wasOpen),
     COMPLETION_FOLLOWUP: String(result.followup),
+    COMPLETION_ARCHIVE_DELIVERED: String(result.archiveDelivered ?? false),
     COMPLETION_BRANCH: result.branch,
     COMPLETION_BASE_HEAD: result.baseHead,
     BASE_BRANCH: result.baseBranch ?? '',
@@ -412,6 +515,8 @@ function main(argv) {
     '--scope': 'scope',
     '--pr-url': 'prUrl',
     '--authority': 'authority',
+    '--archive-receipt': 'archiveReceipt',
+    '--archive-pr-status': 'archivePrStatus',
     '--format': 'format',
   };
   for (let i = 0; i < argv.length; i += 2) {

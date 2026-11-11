@@ -539,6 +539,309 @@ test('synced retained owner and bytes survive parent fresh-base preparation', ()
   }
 });
 
+// Protects the actual resume/closeout boundary: helper-only controls cannot
+// detect an unnecessary original-branch push or an early pointer clear.
+for (const outcome of ['delivered', 'missed-merge', 'changed-export']) {
+  test(`merged-later terminal archive ${outcome}: shipped resume preserves delivery and pointer ownership`, async () => {
+    const { archiveProjectOnCompletion } =
+      await import('../../../../packages/cli/dist/commands/project/archive/archive-utils.js');
+    const f = fixture('synced');
+    try {
+      const summary = '# Terminal summary\n';
+      writeFileSync(
+        join(f.project, 'state.md'),
+        f.state.replace(
+          '---\n# Probe',
+          'oat_lifecycle: complete\noat_phase: archived\n---\n# Probe',
+        ),
+      );
+      writeFileSync(join(f.project, 'summary.md'), summary);
+      execFileSync('git', ['-C', f.project, 'add', 'state.md', 'summary.md']);
+      execFileSync(
+        'git',
+        ['-C', f.project, 'commit', '-m', 'Complete project'],
+        { stdio: 'ignore' },
+      );
+      const source = execFileSync(
+        'git',
+        ['-C', f.project, 'rev-parse', 'HEAD'],
+        { encoding: 'utf8' },
+      ).trim();
+      f.git('update-ref', 'refs/oat/projects/probe', source);
+      f.git('push', 'origin', 'refs/oat/projects/probe');
+      writeFileSync(
+        join(f.repo, '.gitignore'),
+        `${readFileSync(join(f.repo, '.gitignore'), 'utf8')}.oat/projects/archived/\n.oat/config.local.json\n.oat/state.md\n`,
+      );
+      writeFileSync(
+        join(f.repo, '.oat/config.json'),
+        JSON.stringify({
+          archive: {
+            summaryExportPath: '.oat/repo/reference/project-summaries',
+          },
+        }),
+      );
+      f.git('add', '.gitignore', '.oat/config.json');
+      f.git('commit', '-m', 'Ignore archive and local config');
+      f.git('push', '-u', 'origin', 'feature');
+      const beforeArchive = f.git('rev-parse', 'HEAD');
+      assert.equal(
+        success(
+          f.invoke(['--action', 'observe'], {
+            P02_GH_PR: JSON.stringify({
+              ...JSON.parse(f.env.P02_GH_PR),
+              state: 'OPEN',
+              headRefOid: beforeArchive,
+            }),
+          }),
+        ).observedStatus,
+        'open',
+      );
+      const report = await archiveProjectOnCompletion({
+        repoRoot: f.repo,
+        projectPath: f.project,
+        projectName: 'probe',
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        s3SyncOnComplete: false,
+      });
+      const lifecycle = report.lifecycleCommit;
+      assert.equal(f.git('rev-parse', 'HEAD'), lifecycle);
+      assert.throws(() => readFileSync(join(f.project, 'state.md')), {
+        code: 'ENOENT',
+      });
+      const mergedHead = outcome === 'missed-merge' ? beforeArchive : lifecycle;
+      if (outcome !== 'missed-merge') f.git('push');
+      f.git('switch', 'release');
+      f.git('merge', '--squash', mergedHead);
+      f.git('commit', '-m', 'Merge original after archive interruption');
+      if (outcome === 'changed-export') {
+        writeFileSync(
+          report.summaryExportFile,
+          '# Different exported summary\n',
+        );
+        f.git('add', report.summaryExportFile);
+        f.git('commit', '-m', 'Change archive export on base');
+      }
+      f.git('push');
+      f.git('switch', 'feature');
+      // A squash-delivered receipt deliberately is not an ancestor of base.
+      assert.equal(
+        spawnSync(
+          'git',
+          ['merge-base', '--is-ancestor', lifecycle, 'origin/release'],
+          { cwd: f.repo },
+        ).status,
+        1,
+      );
+      writeFileSync(
+        join(f.temp, 'bin/oat'),
+        `#!/bin/sh\nexec '${process.execPath}' '${cli}' "$@"\n`,
+        { mode: 0o755 },
+      );
+      const trace = join(f.temp, 'resume-git-trace.jsonl');
+      const env = {
+        ...f.env,
+        SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
+        P02_GH_PR: JSON.stringify({
+          ...JSON.parse(f.env.P02_GH_PR),
+          headRefOid: mergedHead,
+        }),
+        GIT_TRACE2_EVENT: trace,
+      };
+      execFileSync(
+        process.execPath,
+        [cli, 'config', 'set', 'activeProject', f.projectRelative],
+        { cwd: f.repo, env, stdio: 'pipe' },
+      );
+      const remoteFeature = f.git('rev-parse', 'origin/feature');
+      const branches = f.git(
+        'for-each-ref',
+        '--format=%(refname)',
+        'refs/heads',
+      );
+      const skill = readFileSync(
+        new URL('../SKILL.md', import.meta.url),
+        'utf8',
+      );
+      const block = (section, index = 0) =>
+        [...section.matchAll(/```bash\n([\s\S]*?)```/g)][index][1];
+      const entry = block(
+        skill.split('### Step 1:')[1].split('### Step 1.5:')[0],
+      );
+      const resume = block(
+        skill.split('### Step 1.75:')[1].split('### Step 2:')[0],
+        1,
+      );
+      const commit = block(
+        skill.split('### Step 10:')[1].split('### Step 11:')[0],
+      );
+      const push = block(
+        skill.split('### Step 10:')[1].split('### Step 11:')[0],
+        1,
+      );
+      const publish = block(
+        skill.split('### Step 11:')[1].split('### Step 11.5:')[0],
+      );
+      const sync = block(
+        skill.split('### Step 11.5:')[1].split('### Step 12:')[0],
+      );
+      const clear = block(skill.split('### Step 12:')[1]);
+      writeFileSync(trace, '');
+      writeFileSync(f.log, '');
+      const result = spawnSync(
+        'bash',
+        [
+          '-c',
+          [
+            entry,
+            resume,
+            commit,
+            push,
+            `if [[ "$SHOULD_OPEN_PR" == true ]]; then\n${publish}\nfi`,
+            sync,
+            'if [[ "$SHOULD_SYNC_PR" == true ]]; then gh pr edit "$ORIGINAL_PR_URL" --body-file unexpected; fi',
+            'printf "RESUME:%s|%s|%s|%s\\n" "$COMPLETION_ARCHIVE_DELIVERED" "$OBSERVED_PR_STATUS" "$SHOULD_OPEN_PR" "$SHOULD_SYNC_PR"',
+            clear,
+          ].join('\n'),
+        ],
+        { cwd: f.repo, env, encoding: 'utf8' },
+      );
+      const pointer = execFileSync(
+        process.execPath,
+        [cli, 'config', 'get', 'activeProject'],
+        { cwd: f.repo, env, encoding: 'utf8' },
+      ).trim();
+      if (outcome === 'delivered') {
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        assert.match(result.stdout, /RESUME:true\|merged\|false\|false/);
+        assert.equal(pointer, '');
+        const receipt = JSON.parse(result.stdout.split('\n')[0]).archiveReport;
+        const wrongCommit = f.invoke([
+          '--action',
+          'resume',
+          '--archive-pr-status',
+          'open',
+          '--archive-receipt',
+          JSON.stringify({ ...receipt, lifecycleCommit: beforeArchive }),
+        ]);
+        refused(wrongCommit, 'E_COMPLETION_RESUME');
+        assert.match(
+          JSON.parse(wrongCommit.stderr).message,
+          /lifecycle commit does not match/,
+        );
+        refused(
+          f.invoke([
+            '--action',
+            'resume',
+            '--archive-pr-status',
+            'merged',
+            '--archive-receipt',
+            JSON.stringify(receipt),
+          ]),
+          'E_COMPLETION_RESUME',
+        );
+      } else {
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stderr, /E_COMPLETION_BOOKKEEPING_PENDING/);
+        assert.match(result.stderr, new RegExp(lifecycle));
+        assert.match(result.stderr, /origin\/release/);
+        assert.match(result.stderr, /Retain the active pointer/);
+        assert.ok(
+          result.stderr.includes(
+            outcome === 'missed-merge'
+              ? `${f.projectRelative}.json`
+              : '.oat/repo/reference/project-summaries/',
+          ),
+        );
+        assert.equal(pointer, f.projectRelative);
+      }
+      assert.equal(f.git('rev-parse', 'origin/feature'), remoteFeature);
+      assert.equal(f.git('rev-parse', 'HEAD'), lifecycle);
+      assert.equal(
+        f.git('for-each-ref', '--format=%(refname)', 'refs/heads'),
+        branches,
+      );
+      assert.equal(f.git('status', '--porcelain'), '');
+      assert.throws(() => readFileSync(join(f.project, 'state.md')), {
+        code: 'ENOENT',
+      });
+      assert.equal(readFileSync(report.summaryExportFile, 'utf8'), summary);
+      const gitStarts = readFileSync(trace, 'utf8')
+        .trim()
+        .split('\n')
+        .filter(Boolean)
+        .map(JSON.parse)
+        .filter((event) => event.event === 'start');
+      assert.ok(
+        !gitStarts.some((event) => event.argv.includes('push')),
+        'resume must not push the merged original',
+      );
+      const ghCalls = readFileSync(f.log, 'utf8')
+        .trim()
+        .split('\n')
+        .map(JSON.parse);
+      assert.ok(
+        ghCalls.every(
+          (args) =>
+            args[0] === 'repo' || (args[0] === 'pr' && args[1] === 'view'),
+        ),
+        'resume must not create/edit a PR or look for a new follow-up',
+      );
+    } finally {
+      f.cleanup();
+    }
+  });
+}
+
+for (const binding of ['missing', 'mismatched', 'lost-branch']) {
+  test(`prepared archive resume refuses ${binding} preparation binding`, () => {
+    const f = fixture('synced');
+    try {
+      const prepared = success(f.invoke());
+      rmSync(f.project, { recursive: true });
+      const key = `branch.${prepared.branch}.oat-completion`;
+      if (binding === 'missing') f.git('config', '--local', '--unset', key);
+      else if (binding === 'lost-branch') {
+        f.git('switch', 'feature');
+        f.git('update-ref', '-d', `refs/heads/${prepared.branch}`);
+      } else
+        f.git(
+          'config',
+          '--local',
+          key,
+          JSON.stringify({
+            ...JSON.parse(f.git('config', '--local', '--get', key)),
+            scope: 'shared',
+          }),
+        );
+      const result = f.invoke([
+        '--action',
+        'resume',
+        '--archive-pr-status',
+        'open',
+        '--archive-receipt',
+        '{}',
+      ]);
+      refused(result, 'E_COMPLETION_RESUME');
+      assert.match(
+        JSON.parse(result.stderr).message,
+        binding === 'missing'
+          ? /lacks a valid preparation binding/
+          : binding === 'lost-branch'
+            ? /No prepared follow-up exists/
+            : /binding differs/,
+      );
+      assert.equal(
+        f.git('branch', '--show-current'),
+        binding === 'lost-branch' ? 'feature' : prepared.branch,
+      );
+    } finally {
+      f.cleanup();
+    }
+  });
+}
+
 test('resume reuses observed open follow-up; archive resume needs no retired project and cannot duplicate a closed follow-up', () => {
   const f = fixture('synced');
   try {

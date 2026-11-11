@@ -646,7 +646,13 @@ preserved safely stop with recovery guidance. Shared inputs must exist on the
 updated base; synced artifacts keep their retained owner. Local merged projects
 keep their current branch and record the live original status without follow-up
 authority, push or PR: their ignored artifacts produce no tracked bookkeeping. Existing
-archive-receipt resume routes do not replay completed mutations.
+archive-receipt resume routes do not replay completed mutations. For a synced
+archive completed while the original was open, a later merged observation uses
+the validated receipt to compare its discovery-record deletion and exported
+files with the fetched base. Matching results support squash merges and resume
+closeout without pushing the merged original, opening another PR or editing its
+body. Pending bookkeeping stops with the active pointer, receipt and branch
+retained for explicit recovery. Prepared follow-ups keep their binding checks.
 
 **Expected output:** The skill reports completed lifecycle state, bookkeeping
 commit and push results, recap outcome, any archive location, and the tracked
