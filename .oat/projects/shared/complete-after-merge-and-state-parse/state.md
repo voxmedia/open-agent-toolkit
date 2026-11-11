@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p02
 oat_last_commit: a8986ea0afad3842d49319112a73ab922c66c4e3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]

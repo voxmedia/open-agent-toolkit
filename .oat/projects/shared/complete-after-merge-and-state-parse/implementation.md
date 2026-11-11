@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: null
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
-**Total:** 2/2 phases accepted
+**Total:** 1/2 phases accepted; p02 reopened for approved gate recovery
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** a689912f74742a654e936b7fe1ba19f24c58c519
@@ -403,6 +403,17 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 
 p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0afad3842d49319112a73ab922c66c4e3`. All 14 ordered checks passed on clean `a689912f74742a654e936b7fe1ba19f24c58c519`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Exact commands, exits, runtime, lockfile and cache evidence: `.oat/analysis/complete-after-merge-p02/final-doc-fix/ordered-checks.json`. The earlier forced zero-cache behavioral proof remains in `final-fixes/ordered-checks.json`; this round additionally ran the required repository test command. No new behavior, fixtures, authority, tests, deferrals or recovery attempts. p02 is reaccepted; its Base stays unchanged. Final review round 2 records fixes_completed until independent confirmation, with the configured exit gate still pending.
 
+### Task p02-t07: Restore closed-PR completion and portable follow-up push
+
+**Status:** pending
+**Executor:** root
+**Source:** operator-approved recovery after incompatible gate run 3f079d62-6a7a-45c3-b2d4-529b72754c13; raw artifact reviews/final-review-2026-11-11T032431Z.md is preserved and not received.
+**Intent:** restore existing interactive completion for a live closed-unmerged tracked PR (observe closed, wasOpen=false, no fresh follow-up preparation), and make the existing push guard parse in bash and zsh.
+**Finding classes:** Medium regression of the brief's preserved completion contract; Low regression in the shipped shell snippet. Both are bounded corrections, not new requirements. The automatic companion's closed-PR refusal stays intact.
+**Files:** completion helper, skill and existing Git/shell tests; closeout documentation and evidence mapping only as needed.
+**Proof:** closed-PR observation/preparation sequence plus shell truth table, each red before correction and green afterward; required ordered checks. Existing PR-scoped skill/public-package bumps apply.
+**Ownership exception:** T3 requires root handling small review corrections; root GPT-6 Astra high.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -428,6 +439,10 @@ p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Operator-approved gate recovery — 2026-11-11
+
+The operator answered **approve** to retiring the incompatible gate result and resuming with the prepared branch-local CLI 0.3.50, including the closed-PR regression and zsh guard correction. Original run `3f079d62-6a7a-45c3-b2d4-529b72754c13` is retired as a completion gate: raw outcome passed its High threshold, 0 Critical/0 High/1 Medium/1 Low, but no result reviewedHead was emitted by installed CLI 0.3.46. Its raw receipt, active artifact and received ledger event remain unaltered; no normal receive or inferred provenance is claimed. Current failure carrier remains blocked until a new generation after correction and final review. No remediation attempt consumed (0/2). Corrections are operator-directed execution record p02-t07, with no deferrals. A fresh gate will execute the same configured command through an isolated branch-local oat executable; global installation and configuration remain unchanged.
 
 **Gate:** oat-project-implement · **Scope:** final · **Outcome:** raw review_completed_gate_passed (0 Critical, 0 High, 1 Medium, 1 Low), operationally blocked at event receipt · run 3f079d62-6a7a-45c3-b2d4-529b72754c13 · attempts_completed 0/2. Installed oat 0.3.46 omitted reviewedHead; the branch receiver refuses a gate event without that exact result field. Result/marker/target/project match; no head is inferred from the artifact, no receive or archive occurs, and the received gate Reviews row remains untouched. Original receipt: .oat/analysis/complete-state-parse-exit-gate/attempt-1-result.json. State failure gate_event_reviewed_head_missing owns the stop. Reported findings (not received/dispositioned): interactive closed-unmerged PR refusal changes the preserved base behavior; Step 10 ! (spacing) is needed for zsh parsing. Existing implementation/merge authority remains, but this accepted incompatible run requires explicit retirement before a new gate route.
 
