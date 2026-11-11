@@ -651,9 +651,10 @@ archive completed while the original was open, a later merged observation uses
 the validated receipt to compare its discovery-record deletion and exported
 files with the fetched base. Matching results support squash merges and resume
 closeout without pushing the merged original, opening another PR or editing its
-body. It skips PR-link rendering and local export checks because the receipt
-already proves the exports on the fetched base; an older safe checkout need not
-contain them. Pending bookkeeping stops with the active pointer, receipt and branch
+body. For a continuation carrying that verified terminal receipt, Step 8.6 skips
+PR-link rendering and local export checks: it no longer needs the exports in the
+local checkout. Earlier receipt recovery still runs against the current checkout.
+Pending bookkeeping stops with the active pointer, receipt and branch
 retained for explicit recovery. Prepared follow-ups keep their binding checks.
 
 **Expected output:** The skill reports completed lifecycle state, bookkeeping
