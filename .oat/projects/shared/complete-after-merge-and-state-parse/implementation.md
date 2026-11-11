@@ -388,13 +388,16 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 
 ### Task p02-t06: (review) Qualify merged-project authority in configuration docs
 
-**Status:** pending
+**Status:** completed
 **Executor:** root
 **Source review:** reviews/archived/final-review-2026-11-11T025843Z.md (L1)
 **Intent:** qualify the existing configuration reference so only durable (shared or synced) merged projects require follow-up authority, matching implemented behavior.
 **Files:** apps/oat-docs/docs/reference/configuration.md
 **Proof:** conservation diff, docs lint/format/check/build and generated-index freshness; reuse unchanged behavioral verification.
 **Ownership exception:** T3 directs root to handle small review fixes; root GPT-6 Astra high. This is an accepted documentation requirement with no new behavior or authority.
+
+**Commit:** a8986ea0afad3842d49319112a73ab922c66c4e3
+**Result:** one-phrase docs correction; conservation diff preserves every other word, section, link and claim. Scoped docs check and formatting passed on the exact precommit edit (Node22.23.3, pnpm10.13.1, Darwin arm64). Required checks follow on a clean committed candidate; unchanged runtime behavior retains final-fixes/ordered-checks.json evidence, including uncached test execution. No additional tests or negative controls are warranted for this prose correction.
 
 ## Orchestration Runs
 
