@@ -246,6 +246,27 @@ Execution shape: one phase implementer on the existing orchestration checkout an
 
 Root verified the clean tree at 8e231765ce151db88dedecff4a09d6450089d535, exactly one implementation commit and two journal-only commits after dispatch base, matching p02 anchors with Base ancestral to Head, and no p01 production changes. Source candidate 5d5e6caef9128835562047de5212839f45b6c8e1 remains unchanged. Inspected ordered-checks.json and raw suite summaries: every required command exited 0 with clean before/after state; forced CLI 9,706, smoke 165, skills 735, scripts 7. Reused that evidence rather than rerunning unchanged suites. Read the helper, completion routing diff and reproduction report; independent review remains required. p02 recovery has no attempt/marker to settle (used 0/10); p01 used 2/10 remains unchanged. Phase stays in_progress pending its Opus phase review, then final integrated review and configured gate.
 
+### Review Received: p02 — round 1
+
+**Artifact:** reviews/archived/p02-review-2026-11-11T012506Z.md
+**Reviewed head:** 5d5e6caef9128835562047de5212839f45b6c8e1
+**Findings:** 1 Critical, 1 High, 1 Medium, 2 Low. Reconnaissance: not-attempted; exact signal consumed, no orchestration section. Full p02 anchor range validated.
+**Finding classes:** C1 regression (no-tracked-PR completion fails on real status shell null sentinel; p02 Exit evidence); H1 accepted-requirement (brief Constraints and KU2 preserve composing automatic completion, using explicit existing authority); M1 regression (reused open follow-up body-sync gate contradicts its promised path); L1 accepted-requirement (p02 goal PR_ON_COMPLETE-only exclusion evidence must test the instruction that owns it); L2 accepted-requirement (KU2 requires base project inputs; synced parent discovery record is an input).
+**Dispositions:** convert all five, none deferred or new-hardening. Root handles C1/M1/L1/L2 as small review fixes in p02-t02 under T3's no-small-fix-delegate rule. H1 returns to the original Sol high implementer for the composing wrapper integration: existing explicit task authority can authorize merged follow-up preparation/publication; absent authority refuses at preflight before writes; config opt-in or PR_ON_COMPLETE alone grants no new publication authority. Preserve open/before-merge and batch semantics with per-project authorization. This applies the approved reuse-authority rule, not a new standing grant.
+**Review round:** 1; bounded fix round 1 pending. No recovery attempt consumed. Phase remains in_progress and raw counts remain unchanged.
+
+### Task p02-t02: Correct completion boundary values, sync gating and input evidence
+
+**Status:** completed
+**Executor:** root
+**Intent:** resolve C1/M1/L1/L2 within approved p02; H1 remains for original phase implementer.
+**Files:** completion helper and skill; completion Git tests; existing CLI review contract tests; p02 research evidence.
+**Proof command:** real status-shell-to-skill regression with null/open controls; gated follow-up sync probe; tracked synced-record refusal and preservation controls; goal exclusion contract can-fail check; focused completion and shared/validation tests.
+**Ownership exception:** T3 requires root handling of small review fixes; root GPT-6 Astra high owns only this bounded correction. Sol high remains the p02 implementation owner for H1. Full phase verification follows the combined fix set before re-review.
+
+**Commit:** dd394df379f25aba250e4e8d64d49bb0652ca72e
+**Result:** 104 completion tests and 139 focused CLI contract tests passed (exit 0). The broader isolated shared/validation run passed 1,270 with one obsolete heading assertion failing; that assertion was mechanically updated and passed in the focused run. Null shell composition and both synced-record negative cases failed before the fix and passed afterward. Removing follow-up eligibility and the goal-authority sentence each broke its targeted test; both restored. Evidence: `.oat/analysis/complete-after-merge-p02/review-fixes/` logs and `can-fail.json`. Node 22.23.3/pnpm 10.13.1, Darwin arm64; real Git and branch-built status command, substituted gh boundary. Formatting and hook-only formatting followed tests. Full verification on the combined H1 correction remains required; this task does not advance phase Head or claim phase acceptance.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -258,7 +279,7 @@ Root verified the clean tree at 8e231765ce151db88dedecff4a09d6450089d535, exactl
 
 - run/v1 · request=complete-after-merge-p02-20261111 · scope=p02 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-- run/v1 · request=complete-after-merge-p02-review-r1-20261111 · scope=p02 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-p02-review-r1-20261111 · scope=p02 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
