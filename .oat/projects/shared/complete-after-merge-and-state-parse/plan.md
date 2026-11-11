@@ -130,15 +130,15 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 | final | code | passed | 2026-11-11 | reviews/archived/final-review-2026-11-11T060748Z.md | 1dd8a790bbb3095ae7c1fdcc39a8046365066af2 | auto | - |
 
-| final | code | fixes_added | 2026-11-11 | reviews/archived/final-review-2026-11-11T061345Z.md | 1dd8a790bbb3095ae7c1fdcc39a8046365066af2 | gate | claude-opus-5-5-high |
+| final | code | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T061345Z.md | 1dd8a790bbb3095ae7c1fdcc39a8046365066af2 | gate | claude-opus-5-5-high |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
-- p02 accepted: post-merge bookkeeping, existing completion contracts and merged-later archive receipt recovery are verified and independently reviewed.
-- Total: 2/2 phases accepted. Current final review passes at 1dd8a790; a fresh configured gate, updated closeout and new-head CI precede the authorized merge.
+- p02 re-review pending: the accepted resume correction now includes a delivered-recap instruction clarification.
+- Total: 1/2 phases accepted while p02-t11 awaits final confirmation; a fresh configured gate, updated closeout and new-head CI precede the authorized merge.
 
 ## References
 

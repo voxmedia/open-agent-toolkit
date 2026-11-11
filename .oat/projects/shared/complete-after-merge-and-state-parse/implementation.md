@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
-**Total:** 2/2 phases accepted
+**Total:** 1/2 phases accepted
 
 ---
 
@@ -170,7 +170,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 **Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 1dd8a790bbb3095ae7c1fdcc39a8046365066af2
+**Head:** 703da345153aa455a7dfed2c70107e34eefb821e
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -486,6 +486,8 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Proof:** one bounded instruction clarification; required ordered checks and independent final review for the changed source.
 **Commit:** 132ad171be754378bcdf5606a9e153ba2e2d9de9
 
+**Verification:** 15/15 checks exited 0 on clean 703da345153aa455a7dfed2c70107e34eefb821e against unchanged origin/main ddd67fb5541bac2959ebb64ed82f4287f4f56698. Completion probes 28/28; required checks in order, full pnpm test, lint/format, release validation, docs build/direct index freshness and isolated skill contracts passed. Exact commands, cache replay flags, dependency hash and inputs: `.oat/analysis/complete-state-parse-closeout/recap-link/committed-checks.json`. Node22.23.3/pnpm10.13.1/macOS arm64; exact22.23.4 unavailable. No new test or executable behavior added; source delta is one Step8.5 sentence. Previous helper negative/can-fail proofs remain reusable. Independent confirmation pending; no phase acceptance yet.
+
 ## Orchestration Runs
 
 Root-inline phase: p02, p02-t10 only; small test/prose review corrections handled by root GPT-6 Astra high under host instruction to fix small review findings inline. The substantive implementation remains GPT-6.1 Sol high; independent Opus review remains required.
@@ -521,6 +523,8 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+**Gate4 receipt reconciliation:** tracking receive commit073a645f and archive-deletion commit88bfeb59 jointly settle event830e5bf5; the archive was CLI-tracked, so its deletion required a follow-on exact-path commit. Carrier receive_commit names the final archive commit. Archived artifact and bound row retain original run/head. The later source clarification132ad171 makes the gate stale under effective-delta-v2; no waiver, failed recovery, or gate remediation attempt was used. Standard final confirmation is narrowed to that one sentence before the fresh configured gate.
 
 ### Review Received: final — gate4 recap-link clarification
 
