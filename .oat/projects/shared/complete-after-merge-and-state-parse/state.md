@@ -114,9 +114,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T05:56:29.721Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -150,7 +150,7 @@ oat_implement_exit_gate:
     non-blocking findings (low=1). Run oat-project-review-receive for
     .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T061345Z.md
     to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     runId: 830e5bf5-72c7-48e1-9cfd-1313aaa51b0d
     handoff:
@@ -169,12 +169,12 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-11-11T061345Z.md
   receive_pre_head: a27cf2b04a2511a72b6c3ede7661548d9247ab15
-  receive_commit: null
+  receive_commit: 073a645f14d50b9c2f7a58b1666d168dfab3ada3
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: 2026-11-11T06:16:19.932Z
-  decided_at: null
+  updated_at: 2026-11-11T06:17:16.215Z
+  decided_at: 2026-11-11T06:17:16.102235+00:00
 oat_post_implement_sequence:
   status: in_progress
   source: configured
