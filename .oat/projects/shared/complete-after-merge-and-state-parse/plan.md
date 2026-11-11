@@ -135,6 +135,7 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | final | code | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T070920Z.md | 417ef4401e743773bd8dfca75f02157e375357c4 | auto | - |
 
 | final | code | passed | 2026-11-11 | reviews/archived/final-review-2026-11-11T071801Z.md | f916330bde65ba7ad1024843ca4ac2ce88f3939d | auto | - |
+| final | code | received | 2026-11-11 | reviews/final-review-2026-11-11T072352Z.md | f916330bde65ba7ad1024843ca4ac2ce88f3939d | gate | claude-opus-5-5-high |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
