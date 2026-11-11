@@ -79,6 +79,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 pr421-stale-head-accepted-20261111 accepted p02-t12 and p02-t13 after clean independent final review; recovery p02 1/10 settled; fresh configured gate required. See implementation.md.
 
+### 2026-11-11 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T072352Z.md convergence=new:2,carried:0,resolved:1 sequence=scope:final sequence_run=6 previous_run=d705a945 run=daa8c9de-12be-4648-8980-c53395268196
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
