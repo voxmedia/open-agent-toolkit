@@ -175,6 +175,20 @@ Phase-local refinement (2026-11-11): p01's shared command is available and accep
 
 Execution shape: one phase implementer on the existing orchestration checkout and sole committing owner while active. No parallel group; branch preparation, completion instructions, archive/PR routing and their executable evidence share state and sequencing, so root fan-out is not independent. Exact target GPT-6.1 Sol high, classified consequential for branch/PR and archive durability effects, with independent Opus review. Recovery default/phase limit 10, used 0, remaining 10, pending null; workflow default with no override. No recovery allowance authorizes continuation after terminal failure.
 
+### Task p02-t01: Prepare and route post-merge completion bookkeeping
+
+**Status:** completed
+**Executor:** phase-implementer:complete-after-merge-p02-20261111
+**Handle:** current T3 phase implementation thread (native handle unavailable)
+**Intent:** live-observe the original PR before completion writes, prepare or reuse a fresh-base follow-up within existing authority, and preserve original identity plus scope/receipt routing.
+**Files:** completion skill and cohesive helper/tests; necessary pinned CLI skill contracts; closeout docs, README and CLI README; compact research evidence.
+**Proof command:** real local Git/state probes with substituted GitHub boundary; isolated skill/validation contracts; ordered repository gates, lint/format and forced workspace tests.
+**Pre-task HEAD:** 515f630e64becdbc87a6d2cd49b46026590bee32
+**Recovery capacity:** 0/10 used, 10 remaining, pending null. No optional delegation.
+**Commit:** 4aea7c00c05963a283d62906af4a7b3107da598b
+**Result:** pre-commit completion-skill suite 101/101; isolated shared/validation contracts 1,270/1,270; scoped CLI build, completion oxlint and git diff check all exit 0. Formatter ran on every changed path; hook changed no source bytes. The new Git probes exercise stale-open/current-branch failure, updated non-main base after squash merge, completion-only diff and actual explicit branch push, original/follow-up PR routing, open/no-PR controls, observation/authority/input refusals, shared/local/synced owners and resume reuse. External gh schema captured read-only from actual merged PR 419; synthetic response values are labelled in the executable test header. No live PR mutation.
+**Composition:** p01 production/parser/state-writer source is unchanged. The shared autonomy contract only updates prompt-site hashes for the new completion ordering; both exact-text CLI contract files and the main-module script inventory were mechanically reconciled. Existing PR-scoped skill and 0.3.50 lockstep bumps remain sufficient against fetched main 0.3.49. Full ordered phase gates follow on a clean committed checkout; this record is not phase acceptance.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
