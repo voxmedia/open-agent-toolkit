@@ -47,6 +47,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,l
 
 complete-state-parse-exit-event-blocked-20261111 STOP: gate run 3f079d62-6a7a-45c3-b2d4-529b72754c13 passed its threshold but installed oat 0.3.46 omitted reviewedHead, so current receive rejects the event. Receipt preserved, no receive/archive or remediation attempt, no PR. Recovery requires retiring this incompatible completed run before a branch-CLI gate; state.md records exact receipt and failure.
 
+### 2026-11-11 · structural · oat-project-implement · p02
+
+p02-gate-recovery-accepted-20261111: p02 reaccepted at 09d08130659962709b68e2a8f5bcfe05f34ae725 after all 15 checks passed; approved closed-PR and zsh corrections complete, recovery 0/10 and gate remediation 0/2 unchanged; renewed final review and fresh branch-CLI gate pending. Evidence in implementation.md and .oat/analysis/complete-after-merge-p02/gate-fixes/ordered-checks.json.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

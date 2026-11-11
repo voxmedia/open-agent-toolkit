@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
 
-**Total:** 1/2 phases accepted; p02 reopened for approved gate recovery
+**Total:** 2/2 phases accepted
 
 ---
 
@@ -167,10 +167,10 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** a689912f74742a654e936b7fe1ba19f24c58c519
+**Head:** 09d08130659962709b68e2a8f5bcfe05f34ae725
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -417,6 +417,10 @@ p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0
 **Commit:** bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9
 **Result:** all 21 completion Git/shell probes passed, including closed observation without branch/byte/publication changes and the shipped bash/zsh push truth table. Red evidence shows the exact prior E_PR_CLOSED refusal and zsh parse error, with bash already passing. All 1,272 isolated shared/validation contracts passed. Precommit lint caught one template-literal style issue in the new test; corrected before commit, focused tests/lint passed. Inventory's three shifted locators refreshed. Evidence: .oat/analysis/complete-after-merge-p02/gate-fixes/. No new CLI semantics, companion behavior or authority contract; no recovery attempt used. Required clean-candidate checks follow.
 
+### Approved gate-recovery verification and p02 reacceptance
+
+p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing closed-PR interactive path and portable push guard. All 15 required/extra checks passed on clean `09d08130659962709b68e2a8f5bcfe05f34ae725`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Commands, explicit exits, runtime, lockfile and cache inputs: `.oat/analysis/complete-after-merge-p02/gate-fixes/ordered-checks.json`. Forced workspace tests, root suites, isolated contracts, build/release, docs freshness and lint/format passed. Before commit, 21 Git/shell probes and 1,272 contracts passed; the red controls fail for the exact closed refusal and zsh parse error. No pending findings from the approved correction remain; no recovery attempt or gate remediation attempt consumed. p02 is reaccepted with unchanged Base and updated Head. Independent final re-review and a fresh branch-CLI configured gate remain pending. The previous standard review loop ended in a clean pass; this is the operator-approved continuation after the retired gate, not an exhausted failed fix loop.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -556,19 +560,19 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **Verification performed:**
 
-- Accepted p01 and p02 evidence plus final clean candidate `a689912f74742a654e936b7fe1ba19f24c58c519`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
+- Accepted p01 and p02 evidence plus final clean candidate `09d08130659962709b68e2a8f5bcfe05f34ae725`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
 - Packed consumer proof, historical malformed-state negative/valid controls and stop-before-commit proof; real Git branch/diff/push/resume and shipped shell composition probes with substituted gh. Batch publication-state test fails without its reset and passes with it.
 - Exact commands, runtime, cache and revision inputs are retained in phase verification records. Pinned Node 22.23.4 unavailable; Node 22.23.3 used. Prose checks establish instruction coverage, not agent obedience; live GitHub publication not claimed.
 
 **Outcomes audit:**
 
-- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t06.
+- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/closed/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t07.
 - Outcome 2 met in accepted p01: `180f4758`, `581335dc` plus the reviewed 88-location inventory and packed-consumer probe demonstrate incident BAD_INDENT rejection, valid commented-state acceptance without mutation, and stopping before commit/continuation. Evidence mapping: `references/research/manual-state-writers.md` and p01 acceptance.
 
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review passed. Implementation remains in progress pending the configured exit gate and summary/document/PR closeout sequence. Merge authority is already recorded.
+- The prior final independent review passed; approved gate corrections now await renewed final review and a fresh branch-CLI gate. Implementation remains in progress before summary/document/PR closeout. Merge authority is already recorded.
 
 ## References
 
