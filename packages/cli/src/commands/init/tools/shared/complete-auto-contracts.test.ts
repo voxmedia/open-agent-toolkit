@@ -1048,7 +1048,7 @@ describe('the companion never creates a PR', () => {
         stepEleven.includes('**Skip if `SHOULD_OPEN_PR` is false.**') &&
         stepEleven.includes('gh pr create'),
       syncRunsForOpenPr: flat.includes(
-        '**Run only when `WAS_PR_OPEN_AT_START="true"`',
+        '**Run for an already-open original or a reused open follow-up,',
       ),
     };
   }

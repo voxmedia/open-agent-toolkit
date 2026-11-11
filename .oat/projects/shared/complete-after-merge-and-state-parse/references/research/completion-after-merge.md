@@ -27,9 +27,10 @@ probe responses are synthetic. Logs and raw schema capture are local under
   state. Original URL and empty delivery registration remain unchanged.
 - **Accepted controls:** live open retains the existing branch and open-sync
   decision. No tracked URL calls no GitHub observer and returns neither an
-  observed status nor timestamp. Missing authority refuses even when
-  `PR_ON_COMPLETE=true`; explicit existing brief authority succeeds for the
-  same goal-state input, with no new per-run request.
+  observed status nor timestamp. Missing explicit authority refuses; explicit existing brief authority succeeds
+  for the same goal-state input, with no new per-run request. The goal
+  `PR_ON_COMPLETE` exclusion is owned by the skill instruction and pinned in
+  the CLI review-skill contract test, not evaluated by the helper.
 - **Refusals:** failed observation, dirty parent/retained synced inputs,
   unmerged commits and shared inputs missing from base leave input bytes and
   the current branch intact. The helper preserves ignored local artifacts and
@@ -68,3 +69,24 @@ p01, so no second PR-scoped bump is needed. The only shared-contract change is
 mechanical prompt-site inventory maintenance. Prose checks verify instructional
 contracts; executable Git and shell probes establish their tested seams, not
 an agent's future obedience.
+
+## p02 review corrections
+
+The status-shell regression executes both shipped Step 1.75 blocks against the
+real built status command, rather than passing an invented empty URL. Literal
+`null` now makes no GitHub call and yields no observation/status timestamp;
+an actual tracked OPEN response still succeeds. Pre-fix: the no-PR block
+failed after treating null as a tracked identity. The synced fixture now uses
+the repository's `synced/*/` ignore rule and a parent-tracked discovery record
+matching the schema in `commands/project/sync/record.ts`. Missing or changed
+base records refuse before switching and preserve the current record bytes;
+pre-fix both probes incorrectly switched branches.
+
+The publication test executes Step 11.5's eligibility block before target
+selection. A reused open follow-up receives the final body; an open original
+remains eligible, while a merged original alone and a newly created follow-up
+do not. Neutralizing follow-up eligibility makes the test fail because the
+expected follow-up edit is absent. Removing the goal exclusion sentence makes
+its instruction-contract test fail. Both guards were restored; local receipts
+are in `.oat/analysis/complete-after-merge-p02/review-fixes/`. These are tested
+shell/CLI and instruction contracts, not proof that an agent obeys the prose.

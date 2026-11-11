@@ -73,7 +73,8 @@ function assertClean(root) {
 
 /** Read-only live observation. Stored status is deliberately not an input. */
 export function observeCompletionPr({ cwd, prUrl }) {
-  if (!prUrl)
+  // `oat project status --shell` represents an absent field as literal null.
+  if (!prUrl || prUrl === 'null')
     return {
       originalPrUrl: '',
       observedStatus: '',
@@ -304,6 +305,16 @@ export function prepareCompletionBranch(options) {
         'Local/synced artifacts unexpectedly belong to the parent index; resolve their owner before switching.',
       );
     if (options.scope === 'synced') {
+      const record = `${projectRelative}.json`;
+      if (
+        !gitSucceeds(root, 'cat-file', '-e', `${fetchedBase}:${record}`) ||
+        (!existing &&
+          git(root, 'diff', '--name-only', fetchedBase, 'HEAD', '--', record))
+      )
+        refuse(
+          'E_COMPLETION_INPUTS',
+          'Synced discovery record is missing or differs on updated base; reconcile it before switching.',
+        );
       if (
         realpathSync(git(projectPath, 'rev-parse', '--show-toplevel')) !==
         realpathSync(projectPath)

@@ -1805,8 +1805,21 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
 
-**Run only when `WAS_PR_OPEN_AT_START="true"` and either
-`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`.**
+**Run for an already-open original or a reused open follow-up, and either
+`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`.** Evaluate the eligibility
+below before the body lookup and target selection; skip the rest of this step
+unless `SHOULD_SYNC_PR="true"`:
+
+```bash
+SHOULD_SYNC_PR="false"
+if [[ "${IS_DURABLE_PROJECT:-false}" == "true" && \
+  ( "${SHOULD_ARCHIVE:-false}" == "true" || "${PROJECT_SCOPE:-}" == "synced" ) ]]; then
+  if [[ "${COMPLETION_FOLLOWUP:-false}" != "true" && "${WAS_PR_OPEN_AT_START:-false}" == "true" ]] || \
+    [[ "${COMPLETION_FOLLOWUP:-false}" == "true" && "${FOLLOWUP_PR_STATUS:-}" == "open" && "${NEW_FOLLOWUP_CREATED:-false}" != "true" ]]; then
+    SHOULD_SYNC_PR="true"
+  fi
+fi
+```
 
 For a merged original, this condition never targets the original. An already
 open follow-up (`COMPLETION_FOLLOWUP="true"` and `FOLLOWUP_PR_STATUS="open"`)
@@ -1823,7 +1836,7 @@ commit.
 
 Skip this step when:
 
-- The PR was not yet open at the start (`WAS_PR_OPEN_AT_START="false"`) — Step 11 already created the PR with the archive-aware body.
+- Neither an already-open original nor a reused open follow-up is eligible, or Step 11 just created the follow-up with the final body.
 - No archive happened and the project is not synced — no final retained-ref
   body was published.
 - `IS_DURABLE_PROJECT="false"` — local projects are not archived in this skill, so no link breakage.

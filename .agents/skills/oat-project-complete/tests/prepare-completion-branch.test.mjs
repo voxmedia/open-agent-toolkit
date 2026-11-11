@@ -47,7 +47,7 @@ function fixture(scope = 'shared') {
   git('remote', 'add', 'origin', remote);
   writeFileSync(
     join(repo, '.gitignore'),
-    '.oat/projects/local/\n.oat/projects/synced/\n',
+    '.oat/projects/local/\n.oat/projects/synced/*/\n',
   );
   const projectRelative = `.oat/projects/${scope}/probe`;
   const project = join(repo, projectRelative);
@@ -56,6 +56,19 @@ function fixture(scope = 'shared') {
   writeFileSync(join(project, 'state.md'), state);
   writeFileSync(join(project, 'plan.md'), '# Approved project\n');
   if (scope === 'synced') {
+    writeFileSync(
+      `${project}.json`,
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug: 'probe',
+        scope: 'synced',
+        ref: 'refs/oat/projects/probe',
+        remote: 'origin',
+        status: 'active',
+        createdAt: '2026-11-11T00:00:00Z',
+        completedAt: null,
+      })}\n`,
+    );
     git(
       'worktree',
       'add',
@@ -286,15 +299,12 @@ test('live open and no-tracked-PR controls preserve current branch and bytes wit
   }
 });
 
-test('failed observation and missing explicit authority stop before state/branch writes (goal PR_ON_COMPLETE is insufficient)', () => {
+test('failed observation and missing explicit authority stop before state/branch writes', () => {
   const f = fixture();
   try {
     const before = f.git('rev-parse', 'HEAD');
     refused(f.invoke([], { P02_GH_FAIL: 'true' }), 'E_COMPLETION_PREPARE');
-    refused(
-      f.invoke(['--authority', ''], { PR_ON_COMPLETE: 'true' }),
-      'E_FOLLOWUP_AUTHORITY',
-    );
+    refused(f.invoke(['--authority', '']), 'E_FOLLOWUP_AUTHORITY');
     assert.equal(f.git('rev-parse', 'HEAD'), before);
     assert.equal(f.git('branch', '--show-current'), 'feature');
     assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
@@ -302,6 +312,94 @@ test('failed observation and missing explicit authority stop before state/branch
     f.cleanup();
   }
 });
+
+test('real status-shell output composes with observation for null and open PRs', () => {
+  const f = fixture();
+  try {
+    writeFileSync(
+      join(f.temp, 'bin', 'oat'),
+      `#!/bin/sh\nexec node "${cli}" "$@"\n`,
+      { mode: 0o755 },
+    );
+    const skill = readFileSync(new URL('../SKILL.md', import.meta.url), 'utf8');
+    const section = skill.slice(
+      skill.indexOf('### Step 1.75:'),
+      skill.indexOf('### Step 2:'),
+    );
+    const blocks = [...section.matchAll(/```bash\n([\s\S]*?)\n```/g)].map(
+      (match) => match[1],
+    );
+    const report =
+      '\nprintf "%s|%s|%s" "$ORIGINAL_PR_URL" "$OBSERVED_PR_STATUS" "$PR_STATUS_OBSERVED_AT"';
+    const env = {
+      ...f.env,
+      SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
+      PROJECT_PATH: f.projectRelative,
+      ACTIVE_PROJECT_PATH: f.projectRelative,
+    };
+    writeFileSync(
+      join(f.project, 'state.md'),
+      f.state
+        .replace('oat_pr_status: open', 'oat_pr_status: null')
+        .replace(originalUrl, 'null'),
+    );
+    for (const block of [
+      blocks[0],
+      `eval "$(oat project status --project-path "$PROJECT_PATH" --shell oat_pr_url=project.prUrl)"\n${blocks[1]}`,
+    ]) {
+      const result = spawnSync('bash', ['-c', block + report], {
+        cwd: f.repo,
+        env,
+        encoding: 'utf8',
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout, '||');
+    }
+    assert.equal(readFileSync(f.log, { encoding: 'utf8', flag: 'a+' }), '');
+    writeFileSync(join(f.project, 'state.md'), f.state);
+    const open = spawnSync('bash', ['-c', blocks[0] + report], {
+      cwd: f.repo,
+      env: {
+        ...env,
+        P02_GH_PR: JSON.stringify({
+          ...JSON.parse(f.env.P02_GH_PR),
+          state: 'OPEN',
+        }),
+      },
+      encoding: 'utf8',
+    });
+    assert.equal(open.status, 0, open.stderr);
+    assert.match(open.stdout, /\|open\|\d{4}-/);
+  } finally {
+    f.cleanup();
+  }
+});
+
+for (const change of ['missing', 'different']) {
+  test(`synced parent record ${change} on updated base refuses before switching`, () => {
+    const f = fixture('synced');
+    try {
+      const originalRecord = readFileSync(`${f.project}.json`, 'utf8');
+      f.git('switch', 'release');
+      if (change === 'missing') f.git('rm', `${f.projectRelative}.json`);
+      else {
+        writeFileSync(
+          `${f.project}.json`,
+          originalRecord.replace('active', 'complete'),
+        );
+        f.git('add', `${f.projectRelative}.json`);
+      }
+      f.git('commit', '-m', 'Changed base discovery record');
+      f.git('push', 'origin', 'release');
+      f.git('switch', 'feature');
+      refused(f.invoke(), 'E_COMPLETION_INPUTS');
+      assert.equal(f.git('branch', '--show-current'), 'feature');
+      assert.equal(readFileSync(`${f.project}.json`, 'utf8'), originalRecord);
+    } finally {
+      f.cleanup();
+    }
+  });
+}
 
 test('dirty and divergent shared inputs remain intact and refuse preparation', () => {
   const f = fixture();
@@ -440,16 +538,61 @@ test('shipped Step 11 creates/reuses a separate bookkeeping PR and its body sync
     const selectTarget = skill
       .match(/   PR_REF="\$\{ORIGINAL_PR_URL[\s\S]*?\n   ```/)[0]
       .replace(/\n   ```$/, '');
+    const syncGate = skill
+      .slice(skill.indexOf('### Step 11.5:'))
+      .match(/```bash\n([\s\S]*?)\n```/)[1];
     const sync = spawnSync(
       'bash',
-      ['-c', `${selectTarget}\ngh pr edit "$PR_REF" --body-file "$TMP_BODY"`],
+      [
+        '-c',
+        `${syncGate}\nif [[ "$SHOULD_SYNC_PR" == "true" ]]; then\n${selectTarget}\ngh pr edit "$PR_REF" --body-file "$TMP_BODY"\nfi`,
+      ],
       {
         cwd: f.repo,
-        env: { ...env, FOLLOWUP_PR_URL: followup.url },
+        env: {
+          ...env,
+          FOLLOWUP_PR_URL: followup.url,
+          FOLLOWUP_PR_STATUS: 'open',
+          WAS_PR_OPEN_AT_START: 'false',
+          IS_DURABLE_PROJECT: 'true',
+          SHOULD_ARCHIVE: 'true',
+        },
         encoding: 'utf8',
       },
     );
     assert.equal(sync.status, 0, sync.stderr);
+    for (const [controls, expected] of [
+      [{ COMPLETION_FOLLOWUP: 'false', WAS_PR_OPEN_AT_START: 'true' }, 'true'],
+      [
+        { COMPLETION_FOLLOWUP: 'false', WAS_PR_OPEN_AT_START: 'false' },
+        'false',
+      ],
+      [
+        {
+          COMPLETION_FOLLOWUP: 'true',
+          FOLLOWUP_PR_STATUS: 'open',
+          NEW_FOLLOWUP_CREATED: 'true',
+        },
+        'false',
+      ],
+    ]) {
+      const gate = spawnSync(
+        'bash',
+        ['-c', `${syncGate}\nprintf '%s' "$SHOULD_SYNC_PR"`],
+        {
+          cwd: f.repo,
+          env: {
+            ...env,
+            IS_DURABLE_PROJECT: 'true',
+            SHOULD_ARCHIVE: 'true',
+            ...controls,
+          },
+          encoding: 'utf8',
+        },
+      );
+      assert.equal(gate.status, 0, gate.stderr);
+      assert.equal(gate.stdout, expected);
+    }
     const calls = readFileSync(f.log, 'utf8')
       .trim()
       .split('\n')

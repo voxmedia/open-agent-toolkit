@@ -3576,6 +3576,15 @@ printf 'artifact-read\\n'`,
     }
   });
 
+  it('keeps the create-PR preference insufficient for goal bookkeeping authority', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    expect(content).toContain(
+      '`PR_ON_COMPLETE` alone never authorizes a goal bookkeeping PR',
+    );
+  });
+
   it('syncs the open PR description after archive so blob links keep resolving', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',
