@@ -526,6 +526,8 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 
 ## Reviews and Gates
 
+**PR refresh receipt:** GitHub PR #421 body updated from the refreshed local PR artifact. The exact-path helper refused the attempted local-artifact commit because `pr/` is intentionally ignored (receipt 69eabfcb128743b95b261fca2ee4104d0629af0242150894a2dfa6899bc69d43); nothing was committed by that invocation and the artifact remains local, as intended. The shell continued to the authorized body update and sequence checkpoint instead of stopping on that refusal; root records the deviation here. No force-add, overwritten work, or source change. The GitHub body is the durable PR description. No required review is pending/missing; retired 032431Z stays untouched. Source review coverage and unchanged verification inputs are reused; no redundant self-review lens launched.
+
 **Closeout refresh (generation 5):** summary now names the current clean tested source 703da345, the earlier forced production run at 128dd516, merged-later receipt recovery and recap-link preservation. Project-log roll-up returned status ok, ledger deduplicated, 16 structural entries and no judgment digest. Both Key Decisions were already promoted; no new decision or backlog requirement. Documentation capability scan confirms README, CLI README and closeout-skills already cover the corrected resume contract; packages/cli/AGENTS still covers check-state. The project-owned current-state note is refreshed. PJM adoption is declared. No human-doc or shipped-instruction changes were needed in this sequence, so source verification and gate fingerprints remain valid.
 
 ### Review Received: final — configured gate generation 5
@@ -770,7 +772,7 @@ Document any intentional deviations from the brief. Include accepted review find
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review, PR self-review confirmation, and refreshed branch-CLI gate passed. The source is accepted and gate generation 5 is allowed; configured summary/document/PR closeout is being refreshed. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
+- Final independent review, PR self-review confirmation, and refreshed branch-CLI gate passed. The source is accepted, gate generation 5 is allowed, and configured summary/document/PR closeout is complete. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
 
 ## References
 
