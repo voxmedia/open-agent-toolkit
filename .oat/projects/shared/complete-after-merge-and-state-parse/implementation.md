@@ -471,7 +471,9 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Intent:** address L1 and L2 from final-review-2026-11-11T055350Z.md without production behavior changes.
 **Files:** completion regression test and completion SKILL Step 12.
 **Proof:** extra-local-commit resume refuses E_DIVERGENT_COMPLETION, retains pointer and HEAD and performs no push; neutralizing its guard breaks the test; scoped suite and required repository checks pass.
-**Commit:** -
+**Commit:** 5d4a9fa6c9323a6772ac07ed28203212377b7b94
+
+**Prevention evidence:** divergent resume case passes on current guard; removing only the new-path divergent guard fails with success exit 0 instead of refusal exit 1 and clears the pointer. Exact log and control: `.oat/analysis/complete-state-parse-closeout/review-nits/green-focused.log`, `neutralized-divergent.log`, `can-fail.json`. Production helper bytes restored unchanged; formatting and diff checks pass. Step 12 now names the lifecycle commit, base branch/head and already-delivered outcome without a push or follow-up URL. Full ordered verification follows on a clean committed candidate.
 
 ## Orchestration Runs
 
