@@ -1521,6 +1521,8 @@ archive and clears the pointer without archiving again.
 
 #### Step 8.5: Finalize Archive-Aware Recap Links
 
+When `COMPLETION_ARCHIVE_DELIVERED="true"`, preserve the already-delivered summary export and skip both summary-export and PR-body recap-link rewrites; continue at Step 8.6.
+
 The recap-link rewrite in this subsection runs only when archive returned a
 `projectRecapExport`. A synced archive resume with no recap export performs no
 recap-link rewrite, then still continues at Step 8.6.
