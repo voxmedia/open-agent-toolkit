@@ -496,6 +496,20 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Proof:** existing real archive producer and Git fixture, pre-fix red and fixed green including link validation and pointer finalization; required ordered checks and independent review.
 **Commit:** pending
 
+### Recovery Event p02-stale-head-wording-20261111
+
+- Phase/task: p02 / p02-t12
+- Original request: pr421-stale-head-source
+- Original commit: b6266d8fa3632718cdaef700cf11569a5381fcc9
+- Defect class: test contract wording
+- Discovered by: pnpm test, review-skill-contracts.test.ts:3750 (1 failed / 9707 passed)
+- Authorization: phase-standing; mechanically bounded wording correction, no public behavior change
+- Attempt: 1/10; original p01 usage 2/10 unchanged
+- Dispatch target: inline:root-gpt-6-astra-high, same root inline exception under the host's small-fix rule
+- Disposition: candidate verified before commit; authoritative post-commit verification pending
+- Recovery commit: candidate contains this event and the matching completed marker; root records its SHA after post-commit verification
+- Verification: isolated 1272 contract tests and 29 completion tests pass against b6266d8f plus the exact two-file uncommitted patch recorded in stale-head/recovery-prechecks.json. Both commands exited 0. Restore the required "required even when" phrase for ordinary synced completions; the delivered-only exception and executable guard remain intact. Original failed ordered-check logs retained.
+
 ## Orchestration Runs
 
 Root-inline phase: p02, p02-t12; bounded remote review correction handled by root GPT-6 Astra High per host instruction to fix small review findings inline. No model substitution for substantive phase work or independent Opus review.

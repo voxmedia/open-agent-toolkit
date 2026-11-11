@@ -1559,8 +1559,8 @@ Run this for every synced completion after the final project ref or archive SHA
 is known, except when `COMPLETION_ARCHIVE_DELIVERED="true"`. That receipt has
 already proved the exports on the fetched base and publishes no PR body: skip
 this entire step, including local export checks and link rendering. The current
-checkout may safely be an older ancestor without those exports. Other synced
-completions require this step even when no project recap was selected and
+checkout may safely be an older ancestor without those exports. For other synced
+completions, this step is required even when no project recap was selected and
 `summaryExportFile` is null.
 
 Render into the PR body this run publishes. For archive completion that is the

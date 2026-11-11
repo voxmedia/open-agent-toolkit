@@ -19,6 +19,18 @@ oat_phase_recovery_policy:
     p01:
       used_attempts: 2
       pending_attempt: null
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p02-stale-head-wording-20261111
+        original_request_id: pr421-stale-head-source
+        original_task_id: p02-t12
+        original_commit: b6266d8fa3632718cdaef700cf11569a5381fcc9
+        discovered_by: pnpm test / review-skill-contracts.test.ts:3750
+        dispatch_target: inline:root-gpt-6-astra-high
+        reservation_head: b6266d8fa3632718cdaef700cf11569a5381fcc9
+        status: completed
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
