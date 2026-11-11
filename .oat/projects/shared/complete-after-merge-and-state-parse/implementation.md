@@ -341,6 +341,26 @@ Root verified the clean tree at 8e231765ce151db88dedecff4a09d6450089d535, exactl
 
 Verified clean final journal head `3b64cc9cef77e5f7fe23508d0bf4b0b5fef1fd32`, H1 commit `f74fdb8ac36875113b1a735671044c560270100d`, and unchanged source since tested candidate `a3514dc6e8746557e925444478fb9c85f58340d5`. All 15 recorded combined commands exited 0 on clean inputs; raw logs confirm forced workspace zero cache hits, CLI 9,707, smoke 165, skills 742, scripts 7, isolated contracts 1,271. Inspected complete-auto authority handoff, publication routing and narrow wave refusal composition. Root corrections preserved; p01 production unchanged. Recovery p02 0/10 pending null, p01 2/10 unchanged. Round 1 findings are fixes_completed; this is not a passing re-review. Next independent p02 review covers the full updated phase anchor range.
 
+### Review Received: p02 — round 2
+
+**Artifact:** reviews/archived/p02-review-2026-11-11T021549Z.md
+**Reviewed head:** a3514dc6e8746557e925444478fb9c85f58340d5
+**Findings:** 0 Critical, 0 High, 0 Medium, 1 Low. Exact reconnaissance signal consumed: not-attempted; no orchestration section. Full phase anchors verified. All five round-1 findings independently resolved.
+**Finding classes:** L1 regression: publication-result flag leaks between batch completion members after all preflights finish; accepted H1 per-project batch semantics and completion Step 11.5 reused-follow-up sync.
+**Disposition:** convert L1 to p02-t04; no deferral or new requirement. Root owns small fix under T3 rule. Reviewer reran 17 phase probes and 175 contracts on Node 26.11.1; root combined checks use Node 22.23.3. Review round 2 passes Critical/High threshold; acceptance waits for this selected Low correction and verification. No additional phase gate; final independent review remains required.
+
+### Task p02-t04: Reset publication result when each batch completion starts
+
+**Status:** completed
+**Executor:** root
+**Intent:** prevent a prior member's newly-created follow-up flag from suppressing the next reused follow-up body sync.
+**Files:** complete-auto skill and existing completion Git/shell probe file.
+**Proof command:** shipped preflight-all-first sequence and per-member initialization plus shipped sync gate, with newly-created and reused controls; affected contracts and required repository checks.
+**Ownership exception:** T3 requires root handling small findings; root GPT-6 Astra high, original Sol implementation preserved.
+
+**Commit:** ebb4de39f2eba064b11b1ba3025048b2c405a31d
+**Result:** all 18 phase Git/shell probes and 43 complete-auto contracts passed on Node 22.23.3. The new same-shell batch-order probe failed with second:false when the reset was removed and passed with second:true after restoration; the newly created first follow-up remained correctly excluded. Scoped lint and diff check passed. Exact evidence: `.oat/analysis/complete-after-merge-p02/r2-low-fix/`. No new fixture framework or production helper. Combined required checks follow on a clean committed candidate; phase Head and acceptance remain pending.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -355,7 +375,7 @@ Verified clean final journal head `3b64cc9cef77e5f7fe23508d0bf4b0b5fef1fd32`, H1
 
 - run/v1 · request=complete-after-merge-p02-review-r1-20261111 · scope=p02 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-- run/v1 · request=complete-after-merge-p02-review-r2-20261111 · scope=p02 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-p02-review-r2-20261111 · scope=p02 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
