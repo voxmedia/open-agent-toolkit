@@ -26,7 +26,11 @@ const originalUrl = 'https://github.com/example/project/pull/17';
 // "state":"MERGED","url":"https://github.com/voxmedia/open-agent-toolkit/pull/419"}.
 // Raw capture: .oat/analysis/complete-after-merge-p02/gh-schema.json.
 // Git repositories, state files, branch switching and the shipped parser are real.
-function fixture(scope = 'shared') {
+function fixture(
+  scope = 'shared',
+  additionalSharedProjects = [],
+  workflowMode = 'goal',
+) {
   const temp = mkdtempSync('/private/tmp/oat-completion-p02-');
   const repo = join(temp, 'repo');
   const remote = join(temp, 'remote.git');
@@ -52,7 +56,11 @@ function fixture(scope = 'shared') {
   const projectRelative = `.oat/projects/${scope}/probe`;
   const project = join(repo, projectRelative);
   mkdirSync(project, { recursive: true });
-  const state = `---\noat_workflow_mode: goal\noat_pr_status: open\noat_pr_url: ${originalUrl}\noat_deliveries: [] # bookkeeping must not enter coverage\n---\n# Probe\n`;
+  const snapshot =
+    workflowMode === 'quick'
+      ? '\noat_post_implement_sequence: {status: complete, pre_approval: [], pre_approval_completed: [], approval: not_required, post_approval: [], post_approval_completed: []}'
+      : '';
+  const state = `---\noat_workflow_mode: ${workflowMode}${snapshot}\noat_pr_status: open\noat_pr_url: ${originalUrl}\noat_deliveries: [] # bookkeeping must not enter coverage\n---\n# Probe\n`;
   writeFileSync(join(project, 'state.md'), state);
   writeFileSync(join(project, 'plan.md'), '# Approved project\n');
   if (scope === 'synced') {
@@ -101,6 +109,12 @@ function fixture(scope = 'shared') {
       }).trim(),
     );
   }
+  for (const name of additionalSharedProjects) {
+    const extra = join(repo, '.oat/projects/shared', name);
+    mkdirSync(extra, { recursive: true });
+    writeFileSync(join(extra, 'state.md'), state);
+    writeFileSync(join(extra, 'plan.md'), '# Approved batch member\n');
+  }
   git('add', '.');
   git('commit', '-m', 'Initial inputs');
   git('switch', '-c', 'feature');
@@ -123,7 +137,7 @@ function fixture(scope = 'shared') {
   const log = join(temp, 'gh-calls.jsonl');
   writeFileSync(
     join(bin, 'gh'),
-    `#!/usr/bin/env node\nconst fs=require('node:fs'); const a=process.argv.slice(2); fs.appendFileSync(process.env.P02_GH_LOG,JSON.stringify(a)+'\\n'); if(process.env.P02_GH_FAIL==='true') process.exit(1); if(a[0]==='repo') console.log(JSON.stringify({nameWithOwner:'example/project'})); else if(a[1]==='view') console.log(process.env.P02_GH_PR); else if(a[1]==='list') console.log(process.env.P02_GH_FOLLOWUPS||'[]'); else if(a[1]==='create') console.log('https://github.com/example/project/pull/18'); else if(a[1]==='edit') {} else process.exit(9);\n`,
+    `#!/usr/bin/env node\nconst fs=require('node:fs'); const a=process.argv.slice(2); fs.appendFileSync(process.env.P02_GH_LOG,JSON.stringify(a)+'\\n'); if(process.env.P02_GH_FAIL==='true') process.exit(1); if(a[0]==='repo') console.log(JSON.stringify({nameWithOwner:'example/project'})); else if(a[1]==='view') console.log(process.env.P02_GH_PR); else if(a[1]==='list') console.log(process.env.P02_GH_FOLLOWUPS||'[]'); else if(a[1]==='create') console.log(process.env.P02_CREATE_PR_URL||'https://github.com/example/project/pull/18'); else if(a[1]==='edit') {} else process.exit(9);\n`,
     { mode: 0o755 },
   );
   const env = {
@@ -621,6 +635,341 @@ test('synced dirty retained owner refuses preparation without replacing its work
       /Retained owner edits/,
     );
     assert.equal(f.git('branch', '--show-current'), 'feature');
+  } finally {
+    f.cleanup();
+  }
+});
+
+// H1 probes reuse this fixture's real Git and compiled status producer. They
+// execute the consumer's authority shell, completion's branch preparation and
+// publication blocks, and batch sequencing; they do not simulate those rules.
+const autoSkillRoot = fileURLToPath(
+  new URL('../../oat-project-complete-auto', import.meta.url),
+);
+function autoComposition(
+  f,
+  {
+    authorities = [],
+    prState = 'MERGED',
+    projectRelative = f.projectRelative,
+    publish = true,
+    returnToBase = false,
+    followups = [],
+    createdUrl = 'https://github.com/example/project/pull/18',
+    noPr = false,
+  } = {},
+) {
+  const auto = readFileSync(join(autoSkillRoot, 'SKILL.md'), 'utf8');
+  const core = readFileSync(new URL('../SKILL.md', import.meta.url), 'utf8');
+  const section = (source, start, end) =>
+    source.slice(
+      source.indexOf(start),
+      source.indexOf(end, source.indexOf(start) + start.length),
+    );
+  const bash = (text) => text.match(/```bash\n([\s\S]*?)\n```/)[1];
+  const preflight = bash(
+    section(auto, '#### PR-merge precondition', '#### Answer table'),
+  );
+  const prepare = bash(section(core, '### Step 2.5:', '### Step 3:'));
+  const create = bash(section(core, '### Step 11: Open PR', '### Step 11.5:'));
+  const batchReturn = returnToBase
+    ? bash(section(auto, '### Batch Mode', '### Step 6:'))
+    : '';
+  writeFileSync(
+    join(f.temp, 'bin', 'oat'),
+    `#!/bin/sh\nexec '${process.execPath}' '${cli}' "$@"\n`,
+    { mode: 0o755 },
+  );
+  const body = join(f.temp, 'auto-body.md');
+  writeFileSync(body, '# Completion bookkeeping\n');
+  if (noPr)
+    writeFileSync(
+      join(f.repo, projectRelative, 'state.md'),
+      f.state.replace(originalUrl, 'null'),
+    );
+  const commands = [preflight];
+  if (publish) {
+    // Step 5 applies the consumer decision after the core observation/answers
+    // and before Step 2.5/11. Other lifecycle guards are covered by existing
+    // closeout suites; these probes isolate the composing PR/authority seam.
+    commands.push(
+      'apply_auto_completion_pr_decision || exit 1',
+      'CLOSEOUT_CHECK_ARGS=("$PROJECT_PATH" --json --autonomous)',
+      prepare,
+    );
+    commands.push(
+      `if [[ "$COMPLETION_FOLLOWUP" == true ]]; then\nprintf '# Bookkeeping\\n' > "$PROJECT_PATH/summary.md"\ngit add -- "$PROJECT_PATH/summary.md"\ngit -c core.hooksPath=/dev/null commit -m 'Completion bookkeeping' >/dev/null || exit 1\ngit push --set-upstream origin "$COMPLETION_BRANCH" >/dev/null 2>&1 || exit 1\nfi`,
+    );
+    commands.push(
+      'apply_auto_completion_pr_decision || exit 1',
+      `if [[ "$SHOULD_OPEN_PR" == true ]]; then\n${create}\nfi`,
+      batchReturn,
+    );
+  }
+  commands.push(`printf '\nAUTO_NEW_CREATED:%s\n' "$NEW_FOLLOWUP_CREATED"`);
+  commands.push(
+    `printf '\\nAUTO_RESULT:%s|%s|%s|%s\\n' "$SHOULD_OPEN_PR" "$COMPLETION_FOLLOWUP_AUTHORITY" "\${FOLLOWUP_PR_URL:-}" "\${COMPLETION_BRANCH:-}"`,
+  );
+  return spawnSync('bash', ['-c', commands.join('\n')], {
+    cwd: f.repo,
+    encoding: 'utf8',
+    env: {
+      ...f.env,
+      PROJECT_PATH: projectRelative,
+      ACTIVE_PROJECT_PATH: projectRelative,
+      PROJECT_SCOPE: 'shared',
+      SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
+      COMPLETE_SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
+      COMPLETION_BRANCH_SCRIPT: script,
+      AUTO_FOLLOWUP_AUTHORITY_SCRIPT: join(
+        autoSkillRoot,
+        'scripts/resolve-followup-authority.mjs',
+      ),
+      COMPLETION_FOLLOWUP_AUTHORITIES_JSON: JSON.stringify(authorities),
+      CLOSEOUT_CHECK_ARGS: '',
+      TMP_BODY: body,
+      P02_GH_PR: JSON.stringify({
+        ...JSON.parse(f.env.P02_GH_PR),
+        state: prState,
+      }),
+      P02_GH_FOLLOWUPS: JSON.stringify(followups),
+      P02_CREATE_PR_URL: createdUrl,
+      NEW_FOLLOWUP_CREATED: 'true', // simulate a previous batch member's result
+      OAT_AUTONOMOUS: '1',
+      PR_ON_COMPLETE: 'true',
+    },
+  });
+}
+
+test('complete-auto merged composition publishes once under existing authority and reuses its follow-up', () => {
+  const f = fixture('shared', [], 'quick');
+  try {
+    // Pre-fix complete-auto Step 5 at 47d83407 forced this decision and supplied
+    // no authority. Execute its actual false answer against the core helper.
+    const old = spawnSync(
+      'bash',
+      [
+        '-c',
+        'SHOULD_OPEN_PR=false; printf "%s|%s" "$SHOULD_OPEN_PR" "${COMPLETION_FOLLOWUP_AUTHORITY:-}"',
+      ],
+      { cwd: f.repo, env: f.env, encoding: 'utf8' },
+    );
+    assert.equal(old.stdout, 'false|');
+    refused(f.invoke(['--authority', '']), 'E_FOLLOWUP_AUTHORITY');
+    const authorities = [
+      {
+        projectPath: f.projectRelative,
+        originalPrUrl: originalUrl,
+        source:
+          'Existing task: prepare and publish this project bookkeeping PR',
+      },
+    ];
+    const result = autoComposition(f, { authorities });
+    assert.equal(result.status, 0, result.stderr);
+    const publishedCalls = readFileSync(f.log, 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.equal(
+      publishedCalls.filter((args) => args[1] === 'create').length,
+      1,
+      'authorized merged completion must publish its separate follow-up',
+    );
+
+    assert.match(result.stdout, /AUTO_RESULT:true\|Existing task:/);
+    assert.match(result.stdout, /pull\/18\|oat\/complete-pr-17-/);
+    const branch = f.git('branch', '--show-current');
+    assert.equal(f.git('merge-base', f.base, 'HEAD'), f.base);
+    assert.deepEqual(
+      f.git('diff', '--name-only', `${f.base}..HEAD`).split('\n'),
+      [`${f.projectRelative}/summary.md`],
+    );
+    assert.equal(f.git('rev-parse', '@{u}'), f.git('rev-parse', 'HEAD'));
+    const reused = autoComposition(f, {
+      authorities,
+      publish: false,
+      followups: [
+        {
+          url: 'https://github.com/example/project/pull/18',
+          state: 'OPEN',
+          headRefName: branch,
+          baseRefName: 'release',
+        },
+      ],
+    });
+    assert.equal(reused.status, 0, reused.stderr);
+    assert.match(reused.stdout, /AUTO_NEW_CREATED:false/);
+    // Run the same core preparation and Step 11 without another lifecycle
+    // write/commit: the first completion is already durable on this branch.
+    const helper = success(f.invoke());
+    const core = readFileSync(new URL('../SKILL.md', import.meta.url), 'utf8');
+    const create = core
+      .slice(
+        core.indexOf('### Step 11: Open PR'),
+        core.indexOf('### Step 11.5:'),
+      )
+      .match(/```bash\n([\s\S]*?)\n```/)[1];
+    const retry = spawnSync('bash', ['-c', create], {
+      cwd: f.repo,
+      encoding: 'utf8',
+      env: {
+        ...f.env,
+        COMPLETION_FOLLOWUP: 'true',
+        BASE_BRANCH: 'release',
+        ACTIVE_PROJECT_PATH: f.projectRelative,
+        PROJECT_SCOPE: 'shared',
+        ORIGINAL_PR_URL: originalUrl,
+        COMPLETION_BRANCH_SCRIPT: script,
+        COMPLETION_FOLLOWUP_AUTHORITY: authorities[0].source,
+        TMP_BODY: join(f.temp, 'auto-body.md'),
+        P02_GH_FOLLOWUPS: JSON.stringify([
+          {
+            url: 'https://github.com/example/project/pull/18',
+            state: 'OPEN',
+            headRefName: helper.branch,
+            baseRefName: 'release',
+          },
+        ]),
+      },
+    });
+    assert.equal(retry.status, 0, retry.stderr);
+    const calls = readFileSync(f.log, 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.equal(calls.filter((args) => args[1] === 'create').length, 1);
+    assert.equal(calls.filter((args) => args[1] === 'edit').length, 0);
+    assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
+  } finally {
+    f.cleanup();
+  }
+});
+
+test('complete-auto missing/wrong-project authority stops at preflight before any completion write despite opt-in and PR preference', () => {
+  const f = fixture('shared', [], 'quick');
+  try {
+    const head = f.git('rev-parse', 'HEAD');
+    for (const authorities of [
+      [],
+      [
+        {
+          projectPath: '.oat/projects/shared/other',
+          originalPrUrl: originalUrl,
+          source: 'Other project only',
+        },
+      ],
+      [
+        {
+          projectPath: f.projectRelative,
+          originalPrUrl: 'https://github.com/example/project/pull/99',
+          source: 'Other original PR only',
+        },
+      ],
+    ]) {
+      const result = autoComposition(f, { authorities });
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(result.stderr, /E_AUTO_FOLLOWUP_AUTHORITY/);
+      assert.match(result.stderr, /preflight:8/);
+      assert.equal(f.git('rev-parse', 'HEAD'), head);
+      assert.equal(f.git('status', '--porcelain'), '');
+      assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
+    }
+    const calls = readFileSync(f.log, 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.ok(
+      calls.every((args) => !['create', 'edit', 'list'].includes(args[1])),
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+
+test('complete-auto open and absent-PR controls keep their existing publication decisions', () => {
+  const f = fixture('shared', [], 'quick');
+  try {
+    const before = f.git('rev-parse', 'HEAD');
+    const open = autoComposition(f, { prState: 'OPEN' });
+    assert.equal(open.status, 0, open.stderr);
+    assert.match(open.stdout, /AUTO_NEW_CREATED:false/);
+    assert.match(open.stdout, /AUTO_RESULT:false\|\|\|/);
+    assert.equal(f.git('rev-parse', 'HEAD'), before);
+    const noPr = autoComposition(f, { noPr: true });
+    assert.equal(noPr.status, 1, noPr.stderr);
+    assert.match(noPr.stderr, /preflight:4/);
+    assert.equal(f.git('rev-parse', 'HEAD'), before);
+    const calls = readFileSync(f.log, 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.equal(calls.filter((args) => args[1] === 'create').length, 0);
+    assert.ok(calls.every((args) => args[2] !== 'null'));
+  } finally {
+    f.cleanup();
+  }
+});
+
+test('complete-auto batch authorizes each requested member independently and preserves pushed follow-ups between members', () => {
+  const f = fixture('shared', ['second', 'deferred'], 'quick');
+  try {
+    const second = '.oat/projects/shared/second';
+    const deferred = '.oat/projects/shared/deferred';
+    const authorities = [f.projectRelative, second].map((projectPath) => ({
+      projectPath,
+      originalPrUrl: originalUrl,
+      source: `Existing program authority for ${projectPath}: prepare and publish bookkeeping`,
+    }));
+    const first = autoComposition(f, { authorities, returnToBase: true });
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(f.git('branch', '--show-current'), '');
+    assert.equal(f.git('rev-parse', 'HEAD'), f.base);
+    const refusedMember = autoComposition(f, {
+      authorities,
+      projectRelative: deferred,
+    });
+    assert.equal(refusedMember.status, 1, refusedMember.stderr);
+    assert.match(refusedMember.stderr, /E_AUTO_FOLLOWUP_AUTHORITY/);
+    const next = autoComposition(f, {
+      authorities,
+      projectRelative: second,
+      returnToBase: true,
+      createdUrl: 'https://github.com/example/project/pull/19',
+    });
+    assert.equal(next.status, 0, next.stderr);
+    assert.equal(f.git('rev-parse', 'HEAD'), f.base);
+    const branches = f
+      .git(
+        'for-each-ref',
+        '--format=%(refname:short)',
+        'refs/heads/oat/complete-pr-*',
+      )
+      .split('\n');
+    assert.equal(branches.length, 2);
+    const changed = branches
+      .map((branch) => {
+        assert.equal(
+          f.git('rev-parse', `${branch}@{upstream}`),
+          f.git('rev-parse', branch),
+        );
+        return f.git('diff', '--name-only', `${f.base}..${branch}`);
+      })
+      .sort();
+    assert.deepEqual(
+      changed,
+      [`${f.projectRelative}/summary.md`, `${second}/summary.md`].sort(),
+    );
+    const calls = readFileSync(f.log, 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.equal(calls.filter((args) => args[1] === 'create').length, 2);
+    assert.equal(calls.filter((args) => args[1] === 'edit').length, 0);
+    for (const project of [f.projectRelative, second, deferred])
+      assert.equal(
+        readFileSync(join(f.repo, project, 'state.md'), 'utf8'),
+        f.state,
+      );
   } finally {
     f.cleanup();
   }

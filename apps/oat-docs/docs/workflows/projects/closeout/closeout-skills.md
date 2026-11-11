@@ -680,8 +680,9 @@ separate operations under repository policy.
 
 The non-interactive companion to `oat-project-complete`. Workflow steps use it
 to complete projects without prompts; a person completing a project uses
-`oat-project-complete`. It decides every completion answer from config and
-recorded project state, refuses whenever an answer would need a human, and
+`oat-project-complete`. It decides every completion answer from config,
+recorded project state and existing explicit task authority, refuses whenever
+an answer would need a human, and
 then follows the interactive skill's current steps.
 
 **Invocation:** You do not invoke it. The skill is model-invocable but not
@@ -710,11 +711,22 @@ completion-before-merge exception in `implementation.md` when the PR is still
 open, points the active project at the project, and follows
 `oat-project-complete` with the resolved answers: archive per
 `workflow.archiveOnComplete`, a summary refresh when the summary is missing or
-stale, and no retrospective. It never creates a PR, whatever
-`workflow.createPrOnComplete` says; it updates the description of an existing
-tracked PR as the interactive steps require. The completion commit body
+stale, and no retrospective. For a live merged original, it requires existing
+explicit authority covering preparation and publication of that project's
+separate bookkeeping PR. Missing authority refuses at preflight before any
+completion write; neither autonomous opt-in nor `workflow.createPrOnComplete`
+grants it. The calling agent hands off the verified source separately for each
+requested project. With that authority, the current completion skill prepares
+or reuses a fresh-base follow-up and publishes or reuses its separate PR. The
+original merged URL/status/body and goal delivery coverage stay intact. A
+tracked open PR still creates no new PR and receives the existing description
+sync when required. The completion commit body
 records the requesting step (for a synced archive, the run report does). In batch mode a refused project stays deferred
-while the others complete.
+while the others complete. Between successful merged batch members, it keeps
+the pushed bookkeeping branch/PR and returns a clean checkout to the prepared
+base before starting the next member. It never changes requested membership
+or borrows one member's authority for another. Existing absent-checkout/archive
+resumes still belong to interactive completion.
 
 **Example scenario:** An autonomous wave run reaches closeout with the final
 review passed and the wave PR open. Execute's step 8 runs the companion with

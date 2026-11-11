@@ -3492,6 +3492,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 3: Objective Preflight (Per Project)',
+    match: 'Refuse rather than asking in this non-interactive run',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      'Names the interactive owner for the operator decision after this run refuses; it does not execute another completion flow.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
     anchor: 'Step 5: Complete the Project',
     match: 'A later companion run refuses at preflight once',
     classification: 'non-executing',

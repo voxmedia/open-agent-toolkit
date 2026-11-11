@@ -90,3 +90,60 @@ expected follow-up edit is absent. Removing the goal exclusion sentence makes
 its instruction-contract test fail. Both guards were restored; local receipts
 are in `.oat/analysis/complete-after-merge-p02/review-fixes/`. These are tested
 shell/CLI and instruction contracts, not proof that an agent obeys the prose.
+
+## H1 automatic companion composition
+
+The p02 review's H1 is resolved by the companion's executable PR/authority
+preflight and its current Step 5 handoff, not by granting new standing rights.
+`COMPLETION_FOLLOWUP_AUTHORITIES_JSON` is execution-local evidence supplied by
+the caller after verifying existing task authority. Each entry binds one
+requested project path and original PR URL to its source; the caller must
+verify that source covers both follow-up preparation and publication. It is
+neither a config setting nor permission minted by the resolver. No entry means
+refusal before completion writes. Autonomous opt-in and create-PR preferences
+cannot populate it. Open/before-merge and absent-PR controls retain their
+existing no-create and preflight:4 routes. Missing merged authority uses
+preflight:8, propagated to wave-execute's existing hard-stop list so its parent
+cannot substitute lifecycle writes after this refusal.
+
+Protects against: the automatic consumer forcing publication false or omitting
+explicit scoped authority even though its completion producer requires both;
+not already caught because helper-only Git tests never executed that consumer;
+covered by the four `complete-auto` cases in the existing Git probe file.
+The obsolete force-no-create simulator is replaced by actual consumer/core
+shell composition; its unconditional merged-no-create expectation is retired
+by the accepted H1/reuse-authority contract. The independent interactive
+create-preference instruction is retained in its existing CLI contract suite.
+
+These probes execute the companion's shipped PR preflight, the real built
+`project status --shell`, and completion's shipped branch-preparation and
+publication blocks. Other lifecycle preflight/coverage/archive guards retain
+their existing suites. Quick-mode input has a real completed closeout snapshot,
+so the actual closeout-check after switching also runs; no internal CLI module
+is mocked. Only gh responses are substituted at their external executable
+boundary, using the already recorded live response schema.
+
+- Before control: execute the old Step 5 false/no-authority decision from
+  fix base `47d83407bee1d1232f6ae724316ac887aaa3b135`; the actual completion
+  helper refuses missing authority with E_FOLLOWUP_AUTHORITY.
+- Ordinary merged accepted control: existing explicit authority passes,
+  fresh-base ancestry and completion-only diff hold, the exact branch is
+  pushed, one separate follow-up is published and an existing follow-up is
+  reused. Original state/URL/body are unchanged.
+- Negative controls: no authority, another project's authority, or another
+  original PR's authority refuse at preflight:8 before any completion commit
+  or artifact write, even with autonomous environment and create-PR preference.
+- Batch control: two requested authorized members publish separate pushed
+  branches/PRs; an ungranted member stays deferred. Between members the shipped
+  clean/pushed-branch guard returns to the prepared base, preserving the first
+  branch so the second preparation cannot mistake it for divergent work.
+  Original project states and delivery registries remain byte-identical.
+
+Can-fail proof is reproducible with
+`.oat/analysis/complete-after-merge-p02/h1-fix/can-fail.py`. It independently
+neutralizes the required-authority guard, project binding, original-PR binding
+and merged publication decision. Each targeted test fails for its own clause
+(the publication test reports missing follow-up creation); source is restored
+before the green combined run. Mutation contents, expected failure reasons,
+exit codes and logs are preserved in that directory's `can-fail.json`.
+No production test hook or persistent authority store was added.

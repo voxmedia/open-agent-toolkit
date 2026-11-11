@@ -463,7 +463,8 @@ archive anything first.
    answer). Any other refusal — an objective preflight failure, namely
    `preflight:1` (post-implement sequence incomplete), `preflight:2`
    (incomplete tasks), `preflight:3` (final review not passed), `preflight:5`
-   (unresolved blockers), or `preflight:6` (project-log gate unsatisfied), or
+   (unresolved blockers), `preflight:6` (project-log gate unsatisfied), or
+   `preflight:8` (missing explicit merged follow-up authority), or
    an `activation` refusal — stops wave closeout at a boundary: report the
    failing check and run neither `oat project complete-state` nor the merge
    handoff. `oat project complete-state` checks only the closeout snapshot, so
