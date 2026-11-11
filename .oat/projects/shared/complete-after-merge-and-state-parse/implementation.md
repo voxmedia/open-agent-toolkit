@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02-t12
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -170,7 +170,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 **Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 703da345153aa455a7dfed2c70107e34eefb821e
+**Head:** 417ef4401e743773bd8dfca75f02157e375357c4
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -490,11 +490,17 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 ### Task p02-t12: (review) Resume delivered archives from a stale ancestor checkout
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** inline:stale-head-remote-review
 **Intent:** reproduce the accepted-delivery/local-export mismatch through the actual Step 8.6, correct safe ancestor resume without pushing or publishing, retain divergent/pending refusal behavior.
 **Proof:** existing real archive producer and Git fixture, pre-fix red and fixed green including link validation and pointer finalization; required ordered checks and independent review.
-**Commit:** pending
+**Commit:** 417ef4401e743773bd8dfca75f02157e375357c4
+
+**Correction:** Step 8.6 skips local export checks and link rendering only for `COMPLETION_ARCHIVE_DELIVERED=true`, since no PR body is published. The helper's exact receipt comparison against the fetched base remains authoritative; HEAD is not moved. Ordinary publishing paths retain local validation and the real renderer. Human completion docs updated; existing PR-scoped skill/package bumps remain sufficient. No additional instruction files needed.
+
+**Verification:** 15/15 ordered checks exited 0 on clean 417ef4401e743773bd8dfca75f02157e375357c4, base ddd67fb5541bac2959ebb64ed82f4287f4f56698. Completion tests 29/29; required CI-order gates, lint/format, release validation, direct docs index freshness and isolated contracts passed. Exact commands, runtime, dependency hash and cache flags: `.oat/analysis/complete-state-parse-closeout/stale-head/recovery/committed-checks.json`. Node 22.23.3/pnpm 10.13.1/Darwin arm64; exact pinned 22.23.4 unavailable. Cache replay is recorded, not claimed as fresh execution.
+
+**Regression proof and limits:** `red-carried.log` fails on the old shipped Step 8.6 after `DELIVERY_ACCEPTED:true`, with a real receipt captured before switching to a clean older ancestor lacking exports. `green.log` and `green-controls.log` pass the corrected path, retaining HEAD/branches, avoiding push/PR effects and clearing the pointer. Ordinary link rendering still produces the canonical block; missing local export still refuses when delivery is not already verified. Earlier exploratory `red.log` and `red-export.log` hit existing archive-entry preconditions and do not prove this finding; they are retained for accuracy. A fresh invocation from a stale checkout may stop in that earlier archive owner; this bounded fix covers the carried-receipt continuation and does not change archive discovery. No helper or archive-producer behavior changed. Independent review and configured gate remain pending; no phase acceptance.
 
 ### Recovery Event p02-stale-head-wording-20261111
 
@@ -506,8 +512,8 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 - Authorization: phase-standing; mechanically bounded wording correction, no public behavior change
 - Attempt: 1/10; original p01 usage 2/10 unchanged
 - Dispatch target: inline:root-gpt-6-astra-high, same root inline exception under the host's small-fix rule
-- Disposition: candidate verified before commit; authoritative post-commit verification pending
-- Recovery commit: candidate contains this event and the matching completed marker; root records its SHA after post-commit verification
+- Disposition: recovered; precommit focused/phase checks and all 15 committed checks passed
+- Recovery commit: 417ef4401e743773bd8dfca75f02157e375357c4; matching committed completed marker verified against authoritative post-commit helper/contract checks and all ordered gates. Root settles pending marker to null while preserving p02 usage 1/10 and p01 usage 2/10.
 - Verification: isolated 1272 contract tests and 29 completion tests pass against b6266d8f plus the exact two-file uncommitted patch recorded in stale-head/recovery-prechecks.json. Both commands exited 0. Restore the required "required even when" phrase for ordinary synced completions; the delivered-only exception and executable guard remain intact. Original failed ordered-check logs retained.
 
 ## Orchestration Runs
