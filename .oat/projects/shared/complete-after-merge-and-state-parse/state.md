@@ -169,11 +169,11 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-11-11T061345Z.md
   receive_pre_head: a27cf2b04a2511a72b6c3ede7661548d9247ab15
-  receive_commit: 073a645f14d50b9c2f7a58b1666d168dfab3ada3
+  receive_commit: 88bfeb595ef87ec86ca2f236ab71ae1e0743e46c
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: 2026-11-11T06:17:16.215Z
+  updated_at: 2026-11-11T06:17:36.142Z
   decided_at: 2026-11-11T06:17:16.102235+00:00
 oat_post_implement_sequence:
   status: in_progress
