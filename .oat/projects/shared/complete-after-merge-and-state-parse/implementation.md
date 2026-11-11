@@ -1,10 +1,10 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: null
+oat_current_task_id: p02-t09
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
-**Total:** 2/2 phases accepted
+**Total:** 1/2 phases accepted
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 0e404f79d786cf469b2a3c65ec697686d5083584
@@ -434,6 +434,15 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 **Result:** all 13 required and extra checks passed on clean 0e404f79d786cf469b2a3c65ec697686d5083584, base ddd67fb5541bac2959ebb64ed82f4287f4f56698. Evidence: `.oat/analysis/complete-state-parse-closeout/ci-fix/ordered-checks.json`. Node 22.23.3, pnpm 10.13.1, Darwin arm64, TMPDIR=/tmp; unchanged dependencies. CI run 42960479881 supplies the Linux negative control. The earlier local test command was interrupted with no terminal result; its log is retained and the test step was rerun. The corrected focused suite and full root skills suite exercise the new temporary directory. Linux CI and independent confirmation remain pending. No assertion was removed by inlining the synced-only case.
 
+### Task p02-t09: (review) Preserve synced archive resume after the original PR merges
+
+**Status:** pending
+**Intent:** correct remote review M1 without changing completion authority or replaying the retired active workflow.
+**Source:** cursor[bot] discussion_r4534253649 at fc007d4841d07864783a8cc6b3a16d540ed7ca5b.
+**Files:** completion helper, skill and regression tests; directly affected contracts/docs and manual-writer locators if needed.
+**Proof:** real-Git pre-fix failure and post-fix resume through shipped shell, existing valid follow-up and refusal controls, required ordered checks, lint/format and isolated skill contracts.
+**Commit:** -
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -461,6 +470,14 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #421 — 2026-11-11T051622Z
+
+Source: https://github.com/voxmedia/open-agent-toolkit/pull/421#discussion_r4534253649 (cursor[bot], review 5854157283, reviewed fc007d4841d07864783a8cc6b3a16d540ed7ca5b). Counts: 0 critical, 0 high, 1 medium, 0 low.
+
+M1, regression: merged-later original incorrectly requires a prepared follow-up on synced terminal archive resume. Convert to p02-t09 under approved Outcome 1 and preserved receipt-resume contracts. No new-hardening requirement. First remote receive cycle; prior local/gate cycles are separate events. No reply posted.
+
+All three GitHub checks passed on fc007d4; source correction supersedes that proof and gate freshness for delivery. Outcome: fixes queued. Original p02 Base and recovery usage remain unchanged.
 
 Implementation closeout complete (2026-11-11): all stored pre-approval steps succeeded, no HiLL checkpoint is configured (`approval: not_required`), recap skip validated, closeout-check reports complete and journal preflight reports ok. Final-head CI remains a delivery prerequisite, with no waiver.
 

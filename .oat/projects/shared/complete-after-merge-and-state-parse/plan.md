@@ -124,13 +124,15 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042616Z.md                                   | 09d08130659962709b68e2a8f5bcfe05f34ae725 | gate       | claude-opus-5-5-high                     |
 | final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T050024Z.md                                   | 0e404f79d786cf469b2a3c65ec697686d5083584 | gate       | claude-opus-5-5-high                     |
 
+| remote-pr-421 | code | fixes_added | 2026-11-11 | reviews/archived/remote-pr-421-review-2026-11-11T051622Z.md | fc007d4841d07864783a8cc6b3a16d540ed7ca5b | - | - |
+
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
-- p02 accepted: live merged-PR observation and separate authorized completion bookkeeping, including wrapper/batch composition.
-- Total: 2/2 phases accepted; both Outcomes evidenced in the journal. Final review and configured exit-gate review passed; gate receipt settlement and implementation closeout are complete. PR #421 delivery awaits final-head CI and the authorized merge.
+- p02 reopened for p02-t09: preserve synced archive resume when the original PR merges after archival; previously accepted behavior remains recorded in the journal.
+- Total: 1/2 phases accepted while p02-t09 is active. Prior CI passed on fc007d4. The correction requires verification, review, a fresh configured gate and renewed closeout evidence before the authorized merge.
 
 ## References
 

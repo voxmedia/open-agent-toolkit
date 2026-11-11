@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p02-t09
 oat_last_commit: 0e404f79d786cf469b2a3c65ec697686d5083584
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -111,10 +111,10 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/421 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T05:04:26.110195+00:00'
+oat_project_state_updated: '2026-11-11T05:16:36.488Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -172,21 +172,20 @@ oat_implement_exit_gate:
   receive_commit: 4ee8b09bd9d19d6665a6ba86fd7dd6a71aa0b2c8
   receive_eligible: true
   receive_completed: true
-  failure: null
+  failure:
+    Remote M1 requires p02-t09 synced archive resume correction; fresh gate
+    required.
   updated_at: 2026-11-11T05:03:37.919Z
   decided_at: 2026-11-11T05:03:37.759801Z
 oat_post_implement_sequence:
-  status: complete
+  status: in_progress
   source: configured
   final_phase: p02
   pre_approval:
     - summary
     - document
     - pr
-  pre_approval_completed:
-    - summary
-    - document
-    - pr
+  pre_approval_completed: []
   approval: not_required
   approval_source: null
   post_approval: []
@@ -206,7 +205,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation complete — PR #421 open; final-head CI and authorized merge remain. Final review, configured gate and closeout sequence passed. Completion may run before or after merge.
+p02 reopened for remote review M1: synced archive resume after the original PR merges. CI passed on fc007d4; correction, review, fresh gate and closeout refresh precede authorized merge.
 
 ## Artifacts
 
@@ -225,11 +224,11 @@ Implementation complete — PR #421 open; final-head CI and authorized merge rem
 - ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/421
 - ✓ Final review, PR self-review and configured gate settled
 - ✓ Implementation closeout complete; visual recap skipped by operator
-- ⧗ Awaiting final-head CI and authorized merge
+- ⧗ Resolving remote review M1, then fresh review/gate/CI and authorized merge
 
 ## Blockers
 
-None in implementation. Final-head CI must pass before merge. Recovery usage p01 2/10, p02 0/10, pending null.
+Remote M1 is queued as p02-t09. Updated-head CI must pass before merge. Recovery usage p01 2/10, p02 0/10, pending null.
 
 ## Next Milestone
 
