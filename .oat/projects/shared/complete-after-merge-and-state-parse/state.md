@@ -111,7 +111,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/421 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T04:37:10.375207Z'
+oat_project_state_updated: '2026-11-11T05:04:26.110195+00:00'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
@@ -206,7 +206,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge. Both phases and the configured final gate are accepted.
+Implementation complete — PR #421 open; final-head CI and authorized merge remain. Final review, configured gate and closeout sequence passed. Completion may run before or after merge.
 
 ## Artifacts
 
@@ -223,11 +223,13 @@ Implementation — PR open; completion may run before or after merge. Both phase
 - ✓ Reviewed brief approved by operator on 2026-11-10
 
 - ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/421
-- ⧗ Awaiting remaining review and CI
+- ✓ Final review, PR self-review and configured gate settled
+- ✓ Implementation closeout complete; visual recap skipped by operator
+- ⧗ Awaiting final-head CI and authorized merge
 
 ## Blockers
 
-None in implementation. Optional recap choice and PR self-review/CI remain in closeout. Recovery usage p01 2/10, p02 0/10, pending null.
+None in implementation. Final-head CI must pass before merge. Recovery usage p01 2/10, p02 0/10, pending null.
 
 ## Next Milestone
 

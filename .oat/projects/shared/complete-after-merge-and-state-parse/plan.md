@@ -130,7 +130,7 @@ Preserve existing event rows. Future artifact rows use a review path or `-` in A
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
 - p02 accepted: live merged-PR observation and separate authorized completion bookkeeping, including wrapper/batch composition.
-- Total: 2/2 phases accepted; both Outcomes evidenced in the journal. Final review and configured exit-gate review passed; gate receipt settlement and delivery remain pending.
+- Total: 2/2 phases accepted; both Outcomes evidenced in the journal. Final review and configured exit-gate review passed; gate receipt settlement and implementation closeout are complete. PR #421 delivery awaits final-head CI and the authorized merge.
 
 ## References
 

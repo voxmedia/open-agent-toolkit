@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
@@ -462,6 +462,8 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ## Reviews and Gates
 
+Implementation closeout complete (2026-11-11): all stored pre-approval steps succeeded, no HiLL checkpoint is configured (`approval: not_required`), recap skip validated, closeout-check reports complete and journal preflight reports ok. Final-head CI remains a delivery prerequisite, with no waiver.
+
 ### Review Received: final gate 47a97d4b
 
 **Date:** 2026-11-11
@@ -639,7 +641,7 @@ Document any intentional deviations from the brief. Include accepted review find
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review passed after the approved gate corrections; a fresh branch-CLI gate remains pending. Implementation remains in progress before summary/document/PR closeout. Merge authority is already recorded.
+- Final independent review, PR self-review confirmation, and refreshed branch-CLI gate passed. Implementation and configured summary/document/PR closeout are complete. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
 
 ## References
 
