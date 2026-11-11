@@ -111,7 +111,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T04:31:55.849890Z'
+oat_project_state_updated: '2026-11-11T04:32:49.169226Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 09d08130659962709b68e2a8f5bcfe05f34ae725
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
-  freshness_head: a57b2ec76134417b983f6d4c1bb5c6e68d9d5b86
+  freshness_head: 686e3229e5afb86ed937549363632d1e05e8d12b
   freshness_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
   waivers: []
   launch_state: result_persisted
@@ -185,6 +185,7 @@ oat_post_implement_sequence:
     - pr
   pre_approval_completed:
     - summary
+    - document
   approval: pending
   approval_source: null
   post_approval: []
