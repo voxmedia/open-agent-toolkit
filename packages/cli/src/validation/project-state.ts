@@ -5,6 +5,7 @@ import {
 import { basename, join } from 'node:path';
 
 import {
+  getFrontmatterBlock,
   isProjectStateKind,
   isProjectStatePhase,
   type ProjectStateKind,
@@ -418,9 +419,7 @@ export function parseProjectStateFrontmatter(
   content: string,
   filePath = 'state.md',
 ): Record<string, unknown> {
-  const frontmatter = content.match(
-    /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/,
-  )?.[1];
+  const frontmatter = getFrontmatterBlock(content);
   if (!frontmatter) {
     throw new Error(`${filePath} is missing frontmatter`);
   }

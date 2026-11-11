@@ -39,14 +39,14 @@ For p02's required documentation update, `apps/oat-docs/docs/workflows/projects/
 Reconciled against dispatch base `d1df37b4ac6bbd2a8420ac3e9530ea7e626add6d`.
 All 21 baseline skills contain an actual manual-write instruction. Added
 `oat-project-reconcile` and `oat-wave-execute` (including its wrapper-plan asset):
-**23 writing skills**. `oat-project-next` and `oat-project-progress` only read
+**24 writing skills**. `oat-project-next` and `oat-project-progress` only read
 state here, but also receive version bumps because they bundle the changed
-shared gate record. **26 skill bumps**, plus the phase-implementer role bump.
-No baseline candidate was removed. Counts describe skills, not write sites.
+shared gate record. **27 skill bumps**, plus the phase-implementer role bump.
+Review M1 adds `oat-brainstorm`'s two project-promotion writes, omitted from the original 86-site mapping: **88 adjacent locations**. No baseline candidate was removed. Counts describe skills, not write sites.
 Restrictive tool declarations gain the exact `Bash(oat project check-state:*)`
 scope. Three existing `NG` metadata-line hashes in the shared autonomy
 inventory are refreshed for those changed declarations; no prompt or policy
-is added. Its eight linking skills are in the 26-skill bump set, including
+is added. Its eight linking skills are in the 27-skill bump set, including
 `oat-project-autonomous/references/gate-inventory.md`, whose alias was missed
 by the first filename-only enumeration. The committed-history version gate
 identified that additional consumer; attempt 2 corrects its required bump.
@@ -72,6 +72,8 @@ write**, not once at the end of the section.
 
 | Canonical instruction / check locator                                             | Manual write boundary                                                                            | Required check                                                                                 |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `.agents/skills/oat-brainstorm/SKILL.md:528`                                      | Lite promotion routing state                                                                     | `oat project check-state "$PROMOTED_PROJECT"`; stop on nonzero before commit/continuation      |
+| `.agents/skills/oat-brainstorm/SKILL.md:594`                                      | Quick/spec-driven promotion discovery state                                                      | `oat project check-state "$PROMOTED_PROJECT"`; stop on nonzero before commit/continuation      |
 | `.agents/skills/oat-project-brief/SKILL.md:205`                                   | Consolidated scaffold metadata                                                                   | `oat project check-state "$PROJECT_PATH"`; stop on nonzero before commit/continuation          |
 | `.agents/skills/oat-project-brief/SKILL.md:218`                                   | Initial brief metadata                                                                           | `oat project check-state "$PROJECT_PATH"`; stop on nonzero before commit/continuation          |
 | `.agents/skills/oat-project-brief/SKILL.md:342`                                   | Project dispatch policy                                                                          | `oat project check-state "$PROJECT_PATH"`; stop on nonzero before commit/continuation          |

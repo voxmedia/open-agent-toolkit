@@ -75,9 +75,9 @@ describe('oat project check-state', () => {
     ]);
   });
 
-  it.each(['\n', '\r\n'])(
-    'accepts a commented mapping without semantic validation or rewriting (%j)',
-    async (newline) => {
+  it.each(['---', '--- \t'])(
+    'accepts a commented mapping without semantic validation or rewriting (closing fence %j)',
+    async (closingFence) => {
       const content = [
         '---',
         '# optional gate remains a comment',
@@ -87,10 +87,10 @@ describe('oat project check-state', () => {
         'oat_phase: future-phase # parse only',
         'custom:',
         '  nested: [one, two]',
-        '---',
+        closingFence,
         '# Body is preserved',
         '--- arbitrary body',
-      ].join(newline);
+      ].join('\n');
       await writeFile(join(projectPath, 'state.md'), content);
       const capture = await run();
       expect(process.exitCode).toBe(0);
@@ -105,6 +105,10 @@ describe('oat project check-state', () => {
 
   it.each([
     ['missing block', '# No frontmatter'],
+    [
+      'CRLF block unsupported by lifecycle readers',
+      '---\r\noat_phase: implement\r\n---\r\n',
+    ],
     ['unclosed block', '---\noat_phase: implement'],
     ['sequence', '---\n- implement\n---\n'],
     ['tagged sequence', '---\n!!omap\n- key: value\n---\n'],
