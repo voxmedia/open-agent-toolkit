@@ -39,10 +39,10 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | pending   | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
 **Total:** 1/2 phases accepted
 
@@ -167,9 +167,13 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** pending
+**Status:** in_progress
+**Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
+**Executor:** phase-implementer:complete-after-merge-p02-20261111
 
 Phase-local refinement (2026-11-11): p01's shared command is available and accepted. p02 is now concrete within the approved Approach: earliest normal-path write is Step 3.3, failed live lookup stops before writes, no tracked PR keeps the existing path, merged original/follow-up identities stay separate, and existing scope/receipt-resume owners stay authoritative. Required evidence explicitly covers safe input preservation/refusal, resume reuse and the goal PR_ON_COMPLETE-only exclusion. No outcome, authority, endpoint or phase-split change. Fresh origin/main fetch at ddd67fb5541bac2959ebb64ed82f4287f4f56698 found no intervening commits in planned completion, CLI contract or closeout-doc paths.
+
+Execution shape: one phase implementer on the existing orchestration checkout and sole committing owner while active. No parallel group; branch preparation, completion instructions, archive/PR routing and their executable evidence share state and sequencing, so root fan-out is not independent. Exact target GPT-6.1 Sol high, classified consequential for branch/PR and archive durability effects, with independent Opus review. Recovery default/phase limit 10, used 0, remaining 10, pending null; workflow default with no override. No recovery allowance authorizes continuation after terminal failure.
 
 ## Orchestration Runs
 
