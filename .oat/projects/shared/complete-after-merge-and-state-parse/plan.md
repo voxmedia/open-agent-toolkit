@@ -132,6 +132,8 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 | remote-pr-421 | code | fixes_added | 2026-11-11 | reviews/archived/remote-pr-421-review-2026-11-11T064727Z.md | 7889c8df507d145664c0dd4b0c4c1654f9bcb058 | - | - |
 
+| final | code | pending | 2026-11-11 | - | - | auto | - |
+
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
