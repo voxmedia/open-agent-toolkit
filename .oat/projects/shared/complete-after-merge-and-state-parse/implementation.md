@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: null
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
-**Total:** 2/2 phases accepted
+**Total:** 1/2 phases accepted; p02 reopened for final-review corrections
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1
@@ -367,6 +367,19 @@ p02 accepted after independent Opus round 2 reported 0 Critical/High/Medium and 
 
 **Authoritative final verification:** all 15 commands in `.oat/analysis/complete-after-merge-p02/r2-low-fix/ordered-checks.json` passed with the same clean committed inputs at `52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Required CI order, forced uncached workspace suite, root suites, build, committed skill bumps, fresh fetch/version check, release validation, docs build and direct manifest freshness, plus lint/format and isolated contracts passed. Runtime Node 22.23.3 (exact pin 22.23.4 unavailable), pnpm 10.13.1, Darwin arm64. Existing dependencies/lockfile unchanged; cache use and actual execution are recorded per command. External GitHub responses substituted; no live publication proof. State and journal checks pass. Later project tracking commits contain no source change.
 
+### Task p02-t05: Restore local completion and program-close refusal routing
+
+**Status:** completed
+**Executor:** root
+**Source review:** reviews/archived/final-review-2026-11-11T023618Z.md — M1, M2; L1 evidence locator cleanup
+**Intent:** keep local merged projects on their existing branch without follow-up authority/publication, name interactive completion as program preflight:8 recovery owner, and refresh three evidence locators.
+**Files:** completion and automatic-completion skills/helpers/tests, wave-program routing/version, pinned CLI contracts, closeout docs, research inventory.
+**Proof command:** local merged control at shipped shell and helper boundaries, durable accepted control, caller routing contract, required full repository checks.
+**Ownership exception:** root GPT-6 Astra high fixes small findings per T3; no scope or checkpoint authority expansion.
+
+**Commit:** 3a347325bf28a9683964c17c90a86067496115ab
+**Result:** 18 completion probes and 1,272 isolated shared/validation contracts passed; scoped lint and diff check passed. Local no-authority regression and program preflight:8 owner contract failed before correction. Neutralizing each of the helper, automatic decision and core durable guards reproduces its intended authority refusal; all three restored. Existing local-preservation coverage moves to the local normal-path control; archive resume uses synced scope, its actual owner. Evidence: `.oat/analysis/complete-after-merge-p02/final-fixes/`. Three inventory locators updated without changing coverage. No new checkpoint wording or authority. Combined clean-candidate checks follow before phase reacceptance and final re-review.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -383,11 +396,19 @@ p02 accepted after independent Opus round 2 reported 0 Critical/High/Medium and 
 
 - run/v1 · request=complete-after-merge-p02-review-r2-20261111 · scope=p02 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-- run/v1 · request=complete-after-merge-final-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-final-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: final — round 1
+
+**Artifact:** reviews/archived/final-review-2026-11-11T023618Z.md
+**Reviewed head:** 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1
+**Findings:** 0 Critical, 0 High, 2 Medium, 1 Low; exact reconnaissance signal not-attempted, no orchestration section; anchors validated.
+**Finding classes:** M1 regression (p02 local ownership/preserved completion contract); M2 regression (H1 batch per-project authority and wave-program promised next-step routing); L1 bookkeeping (three stale completion inventory locators, coverage unchanged).
+**Dispositions:** convert M1/M2 to bounded p02-t05, apply L1 locator cleanup in the same correction. No new requirement, no deferral and no new checkpoint/publication grant. Final review remains fixes_added; p02 reopens with its Base unchanged and no later phase Base. Both Outcomes' central probes passed; scope/caller guarantees require these fixes before final acceptance. No deferred Medium ledger entries exist.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
