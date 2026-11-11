@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
 oat_generated: true
-oat_summary_phase_fingerprint: b2adb3f3bb7776fe1641666e4d62f178adf098db12a738719c7c9a9faa536310
+oat_summary_phase_fingerprint: a8f82cf3169920e67db3ecdd57891f1442854d70872b7c7d424d18fa1affa97b
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 oat_summary_learnings_fingerprint: none
@@ -40,6 +40,8 @@ The packed CLI was exercised outside the checkout. Historical incident state at 
 
 Final Opus 5.5 High review at the candidate reported zero findings. Configured gate `9a3a24f8-e4ea-47d4-ac64-67dc109e8d26` passed with 0 Critical, 0 High, 0 Medium and one Low review-table layout finding, fixed at receive without another cycle. The gate's exact event and durable receive commit are bound in state. No gate waiver was used and no remediation attempt consumed. The prior gate generation was explicitly retired because installed CLI 0.3.46 omitted reviewedHead; its raw evidence remains preserved. The replacement used branch-local CLI 0.3.50 without changing global installation or configuration.
 
+CI subsequently exposed a macOS-only temporary path in the completion test fixture (19 Linux ENOENT failures). Test-only correction `0e404f79d786cf469b2a3c65ec697686d5083584` uses the canonical platform temporary directory, clarifies the reconstructed old-path control and inlines the synced-only case without removing assertions. All 13 required/extra local checks passed on that clean commit against the unchanged base, including 9,708 CLI tests and the root suites. One interrupted test run has no claimed result; its resumed run passed. Independent confirmation, fresh gate evidence and Linux CI are pending for this delta.
+
 ## Notable Challenges
 
 Review caught integration regressions beyond the central merged path: literal null PR values, automatic companion authority, follow-up body sync eligibility, batch flag leakage, local scope, program-close routing, the existing closed-PR interactive path and zsh syntax. All were corrected and independently reviewed. p01 recovery used 2 of 10 attempts; p02 used none. Early temporary-parent test contamination and runtime limitations remain disclosed in the journal.
@@ -47,6 +49,10 @@ Review caught integration regressions beyond the central merged path: literal nu
 ## Integration Notes
 
 Use `oat project check-state <project-path>` after manual lifecycle frontmatter edits and stop on nonzero before commit or further effects. The manual-writer inventory and completion research map exact behavior and proof to the accepted phases. Neither a successful parser check nor prose-contract tests validate lifecycle state semantics. No live GitHub publication was claimed as test evidence.
+
+## Explainer Outcome
+
+Skipped by explicit operator choice (interactive); no recap run was generated.
 
 ## References
 

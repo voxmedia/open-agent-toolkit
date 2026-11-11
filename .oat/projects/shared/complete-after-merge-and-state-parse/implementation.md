@@ -167,10 +167,10 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 09d08130659962709b68e2a8f5bcfe05f34ae725
+**Head:** 0e404f79d786cf469b2a3c65ec697686d5083584
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -423,14 +423,16 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ### Task p02-t08: Make completion test fixtures portable
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** root
 **Source:** CI run 42960479881 (19 ENOENT failures on ubuntu-latest), corroborated by PR self-review T1; nonblocking T2 and complexity cleanup.
 **Intent:** use the canonical platform temporary directory; identify the old-path shell snippet as a reconstruction; inline the single synced case while preserving all assertions.
 **Files:** `.agents/skills/oat-project-complete/tests/prepare-completion-branch.test.mjs`.
 **Proof:** CI provides the Linux negative control; all 21 focused tests pass locally after the platform-temp change. Required checks and Linux CI will verify the committed correction. No shipped behavior changes or extra skill/package bump required for this test-only delta.
 **Ownership exception:** root handles small CI/review corrections under existing authority and T3 guidance.
-**Commit:** -
+**Commit:** 0e404f79d786cf469b2a3c65ec697686d5083584
+
+**Result:** all 13 required and extra checks passed on clean 0e404f79d786cf469b2a3c65ec697686d5083584, base ddd67fb5541bac2959ebb64ed82f4287f4f56698. Evidence: `.oat/analysis/complete-state-parse-closeout/ci-fix/ordered-checks.json`. Node 22.23.3, pnpm 10.13.1, Darwin arm64, TMPDIR=/tmp; unchanged dependencies. CI run 42960479881 supplies the Linux negative control. The earlier local test command was interrupted with no terminal result; its log is retained and the test step was rerun. The corrected focused suite and full root skills suite exercise the new temporary directory. Linux CI and independent confirmation remain pending. No assertion was removed by inlining the synced-only case.
 
 ## Orchestration Runs
 
@@ -459,6 +461,8 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+PR self-review at ea195c947: independent Opus 5.5 High applied deliberate-testing and complexity-review to ddd67fb..ea195c9 and docs to 09d0813..ea195c9. T1 Linux temporary-path regression, T2 reconstruction wording, and the redundant synced loop are fixed in p02-t08; docs had no findings. One delta-only confirmation follows. Recap skipped by explicit operator choice; terminal guard passed, no run path.
 
 PR delivery: https://github.com/voxmedia/open-agent-toolkit/pull/421 — final project scope, opened as draft on 2026-11-11; self-review fills only uncovered testing/complexity lenses and the later bookkeeping/docs delta.
 
