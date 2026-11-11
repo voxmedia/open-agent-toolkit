@@ -429,6 +429,8 @@ p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0
 
 ## Reviews and Gates
 
+**Gate:** oat-project-implement · **Scope:** final · **Outcome:** raw review_completed_gate_passed (0 Critical, 0 High, 1 Medium, 1 Low), operationally blocked at event receipt · run 3f079d62-6a7a-45c3-b2d4-529b72754c13 · attempts_completed 0/2. Installed oat 0.3.46 omitted reviewedHead; the branch receiver refuses a gate event without that exact result field. Result/marker/target/project match; no head is inferred from the artifact, no receive or archive occurs, and the received gate Reviews row remains untouched. Original receipt: .oat/analysis/complete-state-parse-exit-gate/attempt-1-result.json. State failure gate_event_reviewed_head_missing owns the stop. Reported findings (not received/dispositioned): interactive closed-unmerged PR refusal changes the preserved base behavior; Step 10 ! (spacing) is needed for zsh parsing. Existing implementation/merge authority remains, but this accepted incompatible run requires explicit retirement before a new gate route.
+
 ### Review Received: final — round 3 (passed)
 
 **Artifact:** reviews/archived/final-review-2026-11-11T031418Z.md

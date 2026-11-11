@@ -114,7 +114,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T03:11:54Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -137,15 +137,19 @@ oat_implement_exit_gate:
   freshness_head: a689912f74742a654e936b7fe1ba19f24c58c519
   freshness_fingerprint: sha256:effective-delta-v2:2e7b8f4d688a2ed95dd10b8455ea192b047b189eca416334ba0fb7dc2db8e1f2
   waivers: []
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 5822495a-3e8a-4372-afbb-b81d6c29bae8
   launch_started_at: 2026-11-11T03:17:50.986444Z
   launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/attempt-1-result.json
   gate_run_marker: /private/tmp/oat-complete-state-parse-gate-5822495a-3e8a-4372-afbb-b81d6c29bae8/3f079d62-6a7a-45c3-b2d4-529b72754c13.json
   gate_run_id: 3f079d62-6a7a-45c3-b2d4-529b72754c13
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T032431Z.md
+  handoff:
+    Gate passed at the high threshold, but the final review still contains
+    non-blocking findings (medium=1, low=1). Run oat-project-review-receive for
+    .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T032431Z.md
+    to disposition them before marking the final review row passed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -155,9 +159,22 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: null
-  updated_at: 2026-11-11T03:18:36.025Z
-  decided_at: null
+  failure:
+    code: gate_event_reviewed_head_missing
+    message: Installed oat 0.3.46 completed the gate but omitted reviewedHead.
+      Current review-receive rejects this event; no head was inferred, no
+      receive or archival occurred, and no remediation attempt was consumed. Raw
+      receipt reports receiveEligible=true but is insufficient under the current
+      event contract.
+    installed_cli: 0.3.46
+    branch_cli: 0.3.50
+    raw_receive_eligible: true
+    required_recovery:
+      Explicitly retire this incompatible completed gate result and
+      authorize a new gate through the branch CLI; preserve the original receipt
+      and address findings through a valid lifecycle path.
+  updated_at: 2026-11-11T03:28:20.386Z
+  decided_at: 2026-11-11T03:28:20.212334Z
 ---
 
 # Project State: complete-after-merge-and-state-parse
