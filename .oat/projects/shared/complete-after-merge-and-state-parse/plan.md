@@ -108,20 +108,20 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target                              |
-| ----- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
-| plan  | artifact | fixes_completed | 2026-11-10 | structured review; receipt in implementation.md                        | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| plan  | artifact | fixes_completed | 2026-11-10 | structured round 2; L1 clarified locally; receipt in implementation.md | aa04c4605e81ca88823accfca56a7cf80c4f081b | auto       | oat-reviewer-claude-claude-opus-5-5-high |
-| plan  | artifact | fixes_completed | 2026-11-10 | reviews/archived/artifact-plan-review-2026-11-10T215917Z.md            | -                                        | -          | -                                        |
-| p01   | code     | fixes_completed | 2026-11-11 | reviews/archived/p01-review-2026-11-11T003543Z.md                      | 3b260ccf51a395362ab7d832d22d5b780ffd0c3b | auto       | -                                        |
-| p02   | code     | fixes_completed | 2026-11-11 | reviews/archived/p02-review-2026-11-11T012506Z.md                      | 5d5e6caef9128835562047de5212839f45b6c8e1 | auto       | -                                        |
-| p02   | code     | fixes_completed | 2026-11-11 | reviews/archived/p02-review-2026-11-11T021549Z.md                      | a3514dc6e8746557e925444478fb9c85f58340d5 | auto       | -                                        |
-| final | code     | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T023618Z.md                    | 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1 | auto       | -                                        |
-| final | code     | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T025843Z.md                    | 0b917cb216c3487d47e9a2cc99732ee519829022 | auto       | -                                        |
-| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T031418Z.md                    | a689912f74742a654e936b7fe1ba19f24c58c519 | auto       | -                                        |
-| final | code     | received        | 2026-11-11 | reviews/final-review-2026-11-11T032431Z.md                             | a689912f74742a654e936b7fe1ba19f24c58c519 | gate       | claude-opus-5-5-high                     |
-| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042030Z.md                    | 09d08130659962709b68e2a8f5bcfe05f34ae725 | auto       | -                                        |
-| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042616Z.md                    | 09d08130659962709b68e2a8f5bcfe05f34ae725 | gate       | claude-opus-5-5-high                     |
+| Scope | Type     | Status          | Date       | Artifact                                                                              | Reviewed Head                            | Invocation | Gate Target                              |
+| ----- | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------- |
+| plan  | artifact | fixes_completed | 2026-11-10 | structured (no artifact); receipt in implementation.md                                | 303910aa99c0eb63dde0cae121ce17d36576a5ab | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| plan  | artifact | fixes_completed | 2026-11-10 | structured (no artifact); round 2; L1 clarified locally; receipt in implementation.md | aa04c4605e81ca88823accfca56a7cf80c4f081b | auto       | oat-reviewer-claude-claude-opus-5-5-high |
+| plan  | artifact | fixes_completed | 2026-11-10 | reviews/archived/artifact-plan-review-2026-11-10T215917Z.md                           | -                                        | -          | -                                        |
+| p01   | code     | fixes_completed | 2026-11-11 | reviews/archived/p01-review-2026-11-11T003543Z.md                                     | 3b260ccf51a395362ab7d832d22d5b780ffd0c3b | auto       | -                                        |
+| p02   | code     | fixes_completed | 2026-11-11 | reviews/archived/p02-review-2026-11-11T012506Z.md                                     | 5d5e6caef9128835562047de5212839f45b6c8e1 | auto       | -                                        |
+| p02   | code     | fixes_completed | 2026-11-11 | reviews/archived/p02-review-2026-11-11T021549Z.md                                     | a3514dc6e8746557e925444478fb9c85f58340d5 | auto       | -                                        |
+| final | code     | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T023618Z.md                                   | 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1 | auto       | -                                        |
+| final | code     | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T025843Z.md                                   | 0b917cb216c3487d47e9a2cc99732ee519829022 | auto       | -                                        |
+| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T031418Z.md                                   | a689912f74742a654e936b7fe1ba19f24c58c519 | auto       | -                                        |
+| final | code     | received        | 2026-11-11 | reviews/final-review-2026-11-11T032431Z.md                                            | a689912f74742a654e936b7fe1ba19f24c58c519 | gate       | claude-opus-5-5-high                     |
+| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042030Z.md                                   | 09d08130659962709b68e2a8f5bcfe05f34ae725 | auto       | -                                        |
+| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042616Z.md                                   | 09d08130659962709b68e2a8f5bcfe05f34ae725 | gate       | claude-opus-5-5-high                     |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 

@@ -449,6 +449,8 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ## Reviews and Gates
 
+PR preparation: normalized the two historical structured plan-review Artifact annotations to the supported `structured (no artifact); ` prefix. These reviews deliberately produced structured results only; event identity, status and provenance are unchanged. The retired gate event and active artifact remain untouched.
+
 ### Closeout documentation assessment
 
 Both capability areas are adequately covered. Parse-only invocation, exit codes, non-mutation and stop-on-failure match check-state.ts and are documented in README.md, packages/cli/README.md, CLI reference and project-artifacts. Fresh-base merged completion, local scope, original/follow-up identities, goal coverage, authority and companion caller behavior match the shipped helpers and are documented in the READMEs, configuration reference, closeout-skills and pr-flow. packages/cli/AGENTS.md owns the new developer command guidance. No additional product documentation edit or navigation change is needed; existing reviewed docs/build/manifest evidence remains valid. Repo-reference sync adds the scoped 0.3.50 current-state entry and retains the two promoted decisions. No linked backlog items or deferred findings exist; no backlog index regeneration or unrelated doctor-warning repairs are performed.
