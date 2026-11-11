@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: p02-t13
 oat_generated: false
 ---
 
@@ -516,9 +516,18 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 - Recovery commit: 417ef4401e743773bd8dfca75f02157e375357c4; matching committed completed marker verified against authoritative post-commit helper/contract checks and all ordered gates. Root settles pending marker to null while preserving p02 usage 1/10 and p01 usage 2/10.
 - Verification: isolated 1272 contract tests and 29 completion tests pass against b6266d8f plus the exact two-file uncommitted patch recorded in stale-head/recovery-prechecks.json. Both commands exited 0. Restore the required "required even when" phrase for ordinary synced completions; the delivered-only exception and executable guard remain intact. Original failed ordered-check logs retained.
 
+### Task p02-t13: (review) Scope stale-checkout documentation to link rendering
+
+**Status:** in_progress
+**Executor:** inline:stale-head-doc-clarification
+**Intent:** clarify that the delivered exception applies to Step 8.6 after a terminal receipt is carried; earlier receipt recovery still requires its existing current-checkout preconditions.
+**Files:** apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md only.
+**Proof:** conservation diff and required checks; no new behavior, test or fixture.
+**Commit:** pending
+
 ## Orchestration Runs
 
-- run/v1 · request=complete-after-merge-stale-head-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-stale-head-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 Root-inline phase: p02, p02-t12; bounded remote review correction handled by root GPT-6 Astra High per host instruction to fix small review findings inline. No model substitution for substantive phase work or independent Opus review.
 
@@ -557,6 +566,16 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: final — stale-HEAD correction
+
+**Artifact:** reviews/archived/final-review-2026-11-11T070920Z.md
+**Reviewed head:** 417ef4401e743773bd8dfca75f02157e375357c4; invocation auto; final p01/p02, narrowed from 703da345.
+**Findings:** 0 critical, 0 high, 0 medium, 1 low.
+**Finding classes:** L1 regression (in-delta docs overstate fresh stale-checkout resume support; AGENTS.md requires accurate human documentation).
+**Disposition:** convert L1 to p02-t13, a negligible wording clarification within standing in-scope correction authority. Root fixes small findings inline per host instruction. No behavior expansion, archive redesign or new-hardening. Reviewer independently confirms remote M1 corrected using real-archive red/green and can-fail controls; fresh invocation's earlier archive precondition remains unchanged and is now explicit.
+**Reconnaissance:** not-attempted, consumed once from reviewer report; artifact contains no orchestration section. No recon log required.
+**Verification reuse:** all 15 committed checks at 417ef440 remain valid for executable behavior; docs delta gets repository-required checks. No fresh CI proof yet. Configured gate remains stale pending correction and confirmation.
 
 ### Remote Review Received: PR #421 — 2026-11-11T064727Z
 
