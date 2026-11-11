@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
 
-**Total:** 1/2 phases accepted; p02 reopened for final-review corrections
+**Total:** 2/2 phases accepted
 
 ---
 
@@ -167,10 +167,10 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1
+**Head:** 0b917cb216c3487d47e9a2cc99732ee519829022
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -380,6 +380,12 @@ p02 accepted after independent Opus round 2 reported 0 Critical/High/Medium and 
 **Commit:** 3a347325bf28a9683964c17c90a86067496115ab
 **Result:** 18 completion probes and 1,272 isolated shared/validation contracts passed; scoped lint and diff check passed. Local no-authority regression and program preflight:8 owner contract failed before correction. Neutralizing each of the helper, automatic decision and core durable guards reproduces its intended authority refusal; all three restored. Existing local-preservation coverage moves to the local normal-path control; archive resume uses synced scope, its actual owner. Evidence: `.oat/analysis/complete-after-merge-p02/final-fixes/`. Three inventory locators updated without changing coverage. No new checkpoint wording or authority. Combined clean-candidate checks follow before phase reacceptance and final re-review.
 
+### Final-review correction verification and p02 reacceptance
+
+Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a347325bf28a9683964c17c90a86067496115ab`). Local merged projects retain their branch and live status with no follow-up authority/push/PR; program preflight:8 names interactive completion without changing the checkpoint grant. Inventory locators now match the completion skill. No findings are deferred and no recovery attempt was used. p02 reaccepted under the existing zero-Critical/High phase review plus completed selected corrections; final re-review remains pending.
+
+**Latest authoritative verification:** all 15 required/extra checks passed on clean `0b917cb216c3487d47e9a2cc99732ee519829022`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Commands, runtime/platform, lockfile, cache reuse, tree state and exit codes: `.oat/analysis/complete-after-merge-p02/final-fixes/ordered-checks.json`. Forced workspace executed all 12 tasks with zero cache hits (9,708 CLI tests); root suites passed (165 smoke, 743 skill, 7 script tests), along with 1,272 isolated contracts, release validation, docs manifest freshness and lint/format. Node22.23.3/pnpm10.13.1/Darwin arm64; exact22.23.4 unavailable. Probes18 and isolated contracts1272 passed before commit. Three guard neutralizations failed with the intended authority refusal and were restored. Source bytes remain unchanged since the tested candidate; subsequent tracking commits do not invalidate these checks. p01 recovery2/10, p02 0/10, pending null.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -408,7 +414,7 @@ p02 accepted after independent Opus round 2 reported 0 Critical/High/Medium and 
 **Reviewed head:** 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1
 **Findings:** 0 Critical, 0 High, 2 Medium, 1 Low; exact reconnaissance signal not-attempted, no orchestration section; anchors validated.
 **Finding classes:** M1 regression (p02 local ownership/preserved completion contract); M2 regression (H1 batch per-project authority and wave-program promised next-step routing); L1 bookkeeping (three stale completion inventory locators, coverage unchanged).
-**Dispositions:** convert M1/M2 to bounded p02-t05, apply L1 locator cleanup in the same correction. No new requirement, no deferral and no new checkpoint/publication grant. Final review remains fixes_added; p02 reopens with its Base unchanged and no later phase Base. Both Outcomes' central probes passed; scope/caller guarantees require these fixes before final acceptance. No deferred Medium ledger entries exist.
+**Dispositions:** convert M1/M2 to bounded p02-t05, apply L1 locator cleanup in the same correction. No new requirement, no deferral and no new checkpoint/publication grant. Final review corrections are complete; p02 Base remains unchanged and its Head advances after verification. Final independent re-review is pending. Both Outcomes' central probes passed; scope/caller guarantees require these fixes before final acceptance. No deferred Medium ledger entries exist.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
@@ -491,13 +497,13 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **Verification performed:**
 
-- Accepted p01 and p02 evidence plus final clean candidate `52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
+- Accepted p01 and p02 evidence plus final clean candidate `0b917cb216c3487d47e9a2cc99732ee519829022`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
 - Packed consumer proof, historical malformed-state negative/valid controls and stop-before-commit proof; real Git branch/diff/push/resume and shipped shell composition probes with substituted gh. Batch publication-state test fails without its reset and passes with it.
 - Exact commands, runtime, cache and revision inputs are retained in phase verification records. Pinned Node 22.23.4 unavailable; Node 22.23.3 used. Prose checks establish instruction coverage, not agent obedience; live GitHub publication not claimed.
 
 **Outcomes audit:**
 
-- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/no-PR controls, scope/resume preservation and batch reuse. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t04.
+- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t05.
 - Outcome 2 met in accepted p01: `180f4758`, `581335dc` plus the reviewed 88-location inventory and packed-consumer probe demonstrate incident BAD_INDENT rejection, valid commented-state acceptance without mutation, and stopping before commit/continuation. Evidence mapping: `references/research/manual-state-writers.md` and p01 acceptance.
 
 **Brief deltas:**
