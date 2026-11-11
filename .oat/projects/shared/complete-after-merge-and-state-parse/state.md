@@ -134,21 +134,25 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 8ae1234974fa36c487ae703f1a4694b3ab3dcbf1
+  reviewed_head: f916330bde65ba7ad1024843ca4ac2ce88f3939d
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:c938406e1d828bdea8cbd8f007cc848ab0938aaa385ec654b18b97075e91396f
   freshness_head: 8ae1234974fa36c487ae703f1a4694b3ab3dcbf1
   freshness_fingerprint: sha256:effective-delta-v2:c938406e1d828bdea8cbd8f007cc848ab0938aaa385ec654b18b97075e91396f
   waivers: []
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 69378dbe-fd27-4b48-b2b1-69d4c9c1e4ee
   launch_started_at: 2026-11-11T07:21:35.437665Z
   launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-6/result.json
   gate_run_marker: /private/tmp/oat-complete-state-parse-gate-69378dbe-fd27-4b48-b2b1-69d4c9c1e4ee/daa8c9de-12be-4648-8980-c53395268196.json
   gate_run_id: daa8c9de-12be-4648-8980-c53395268196
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T072352Z.md
+  handoff:
+    Gate passed at the high threshold, but the final review still contains
+    non-blocking findings (low=2). Run oat-project-review-receive for
+    .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T072352Z.md
+    to disposition them before marking the final review row passed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -156,10 +160,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: 2026-11-11T07:22:02.398Z
+  updated_at: 2026-11-11T07:27:39.625Z
   decided_at: null
 oat_post_implement_sequence:
   status: pending
