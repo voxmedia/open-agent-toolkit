@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
 
-**Total:** 1/2 phases accepted
+**Total:** 2/2 phases accepted
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 703da345153aa455a7dfed2c70107e34eefb821e
@@ -498,7 +498,7 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 
 <!-- orchestration-runs-start -->
 
-- run/v1 · request=complete-after-merge-recap-confirm-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-recap-confirm-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=complete-after-merge-resume-review-confirm-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -525,6 +525,16 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Final confirmation received and p02 reaccepted — recap-link correction
+
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-11T062455Z.md
+**Reviewed head:** 703da345153aa455a7dfed2c70107e34eefb821e
+**Invocation:** auto · **Reviewer:** claude-opus-5-5, configured high effort
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+**Finding classes:** none. Deferred Medium ledger empty; no deferrals or waivers.
+**Outcome:** passed. L1 from gate4 is confirmed resolved by132ad171. Reviewer verified Step8.5 composition through Steps1.75/8.6/10/12, source-only diff and version bump. Prior gate coverage and all15 checks at clean703da345 are reused with unchanged inputs. Runtime limitations unchanged; no Linux CI/live GitHub proof claimed. Exactly one not-attempted recon signal came from the reviewer return; no orchestration section exists.
+**Acceptance:** root reaccepts p02 at Head703da345, preserving Basea7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d. Both Outcomes remain met; no recovery attempt consumed. Next: fresh configured gate, closeout refresh, push and CI before authorized merge.
 
 **Gate4 receipt reconciliation:** tracking receive commit073a645f and archive-deletion commit88bfeb59 jointly settle event830e5bf5; the archive was CLI-tracked, so its deletion required a follow-on exact-path commit. Carrier receive_commit names the final archive commit. Archived artifact and bound row retain original run/head. The later source clarification132ad171 makes the gate stale under effective-delta-v2; no waiver, failed recovery, or gate remediation attempt was used. Standard final confirmation is narrowed to that one sentence before the fresh configured gate.
 
