@@ -44,7 +44,10 @@ copying their content here. -->
   already-merged PRs. Durable projects prepare/reuse a fresh-base follow-up
   under existing explicit authority; original merged identity/body and goal
   coverage stay intact. Local projects retain their branch. The automatic
-  companion binds authority per project and original PR. See
+  companion binds authority per project and original PR. Terminal synced
+  receipts also survive a later original-PR merge: delivered results resume
+  without push or recap/body rewrites; pending bookkeeping or divergent local
+  work retains the pointer and receipt for recovery. See
   [the project summary](../../projects/shared/complete-after-merge-and-state-parse/summary.md)
   and decisions [state parsing](../reference/decisions/DR-261111-check-manual-lifecycle-state.md)
   and [merged completion](../reference/decisions/DR-261111-reuse-authority-for-merged.md).

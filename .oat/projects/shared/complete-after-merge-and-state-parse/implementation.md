@@ -526,6 +526,8 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 
 ## Reviews and Gates
 
+**Closeout refresh (generation 5):** summary now names the current clean tested source 703da345, the earlier forced production run at 128dd516, merged-later receipt recovery and recap-link preservation. Project-log roll-up returned status ok, ledger deduplicated, 16 structural entries and no judgment digest. Both Key Decisions were already promoted; no new decision or backlog requirement. Documentation capability scan confirms README, CLI README and closeout-skills already cover the corrected resume contract; packages/cli/AGENTS still covers check-state. The project-owned current-state note is refreshed. PJM adoption is declared. No human-doc or shipped-instruction changes were needed in this sequence, so source verification and gate fingerprints remain valid.
+
 ### Review Received: final — configured gate generation 5
 
 **Review artifact (local-only):** reviews/archived/final-review-2026-11-11T062926Z.md
