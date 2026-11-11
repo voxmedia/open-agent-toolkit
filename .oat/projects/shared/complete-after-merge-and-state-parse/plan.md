@@ -124,19 +124,19 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042616Z.md                                   | 09d08130659962709b68e2a8f5bcfe05f34ae725 | gate       | claude-opus-5-5-high                     |
 | final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T050024Z.md                                   | 0e404f79d786cf469b2a3c65ec697686d5083584 | gate       | claude-opus-5-5-high                     |
 
-| remote-pr-421 | code | fixes_added | 2026-11-11 | reviews/archived/remote-pr-421-review-2026-11-11T051622Z.md | fc007d4841d07864783a8cc6b3a16d540ed7ca5b | - | - |
+| remote-pr-421 | code | fixes_completed | 2026-11-11 | reviews/archived/remote-pr-421-review-2026-11-11T051622Z.md | fc007d4841d07864783a8cc6b3a16d540ed7ca5b | - | - |
 
 | final | code | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T055350Z.md | 128dd5163cb27c920f94b58efc49960dfdf07dc6 | auto | - |
 
-| final | code | pending | 2026-11-11 | - | - | auto | - |
+| final | code | passed | 2026-11-11 | reviews/archived/final-review-2026-11-11T060748Z.md | 1dd8a790bbb3095ae7c1fdcc39a8046365066af2 | auto | - |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
-- p02 reopened for p02-t09: preserve synced archive resume when the original PR merges after archival; previously accepted behavior remains recorded in the journal.
-- Total: 1/2 phases accepted while p02-t09 is active. Prior CI passed on fc007d4. The correction requires verification, review, a fresh configured gate and renewed closeout evidence before the authorized merge.
+- p02 accepted: post-merge bookkeeping, existing completion contracts and merged-later archive receipt recovery are verified and independently reviewed.
+- Total: 2/2 phases accepted. Current final review passes at 1dd8a790; a fresh configured gate, updated closeout and new-head CI precede the authorized merge.
 
 ## References
 
