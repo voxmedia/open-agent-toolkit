@@ -462,6 +462,19 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ## Reviews and Gates
 
+### Review Received: final gate 47a97d4b
+
+**Date:** 2026-11-11
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-11T050024Z.md
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+**Finding classes:** L1 accepted-requirement (root AGENTS.md Definition of Done and operator authorization to merge only after checks pass).
+
+- L1: Linux CI still pending → no further code fix; retain the existing required CI checkpoint before merge. The portability regression is corrected and independently confirmed; pending CI is an unfinished delivery check, not a waived check or a deferred product defect. The Linux negative control is not yet claimed closed. Root must observe successful CI on the final pushed head before merging.
+
+**Outcome:** passed with the Low verification reminder routed to the existing merge checkpoint. No gate remediation attempt or waiver. No deferred Medium findings; no new requirement. Existing operator merge-after-checks authority governs the remaining verification. Prior received gate 3f079d62 remains untouched as retired history.
+
+**Gate:** oat-project-implement · **Scope:** final · **Outcome:** passed (raw 0C/0H/0M/1L) · run 47a97d4b-5310-4f4d-bf5a-21f3d73f0c0d · reviewed 0e404f79d786cf469b2a3c65ec697686d5083584 · attempts 0/2 · final-head Linux CI required before merge.
+
 PR self-review confirmation at `fd0fe5134dbb099b15570494c84b098fc7bff420` (Opus 5.5 High, 2026-11-11): T1 platform temporary directory, T2 reconstruction wording, and synced-only loop cleanup all confirmed fixed; testing and complexity have no delta findings. Reviewer independently ran 21/21 with TMPDIR unset and 2/2 affected cases with an explicit scratch TMPDIR, retaining clean files and fixture cleanup. Reused all 13 checks at clean `0e404f79d` (9,708 CLI, root 165/746/7). One optional documentation nit, class bookkeeping: change “resumed” to “rerun” in summary.md; applied here under existing small-fix authority, with no new code review loop. Earlier independent correctness and product-doc coverage through `09d0813` remains valid because shipped source is unchanged. No outstanding review findings or deferred work. This confirmation is a supplemental PR self-review record, not a fabricated lifecycle artifact or configured gate receipt. The gate generation is still stale pending refresh.
 
 PR self-review at ea195c947: independent Opus 5.5 High applied deliberate-testing and complexity-review to ddd67fb..ea195c9 and docs to 09d0813..ea195c9. T1 Linux temporary-path regression, T2 reconstruction wording, and the redundant synced loop are fixed in p02-t08; docs had no findings. One delta-only confirmation follows. Recap skipped by explicit operator choice; terminal guard passed, no run path.
