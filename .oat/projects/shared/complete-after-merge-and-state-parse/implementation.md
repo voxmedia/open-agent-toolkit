@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-10
-oat_current_task_id: p01
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -39,20 +39,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | in_progress | 1     | 0/1      |
-| p02   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | pending   | 1     | 0/1      |
 
-**Total:** 0/2 phases accepted
+**Total:** 1/2 phases accepted
 
 ---
 
 ## Phase p01: Validate manual lifecycle state writes
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 7e5b5bd32c5443dae06947c2fbf99fc3d02aaac9
-**Head:** 3b260ccf51a395362ab7d832d22d5b780ffd0c3b
+**Head:** f5310385635087cfc0794e61c1415b0f11d460bc
 **Executor:** phase-implementer:complete-state-parse-p01-20261110
 
 Execution shape: one phase implementer in the existing orchestration checkout, the sole committing owner while active. No declared parallel group; slice fan-out fails the independence test because the shared check, skill references, tests, release assets and versions overlap. Tier 1 uses T3 delegation with the operator-selected GPT-6.1 Sol high; the root retains independent Opus review and phase acceptance. Recovery capacity: default 10, phase limit 10, used 0, remaining 10, pending none; source is the workflow default with no project/phase override. Remaining capacity does not authorize target changes or continuation after a terminal failure.
@@ -156,6 +156,14 @@ Root inspected `attempt2/postcommit-checks.json` and installed-package proof: ev
 
 **Commit:** 581335dc4c4666f7367a0749b428991b079a8c7f
 **Result:** both promotion writes checked; 88 locations / 24 writing skills / 27 skill bumps. Existing getFrontmatterBlock extraction restored, retaining whitespace-fence acceptance and LF-only reader compatibility; this supersedes p01-t01's CRLF claim. Red run failed exactly the two fence cases; green run passed all 1,282 tests. Full repository verification pending; phase remains in_progress.
+
+### Root phase acceptance — 2026-11-11
+
+p01 accepted after independent Opus 5.5 high review (0 Critical, 0 High, 1 Medium, 1 Low), both selected fixes completed in p01-t02, and all required verification passed. No additional phase gate was selected. Original review is fixes_completed, not relabeled a clean re-review; final independent review remains required. Review-fix loop: one bounded correction, no Critical/High re-review round. Recovery ledger remains used=2/10, pending=null.
+
+**Current verification (supersedes earlier candidate summaries):** clean committed candidate `f5310385635087cfc0794e61c1415b0f11d460bc`, source correction `581335dc4c4666f7367a0749b428991b079a8c7f`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Required order completed: check, type-check, forced uncached workspace tests, root test command (workspace cache reused plus 165 smoke, 721 skill and 7 script tests), build, committed-history skill bumps, fresh fetch/version check, release validation, docs build, direct index generation/freshness. Lint, format and 1,282 isolated focused/skill/validation tests also passed. CLI full suite: 9,706 passed. All commands exited 0; exact commands, cache hits, timings and per-check clean tree/HEAD are in `.oat/analysis/complete-state-parse-p01/review-fixes/{checks,root-checks}.json`. Builds/docs reused cache; forced workspace suite actually executed. Node 22.23.3 (exact 22.23.4 pin unavailable), pnpm 10.13.1, Darwin arm64, unchanged lockfile SHA 425ad4fa9e0b1b2dba6185a4d4fa130fa5ed0edbcfb93c165a74e6e70a866dd6. Fresh isolated temporary roots under /private/tmp removed by the runner.
+
+L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closing fence and accepted CRLF; the new expected cases both failed for those outcomes. Restoring the existing shared extractor makes both pass while incident BAD_INDENT remains rejected and valid bytes unchanged. This preserves the integration-base LF-only reader contract rather than adding CRLF support. M1's two brainstorm invocations are adjacent to writes and before handoff; the broad Bash scope permits them and its version is bumped. Existing installed-package proof is retained for unchanged packaging/command resolution; changed parser and skill packaging were exercised by the fresh tests/build/release checks. Prose coverage does not establish agent obedience.
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
