@@ -114,9 +114,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T06:26:42.798066+00:00'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 703da345153aa455a7dfed2c70107e34eefb821e
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:0cb5c500ae7294c918752868ea7ff8590ac0428b0642f33e4728af93548cfc5f
-  freshness_head: 703da345153aa455a7dfed2c70107e34eefb821e
+  freshness_head: 751ca9835712214ceeaf63cbff927f40aa742448
   freshness_fingerprint: sha256:effective-delta-v2:0cb5c500ae7294c918752868ea7ff8590ac0428b0642f33e4728af93548cfc5f
   waivers: []
   launch_state: result_persisted
@@ -150,7 +150,7 @@ oat_implement_exit_gate:
     non-blocking findings (low=1). Run oat-project-review-receive for
     .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T062926Z.md
     to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     runId: d705a945-986c-4cc3-a9db-b99d16b987d2
     handoff:
@@ -169,12 +169,12 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-11-11T062926Z.md
   receive_pre_head: 14b8b360ee51db6a59973742c06051b48f4e73ad
-  receive_commit: null
+  receive_commit: 751ca9835712214ceeaf63cbff927f40aa742448
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: 2026-11-11T06:31:00.967Z
-  decided_at: null
+  updated_at: 2026-11-11T06:31:46.511Z
+  decided_at: 2026-11-11T06:31:46.439790+00:00
 oat_post_implement_sequence:
   status: in_progress
   source: configured
