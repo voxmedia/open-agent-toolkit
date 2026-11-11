@@ -170,7 +170,56 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 **Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 5d5e6caef9128835562047de5212839f45b6c8e1
+**Head:** a3514dc6e8746557e925444478fb9c85f58340d5
+
+**Combined fix verification (supersedes the initial candidate below):** all
+15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
+containing root correction `dd394df379f25aba250e4e8d64d49bb0652ca72e` plus H1
+source commit `f74fdb8ac36875113b1a735671044c560270100d`. Fix dispatch base was
+`47d83407bee1d1232f6ae724316ac887aaa3b135`; integration base remains
+`ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Phase Base is unchanged. Phase
+remains in_progress; root owns independent re-review, acceptance and final gate.
+
+Required order passed: `pnpm check`, `pnpm type-check`, `pnpm test:evidence`,
+root `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, fresh
+`git fetch origin main`, `pnpm release:check-versions`,
+`pnpm release:validate`, `pnpm build:docs`, direct
+`pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`,
+then `git diff --exit-code -- apps/oat-docs/index.md`. Additional `pnpm lint`,
+`pnpm format` and the exact isolated shared/validation command in p02-t03 all
+exited 0. Every command began/ended at the same clean HEAD. Exact commands,
+base/HEAD, tree/cache/runtime evidence and exit codes are in
+`.oat/analysis/complete-after-merge-p02/h1-fix/ordered-checks.json`.
+
+Forced workspace verification executed 12 tasks with zero cache hits,
+including 9,707 CLI tests. Root test reused those workspace results and freshly
+ran 165 smoke, 742 skill and 7 script tests. Isolated shared/validation tests
+passed 1,271. The 108 completion tests include all four new consumer-composition
+cases and root's boundary corrections. The four authority/publication can-fail
+controls all failed for the intended clause, then restored source passed.
+Type-check, later builds/docs and package lint/format reused cache; root
+lint/format passes and direct manifest generation ran. No repeated full batch
+was needed. No source bytes changed after the clean candidate checks.
+
+Finding corrections: C1, M1, L1 and L2 are root's p02-t02 correction above;
+H1 is p02-t03. All five are covered by the combined candidate, with none
+unresolved or deferred in this implementation return. This is correction
+status, not a clean re-review or acceptance; original counts remain intact.
+Review-fix round 1 of 2; recovery remains p02 used 0/10, remaining 10, pending
+null. p01 used 2/10, its anchors, parser and other production corrections are
+unchanged. No recovery event occurred.
+
+Runtime remains Node 22.23.3 / pnpm 10.13.1, Darwin arm64 (macOS 27.0.1);
+exact Node 22.23.4 is unavailable. Lockfile SHA-256 remains
+`425ad4fa9e0b1b2dba6185a4d4fa130fa5ed0edbcfb93c165a74e6e70a866dd6`.
+Tests used `/private/tmp` and the isolated-HOME runner without a manual HOME
+override. Existing contamination evidence was preserved. No PR/GitHub mutation,
+production-project write, new standing grant or global setting change occurred.
+GitHub responses were substituted only at their external boundary. Source
+proof remains reusable across this final journal-only verification record. Final
+read-only journal review check reports status=ok (exit 0); strict state check
+reports valid=true (exit 0). The only journal warning is the expected
+root-owned run-line-unresolved while this dispatch remains active.
 
 **Phase verification:** local implementation evidence passed on clean committed
 `5d5e6caef9128835562047de5212839f45b6c8e1`, whose source implementation is
