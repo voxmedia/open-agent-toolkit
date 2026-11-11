@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p02-t12
 oat_last_commit: 132ad171be754378bcdf5606a9e153ba2e2d9de9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -111,10 +111,10 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/421 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T06:34:31.098578+00:00'
+oat_project_state_updated: '2026-11-11T06:47:27.415496+00:00'
 oat_generated: false
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -172,21 +172,19 @@ oat_implement_exit_gate:
   receive_commit: 751ca9835712214ceeaf63cbff927f40aa742448
   receive_eligible: true
   receive_completed: true
-  failure: null
+  failure: Remote M1 requires p02-t12 stale-HEAD resume correction; prior
+    generation retained as provenance.
   updated_at: 2026-11-11T06:34:31.175Z
   decided_at: 2026-11-11T06:31:46.439790+00:00
 oat_post_implement_sequence:
-  status: complete
+  status: pending
   source: configured
   final_phase: p02
   pre_approval:
     - summary
     - document
     - pr
-  pre_approval_completed:
-    - summary
-    - document
-    - pr
+  pre_approval_completed: []
   approval: not_required
   approval_source: null
   post_approval: []

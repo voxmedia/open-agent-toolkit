@@ -1,10 +1,10 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: null
+oat_current_task_id: p02-t12
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
-**Total:** 2/2 phases accepted
+**Total:** 1/2 phases accepted
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 703da345153aa455a7dfed2c70107e34eefb821e
@@ -488,7 +488,17 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 **Verification:** 15/15 checks exited 0 on clean 703da345153aa455a7dfed2c70107e34eefb821e against unchanged origin/main ddd67fb5541bac2959ebb64ed82f4287f4f56698. Completion probes 28/28; required checks in order, full pnpm test, lint/format, release validation, docs build/direct index freshness and isolated skill contracts passed. Exact commands, cache replay flags, dependency hash and inputs: `.oat/analysis/complete-state-parse-closeout/recap-link/committed-checks.json`. Node 22.23.3/pnpm 10.13.1/macOS arm64; exact22.23.4 unavailable. No new test or executable behavior added; source delta is one Step 8.5 sentence. Previous helper negative/can-fail proofs remain reusable. Independent confirmation pending; no phase acceptance yet.
 
+### Task p02-t12: (review) Resume delivered archives from a stale ancestor checkout
+
+**Status:** in_progress
+**Executor:** inline:stale-head-remote-review
+**Intent:** reproduce the accepted-delivery/local-export mismatch through the actual Step 8.6, correct safe ancestor resume without pushing or publishing, retain divergent/pending refusal behavior.
+**Proof:** existing real archive producer and Git fixture, pre-fix red and fixed green including link validation and pointer finalization; required ordered checks and independent review.
+**Commit:** pending
+
 ## Orchestration Runs
+
+Root-inline phase: p02, p02-t12; bounded remote review correction handled by root GPT-6 Astra High per host instruction to fix small review findings inline. No model substitution for substantive phase work or independent Opus review.
 
 Root-inline phase: p02, p02-t10 only; small test/prose review corrections handled by root GPT-6 Astra high under host instruction to fix small review findings inline. The substantive implementation remains GPT-6.1 Sol high; independent Opus review remains required.
 
@@ -525,6 +535,15 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #421 — 2026-11-11T064727Z
+
+Source: https://github.com/voxmedia/open-agent-toolkit/pull/421#discussion_r4534785498 (cursor[bot], review 5854836835, reviewed head 7889c8df507d145664c0dd4b0c4c1654f9bcb058). **Findings:** 0 critical, 0 high, 1 medium, 0 low.
+**Finding classes:** M1 regression (delivered synced archive resume accepts stale HEAD but Step 8.6 cannot find its tracked export).
+
+Convert M1 to p02-t12 under Outcome 1, KU2 and p02 Exit evidence preserving receipt resume and divergent inputs. The exact receipt-owned result is verified on fetched base, while subsequent shipped link validation reads the checkout. Extend the existing real-archive test through Step 8.6 and correct this boundary. No new-hardening requirement or authority. This is remote receive cycle 2/3; prior local/gate events are separate. Old Bugbot review 5854157283 is stale and its finding already resolved; the summary comment is informational. No GitHub replies posted.
+
+Outcome: fixes queued. Reopen p02, preserve its Base and recovery usage, mark the configured gate stale and reset closeout. Root handles this bounded review correction inline under the host instruction; substantive implementation routing remains GPT-6.1 Sol High, independent review remains Opus 5.5 High.
 
 **PR refresh receipt:** GitHub PR #421 body updated from the refreshed local PR artifact. The exact-path helper refused the attempted local-artifact commit because `pr/` is intentionally ignored (receipt 69eabfcb128743b95b261fca2ee4104d0629af0242150894a2dfa6899bc69d43); nothing was committed by that invocation and the artifact remains local, as intended. The shell continued to the authorized body update and sequence checkpoint instead of stopping on that refusal; root records the deviation here. No force-add, overwritten work, or source change. The GitHub body is the durable PR description. No required review is pending/missing; retired 032431Z stays untouched. Source review coverage and unchanged verification inputs are reused; no redundant self-review lens launched.
 
