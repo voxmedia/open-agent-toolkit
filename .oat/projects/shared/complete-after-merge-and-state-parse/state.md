@@ -111,7 +111,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/421 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T04:37:05.050555+00:00'
+oat_project_state_updated: '2026-11-11T04:37:10.375207Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 09d08130659962709b68e2a8f5bcfe05f34ae725
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
-  freshness_head: 686e3229e5afb86ed937549363632d1e05e8d12b
+  freshness_head: 9b52c60efd242353f2ddf80e644b93ddf55e0e83
   freshness_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
   waivers: []
   launch_state: result_persisted
@@ -186,6 +186,7 @@ oat_post_implement_sequence:
   pre_approval_completed:
     - summary
     - document
+    - pr
   approval: pending
   approval_source: null
   post_approval: []
