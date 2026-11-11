@@ -571,6 +571,11 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 
 ## Reviews and Gates
 
+### Final closeout refresh — gate generation 6
+
+**Outcome:** summary, document and PR steps completed in configured order; gate allowed/passed, visual recap skipped by recorded operator choice. Existing PR #421 remains open pending updated-head CI and remote review; merge authority unchanged. No project archive or completion invoked.
+**Verification:** summary phase fingerprint matches accepted anchors; project-log rollup deduplicates 18 structural entries without new learnings. Existing decisions are already promoted. PJM adoption is declared; doctor exits 1 solely for pre-existing completed-ledger references to unrelated active backlog items, outside this correction. Closeout check returns complete and implement-preflight journal check returns ok without warnings. Source/base/dependency/runtime inputs remain unchanged from the accepted verification; only tracking and repository-status prose changed. No fresh broad test run is claimed.
+
 ### Review Received: final — configured gate generation 6
 
 **Artifact:** reviews/archived/final-review-2026-11-11T072352Z.md
@@ -862,7 +867,7 @@ Document any intentional deviations from the brief. Include accepted review find
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review and PR self-review coverage pass on the accepted source. Gate generation 6 passed and both bookkeeping Low findings were fixed at receive; configured summary/document/PR refresh continues. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
+- Final independent review and PR self-review coverage pass on the accepted source. Gate generation 6 passed and both bookkeeping Low findings were fixed at receive; configured summary/document/PR refresh is complete. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
 
 ## References
 
