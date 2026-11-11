@@ -974,3 +974,88 @@ test('complete-auto batch authorizes each requested member independently and pre
     f.cleanup();
   }
 });
+
+test('complete-auto preflights all batch members before resetting each completion publication result', () => {
+  const f = fixture('shared', ['second'], 'quick');
+  try {
+    const auto = readFileSync(join(autoSkillRoot, 'SKILL.md'), 'utf8');
+    const core = readFileSync(new URL('../SKILL.md', import.meta.url), 'utf8');
+    const preflight = auto
+      .slice(
+        auto.indexOf('#### PR-merge precondition'),
+        auto.indexOf('#### Answer table'),
+      )
+      .match(/```bash\n([\s\S]*?)\n```/)[1];
+    const start =
+      auto
+        .slice(auto.indexOf('### Step 5:'), auto.indexOf('### Batch Mode'))
+        .match(/```bash\n([\s\S]*?)\n```/)?.[1] ?? '';
+    const sync = core
+      .slice(core.indexOf('### Step 11.5:'))
+      .match(/```bash\n([\s\S]*?)\n```/)[1];
+    writeFileSync(
+      join(f.temp, 'bin', 'oat'),
+      `#!/bin/sh\nexec '${process.execPath}' '${cli}' "$@"\n`,
+      { mode: 0o755 },
+    );
+    const members = [f.projectRelative, '.oat/projects/shared/second'];
+    const result = spawnSync(
+      'bash',
+      [
+        '-c',
+        [
+          // The documented batch has two stages: all preflights, then completions
+          // in the same shell. Previous tests isolated each member in a new shell.
+          ...members.map((member) => `PROJECT_PATH='${member}'\n${preflight}`),
+          // Completion preparation establishes the follow-up fields after the
+          // read-only original-PR observations have cleared them.
+          'COMPLETION_FOLLOWUP=true; FOLLOWUP_PR_STATUS=open',
+          `PROJECT_PATH='${members[0]}'`,
+          start,
+          // Step 11's successful creation result (publication itself has a real
+          // Git/gh-boundary probe above); Step 11.5 must skip this new PR's sync.
+          'NEW_FOLLOWUP_CREATED=true',
+          sync,
+          'printf "first:%s\\n" "$SHOULD_SYNC_PR"',
+          `PROJECT_PATH='${members[1]}'`,
+          start,
+          sync,
+          'printf "second:%s\\n" "$SHOULD_SYNC_PR"',
+        ].join('\n'),
+      ],
+      {
+        cwd: f.repo,
+        encoding: 'utf8',
+        env: {
+          ...f.env,
+          COMPLETE_SKILL_DIR: fileURLToPath(new URL('..', import.meta.url)),
+          AUTO_FOLLOWUP_AUTHORITY_SCRIPT: join(
+            autoSkillRoot,
+            'scripts/resolve-followup-authority.mjs',
+          ),
+          COMPLETION_FOLLOWUP_AUTHORITIES_JSON: JSON.stringify(
+            members.map((projectPath) => ({
+              projectPath,
+              originalPrUrl: originalUrl,
+              source: 'Existing task covers both bookkeeping PRs',
+            })),
+          ),
+          IS_DURABLE_PROJECT: 'true',
+          SHOULD_ARCHIVE: 'true',
+          COMPLETION_FOLLOWUP: 'true',
+          FOLLOWUP_PR_STATUS: 'open',
+          WAS_PR_OPEN_AT_START: 'false',
+        },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /first:false/);
+    assert.match(
+      result.stdout,
+      /second:true/,
+      'reused second follow-up must sync after the first creates one',
+    );
+  } finally {
+    f.cleanup();
+  }
+});

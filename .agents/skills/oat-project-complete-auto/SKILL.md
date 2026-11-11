@@ -275,7 +275,7 @@ retain the companion's existing absent-PR refusal; they do not become an
 invented observation. Failed observation stops this project's preflight.
 
 ```bash
-# Per-project publication result; never inherit an earlier batch member's flag.
+# Initialize the preflight result; Step 5 resets it again per completed member.
 NEW_FOLLOWUP_CREATED="false"
 AUTO_TRACKED_PR_FIELDS=$(oat project status --project-path "$PROJECT_PATH" --shell \
   oat_pr_url=project.prUrl) || exit 1
@@ -389,6 +389,15 @@ bookkeeping commit carries this file with the rest of the completion changes.
 ### Step 5: Complete the Project
 
 For each project that passed Steps 3 and 4, in the order given:
+
+Before item 1, reset this member's publication result. Batch preflights all
+finish before any completion starts, so a preflight reset alone cannot clear
+the preceding member's result. Run this once per member, before its completion
+steps; preserve the result set by Step 11 through Step 11.5:
+
+```bash
+NEW_FOLLOWUP_CREATED="false"
+```
 
 1. Point the active project at it: `oat config set activeProject "$PROJECT_PATH"`.
 2. Export `OAT_AUTONOMOUS=1` and `OAT_NON_INTERACTIVE=1` for the completion
