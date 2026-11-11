@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02-t09
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -436,7 +436,7 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ### Task p02-t09: (review) Preserve synced archive resume after the original PR merges
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:complete-after-merge-resume-fix-20261111
 **Handle:** current T3 implementation sub-agent, GPT-6.1 Sol high; no nested dispatch
 **Intent:** correct remote review M1 without changing completion authority or replaying the retired active workflow.
@@ -462,9 +462,11 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Clean committed verification:** every check used `128dd5163cb27c920f94b58efc49960dfdf07dc6`, with clean tracked inputs before/after, against unchanged integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`; p02 Base remains `a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d`. Ordered exits are all 0: helper suite; `pnpm check`; `pnpm type-check`; `pnpm test:evidence`; `pnpm test`; `pnpm build`; `pnpm run check:skill-bumps`; `git fetch origin main`; `pnpm release:check-versions`; `pnpm release:validate`; `pnpm build:docs`; direct `pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`; direct manifest `git diff --exit-code`; `pnpm lint`; `pnpm format`; isolated skill prose contracts (`bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`, 1272 tests). The forced workspace run executed 12/12 tasks, 0 cached (CLI 9708 tests). Type-check, ordinary test's Turbo portion, build, docs build and package portions of lint/format reused cache; direct root smoke/skill/script tests, root lint/format, manifest generation/diff and isolated contracts executed. Runtime Node 22.23.3 (exact pin 22.23.4 unavailable), pnpm 10.13.1, macOS 27.0.1 arm64; lockfile SHA256 `425ad4fa9e0b1b2dba6185a4d4fa130fa5ed0edbcfb93c165a74e6e70a866dd6`. Exact commands, scope, exit codes, runtime, cache flags and clean states: `committed-checks.json` and `committed-01.log` through `committed-16.log`; separate reproduction/prevention inputs: `correction-evidence.json`. No broad rerun for this journal-only update.
 **Handoff:** implementation verification complete; task and phase remain in_progress for root review/acceptance as directed. No push, PR mutation, configured gate or acceptance. Original p02 Base retained and Head advanced only after the clean candidate passed all required checks. Recovery p01 2/10, p02 0/10, pending null unchanged; no qualifying postcommit failure occurred. Unchanged p01 installed proof is reused. No unresolved implementation issue; fresh Opus review/configured gate/CI remain root-owned.
 
+**Root verification handoff:** inspected helper/skill delta and clean committed-checks record (16 exit-0 rows at 128dd5163cb27c920f94b58efc49960dfdf07dc6). Source delta after that candidate is journal only. Task implementation is complete; phase acceptance awaits independent review. The configured gate remains stale and closeout must refresh after review.
+
 ## Orchestration Runs
 
-- run/v1 · request=complete-after-merge-resume-fix-20261111 · scope=p02-t09 · action=fix · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-t09 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=complete-after-merge-resume-fix-20261111,pr421-resume-option2-20261111 · observed=~ · match=~
+- run/v1 · request=complete-after-merge-resume-fix-20261111 · scope=p02-t09 · action=fix · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-t09 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=complete-after-merge-resume-fix-20261111,pr421-resume-option2-20261111 · observed=~ · match=~
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
 
