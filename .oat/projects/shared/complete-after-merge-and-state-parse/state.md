@@ -137,12 +137,12 @@ oat_implement_exit_gate:
   freshness_head: 6fd622f52d66858e957923f2013843cbdb3e23e6
   freshness_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
   waivers: []
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: a94b427b-2691-4630-9a12-7fe92db85f72
   launch_started_at: 2026-11-11T04:23:42.616996Z
   launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-2/result.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /private/tmp/oat-complete-state-parse-gate-a94b427b-2691-4630-9a12-7fe92db85f72/9a3a24f8-e4ea-47d4-ac64-67dc109e8d26.json
+  gate_run_id: 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26
   envelope_status: null
   artifact: null
   handoff: null
@@ -156,7 +156,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: 2026-11-11T04:23:42.688Z
+  updated_at: 2026-11-11T04:24:08.579Z
   decided_at: null
 ---
 
