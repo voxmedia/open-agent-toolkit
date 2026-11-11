@@ -384,7 +384,7 @@ p02 accepted after independent Opus round 2 reported 0 Critical/High/Medium and 
 
 Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a347325bf28a9683964c17c90a86067496115ab`). Local merged projects retain their branch and live status with no follow-up authority/push/PR; program preflight:8 names interactive completion without changing the checkpoint grant. Inventory locators now match the completion skill. No findings are deferred and no recovery attempt was used. p02 reaccepted under the existing zero-Critical/High phase review plus completed selected corrections; final re-review remains pending.
 
-**Latest authoritative verification:** all 15 required/extra checks passed on clean `0b917cb216c3487d47e9a2cc99732ee519829022`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Commands, runtime/platform, lockfile, cache reuse, tree state and exit codes: `.oat/analysis/complete-after-merge-p02/final-fixes/ordered-checks.json`. Forced workspace executed all 12 tasks with zero cache hits (9,708 CLI tests); root suites passed (165 smoke, 743 skill, 7 script tests), along with 1,272 isolated contracts, release validation, docs manifest freshness and lint/format. Node22.23.3/pnpm10.13.1/Darwin arm64; exact22.23.4 unavailable. Probes18 and isolated contracts1272 passed before commit. Three guard neutralizations failed with the intended authority refusal and were restored. Source bytes remain unchanged since the tested candidate; subsequent tracking commits do not invalidate these checks. p01 recovery2/10, p02 0/10, pending null.
+**Latest authoritative verification:** all 15 required/extra checks passed on clean `0b917cb216c3487d47e9a2cc99732ee519829022`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Commands, runtime/platform, lockfile, cache reuse, tree state and exit codes: `.oat/analysis/complete-after-merge-p02/final-fixes/ordered-checks.json`. Forced workspace executed all 12 tasks with zero cache hits (9,708 CLI tests); root suites passed (165 smoke, 743 skill, 7 script tests), along with 1,272 isolated contracts, release validation, docs manifest freshness and lint/format. Node 22.23.3/pnpm 10.13.1/Darwin arm64; exact22.23.4 unavailable. Probes18 and isolated contracts1272 passed before commit. Three guard neutralizations failed with the intended authority refusal and were restored. Source bytes remain unchanged since the tested candidate; subsequent tracking commits do not invalidate these checks. p01 recovery2/10, p02 0/10, pending null.
 
 ### Task p02-t06: (review) Qualify merged-project authority in configuration docs
 
@@ -397,7 +397,7 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 **Ownership exception:** T3 directs root to handle small review fixes; root GPT-6 Astra high. This is an accepted documentation requirement with no new behavior or authority.
 
 **Commit:** a8986ea0afad3842d49319112a73ab922c66c4e3
-**Result:** one-phrase docs correction; conservation diff preserves every other word, section, link and claim. Scoped docs check and formatting passed on the exact precommit edit (Node22.23.3, pnpm10.13.1, Darwin arm64). Required checks follow on a clean committed candidate; unchanged runtime behavior retains final-fixes/ordered-checks.json evidence, including uncached test execution. No additional tests or negative controls are warranted for this prose correction.
+**Result:** one-phrase docs correction; conservation diff preserves every other word, section, link and claim. Scoped docs check and formatting passed on the exact precommit edit (Node 22.23.3, pnpm 10.13.1, Darwin arm64). Required checks follow on a clean committed candidate; unchanged runtime behavior retains final-fixes/ordered-checks.json evidence, including uncached test execution. No additional tests or negative controls are warranted for this prose correction.
 
 ### Final documentation verification and p02 reacceptance
 
@@ -475,7 +475,7 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 **Prevention evidence:** divergent resume case passes on current guard; removing only the new-path divergent guard fails with success exit 0 instead of refusal exit 1 and clears the pointer. Exact log and control: `.oat/analysis/complete-state-parse-closeout/review-nits/green-focused.log`, `neutralized-divergent.log`, `can-fail.json`. Production helper bytes restored unchanged; formatting and diff checks pass. Step 12 now names the lifecycle commit, base branch/head and already-delivered outcome without a push or follow-up URL. Full ordered verification follows on a clean committed candidate.
 
-**Verification:** all 15 ordered checks/extras exited 0 on clean `1dd8a790bbb3095ae7c1fdcc39a8046365066af2`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Direct helper tests 28/28; full pnpm test passed (root smoke 165, skill 753, scripts 7), isolated skill contracts passed. Runtime Node22.23.3, pnpm10.13.1, Darwin arm64; exact22.23.4 unavailable. Cache flags and exact inputs/results are in `.oat/analysis/complete-state-parse-closeout/review-nits/committed-checks.json`. Prior forced run at128dd516 remains recorded; no new forced-run claim. Divergent guard neutralization failed for its intended refusal assertion, helper restored byte-for-byte. Production helper unchanged; only test case and Step12 prose changed. Independent confirmation and configured gate remain pending; no phase acceptance.
+**Verification:** all 15 ordered checks/extras exited 0 on clean `1dd8a790bbb3095ae7c1fdcc39a8046365066af2`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Direct helper tests 28/28; full pnpm test passed (root smoke 165, skill 753, scripts 7), isolated skill contracts passed. Runtime Node 22.23.3, pnpm 10.13.1, Darwin arm64; exact22.23.4 unavailable. Cache flags and exact inputs/results are in `.oat/analysis/complete-state-parse-closeout/review-nits/committed-checks.json`. Prior forced run at 128dd516 remains recorded; no new forced-run claim. Divergent guard neutralization failed for its intended refusal assertion, helper restored byte-for-byte. Production helper unchanged; only test case and Step 12 prose changed. Independent confirmation and configured gate remain pending; no phase acceptance.
 
 ### Task p02-t11: Preserve delivered recap links on terminal resume
 
@@ -486,7 +486,7 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Proof:** one bounded instruction clarification; required ordered checks and independent final review for the changed source.
 **Commit:** 132ad171be754378bcdf5606a9e153ba2e2d9de9
 
-**Verification:** 15/15 checks exited 0 on clean 703da345153aa455a7dfed2c70107e34eefb821e against unchanged origin/main ddd67fb5541bac2959ebb64ed82f4287f4f56698. Completion probes 28/28; required checks in order, full pnpm test, lint/format, release validation, docs build/direct index freshness and isolated skill contracts passed. Exact commands, cache replay flags, dependency hash and inputs: `.oat/analysis/complete-state-parse-closeout/recap-link/committed-checks.json`. Node22.23.3/pnpm10.13.1/macOS arm64; exact22.23.4 unavailable. No new test or executable behavior added; source delta is one Step8.5 sentence. Previous helper negative/can-fail proofs remain reusable. Independent confirmation pending; no phase acceptance yet.
+**Verification:** 15/15 checks exited 0 on clean 703da345153aa455a7dfed2c70107e34eefb821e against unchanged origin/main ddd67fb5541bac2959ebb64ed82f4287f4f56698. Completion probes 28/28; required checks in order, full pnpm test, lint/format, release validation, docs build/direct index freshness and isolated skill contracts passed. Exact commands, cache replay flags, dependency hash and inputs: `.oat/analysis/complete-state-parse-closeout/recap-link/committed-checks.json`. Node 22.23.3/pnpm 10.13.1/macOS arm64; exact22.23.4 unavailable. No new test or executable behavior added; source delta is one Step 8.5 sentence. Previous helper negative/can-fail proofs remain reusable. Independent confirmation pending; no phase acceptance yet.
 
 ## Orchestration Runs
 
@@ -526,6 +526,20 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 
 ## Reviews and Gates
 
+### Review Received: final — configured gate generation 5
+
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-11T062926Z.md
+**Reviewed head:** 703da345153aa455a7dfed2c70107e34eefb821e
+**Gate run:** d705a945-986c-4cc3-a9db-b99d16b987d2 · target claude-opus-5-5-high
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+**Finding classes:** L1 bookkeeping (presentation only in this project's plan and journal; no acceptance/provenance/requirement change).
+
+- L1 (Low): separated Reviews table rows and missing prose spaces → fixed at receive (bookkeeping): rejoined the existing rows and restored spacing, preserving each event's identity, counts and reviewed head.
+  **Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/final-review-2026-11-11T062926Z.md).
+  **Verification:** exact event resolved by CLI; reviewer independently passed isolated contracts (1,272 tests), formatting, version bumps and journal check. All 15 clean-candidate checks remain reusable. No unresolved Medium or Low; no fix task, review cycle, waiver, gate attempt or rerun. The retired 032431Z event remains untouched.
+
+**Gate:** implement-exit · **Scope:** final · **Outcome:** allowed/passed by bookkeeping-only receive; raw verdict review_completed_gate_passed, C0 H0 M0 L1; run d705a945-986c-4cc3-a9db-b99d16b987d2; zero remediation attempts, no waiver.
+
 ### Final confirmation received and p02 reaccepted — recap-link correction
 
 **Review artifact (local-only):** reviews/archived/final-review-2026-11-11T062455Z.md
@@ -533,10 +547,10 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 **Invocation:** auto · **Reviewer:** claude-opus-5-5, configured high effort
 **Findings:** Critical 0 · High 0 · Medium 0 · Low 0
 **Finding classes:** none. Deferred Medium ledger empty; no deferrals or waivers.
-**Outcome:** passed. L1 from gate4 is confirmed resolved by132ad171. Reviewer verified Step8.5 composition through Steps1.75/8.6/10/12, source-only diff and version bump. Prior gate coverage and all15 checks at clean703da345 are reused with unchanged inputs. Runtime limitations unchanged; no Linux CI/live GitHub proof claimed. Exactly one not-attempted recon signal came from the reviewer return; no orchestration section exists.
-**Acceptance:** root reaccepts p02 at Head703da345, preserving Basea7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d. Both Outcomes remain met; no recovery attempt consumed. Next: fresh configured gate, closeout refresh, push and CI before authorized merge.
+**Outcome:** passed. L1 from gate4 is confirmed resolved by132ad171. Reviewer verified Step 8.5 composition through Steps1.75/8.6/10/12, source-only diff and version bump. Prior gate coverage and all 15 checks at clean703da345 are reused with unchanged inputs. Runtime limitations unchanged; no Linux CI/live GitHub proof claimed. Exactly one not-attempted recon signal came from the reviewer return; no orchestration section exists.
+**Acceptance:** root reaccepts p02 at Head 703da345, preserving Basea7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d. Both Outcomes remain met; no recovery attempt consumed. Next: fresh configured gate, closeout refresh, push and CI before authorized merge.
 
-**Gate4 receipt reconciliation:** tracking receive commit073a645f and archive-deletion commit88bfeb59 jointly settle event830e5bf5; the archive was CLI-tracked, so its deletion required a follow-on exact-path commit. Carrier receive_commit names the final archive commit. Archived artifact and bound row retain original run/head. The later source clarification132ad171 makes the gate stale under effective-delta-v2; no waiver, failed recovery, or gate remediation attempt was used. Standard final confirmation is narrowed to that one sentence before the fresh configured gate.
+**Gate4 receipt reconciliation:** tracking receive commit 073a645f and archive-deletion commit 88bfeb59 jointly settle event830e5bf5; the archive was CLI-tracked, so its deletion required a follow-on exact-path commit. Carrier receive_commit names the final archive commit. Archived artifact and bound row retain original run/head. The later source clarification132ad171 makes the gate stale under effective-delta-v2; no waiver, failed recovery, or gate remediation attempt was used. Standard final confirmation is narrowed to that one sentence before the fresh configured gate.
 
 ### Review Received: final — gate4 recap-link clarification
 
@@ -549,13 +563,13 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 **Outcome:** fixes_added. Raw gate passed its threshold; the skill-source correction requires a fresh evidence basis under implement exit-gate freshness. No remediation attempt used for this passing gate. Deferred Medium ledger empty; no Low deferral or waiver.
 **Evidence:** independent gate reran 28/28 completion probes and neutralized the pending-path refusal, which broke the missed-merge and changed-export controls for their intended reason. Helper restored byte-for-byte. Exact event resolved by CLI; retirement of gate032431Z remains unchanged.
 
-**Gate:** implement-exit · **Scope:** final · **Outcome:** raw passed, C0 H0 M0 L1; run830e5bf5-72c7-48e1-9cfd-1313aaa51b0d; L1 converted to p02-t11; source freshness pending; zero attempts used.
+**Gate:** implement-exit · **Scope:** final · **Outcome:** raw passed, C0 H0 M0 L1; run 830e5bf5-72c7-48e1-9cfd-1313aaa51b0d; L1 converted to p02-t11; source freshness pending; zero attempts used.
 
 ### Final confirmation received and p02 reaccepted — 2026-11-11
 
-Selected event `reviews/archived/final-review-2026-11-11T060748Z.md`, auto final review at `1dd8a790bbb3095ae7c1fdcc39a8046365066af2`, counts 0 Critical/High/Medium/Low. The returned reviewer message contains one valid not-attempted reconnaissance signal; no Review Orchestration section exists. No fix or deferral added. L1/L2 from 055350Z are independently confirmed fixed. Coverage inherits the prior review's production correctness and integration findings; reviewer reran 28/28 helper tests under Node26.11.1, and reused our clean Node22.23.3 ordered evidence. Reviewer-reported local dd93fcae5 excludes later tracking-only dispatch commit2868b4b; source is identical.
+Selected event `reviews/archived/final-review-2026-11-11T060748Z.md`, auto final review at `1dd8a790bbb3095ae7c1fdcc39a8046365066af2`, counts 0 Critical/High/Medium/Low. The returned reviewer message contains one valid not-attempted reconnaissance signal; no Review Orchestration section exists. No fix or deferral added. L1/L2 from 055350Z are independently confirmed fixed. Coverage inherits the prior review's production correctness and integration findings; reviewer reran 28/28 helper tests under Node 26.11.1, and reused our clean Node 22.23.3 ordered evidence. Reviewer-reported local dd93fcae5 excludes later tracking-only dispatch commit 2868b4b; source is identical.
 
-Root accepts p02 again with Base a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d preserved and Head1dd8a790bbb3095ae7c1fdcc39a8046365066af2. Remote M1 is resolved by p02-t09; p02-t10 closes test/reporting gaps. Current verification: review-nits/committed-checks.json, 15 exits0, and resume-fix/committed-checks.json forced production run. Recovery remains p01 2/10,p02 0/10,pending null. Both Outcomes are evidenced. The separately configured gate remains stale and will run as generation4; summary/document/PR closeout and new-head Linux CI remain required. No merge or fresh gate pass claimed here.
+Root accepts p02 again with Base a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d preserved and Head 1dd8a790bbb3095ae7c1fdcc39a8046365066af2. Remote M1 is resolved by p02-t09; p02-t10 closes test/reporting gaps. Current verification: review-nits/committed-checks.json, 15 exits0, and resume-fix/committed-checks.json forced production run. Recovery remains p01 2/10,p02 0/10,pending null. Both Outcomes are evidenced. The separately configured gate remains stale and will run as generation4; summary/document/PR closeout and new-head Linux CI remain required. No merge or fresh gate pass claimed here.
 
 ### Review received: final-review-2026-11-11T055350Z.md
 
@@ -612,7 +626,7 @@ Both capability areas are adequately covered. Parse-only invocation, exit codes,
 - L1 (Low): the review table's trailing paragraph split its last rows from the header → fixed at receive (bookkeeping): move that paragraph below the contiguous event rows. Row order, provenance and historical statuses remain unchanged; only this gate event advances to passed. Task Scope: Negligible.
   **Design drift / artifact alignment notes:** none. No deferred Mediums, Low deferrals, new requirements or fix tasks.
   **Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/final-review-2026-11-11T042616Z.md). Raw gate verdict review_completed_gate_passed and all counts preserved. No review cycle, remediation attempt or re-gate consumed. Retired run 3f079d62-6a7a-45c3-b2d4-529b72754c13 remains unreceived and its artifact/row untouched.
-  **Evidence:** exact gate event resolved with matching artifact, scope, type, full reviewed head, run ID and current received row. Reviewer reported 67/67 completion/helper tests including bash/zsh, skill bumps and journal validation; reused the unchanged 15-check candidate record. Gate probes ran Node26.11.1, full candidate proof Node22.23.3; no live GitHub proof. One reconnaissance not-attempted signal, no Review Orchestration section.
+  **Evidence:** exact gate event resolved with matching artifact, scope, type, full reviewed head, run ID and current received row. Reviewer reported 67/67 completion/helper tests including bash/zsh, skill bumps and journal validation; reused the unchanged 15-check candidate record. Gate probes ran Node 26.11.1, full candidate proof Node 22.23.3; no live GitHub proof. One reconnaissance not-attempted signal, no Review Orchestration section.
   **Next:** reconcile the durable archive/ledger/commit receipt and persist allowed/fresh before the configured summary/document/PR sequence.
 
 **Gate:** 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26 · **Scope:** final · **Outcome:** raw review_completed_gate_passed; 0C/0H/0M/1L, bookkeeping-only fix applied at receive; 0/2 remediation attempts, no rerun; durable receipt d8588c99dc2cbf05b8d1c960be4f6d475e24b6fd reconciled and carrier allowed/passed with unchanged effective delta.
@@ -625,7 +639,7 @@ Both capability areas are adequately covered. Parse-only invocation, exit codes,
 **Findings:** Critical 0 · High 0 · Medium 0 · Low 0
 **Finding classes:** none. No deferred Mediums or Low dispositions; no design drift or fix tasks.
 **Outcome:** passed. The reviewer's final confirmation contains exactly one Reconnaissance not-attempted signal; artifact has no Review Orchestration section. This is the approved continuation after retirement of the incompatible gate generation; prior standard final loop ended in a clean pass. No failed fix cycle or remediation attempt consumed.
-**Evidence:** reviewer independently passed 21 completion tests (zsh ran), CLOSED/OPEN/MERGED/DRAFT observer and companion controls, all 12 push combinations in bash/zsh, syntax checks on all 46 completion shell blocks, and three inventory locators. Reused all 15 clean-candidate checks at the reviewed head, forced 12-task zero-cache tests and earlier integrated proofs. Both retired-gate regressions are resolved; original retired artifact and row remain untouched. Node22.23.3, substituted GitHub, prose cannot prove agent obedience; no live publication claimed.
+**Evidence:** reviewer independently passed 21 completion tests (zsh ran), CLOSED/OPEN/MERGED/DRAFT observer and companion controls, all 12 push combinations in bash/zsh, syntax checks on all 46 completion shell blocks, and three inventory locators. Reused all 15 clean-candidate checks at the reviewed head, forced 12-task zero-cache tests and earlier integrated proofs. Both retired-gate regressions are resolved; original retired artifact and row remain untouched. Node 22.23.3, substituted GitHub, prose cannot prove agent obedience; no live publication claimed.
 **Next:** fresh configured exit gate using branch-local CLI0.3.50; implementation stays in progress.
 
 ### Operator-approved gate recovery — 2026-11-11
@@ -640,7 +654,7 @@ The operator answered **approve** to retiring the incompatible gate result and r
 **Reviewed head:** a689912f74742a654e936b7fe1ba19f24c58c519; requested scope final, ordered accepted phases p01/p02, anchor base 7e5b5bd32c5443dae06947c2fbf99fc3d02aaac9.
 **Findings:** 0 Critical, 0 High, 0 Medium, 0 Low. Exact reconnaissance confirmation not-attempted; no Review Orchestration section. No finding classes or Low dispositions needed; no deferred Medium ledger entries exist.
 **Outcome:** passed. Prior L1 corrected by a8986ea0a; reviewer confirmed the one-phrase conservation diff, matching local/durable behavior and no other source drift. Earlier round-1/round-2 rows retain their historical fixes_completed status. Final pass rests on this fresh confirmation plus independently reviewed unchanged behavior, not a relabelled fixes result.
-**Evidence:** reviewer read exact docs delta, source/anchor ancestry and origin/main; reused clean 14-command verification at a689912f7, forced zero-cache behavioral evidence at 0b917cb21 and round-2 independent controls. Runtime/testing limitations remain recorded: Node22.23.3, no live GitHub mutation, skill text presence does not prove agent obedience.
+**Evidence:** reviewer read exact docs delta, source/anchor ancestry and origin/main; reused clean 14-command verification at a689912f7, forced zero-cache behavioral evidence at 0b917cb21 and round-2 independent controls. Runtime/testing limitations remain recorded: Node 22.23.3, no live GitHub mutation, skill text presence does not prove agent obedience.
 **Next:** separate configured implementation exit gate. Implementation remains in progress; no new HiLL or merge permission is required.
 
 ### Review Received: final — round 2
