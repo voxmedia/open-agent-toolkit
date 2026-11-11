@@ -463,7 +463,7 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
   **Evidence:** exact gate event resolved with matching artifact, scope, type, full reviewed head, run ID and current received row. Reviewer reported 67/67 completion/helper tests including bash/zsh, skill bumps and journal validation; reused the unchanged 15-check candidate record. Gate probes ran Node26.11.1, full candidate proof Node22.23.3; no live GitHub proof. One reconnaissance not-attempted signal, no Review Orchestration section.
   **Next:** reconcile the durable archive/ledger/commit receipt and persist allowed/fresh before the configured summary/document/PR sequence.
 
-**Gate:** 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26 · **Scope:** final · **Outcome:** raw review_completed_gate_passed; 0C/0H/0M/1L, bookkeeping-only fix applied at receive; 0/2 remediation attempts, no rerun; receipt settlement pending.
+**Gate:** 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26 · **Scope:** final · **Outcome:** raw review_completed_gate_passed; 0C/0H/0M/1L, bookkeeping-only fix applied at receive; 0/2 remediation attempts, no rerun; durable receipt d8588c99dc2cbf05b8d1c960be4f6d475e24b6fd reconciled and carrier allowed/passed with unchanged effective delta.
 
 ### Review Received: final — approved gate-correction continuation
 

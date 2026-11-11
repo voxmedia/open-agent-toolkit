@@ -175,6 +175,20 @@ oat_implement_exit_gate:
   failure: null
   updated_at: 2026-11-11T04:29:18.866Z
   decided_at: 2026-11-11T04:29:18.795039Z
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p02
+  pre_approval:
+    - summary
+    - document
+    - pr
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 ---
 
 # Project State: complete-after-merge-and-state-parse
