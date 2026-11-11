@@ -120,16 +120,16 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | final | code     | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T025843Z.md                    | 0b917cb216c3487d47e9a2cc99732ee519829022 | auto       | -                                        |
 | final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T031418Z.md                    | a689912f74742a654e936b7fe1ba19f24c58c519 | auto       | -                                        |
 | final | code     | received        | 2026-11-11 | reviews/final-review-2026-11-11T032431Z.md                             | a689912f74742a654e936b7fe1ba19f24c58c519 | gate       | claude-opus-5-5-high                     |
+| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042030Z.md                    | 09d08130659962709b68e2a8f5bcfe05f34ae725 | auto       | -                                        |
+| final | code     | passed          | 2026-11-11 | reviews/archived/final-review-2026-11-11T042616Z.md                    | 09d08130659962709b68e2a8f5bcfe05f34ae725 | gate       | claude-opus-5-5-high                     |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
-| final | code | passed | 2026-11-11 | reviews/archived/final-review-2026-11-11T042030Z.md | 09d08130659962709b68e2a8f5bcfe05f34ae725 | auto | - |
-| final | code | received | 2026-11-11 | reviews/final-review-2026-11-11T042616Z.md | 09d08130659962709b68e2a8f5bcfe05f34ae725 | gate | claude-opus-5-5-high |
 
 ## Implementation Complete
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
 - p02 accepted: live merged-PR observation and separate authorized completion bookkeeping, including wrapper/batch composition.
-- Total: 2/2 phases accepted; both Outcomes evidenced in the journal. Final review, configured exit gate and delivery remain pending.
+- Total: 2/2 phases accepted; both Outcomes evidenced in the journal. Final review and configured exit-gate review passed; gate receipt settlement and delivery remain pending.
 
 ## References
 
