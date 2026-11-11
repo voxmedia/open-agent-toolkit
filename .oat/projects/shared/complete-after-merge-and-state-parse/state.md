@@ -123,7 +123,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — both phases accepted; awaiting final re-review and configured exit gate
+Implementation — both phases accepted; final review passed; awaiting configured exit gate
 
 ## Artifacts
 
@@ -141,8 +141,8 @@ Implementation — both phases accepted; awaiting final re-review and configured
 
 ## Blockers
 
-None. All phase findings resolved; final review and exit gate remain pending. Recovery usage p01 2/10, p02 0/10, pending null.
+None. All phase findings resolved; final review passed; exit gate remains pending. Recovery usage p01 2/10, p02 0/10, pending null.
 
 ## Next Milestone
 
-Final integrated Opus 5.5 high review, configured exit gate, then summary/document/PR delivery. Merge after checks and reviews is authorized.
+Configured exit gate, then summary/document/PR delivery. Final integrated Opus review passed. Merge after checks and reviews is authorized.
