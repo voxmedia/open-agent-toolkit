@@ -114,9 +114,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T04:28:56Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 09d08130659962709b68e2a8f5bcfe05f34ae725
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
-  freshness_head: 6fd622f52d66858e957923f2013843cbdb3e23e6
+  freshness_head: d8588c99dc2cbf05b8d1c960be4f6d475e24b6fd
   freshness_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
   waivers: []
   launch_state: result_persisted
@@ -150,7 +150,7 @@ oat_implement_exit_gate:
     non-blocking findings (low=1). Run oat-project-review-receive for
     .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T042616Z.md
     to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     runId: 9a3a24f8-e4ea-47d4-ac64-67dc109e8d26
     handoff:
@@ -169,12 +169,12 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-11-11T042616Z.md
   receive_pre_head: fb65dcbd358b5fe9fd5a22fa1e8a8cbfeb29ed14
-  receive_commit: null
+  receive_commit: d8588c99dc2cbf05b8d1c960be4f6d475e24b6fd
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: 2026-11-11T04:28:15.847Z
-  decided_at: null
+  updated_at: 2026-11-11T04:29:18.866Z
+  decided_at: 2026-11-11T04:29:18.795039Z
 ---
 
 # Project State: complete-after-merge-and-state-parse
