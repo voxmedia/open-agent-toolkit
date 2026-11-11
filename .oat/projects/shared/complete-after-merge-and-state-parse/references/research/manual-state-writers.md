@@ -41,12 +41,15 @@ All 21 baseline skills contain an actual manual-write instruction. Added
 `oat-project-reconcile` and `oat-wave-execute` (including its wrapper-plan asset):
 **23 writing skills**. `oat-project-next` and `oat-project-progress` only read
 state here, but also receive version bumps because they bundle the changed
-shared gate record. **25 skill bumps**, plus the phase-implementer role bump.
+shared gate record. **26 skill bumps**, plus the phase-implementer role bump.
 No baseline candidate was removed. Counts describe skills, not write sites.
 Restrictive tool declarations gain the exact `Bash(oat project check-state:*)`
 scope. Three existing `NG` metadata-line hashes in the shared autonomy
 inventory are refreshed for those changed declarations; no prompt or policy
-is added. Its seven symlink consumers were already in the 25-skill bump set.
+is added. Its eight linking skills are in the 26-skill bump set, including
+`oat-project-autonomous/references/gate-inventory.md`, whose alias was missed
+by the first filename-only enumeration. The committed-history version gate
+identified that additional consumer; attempt 2 corrects its required bump.
 
 Enumeration searched every canonical skill/reference/asset, not just the 21
 baseline files: `rg -n 'state\.md' .agents/skills .agents/docs`, then write

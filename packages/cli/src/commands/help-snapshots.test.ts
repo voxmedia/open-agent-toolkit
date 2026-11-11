@@ -1269,6 +1269,7 @@ describe('help output snapshots', () => {
 
       Commands:
         archive [options] [project-path]             Manage archived project data
+        check-state <project-path>                   Read-only strict YAML frontmatter mapping check for state.md (no lifecycle validation)
         closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape

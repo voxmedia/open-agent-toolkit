@@ -17,8 +17,17 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: 'p01-bounded-corrections-20261110'
+        original_request_id: 'complete-state-parse-p01-20261110'
+        original_task_id: 'p01-t01'
+        original_commit: '180f4758c2e1a1d470a8a86e6252836c883846d0'
+        discovered_by: 'pnpm test (project --help snapshot); pnpm run check:skill-bumps (linked autonomous skill)'
+        dispatch_target: 'oat-phase-implementer-gpt-6-1-sol-high'
+        reservation_head: 'b2ac3aa3fa67c52a402d2d7e4f0cc425918d5a14'
+        status: 'completed'
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
