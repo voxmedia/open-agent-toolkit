@@ -3,15 +3,15 @@ oat_status: in_progress
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-10
-oat_current_task_id: p02
+oat_last_updated: 2026-11-11
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: complete-after-merge-and-state-parse
 
 **Started:** 2026-11-10
-**Last Updated:** 2026-11-10
+**Last Updated:** 2026-11-11
 
 > This journal records execution of the Project Brief in `plan.md` and is used
 > to resume interrupted sessions.
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
 
-**Total:** 1/2 phases accepted
+**Total:** 2/2 phases accepted
 
 ---
 
@@ -57,7 +57,7 @@ oat_generated: false
 
 Execution shape: one phase implementer in the existing orchestration checkout, the sole committing owner while active. No declared parallel group; slice fan-out fails the independence test because the shared check, skill references, tests, release assets and versions overlap. Tier 1 uses T3 delegation with the operator-selected GPT-6.1 Sol high; the root retains independent Opus review and phase acceptance. Recovery capacity: default 10, phase limit 10, used 0, remaining 10, pending none; source is the workflow default with no project/phase override. Remaining capacity does not authorize target changes or continuation after a terminal failure.
 
-**Current verification:** pass on clean committed candidate `3b260ccf51a395362ab7d832d22d5b780ffd0c3b`, recovery base `b2ac3aa3fa67c52a402d2d7e4f0cc425918d5a14`, dispatch base `d1df37b4ac6bbd2a8420ac3e9530ea7e626add6d`, integration `origin/main` `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Focused help/version/skill contracts passed before and immediately after commit (1,351 tests each). Required Definition of Done ran in order: check, type-check, isolated forced test, build, committed-history skill bumps, fetch and release version check, release validation, docs build, direct docs index generation and freshness diff; all exited 0. Additional lint, format and isolated skill contracts exited 0. Forced workspace tests executed with 12 cache-bypass tasks and no cache hits (CLI 9,705, docs 93, control plane 320, other packages 85; smoke 165, skills 721, scripts 7 passed). Skill-bump gate validated 27 skill/role bumps; all five public packages validated at 0.3.50. Final inventory is 86 adjacent check locations across 23 writing skills, with 26 skill bumps and one role bump; this supersedes the original task record's 25-skill count after the authorized autonomous bump.
+**Historical initial verification (superseded by root phase acceptance below):** pass on clean committed candidate `3b260ccf51a395362ab7d832d22d5b780ffd0c3b`, recovery base `b2ac3aa3fa67c52a402d2d7e4f0cc425918d5a14`, dispatch base `d1df37b4ac6bbd2a8420ac3e9530ea7e626add6d`, integration `origin/main` `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Focused help/version/skill contracts passed before and immediately after commit (1,351 tests each). Required Definition of Done ran in order: check, type-check, isolated forced test, build, committed-history skill bumps, fetch and release version check, release validation, docs build, direct docs index generation and freshness diff; all exited 0. Additional lint, format and isolated skill contracts exited 0. Forced workspace tests executed with 12 cache-bypass tasks and no cache hits (CLI 9,705, docs 93, control plane 320, other packages 85; smoke 165, skills 721, scripts 7 passed). Skill-bump gate validated 27 skill/role bumps; all five public packages validated at 0.3.50. Final inventory is 86 adjacent check locations across 23 writing skills, with 26 skill bumps and one role bump; this supersedes the original task record's 25-skill count after the authorized autonomous bump.
 
 **Verification inputs and cache:** no uncommitted inputs during postcommit verification. Node v22.23.3, pnpm 10.13.1, macOS 27.0.1 arm64; exact repository Node pin 22.23.4 unavailable locally. Existing installed dependencies, unchanged lockfile SHA-256 `425ad4fa9e0b1b2dba6185a4d4fa130fa5ed0edbcfb93c165a74e6e70a866dd6`, isolated HOME and uncontaminated TMPDIR `/private/tmp/oat-p01-attempt2-6nw1xrys`. Check and focused suites executed; type-check, lint and format executed while reusing five dependency builds each. Later build reused five results and explicit docs build reused six; actual dependency/docs builds executed during forced tests. Direct manifest freshness ran independently. Exact commands, exit codes and cache counts: `.oat/analysis/complete-state-parse-p01/attempt2/postcommit-checks.json` and `postcommit/*.log`; prevention inputs/results: `attempt2/prevention.json`.
 
@@ -167,12 +167,12 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** a3514dc6e8746557e925444478fb9c85f58340d5
+**Head:** 52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1
 
-**Combined fix verification (supersedes the initial candidate below):** all
+**Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
 containing root correction `dd394df379f25aba250e4e8d64d49bb0652ca72e` plus H1
 source commit `f74fdb8ac36875113b1a735671044c560270100d`. Fix dispatch base was
@@ -361,6 +361,12 @@ Verified clean final journal head `3b64cc9cef77e5f7fe23508d0bf4b0b5fef1fd32`, H1
 **Commit:** ebb4de39f2eba064b11b1ba3025048b2c405a31d
 **Result:** all 18 phase Git/shell probes and 43 complete-auto contracts passed on Node 22.23.3. The new same-shell batch-order probe failed with second:false when the reset was removed and passed with second:true after restoration; the newly created first follow-up remained correctly excluded. Scoped lint and diff check passed. Exact evidence: `.oat/analysis/complete-after-merge-p02/r2-low-fix/`. No new fixture framework or production helper. Combined required checks follow on a clean committed candidate; phase Head and acceptance remain pending.
 
+### Root p02 acceptance and final verification
+
+p02 accepted after independent Opus round 2 reported 0 Critical/High/Medium and 1 Low; all five round-1 findings resolved. Selected round-2 Low fixed in p02-t04 (`ebb4de39f2eba064b11b1ba3025048b2c405a31d`), with same-shell preflight-all-first regression and can-fail proof. No findings remain open or deferred. Two phase review rounds, one Critical/High fix loop; no additional phase gate selected. Phase Base preserved, Head advanced to tested `52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1`. Recovery p02 0/10 pending null; p01 2/10 unchanged. This acceptance does not claim a new clean review of the Low fix; final integrated review follows.
+
+**Authoritative final verification:** all 15 commands in `.oat/analysis/complete-after-merge-p02/r2-low-fix/ordered-checks.json` passed with the same clean committed inputs at `52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Required CI order, forced uncached workspace suite, root suites, build, committed skill bumps, fresh fetch/version check, release validation, docs build and direct manifest freshness, plus lint/format and isolated contracts passed. Runtime Node 22.23.3 (exact pin 22.23.4 unavailable), pnpm 10.13.1, Darwin arm64. Existing dependencies/lockfile unchanged; cache use and actual execution are recorded per command. External GitHub responses substituted; no live publication proof. State and journal checks pass. Later project tracking commits contain no source change.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -447,29 +453,34 @@ Document any intentional deviations from the brief. Include accepted review find
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**Implemented capabilities (delivery pending):**
 
-- [capability 1]
-
-**Behavioral changes (user-facing):**
-
-- [bullet]
+- Read-only `oat project check-state` rejects malformed YAML frontmatter after manual lifecycle state writes and leaves valid state bytes unchanged.
+- Completion observes a tracked PR live before writes, preserves the merged original, prepares or reuses a branch from its updated base, and publishes a separate bookkeeping PR under existing explicit authority.
+- Automatic completion carries per-project authority and safely sequences batch follow-ups; configuration alone grants no publication authority.
 
 **Key files / modules:**
 
-- `[path]` - [purpose]
+- `packages/cli/src/commands/project/check-state.ts` and `validation/project-state.ts`: portable strict parse boundary, preserving the existing fence grammar.
+- Canonical lifecycle skills and `references/research/manual-state-writers.md`: 88 checked locations across 24 writing skills, including promotion paths.
+- `oat-project-complete` / `oat-project-complete-auto`: live observation, branch preparation, follow-up identity and authority routing, scope/resume and batch composition.
+- README, CLI README/AGENTS and project closeout/reference docs: command and behavior guidance. Five public packages bumped together to 0.3.50, affected skills/role bumped per PR.
 
 **Verification performed:**
 
-- [tests/lint/typecheck/build/manual steps]
+- Accepted p01 and p02 evidence plus final clean candidate `52d9aeb9719a4bbbdc2e529799d1618d76c7c4c1`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
+- Packed consumer proof, historical malformed-state negative/valid controls and stop-before-commit proof; real Git branch/diff/push/resume and shipped shell composition probes with substituted gh. Batch publication-state test fails without its reset and passes with it.
+- Exact commands, runtime, cache and revision inputs are retained in phase verification records. Pinned Node 22.23.4 unavailable; Node 22.23.3 used. Prose checks establish instruction coverage, not agent obedience; live GitHub publication not claimed.
 
 **Outcomes audit:**
 
-- Outcome 1: [observed evidence (accepted phase, commit, or verification result) or the recorded deferral]
+- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/no-PR controls, scope/resume preservation and batch reuse. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t04.
+- Outcome 2 met in accepted p01: `180f4758`, `581335dc` plus the reviewed 88-location inventory and packed-consumer probe demonstrate incident BAD_INDENT rejection, valid commented-state acceptance without mutation, and stopping before commit/continuation. Evidence mapping: `references/research/manual-state-writers.md` and p01 acceptance.
 
-**Brief deltas (if any):**
+**Brief deltas:**
 
-- [what changed vs plan.md and why]
+- No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
+- Implementation remains in progress pending final independent review, configured exit gate and the configured summary/document/PR closeout sequence. Merge authority is already recorded.
 
 ## References
 

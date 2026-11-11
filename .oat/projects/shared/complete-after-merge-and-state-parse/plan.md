@@ -115,14 +115,16 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | plan  | artifact | fixes_completed | 2026-11-10 | reviews/archived/artifact-plan-review-2026-11-10T215917Z.md            | -                                        | -          | -                                        |
 | p01   | code     | fixes_completed | 2026-11-11 | reviews/archived/p01-review-2026-11-11T003543Z.md                      | 3b260ccf51a395362ab7d832d22d5b780ffd0c3b | auto       | -                                        |
 | p02   | code     | fixes_completed | 2026-11-11 | reviews/archived/p02-review-2026-11-11T012506Z.md                      | 5d5e6caef9128835562047de5212839f45b6c8e1 | auto       | -                                        |
-| p02   | code     | fixes_added     | 2026-11-11 | reviews/archived/p02-review-2026-11-11T021549Z.md                      | a3514dc6e8746557e925444478fb9c85f58340d5 | auto       | -                                        |
+| p02   | code     | fixes_completed | 2026-11-11 | reviews/archived/p02-review-2026-11-11T021549Z.md                      | a3514dc6e8746557e925444478fb9c85f58340d5 | auto       | -                                        |
 | final | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 
-Not started. Outcome evidence will be recorded here at closeout and in `implementation.md` during execution.
+- p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
+- p02 accepted: live merged-PR observation and separate authorized completion bookkeeping, including wrapper/batch composition.
+- Total: 2/2 phases accepted; both Outcomes evidenced in the journal. Final review, configured exit gate and delivery remain pending.
 
 ## References
 
