@@ -97,8 +97,10 @@ Run the repository Definition of Done in its required order, plus the mandated l
 ## Phase p02: Deliver completion bookkeeping after merge
 
 **Intent:** make completion observe the original PR live, prepare the follow-up branch from the updated base before mutation, retain truthful original-PR state, and land bookkeeping through a follow-up PR under existing authority.
-**Exit evidence:** merged-PR reproduction confirms live `merged` status, fresh-base ancestry, completion-only changes and follow-up PR routing with no merged-body sync; open-PR control retains its existing behavior; the resulting state passes p01's check; a goal-mode case proves existing authority permits the follow-up without a new per-run request while bookkeeping stays outside delivery registration and coverage; applicable scope/resume cases and full required repository gates pass; integrated review is settled.
-**Provisional:** yes
+**Exit evidence:** failed tracked-PR observation stops before completion writes; no-tracked-PR control retains the existing completion path without claiming an observed status; merged-PR reproduction confirms live `merged` status, fresh-base ancestry, completion-only changes and follow-up PR routing with no merged-body sync; open-PR control retains its existing behavior; the resulting state passes p01's check; a goal-mode case proves existing authority permits the follow-up without a new per-run request while bookkeeping stays outside delivery registration and coverage; applicable scope/resume cases and full required repository gates pass; integrated review is settled.
+**Provisional:** no
+
+**Phase-local design:** perform live observation and any merged-PR branch preparation before the first normal-path completion mutation, including Step 3.3 documentation-skip metadata and Step 3.x outputs. Derive the base from live PR/repository data; keep original identity/status separate from follow-up branch/PR identity. A safe existing follow-up is reused on resume. Preserve shared/synced/local artifact ownership and existing receipt-resume routes; confirm needed project inputs are available on the updated base or their existing retained authority before switching, and stop with recoverable diagnostics if divergent or dirty inputs cannot be preserved. Do not replay completed archive mutations to prepare a branch. Use the current completion helpers and smallest cohesive executable seam for real Git probes; no general transaction framework. Evidence includes shared/synced/local applicability, resume reuse, preserved inputs or refusal, original merged body unchanged, and the goal-mode PR_ON_COMPLETE-only exclusion. Phase-local choices and limitations are recorded in the journal.
 
 ## Parallelism
 
@@ -112,9 +114,10 @@ No parallel phase groups. The completion skill, shared instructions, and package
 | plan  | artifact | fixes_completed | 2026-11-10 | structured round 2; L1 clarified locally; receipt in implementation.md | aa04c4605e81ca88823accfca56a7cf80c4f081b | auto       | oat-reviewer-claude-claude-opus-5-5-high |
 | plan  | artifact | fixes_completed | 2026-11-10 | reviews/archived/artifact-plan-review-2026-11-10T215917Z.md            | -                                        | -          | -                                        |
 | p01   | code     | fixes_completed | 2026-11-11 | reviews/archived/p01-review-2026-11-11T003543Z.md                      | 3b260ccf51a395362ab7d832d22d5b780ffd0c3b | auto       | -                                        |
+| p02   | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 | final | code     | pending         | -          | -                                                                      | -                                        | -          | -                                        |
 
-Add p02's code review row when that phase becomes concrete. Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
+Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 

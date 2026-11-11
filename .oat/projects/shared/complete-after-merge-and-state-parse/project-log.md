@@ -23,6 +23,10 @@ p01-terminal-recovery-settlement-20261110 Validated and settled failed recovery 
 
 p01 accepted after Opus review and one bounded root review correction; 0 Critical/High, M1/L1 fixed, required checks passed at f5310385635087cfc0794e61c1415b0f11d460bc. p01-accept-20261111
 
+### 2026-11-11 · structural · oat-project-implement · p02
+
+p02 made concrete within approved brief after p01 acceptance; early observation/preparation, failed/no-PR controls and scope/resume evidence clarified. p02-concrete-20261111
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

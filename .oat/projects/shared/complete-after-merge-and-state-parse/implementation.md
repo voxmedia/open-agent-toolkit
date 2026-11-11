@@ -169,6 +169,8 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 **Status:** pending
 
+Phase-local refinement (2026-11-11): p01's shared command is available and accepted. p02 is now concrete within the approved Approach: earliest normal-path write is Step 3.3, failed live lookup stops before writes, no tracked PR keeps the existing path, merged original/follow-up identities stay separate, and existing scope/receipt-resume owners stay authoritative. Required evidence explicitly covers safe input preservation/refusal, resume reuse and the goal PR_ON_COMPLETE-only exclusion. No outcome, authority, endpoint or phase-split change. Fresh origin/main fetch at ddd67fb5541bac2959ebb64ed82f4287f4f56698 found no intervening commits in planned completion, CLI contract or closeout-doc paths.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
