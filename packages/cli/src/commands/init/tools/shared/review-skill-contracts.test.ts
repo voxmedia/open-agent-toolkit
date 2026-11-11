@@ -1455,7 +1455,7 @@ printf 'artifact-read\\n'`,
 
     expect(content).toContain('oat_pr_status');
     expect(content).toContain(
-      'If `oat_pr_status` is `open`, do not ask the Open PR question',
+      'If `OBSERVED_PR_STATUS` is `open`, do not ask the Open PR question',
     );
     expect(content).toContain(
       'If `oat_pr_url` is present, show it in the completion summary',
@@ -1476,7 +1476,7 @@ printf 'artifact-read\\n'`,
       'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
     );
     const stateReadIndex = content.indexOf(
-      'Before asking the batched questions, read `oat_pr_status`',
+      'PROJECT_PR_FIELDS=$(oat project status --project-path "$PROJECT_PATH" --shell',
     );
 
     expect(scopeIndex).toBeGreaterThanOrEqual(0);
@@ -1509,7 +1509,7 @@ printf 'artifact-read\\n'`,
       'When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt',
     );
     expect(content).toContain(
-      'Persist either `generate` or `skip` as the returned `interactive` record before continuing.',
+      'persist either `generate` or `skip` as the returned `interactive` record before continuing.',
     );
     expect(content).toContain(
       'A valid persisted `oat_project_recap` decision prevents another prompt.',

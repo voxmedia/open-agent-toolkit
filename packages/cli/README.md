@@ -85,6 +85,13 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat project delivery waive --project <path> --delivery <dNN> --reason <text> [--by <name>]` - operator-only head-bound freshness waiver for a registered goal delivery that is stale only through head movement; restores its passed record in `state.md` (refuses under `OAT_AUTONOMOUS=1`, with a stable `code` under `--json`)
 - `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`; refuses the same incomplete closeout `closeout-check` reports; on success for a goal project it lists the terminal deliveries' freshness waivers (`waivers` under `--json`)
 
+The `oat-project-complete` skill observes a tracked PR live before writing. For
+an already merged original it prepares a fresh branch from the updated PR base
+and routes bookkeeping through a separate follow-up under existing explicit
+authority, preserving the original URL/status/body. Unsafe local inputs stop
+for recovery; existing archive receipt and shared/synced/local owners remain
+authoritative. The `complete-state` command still owns lifecycle completion.
+
 `oat project delivery check --project <path> --subject mNN --recovery --json` checks the matching committed phase-only `oat_goal_recovery` scope. The record must have `delivery_id: null` and a nonempty, unique, canonical phase set in plan order, owned by the milestone and accepted. Commit the recovery record before checking; unrelated local state edits are allowed. Ordinary milestone checks retain full milestone scope; registered delivery recoveries use the ordinary `--subject dNN` check.
 
 Delivery re-review after an observed member-base change binds a new, delivery-owned timestamped review to the actual observed bases and heads. Keep the registered member bases and first endpoint attainment unchanged; an old or sibling review cannot authorize rebinding. Git evidence reads allow up to 64 MiB per output stream and fail closed if output exceeds that bound.

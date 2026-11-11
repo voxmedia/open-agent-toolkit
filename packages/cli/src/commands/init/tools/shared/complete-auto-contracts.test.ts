@@ -1042,7 +1042,7 @@ describe('the companion never creates a PR', () => {
         '**If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question.',
       ),
       trackedOpenSkips: flat.includes(
-        'If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"`',
+        'If `OBSERVED_PR_STATUS` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"`',
       ),
       createGatedOnShouldOpen:
         stepEleven.includes('**Skip if `SHOULD_OPEN_PR` is false.**') &&

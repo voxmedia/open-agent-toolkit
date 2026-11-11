@@ -620,15 +620,29 @@ archive runs `oat project archive`, including an S3 upload when
 In a goal project whose `pr` step is satisfied by delivery coverage, the skill
 creates no PR, even with `workflow.createPrOnComplete: true`, and reports
 `PR on complete: satisfied by goal delivery coverage`. It opens a separate
-bookkeeping PR for the completion commits only when you ask for one in that
-run, and never counts it as a goal delivery.
+bookkeeping PR for the completion commits under existing explicit authority;
+it asks for a decision only when that authority is missing. The create-PR
+preference alone does not authorize goal bookkeeping. That PR never enters
+`oat_deliveries`, counts toward delivery coverage, or replaces the projected
+original delivery PR.
 
 **Example scenario:** The export project has passed final verification and its
 stored closeout sequence, but the PR is still open. Complete finalizes lifecycle
 state and, if selected, archives the durable artifacts and updates the existing
 PR body to use valid archived references. Choose this skill instead of another
 PR invocation because publication already exists and the remaining work is
-lifecycle finalization. An open PR is not a completion blocker.
+lifecycle finalization. An open PR is not a completion blocker. Before the first normal-path write,
+completion observes a tracked PR live. Failed observation stops without writing;
+no tracked URL keeps the ordinary path without claiming an observed status. If
+the original has merged, completion fetches its actual base and prepares a
+fresh bookkeeping branch before docs-skip metadata, recap intent persistence,
+summary or lifecycle changes. It retains the original merged URL/status and
+never edits that merged PR body. Bookkeeping is delivered through a separate
+follow-up PR under existing task authority; a valid prepared branch and open
+follow-up are reused on resume. Dirty or divergent inputs that cannot be
+preserved safely stop with recovery guidance. Shared inputs must exist on the
+updated base; synced and local artifacts keep their retained owners. Existing
+archive-receipt resume routes do not replay completed mutations.
 
 **Expected output:** The skill reports completed lifecycle state, bookkeeping
 commit and push results, recap outcome, any archive location, and the tracked
@@ -649,8 +663,9 @@ append, roll-up, ledger graduation, seal, archive or lifecycle change happens.
 An authorized override is written as one line under
 `## Deviations from Plan / Design` (idempotent on code, scope and decision id),
 never by an autonomous run, and never bypasses the closeout invariant. Before
-archive, completion records `oat_pr_status_observed_at` beside
-`oat_pr_status`. When a shared or
+archive, completion records the live original `oat_pr_status` and its actual
+lookup time in `oat_pr_status_observed_at`; it claims neither when no URL was
+tracked. When a shared or
 synced project will be archived, the active project stays set until the
 archive succeeds, so an archive or S3 failure leaves the completion
 resumable. Every other completion clears the active project right away. Synced

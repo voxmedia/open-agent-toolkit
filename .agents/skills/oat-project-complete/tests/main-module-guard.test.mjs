@@ -33,6 +33,7 @@ const scripts = [
   'finalize-synced-archive.mjs',
   'parse-completion-retry-fields.mjs',
   'parse-synced-archive-resume-fields.mjs',
+  'prepare-completion-branch.mjs',
   'recover-completion-receipts.mjs',
   'resolve-completion-retry.mjs',
   'resolve-synced-archive-entry.mjs',
