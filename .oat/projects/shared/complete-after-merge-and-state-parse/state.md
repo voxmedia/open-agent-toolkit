@@ -113,6 +113,51 @@ oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-11-11T03:11:54Z'
 oat_generated: false
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
+  resolved_command:
+    oat --json gate review --project "$PROJECT_PATH" --review-type
+    code --review-scope final --exit-nonzero-on important "Use the
+    oat-project-review-provide skill to review the current project. Use project
+    state to determine the most appropriate review scope. If the project is
+    complete, provide a final independent code review of the entire project.
+    Return blocking findings clearly, or say no blocking findings."
+  resolved_description: Semantic cross-family final implementation review before
+    oat-project-implement exits.
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: a689912f74742a654e936b7fe1ba19f24c58c519
+  implementation_base_ref: origin/main
+  implementation_fingerprint: sha256:effective-delta-v2:2e7b8f4d688a2ed95dd10b8455ea192b047b189eca416334ba0fb7dc2db8e1f2
+  freshness_head: a689912f74742a654e936b7fe1ba19f24c58c519
+  freshness_fingerprint: sha256:effective-delta-v2:2e7b8f4d688a2ed95dd10b8455ea192b047b189eca416334ba0fb7dc2db8e1f2
+  waivers: []
+  launch_state: intent_persisted
+  launch_attempt_id: 5822495a-3e8a-4372-afbb-b81d6c29bae8
+  launch_started_at: 2026-11-11T03:17:50.986444Z
+  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/attempt-1-result.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: 2026-11-11T03:17:51.245Z
+  decided_at: null
 ---
 
 # Project State: complete-after-merge-and-state-parse
