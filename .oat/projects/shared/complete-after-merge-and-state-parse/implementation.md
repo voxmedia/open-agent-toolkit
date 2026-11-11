@@ -525,7 +525,7 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Proof:** conservation diff and required checks; no new behavior, test or fixture.
 **Commit:** f916330bde65ba7ad1024843ca4ac2ce88f3939d
 
-**Verification:** conservation diff limits the wording to Step 8.6 and preserves the earlier receipt-recovery preconditions. All 11 CI-order checks exited 0 on clean f916330bde65ba7ad1024843ca4ac2ce88f3939d, base ddd67fb5541bac2959ebb64ed82f4287f4f56698; exact commands/cache/runtime/dependency inputs in `.oat/analysis/complete-state-parse-closeout/stale-head-doc/committed-checks.json`. No tests/fixtures or executable source changed; helper29, isolatedcontracts1272, lint/format and independent red/green/can-fail evidence at 417ef440 remain valid and are reused. Node22.23.3/pnpm10.13.1/Darwinarm64; exact pin22.23.4 unavailable. Independent docs confirmation and configured gate pending; no acceptance claim.
+**Verification:** conservation diff limits the wording to Step 8.6 and preserves the earlier receipt-recovery preconditions. All 11 CI-order checks exited 0 on clean f916330bde65ba7ad1024843ca4ac2ce88f3939d, base ddd67fb5541bac2959ebb64ed82f4287f4f56698; exact commands/cache/runtime/dependency inputs in `.oat/analysis/complete-state-parse-closeout/stale-head-doc/committed-checks.json`. No tests/fixtures or executable source changed; helper 29, isolated contracts 1272, lint/format and independent red/green/can-fail evidence at 417ef440 remain valid and are reused. Node 22.23.3 / pnpm 10.13.1 / Darwin arm64; exact pin 22.23.4 unavailable. Independent docs confirmation and configured gate pending; no acceptance claim.
 
 ## Orchestration Runs
 
@@ -571,15 +571,31 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 
 ## Reviews and Gates
 
+### Review Received: final — configured gate generation 6
+
+**Artifact:** reviews/archived/final-review-2026-11-11T072352Z.md
+**Gate run:** daa8c9de-12be-4648-8980-c53395268196; configured Claude Opus 5.5 High.
+**Reviewed head:** f916330bde65ba7ad1024843ca4ac2ce88f3939d; invocation gate, final code; exact event resolved with matching head, run, scope and type.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+**Finding classes:** L1 bookkeeping · L2 bookkeeping
+
+- L1 (Low): detached Reviews rows and missing journal spaces → fixed at receive (bookkeeping): rejoined the ledger and restored spacing without changing reviewed heads, acceptance markers or historical outcomes.
+- L2 (Low): summary predates p02-t12/t13 → fixed at receive (bookkeeping): refreshed accepted outcomes, tested revisions, carried-receipt limits and this gate result from existing evidence.
+
+**Deferred Medium ledger:** empty; no unresolved prior deferrals or new requirements.
+**Outcome:** passed — bookkeeping-only fixes applied at receive (reviews/archived/final-review-2026-11-11T072352Z.md).
+**Gate terminal:** daa8c9de-12be-4648-8980-c53395268196 — raw outcome review_completed_gate_passed, envelope ok, exit 0; Critical 0 · High 0 · Medium 0 · Low 2. Gate satisfied by bookkeeping-only fixes; no attempt used, no task or reviewer dispatched, no review cycle counted.
+**Verification:** raw artifact preserved byte-for-byte during archival. Resolver corroborates exact event; gate reproduced old Step 8.6 failure and valid delivered controls. Existing clean-source verification at 417ef440/f916330b remains applicable; this receive changes project tracking only. The ephemeral launch marker is no longer present after gate completion; the persisted result envelope and artifact independently match run, project and invocation. No Linux CI on the new source is claimed.
+
 ### Final confirmation received and p02 reaccepted — carried-receipt correction
 
 **Artifact:** reviews/archived/final-review-2026-11-11T071801Z.md
 **Reviewed head:** f916330bde65ba7ad1024843ca4ac2ce88f3939d; invocation auto, final p01/p02; inherited coverage through reviews/archived/final-review-2026-11-11T070920Z.md at 417ef440.
 **Findings:** 0 critical, 0 high, 0 medium, 0 low. No deferred Medium findings or unresolved Low dispositions remain. Prior L1 corrected; remote stale-HEAD M1 settled by reviewed p02-t12.
-**Reconnaissance:** not-attempted, consumed once from reviewer report; no orchestration section or recon log. Conservation diff verified; no executable/fixture drift after 417ef440. All11 required checks at clean f916330b pass, with cache reuse disclosed; earlier executable proof remains relevant.
+**Reconnaissance:** not-attempted, consumed once from reviewer report; no orchestration section or recon log. Conservation diff verified; no executable/fixture drift after 417ef440. All 11 required checks at clean f916330b pass, with cache reuse disclosed; earlier executable proof remains relevant.
 **Boundary check:** an early completion-journal check correctly refused `state-status-disagrees` while the exit gate is pending and state remains `in_progress`; no commit followed that refusal. The applicable review-boundary check is used before gate launch; completion validation remains for post-gate closeout.
 
-**Outcome:** final review passed, both phases accepted, task pointer null. Recovery p01 2/10, p02 1/10, pending null. Configured gate generation5 remains stale; fresh generation6 is next, followed by summary/document/PR refresh and updated-head CI. Merge authority remains recorded; visual recap skip remains recorded.
+**Outcome:** final review passed, both phases accepted, task pointer null. Recovery p01 2/10, p02 1/10, pending null. Configured gate generation 5 remains stale; fresh generation 6 is next, followed by summary/document/PR refresh and updated-head CI. Merge authority remains recorded; visual recap skip remains recorded.
 
 ### Review Received: final — stale-HEAD correction
 
@@ -846,7 +862,7 @@ Document any intentional deviations from the brief. Include accepted review find
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review and PR self-review coverage pass on the accepted source. Gate generation 5 is stale after the carried-receipt correction; generation 6 and configured summary/document/PR refresh remain pending. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
+- Final independent review and PR self-review coverage pass on the accepted source. Gate generation 6 passed and both bookkeeping Low findings were fixed at receive; configured summary/document/PR refresh continues. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
 
 ## References
 
