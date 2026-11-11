@@ -114,7 +114,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T04:23:11Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -131,25 +131,21 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: a689912f74742a654e936b7fe1ba19f24c58c519
+  reviewed_head: 6fd622f52d66858e957923f2013843cbdb3e23e6
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v2:2e7b8f4d688a2ed95dd10b8455ea192b047b189eca416334ba0fb7dc2db8e1f2
-  freshness_head: a689912f74742a654e936b7fe1ba19f24c58c519
-  freshness_fingerprint: sha256:effective-delta-v2:2e7b8f4d688a2ed95dd10b8455ea192b047b189eca416334ba0fb7dc2db8e1f2
+  implementation_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
+  freshness_head: 6fd622f52d66858e957923f2013843cbdb3e23e6
+  freshness_fingerprint: sha256:effective-delta-v2:a3c508e96e02a49e18bafe282fc5799e32bc6dd8cf200ea8c9b0df4287565d3b
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: 5822495a-3e8a-4372-afbb-b81d6c29bae8
-  launch_started_at: 2026-11-11T03:17:50.986444Z
-  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/attempt-1-result.json
-  gate_run_marker: /private/tmp/oat-complete-state-parse-gate-5822495a-3e8a-4372-afbb-b81d6c29bae8/3f079d62-6a7a-45c3-b2d4-529b72754c13.json
-  gate_run_id: 3f079d62-6a7a-45c3-b2d4-529b72754c13
-  envelope_status: ok
-  artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T032431Z.md
-  handoff:
-    Gate passed at the high threshold, but the final review still contains
-    non-blocking findings (medium=1, low=1). Run oat-project-review-receive for
-    .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T032431Z.md
-    to disposition them before marking the final review row passed.
+  launch_state: intent_persisted
+  launch_attempt_id: a94b427b-2691-4630-9a12-7fe92db85f72
+  launch_started_at: 2026-11-11T04:23:42.616996Z
+  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-2/result.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -159,18 +155,9 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure:
-    code: operator_retired_incompatible_gate
-    message: Operator approved retiring completed run
-      3f079d62-6a7a-45c3-b2d4-529b72754c13 after installed oat 0.3.46 omitted
-      reviewedHead; original receipt preserved and never received. New
-      substantive corrections bfe2d93de require verified final review and a
-      fresh branch-CLI gate generation.
-    retired_run_id: 3f079d62-6a7a-45c3-b2d4-529b72754c13
-    retired_by: operator approval in this session
-    replacement_cli: branch-local 0.3.50
-  updated_at: 2026-11-11T04:09:03.451Z
-  decided_at: 2026-11-11T03:28:20.212334Z
+  failure: null
+  updated_at: 2026-11-11T04:23:42.688Z
+  decided_at: null
 ---
 
 # Project State: complete-after-merge-and-state-parse
