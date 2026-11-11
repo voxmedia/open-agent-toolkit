@@ -1,10 +1,10 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: null
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 1dd8a790bbb3095ae7c1fdcc39a8046365066af2
@@ -477,6 +477,15 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 **Verification:** all 15 ordered checks/extras exited 0 on clean `1dd8a790bbb3095ae7c1fdcc39a8046365066af2`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Direct helper tests 28/28; full pnpm test passed (root smoke 165, skill 753, scripts 7), isolated skill contracts passed. Runtime Node22.23.3, pnpm10.13.1, Darwin arm64; exact22.23.4 unavailable. Cache flags and exact inputs/results are in `.oat/analysis/complete-state-parse-closeout/review-nits/committed-checks.json`. Prior forced run at128dd516 remains recorded; no new forced-run claim. Divergent guard neutralization failed for its intended refusal assertion, helper restored byte-for-byte. Production helper unchanged; only test case and Step12 prose changed. Independent confirmation and configured gate remain pending; no phase acceptance.
 
+### Task p02-t11: Preserve delivered recap links on terminal resume
+
+**Status:** in_progress
+**Executor:** inline:gate4-recap-link-clarification
+**Intent:** settle gate4 L1 by explicitly skipping recap-link rewrites after the delivered receipt check.
+**Files:** `.agents/skills/oat-project-complete/SKILL.md`, Step 8.5 only.
+**Proof:** one bounded instruction clarification; required ordered checks and independent final review for the changed source.
+**Commit:** pending
+
 ## Orchestration Runs
 
 Root-inline phase: p02, p02-t10 only; small test/prose review corrections handled by root GPT-6 Astra high under host instruction to fix small review findings inline. The substantive implementation remains GPT-6.1 Sol high; independent Opus review remains required.
@@ -512,6 +521,19 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: final — gate4 recap-link clarification
+
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-11T061345Z.md
+**Reviewed head:** 1dd8a790bbb3095ae7c1fdcc39a8046365066af2
+**Gate run:** 830e5bf5-72c7-48e1-9cfd-1313aaa51b0d · target claude-opus-5-5-high
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+**Finding classes:** L1 accepted-requirement (Brief Outcome 1 preserves merged body; KU2 and Constraints preserve archive durability and receipt-resume contracts).
+**Disposition:** L1 address now as p02-t11: Step 8.5 must skip summary-export and PR-body recap-link rewrites when COMPLETION_ARCHIVE_DELIVERED=true. Otherwise it can dirty an export already verified on base, with no later push. Scope Negligible; no new behavior framework or requirement. Root handles this small source-prose correction inline per host instruction; substantive implementation remains Sol High.
+**Outcome:** fixes_added. Raw gate passed its threshold; the skill-source correction requires a fresh evidence basis under implement exit-gate freshness. No remediation attempt used for this passing gate. Deferred Medium ledger empty; no Low deferral or waiver.
+**Evidence:** independent gate reran 28/28 completion probes and neutralized the pending-path refusal, which broke the missed-merge and changed-export controls for their intended reason. Helper restored byte-for-byte. Exact event resolved by CLI; retirement of gate032431Z remains unchanged.
+
+**Gate:** implement-exit · **Scope:** final · **Outcome:** raw passed, C0 H0 M0 L1; run830e5bf5-72c7-48e1-9cfd-1313aaa51b0d; L1 converted to p02-t11; source freshness pending; zero attempts used.
 
 ### Final confirmation received and p02 reaccepted — 2026-11-11
 
