@@ -134,15 +134,15 @@ No parallel phase groups. The completion skill, shared instructions, and package
 
 | final | code | fixes_completed | 2026-11-11 | reviews/archived/final-review-2026-11-11T070920Z.md | 417ef4401e743773bd8dfca75f02157e375357c4 | auto | - |
 
-| final | code | pending | 2026-11-11 | - | - | auto | - |
+| final | code | passed | 2026-11-11 | reviews/archived/final-review-2026-11-11T071801Z.md | f916330bde65ba7ad1024843ca4ac2ce88f3939d | auto | - |
 
 Preserve existing event rows. Future artifact rows use a review path or `-` in Artifact and `-` in the three code-only metadata columns. The gate passed its threshold; its three Low notes are dispositioned in the journal, without claiming a clean re-review.
 
 ## Implementation Complete
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
-- p02 reopened for p02-t12: stale-HEAD delivered archive resume.
-- Total: 1/2 phases accepted. Prior gate generation 5 is stale for the correction; independent review, fresh configured gate and updated-head CI remain required.
+- p02 accepted: merged-PR bookkeeping, safe receipt-resume handling, and carried-receipt link rendering are verified and independently reviewed.
+- Total: 2/2 phases accepted. Final confirmation passed at f916330b; a fresh configured exit gate, closeout refresh and updated-head CI precede the authorized merge.
 
 ## References
 

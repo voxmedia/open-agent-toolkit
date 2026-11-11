@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
 
-**Total:** 1/2 phases accepted
+**Total:** 2/2 phases accepted
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** f916330bde65ba7ad1024843ca4ac2ce88f3939d
@@ -529,7 +529,7 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 ## Orchestration Runs
 
-- run/v1 · request=complete-after-merge-stale-head-doc-confirm-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-stale-head-doc-confirm-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=complete-after-merge-stale-head-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -570,6 +570,16 @@ Root-inline phase: p02, p02-t10 only; small test/prose review corrections handle
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Final confirmation received and p02 reaccepted — carried-receipt correction
+
+**Artifact:** reviews/archived/final-review-2026-11-11T071801Z.md
+**Reviewed head:** f916330bde65ba7ad1024843ca4ac2ce88f3939d; invocation auto, final p01/p02; inherited coverage through reviews/archived/final-review-2026-11-11T070920Z.md at 417ef440.
+**Findings:** 0 critical, 0 high, 0 medium, 0 low. No deferred Medium findings or unresolved Low dispositions remain. Prior L1 corrected; remote stale-HEAD M1 settled by reviewed p02-t12.
+**Reconnaissance:** not-attempted, consumed once from reviewer report; no orchestration section or recon log. Conservation diff verified; no executable/fixture drift after 417ef440. All11 required checks at clean f916330b pass, with cache reuse disclosed; earlier executable proof remains relevant.
+**Boundary check:** an early completion-journal check correctly refused `state-status-disagrees` while the exit gate is pending and state remains `in_progress`; no commit followed that refusal. The applicable review-boundary check is used before gate launch; completion validation remains for post-gate closeout.
+
+**Outcome:** final review passed, both phases accepted, task pointer null. Recovery p01 2/10, p02 1/10, pending null. Configured gate generation5 remains stale; fresh generation6 is next, followed by summary/document/PR refresh and updated-head CI. Merge authority remains recorded; visual recap skip remains recorded.
 
 ### Review Received: final — stale-HEAD correction
 
@@ -812,7 +822,7 @@ Document any intentional deviations from the brief. Include accepted review find
 
 - Read-only `oat project check-state` rejects malformed YAML frontmatter after manual lifecycle state writes and leaves valid state bytes unchanged.
 - Completion observes a tracked PR live before writes, preserves the merged original, prepares or reuses a branch from its updated base, and publishes a separate bookkeeping PR under existing explicit authority.
-- Terminal synced archive receipts created before a later merge resume without a push or recap/body rewrite when their exact results are already on base; pending bookkeeping or divergent local inputs refuse and preserve recovery state.
+- Terminal synced archive receipts created before a later merge resume without a push or recap/body/link rewrite when their exact results are already on base; pending bookkeeping or divergent local inputs refuse and preserve recovery state.
 - Automatic completion carries per-project authority and safely sequences batch follow-ups; configuration alone grants no publication authority.
 
 **Key files / modules:**
@@ -824,19 +834,19 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **Verification performed:**
 
-- Accepted p01 and p02 evidence plus current clean candidate `703da345153aa455a7dfed2c70107e34eefb821e`: required ordered checks, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed. Production candidate 128dd516 also has a forced zero-cache workspace run; later source changes are test/prose only and their cache reuse is recorded.
+- Accepted p01 and p02 evidence plus current executable candidate `417ef4401e743773bd8dfca75f02157e375357c4` and docs candidate `f916330bde65ba7ad1024843ca4ac2ce88f3939d`: required ordered checks, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed. Production candidate 128dd516 also has a forced zero-cache workspace run; later source changes are test/prose only and their cache reuse is recorded.
 - Packed consumer proof, historical malformed-state negative/valid controls and stop-before-commit proof; real Git branch/diff/push/resume and shipped shell composition probes with substituted gh. Batch publication-state test fails without its reset and passes with it.
 - Exact commands, runtime, cache and revision inputs are retained in phase verification records. Pinned Node 22.23.4 unavailable; Node 22.23.3 used. Prose checks establish instruction coverage, not agent obedience; live GitHub publication not claimed.
 
 **Outcomes audit:**
 
-- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/closed/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Merged-later receipt resume and recap-link preservation are proven by p02-t09–t11, 28/28 probes and can-fail controls. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t11.
+- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/closed/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Merged-later receipt resume and recap-link preservation are proven by p02-t09–t13, 29/29 probes and can-fail controls. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t13.
 - Outcome 2 met in accepted p01: `180f4758`, `581335dc` plus the reviewed 88-location inventory and packed-consumer probe demonstrate incident BAD_INDENT rejection, valid commented-state acceptance without mutation, and stopping before commit/continuation. Evidence mapping: `references/research/manual-state-writers.md` and p01 acceptance.
 
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review, PR self-review confirmation, and refreshed branch-CLI gate passed. The source is accepted, gate generation 5 is allowed, and configured summary/document/PR closeout is complete. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
+- Final independent review and PR self-review coverage pass on the accepted source. Gate generation 5 is stale after the carried-receipt correction; generation 6 and configured summary/document/PR refresh remain pending. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
 
 ## References
 
