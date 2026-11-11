@@ -10,6 +10,8 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261111-check-manual-lifecycle-state   | 2026-11-11 | accepted   | Check manual lifecycle state parsing                                                                   | -       |
+| DR-261111-reuse-authority-for-merged     | 2026-11-11 | accepted   | Reuse authority for merged completion                                                                  | -       |
 | DR-261108-finding-classes-recorded-at    | 2026-11-08 | accepted   | Finding classes recorded at receive                                                                    | -       |
 | DR-261108-goal-exit-gate-resolves-final  | 2026-11-08 | accepted   | Goal exit gate resolves final to the milestone                                                         | -       |
 | DR-261106-read-side-supersession         | 2026-11-06 | accepted   | Read-side supersession of received review rows                                                         | -       |
