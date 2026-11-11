@@ -93,7 +93,7 @@ for recovery; existing archive receipt and shared/synced/local owners remain
 authoritative. If a terminal synced archive completed before the original merged,
 resume verifies its exact record retirement and exports on the updated base,
 including squash merges. Already-delivered bookkeeping needs no branch push or
-PR; pending delivery stops with the active pointer and receipt retained for
+PR and skips PR-link rendering against the local checkout; pending delivery stops with the active pointer and receipt retained for
 recovery. Local-only projects retain their branch and live PR status without
 follow-up authority or publication. The `complete-state` command still owns lifecycle completion.
 

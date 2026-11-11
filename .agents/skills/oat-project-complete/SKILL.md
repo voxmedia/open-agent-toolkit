@@ -1556,7 +1556,11 @@ make pinned project links conditional on a recap export.
 #### Step 8.6: Render Final Synced Project Links
 
 Run this for every synced completion after the final project ref or archive SHA
-is known. It is required even when no project recap was selected and
+is known, except when `COMPLETION_ARCHIVE_DELIVERED="true"`. That receipt has
+already proved the exports on the fetched base and publishes no PR body: skip
+this entire step, including local export checks and link rendering. The current
+checkout may safely be an older ancestor without those exports. Other synced
+completions require this step even when no project recap was selected and
 `summaryExportFile` is null.
 
 Render into the PR body this run publishes. For archive completion that is the
@@ -1567,16 +1571,18 @@ synced completion it is the active PR-description artifact. Render the
 canonical pinned block:
 
 ```bash
-FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
-if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
-  test -f "$SUMMARY_EXPORT_FILE" || exit 1
-  git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
-  git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
-  SUMMARY_EXPORT_RELATIVE=$(git ls-files --full-name -- "$SUMMARY_EXPORT_FILE") || exit 1
-  [[ -n "$SUMMARY_EXPORT_RELATIVE" ]] || exit 1
-  FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")
+if [[ "${COMPLETION_ARCHIVE_DELIVERED:-false}" != "true" ]]; then
+  FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
+  if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
+    test -f "$SUMMARY_EXPORT_FILE" || exit 1
+    git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
+    git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
+    SUMMARY_EXPORT_RELATIVE=$(git ls-files --full-name -- "$SUMMARY_EXPORT_FILE") || exit 1
+    [[ -n "$SUMMARY_EXPORT_RELATIVE" ]] || exit 1
+    FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")
+  fi
+  FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
 fi
-FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
 ```
 
 Insert `FINAL_PROJECT_LINKS` when the body has no

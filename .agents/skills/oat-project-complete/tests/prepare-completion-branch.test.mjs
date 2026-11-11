@@ -543,6 +543,7 @@ test('synced retained owner and bytes survive parent fresh-base preparation', ()
 // detect an unnecessary original-branch push or an early pointer clear.
 for (const outcome of [
   'delivered',
+  'stale-base',
   'missed-merge',
   'changed-export',
   'divergent',
@@ -618,6 +619,14 @@ for (const outcome of [
       const mergedHead = outcome === 'missed-merge' ? beforeArchive : lifecycle;
       if (outcome !== 'missed-merge') f.git('push');
       f.git('switch', 'release');
+      if (outcome === 'stale-base') {
+        // Model a clean older base with normal local-runtime ignores, before
+        // the project and its archive exports reached base.
+        f.git('checkout', 'feature', '--', '.gitignore', '.oat/config.json');
+        f.git('rm', `${f.projectRelative}.json`);
+        f.git('commit', '-m', 'Base runtime configuration before archive');
+        f.git('branch', 'stale-base');
+      }
       f.git('merge', '--squash', mergedHead);
       f.git('commit', '-m', 'Merge original after archive interruption');
       if (outcome === 'changed-export') {
@@ -629,13 +638,17 @@ for (const outcome of [
         f.git('commit', '-m', 'Change archive export on base');
       }
       f.git('push');
+      const deliveredBase = f.git('rev-parse', 'HEAD');
       f.git('switch', 'feature');
       if (outcome === 'divergent') {
         writeFileSync(join(f.repo, 'local-work.txt'), 'Unmerged local work\n');
         f.git('add', 'local-work.txt');
         f.git('commit', '-m', 'Preserve work after archive');
       }
-      const resumeHead = f.git('rev-parse', 'HEAD');
+      const resumeHead = f.git(
+        'rev-parse',
+        outcome === 'stale-base' ? 'stale-base' : 'HEAD',
+      );
       // A squash-delivered receipt deliberately is not an ancestor of base.
       assert.equal(
         spawnSync(
@@ -684,6 +697,9 @@ for (const outcome of [
         skill.split('### Step 1.75:')[1].split('### Step 2:')[0],
         1,
       );
+      const links = block(
+        skill.split('### Step 8.6:')[1].split('### Step 9:')[0],
+      );
       const commit = block(
         skill.split('### Step 10:')[1].split('### Step 11:')[0],
       );
@@ -706,7 +722,14 @@ for (const outcome of [
           '-c',
           [
             entry,
+            // Resume a carried real terminal receipt after returning to an older
+            // base checkout; no archive producer is mocked or replayed there.
+            outcome === 'stale-base'
+              ? 'git switch stale-base && test ! -f "$SUMMARY_EXPORT_FILE" || exit 1'
+              : ':',
             resume,
+            'printf "DELIVERY_ACCEPTED:%s\\n" "$COMPLETION_ARCHIVE_DELIVERED"',
+            links,
             commit,
             push,
             `if [[ "$SHOULD_OPEN_PR" == true ]]; then\n${publish}\nfi`,
@@ -723,10 +746,33 @@ for (const outcome of [
         [cli, 'config', 'get', 'activeProject'],
         { cwd: f.repo, env, encoding: 'utf8' },
       ).trim();
-      if (outcome === 'delivered') {
+      if (outcome === 'delivered' || outcome === 'stale-base') {
         assert.equal(result.status, 0, result.stdout + result.stderr);
         assert.match(result.stdout, /RESUME:true\|merged\|false\|false/);
         assert.equal(pointer, '');
+        if (outcome === 'delivered') {
+          // A completion still publishing links must keep the real renderer and
+          // local export validation; the delivered-only bypass cannot be global.
+          const render = (summaryExport) =>
+            spawnSync(
+              'bash',
+              ['-c', `${links}\nprintf '%s' "$FINAL_PROJECT_LINKS"`],
+              {
+                cwd: f.repo,
+                env: {
+                  ...env,
+                  PROJECT_NAME: 'probe',
+                  SUMMARY_EXPORT_FILE: summaryExport,
+                  COMPLETION_ARCHIVE_DELIVERED: 'false',
+                },
+                encoding: 'utf8',
+              },
+            );
+          const validLinks = render(report.summaryExportFile);
+          assert.equal(validLinks.status, 0, validLinks.stderr);
+          assert.match(validLinks.stdout, /<!-- oat:project-links:start -->/);
+          assert.equal(render(`${report.summaryExportFile}-missing`).status, 1);
+        }
         const receipt = JSON.parse(result.stdout.split('\n')[0]).archiveReport;
         const wrongCommit = f.invoke([
           '--action',
@@ -785,7 +831,20 @@ for (const outcome of [
       assert.throws(() => readFileSync(join(f.project, 'state.md')), {
         code: 'ENOENT',
       });
-      assert.equal(readFileSync(report.summaryExportFile, 'utf8'), summary);
+      if (outcome === 'stale-base') {
+        assert.throws(() => readFileSync(report.summaryExportFile), {
+          code: 'ENOENT',
+        });
+        assert.equal(
+          f.git(
+            'show',
+            `${deliveredBase}:.oat/repo/reference/project-summaries/${report.summaryExportFile.split('/').at(-1)}`,
+          ),
+          summary.trim(),
+        );
+      } else {
+        assert.equal(readFileSync(report.summaryExportFile, 'utf8'), summary);
+      }
       const gitStarts = readFileSync(trace, 'utf8')
         .trim()
         .split('\n')
