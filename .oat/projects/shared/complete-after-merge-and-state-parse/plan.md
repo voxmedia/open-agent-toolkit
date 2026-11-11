@@ -136,7 +136,7 @@ Preserve existing event rows. Future artifact rows use a review path or `-` in A
 
 - p01 accepted: shared strict state parse check and reviewed manual-writer coverage.
 - p02 accepted: merged-later receipt resume and delivered recap-link preservation are verified and independently reviewed.
-- Total: 2/2 phases accepted. Final confirmation and configured gate pass at 703da345; closeout refresh and new-head CI precede the authorized merge.
+- Total: 2/2 phases accepted. Final confirmation and configured gate pass at 703da345; closeout is refreshed and new-head CI precedes the authorized merge.
 
 ## References
 
