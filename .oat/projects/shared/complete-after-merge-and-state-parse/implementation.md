@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02-t13
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -170,7 +170,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 **Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 417ef4401e743773bd8dfca75f02157e375357c4
+**Head:** f916330bde65ba7ad1024843ca4ac2ce88f3939d
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -518,12 +518,14 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 ### Task p02-t13: (review) Scope stale-checkout documentation to link rendering
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** inline:stale-head-doc-clarification
 **Intent:** clarify that the delivered exception applies to Step 8.6 after a terminal receipt is carried; earlier receipt recovery still requires its existing current-checkout preconditions.
 **Files:** apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md only.
 **Proof:** conservation diff and required checks; no new behavior, test or fixture.
-**Commit:** pending
+**Commit:** f916330bde65ba7ad1024843ca4ac2ce88f3939d
+
+**Verification:** conservation diff limits the wording to Step 8.6 and preserves the earlier receipt-recovery preconditions. All 11 CI-order checks exited 0 on clean f916330bde65ba7ad1024843ca4ac2ce88f3939d, base ddd67fb5541bac2959ebb64ed82f4287f4f56698; exact commands/cache/runtime/dependency inputs in `.oat/analysis/complete-state-parse-closeout/stale-head-doc/committed-checks.json`. No tests/fixtures or executable source changed; helper29, isolatedcontracts1272, lint/format and independent red/green/can-fail evidence at 417ef440 remain valid and are reused. Node22.23.3/pnpm10.13.1/Darwinarm64; exact pin22.23.4 unavailable. Independent docs confirmation and configured gate pending; no acceptance claim.
 
 ## Orchestration Runs
 
