@@ -159,3 +159,18 @@ controls remain. Synced scope supplies the archive-resume fixture. Program-close
 `preflight:8` names `oat-project-complete` as the next owner without broadening
 the human checkpoint grant. The caller instruction test failed before this
 routing clause was added. Three completion writer locators were refreshed.
+
+## Approved gate recovery: closed PRs and shell portability
+
+The retired 0.3.46 gate identified a closed-unmerged interactive completion
+regression and a zsh parse failure in the follow-up push guard. Under the
+operator-approved recovery, observation now records `closed`, `wasOpen=false`,
+and preserves the current branch without follow-up authority or preparation.
+The automatic companion keeps its existing closed-PR refusal. The shipped push
+guard now uses `! (` and has the same truth table in bash and zsh.
+
+Evidence: `.oat/analysis/complete-after-merge-p02/gate-fixes/red.log` reproduces
+`E_PR_CLOSED` and the zsh parse error. `green.log` passes all 21 completion
+probes, including a valid bash control, the restored closed path and the zsh
+truth table. The shell check skips zsh only when it is absent; it ran here.
+The three manual-writer locators were refreshed with unchanged coverage.

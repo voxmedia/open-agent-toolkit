@@ -100,14 +100,9 @@ export function observeCompletionPr({ cwd, prUrl }) {
     );
   }
   git(cwd, 'check-ref-format', `refs/heads/${pr.baseRefName}`);
-  if (pr.state === 'CLOSED')
-    refuse(
-      'E_PR_CLOSED',
-      'The tracked PR is closed without merge; resolve its delivery before completion.',
-    );
   return {
     originalPrUrl: pr.url,
-    observedStatus: pr.state === 'MERGED' ? 'merged' : 'open',
+    observedStatus: pr.state.toLowerCase(),
     observedAt: new Date().toISOString(),
     wasOpen: pr.state === 'OPEN',
     baseBranch: pr.baseRefName,

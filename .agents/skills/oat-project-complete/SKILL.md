@@ -245,8 +245,10 @@ those paths.
 
 On the normal path, run this before Step 2 and every completion write, including
 Step 3.3's docs-skip metadata and any child summary, retro, recap or review write.
-A tracked URL requires a successful live observation; a failed `gh` request,
-invalid response or closed-unmerged PR stops here without completion writes.
+A tracked URL requires a successful live observation; a failed `gh` request
+or invalid response stops here without completion writes. A closed-unmerged PR
+continues on the existing branch with observed status `closed`,
+`WAS_PR_OPEN_AT_START=false`, and no follow-up preparation.
 No tracked URL follows the existing path and claims no observed PR status.
 
 ```bash
@@ -1185,7 +1187,7 @@ writing.
 
 After `complete-state` succeeds and before any archive, when
 `OBSERVED_PR_STATUS` is nonempty, set `oat_pr_status` to that live observed
-`open` or `merged` value, retain `oat_pr_url: ORIGINAL_PR_URL`, and set
+`open`, `closed` or `merged` value, retain `oat_pr_url: ORIGINAL_PR_URL`, and set
 `oat_pr_status_observed_at` to `PR_STATUS_OBSERVED_AT` from the actual lookup.
 Do not stamp "now" onto a stale stored status. With no tracked URL, do not
 assert an observed status or timestamp. A merged original stays merged even
@@ -1743,7 +1745,7 @@ explicit branch and establish the upstream before PR publication:
 
 ```bash
 if [[ "${COMPLETION_FOLLOWUP:-false}" == "true" && \
-  !( "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ) ]]; then
+  ! ( "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ) ]]; then
   git push --set-upstream origin "$COMPLETION_BRANCH" || exit 1
 fi
 ```

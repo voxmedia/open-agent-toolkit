@@ -313,6 +313,87 @@ test('live open and no-tracked-PR controls preserve current branch and bytes wit
   }
 });
 
+test('closed tracked PR keeps interactive completion on its branch without follow-up authority', () => {
+  const f = fixture();
+  try {
+    const before = f.git('rev-parse', 'HEAD');
+    const closed = success(
+      f.invoke(['--authority', ''], {
+        P02_GH_PR: JSON.stringify({
+          ...JSON.parse(f.env.P02_GH_PR),
+          state: 'CLOSED',
+        }),
+      }),
+    );
+    assert.equal(closed.observedStatus, 'closed');
+    assert.equal(closed.originalPrUrl, originalUrl);
+    assert.match(closed.observedAt, /^\d{4}-\d{2}-\d{2}T/);
+    assert.equal(closed.wasOpen, false);
+    assert.equal(closed.followup, false);
+    assert.equal(closed.branch, '');
+    assert.equal(f.git('rev-parse', 'HEAD'), before);
+    assert.equal(f.git('branch', '--show-current'), 'feature');
+    assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
+    assert.deepEqual(
+      readFileSync(f.log, 'utf8')
+        .trim()
+        .split('\n')
+        .map(JSON.parse)
+        .map((args) => args.slice(0, 2)),
+      [['pr', 'view']],
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+
+for (const shell of ['bash', 'zsh']) {
+  test(
+    `follow-up push guard preserves its truth table in ${shell}`,
+    {
+      skip: spawnSync(shell, ['--version']).error?.code === 'ENOENT',
+    },
+    () => {
+      const skill = readFileSync(
+        new URL('../SKILL.md', import.meta.url),
+        'utf8',
+      );
+      const section = skill.slice(
+        skill.indexOf('For a prepared follow-up outside'),
+        skill.indexOf('### Step 11:'),
+      );
+      const block = section.match(/```bash\n([\s\S]*?)\n```/)[1];
+      for (const [followup, scope, archive, expected] of [
+        ['true', 'shared', 'true', 'push --set-upstream origin bookkeeping\n'],
+        ['true', 'synced', 'false', 'push --set-upstream origin bookkeeping\n'],
+        ['true', 'synced', 'true', ''],
+        ['false', 'shared', 'false', ''],
+      ]) {
+        const result = spawnSync(
+          shell,
+          ['-c', `git() { printf "%s\\n" "$*"; }\n${block}`],
+          {
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              COMPLETION_FOLLOWUP: followup,
+              PROJECT_SCOPE: scope,
+              SHOULD_ARCHIVE: archive,
+              COMPLETION_BRANCH: 'bookkeeping',
+            },
+          },
+        );
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(
+          result.stdout,
+          expected,
+          `${followup}/${scope}/${archive}`,
+        );
+      }
+    },
+  );
+}
+
 test('failed observation and missing explicit authority stop before state/branch writes', () => {
   const f = fixture();
   try {

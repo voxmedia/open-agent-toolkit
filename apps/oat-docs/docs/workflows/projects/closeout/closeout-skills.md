@@ -633,7 +633,9 @@ PR body to use valid archived references. Choose this skill instead of another
 PR invocation because publication already exists and the remaining work is
 lifecycle finalization. An open PR is not a completion blocker. Before the first normal-path write,
 completion observes a tracked PR live. Failed observation stops without writing;
-no tracked URL keeps the ordinary path without claiming an observed status. If
+no tracked URL keeps the ordinary path without claiming an observed status. A
+closed-unmerged tracked PR follows the existing interactive completion path on
+the current branch, records `closed`, and prepares no follow-up branch. If
 the original has merged for a durable project, completion fetches its actual base and prepares a
 fresh bookkeeping branch before docs-skip metadata, recap intent persistence,
 summary or lifecycle changes. It retains the original merged URL/status and
