@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: p02-t10
 oat_generated: false
 ---
 
@@ -464,7 +464,18 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 **Root verification handoff:** inspected helper/skill delta and clean committed-checks record (16 exit-0 rows at 128dd5163cb27c920f94b58efc49960dfdf07dc6). Source delta after that candidate is journal only. Task implementation is complete; phase acceptance awaits independent review. The configured gate remains stale and closeout must refresh after review.
 
+### Task p02-t10: (review) Cover divergent archive resume and clarify delivered reporting
+
+**Status:** in_progress
+**Executor:** inline:pr421-small-review-corrections
+**Intent:** address L1 and L2 from final-review-2026-11-11T055350Z.md without production behavior changes.
+**Files:** completion regression test and completion SKILL Step 12.
+**Proof:** extra-local-commit resume refuses E_DIVERGENT_COMPLETION, retains pointer and HEAD and performs no push; neutralizing its guard breaks the test; scoped suite and required repository checks pass.
+**Commit:** -
+
 ## Orchestration Runs
+
+Root-inline phase: p02, p02-t10 only; small test/prose review corrections handled by root GPT-6 Astra high under host instruction to fix small review findings inline. The substantive implementation remains GPT-6.1 Sol high; independent Opus review remains required.
 
 - run/v1 · request=complete-after-merge-resume-fix-20261111 · scope=p02-t09 · action=fix · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-t09 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=complete-after-merge-resume-fix-20261111,pr421-resume-option2-20261111 · observed=~ · match=~
 
@@ -472,7 +483,7 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 <!-- orchestration-runs-start -->
 
-- run/v1 · request=complete-after-merge-resume-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-resume-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=complete-state-parse-p01-20261110 · scope=p01 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=p01-router-resume-20261110,p01-bounded-corrections-20261110 · observed=~ · match=~
 
@@ -495,6 +506,15 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review received: final-review-2026-11-11T055350Z.md
+
+Source: reviews/archived/final-review-2026-11-11T055350Z.md, auto final review at 128dd5163cb27c920f94b58efc49960dfdf07dc6. Reconnaissance: not-attempted (one valid signal in returned reviewer message; artifact has no orchestration section). Counts 0 critical, 0 high, 0 medium, 2 low.
+
+- L1 — accepted-requirement gap: KU2 requires divergent work to be preserved/reported; new resume guard exists but its branch lacks regression coverage. Convert to p02-t10; test actual refusal, pointer and push boundaries plus a can-fail control.
+- L2 — accepted-requirement gap: final confirmation must describe the new delivered-without-push result accurately. Convert to p02-t10; clarify Step 12 lifecycle/base evidence and absence of new push/PR.
+
+Outcome: fixes_added. No new hardening or deferral. Source correction remains reviewed without regressions; evidence/prose correction needs verification and final confirmation. Prior retired gate row/artifact is untouched. Initial receive automation stopped on an over-strict artifact signal assertion; state pointer was committed separately at 2c4d41590. This commit completes the matching journal/ledger receive with no source changes or lost event.
 
 ### Remote Review Received: PR #421 — 2026-11-11T051622Z
 
