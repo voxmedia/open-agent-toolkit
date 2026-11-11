@@ -117,9 +117,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T07:20:22.183347+00:00'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -137,7 +137,7 @@ oat_implement_exit_gate:
   reviewed_head: f916330bde65ba7ad1024843ca4ac2ce88f3939d
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:c938406e1d828bdea8cbd8f007cc848ab0938aaa385ec654b18b97075e91396f
-  freshness_head: 8ae1234974fa36c487ae703f1a4694b3ab3dcbf1
+  freshness_head: 65c2320ec1011c52d7bd47c23d5dca1a7ab36b8f
   freshness_fingerprint: sha256:effective-delta-v2:c938406e1d828bdea8cbd8f007cc848ab0938aaa385ec654b18b97075e91396f
   waivers: []
   launch_state: result_persisted
@@ -153,7 +153,7 @@ oat_implement_exit_gate:
     non-blocking findings (low=2). Run oat-project-review-receive for
     .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T072352Z.md
     to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     run_id: daa8c9de-12be-4648-8980-c53395268196
     handoff:
@@ -173,12 +173,12 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-11-11T072352Z.md
   receive_pre_head: a2ec6ef994ceda619ab17fe8c61936d25010eaf0
-  receive_commit: null
+  receive_commit: 65c2320ec1011c52d7bd47c23d5dca1a7ab36b8f
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: 2026-11-11T07:27:57.006Z
-  decided_at: null
+  updated_at: 2026-11-11T07:29:00.394Z
+  decided_at: 2026-11-11T07:29:00.253792+00:00
 oat_post_implement_sequence:
   status: pending
   source: configured
