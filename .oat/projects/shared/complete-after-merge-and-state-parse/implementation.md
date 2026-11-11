@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: null
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | completed | 1     | 1/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | completed   | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
 
-**Total:** 2/2 phases accepted
+**Total:** 1/2 phases accepted; p02 reopened for final documentation correction
 
 ---
 
@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 0b917cb216c3487d47e9a2cc99732ee519829022
@@ -386,6 +386,16 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 
 **Latest authoritative verification:** all 15 required/extra checks passed on clean `0b917cb216c3487d47e9a2cc99732ee519829022`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Commands, runtime/platform, lockfile, cache reuse, tree state and exit codes: `.oat/analysis/complete-after-merge-p02/final-fixes/ordered-checks.json`. Forced workspace executed all 12 tasks with zero cache hits (9,708 CLI tests); root suites passed (165 smoke, 743 skill, 7 script tests), along with 1,272 isolated contracts, release validation, docs manifest freshness and lint/format. Node22.23.3/pnpm10.13.1/Darwin arm64; exact22.23.4 unavailable. Probes18 and isolated contracts1272 passed before commit. Three guard neutralizations failed with the intended authority refusal and were restored. Source bytes remain unchanged since the tested candidate; subsequent tracking commits do not invalidate these checks. p01 recovery2/10, p02 0/10, pending null.
 
+### Task p02-t06: (review) Qualify merged-project authority in configuration docs
+
+**Status:** pending
+**Executor:** root
+**Source review:** reviews/archived/final-review-2026-11-11T025843Z.md (L1)
+**Intent:** qualify the existing configuration reference so only durable (shared or synced) merged projects require follow-up authority, matching implemented behavior.
+**Files:** apps/oat-docs/docs/reference/configuration.md
+**Proof:** conservation diff, docs lint/format/check/build and generated-index freshness; reuse unchanged behavioral verification.
+**Ownership exception:** T3 directs root to handle small review fixes; root GPT-6 Astra high. This is an accepted documentation requirement with no new behavior or authority.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -404,11 +414,20 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 
 - run/v1 · request=complete-after-merge-final-review-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-- run/v1 · request=complete-after-merge-final-review-r2-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-after-merge-final-review-r2-20261111 · scope=final · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: final — round 2
+
+**Artifact:** reviews/archived/final-review-2026-11-11T025843Z.md
+**Reviewed head:** 0b917cb216c3487d47e9a2cc99732ee519829022
+**Findings:** 0 Critical, 0 High, 0 Medium, 1 Low. Exact reconnaissance confirmation: not-attempted; no Review Orchestration section. All round-1 findings resolved independently.
+**Class and disposition:** L1 accepted-requirement (root AGENTS.md same-PR human-documentation requirement), converted to p02-t06 under existing implementation/fix authority. The configuration reference overstates the scope of follow-up authority; qualify it for durable projects. No deferral, requirement expansion, checkpoint change or new operator grant. No deferred Mediums exist. Status fixes_added, not a clean re-review pass.
+**Evidence:** reviewer independently passed 18 completion probes, three can-fail controls, 80 focused contracts, scope/authority resolver cases and historical BAD_INDENT/valid-byte/fail-stop controls; reused the 15-check record at the exact unchanged source basis. GitHub substituted; no live publication. Reviewer scratch directory retained at /private/tmp/final-r2-vl3Nrm after its runtime denied cleanup; no cleanup needed for acceptance.
+**Next:** root applies the one-phrase documentation correction, verifies affected docs, and obtains a focused final review confirmation before the separate configured exit gate. Existing behavioral evidence remains valid.
 
 ### Review Received: final — round 1
 
