@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -39,12 +39,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | completed   | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | completed | 1     | 1/1      |
 
-**Total:** 1/2 phases accepted; p02 reopened for final documentation correction
+**Total:** 2/2 phases accepted
 
 ---
 
@@ -167,10 +167,10 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 0b917cb216c3487d47e9a2cc99732ee519829022
+**Head:** a689912f74742a654e936b7fe1ba19f24c58c519
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -399,6 +399,10 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 **Commit:** a8986ea0afad3842d49319112a73ab922c66c4e3
 **Result:** one-phrase docs correction; conservation diff preserves every other word, section, link and claim. Scoped docs check and formatting passed on the exact precommit edit (Node22.23.3, pnpm10.13.1, Darwin arm64). Required checks follow on a clean committed candidate; unchanged runtime behavior retains final-fixes/ordered-checks.json evidence, including uncached test execution. No additional tests or negative controls are warranted for this prose correction.
 
+### Final documentation verification and p02 reacceptance
+
+p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0afad3842d49319112a73ab922c66c4e3`. All 14 ordered checks passed on clean `a689912f74742a654e936b7fe1ba19f24c58c519`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Exact commands, exits, runtime, lockfile and cache evidence: `.oat/analysis/complete-after-merge-p02/final-doc-fix/ordered-checks.json`. The earlier forced zero-cache behavioral proof remains in `final-fixes/ordered-checks.json`; this round additionally ran the required repository test command. No new behavior, fixtures, authority, tests, deferrals or recovery attempts. p02 is reaccepted; its Base stays unchanged. Final review round 2 records fixes_completed until independent confirmation, with the configured exit gate still pending.
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -428,7 +432,7 @@ Final-review M1/M2 regressions and L1 evidence cleanup are fixed in p02-t05 (`3a
 **Artifact:** reviews/archived/final-review-2026-11-11T025843Z.md
 **Reviewed head:** 0b917cb216c3487d47e9a2cc99732ee519829022
 **Findings:** 0 Critical, 0 High, 0 Medium, 1 Low. Exact reconnaissance confirmation: not-attempted; no Review Orchestration section. All round-1 findings resolved independently.
-**Class and disposition:** L1 accepted-requirement (root AGENTS.md same-PR human-documentation requirement), converted to p02-t06 under existing implementation/fix authority. The configuration reference overstates the scope of follow-up authority; qualify it for durable projects. No deferral, requirement expansion, checkpoint change or new operator grant. No deferred Mediums exist. Status fixes_added, not a clean re-review pass.
+**Class and disposition:** L1 accepted-requirement (root AGENTS.md same-PR human-documentation requirement), converted to p02-t06 under existing implementation/fix authority. The configuration reference overstates the scope of follow-up authority; qualify it for durable projects. No deferral, requirement expansion, checkpoint change or new operator grant. No deferred Mediums exist. Status fixes_completed after p02-t06, not a clean re-review pass.
 **Evidence:** reviewer independently passed 18 completion probes, three can-fail controls, 80 focused contracts, scope/authority resolver cases and historical BAD_INDENT/valid-byte/fail-stop controls; reused the 15-check record at the exact unchanged source basis. GitHub substituted; no live publication. Reviewer scratch directory retained at /private/tmp/final-r2-vl3Nrm after its runtime denied cleanup; no cleanup needed for acceptance.
 **Next:** root applies the one-phrase documentation correction, verifies affected docs, and obtains a focused final review confirmation before the separate configured exit gate. Existing behavioral evidence remains valid.
 
@@ -521,13 +525,13 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **Verification performed:**
 
-- Accepted p01 and p02 evidence plus final clean candidate `0b917cb216c3487d47e9a2cc99732ee519829022`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
+- Accepted p01 and p02 evidence plus final clean candidate `a689912f74742a654e936b7fe1ba19f24c58c519`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
 - Packed consumer proof, historical malformed-state negative/valid controls and stop-before-commit proof; real Git branch/diff/push/resume and shipped shell composition probes with substituted gh. Batch publication-state test fails without its reset and passes with it.
 - Exact commands, runtime, cache and revision inputs are retained in phase verification records. Pinned Node 22.23.4 unavailable; Node 22.23.3 used. Prose checks establish instruction coverage, not agent obedience; live GitHub publication not claimed.
 
 **Outcomes audit:**
 
-- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t05.
+- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t06.
 - Outcome 2 met in accepted p01: `180f4758`, `581335dc` plus the reviewed 88-location inventory and packed-consumer probe demonstrate incident BAD_INDENT rejection, valid commented-state acceptance without mutation, and stopping before commit/continuation. Evidence mapping: `references/research/manual-state-writers.md` and p01 acceptance.
 
 **Brief deltas:**
