@@ -136,6 +136,27 @@ Root validated the attempt-2 report, committed completed marker, exact original 
 
 Root inspected `attempt2/postcommit-checks.json` and installed-package proof: every required command exited 0 against the clean candidate; forced full tests executed, while later builds reused their outputs. The installed historical bad state rejects with BAD_INDENT and the historical parent passes. Source evidence is reusable across subsequent journal/state bookkeeping; no duplicate source suite run. Exact Node 22.23.4 remains unavailable locally (22.23.3 used); independent review and downstream CI remain required. Phase stays in_progress with both pointers p01, pending fresh Opus 5.5 high review of the complete Base..Head range. This is not phase acceptance.
 
+### Review Received: p01 — round 1
+
+**Artifact:** reviews/archived/p01-review-2026-11-11T003543Z.md
+**Reviewed head:** 3b260ccf51a395362ab7d832d22d5b780ffd0c3b
+**Findings:** 0 Critical, 0 High, 1 Medium, 1 Low. Reconnaissance: not-attempted; signal validated, no Review Orchestration section present.
+**Finding classes:** M1 accepted-requirement (plan Outcome 2, Approach and p01 Exit evidence require each manual lifecycle writer); L1 regression (existing CLI state validators changed their accepted frontmatter fences, contrary to preservation of existing contracts).
+**Disposition:** convert both to p01-t02. M1 adds the two brainstorm promotion checks and reconciles inventory/version coverage. L1 restores the existing shared frontmatter extraction, including LF-only handling; strict YAML mapping validation stays in place. No new hardening or deferral. Original review counts remain unchanged; fixes will be recorded as fixes_completed, not a clean re-review.
+**Independent evidence:** reviewer reproduced BAD_INDENT and valid controls, fail-stop sequence, all 86 inventoried locations and release/bundle coverage; 140 focused tests passed. Full-suite evidence at 3b260ccf5 is retained and affected checks will be rerun.
+
+### Task p01-t02: Close promotion coverage and preserve state fence compatibility
+
+**Status:** completed
+**Executor:** root
+**Intent:** resolve review M1/L1 within approved p01; no p02 changes.
+**Files:** oat-brainstorm skill; shared project-state parser and check-state tests; manual-writer inventory.
+**Proof command:** focused check-state/validation/skill contracts with red-green fence regression; repository required checks and release validation.
+**Ownership exception:** T3 orchestration directs the root to fix small review findings itself and forbids a new delegate for them. Root GPT-6 Astra high owns this bounded correction; phase implementation remains the recorded Sol high work. No recovery attempt is consumed by this review fix.
+
+**Commit:** 581335dc4c4666f7367a0749b428991b079a8c7f
+**Result:** both promotion writes checked; 88 locations / 24 writing skills / 27 skill bumps. Existing getFrontmatterBlock extraction restored, retaining whitespace-fence acceptance and LF-only reader compatibility; this supersedes p01-t01's CRLF claim. Red run failed exactly the two fence cases; green run passed all 1,282 tests. Full repository verification pending; phase remains in_progress.
+
 ## Phase p02: Deliver completion bookkeeping after merge
 
 **Status:** pending
@@ -148,7 +169,7 @@ Root inspected `attempt2/postcommit-checks.json` and installed-package proof: ev
 
 - run/v1 · request=complete-state-parse-p01-20261110 · scope=p01 · action=implementation · role=oat-phase-implementer · target=~ · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=p01-router-resume-20261110,p01-bounded-corrections-20261110 · observed=~ · match=~
 
-- run/v1 · request=complete-state-parse-p01-review-r1-20261110 · scope=p01 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=complete-state-parse-p01-review-r1-20261110 · scope=p01 · action=review · role=oat-reviewer · target=~ · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
