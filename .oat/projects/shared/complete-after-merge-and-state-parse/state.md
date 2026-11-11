@@ -114,9 +114,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T04:37:10.375207Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 0e404f79d786cf469b2a3c65ec697686d5083584
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:5e8b971843b7e6a868431408969d1636623c51709767c2de39f4e69c5787d825
-  freshness_head: 0e404f79d786cf469b2a3c65ec697686d5083584
+  freshness_head: 4ee8b09bd9d19d6665a6ba86fd7dd6a71aa0b2c8
   freshness_fingerprint: sha256:effective-delta-v2:5e8b971843b7e6a868431408969d1636623c51709767c2de39f4e69c5787d825
   waivers: []
   launch_state: result_persisted
@@ -150,7 +150,7 @@ oat_implement_exit_gate:
     non-blocking findings (low=1). Run oat-project-review-receive for
     .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T050024Z.md
     to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     runId: 47a97d4b-5310-4f4d-bf5a-21f3d73f0c0d
     handoff:
@@ -169,12 +169,12 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-11-11T050024Z.md
   receive_pre_head: def464f0ecc92f853d7ba3935fa211d0b22ede4f
-  receive_commit: null
+  receive_commit: 4ee8b09bd9d19d6665a6ba86fd7dd6a71aa0b2c8
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: 2026-11-11T05:02:55.069Z
-  decided_at: null
+  updated_at: 2026-11-11T05:03:37.919Z
+  decided_at: 2026-11-11T05:03:37.759801Z
 oat_post_implement_sequence:
   status: pre_approval
   source: configured
