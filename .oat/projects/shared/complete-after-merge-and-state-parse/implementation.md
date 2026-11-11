@@ -52,9 +52,20 @@ oat_generated: false
 
 **Status:** in_progress
 **Base:** 7e5b5bd32c5443dae06947c2fbf99fc3d02aaac9
+**Head:** 3b260ccf51a395362ab7d832d22d5b780ffd0c3b
 **Executor:** phase-implementer:complete-state-parse-p01-20261110
 
 Execution shape: one phase implementer in the existing orchestration checkout, the sole committing owner while active. No declared parallel group; slice fan-out fails the independence test because the shared check, skill references, tests, release assets and versions overlap. Tier 1 uses T3 delegation with the operator-selected GPT-6.1 Sol high; the root retains independent Opus review and phase acceptance. Recovery capacity: default 10, phase limit 10, used 0, remaining 10, pending none; source is the workflow default with no project/phase override. Remaining capacity does not authorize target changes or continuation after a terminal failure.
+
+**Current verification:** pass on clean committed candidate `3b260ccf51a395362ab7d832d22d5b780ffd0c3b`, recovery base `b2ac3aa3fa67c52a402d2d7e4f0cc425918d5a14`, dispatch base `d1df37b4ac6bbd2a8420ac3e9530ea7e626add6d`, integration `origin/main` `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Focused help/version/skill contracts passed before and immediately after commit (1,351 tests each). Required Definition of Done ran in order: check, type-check, isolated forced test, build, committed-history skill bumps, fetch and release version check, release validation, docs build, direct docs index generation and freshness diff; all exited 0. Additional lint, format and isolated skill contracts exited 0. Forced workspace tests executed with 12 cache-bypass tasks and no cache hits (CLI 9,705, docs 93, control plane 320, other packages 85; smoke 165, skills 721, scripts 7 passed). Skill-bump gate validated 27 skill/role bumps; all five public packages validated at 0.3.50. Final inventory is 86 adjacent check locations across 23 writing skills, with 26 skill bumps and one role bump; this supersedes the original task record's 25-skill count after the authorized autonomous bump.
+
+**Verification inputs and cache:** no uncommitted inputs during postcommit verification. Node v22.23.3, pnpm 10.13.1, macOS 27.0.1 arm64; exact repository Node pin 22.23.4 unavailable locally. Existing installed dependencies, unchanged lockfile SHA-256 `425ad4fa9e0b1b2dba6185a4d4fa130fa5ed0edbcfb93c165a74e6e70a866dd6`, isolated HOME and uncontaminated TMPDIR `/private/tmp/oat-p01-attempt2-6nw1xrys`. Check and focused suites executed; type-check, lint and format executed while reusing five dependency builds each. Later build reused five results and explicit docs build reused six; actual dependency/docs builds executed during forced tests. Direct manifest freshness ran independently. Exact commands, exit codes and cache counts: `.oat/analysis/complete-state-parse-p01/attempt2/postcommit-checks.json` and `postcommit/*.log`; prevention inputs/results: `attempt2/prevention.json`.
+
+**Final installed evidence:** `attempt2/installed/installed-proof.json` records a real packed consumer outside the checkout, with its own manifest, explicit npm prefix, isolated HOME and no NODE_PATH. Installed `oat project check-state <project-path> --json` accepts the unchanged commented mapping and historical parent, rejects the minimal incident and full historical `a323ee7ce` state with exit 1 / BAD_INDENT, and stops the representative shell sequence before commit/continuation. Shared gate docs and autonomous 1.0.27 gate-inventory alias materialize correctly. The temporary install was removed. Original pre-fix acceptance/unchecked-commit evidence and incident provenance remain preserved; these probes demonstrate executable command/calling-sequence behavior, not actual agent execution of every prose branch.
+
+**Current recovery capacity:** used 2/10, remaining 8; matching attempt 2 `p01-bounded-corrections-20261110` is committed as completed and retained for root settlement. Attempt 1 remains failed and settled. No counter reset, history rewrite, nested dispatch or p02 behavior change. Phase remains in_progress pending independent review and root acceptance; subsequent journal-only bookkeeping does not invalidate the tested source candidate.
+
+**Journal bookkeeping checks:** scoped oxfmt and diff whitespace checks passed. An additional read-only `project journal check --at implement-preflight` returned exit 1 for p01 not yet accepted, p02 pending/provisional and existing root-owned Final Summary placeholders. These are current lifecycle/artifact conditions outside the implementer's acceptance authority; no source-check failure or new correction is inferred. No required passing phase check was waived or rerun for journal bookkeeping.
 
 ### Task p01-t01: Guard manual lifecycle state writes with a portable strict check
 
@@ -103,6 +114,21 @@ Local report/evidence: `.oat/analysis/complete-state-parse-p01/phase-implementat
 ### Operator-authorized bounded continuation — 2026-11-10
 
 The operator selected "Resume these bounded corrections" after root settled the terminal failure at `c66016618d2ad6c43998dcae0f34b4ff2128c761`. Resume on the same GPT-6.1 Sol high child, original request `complete-state-parse-p01-20261110`, continuation `p01-bounded-corrections-20261110`. Scope: restore the required check-state project-help snapshot entry, bump oat-project-autonomous for its changed linked autonomy contract and any directly pinned metadata, and finish required verification. This supplies direction beyond the previous terminal stop; it does not reset used=1/10, waive verification, change the target, or expand product scope. Reserve the next attempt before correction and preserve the failed first attempt. Independent Opus review and root phase acceptance remain outstanding.
+
+### Recovery Event p01-bounded-corrections-20261110
+
+- Phase/task: p01 / p01-t01
+- Original request: complete-state-parse-p01-20261110
+- Original commit: 180f4758c2e1a1d470a8a86e6252836c883846d0
+- Defect class: composition
+- Discovered by: pnpm test (project --help snapshot); pnpm run check:skill-bumps (linked autonomous skill)
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: 3b260ccf51a395362ab7d832d22d5b780ffd0c3b
+- Verification: pre/post focused 1,351 tests passed; ordered Definition of Done and additional lint/format/isolated skill contracts exited 0 on clean candidate; final packed installation passed. Exact inputs/results: `.oat/analysis/complete-state-parse-p01/attempt2/`.
+- Reason: operator-authorized bounded corrections after settled failure; completed marker committed with candidate and validated by postcommit checks. Corrected one help entry, autonomous metadata.version 1.0.26 to 1.0.27, and mechanically related research counts/link mapping; no direct version pins required edits. No history rewrite or counter reset; matching completed marker retained for root settlement.
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
