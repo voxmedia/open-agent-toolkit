@@ -449,6 +449,8 @@ p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing close
 
 ## Reviews and Gates
 
+PR delivery: https://github.com/voxmedia/open-agent-toolkit/pull/421 — final project scope, opened as draft on 2026-11-11; self-review fills only uncovered testing/complexity lenses and the later bookkeeping/docs delta.
+
 PR preparation: normalized the two historical structured plan-review Artifact annotations to the supported `structured (no artifact); ` prefix. These reviews deliberately produced structured results only; event identity, status and provenance are unchanged. The retired gate event and active artifact remain untouched.
 
 ### Closeout documentation assessment

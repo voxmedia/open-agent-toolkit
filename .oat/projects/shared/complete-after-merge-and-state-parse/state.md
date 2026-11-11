@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -107,11 +107,11 @@ oat_brief_gate:
   reviewed_head: '215d88e6ea8d3fdd9b75d4123fcfe49aede2799e'
   decided_at: '2026-11-10T22:02:24Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/421 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-10T18:52:05.799Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-11T04:32:49.169226Z'
+oat_project_state_updated: '2026-11-11T04:37:05.050555+00:00'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
@@ -201,7 +201,7 @@ oat_post_implement_sequence:
 
 ## Current Phase
 
-Implementation — both phases accepted; final correction review passed; awaiting a fresh configured exit gate
+Implementation — PR open; completion may run before or after merge. Both phases and the configured final gate are accepted.
 
 ## Artifacts
 
@@ -217,10 +217,17 @@ Implementation — both phases accepted; final correction review passed; awaitin
 - ✓ Artifact reviews and configured brief gate completed; Low notes dispositioned
 - ✓ Reviewed brief approved by operator on 2026-11-10
 
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/421
+- ⧗ Awaiting remaining review and CI
+
 ## Blockers
 
-None. All phase findings resolved; approved gate corrections verified and final review passed; fresh exit gate pending. Recovery usage p01 2/10, p02 0/10, pending null.
+None in implementation. Optional recap choice and PR self-review/CI remain in closeout. Recovery usage p01 2/10, p02 0/10, pending null.
 
 ## Next Milestone
 
-Configured exit gate, then summary/document/PR delivery. Final integrated Opus review passed. Merge after checks and reviews is authorized.
+PR #421 is open for review; merge after checks and reviews is authorized.
+
+- To incorporate feedback: run `oat-project-revise`.
+- Complete before merge: run `oat-project-complete`, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
