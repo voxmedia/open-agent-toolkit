@@ -4,7 +4,7 @@ oat_template: false
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-11
-oat_current_task_id: p02-t10
+oat_current_task_id: p02
 oat_generated: false
 ---
 
@@ -170,7 +170,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 **Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
-**Head:** 128dd5163cb27c920f94b58efc49960dfdf07dc6
+**Head:** 1dd8a790bbb3095ae7c1fdcc39a8046365066af2
 
 **Historical round-1 fix verification (superseded by final acceptance below):** all
 15 recorded checks exited 0 on clean `a3514dc6e8746557e925444478fb9c85f58340d5`,
@@ -466,7 +466,7 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 
 ### Task p02-t10: (review) Cover divergent archive resume and clarify delivered reporting
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** inline:pr421-small-review-corrections
 **Intent:** address L1 and L2 from final-review-2026-11-11T055350Z.md without production behavior changes.
 **Files:** completion regression test and completion SKILL Step 12.
@@ -474,6 +474,8 @@ Root inspected the captured real-archive/real-Git reproduction and downstream re
 **Commit:** 5d4a9fa6c9323a6772ac07ed28203212377b7b94
 
 **Prevention evidence:** divergent resume case passes on current guard; removing only the new-path divergent guard fails with success exit 0 instead of refusal exit 1 and clears the pointer. Exact log and control: `.oat/analysis/complete-state-parse-closeout/review-nits/green-focused.log`, `neutralized-divergent.log`, `can-fail.json`. Production helper bytes restored unchanged; formatting and diff checks pass. Step 12 now names the lifecycle commit, base branch/head and already-delivered outcome without a push or follow-up URL. Full ordered verification follows on a clean committed candidate.
+
+**Verification:** all 15 ordered checks/extras exited 0 on clean `1dd8a790bbb3095ae7c1fdcc39a8046365066af2`, base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Direct helper tests 28/28; full pnpm test passed (root smoke 165, skill 753, scripts 7), isolated skill contracts passed. Runtime Node22.23.3, pnpm10.13.1, Darwin arm64; exact22.23.4 unavailable. Cache flags and exact inputs/results are in `.oat/analysis/complete-state-parse-closeout/review-nits/committed-checks.json`. Prior forced run at128dd516 remains recorded; no new forced-run claim. Divergent guard neutralization failed for its intended refusal assertion, helper restored byte-for-byte. Production helper unchanged; only test case and Step12 prose changed. Independent confirmation and configured gate remain pending; no phase acceptance.
 
 ## Orchestration Runs
 
