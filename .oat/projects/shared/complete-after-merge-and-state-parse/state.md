@@ -150,17 +150,30 @@ oat_implement_exit_gate:
     non-blocking findings (low=1). Run oat-project-review-receive for
     .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T062926Z.md
     to disposition them before marking the final review row passed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation:
+    runId: d705a945-986c-4cc3-a9db-b99d16b987d2
+    handoff:
+      Gate passed at the high threshold, but the final review still contains
+      non-blocking findings (low=1). Run oat-project-review-receive for
+      .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T062926Z.md
+      to disposition them before marking the final review row passed.
+    artifactPath: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T062926Z.md
+    scope: final
+    reviewType: code
+    sourceFilename: final-review-2026-11-11T062926Z.md
+  receive_source_artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T062926Z.md
+  receive_archived_artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/archived/final-review-2026-11-11T062926Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    source_filename: final-review-2026-11-11T062926Z.md
+  receive_pre_head: 14b8b360ee51db6a59973742c06051b48f4e73ad
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: 2026-11-11T06:30:57.036Z
+  updated_at: 2026-11-11T06:31:00.967Z
   decided_at: null
 oat_post_implement_sequence:
   status: in_progress
