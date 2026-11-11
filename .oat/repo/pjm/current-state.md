@@ -46,8 +46,10 @@ copying their content here. -->
   coverage stay intact. Local projects retain their branch. The automatic
   companion binds authority per project and original PR. Terminal synced
   receipts also survive a later original-PR merge: delivered results resume
-  without push or recap/body rewrites; pending bookkeeping or divergent local
-  work retains the pointer and receipt for recovery. See
+  without push or recap/body/link rewrites. A continuation carrying the verified
+  terminal receipt skips local export checks and link rendering; earlier receipt
+  recovery keeps its current-checkout preconditions. Pending bookkeeping or
+  divergent local work retains the pointer and receipt for recovery. See
   [the project summary](../../projects/shared/complete-after-merge-and-state-parse/summary.md)
   and decisions [state parsing](../reference/decisions/DR-261111-check-manual-lifecycle-state.md)
   and [merged completion](../reference/decisions/DR-261111-reuse-authority-for-merged.md).
