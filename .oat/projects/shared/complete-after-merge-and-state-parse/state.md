@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p02-t08
 oat_last_commit: bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -114,7 +114,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T04:37:10.375207Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -172,7 +172,8 @@ oat_implement_exit_gate:
   receive_commit: d8588c99dc2cbf05b8d1c960be4f6d475e24b6fd
   receive_eligible: true
   receive_completed: true
-  failure: null
+  failure: Post-review test-only correction p02-t08 changes the effective delta;
+    fresh gate required.
   updated_at: 2026-11-11T04:29:18.866Z
   decided_at: 2026-11-11T04:29:18.795039Z
 oat_post_implement_sequence:
@@ -192,6 +193,10 @@ oat_post_implement_sequence:
   post_approval: []
   post_approval_completed: []
   failure: null
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-11-11T04:47:20.065Z'
 ---
 
 # Project State: complete-after-merge-and-state-parse

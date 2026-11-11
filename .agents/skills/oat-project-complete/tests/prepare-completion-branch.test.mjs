@@ -4,9 +4,11 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -31,7 +33,7 @@ function fixture(
   additionalSharedProjects = [],
   workflowMode = 'goal',
 ) {
-  const temp = mkdtempSync('/private/tmp/oat-completion-p02-');
+  const temp = mkdtempSync(join(realpathSync(tmpdir()), 'oat-completion-p02-'));
   const repo = join(temp, 'repo');
   const remote = join(temp, 'remote.git');
   const bin = join(temp, 'bin');
@@ -200,8 +202,9 @@ function refused(result, code) {
 test('stale-open negative control: old path stays on feature; live merged path starts at updated base and commits only completion', () => {
   const f = fixture();
   try {
-    // Execute the pre-fix Step 2 decision from 515f630e64becdbc87a6d2cd49b46026590bee32
-    // and ordinary current-branch commit. This is the actual old shell decision.
+    // Reconstruct the pre-fix Step 2 decision from 515f630e64becdbc87a6d2cd49b46026590bee32
+    // with a stale-open input, then execute an ordinary current-branch commit.
+    // The divergence refusal and ancestry assertions below demonstrate the failure.
     const oldDecision = execFileSync(
       'bash',
       [
@@ -517,27 +520,24 @@ test('dirty and divergent shared inputs remain intact and refuse preparation', (
   }
 });
 
-for (const scope of ['synced']) {
-  test(`${scope} retained owner and bytes survive parent fresh-base preparation`, () => {
-    const f = fixture(scope);
-    try {
-      const prepared = success(f.invoke());
-      assert.equal(prepared.baseHead, f.base);
-      assert.equal(prepared.followup, true);
-      assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
-      assert.equal(f.git('ls-files', '--', f.projectRelative), '');
-      if (scope === 'synced')
-        assert.equal(
-          execFileSync('git', ['-C', f.project, 'rev-parse', 'HEAD'], {
-            encoding: 'utf8',
-          }).trim(),
-          f.git('rev-parse', 'refs/oat/projects/probe'),
-        );
-    } finally {
-      f.cleanup();
-    }
-  });
-}
+test('synced retained owner and bytes survive parent fresh-base preparation', () => {
+  const f = fixture('synced');
+  try {
+    const prepared = success(f.invoke());
+    assert.equal(prepared.baseHead, f.base);
+    assert.equal(prepared.followup, true);
+    assert.equal(readFileSync(join(f.project, 'state.md'), 'utf8'), f.state);
+    assert.equal(f.git('ls-files', '--', f.projectRelative), '');
+    assert.equal(
+      execFileSync('git', ['-C', f.project, 'rev-parse', 'HEAD'], {
+        encoding: 'utf8',
+      }).trim(),
+      f.git('rev-parse', 'refs/oat/projects/probe'),
+    );
+  } finally {
+    f.cleanup();
+  }
+});
 
 test('resume reuses observed open follow-up; archive resume needs no retired project and cannot duplicate a closed follow-up', () => {
   const f = fixture('synced');

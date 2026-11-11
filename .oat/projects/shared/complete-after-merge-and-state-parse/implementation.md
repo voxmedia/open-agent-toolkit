@@ -167,7 +167,7 @@ L1 regression evidence: pre-fix check-state rejected a whitespace-suffixed closi
 
 ## Phase p02: Deliver completion bookkeeping after merge
 
-**Status:** completed
+**Status:** in_progress
 **Base:** a7ff0c6f1a7cb21ed96bdc75edd9be11c6740d4d
 **Executor:** phase-implementer:complete-after-merge-p02-20261111
 **Head:** 09d08130659962709b68e2a8f5bcfe05f34ae725
@@ -420,6 +420,17 @@ p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0
 ### Approved gate-recovery verification and p02 reacceptance
 
 p02-t07 (`bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9`) restores the existing closed-PR interactive path and portable push guard. All 15 required/extra checks passed on clean `09d08130659962709b68e2a8f5bcfe05f34ae725`, integration base `ddd67fb5541bac2959ebb64ed82f4287f4f56698`. Commands, explicit exits, runtime, lockfile and cache inputs: `.oat/analysis/complete-after-merge-p02/gate-fixes/ordered-checks.json`. Forced workspace tests, root suites, isolated contracts, build/release, docs freshness and lint/format passed. Before commit, 21 Git/shell probes and 1,272 contracts passed; the red controls fail for the exact closed refusal and zsh parse error. No pending findings from the approved correction remain; no recovery attempt or gate remediation attempt consumed. p02 is reaccepted with unchanged Base and updated Head. Independent final re-review and a fresh branch-CLI configured gate remain pending. The previous standard review loop ended in a clean pass; this is the operator-approved continuation after the retired gate, not an exhausted failed fix loop.
+
+### Task p02-t08: Make completion test fixtures portable
+
+**Status:** in_progress
+**Executor:** root
+**Source:** CI run 42960479881 (19 ENOENT failures on ubuntu-latest), corroborated by PR self-review T1; nonblocking T2 and complexity cleanup.
+**Intent:** use the canonical platform temporary directory; identify the old-path shell snippet as a reconstruction; inline the single synced case while preserving all assertions.
+**Files:** `.agents/skills/oat-project-complete/tests/prepare-completion-branch.test.mjs`.
+**Proof:** CI provides the Linux negative control; all 21 focused tests pass locally after the platform-temp change. Required checks and Linux CI will verify the committed correction. No shipped behavior changes or extra skill/package bump required for this test-only delta.
+**Ownership exception:** root handles small CI/review corrections under existing authority and T3 guidance.
+**Commit:** -
 
 ## Orchestration Runs
 
