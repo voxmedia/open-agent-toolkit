@@ -744,6 +744,7 @@ Document any intentional deviations from the brief. Include accepted review find
 
 - Read-only `oat project check-state` rejects malformed YAML frontmatter after manual lifecycle state writes and leaves valid state bytes unchanged.
 - Completion observes a tracked PR live before writes, preserves the merged original, prepares or reuses a branch from its updated base, and publishes a separate bookkeeping PR under existing explicit authority.
+- Terminal synced archive receipts created before a later merge resume without a push or recap/body rewrite when their exact results are already on base; pending bookkeeping or divergent local inputs refuse and preserve recovery state.
 - Automatic completion carries per-project authority and safely sequences batch follow-ups; configuration alone grants no publication authority.
 
 **Key files / modules:**
@@ -755,19 +756,19 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **Verification performed:**
 
-- Accepted p01 and p02 evidence plus final clean candidate `09d08130659962709b68e2a8f5bcfe05f34ae725`: required ordered checks, forced workspace tests, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed.
+- Accepted p01 and p02 evidence plus current clean candidate `703da345153aa455a7dfed2c70107e34eefb821e`: required ordered checks, root smoke/skill/script tests, isolated contracts, lint/format, package release validation and generated docs freshness all passed. Production candidate 128dd516 also has a forced zero-cache workspace run; later source changes are test/prose only and their cache reuse is recorded.
 - Packed consumer proof, historical malformed-state negative/valid controls and stop-before-commit proof; real Git branch/diff/push/resume and shipped shell composition probes with substituted gh. Batch publication-state test fails without its reset and passes with it.
 - Exact commands, runtime, cache and revision inputs are retained in phase verification records. Pinned Node 22.23.4 unavailable; Node 22.23.3 used. Prose checks establish instruction coverage, not agent obedience; live GitHub publication not claimed.
 
 **Outcomes audit:**
 
-- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/closed/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t07.
+- Outcome 1 met in accepted p02: `4aea7c00`, `dd394df37`, `f74fdb8ac`, `ebb4de39f`, `3a347325b` and phase probes demonstrate live merged status, updated-base ancestry, completion-only changes, untouched original body, separate authorized follow-up, open/closed/no-PR controls, scope/resume preservation, local-only completion without follow-up delivery, batch reuse and program authority-refusal routing. Merged-later receipt resume and recap-link preservation are proven by p02-t09–t11, 28/28 probes and can-fail controls. Evidence mapping: `references/research/completion-after-merge.md` and p02-t01–t11.
 - Outcome 2 met in accepted p01: `180f4758`, `581335dc` plus the reviewed 88-location inventory and packed-consumer probe demonstrate incident BAD_INDENT rejection, valid commented-state acceptance without mutation, and stopping before commit/continuation. Evidence mapping: `references/research/manual-state-writers.md` and p01 acceptance.
 
 **Brief deltas:**
 
 - No outcome or authority expansion. The provisional completion phase became concrete after p01. The writer sweep added two brainstorm promotion sites, preserving the existing parser fence behavior. Automatic-wrapper and wave refusal composition apply the accepted existing-contract requirement; goal bookkeeping remains outside deliveries/coverage.
-- Final independent review, PR self-review confirmation, and refreshed branch-CLI gate passed. Implementation and configured summary/document/PR closeout are complete. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
+- Final independent review, PR self-review confirmation, and refreshed branch-CLI gate passed. The source is accepted and gate generation 5 is allowed; configured summary/document/PR closeout is being refreshed. Visual recap skipped by explicit operator choice. PR #421 remains open; final-head CI is required before the authorized merge.
 
 ## References
 
