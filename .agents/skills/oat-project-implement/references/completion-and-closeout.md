@@ -15,6 +15,10 @@ oat_blockers:
     since: { date }
 ```
 
+After writing these blockers to `state.md` frontmatter, run
+`oat project check-state "$PROJECT_PATH"`. On nonzero, stop; repair and recheck
+before committing, notifying, or continuing.
+
 **Update task status:**
 
 ```markdown
@@ -112,6 +116,10 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    Receive records one class per finding of the gate result and routes a
    finding no contract source requires to the operator, as Step 14 states;
    the carrier rules above are unchanged.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 3. **Read freshness before any transition.** Run
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
    and persist its `exit` result (`source: milestone-carrier`) as the
@@ -126,12 +134,20 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
    bookkeeping-successor rule (section 12.8) decides freshness: bookkeeping
    commits after the reviewed head never force a rerun, and a substantive
    commit does.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 4. **Transition.** For the active milestone, when the carrier is `allowed` and
    fresh, write `oat_milestone_status: reviewing` (`implementing → reviewing`);
    never `delivering`, which belongs to `oat-project-review-receive`. For a
    recovery scope, advance `oat_goal_recovery.stage` instead: accepted fixes →
    `exit_gate`, then an allowed, fresh carrier → `reviewing`; the active
    milestone's fields stay unchanged.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 5. **Hand off.** Commit the carrier and transition as bookkeeping, then
    report the router's next skill: `oat-project-review-provide` with the
    explicit `code mNN: <ordered phase ids>` (or `code mNN/dNN: …`) scope.
@@ -139,7 +155,9 @@ set] }`, and `freshness: fresh` with `freshness_reason: null` for every
 **Terminal `pr` step.** When the terminal post-implement sequence (Step 15)
 reaches the `pr` step's position, run `oat project closeout-check
 "$PROJECT_PATH" --json`. When delivery coverage holds, record the step complete
-with `satisfied_by: { pr: delivery-coverage }` in the snapshot and run every
+with `satisfied_by: { pr: delivery-coverage }` in the snapshot, then run
+`oat project check-state "$PROJECT_PATH"`. On nonzero, stop; repair and recheck
+before committing or continuing. Only after success run every
 other configured step unchanged; never record it before that position. When an
 accepted phase is uncovered (`phase-uncovered`), the step's target
 `oat-project-pr-final` registers the terminal delivery; other refusals route to
@@ -211,6 +229,9 @@ closeout remains in progress:
 - `oat_phase_status: in_progress` (until all closeout boundaries pass)
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - Do not append `"implement"` to `oat_hill_completed` yet.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Update content:
 
@@ -634,6 +655,13 @@ artifact before deciding the next transition:
   `blocked/launch_reconciliation_required` and never relaunches automatically.
   Surface the persisted attempt ID, marker/receipt paths, and exact recovery
   action so a human can reconcile or explicitly retire that attempt.
+
+After **each** manual state-frontmatter transition in this Step 14 (resolution,
+launch intent/acceptance/result, receive intent/completion/failure, disposition,
+attempt, stale/freshness checkpoint, and operator waiver), run
+`oat project check-state "$PROJECT_PATH"`. On nonzero, stop; repair and recheck
+before committing or continuing. This applies to every branch, including
+no-gate, project-disabled, failure, and interruption exits.
 
 Persist and commit every state transition before crossing its launch, receive,
 stop, approval-aware sequence, completion, or output boundary. Append a concise
@@ -1233,6 +1261,12 @@ success. If a child removed or altered it, restore the authoritative snapshot,
 record that step as failed, and stop with the boundary, failed step, and exact
 resume command: `oat-project-implement`.
 
+After **each** manual state-frontmatter write in this Step 15 (initial or
+repaired snapshot, child results, sequence fields, terminal status, and rolling
+freshness checkpoint), run `oat project check-state "$PROJECT_PATH"`. On
+nonzero, stop; repair and recheck before committing, dispatching, returning, or
+continuing. Apply this to the lite, non-lite, and autonomous algorithms below.
+
 Commit each completed step before dispatching the next step. On failure, persist
 `status: failed`, the boundary, the failed step, and concise recovery context.
 A pre-approval failure leaves `approval: pending`; a post-approval failure
@@ -1421,6 +1455,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - If `"implement"` is in `oat_hill_checkpoints`, append `"implement"` to
   `oat_hill_completed`; otherwise leave it unchanged.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Update the current phase and progress content to record that implementation,
 final review, the configured exit gate, and closeout sequencing are complete.

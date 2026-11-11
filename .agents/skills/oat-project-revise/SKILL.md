@@ -3,9 +3,9 @@ name: oat-project-revise
 description: Use when a project has an open PR and human feedback needs to be incorporated. Creates revision tasks and re-enters implementation.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.8
+  version: 1.0.9
 ---
 
 # Project Revise
@@ -240,6 +240,8 @@ ordered set plus p-rev{N}], stage: implementing, review_artifact: null }`
   `oat_milestone_status`, `oat_current_task_id`, and `oat_current_task` stay
   unchanged.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 **Task naming:** Prefix with `(revision)` — following the `(review)` convention in review-receive.
 
 **Task IDs:** `prev{N}-t{NN}` format (e.g., `prev1-t01`, `prev1-t02`).
@@ -294,6 +296,9 @@ never after `## References`:
 - `oat_current_task: prev{N}-t01` (brief modes: `p-rev{N}`)
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 #### 4g: Route to Implement
 
 Tell the user: "Revision tasks created. Run the `oat-project-implement` skill to execute them starting from {first_task_id}."
@@ -310,6 +315,9 @@ Update state.md:
 
 - `oat_phase_status: in_progress`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 This is the key value revise adds: state transition management so agents know the project is in revision mode.
 

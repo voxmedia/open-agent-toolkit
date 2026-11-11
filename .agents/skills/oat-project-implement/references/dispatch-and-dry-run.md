@@ -295,6 +295,9 @@ leaving policy state absent. For `Inherit Host Defaults`, persist
 or effort in this mode. `Leave Unresolved` records no runtime policy: stop
 before phase work and report the unresolved state.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 If no policy resolves and `OAT_NON_INTERACTIVE=1` or no user-response channel
 exists, rerun the resolver with `--non-interactive` and stop before work
 starts if it blocks:

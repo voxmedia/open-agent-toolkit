@@ -297,6 +297,10 @@ oat_phase_recovery_policy:
       pending_attempt: null
 ```
 
+After each manual recovery-ledger write (reservation, completed/failed marker,
+or root settlement), run `oat project check-state "$PROJECT_PATH"`. On nonzero,
+stop; repair and recheck before any edit, commit, verification, or continuation.
+
 A phase's `phase_attempt_usage.<pNN>` entry in `state.md` is the authoritative
 durable usage ledger. The count is monotonic and survives process, handle, and
 session interruption. Reports and canonical events corroborate the ledger; they
@@ -1172,6 +1176,9 @@ update the phase's Progress Overview row, keep `**Status:** in_progress`, and
 point both resume pointers at the phase ID. A missing `**Head:**` stops before
 review.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 The task rows, resume pointer, and recovery settlement do not depend on the
 review outcome, which is why they can move ahead of the review; the recovery
 settlement is validated from the phase report, not from the review. A
@@ -1245,6 +1252,9 @@ Write the review-outcome bookkeeping that Step 7a leaves out:
 - update `state.md` last commit and timestamp for any review-fix commit, and
   its current task when the phase outcome changes it; and
 - preserve any configured retry override.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Phase row transitions: a passing root review (zero Critical and zero High) can
 still queue Medium or Low fix tasks through review-receive, and the selected

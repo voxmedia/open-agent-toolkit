@@ -51,7 +51,9 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
    phases continue. **Bundle phases:** a STOP parks only the stopped task; the
    implementer records the blocker and continues remaining independent tasks; the
    phase is terminal when every task is completed or parked
-   (DR-260713-bundle-stop-semantics-park).
+   (DR-260713-bundle-stop-semantics-park). After writing `state.md` frontmatter,
+   run `oat project check-state "$PROJECT_PATH"`; on nonzero, stop, repair and
+   recheck before committing or continuing any task or phase.
 5. **Group-dependency rule:** a group starts when every phase of the previous
    group is terminal — merged, or parked with completed commits merged. A park
    never blocks the next group.

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.5
+  version: 1.5.6
 ---
 
 # Project Remote Review Receive
@@ -268,6 +268,9 @@ Update `state.md`:
 - `oat_phase_status: in_progress`
 - `oat_current_task: <first-new-task-id|null>`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 6.5: Commit Review Bookkeeping (Required)
 

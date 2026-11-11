@@ -76,6 +76,7 @@ oat config set updateNotifications false --user
 Use these commands when you want structured runtime/project state out of the CLI:
 
 - `oat config dump --json` - emit merged OAT config with per-key source attribution
+- `oat project check-state <project-path> [--json]` - read-only strict YAML frontmatter mapping check for `state.md`; no lifecycle semantics or rewriting. Exit 0 means a mapping parsed, 1 means missing/non-mapping frontmatter or invalid YAML, and 2 means the file could not be read. JSON reports `valid`, `statePath`, and, on failure, `code` and `errors`. Use an absolute project path from any working directory. After every manual lifecycle frontmatter write, stop on nonzero, repair and recheck before committing or continuing. `validate-plan` and dashboard refresh do not substitute for this check.
 - `oat project status --json` - emit the active project's full parsed control-plane state
 - `oat project list --json` - emit summary state for tracked projects under the configured projects root
 - `oat project closeout-check <project-path> --json` - report whether a configured, autonomous, or lite closeout's `oat_post_implement_sequence` snapshot permits terminal completion and, for a goal project, whether the declaration, outcome audit, and delivery coverage boundary holds, and which step, approval, or skill owns it next (read-only); for a goal project it also lists the terminal deliveries' freshness waivers (`waivers` under `--json`, on success and on refusal)
@@ -83,6 +84,18 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat project delivery check --project <path> --subject <mNN|dNN> --json` - read-only goal delivery evidence report for a milestone or registered delivery (`status: ok`, or `undeliverable` with exit 1)
 - `oat project delivery waive --project <path> --delivery <dNN> --reason <text> [--by <name>]` - operator-only head-bound freshness waiver for a registered goal delivery that is stale only through head movement; restores its passed record in `state.md` (refuses under `OAT_AUTONOMOUS=1`, with a stable `code` under `--json`)
 - `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`; refuses the same incomplete closeout `closeout-check` reports; on success for a goal project it lists the terminal deliveries' freshness waivers (`waivers` under `--json`)
+
+The `oat-project-complete` skill observes a tracked PR live before writing. For
+a shared or synced project with an already merged original it prepares a fresh branch from the updated PR base
+and routes bookkeeping through a separate follow-up under existing explicit
+authority, preserving the original URL/status/body. Unsafe local inputs stop
+for recovery; existing archive receipt and shared/synced/local owners remain
+authoritative. If a terminal synced archive completed before the original merged,
+resume verifies its exact record retirement and exports on the updated base,
+including squash merges. Already-delivered bookkeeping needs no branch push or
+PR and skips PR-link rendering against the local checkout; pending delivery stops with the active pointer and receipt retained for
+recovery. Local-only projects retain their branch and live PR status without
+follow-up authority or publication. The `complete-state` command still owns lifecycle completion.
 
 `oat project delivery check --project <path> --subject mNN --recovery --json` checks the matching committed phase-only `oat_goal_recovery` scope. The record must have `delivery_id: null` and a nonempty, unique, canonical phase set in plan order, owned by the milestone and accepted. Commit the recovery record before checking; unrelated local state edits are allowed. Ordinary milestone checks retain full milestone scope; registered delivery recoveries use the ordinary `--subject dNN` check.
 

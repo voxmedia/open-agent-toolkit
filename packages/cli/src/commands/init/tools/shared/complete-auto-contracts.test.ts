@@ -406,7 +406,7 @@ describe('oat-project-complete-auto identity', () => {
     expect(fm).toContain(`name: ${SKILL}`);
     expect(fm).toContain('disable-model-invocation: false');
     expect(fm).toContain('user-invocable: false');
-    expect(fm).toMatch(/metadata:\n {2}version: 1\.0\.1/);
+    expect(fm).toMatch(/metadata:\n {2}version: 1\.0\.2/);
     expect(fm).not.toContain('AskUserQuestion');
   });
 
@@ -992,6 +992,16 @@ describe('wave closeout invokes the companion', () => {
     );
   });
 
+  it('the program checkpoint names interactive completion for missing follow-up authority', () => {
+    const checkpoint = waveProgramCheckpoint();
+    expect(checkpoint).toContain(
+      'For `preflight:8`, keep the wrapper deferred and name `oat-project-complete` as the next owner',
+    );
+    expect(checkpoint).toContain(
+      'The checkpoint alone does not authorize a separate bookkeeping PR',
+    );
+  });
+
   it('the provenance wave-execute step 8 passes completes a reviewed wave with an open tracked PR', () => {
     const step = waveExecuteStep8();
 
@@ -1023,37 +1033,15 @@ describe('wave closeout invokes the companion', () => {
   });
 });
 
-describe('the companion never creates a PR', () => {
-  function interactivePrRules(): {
-    configOpens: boolean;
-    trackedOpenSkips: boolean;
-    createGatedOnShouldOpen: boolean;
-    syncRunsForOpenPr: boolean;
-  } {
-    const interactive = readRepoFile(INTERACTIVE_PATH);
-    const flat = normalize(interactive);
-    const stepEleven = sliceBetween(
-      interactive,
-      '### Step 11: Open PR in GitHub (Conditional)',
-      '### Step 11.5:',
+describe('the companion composes authorized bookkeeping publication', () => {
+  it('retains the interactive create-PR preference rule independently of companion authority', () => {
+    expect(normalize(readRepoFile(INTERACTIVE_PATH))).toContain(
+      '**If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question.',
     );
-    return {
-      configOpens: flat.includes(
-        '**If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question.',
-      ),
-      trackedOpenSkips: flat.includes(
-        'If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"`',
-      ),
-      createGatedOnShouldOpen:
-        stepEleven.includes('**Skip if `SHOULD_OPEN_PR` is false.**') &&
-        stepEleven.includes('gh pr create'),
-      syncRunsForOpenPr: flat.includes(
-        '**Run only when `WAS_PR_OPEN_AT_START="true"`',
-      ),
-    };
-  }
+  });
 
-  function companionForcesNoPr(): boolean {
+  it('hands the per-project decision to observation, preparation and publication', () => {
+    const skill = normalize(readRepoFile(SKILL_PATH));
     const stepFive = normalize(
       sliceBetween(
         readRepoFile(SKILL_PATH),
@@ -1061,64 +1049,55 @@ describe('the companion never creates a PR', () => {
         '### Batch Mode',
       ),
     );
-    return (
-      stepFive.includes(
-        'set `SHOULD_OPEN_PR="false"`, whatever `workflow.createPrOnComplete` or `oat_pr_status` says',
-      ) && stepFive.includes('This skill never runs `gh pr create`')
+    expect(stepFive).toContain(
+      'Apply the per-project PR decision with `apply_auto_completion_pr_decision`',
     );
-  }
+    expect(stepFive).toContain(
+      'after the interactive Step 1.75 observation, again after its Step 2 answers and before Step 2.5, and immediately before Step 11',
+    );
+    expect(stepFive).toContain(
+      'Let the current Step 11 create or reuse that follow-up.',
+    );
+    expect(stepFive).not.toContain('This skill never runs `gh pr create`');
+    const preflight = skill.indexOf('apply_auto_completion_pr_decision || {');
+    expect(preflight).toBeGreaterThanOrEqual(0);
+    expect(preflight).toBeLessThan(skill.indexOf('### Step 4:'));
 
-  /**
-   * Walk the interactive PR decisions (Step 2 config and tracked-PR rules,
-   * the Step 11 create gate, the Step 11.5 sync gate) with or without the
-   * companion's Step 5 override.
-   */
-  function simulatePr(
-    prStatus: string | null,
-    createPrOnComplete: boolean,
-    companion: boolean,
-  ): { prCreate: boolean; prSync: boolean } {
-    const rules = interactivePrRules();
-    expect(rules.createGatedOnShouldOpen).toBe(true);
-    let shouldOpen = false;
-    if (rules.configOpens && createPrOnComplete && prStatus !== 'open') {
-      shouldOpen = true;
-    }
-    if (rules.trackedOpenSkips && prStatus === 'open') {
-      shouldOpen = false;
-    }
-    if (companion && companionForcesNoPr()) {
-      shouldOpen = false;
-    }
-    return {
-      prCreate: shouldOpen,
-      prSync: rules.syncRunsForOpenPr && prStatus === 'open',
-    };
-  }
-
-  it('the interactive flow alone would create a PR for a merged project with createPrOnComplete', () => {
-    expect(simulatePr('merged', true, false).prCreate).toBe(true);
+    expect(skill).toContain(
+      'Neither `workflow.autonomousComplete` nor `PR_ON_COMPLETE` grants follow-up publication authority.',
+    );
+    expect(skill).toContain(
+      "one project's reference cannot authorize another or add a project to the requested batch",
+    );
   });
 
-  it('a merged project with createPrOnComplete true completes without a PR-create attempt', () => {
-    expect(decide({ ...MERGED_BATCH_MEMBER, prStatus: 'merged' })).toEqual({
-      kind: 'completed',
-      exception: false,
-    });
-    expect(simulatePr('merged', true, true)).toEqual({
-      prCreate: false,
-      prSync: false,
-    });
-  });
-
-  it('the tracked open path still updates the existing PR and creates none', () => {
-    expect(decide(REVIEWED_WAVE_OPEN_PR)).toEqual({
-      kind: 'completed',
-      exception: true,
-    });
-    expect(simulatePr('open', true, true)).toEqual({
-      prCreate: false,
-      prSync: true,
-    });
+  it('keeps the original PR and goal coverage separate from bookkeeping', () => {
+    const stepFive = normalize(
+      sliceBetween(
+        readRepoFile(SKILL_PATH),
+        '### Step 5: Complete the Project',
+        '### Batch Mode',
+      ),
+    );
+    expect(stepFive).toContain(
+      'For the tracked open/before-merge path it sets `SHOULD_OPEN_PR="false"`',
+    );
+    expect(stepFive).toContain(
+      'Goal bookkeeping stays outside `oat_deliveries`/delivery coverage',
+    );
+    expect(stepFive).toContain(
+      'Never overwrite the original URL/status with a follow-up identity.',
+    );
+    const batch = sliceBetween(
+      readRepoFile(SKILL_PATH),
+      '### Batch Mode',
+      '### Step 6:',
+    );
+    expect(batch).toContain(
+      'git switch --detach "$COMPLETION_BASE_HEAD" || exit 1',
+    );
+    expect(batch).toContain(
+      `test "$(git rev-parse '@{upstream}')" = "$(git rev-parse HEAD)" || exit 1`,
+    );
   });
 });

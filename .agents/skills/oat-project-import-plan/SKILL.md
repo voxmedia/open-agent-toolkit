@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.24
+  version: 1.4.25
 ---
 
 # Import External Plan
@@ -343,6 +343,9 @@ maximum. Use the canonical
 project ceiling resolves. `Uncapped` and `Inherit Host Defaults` remain
 explicit modes; `Leave Unresolved` is not implementation-ready.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 4.25: Configure Optional Phase Gate Review
 
 After normalization has produced stable phase IDs and before Step 4.5 starts
@@ -388,6 +391,9 @@ Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
 every gate leaves the map absent. Never modify the shared, local, or user
 configuration layers, and never prompt or write a new map in non-interactive
 mode.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 4.5: Run Import-Aware Plan Artifact Review Loop
 
@@ -486,6 +492,9 @@ Set `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_phase_status: complete`
 - `oat_current_task: null`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp, e.g. 2026-03-10T14:30:00Z}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 5.5: Ensure Active Project Pointer
 

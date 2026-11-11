@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.26
+  version: 2.3.27
 ---
 
 # Quick Start Project
@@ -268,6 +268,9 @@ validated for a new one:
 - `oat_phase_status: in_progress`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 2: Capture Discovery (Adaptive Depth)
 
 If `"$PROJECT_PATH/discovery.md"` is missing, create it first with `oat template resolve discovery --output "$PROJECT_PATH/discovery.md"`.
@@ -375,6 +378,10 @@ oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
   - `oat_phase: discovery`
   - `oat_phase_status: complete`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+  After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+  On nonzero, stop; repair and recheck before committing or continuing.
+
 - Refresh repo dashboard: `oat state refresh`
 - Commit the promoted discovery/state artifacts before stopping:
 
@@ -583,6 +590,9 @@ Update `"$PROJECT_PATH/state.md"` to reflect the design phase:
 - `oat_phase_status: complete`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 Before proceeding to plan generation or pausing for validation, persist the design bookkeeping:
 
 ```bash
@@ -760,6 +770,9 @@ copy compiled provider targets into this shape or user config. `Uncapped` and
 `Inherit Host Defaults` remain explicit modes; `Leave Unresolved` and
 non-interactive unresolved state are not implementation-ready.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 3.55: Configure Optional Phase Gate Review
 
 After the generated quick plan has stable phase IDs and before Step 3.6 starts
@@ -803,6 +816,9 @@ Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
 every gate leaves the map absent. Never modify the shared, local, or user
 configuration layers, and never prompt or write a new map in non-interactive
 mode.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 3.6: Run Plan Artifact Review Loop
 
@@ -1241,6 +1257,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_current_task: null`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp, e.g. 2026-03-10T14:30:00Z}"`
 - set `oat_hill_checkpoints: []` for quick mode to avoid spec/design gate confusion
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Recommended quick-mode gate defaults:
 

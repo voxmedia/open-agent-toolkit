@@ -3,9 +3,9 @@ name: oat-project-reconcile
 description: Use when human-implemented commits need to be mapped back to planned tasks. Reconciles implementation.md and state.md after manual work outside the OAT workflow.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.7
+  version: 1.0.8
 ---
 
 # Reconcile Manual Implementation
@@ -208,6 +208,10 @@ this skill differs:
   confirms the repaired record with the user in Step 4. Older-delivery
   recovery leaves `oat_milestone`, `oat_milestone_status`,
   `oat_current_task_id`, and `oat_current_task` untouched.
+
+  After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+  On nonzero, stop; repair and recheck before committing or continuing.
+
 - **Never for the active milestone.** Reconcile never creates an
   `oat_goal_recovery` record for the active milestone and never creates one
   at all: only `oat-project-review-receive`, `oat-project-revise`, and
@@ -216,6 +220,9 @@ this skill differs:
   more than one pull request is routed here by its registration owner: report
   the matches and attach the one the user confirms in Step 4; reconcile never
   creates a pull request.
+
+  After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+  On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 1: Find Checkpoint
 
@@ -736,6 +743,9 @@ oat_project_state_updated: '{ISO 8601 UTC timestamp}'
 # Always in_progress after reconciliation — only oat-project-review-receive
 # may advance to complete after the final review passes.
 ```
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 **5f. Record the reconciliation session:**
 

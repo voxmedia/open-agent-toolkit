@@ -1126,7 +1126,7 @@ printf 'artifact-read\\n'`,
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.5.5');
+    expect(readDeclaredVersion(content)).toBe('1.5.6');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);
@@ -1455,7 +1455,7 @@ printf 'artifact-read\\n'`,
 
     expect(content).toContain('oat_pr_status');
     expect(content).toContain(
-      'If `oat_pr_status` is `open`, do not ask the Open PR question',
+      'If `OBSERVED_PR_STATUS` is `open`, do not ask the Open PR question',
     );
     expect(content).toContain(
       'If `oat_pr_url` is present, show it in the completion summary',
@@ -1476,7 +1476,7 @@ printf 'artifact-read\\n'`,
       'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
     );
     const stateReadIndex = content.indexOf(
-      'Before asking the batched questions, read `oat_pr_status`',
+      'PROJECT_PR_FIELDS=$(oat project status --project-path "$PROJECT_PATH" --shell',
     );
 
     expect(scopeIndex).toBeGreaterThanOrEqual(0);
@@ -1498,7 +1498,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.7.19');
+    expect(readDeclaredVersion(content)).toBe('1.7.20');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1509,7 +1509,7 @@ printf 'artifact-read\\n'`,
       'When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt',
     );
     expect(content).toContain(
-      'Persist either `generate` or `skip` as the returned `interactive` record before continuing.',
+      'persist either `generate` or `skip` as the returned `interactive` record before continuing.',
     );
     expect(content).toContain(
       'A valid persisted `oat_project_recap` decision prevents another prompt.',
@@ -3574,6 +3574,15 @@ printf 'artifact-read\\n'`,
     } finally {
       rmSync(workspace, { recursive: true, force: true });
     }
+  });
+
+  it('keeps the create-PR preference insufficient for goal bookkeeping authority', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    expect(content).toContain(
+      '`PR_ON_COMPLETE` alone never authorizes a goal bookkeeping PR',
+    );
   });
 
   it('syncs the open PR description after archive so blob links keep resolving', () => {

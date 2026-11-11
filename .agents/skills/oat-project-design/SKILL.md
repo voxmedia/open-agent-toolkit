@@ -3,9 +3,9 @@ name: oat-project-design
 description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, selective collaborative, or draft-and-review design flow, confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.11
+  version: 2.3.12
 ---
 
 # Design Phase
@@ -810,6 +810,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - **If** `"spec"` is in `oat_hill_checkpoints` and not previously completed via the standalone spec skill: append `"spec"` too (folded HiLL — a single approval covers both).
 
 **Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Update content:
 

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.19
+  version: 1.7.20
 ---
 
 # Complete Project
@@ -241,6 +241,66 @@ The shared and synced archive resume branches above continue at Step 12 or
 Step 8.5 and skip this gate, because `complete-state` already succeeded on
 those paths.
 
+### Step 1.75: Observe the Original PR Live (Read Only)
+
+On the normal path, run this before Step 2 and every completion write, including
+Step 3.3's docs-skip metadata and any child summary, retro, recap or review write.
+A tracked URL requires a successful live observation; a failed `gh` request
+or invalid response stops here without completion writes. A closed-unmerged PR
+continues on the existing branch with observed status `closed`,
+`WAS_PR_OPEN_AT_START=false`, and no follow-up preparation.
+No tracked URL follows the existing path and claims no observed PR status.
+
+```bash
+COMPLETION_BRANCH_SCRIPT="$SKILL_DIR/scripts/prepare-completion-branch.mjs"
+PROJECT_PR_FIELDS=$(oat project status --project-path "$PROJECT_PATH" --shell \
+  oat_pr_url=project.prUrl oat_pr_status=project.prStatus \
+  COMPLETION_WORKFLOW_MODE=project.workflowMode) || exit 1
+eval "$PROJECT_PR_FIELDS" || exit 1
+COMPLETION_PR_FIELDS=$(node "$COMPLETION_BRANCH_SCRIPT" --action observe \
+  --pr-url "${oat_pr_url:-}" --format shell) || exit 1
+eval "$COMPLETION_PR_FIELDS" || exit 1
+```
+
+`ORIGINAL_PR_URL`, `OBSERVED_PR_STATUS`, `PR_STATUS_OBSERVED_AT` and
+`WAS_PR_OPEN_AT_START` come from GitHub, never the stale stored status. Keep
+these original-delivery values separate from `FOLLOWUP_PR_URL` and
+`COMPLETION_BRANCH`. Do not update a merged original's body or project its
+bookkeeping successor into `oat_pr_url`/`oat_deliveries`.
+
+Receipt resumes keep their existing route: shared archive resumes go directly
+to Step 12; synced archive resumes go to Step 8.5. Do not replay completed
+archive mutations to prepare a branch. For a synced archive resume, live-observe
+the original URL read from the archived status before Step 8.5:
+
+```bash
+# Only on the existing SYNCED_ARCHIVE_RESUME route, after archived status read.
+COMPLETION_BRANCH_SCRIPT="$SKILL_DIR/scripts/prepare-completion-branch.mjs"
+RESUME_PR_FIELDS=$(node "$COMPLETION_BRANCH_SCRIPT" --action resume \
+  --project-path "$ACTIVE_PROJECT_PATH" --scope synced \
+  --archive-receipt "$ARCHIVE_OUTPUT" --archive-pr-status "${oat_pr_status:-}" \
+  --pr-url "${oat_pr_url:-}" --format shell) || exit 1
+eval "$RESUME_PR_FIELDS" || exit 1
+```
+
+For a merged original with a prepared follow-up, it validates and retains that
+parent branch and resolves its follow-up; missing/mismatched preparation bindings
+still stop before further writes. A validated terminal synced archive whose
+archived PR status was `open` may instead have completed before any follow-up
+was prepared. Without an existing preparation binding, the helper compares the
+receipt-owned discovery-record deletion and exported files with the fetched
+base. Exact resulting trees permit squash merges without commit ancestry. A
+match sets `COMPLETION_ARCHIVE_DELIVERED="true"`: continue at Step 8.5 on the
+current branch, skip the Step 10 push and Steps 11/11.5 publication/body work,
+and clear the pointer only through the existing Step 12 finalizer. No new
+branch or PR is created. A difference stops with
+`E_COMPLETION_BOOKKEEPING_PENDING`, naming the receipt, base and pending record
+or exports. Preserve the active pointer, receipt and work for explicit delivery
+recovery; never push the merged original or replay archive. Failed live
+observation also stops before further writes.
+A shared terminal resume only validates its durable archive and clears the
+pointer as before; it performs no delivery/body work.
+
 ### Step 2: Upfront User Questions (Batched)
 
 Ask all user questions at once so the user can answer them in a single interaction, then the rest of the skill runs without further prompts.
@@ -251,18 +311,9 @@ Ask all user questions at once so the user can answer them in a single interacti
 - Codex: use structured user-input tooling when available in the current Codex host/runtime
 - Fallback: present as a plain-text conversational prompt
 
-Before asking the batched questions, read `oat_pr_status` and `oat_pr_url` from `state.md` frontmatter.
-
-**Capture pre-mutation PR state for later steps.** The skill mutates `state.md` (Step 5) and the project tree (Step 8) before Step 11.5 needs to know whether the PR was already open at the start. Persist that decision in a shell variable now:
-
-```bash
-WAS_PR_OPEN_AT_START="false"
-if [[ "${oat_pr_status:-}" == "open" ]]; then
-  WAS_PR_OPEN_AT_START="true"
-fi
-```
-
-Use the same `state.md` read you already perform for `oat_pr_status`/`oat_pr_url` — do not re-read after Step 5. Step 11.5 (Sync Open-PR Description on GitHub) consumes this value.
+Use Step 1.75's live observation for the tracked-PR decision. In particular,
+`WAS_PR_OPEN_AT_START="false"` for a merged original even if `state.md` says
+`open`; retain the original URL for the final report.
 
 **Workflow preference checks (before asking questions):**
 
@@ -297,8 +348,8 @@ PROJECT_RECAP_CONFIG=$(oat config get workflow.explainers.projectRecap --json 2>
 - **If `PR_ON_COMPLETE` is `true` AND no tracked open PR exists:** Set `SHOULD_OPEN_PR="true"`. Skip the Open PR question. Print `PR on complete: enabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is `false`:** Set `SHOULD_OPEN_PR="false"`. Skip the Open PR question. Print `PR on complete: disabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is unset:** Include the Open PR question in the batched prompt as normal (backward compatible).
-- The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
-- **Goal mode (`oat_workflow_mode: goal`):** the completion decision consumes the validated goal coverage from Step 1.5. When the declaration and its exhaustive audit are valid, every terminal delivery is at its agreed endpoint (`status: at_endpoint`, or `endpoint_attainment` recorded), and the snapshot's `pr` step is satisfied by coverage (`satisfied_by: { pr: delivery-coverage }`), set `SHOULD_OPEN_PR="false"`, skip the Open PR question, call no `gh pr create` in Step 11, and print `PR on complete: satisfied by goal delivery coverage` — even when `PR_ON_COMPLETE` is `true`. Genuinely uncovered delivery work never reaches this step: Step 1.5 refuses it and routes to the goal registration owner (`oat-project-pr-final` for terminal registration, `oat-project-pr-progress` for a milestone delivery). A separately intended bookkeeping PR for the completion commits is not a goal delivery: open one only when the user explicitly asks for it in this run, never because of `PR_ON_COMPLETE`, and never register it in `oat_deliveries` or count it toward coverage. Every other mode is unchanged.
+- The existing tracked-PR skip still applies: if `OBSERVED_PR_STATUS` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
+- **Goal mode (`oat_workflow_mode: goal`):** the completion decision consumes the validated goal coverage from Step 1.5. When the declaration and its exhaustive audit are valid, every terminal delivery is at its agreed endpoint (`status: at_endpoint`, or `endpoint_attainment` recorded), and the snapshot's `pr` step is satisfied by coverage (`satisfied_by: { pr: delivery-coverage }`), set `SHOULD_OPEN_PR="false"` for the delivery, skip the Open PR question, and print `PR on complete: satisfied by goal delivery coverage` — even when `PR_ON_COMPLETE` is `true`. Genuinely uncovered delivery work never reaches this step: Step 1.5 refuses it and routes to the goal registration owner (`oat-project-pr-final` for terminal registration, `oat-project-pr-progress` for a milestone delivery). A separately intended bookkeeping PR for the completion commits is not a goal delivery: reuse existing explicit task authority to prepare, publish and land it; do not require a new per-run request. Missing authority still needs the corresponding operator decision in the batched questions. `PR_ON_COMPLETE` alone never authorizes a goal bookkeeping PR. Never register bookkeeping in `oat_deliveries`, count it toward coverage, or replace the projected original delivery PR. Every other mode is unchanged.
 
 Select archive prompt participation before assembling the batched prompt:
 
@@ -316,6 +367,21 @@ if [[ "$IS_DURABLE_PROJECT" == "true" ]]; then
 fi
 # archive-prompt-selection:end
 ```
+
+For a merged original in a durable project, resolve the separate bookkeeping PR choice from existing
+explicit task authority before the preference rules above. Retain its source as
+`COMPLETION_FOLLOWUP_AUTHORITY`; do not ask again for actions it already covers.
+When that authority is absent, obtain the needed decision in this same batched
+prompt before preparing or writing. For goal mode, a create-PR preference is
+insufficient. Set `SHOULD_OPEN_PR="true"` only when follow-up publication is
+authorized, even though the goal delivery step remains satisfied by coverage.
+Publication and landing each require their corresponding existing authority;
+this skill does not add merge permission.
+
+For a local project with a merged original, set `SHOULD_OPEN_PR="false"` and
+skip the follow-up authority question regardless of the PR preference. Local
+artifacts remain ignored on the current branch; there is no tracked completion
+bookkeeping to publish. Keep the live original merged identity/status.
 
 The "Ready to mark complete?" confirmation is always asked — it is a meaningful "are you sure" moment, not a preference.
 
@@ -386,7 +452,7 @@ the current `oat_project_recap` value from the same `state.md` read and the
 source-aware `workflow.explainers.projectRecap` preference. Preserve the state
 content hash required by the adapter's safe intent persistence contract.
 
-When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt: "Generate a final project recap as part of completion?" Do not open a second prompt. Resolve the answer as `generate` or `skip`, then use the adapter's intent persistence helper with the captured state hash. Persist either `generate` or `skip` as the returned `interactive` record before continuing. If persistence reports a stale write, re-read state and resolve precedence again; never retry the stale record blindly. A valid persisted `oat_project_recap` decision prevents another prompt.
+When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt: "Generate a final project recap as part of completion?" Do not open a second prompt. Resolve the answer as `generate` or `skip` and hold it in memory until Step 2.5 has prepared the branch. Then re-read state, resolve precedence again, and use the adapter's intent persistence helper with the current state hash to persist either `generate` or `skip` as the returned `interactive` record before continuing. If persistence reports a stale write, re-read state and resolve precedence again; never retry the stale record blindly. A valid persisted `oat_project_recap` decision prevents another prompt.
 
 Set `SHOULD_GENERATE_RECAP="true"` only when the final resolved decision is
 `generate`; otherwise set it to `"false"`. Direct `always` or `never` workflow
@@ -438,7 +504,7 @@ implementation ran:
 5. **Generate final project recap** (only when recap intent resolution returned `needsPrompt: true`): "Generate a final project recap as part of completion?"
 6. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
 
-If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"` and treat the existing PR as already tracked.
+If `OBSERVED_PR_STATUS` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"` and treat the existing PR as already tracked.
 
 Present all applicable questions together. Example combined prompt:
 
@@ -461,11 +527,58 @@ the decision resolver above. Store the remaining answers as
 and `SHOULD_OPEN_PR` for use in later steps. Set
 `SHOULD_GENERATE_RETRO="false"` when the retro already exists or this completion
 run is non-interactive. Persist a prompted recap answer only after that
-confirmation is accepted.
+confirmation is accepted and Step 2.5 has prepared any merged-PR branch.
 
 If the summary status is `current`, set `SHOULD_GENERATE_SUMMARY="false"` and note that a current summary is already available.
 
 If `oat_pr_url` is present, show it in the completion summary.
+
+### Step 2.5: Prepare Merged-PR Bookkeeping Before Writes
+
+Initialize `COMPLETION_OUTPUT_PATHS=()` now and retain each producer's exact
+paths through Step 10. For a durable project with a live merged original, prepare before Step 3,
+including docs-skip, summary and review-child mutations:
+
+```bash
+if [[ "$IS_DURABLE_PROJECT" == "true" && "$OBSERVED_PR_STATUS" == "merged" ]]; then
+  COMPLETION_BRANCH_FIELDS=$(node "$COMPLETION_BRANCH_SCRIPT" --action prepare \
+    --project-path "$ACTIVE_PROJECT_PATH" --scope "$PROJECT_SCOPE" \
+    --pr-url "$ORIGINAL_PR_URL" \
+    --authority "${COMPLETION_FOLLOWUP_AUTHORITY:?resolve existing authority in Step 2}" \
+    --format shell) || exit 1
+  eval "$COMPLETION_BRANCH_FIELDS" || exit 1
+  PREPARED_PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT_PATH" --format value) || exit 1
+  test "$PREPARED_PROJECT_SCOPE" = "$PROJECT_SCOPE" || exit 1
+  oat project closeout-check "${CLOSEOUT_CHECK_ARGS[@]}" > /dev/null || exit 1
+fi
+```
+
+The helper fetches the live PR's base from `origin` and creates a separate
+`oat/complete-pr-…` branch at that fetched commit. It refuses dirty staged,
+unstaged or untracked work, commits beyond the merged delivery, missing shared
+inputs on base, divergent shared inputs, or a synced checkout that differs
+from its retained ref. Local projects skip preparation and follow-up publication; synced artifacts retain their
+existing owner. A refusal leaves the work intact; report the conflicting inputs
+and stop for recovery, without stashing, dropping or copying work implicitly.
+An updated base may contain unrelated changes after the original merge.
+
+A deterministic name and local branch binding preserve the original URL,
+project, scope and prepared base across retries. An existing branch must match
+that binding and descend from its prepared base, which must still be an
+ancestor of the updated base. Reuse an existing open follow-up rather than
+creating another. Before continuing a resume, inspect
+`git diff --name-status "$COMPLETION_BASE_HEAD" HEAD` and confirm every change
+is a previously produced completion output; refuse unexplained/divergent work.
+Keep the original producer list and exact-path commit identities. A closed or
+merged follow-up is a recovery boundary, not permission to open a duplicate.
+
+After switching, re-resolve the project scope and run the read-only Step 1.5
+closeout check against the now-authoritative inputs. Stop on either failure.
+Do not use old branch's state values or cached artifacts to overwrite newer
+base inputs. Only now persist a prompted recap answer using the adapter and a
+fresh state hash; no Step 2 answer writes before preparation. The later Step 3.65 receipt router remains authoritative for
+synced non-archive pin-source/final-artifact recovery; preparation does not
+replay its skipped writes or invent new receipts.
 
 ### Step 3: Check Completion Gates
 
@@ -563,6 +676,9 @@ If `oat_docs_updated` is `null` or empty:
 
 - **If `requireForProjectCompletion` is `true`:** Hard gate — ask user to run `oat-project-document` or explicitly skip. If user chooses to skip, update `state.md` frontmatter to set `oat_docs_updated: skipped`.
 - **If `requireForProjectCompletion` is `false` (default):** Soft suggestion — inform user about `oat-project-document` and allow proceeding. If user wants to skip, set `oat_docs_updated: skipped`.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 If `oat_docs_updated` is `skipped` or `complete`: proceed normally.
 
@@ -906,6 +1022,12 @@ disposition, `deferred advisory`, described below. Append the dispositions to th
 log before the roll-up runs, so the roll-up summarizes them and the seal remains
 the final entry:
 
+If a fix edits another active project's `state.md` frontmatter, bind
+`AFFECTED_PROJECT_PATH` to that file's containing project directory and run
+`oat project check-state "$AFFECTED_PROJECT_PATH"` immediately after the write.
+On nonzero, stop; repair and recheck before committing, appending the
+disposition, or continuing.
+
 ```bash
 oat project log append \
   --project "$PROJECT_PATH" \
@@ -1075,11 +1197,17 @@ evaluates the same invariant and the final journal evaluator (the Step 3.55
 check, on the bytes it is about to complete) and refuses either without
 writing.
 
-After `complete-state` succeeds and before any archive, record when the PR
-fields were observed: set `oat_pr_status_observed_at: '<UTC ISO 8601 now>'` in
-`state.md` frontmatter beside `oat_pr_status` (only when `oat_pr_status` is not
-`null`). An archived `oat_pr_status`/`oat_pr_url` is an observation at that
-time, not a live PR state.
+After `complete-state` succeeds and before any archive, when
+`OBSERVED_PR_STATUS` is nonempty, set `oat_pr_status` to that live observed
+`open`, `closed` or `merged` value, retain `oat_pr_url: ORIGINAL_PR_URL`, and set
+`oat_pr_status_observed_at` to `PR_STATUS_OBSERVED_AT` from the actual lookup.
+Do not stamp "now" onto a stale stored status. With no tracked URL, do not
+assert an observed status or timestamp. A merged original stays merged even
+when its separate bookkeeping PR is open. An archived PR status is an
+observation at that time, not a continuously live state.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 For `synced`, keep this finalized lifecycle state in the project checkout until
 Step 7.5 publishes it together with every later pre-archive artifact write. Do
@@ -1144,7 +1272,7 @@ carries the same Steps 0.5 through 4 contract:
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 # Resolution chain: OAT config > git remote > fallback
-BASE_BRANCH=$(oat config get git.defaultBranch 2>/dev/null || true)
+BASE_BRANCH="${BASE_BRANCH:-$(oat config get git.defaultBranch 2>/dev/null || true)}"
 if [ -z "$BASE_BRANCH" ]; then
   BASE_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||' || true)
 fi
@@ -1393,6 +1521,8 @@ archive and clears the pointer without archiving again.
 
 #### Step 8.5: Finalize Archive-Aware Recap Links
 
+When `COMPLETION_ARCHIVE_DELIVERED="true"`, preserve the already-delivered summary export and skip both summary-export and PR-body recap-link rewrites; continue at Step 8.6.
+
 The recap-link rewrite in this subsection runs only when archive returned a
 `projectRecapExport`. A synced archive resume with no recap export performs no
 recap-link rewrite, then still continues at Step 8.6.
@@ -1426,7 +1556,11 @@ make pinned project links conditional on a recap export.
 #### Step 8.6: Render Final Synced Project Links
 
 Run this for every synced completion after the final project ref or archive SHA
-is known. It is required even when no project recap was selected and
+is known, except when `COMPLETION_ARCHIVE_DELIVERED="true"`. That receipt has
+already proved the exports on the fetched base and publishes no PR body: skip
+this entire step, including local export checks and link rendering. The current
+checkout may safely be an older ancestor without those exports. For other synced
+completions, this step is required even when no project recap was selected and
 `summaryExportFile` is null.
 
 Render into the PR body this run publishes. For archive completion that is the
@@ -1437,16 +1571,18 @@ synced completion it is the active PR-description artifact. Render the
 canonical pinned block:
 
 ```bash
-FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
-if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
-  test -f "$SUMMARY_EXPORT_FILE" || exit 1
-  git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
-  git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
-  SUMMARY_EXPORT_RELATIVE=$(git ls-files --full-name -- "$SUMMARY_EXPORT_FILE") || exit 1
-  [[ -n "$SUMMARY_EXPORT_RELATIVE" ]] || exit 1
-  FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")
+if [[ "${COMPLETION_ARCHIVE_DELIVERED:-false}" != "true" ]]; then
+  FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
+  if [[ -n "${SUMMARY_EXPORT_FILE:-}" ]]; then
+    test -f "$SUMMARY_EXPORT_FILE" || exit 1
+    git ls-files --error-unmatch -- "$SUMMARY_EXPORT_FILE" >/dev/null || exit 1
+    git check-ignore --quiet -- "$SUMMARY_EXPORT_FILE" && exit 1
+    SUMMARY_EXPORT_RELATIVE=$(git ls-files --full-name -- "$SUMMARY_EXPORT_FILE") || exit 1
+    [[ -n "$SUMMARY_EXPORT_RELATIVE" ]] || exit 1
+    FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")
+  fi
+  FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
 fi
-FINAL_PROJECT_LINKS=$(oat project links "${FINAL_LINK_ARGS[@]}") || exit 1
 ```
 
 Insert `FINAL_PROJECT_LINKS` when the body has no
@@ -1600,16 +1736,25 @@ Rules:
   one was selected.
 - Snapshot unrelated working-tree changes and verify they remain unchanged.
 
-For every synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
-push the parent branch exactly once after the lifecycle receipt is final.
-Verify the pushed upstream contains that exact bookkeeping commit before
+For synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
+push the parent branch exactly once after the lifecycle receipt is final,
+except when Step 1.75 already verified `COMPLETION_ARCHIVE_DELIVERED="true"`.
+That merged-later terminal archive needs no original-branch push. Otherwise
+verify the pushed upstream contains that exact bookkeeping commit before
 continuing to PR closeout or claiming completion:
 
 ```bash
-if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" && \
+  "${COMPLETION_ARCHIVE_DELIVERED:-false}" == "true" ]]; then
+  echo "Completion bookkeeping already delivered on $BASE_BRANCH at $COMPLETION_BASE_HEAD: $LIFECYCLE_COMMIT; no push required."
+elif [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
   BOOKKEEPING_PUSH_COMMIT="$LIFECYCLE_COMMIT"
   test -n "$BOOKKEEPING_PUSH_COMMIT" || exit 1
-  git push || exit 1
+  if [[ "${COMPLETION_FOLLOWUP:-false}" == "true" ]]; then
+    git push --set-upstream origin "$COMPLETION_BRANCH" || exit 1
+  else
+    git push || exit 1
+  fi
   BOOKKEEPING_UPSTREAM=$(git rev-parse --abbrev-ref \
     --symbolic-full-name '@{u}') || exit 1
   BOOKKEEPING_UPSTREAM_COMMIT=$(git rev-parse \
@@ -1620,9 +1765,36 @@ if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
 fi
 ```
 
+For a prepared follow-up outside the synced-archive block above, push its
+explicit branch and establish the upstream before PR publication:
+
+```bash
+if [[ "${COMPLETION_FOLLOWUP:-false}" == "true" && \
+  ! ( "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ) ]]; then
+  git push --set-upstream origin "$COMPLETION_BRANCH" || exit 1
+fi
+```
+
+Keep the follow-up diff completion-only: compare its prepared base with HEAD
+and reconcile every changed path to the retained exact producer list, including
+outputs already committed by summary/archive children. Unexplained paths stop
+publication. Never force-push or push the merged original's feature branch.
+
 ### Step 11: Open PR in GitHub (Conditional)
 
 **Skip if `SHOULD_OPEN_PR` is false.**
+
+For `COMPLETION_FOLLOWUP="true"`, use the prepared branch and live PR base.
+If `FOLLOWUP_PR_URL` already names its observed open PR, skip creation and
+reuse that URL. Otherwise re-run the helper with `--action resume` immediately
+before creating, retaining the prepared branch and existing explicit authority;
+a failed/ambiguous lookup stops, and a newly discovered open follow-up is reused.
+Capture a newly created URL as `FOLLOWUP_PR_URL`. Never assign it to
+`oat_pr_url`, run goal delivery registration, or replace the original delivery's
+identity/status/body. Receipt resumes with no carried PR body report the
+pending publication rather than creating an empty or guessed PR. Existing
+explicit publication authority may be reused; an unpersisted old answer alone
+is still insufficient.
 
 **CRITICAL — Strip YAML frontmatter before submitting to GitHub.**
 The local artifact file contains YAML frontmatter (`---` delimited block at the top) for OAT metadata. This frontmatter MUST NOT appear in the GitHub PR body. Before passing the file to `gh pr create`, strip everything from the start of the file through and including the closing `---` line. Verify the resulting body starts with the markdown heading (e.g., `# feat: ...`), not YAML keys.
@@ -1641,7 +1813,20 @@ Steps:
 
 ```bash
 : "${BASE_BRANCH:?BASE_BRANCH is unset; run the Step 7 base-branch resolution first}"
-gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
+if [[ "${COMPLETION_FOLLOWUP:-false}" == "true" ]]; then
+  FOLLOWUP_FIELDS=$(node "$COMPLETION_BRANCH_SCRIPT" --action resume \
+    --project-path "$ACTIVE_PROJECT_PATH" --scope "$PROJECT_SCOPE" \
+    --pr-url "$ORIGINAL_PR_URL" --format shell) || exit 1
+  eval "$FOLLOWUP_FIELDS" || exit 1
+  if [[ -z "$FOLLOWUP_PR_URL" ]]; then
+    : "${COMPLETION_FOLLOWUP_AUTHORITY:?retain explicit publication authority}"
+    FOLLOWUP_PR_URL=$(gh pr create --base "$BASE_BRANCH" \
+      --head "$COMPLETION_BRANCH" --title "{title}" --body-file "$TMP_BODY") || exit 1
+    NEW_FOLLOWUP_CREATED="true"
+  fi
+else
+  gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
+fi
 ```
 
 6. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
@@ -1652,8 +1837,27 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
 
-**Run only when `WAS_PR_OPEN_AT_START="true"` and either
-`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`.**
+**Run for an already-open original or a reused open follow-up, and either
+`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`.** Evaluate the eligibility
+below before the body lookup and target selection; skip the rest of this step
+unless `SHOULD_SYNC_PR="true"`:
+
+```bash
+SHOULD_SYNC_PR="false"
+if [[ "${IS_DURABLE_PROJECT:-false}" == "true" && \
+  ( "${SHOULD_ARCHIVE:-false}" == "true" || "${PROJECT_SCOPE:-}" == "synced" ) ]]; then
+  if [[ "${COMPLETION_FOLLOWUP:-false}" != "true" && "${WAS_PR_OPEN_AT_START:-false}" == "true" ]] || \
+    [[ "${COMPLETION_FOLLOWUP:-false}" == "true" && "${FOLLOWUP_PR_STATUS:-}" == "open" && "${NEW_FOLLOWUP_CREATED:-false}" != "true" ]]; then
+    SHOULD_SYNC_PR="true"
+  fi
+fi
+```
+
+For a merged original, this condition never targets the original. An already
+open follow-up (`COMPLETION_FOLLOWUP="true"` and `FOLLOWUP_PR_STATUS="open"`)
+uses the same archive-aware body rules below with `PR_REF="$FOLLOWUP_PR_URL"`.
+A newly created follow-up already received the final body in Step 11. Never
+fall back to the merged original or a current-branch guess for follow-up sync.
 
 When the PR was already open at the start, push the final validated completion
 body to the existing PR. Archive completion uses the regenerated archive-aware
@@ -1664,7 +1868,7 @@ commit.
 
 Skip this step when:
 
-- The PR was not yet open at the start (`WAS_PR_OPEN_AT_START="false"`) — Step 11 already created the PR with the archive-aware body.
+- Neither an already-open original nor a reused open follow-up is eligible, or Step 11 just created the follow-up with the final body.
 - No archive happened and the project is not synced — no final retained-ref
   body was published.
 - `IS_DURABLE_PROJECT="false"` — local projects are not archived in this skill, so no link breakage.
@@ -1688,7 +1892,10 @@ Steps:
 3. Resolve the open PR. Prefer the tracked URL captured in Step 2:
 
    ```bash
-   PR_REF="${oat_pr_url:-}"
+   PR_REF="${ORIGINAL_PR_URL:-${oat_pr_url:-}}"
+   if [[ "${COMPLETION_FOLLOWUP:-false}" == "true" ]]; then
+     PR_REF="${FOLLOWUP_PR_URL:?follow-up URL required; never edit the merged original}"
+   fi
    if [[ -z "$PR_REF" ]]; then
      # Fall back to the head branch — gh auto-resolves to the open PR for the current branch.
      PR_REF=$(git rev-parse --abbrev-ref HEAD)
@@ -1768,12 +1975,17 @@ Show user:
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
-- Include the lifecycle bookkeeping commit hash and the single push result.
+- Include the lifecycle bookkeeping commit hash and the single push result. When
+  `COMPLETION_ARCHIVE_DELIVERED="true"`, instead report the lifecycle commit,
+  `BASE_BRANCH` and `COMPLETION_BASE_HEAD` as "already delivered; no push or
+  bookkeeping PR"; no follow-up URL is required.
 - Report the final recap outcome and tracked recap page path.
 - Report every absorbed-project retirement finding from the Step 3.7 sweep with
   its disposition. This is the required destination whenever the sweep could not
   append them to the project log — an absent log, or a resume whose log is
   already sealed — and it stays a report, never a completion failure.
-- If PR was opened: include the PR URL.
+- If PR was opened: include the PR URL. For post-merge completion that prepared a follow-up, report the
+  original merged URL and separate bookkeeping URL/branch/base, including any
+  pending authorized publication or landing; never label the original open.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
 - If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`), that it was skipped because a resumed archive run carried no body, or warn that the sync failed and surface the retained body path (`PR_BODY_FILE` for archive completion) so the user can update it manually.

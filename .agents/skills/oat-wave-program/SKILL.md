@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.5.4
+  version: 1.5.5
 ---
 
 # Program a Corpus of External Plans into Waves
@@ -136,7 +136,10 @@ target (same disclaimer as the plan indexes).
    with its next step: the operator completes it with `oat-project-complete`,
    or sets the missing config and answers the checkpoint again. A wrapper
    refused for an objective reason keeps its deferral and reports the failing
-   check. On no or defer,
+   check. For `preflight:8`, keep the wrapper deferred and name
+   `oat-project-complete` as the next owner to resolve follow-up authority.
+   The checkpoint alone does not authorize a separate bookkeeping PR; do not
+   infer that authority from the archive/S3/pointer-clear answer. On no or defer,
    record the standing deferral and its owner in the program ledger.
    This is the program completion gate; never answer it autonomously or repeat
    it once per wave.

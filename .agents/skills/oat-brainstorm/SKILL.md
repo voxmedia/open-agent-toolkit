@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.10
+  version: 1.3.11
 ---
 
 # Brainstorm
@@ -525,8 +525,9 @@ the canonical artifact. Fill its `Summary`, `Decisions`, `Assumptions`, `Out of
 Scope`, and `Validation Criteria` sections from the synthesized payload without
 replacing an already populated section or the scaffolded `## Phase 1`. Do not
 create, write, or complete `discovery.md` or `design.md`. Set the project state
-to plan/in-progress with `oat_ready_for: oat-project-lite`, print the
-`oat-project-lite` handoff, and stop.
+to plan/in-progress with `oat_ready_for: oat-project-lite`. Then run
+`oat project check-state "$PROMOTED_PROJECT"`; on nonzero, stop, repair and recheck
+before committing or continuing. Print the `oat-project-lite` handoff, and stop.
 
 Use this branch contract to validate the lite scaffold before the handoff:
 
@@ -590,6 +591,7 @@ Mark the discovery frontmatter:
 - `oat_ready_for: oat-project-quick-start` (when mode is `quick`) or `oat-project-design` (when mode is `spec-driven`)
 
 Update the project's `state.md` (phase=discovery, status=complete) so the project is recognized as ready for the next phase.
+Then run `oat project check-state "$PROMOTED_PROJECT"`; on nonzero, stop, repair and recheck before committing or continuing.
 
 Print a pointer to the next skill, e.g.:
 

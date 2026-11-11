@@ -620,15 +620,42 @@ archive runs `oat project archive`, including an S3 upload when
 In a goal project whose `pr` step is satisfied by delivery coverage, the skill
 creates no PR, even with `workflow.createPrOnComplete: true`, and reports
 `PR on complete: satisfied by goal delivery coverage`. It opens a separate
-bookkeeping PR for the completion commits only when you ask for one in that
-run, and never counts it as a goal delivery.
+bookkeeping PR for the completion commits under existing explicit authority;
+it asks for a decision only when that authority is missing. The create-PR
+preference alone does not authorize goal bookkeeping. That PR never enters
+`oat_deliveries`, counts toward delivery coverage, or replaces the projected
+original delivery PR.
 
 **Example scenario:** The export project has passed final verification and its
 stored closeout sequence, but the PR is still open. Complete finalizes lifecycle
 state and, if selected, archives the durable artifacts and updates the existing
 PR body to use valid archived references. Choose this skill instead of another
 PR invocation because publication already exists and the remaining work is
-lifecycle finalization. An open PR is not a completion blocker.
+lifecycle finalization. An open PR is not a completion blocker. Before the first normal-path write,
+completion observes a tracked PR live. Failed observation stops without writing;
+no tracked URL keeps the ordinary path without claiming an observed status. A
+closed-unmerged tracked PR follows the existing interactive completion path on
+the current branch, records `closed`, and prepares no follow-up branch. If
+the original has merged for a durable project, completion fetches its actual base and prepares a
+fresh bookkeeping branch before docs-skip metadata, recap intent persistence,
+summary or lifecycle changes. It retains the original merged URL/status and
+never edits that merged PR body. Bookkeeping is delivered through a separate
+follow-up PR under existing task authority; a valid prepared branch and open
+follow-up are reused on resume. Dirty or divergent inputs that cannot be
+preserved safely stop with recovery guidance. Shared inputs must exist on the
+updated base; synced artifacts keep their retained owner. Local merged projects
+keep their current branch and record the live original status without follow-up
+authority, push or PR: their ignored artifacts produce no tracked bookkeeping. Existing
+archive-receipt resume routes do not replay completed mutations. For a synced
+archive completed while the original was open, a later merged observation uses
+the validated receipt to compare its discovery-record deletion and exported
+files with the fetched base. Matching results support squash merges and resume
+closeout without pushing the merged original, opening another PR or editing its
+body. For a continuation carrying that verified terminal receipt, Step 8.6 skips
+PR-link rendering and local export checks: it no longer needs the exports in the
+local checkout. Earlier receipt recovery still runs against the current checkout.
+Pending bookkeeping stops with the active pointer, receipt and branch
+retained for explicit recovery. Prepared follow-ups keep their binding checks.
 
 **Expected output:** The skill reports completed lifecycle state, bookkeeping
 commit and push results, recap outcome, any archive location, and the tracked
@@ -649,8 +676,9 @@ append, roll-up, ledger graduation, seal, archive or lifecycle change happens.
 An authorized override is written as one line under
 `## Deviations from Plan / Design` (idempotent on code, scope and decision id),
 never by an autonomous run, and never bypasses the closeout invariant. Before
-archive, completion records `oat_pr_status_observed_at` beside
-`oat_pr_status`. When a shared or
+archive, completion records the live original `oat_pr_status` and its actual
+lookup time in `oat_pr_status_observed_at`; it claims neither when no URL was
+tracked. When a shared or
 synced project will be archived, the active project stays set until the
 archive succeeds, so an archive or S3 failure leaves the completion
 resumable. Every other completion clears the active project right away. Synced
@@ -665,8 +693,9 @@ separate operations under repository policy.
 
 The non-interactive companion to `oat-project-complete`. Workflow steps use it
 to complete projects without prompts; a person completing a project uses
-`oat-project-complete`. It decides every completion answer from config and
-recorded project state, refuses whenever an answer would need a human, and
+`oat-project-complete`. It decides every completion answer from config,
+recorded project state and existing explicit task authority, refuses whenever
+an answer would need a human, and
 then follows the interactive skill's current steps.
 
 **Invocation:** You do not invoke it. The skill is model-invocable but not
@@ -695,11 +724,25 @@ completion-before-merge exception in `implementation.md` when the PR is still
 open, points the active project at the project, and follows
 `oat-project-complete` with the resolved answers: archive per
 `workflow.archiveOnComplete`, a summary refresh when the summary is missing or
-stale, and no retrospective. It never creates a PR, whatever
-`workflow.createPrOnComplete` says; it updates the description of an existing
-tracked PR as the interactive steps require. The completion commit body
+stale, and no retrospective. For a durable project with a live merged original, it requires existing
+explicit authority covering preparation and publication of that project's
+separate bookkeeping PR. Missing authority refuses at preflight before any
+completion write; neither autonomous opt-in nor `workflow.createPrOnComplete`
+grants it. The calling agent hands off the verified source separately for each
+requested project. With that authority, the current completion skill prepares
+or reuses a fresh-base follow-up and publishes or reuses its separate PR. The
+original merged URL/status/body and goal delivery coverage stay intact. A
+tracked open PR still creates no new PR and receives the existing description
+sync when required. The completion commit body
 records the requesting step (for a synced archive, the run report does). In batch mode a refused project stays deferred
-while the others complete.
+while the others complete. The program-close caller routes a missing-authority
+refusal (`preflight:8`) to `oat-project-complete`; its archive/S3/pointer-clear
+checkpoint does not itself authorize a bookkeeping PR. Local merged projects
+complete on their current branch without a follow-up. Between successful merged batch members, it keeps
+the pushed bookkeeping branch/PR and returns a clean checkout to the prepared
+base before starting the next member. It never changes requested membership
+or borrows one member's authority for another. Existing absent-checkout/archive
+resumes still belong to interactive completion.
 
 **Example scenario:** An autonomous wave run reaches closeout with the final
 review passed and the wave PR open. Execute's step 8 runs the companion with

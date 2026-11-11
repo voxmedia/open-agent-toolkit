@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.9
+  version: 1.9.10
 ---
 
 # Execute a Wave of External Plans
@@ -213,6 +213,11 @@ writes and stay on the orchestrator's own model class, the same rule
    **`oat_phase: plan` + `oat_phase_status: complete`**. Also refresh the
    state.md BODY prose (Status/Current Phase/Artifacts/Progress/Next Milestone)
    — frontmatter alone is not enough; two waves hit body-drift findings.
+
+   After each state-frontmatter write here, including the delayed plan-ready
+   write after plan authoring, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 3. Write `plan.md` from `assets/wrapper-plan-template.md` — pointer-only tasks,
    the wrapper execution contract verbatim, drift-refresh record marked
    **non-authoritative recon evidence**, HiLL at the final phase (confirm against
@@ -458,7 +463,8 @@ archive anything first.
    answer). Any other refusal — an objective preflight failure, namely
    `preflight:1` (post-implement sequence incomplete), `preflight:2`
    (incomplete tasks), `preflight:3` (final review not passed), `preflight:5`
-   (unresolved blockers), or `preflight:6` (project-log gate unsatisfied), or
+   (unresolved blockers), `preflight:6` (project-log gate unsatisfied), or
+   `preflight:8` (missing explicit merged follow-up authority), or
    an `activation` refusal — stops wave closeout at a boundary: report the
    failing check and run neither `oat project complete-state` nor the merge
    handoff. `oat project complete-state` checks only the closeout snapshot, so

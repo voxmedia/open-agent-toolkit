@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.10
+  version: 1.0.11
 ---
 
 # Brief Project
@@ -202,6 +202,9 @@ frontmatter write immediately after the scaffold, with the same shapes and
 meaning that `oat-project-quick-start` and `oat-project-lite` record. Record
 them only when a consolidation actually happened.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 1: Set Metadata and Read Repository Knowledge
 
 Update `"$PROJECT_PATH/state.md"` frontmatter:
@@ -211,6 +214,9 @@ Update `"$PROJECT_PATH/state.md"` frontmatter:
 - `oat_phase: plan`
 - `oat_phase_status: in_progress`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Read repository instructions and the minimum durable context the interview
 needs. Start with root `AGENTS.md`/`CLAUDE.md`. If `.oat/repo/AGENTS.md`
@@ -333,6 +339,9 @@ policy only in `"$PROJECT_PATH/state.md"`; it remains a named ceiling,
 uncapped managed selection, or host inheritance, never a pinned provider
 target.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 Run the reviewer readiness check:
 
 ```bash
@@ -366,6 +375,9 @@ relevant set. Persist only disabled choices to `"$PROJECT_PATH/state.md"`.
 Never modify the shared, local, or user configuration layers. In
 non-interactive planning, preserve configured gates and do not invent or write
 an override.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 3.6: Run Brief Artifact Review Loop
 
@@ -568,6 +580,9 @@ Update `"$PROJECT_PATH/state.md"`:
 - `oat_current_task: null`
 - `oat_hill_checkpoints: []` (none for brief modes)
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 5: Initialize the Journal
 

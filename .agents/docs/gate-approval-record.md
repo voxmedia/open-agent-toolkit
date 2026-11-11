@@ -62,6 +62,18 @@ and counts unchanged, with the note `bookkeeping-only fixes applied at
 receive`. A result with any finding that is not bookkeeping follows the rows
 above unchanged.
 
+After each manual carrier write described above, run the shared read-only
+frontmatter check before committing, stopping, or continuing the workflow:
+
+```bash
+oat project check-state "$PROJECT_PATH" || exit 1
+```
+
+On nonzero, stop; repair the frontmatter and rerun the same check before any
+later workflow effect. This checks YAML syntax and a mapping only; it does not
+validate gate approval or lifecycle semantics. One successful invocation covers
+one write, including a write governed by several linked contracts.
+
 ## Carriers
 
 - **`oat_implement_exit_gate`** (`oat-project-implement`,

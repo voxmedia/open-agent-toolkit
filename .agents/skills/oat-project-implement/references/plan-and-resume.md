@@ -434,7 +434,11 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 - Only if the user approves:
   - Update `implementation.md` frontmatter `oat_current_task_id: {next_task_id}`
   - Update `state.md` frontmatter `oat_current_task: {next_task_id}` and refresh stale "awaiting re-review" wording
+
+  After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+  On nonzero, stop; repair and recheck before committing or continuing.
   - Update implementation review notes "Next" guidance to continue implementation (not re-review)
+
 - If the user declines:
   - Do not auto-edit bookkeeping; pause and ask whether to proceed manually or stop.
 
@@ -471,6 +475,9 @@ Initialize project state so other skills (e.g., `oat-project-progress`) reflect 
   - `oat_current_task: p01-t01`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 **Brief modes:** resolve the journal with
 `oat template resolve implementation-brief --output "$PROJECT_PATH/implementation.md"`
 instead, write one Progress Overview row and one `## Phase pNN: <name>` section
@@ -478,3 +485,6 @@ holding only `**Status:** pending` per brief phase, and set both resume pointers
 (`oat_current_task_id` here and `oat_current_task` in `state.md`) to the first
 incomplete phase ID, such as `p01`, rather than a task ID. Anchors and execution
 records are written only when work starts.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.

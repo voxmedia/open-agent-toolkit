@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.15
+  version: 1.1.16
 ---
 
 # Lite Project
@@ -186,6 +186,9 @@ retirement sweep reads at completion, where retiring a scaffold is treated as a
 semantic claim about the planning surfaces rather than the physical removal of
 a directory. The write travels with this project's next `state.md` commit.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 1: Read Repository Knowledge
 
 Read repository instructions and the minimum durable context needed for the
@@ -342,6 +345,9 @@ explicit or configured policy; unresolved non-interactive state blocks. The
 project policy remains a named ceiling, uncapped managed selection, or host
 inheritance, never a pinned provider target.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 Run the reviewer readiness check:
 
 ```bash
@@ -369,6 +375,9 @@ caller-supplied relevant set.
 Persist only disabled choices to `"$PROJECT_PATH/state.md"`. Never modify the
 shared, local, or user configuration layers. In non-interactive planning,
 preserve configured gates and do not invent or write an override.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ### Step 6: Run Plan Artifact Review Loop
 
@@ -497,6 +506,9 @@ Update `state.md`:
 - `oat_phase_status: complete`
 - `oat_current_task: null`
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 Ensure `implementation.md` is present and points to the plan's first task with
 status `in_progress`. Run `oat state refresh`, format the scoped artifacts,

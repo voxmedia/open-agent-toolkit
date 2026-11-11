@@ -4,9 +4,9 @@ description: Use when the user requests or confirms documenting an active OAT pr
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat project check-state:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
-  version: 1.8.15
+  version: 1.8.16
 ---
 
 # Project Documentation Sync
@@ -484,7 +484,7 @@ Format and present the recommendations for user approval.
 **6b. Handle edge cases:**
 
 - If `$AUTO_MODE` is true: skip to Step 7 (apply all recommendations)
-- If no recommendations found: report "No documentation updates identified for this project.", set `oat_docs_updated: complete` in state.md, and exit
+- If no recommendations found: report "No documentation updates identified for this project.", set `oat_docs_updated: complete` in state.md, run `oat project check-state "$PROJECT_PATH"`, and exit only on success. On nonzero, stop; repair and recheck before continuing
 - If only instruction recommendations (no docs): still present, but note the documentation-first priority
 
 Under `OAT_AUTONOMOUS=1`, the auto path applies all non-destructive
@@ -504,7 +504,7 @@ Approve recommendations?
 
 - **Yes:** mark all recommendations as approved
 - **Individual:** present each recommendation one at a time with approve/reject
-- **Skip:** set `oat_docs_updated: skipped` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"` in `$PROJECT_PATH/state.md` frontmatter, commit the state change, and exit without applying documentation changes
+- **Skip:** set `oat_docs_updated: skipped` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"` in `$PROJECT_PATH/state.md` frontmatter, run `oat project check-state "$PROJECT_PATH"`, then commit the state change and exit without applying documentation changes only on success. On nonzero, stop; repair and recheck before committing or continuing
 
 Track which recommendations were approved for Step 7.
 
@@ -577,6 +577,9 @@ Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
 
 - If `$ALL_SUCCEEDED` is true: set `oat_docs_updated: complete` and `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Still set `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Surface the failures clearly in the summary report (Step 8d) so the user knows which updates failed and why.
+
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
 
 ```bash
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }

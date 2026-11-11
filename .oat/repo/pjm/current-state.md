@@ -38,6 +38,22 @@ copying their content here. -->
 
 ## What's Implemented
 
+- CLI `0.3.50` (`complete-after-merge-and-state-parse`, implementation and
+  exit review complete, PR delivery pending) adds `oat project check-state`
+  after manual lifecycle frontmatter writes and completion bookkeeping for
+  already-merged PRs. Durable projects prepare/reuse a fresh-base follow-up
+  under existing explicit authority; original merged identity/body and goal
+  coverage stay intact. Local projects retain their branch. The automatic
+  companion binds authority per project and original PR. Terminal synced
+  receipts also survive a later original-PR merge: delivered results resume
+  without push or recap/body/link rewrites. A continuation carrying the verified
+  terminal receipt skips local export checks and link rendering; earlier receipt
+  recovery keeps its current-checkout preconditions. Pending bookkeeping or
+  divergent local work retains the pointer and receipt for recovery. See
+  [the project summary](../../projects/shared/complete-after-merge-and-state-parse/summary.md)
+  and decisions [state parsing](../reference/decisions/DR-261111-check-manual-lifecycle-state.md)
+  and [merged completion](../reference/decisions/DR-261111-reuse-authority-for-merged.md).
+
 - CLI `0.3.39` (`wave-1-correctness`, implementation complete, final PR
   pending) delivers Wave 1 of the
   [backlog and roadmap review](backlog/reviews/backlog-and-roadmap-review.md).

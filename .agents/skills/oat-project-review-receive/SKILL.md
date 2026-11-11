@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.17
+  version: 1.6.18
 ---
 
 # Receive Review
@@ -553,6 +553,9 @@ delivery review:
    invalidate the review and exit-gate evidence even when the check would
    still report them fresh, so the exit gate runs again before the next
    integrated review.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
    - **Active target:** update the execution pointer as in brief mode and
      write `oat_milestone_status: implementing` (from `reviewing` or
      `delivering`).
@@ -562,6 +565,10 @@ delivery_id, phase_ids, stage: implementing, review_artifact: null }`,
      record, or move an existing one for this target back to `implementing`).
      Leave `oat_milestone`, `oat_milestone_status`, `oat_current_task_id`, and
      `oat_current_task` unchanged; Step 7's brief pointer write is skipped.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
+
 3. **Clean receive.** `fixes_completed` is not a passed review. When no fixes
    are queued, write the Reviews event `passed` (Step 6) and persist the
    authoritative evidence in tracked records before Step 7.5 archives the file:
@@ -578,7 +585,9 @@ reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
    the original registered `members[].base` and first endpoint attainment. The delivery's
    `exit_gate` and `members[].reviewed_head` are set once and may change only
    in the commit that records a review naming a different artifact of this
-   delivery (section 12.8), so never split these writes. Commit them (Step 7.6), then
+   delivery (section 12.8), so never split these writes. Run
+   `oat project check-state "$PROJECT_PATH"`; on nonzero, stop, repair and recheck
+   before committing or continuing. Only after success commit them (Step 7.6), then
    re-validate scope, revisions and the exit carrier with
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`.
    For a phase-only recovery (`delivery_id: null`), add `--recovery` to judge
@@ -593,6 +602,9 @@ reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
    - `status: undeliverable` with a not-fresh `review` → write no transition
      and route to `oat-project-review-provide` for a new integrated review of
      the same explicit set.
+
+   After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+   On nonzero, stop; repair and recheck before committing or continuing.
 
    Commit the transition or invalidation as its own bookkeeping commit.
 
@@ -873,6 +885,9 @@ re-review.
     Progress Overview row status. The phase-unit totals change only when a
     revision phase was appended.
 
+After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
+On nonzero, stop; repair and recheck before committing or continuing.
+
 ### Step 7.5: Archive the Consumed Review Artifact
 
 After plan/implementation/state updates reference the archived location, move the processed review artifact into the local-only history directory:
@@ -1084,7 +1099,7 @@ Choose:
 
 **If execute now:**
 
-- Update state.md: `oat_phase_status: in_progress`, `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+- Update state.md: `oat_phase_status: in_progress`, `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Then run `oat project check-state "$PROJECT_PATH"`; on nonzero, stop, repair and recheck before committing or continuing.
 - Tell user: "Run the `oat-project-implement` skill to execute fix tasks starting from {first_fix_task_id}"
 - Or directly invoke `oat-project-implement` if environment supports skill chaining, loading the current `oat-project-implement/SKILL.md` and following it
 
