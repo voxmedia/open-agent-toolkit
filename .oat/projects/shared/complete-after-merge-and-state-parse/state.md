@@ -114,9 +114,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T05:56:29.721Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -131,52 +131,33 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 0e404f79d786cf469b2a3c65ec697686d5083584
+  reviewed_head: cab6f8c2ca955998987d89588ef3a2a6d0757ff1
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v2:5e8b971843b7e6a868431408969d1636623c51709767c2de39f4e69c5787d825
-  freshness_head: 4ee8b09bd9d19d6665a6ba86fd7dd6a71aa0b2c8
-  freshness_fingerprint: sha256:effective-delta-v2:5e8b971843b7e6a868431408969d1636623c51709767c2de39f4e69c5787d825
+  implementation_fingerprint: sha256:effective-delta-v2:0ae1b7c5da2c9c83deb6d3dc02de97e78f1a470cb3da9a52287143f4b0eaa39d
+  freshness_head: cab6f8c2ca955998987d89588ef3a2a6d0757ff1
+  freshness_fingerprint: sha256:effective-delta-v2:0ae1b7c5da2c9c83deb6d3dc02de97e78f1a470cb3da9a52287143f4b0eaa39d
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: 08c7d242-cfca-4f46-9f62-c83cf8bf7c83
-  launch_started_at: 2026-11-11T04:58:40.421052Z
-  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-3/result.json
-  gate_run_marker: /private/tmp/oat-complete-state-parse-gate-08c7d242-cfca-4f46-9f62-c83cf8bf7c83/47a97d4b-5310-4f4d-bf5a-21f3d73f0c0d.json
-  gate_run_id: 47a97d4b-5310-4f4d-bf5a-21f3d73f0c0d
-  envelope_status: ok
-  artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T050024Z.md
-  handoff:
-    Gate passed at the high threshold, but the final review still contains
-    non-blocking findings (low=1). Run oat-project-review-receive for
-    .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T050024Z.md
-    to disposition them before marking the final review row passed.
-  receive_state: completed
-  receive_correlation:
-    runId: 47a97d4b-5310-4f4d-bf5a-21f3d73f0c0d
-    handoff:
-      Gate passed at the high threshold, but the final review still contains
-      non-blocking findings (low=1). Run oat-project-review-receive for
-      .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T050024Z.md
-      to disposition them before marking the final review row passed.
-    artifactPath: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T050024Z.md
-    scope: final
-    reviewType: code
-    sourceFilename: final-review-2026-11-11T050024Z.md
-  receive_source_artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/final-review-2026-11-11T050024Z.md
-  receive_archived_artifact: .oat/projects/shared/complete-after-merge-and-state-parse/reviews/archived/final-review-2026-11-11T050024Z.md
-  receive_event_identity:
-    scope: final
-    type: code
-    source_filename: final-review-2026-11-11T050024Z.md
-  receive_pre_head: def464f0ecc92f853d7ba3935fa211d0b22ede4f
-  receive_commit: 4ee8b09bd9d19d6665a6ba86fd7dd6a71aa0b2c8
-  receive_eligible: true
-  receive_completed: true
-  failure:
-    Remote M1 requires p02-t09 synced archive resume correction; fresh gate
-    required.
-  updated_at: 2026-11-11T05:03:37.919Z
-  decided_at: 2026-11-11T05:03:37.759801Z
+  launch_state: intent_persisted
+  launch_attempt_id: 4e67007c-9f82-4699-8f16-ad18547d3584
+  launch_started_at: 2026-11-11T06:10:44.865306Z
+  launch_result_receipt: .oat/analysis/complete-state-parse-exit-gate/generation-4/result.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: 2026-11-11T06:10:44.981Z
+  decided_at: null
 oat_post_implement_sequence:
   status: in_progress
   source: configured
@@ -205,7 +186,7 @@ oat_project_recap:
 
 ## Current Phase
 
-p02 reopened for remote review M1: synced archive resume after the original PR merges. CI passed on fc007d4; correction, review, fresh gate and closeout refresh precede authorized merge.
+Both phases accepted after remote M1 correction and independent final confirmation. Generation 4 of the configured exit gate is pending; summary/document/PR refresh and new-head CI precede the authorized merge.
 
 ## Artifacts
 
@@ -224,11 +205,12 @@ p02 reopened for remote review M1: synced archive resume after the original PR m
 - ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/421
 - ✓ Final review, PR self-review and configured gate settled
 - ✓ Implementation closeout complete; visual recap skipped by operator
-- ⧗ Resolving remote review M1, then fresh review/gate/CI and authorized merge
+- ✓ Remote review M1 and follow-up Low findings resolved; final Opus confirmation passed
+- ⧗ Fresh gate, closeout refresh and updated-head CI before authorized merge
 
 ## Blockers
 
-Remote M1 is queued as p02-t09. Updated-head CI must pass before merge. Recovery usage p01 2/10, p02 0/10, pending null.
+No unresolved implementation findings. Fresh configured gate and updated-head CI are required before merge. Recovery usage p01 2/10, p02 0/10, pending null.
 
 ## Next Milestone
 
