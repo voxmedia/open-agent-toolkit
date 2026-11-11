@@ -405,7 +405,7 @@ p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0
 
 ### Task p02-t07: Restore closed-PR completion and portable follow-up push
 
-**Status:** pending
+**Status:** completed
 **Executor:** root
 **Source:** operator-approved recovery after incompatible gate run 3f079d62-6a7a-45c3-b2d4-529b72754c13; raw artifact reviews/final-review-2026-11-11T032431Z.md is preserved and not received.
 **Intent:** restore existing interactive completion for a live closed-unmerged tracked PR (observe closed, wasOpen=false, no fresh follow-up preparation), and make the existing push guard parse in bash and zsh.
@@ -413,6 +413,9 @@ p02-t06's one-phrase configuration-reference correction is complete in `a8986ea0
 **Files:** completion helper, skill and existing Git/shell tests; closeout documentation and evidence mapping only as needed.
 **Proof:** closed-PR observation/preparation sequence plus shell truth table, each red before correction and green afterward; required ordered checks. Existing PR-scoped skill/public-package bumps apply.
 **Ownership exception:** T3 requires root handling small review corrections; root GPT-6 Astra high.
+
+**Commit:** bfe2d93de8aa0435e1910d94b58f31ef6f21e6f9
+**Result:** all 21 completion Git/shell probes passed, including closed observation without branch/byte/publication changes and the shipped bash/zsh push truth table. Red evidence shows the exact prior E_PR_CLOSED refusal and zsh parse error, with bash already passing. All 1,272 isolated shared/validation contracts passed. Precommit lint caught one template-literal style issue in the new test; corrected before commit, focused tests/lint passed. Inventory's three shifted locators refreshed. Evidence: .oat/analysis/complete-after-merge-p02/gate-fixes/. No new CLI semantics, companion behavior or authority contract; no recovery attempt used. Required clean-candidate checks follow.
 
 ## Orchestration Runs
 

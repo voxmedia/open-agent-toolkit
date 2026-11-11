@@ -114,7 +114,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-11-11T03:11:54Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -160,20 +160,16 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure:
-    code: gate_event_reviewed_head_missing
-    message: Installed oat 0.3.46 completed the gate but omitted reviewedHead.
-      Current review-receive rejects this event; no head was inferred, no
-      receive or archival occurred, and no remediation attempt was consumed. Raw
-      receipt reports receiveEligible=true but is insufficient under the current
-      event contract.
-    installed_cli: 0.3.46
-    branch_cli: 0.3.50
-    raw_receive_eligible: true
-    required_recovery:
-      Explicitly retire this incompatible completed gate result and
-      authorize a new gate through the branch CLI; preserve the original receipt
-      and address findings through a valid lifecycle path.
-  updated_at: 2026-11-11T03:28:20.386Z
+    code: operator_retired_incompatible_gate
+    message: Operator approved retiring completed run
+      3f079d62-6a7a-45c3-b2d4-529b72754c13 after installed oat 0.3.46 omitted
+      reviewedHead; original receipt preserved and never received. New
+      substantive corrections bfe2d93de require verified final review and a
+      fresh branch-CLI gate generation.
+    retired_run_id: 3f079d62-6a7a-45c3-b2d4-529b72754c13
+    retired_by: operator approval in this session
+    replacement_cli: branch-local 0.3.50
+  updated_at: 2026-11-11T04:09:03.451Z
   decided_at: 2026-11-11T03:28:20.212334Z
 ---
 
