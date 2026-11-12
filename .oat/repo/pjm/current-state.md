@@ -39,7 +39,7 @@ copying their content here. -->
 ## What's Implemented
 
 - CLI `0.3.50` (`complete-after-merge-and-state-parse`, implementation and
-  exit review complete, PR delivery pending) adds `oat project check-state`
+  exit review complete, delivered in PR #421 and archived) adds `oat project check-state`
   after manual lifecycle frontmatter writes and completion bookkeeping for
   already-merged PRs. Durable projects prepare/reuse a fresh-base follow-up
   under existing explicit authority; original merged identity/body and goal
@@ -50,7 +50,7 @@ copying their content here. -->
   terminal receipt skips local export checks and link rendering; earlier receipt
   recovery keeps its current-checkout preconditions. Pending bookkeeping or
   divergent local work retains the pointer and receipt for recovery. See
-  [the project summary](../../projects/shared/complete-after-merge-and-state-parse/summary.md)
+  [the project summary](../reference/project-summaries/20261112-complete-after-merge-and-state-parse.md)
   and decisions [state parsing](../reference/decisions/DR-261111-check-manual-lifecycle-state.md)
   and [merged completion](../reference/decisions/DR-261111-reuse-authority-for-merged.md).
 
