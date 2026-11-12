@@ -14,7 +14,7 @@ oat_summary_learnings_fingerprint: none
 
 ## Overview
 
-This brief project addresses goal-delivery-freshness retro UP-02 and UP-03: completion on a branch whose PR has already merged, and invalid YAML introduced by manual lifecycle state edits. Both phase-units are accepted and the independent final review and configured exit gate have passed. PR delivery is the remaining endpoint.
+This brief project addresses goal-delivery-freshness retro UP-02 and UP-03: completion on a branch whose PR has already merged, and invalid YAML introduced by manual lifecycle state edits. Both phase-units are accepted and the independent final review and configured exit gate have passed. PR #421 was squash-merged on 2026-11-11 as `74487725450e7a9ab851150e2c154d3733d7a857`; implementation delivery is complete.
 
 ## What Was Implemented
 
@@ -40,7 +40,7 @@ The production correction at clean `128dd5163cb27c920f94b58efc49960dfdf07dc6` al
 
 The packed CLI was exercised outside the checkout. Historical incident state at `a323ee7ce` fails with BAD_INDENT; its parent and commented valid controls pass without byte changes, and a failing check stops before commit. Real Git and archive-producer probes cover merged/open/absent/closed PRs, local/shared/synced scopes, follow-up reuse, authority refusals, bash/zsh push guards, and merged-later terminal receipts. Neutralizing pending-path or divergent-input guards breaks the corresponding refusal tests. GitHub responses are substituted; no live GitHub publication is claimed as test evidence.
 
-CI caught a macOS-only temporary path in an earlier test fixture. The portable temporary-directory correction passed on the prior pushed heads `fc007d4` and `7889c8d`; Linux CI for the new source still must pass before merge. This is distinct from the local proof above.
+CI caught a macOS-only temporary path in an earlier test fixture. The portable temporary-directory correction passed on the prior pushed heads `fc007d4` and `7889c8d`; Linux CI, release dry-run and Bugbot all passed on final head `f374fbf24fe4405407e8a1df12493ac303452316` before merge. This is distinct from the local proof above.
 
 Independent Opus 5.5 High confirmation at `f916330b` has no findings; the prior behavioral review at `417ef440` independently verified the carried-receipt correction, with its documentation Low corrected and confirmed. Configured exit gate generation 6 (run `daa8c9de-12be-4648-8980-c53395268196`, Opus 5.5 High) passed with 0 Critical, 0 High, 0 Medium and 2 Low bookkeeping findings. Both were fixed at receive; raw counts are preserved, with no waiver, retry or additional review cycle. Earlier review and gate events remain preserved, including the explicitly retired result lacking reviewed-head provenance. No waiver was used.
 
