@@ -300,6 +300,10 @@ narrow exception to root-owned bookkeeping: while it owns the worktree, it may
 atomically replace only that ledger entry. It must not alter any other project
 tracking field.
 
+After each manual recovery-ledger write, run
+`oat project check-state "$PROJECT_PATH"`. On nonzero, stop; repair and recheck
+before any edit, commit, verification, or continuation.
+
 Before the first code edit for a new recovery attempt, atomically increment
 `used_attempts` and write `pending_attempt` with the attempt number, event ID,
 original request, original task/commit, discovering check, exact target, and
