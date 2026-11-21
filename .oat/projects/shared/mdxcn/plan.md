@@ -40,8 +40,15 @@ components, Fumadocs 16, Tailwind v4, vitest, the OAT CLI (`docs check`,
 **Format step (every task that edits files):** run
 `pnpm exec oxfmt <each created or edited file>` from the repository root. This
 is the file-scoped form of the repository's oxfmt formatter, which
-`pnpm format:fix` and the lint-staged hook run. Skip files oxfmt does not
-handle, such as `.css`.
+`pnpm format:fix` and the lint-staged hook run. Include `.css` files: oxfmt
+formats CSS and `oxfmt --check .` in package `check` scripts fails on
+unformatted CSS, even though lint-staged does not format CSS on commit.
+
+**Cross-package builds:** packages resolve `@open-agent-toolkit/docs-transforms`
+and `@open-agent-toolkit/docs-theme` through their built `dist`.
+`pnpm --filter <pkg> exec vitest` does not build dependencies, so every
+verification that imports a sibling package's new exports first runs that
+package's `build`.
 
 **Upstream source:** take mdxcn components from the registry JSON at
 `https://mdxcn.dev/r/<name>.json`, extracting each `files[].content` with a
@@ -50,22 +57,35 @@ in each vendored file's header.
 
 **Spike reference:** the spike copies are read-only, in the main worktree only:
 
-- the spike remark plugin and vendored components, at
+- the spike remark plugin, `cn` stand-in and vendored components, under
   `/Users/tstang/.t3/worktrees/open-agent-toolkit/t3-1aced216-22e6aad08f8c1005/.oat/repo/analysis/mdxcn-spike/`
-  (see Pre-implementation);
-- the ported CSS utilities, at `/tmp/mdxcn-tools/mdxcn-globals.css`, lines
-  353–446.
+  (`lib/`, `registry/`, `tracked.patch`);
+- mdxcn's site stylesheet, at
+  `.oat/repo/analysis/mdxcn-spike/mdxcn-globals.css` in the same worktree. The
+  CSS utilities are at lines 353–446.
 
-Do not copy the spike's shortcuts. It used a `cn` without tailwind-merge,
-`motion`, and a transform that injected `not-prose`.
+Do not copy two of the spike's shortcuts: `motion`, and a transform that
+injected `not-prose`. Keep `cn` as a local class joiner with no
+tailwind-merge. Figures accept no author-supplied `className` that would need
+conflict merging, and adding tailwind-merge would touch the lockfile in p02.
 
 ## Pre-implementation (root orchestrator, before p01)
 
-Untracked spike edits remain in the main worktree: `apps/oat-docs` changes
-plus `pnpm-lock.yaml`. With user approval, the root saves them as a patch and
-a copy of `apps/oat-docs/registry/` under the gitignored
-`.oat/repo/analysis/mdxcn-spike/`, then restores those paths to `HEAD`.
-Phase work must start from a clean tree. p03-t04 replaces the spike with the
+The spike is still uncommitted in the main worktree: tracked edits under
+`apps/oat-docs` and `pnpm-lock.yaml`, plus the untracked
+`apps/oat-docs/registry/`, `apps/oat-docs/lib/remark-docs-fences.ts` and
+`apps/oat-docs/lib/utils.ts`. With user approval, the root:
+
+1. Saves `git diff` of the tracked spike paths as
+   `.oat/repo/analysis/mdxcn-spike/tracked.patch`.
+2. Copies `apps/oat-docs/registry/`, `apps/oat-docs/lib/` and
+   `/tmp/mdxcn-tools/mdxcn-globals.css` into
+   `.oat/repo/analysis/mdxcn-spike/`, which is gitignored.
+3. Restores the tracked paths to `HEAD`, deletes the untracked spike files,
+   and runs `pnpm install`.
+4. Confirms `git status --short` is empty.
+
+Phase work starts from that clean tree. p03-t04 replaces the spike with the
 packaged capability.
 
 ## Planning Checklist
@@ -84,7 +104,8 @@ packaged capability.
   `packages/docs-config/**`.
 - **p02** writes only `packages/docs-theme/**`. It removes `motion` rather
   than adding it, and adds no new dependency, so `pnpm-lock.yaml` is
-  untouched.
+  untouched. It keeps test inputs inline, so it needs no CLI version-policy
+  edit.
 - The write sets are disjoint, and each phase verifies on its own with its
   package's tests, type-check and check.
 - The one cross-package link is the contract test that docs-theme's
@@ -223,7 +244,7 @@ Expected: all pass.
   - a `[x](page.md)` link inside a figure is normalized by `remarkLinks`;
   - a `> [!NOTE]` alert and a Mermaid fence next to a figure are unchanged.
 
-Run: `pnpm --filter @open-agent-toolkit/docs-config exec vitest run src/source-config.test.ts && pnpm --filter @open-agent-toolkit/docs-transforms exec vitest run src/composition.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/docs-transforms build && pnpm --filter @open-agent-toolkit/docs-config exec vitest run src/source-config.test.ts && pnpm --filter @open-agent-toolkit/docs-transforms exec vitest run src/composition.test.ts`
 Expected: fails.
 
 **Step 2: Implement (GREEN)**
@@ -236,7 +257,7 @@ Expected: passes.
 
 **Step 3: Format and verify**
 
-Run: `pnpm exec oxfmt packages/docs-config/src/source-config.ts packages/docs-config/src/source-config.test.ts packages/docs-transforms/src/composition.test.ts && pnpm --filter @open-agent-toolkit/docs-config test && pnpm --filter @open-agent-toolkit/docs-config type-check && pnpm --filter @open-agent-toolkit/docs-config check`
+Run: `pnpm exec oxfmt packages/docs-config/src/source-config.ts packages/docs-config/src/source-config.test.ts packages/docs-transforms/src/composition.test.ts && pnpm --filter @open-agent-toolkit/docs-transforms build && pnpm --filter @open-agent-toolkit/docs-config test && pnpm --filter @open-agent-toolkit/docs-config type-check && pnpm --filter @open-agent-toolkit/docs-config check`
 Expected: all pass.
 
 **Step 4: Commit**
@@ -248,8 +269,15 @@ Expected: all pass.
 ## Phase 2: Figure components (docs-theme)
 
 Tests in docs-theme use `.test.ts` with `React.createElement`. The vitest
-`include` and the tsconfig `exclude` only cover `*.test.ts`, and `.tsx` tests
-would compile into `dist`.
+`include` and the tsconfig `exclude` only cover `*.test.ts`, so `.tsx` tests
+or separate fixture modules under `src/` would compile into `dist` and count
+toward the version policy.
+
+p02 element-tree inputs are therefore declared inline in their `.test.ts`
+files. They are hand-built unit inputs for component logic, and each test file
+header says so. The fixtures captured from a real compile, which the
+Definition of Done requires for parsers of external formats, come in p03-t01
+once the transform and components are integrated.
 
 ### Task p02-t01: Vendor the static frame, child parser and figures.css
 
@@ -272,10 +300,14 @@ assert:
 - the frame root has `not-prose`;
 - there is no `opacity:0`, `transform` style or `motion` attribute.
 
-Parse a small Markdown-derived element tree through `graph-markdown` and assert
-host-tag detection for `p`, `ul`, `li`, `strong`, `em` and `code`, including
-elements carrying the host marker. Assert that `package.json` exports
-`./figures.css` and that the file exists.
+Parse a small Markdown-derived element tree through `graph-markdown`. Assert
+host-tag detection for `p`, `ul`, `ol`, `li`, `strong`, `em`, `code`, `pre`,
+`table` and `a`, including elements carrying the host marker. Fumadocs
+overrides `pre`, `table` and `a` with its own components. Assert that
+`package.json` exports `./figures.css` and that the file exists. Also assert
+that `figures.css` defines only `--graph-*` and `--color-graph-*` custom
+properties, with no unprefixed `--background`, `--foreground` or
+`--destructive`.
 
 Run: `pnpm --filter @open-agent-toolkit/docs-theme exec vitest run src/figures/graph-frame.test.ts`
 Expected: fails.
@@ -289,24 +321,33 @@ Port upstream `graph-frame` and `graph-markdown` with these changes:
 - Put `not-prose` on the frame root.
 - Render inline `code` as a code chip, not bold.
 - Make `cn` a local class joiner. Add no new dependency.
+- Rewrite upstream's generic shadcn token classes to prefixed tokens. For
+  example, `text-foreground` becomes `text-fd-foreground`, and
+  `text-destructive` becomes a `--graph-danger`-based class. A shared package
+  stylesheet must not override a downstream app's own `--background`,
+  `--foreground` or `--destructive`.
 
 `figures.css` contains:
 
-- `--graph-*` tokens mapped to `--color-fd-*`, with `.dark` overrides;
+- `--graph-*` tokens mapped to `--color-fd-*`, with `.dark` overrides. Only
+  `--graph-*` and `--color-graph-*` names are defined;
 - the `@theme inline` block;
 - the `graph-frame`, `graph-rule`, `graph-rule-y`, `scrollbar-graph` and
   `graph-scroll-x` utilities;
-- an MIT attribution header.
+- the full mdxcn MIT notice (copyright line plus permission text).
 
-Each vendored file gets a header naming the upstream source, its date or
-version, and the local patches.
+Each vendored file gets a header with the upstream source, its date or version,
+the local patches and the full mdxcn MIT notice. The notice is required because
+docs-theme redistributes the code, and NOTICES.md ships only in the CLI. Keep
+the header as a `/*! … */` or leading block comment that `tsc` preserves in
+`dist`, and confirm that it does.
 
 Run: same as Step 1.
 Expected: passes.
 
 **Step 3: Format and verify**
 
-Run: `pnpm exec oxfmt packages/docs-theme/src/figures/graph-frame.tsx packages/docs-theme/src/figures/graph-markdown.ts packages/docs-theme/src/figures/cn.ts packages/docs-theme/src/figures/graph-frame.test.ts packages/docs-theme/package.json && pnpm --filter @open-agent-toolkit/docs-theme type-check && pnpm --filter @open-agent-toolkit/docs-theme check`
+Run: `pnpm exec oxfmt packages/docs-theme/src/figures/graph-frame.tsx packages/docs-theme/src/figures/graph-markdown.ts packages/docs-theme/src/figures/cn.ts packages/docs-theme/src/figures/graph-frame.test.ts packages/docs-theme/figures.css packages/docs-theme/package.json && pnpm --filter @open-agent-toolkit/docs-theme type-check && pnpm --filter @open-agent-toolkit/docs-theme check`
 Expected: no errors.
 
 **Step 4: Commit**
@@ -320,13 +361,13 @@ Expected: no errors.
 **Files:**
 
 - Create: `packages/docs-theme/src/figures/{steps,tree,timeline}.tsx`
-- Create: `packages/docs-theme/src/figures/fixtures/{steps,tree,timeline}.ts`
 - Create: `packages/docs-theme/src/figures/figures-core.test.ts`
 
 **Step 1: Write test (RED)**
 
-Fixtures are mdast-equivalent React element trees, derived from upstream mdxcn
-examples and the spike's lifecycle page. Their headers record provenance.
+Inline element-tree inputs are modeled on upstream mdxcn examples and the
+spike's lifecycle page. The test header records that provenance and states
+that captured compile fixtures come in p03-t01.
 
 Assert:
 
@@ -363,14 +404,16 @@ Expected: no errors.
 **Files:**
 
 - Create: `packages/docs-theme/src/figures/{terminal,decision,check,compare,annotate}.tsx`
-- Create: `packages/docs-theme/src/figures/fixtures/{terminal,decision,check,compare,annotate}.ts`
 - Create: `packages/docs-theme/src/figures/figures-extended.test.ts`
 
 **Step 1: Write test (RED)**
 
 First confirm each grammar against the upstream registry source and doc
 comments. Record any divergence from `design.md`'s grammar table in
-`implementation.md` before writing fixtures. Assert:
+`implementation.md` before writing inline inputs. Terminal and annotate
+receive their code inside a Fumadocs `pre` (CodeBlock) with Shiki line spans,
+and compare receives its table inside the Fumadocs `Table` override. Model
+those wrapped shapes in the inputs, not bare `pre`/`table` elements. Assert:
 
 - **Terminal:** from a `raw` code child, `$ cmd` lines are commands, `# …`
   lines are comments and the rest is output.
@@ -418,7 +461,7 @@ Expected: no errors.
   components.
 - Host-tag overrides in the input map, such as a custom `p`, are marked so
   that figures still detect them.
-- A guard test renders every figure from its fixture. It asserts the
+- A guard test renders every figure from its inline input. It asserts the
   server HTML has no `opacity:0`, `translateY` or `data-motion` markup and no
   `use client` dependency.
 
@@ -452,29 +495,67 @@ Expected: all pass, and `dist/` contains the figures.
 
 ## Phase 3: Integration (contract, checker, scaffold, OAT docs app)
 
-### Task p03-t01: Add the fence/component contract test
+### Task p03-t01: Add the fence/component contract test and captured compile fixtures
 
 **Files:**
 
-- Modify: `packages/docs-theme/package.json` (dev dependency
-  `@open-agent-toolkit/docs-transforms: workspace:*`)
+- Modify: `packages/docs-theme/package.json`:
+  - dev dependencies `@open-agent-toolkit/docs-transforms: workspace:*`,
+    `@open-agent-toolkit/docs-config: workspace:*` and whatever MDX compiler
+    and code-highlighting plugin fumadocs-mdx uses (reuse the versions already
+    in the lockfile);
 - Modify: `pnpm-lock.yaml`
+- Modify: `packages/docs-theme/tsconfig.json` (exclude
+  `src/**/__fixtures__/**`)
+- Modify: `packages/cli/src/release/public-package-contract.ts` (add
+  `src/**/__fixtures__/**` to docs-theme `versionPolicyIgnorePatterns`, kept
+  equal to the tsconfig test exclusion)
 - Create: `packages/docs-theme/src/figures/fence-contract.test.ts`
+- Create: `packages/docs-theme/src/figures/__fixtures__/all-fences.md`
+- Create: `packages/docs-theme/src/figures/__fixtures__/compiled/*` (captured
+  output, with a provenance header)
+- Create: `packages/docs-theme/src/figures/compiled-fixtures.test.ts`
 
-**Step 1: Write test (RED, then GREEN)**
+**Step 1: Contract test (RED, then GREEN)**
 
 Assert that the component names in `DOCS_FENCES` equal
 `DOCS_FIGURE_COMPONENTS`, as sets.
 
-Run: `pnpm install && pnpm --filter @open-agent-toolkit/docs-theme exec vitest run src/figures/fence-contract.test.ts`
+Run: `pnpm install && pnpm --filter @open-agent-toolkit/docs-transforms build && pnpm --filter @open-agent-toolkit/docs-config build && pnpm --filter @open-agent-toolkit/docs-theme exec vitest run src/figures/fence-contract.test.ts`
 Expected: passes. Temporarily remove one entry on either side and confirm it
 fails, then restore.
 
-**Step 2: Format, verify and commit**
+**Step 2: Captured compile fixtures**
 
-Run: `pnpm exec oxfmt packages/docs-theme/package.json packages/docs-theme/src/figures/fence-contract.test.ts && pnpm --filter @open-agent-toolkit/docs-theme test`
+`all-fences.md` holds one realistic example of each of the eight fences,
+including one figure inside a `=== "Tab"` and one containing a `.md` link.
 
-Commit: `test(p03-t01): pin docs fence names to theme components`
+1. Compile it the way a Fumadocs app does: the shared
+   `createSourceConfig()` remark plugins, then fumadocs-mdx's
+   code-highlighting rehype step.
+2. Render with `withDocsFigures({ ...defaultMdxComponents })` from
+   `fumadocs-ui/mdx`.
+3. Write the compiled element shape and rendered HTML into
+   `__fixtures__/compiled/`. Record the tool versions and the capture command
+   in the header.
+
+`compiled-fixtures.test.ts` asserts the parsed figure states from the real
+output: timeline done/now/next, decision chosen/rejected, check `[x]`, compare
+✓/–, terminal command/comment/output and annotate marker/note pairing. It also
+asserts that the server HTML hides nothing. Fix any component that misreads the
+real Fumadocs `pre`, `table` or `a` overrides, and record each fix in
+`implementation.md`.
+
+Run: `pnpm --filter @open-agent-toolkit/docs-theme exec vitest run src/figures/compiled-fixtures.test.ts`
+Expected: passes against the captured real output.
+
+**Step 3: Format, verify and commit**
+
+Run: `pnpm exec oxfmt packages/docs-theme/package.json packages/docs-theme/tsconfig.json packages/docs-theme/src/figures/fence-contract.test.ts packages/docs-theme/src/figures/compiled-fixtures.test.ts packages/cli/src/release/public-package-contract.ts && pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme build && ! find packages/docs-theme/dist -path '*__fixtures__*' | grep -q . && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+Expected: tests pass, `dist` has no fixtures, and the version-policy contract
+test passes.
+
+Commit: `test(p03-t01): pin fence names and capture compiled figure fixtures`
 
 ---
 
@@ -482,20 +563,25 @@ Commit: `test(p03-t01): pin docs fence names to theme components`
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/docs/check/checker.ts` (or a new
-  `docs-fences.ts` beside `diagrams.ts`)
+- Create: `packages/cli/src/commands/docs/check/docs-fences.ts`, beside
+  `diagrams.ts`
+- Modify: `packages/cli/src/commands/docs/check/checker.ts` (wire the rule
+  group the way `checker.ts:91-104` gates the others)
 - Modify: `packages/cli/src/commands/docs/check/checker.test.ts`
-- Modify: the rule registry under `@config/documentation-check`, if rules are
-  enumerated there
+- Modify: `packages/cli/src/config/documentation-check.ts` (add `docs-fences`
+  to `DOCS_CHECK_RULES`; unknown `--rules` values are rejected, so this is
+  required)
 
 **Step 1: Write test (RED)**
 
 - A Fumadocs fixture with a `docs-nope` fence reports one error. The error
-  carries the rule id, file, line and known list.
+  carries rule id `docs-fences`, file, line and known list.
 - Known fences produce no finding.
 - MkDocs and Markdown fixtures with `docs-nope` produce no finding.
+- `--rules docs-fences` runs only this rule, and `--rules` without it skips the
+  rule.
 
-Run: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/check`
+Run: `pnpm --filter @open-agent-toolkit/docs-transforms build && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/check`
 Expected: fails.
 
 **Step 2: Implement (GREEN)**
@@ -546,9 +632,26 @@ Edit the two templates.
 Run: same as Step 1.
 Expected: passes.
 
-**Step 3: Format, verify and commit**
+**Step 3: Build a freshly scaffolded app with a figure**
 
-Run: `pnpm exec oxfmt '.oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx' <edited test files> && pnpm --filter @open-agent-toolkit/cli type-check`
+Build all workspace packages with `pnpm build`. Then:
+
+1. Run the branch CLI's `docs init` (Fumadocs, non-interactive) into a
+   temporary directory outside the repository.
+2. Point its `@open-agent-toolkit/docs-*` dependencies at the built workspace
+   packages, using `link:` or locally packed tarballs.
+3. Add one page with a `docs-tree` fence and install.
+4. Run the app's build.
+
+Expected: the build succeeds, the page's static HTML contains the figure, and
+`figures.css` utilities appear in the emitted CSS. Record the commands and
+result in `implementation.md`, then delete the temporary directory. This
+covers discovery's "no manual wiring" criterion. The template tests alone do
+not.
+
+**Step 4: Format, verify and commit**
+
+Run: `pnpm exec oxfmt '.oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx' .oat/templates/docs-app-fuma/app/globals.css <edited test files> && pnpm --filter @open-agent-toolkit/cli type-check`
 
 Commit: `feat(p03-t03): register docs figures in the Fumadocs scaffold`
 
@@ -598,7 +701,7 @@ Save screenshots to the gitignored `.oat/repo/analysis/mdxcn/`.
 
 **Step 3: Format and commit**
 
-Run: `pnpm exec oxfmt <edited .md and .tsx files>`
+Run: `pnpm exec oxfmt <edited .md and .tsx files> apps/oat-docs/app/globals.css`
 
 Commit: `feat(p03-t04): adopt packaged docs figures in OAT docs`
 
@@ -624,6 +727,9 @@ Commit: `feat(p03-t04): adopt packaged docs figures in OAT docs`
     Syntax/Rendered tab pair per fence.
   - Add the agent-readability rule.
   - Add the four-backtick rule for `docs-annotate`.
+- **Fumadocs contributing page, checker sentence:** add unknown `docs-*`
+  fences to the list of what `docs:check` checks (currently
+  `.oat/templates/docs-app-fuma/docs/contributing.md:94`).
 - **MkDocs contributing page:** add one sentence saying `docs-*` fences render
   as plain code blocks.
 - **Fumadocs app AGENTS:** add when to choose a figure over a list, a table or
@@ -655,6 +761,8 @@ Commit: `docs(p04-t01): document figure fences in scaffold contributing guidance
     `figures.css` import, or whose contributing page lacks figure-fence
     guidance;
   - the check gives the exact two-line fix.
+- Modify: `.agents/skills/oat-docs-analyze/SKILL.md`, where it summarizes what
+  the checker covers (around line 552), to add the `docs-fences` rule.
 - Bump `metadata.version` in both skills' `SKILL.md`.
 
 **Step 1: Verify**
@@ -684,15 +792,31 @@ Commit: `docs(p04-t02): cover figure fences in docs bootstrap and analyze skills
   authoring capability updates the scaffold contributing templates, scaffold
   app AGENTS guidance, `oat-docs-bootstrap`/`oat-docs-analyze` guidance and
   OAT's Markdown Features page in the same PR."
-- Modify: `packages/docs-transforms/README.md` and
-  `packages/docs-theme/README.md` (usage: `withDocsFigures`, the
+- Modify: `packages/docs-transforms/README.md`. The example chain
+  (around line 23) becomes `[remarkTabs, remarkDocsFences, remarkLinks, remarkMermaid]`,
+  and the export list (around lines 36–37) gains `remarkDocsFences` and
+  `DOCS_FENCES`.
+- Modify: `packages/docs-theme/README.md` (usage: `withDocsFigures`, the
   `figures.css` import)
-- Modify: `NOTICES.md` (an mdxcn MIT entry naming the vendored files and
-  local patches)
+- Modify: `apps/oat-docs/docs/reference/file-locations.md` (the docs-transforms
+  plugin list, around line 196)
+- Modify: `apps/oat-docs/docs/docs-tooling/check.md` (add the `docs-fences`
+  rule to the rule table, around line 112)
+- Modify: `NOTICES.md`. Add an mdxcn entry in the existing MIT format:
+  Source, Version referenced, the vendored files and local patches, and
+  `Copyright (c) <year> <holder>` followed by the full MIT text, copied from
+  the upstream LICENSE.
+- Modify: `packages/cli/src/release/public-package-contract.ts` and its test:
+  - pin the mdxcn Source, Version and `Copyright …\n\n${MIT_LICENSE_BODY}`
+    lines in the CLI's `assets/NOTICES.md` `requiredContents`;
+  - add `figures.css` to docs-theme `requiredPaths`;
+  - add a docs-theme `requiredPackedTextFiles` entry requiring the mdxcn MIT
+    notice in one packed vendored `dist` file.
 
 **Step 1: Verify**
 
-Run: `pnpm build:docs && pnpm --filter oat-docs docs:check && pnpm check`
+Run: `pnpm build && pnpm release:validate && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+Then run: `pnpm build:docs && pnpm --filter oat-docs docs:check && pnpm check`
 Then run, sequentially, the generate-index command and the
 `git diff --exit-code -- apps/oat-docs/index.md` check from p03-t04.
 Expected: all pass. Review the Markdown Features figures in the rendered site.
@@ -717,29 +841,35 @@ Commit: `docs(p04-t03): document figure fences across OAT docs and package guida
 Run `git fetch origin main`. Bump all five packages to one version strictly
 greater than `origin/main`'s.
 
-**Step 2: Verify**
+**Step 2: Format and commit**
 
-Run each CI gate in order, capturing exit codes, for example
-`pnpm <gate> > gate.log 2>&1; echo "exit=$?"`:
+Run: `pnpm exec oxfmt <edited package.json files>`
+
+Commit: `chore(p04-t04): bump lockstep package versions for docs figure fences`
+
+**Step 3: Verify**
+
+Run each CI gate in order on the committed tree, capturing exit codes, for
+example `pnpm <gate> > gate.log 2>&1; echo "exit=$?"`:
 
 1. `pnpm check`
 2. `pnpm type-check`
-3. `pnpm test:evidence`
+3. `pnpm test`. The root script is
+   `turbo run test && pnpm test:smoke && pnpm test:skills && pnpm test:scripts`,
+   matching CI. For evidence-grade proof, also run `pnpm test:evidence` for the
+   uncached turbo pass.
 4. `pnpm build`
-5. `pnpm run check:skill-bumps`, after committing
+5. `pnpm run check:skill-bumps`
 6. `pnpm release:check-versions`
 7. `pnpm release:validate`
 8. `pnpm build:docs`
 9. the generate-index command, then
    `git diff --exit-code -- apps/oat-docs/index.md`
 
-Expected: every gate reports `exit=0`, with no replays from cache.
-
-**Step 3: Format and commit**
-
-Run: `pnpm exec oxfmt <edited package.json files>`
-
-Commit: `chore(p04-t04): bump lockstep package versions for docs figure fences`
+Expected: every gate reports `exit=0`. Turbo cache replays are acceptable for
+`check`, `build` and `build:docs`; `test:evidence` supplies the uncached test
+run. If a gate forces a change, fix, format, commit and rerun the affected
+gates.
 
 ---
 
@@ -772,8 +902,8 @@ cell, and never truncate a widened row back to five columns.
   wiring.
 - Phase 2: 4 tasks. Static figure components, `figures.css` and
   `withDocsFigures`.
-- Phase 3: 4 tasks. The contract test, checker rule, scaffold wiring and OAT
-  docs adoption.
+- Phase 3: 4 tasks. The contract test and captured compile fixtures, the
+  checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption.
 - Phase 4: 4 tasks. Scaffold and skill guidance, OAT docs and instructions,
   and the lockstep release.
 
