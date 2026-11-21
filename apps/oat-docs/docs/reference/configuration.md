@@ -582,6 +582,8 @@ mapping connects each flat ladder ID to its verified frontmatter model.
 Existing mappings keep their bracket selectors; Sonnet 5.5 uses per-pin
 verified exact IDs. The 31 mappings produce 62 pinned role variants.
 Configuration and skills never derive selectors or admit arbitrary flat IDs.
+Verified Cursor entries include `gpt-5.6-luna-high`, `gpt-5.6-terra-high`,
+`gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and `gpt-5.6-sol-max`.
 
 The corresponding pinned Codex variant catalogue includes
 `oat-phase-implementer-gpt-6-2-sol-high` and
