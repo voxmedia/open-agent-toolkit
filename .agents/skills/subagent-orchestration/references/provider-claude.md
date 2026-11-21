@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-10-01
-last_verified: 2026-10-01
-review_after: 2026-12-30
+guidance_version: 2026-11-21
+last_verified: 2026-11-21
+review_after: 2027-02-19
 ---
 
 # Claude Model Selection
@@ -25,8 +25,9 @@ the dated model examples below. Launch mechanics for OAT dispatch live in
   when measured latency, throughput,
   access, rate limits, or established-workflow economics beat the relevant
   Opus route.
-- `claude-fable-5-1`: eligibility-gated specialist for a directly relevant
-  failure mode, not a universal escalation above Opus.
+- `claude-fable-5-2`: eligibility-gated specialist for a directly relevant
+  failure mode. The bundled Frontier recommendation uses `high`. Fable 5.1
+  remains available for explicit configuration.
 
 Claude Mythos 5 is invitation-only and intended for approved defensive cyber
 work. It is not a general routing candidate unless the organization explicitly
@@ -59,8 +60,11 @@ host.
 - Sonnet 5: use medium or high only when measured latency, throughput, access,
   or workload economics justify the conditional route. Do not preserve xhigh
   or max as generic workhorse settings.
-- Fable 5.1: use high or xhigh only for a qualified specialist case. Max is
-  exceptional; medium or low are not routine economy substitutes for Opus.
+- Fable 5.2: start at high for a qualified specialist case. Use xhigh when
+  deeper reasoning is needed and reserve max for workload-tested cases.
+  [Claude Code](https://code.claude.com/docs/en/model-config#effort-levels)
+  supports all five levels from low through max. Use the exact model ID
+  because the `fable` alias can resolve to another generation on some gateways.
 - Haiku 4.5 does not expose the same adaptive-effort surface. Use only controls
   present in the live schema.
 
@@ -110,10 +114,8 @@ prove lower trajectory cost.
 
 Choose specialist reviewers by anticipated failure mode. Fable is a
 provisional candidate for latent-knowledge, missing-domain-concept,
-sparse-context, long-horizon, or additional-perspective work. It is unavailable
-where zero data retention is required because the current route requires
-30-day retention. Provider availability, retention, and controls must be
-verified before selection.
+sparse-context, long-horizon, or additional-perspective work. Verify provider
+availability, retention, and controls before selecting it.
 
 ## Eligibility, Retention, and Service Constraints
 
@@ -125,16 +127,17 @@ The non-Opus constraints are dated observations; reverify against the live
 schema and the organization's actual plan before launch. Do not transfer Opus 5
 service-tier or retention claims to Opus 5.5 without fresh evidence.
 
-| Constraint          | Opus 5.5      | Sonnet 5      | Fable 5.1                  | Haiku 4.5     |
-| ------------------- | ------------- | ------------- | -------------------------- | ------------- |
-| Zero data retention | verify live   | eligible      | **unavailable**, needs 30d | eligible      |
-| Priority Tier       | verify live   | not supported | supported                  | verify live   |
-| Fast mode           | verify live   | no            | no                         | no            |
-| Long context        | verify live   | 1M standard   | 1M standard                | verify live   |
-| Claude Code minimum | version-gated | version-gated | version-gated              | version-gated |
+| Constraint          | Opus 5.5      | Sonnet 5      | Fable 5.2             | Haiku 4.5     |
+| ------------------- | ------------- | ------------- | --------------------- | ------------- |
+| Zero data retention | verify live   | eligible      | 30d unless authorized | eligible      |
+| Priority Tier       | verify live   | not supported | verify live           | verify live   |
+| Fast mode           | verify live   | no            | availability varies   | no            |
+| Long context        | verify live   | 1M standard   | 1M standard           | verify live   |
+| Claude Code minimum | version-gated | version-gated | v2.1.321              | version-gated |
 
-- Zero data retention removes Fable from the route set outright. Check the
-  retention requirement before selecting a specialist reviewer.
+- Fable 5.2 requires 30-day retention unless Anthropic expressly authorizes
+  zero data retention. Check the retention requirement before selecting a
+  specialist reviewer. [Fable 5.2 specifications](https://platform.claude.com/docs/en/models/fable-5-2/overview)
 - Priority Tier commitments are closed to new buyers, so this matters only for
   an existing commitment. Do not infer availability from another Claude family.
 - Fast mode is a gated latency purchase, not a capability rung.

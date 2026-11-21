@@ -559,11 +559,11 @@ The example above is illustrative rather than a copy of the bundled ladder; its
 tiers are trimmed for readability.
 
 The bundled recommendation covers 13 Codex model/effort combinations: GPT-6.1
-Terra at `low` and `medium`, GPT-6 Luna at `low` through `max`, GPT-6.1 Sol at
-`low` through `high` plus `xhigh`, and GPT-6 Astra at `high` and `xhigh`.
+Terra at `low` and `medium`, GPT-6 Luna at `low` through `max`, GPT-6.2 Sol at
+`low` through `high` plus `xhigh`, and GPT-6.2 Astra at `high` and `xhigh`.
 Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
 model/effort pairs. Effort-pinned Claude cells require a recognized versioned
-model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5-5`, `sonnet-5`,
+model ID (`fable-5-2`, `fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5-5`, `sonnet-5`,
 `opus-4-7`, `opus-4-6`, or `sonnet-4-6`) or a matching
 `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A custom provider pin must declare
 matching capability through `<PIN>_SUPPORTED_CAPABILITIES`: `effort` enables
@@ -582,12 +582,15 @@ mapping connects each flat ladder ID to its verified frontmatter model.
 Existing mappings keep their bracket selectors; Sonnet 5.5 uses per-pin
 verified exact IDs. The 31 mappings produce 62 pinned role variants.
 Configuration and skills never derive selectors or admit arbitrary flat IDs.
+Verified Cursor entries include `gpt-5.6-luna-high`, `gpt-5.6-luna-xhigh`,
+`gpt-5.6-terra-high`, `gpt-5.6-sol-high`, and `gpt-5.6-sol-max`.
 
 The corresponding pinned Codex variant catalogue includes
-`gpt-6-1-sol-high` and `gpt-6-1-sol-max`, alongside compatible older targets
-such as `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
-`gpt-5.6-sol-max`. Configuration selects from that materialized catalogue; it
-does not construct an unregistered role during dispatch.
+`oat-phase-implementer-gpt-6-2-sol-high` and
+`oat-reviewer-gpt-6-2-astra-xhigh`. The catalogue also includes older targets
+such as `oat-phase-implementer-gpt-6-1-sol-high` and
+`oat-reviewer-gpt-5-6-sol-max`. Dispatch selects a registered role from this
+catalogue.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. For
 implementation and fix tasks, all candidates from the lowest tier through the
