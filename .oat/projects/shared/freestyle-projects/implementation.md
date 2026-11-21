@@ -151,6 +151,21 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 - Can-fail: neutralizing each of the five guards failed exactly its freestyle tests (validate-plan 2, closeout 2, complete-state 1, evaluator 1, cleanup 1); restored. The complete-state "journal every lifecycle rule would refuse" case stays green with the complete-state guard neutralized because the evaluator opt-out also covers it.
 - Commit note: the first attempt was refused by commitlint (header over 100 characters) before any commit; retried with a shorter header under the same identity.
 
+### Recovery Event freestyle-projects-p01-recovery-1
+
+- Phase/task: p01 / p01-t01
+- Original request: freestyle-projects-p01-implementation-1
+- Original commit: 012945d67e70b7d413ca8fd2241e26938ba379aa
+- Defect class: test
+- Discovered by: pnpm test:evidence (packages/cli src/commands/help-snapshots.test.ts > project new --help matches snapshot)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862
+- Verification: focused snapshot test (71/71) and `pnpm test:evidence` (exit 0, 0 cached) before the commit and again on committed HEAD `8220a9dab`
+- Reason: the `project new --help` inline snapshot still listed the old `--mode` choices after t01 added `freestyle`; mechanical snapshot update in an in-phase test file. Root validated the event, the unchanged original commit and the two-file recovery diff, and cleared the `completed` marker (`used_attempts: 1` kept).
+
 ---
 
 ## Phase p02: Project AGENTS.md, shape.md and the shaping skill
@@ -206,6 +221,8 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
 
 <!-- orchestration-runs-start -->
+
+- run/v1 · request=freestyle-projects-p01-implementation-1 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

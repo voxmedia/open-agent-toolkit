@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01
-oat_last_commit: null
+oat_last_commit: 60632049bbc714fb656cd2ff12af409c7ee23444
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -25,16 +25,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: freestyle-projects-p01-recovery-1
-        original_request_id: freestyle-projects-p01-implementation-1
-        original_task_id: p01-t01
-        original_commit: 012945d67e70b7d413ca8fd2241e26938ba379aa
-        discovered_by: 'pnpm test:evidence (packages/cli src/commands/help-snapshots.test.ts > project new --help matches snapshot)'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: d17399de98aaf7d9128a90d80fa319aa451ef6ed
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
