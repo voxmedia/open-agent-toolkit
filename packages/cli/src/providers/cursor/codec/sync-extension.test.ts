@@ -100,7 +100,7 @@ describe('cursor sync extension', () => {
     );
 
     expect(first.provider).toBe('cursor');
-    expect(first.managedEntries).toHaveLength(62);
+    expect(first.managedEntries).toHaveLength(78);
     expect(
       first.operations.every(({ provider }) => provider === 'cursor'),
     ).toBe(true);

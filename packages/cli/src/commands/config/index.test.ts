@@ -3067,7 +3067,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-11-21.1');
+      expect(recommendation.version).toBe('2026-11-21.3');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -3130,6 +3130,7 @@ describe('oat config', () => {
             candidates: [
               'composer-2.5',
               'gpt-5.6-luna-high',
+              'gemini-4-hydrogen-medium',
               'gpt-5.6-luna-xhigh',
             ],
           },
@@ -3137,25 +3138,23 @@ describe('oat config', () => {
             candidates: [
               'cursor-grok-4.6-medium',
               'gpt-5.6-terra-high',
+              'gemini-4-neon-medium',
               'claude-opus-5-5-low',
             ],
           },
           high: {
             candidates: [
-              'gpt-5.6-sol-medium',
               'claude-opus-5-5-low',
-              'gpt-5.6-sol-high',
               'claude-opus-5-5-medium',
+              'gemini-4-neon-high',
               'claude-opus-5-5-high',
             ],
           },
           frontier: {
             candidates: [
-              'gpt-5.6-sol-xhigh',
-              'gpt-5.6-sol-max',
               'claude-opus-5-5-high',
               'claude-opus-5-5-xhigh',
-              'claude-fable-5-1-thinking-high',
+              'claude-fable-5-2-high',
             ],
           },
         },

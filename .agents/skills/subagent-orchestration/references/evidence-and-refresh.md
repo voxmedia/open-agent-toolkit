@@ -108,6 +108,12 @@ publish a provider-independent effort conversion.
   carries forward the prior reviewer slot without a new workload comparison.
   Fable 5.2 requires 30-day retention unless Anthropic expressly authorizes
   zero data retention.
+- Cursor desktop 3.29.9 editor Agent Chat matched eight Fable 5.2 and Gemini 4
+  exact IDs. Fable 5.2 high takes the prior Fable Frontier slot. The bundled
+  ladder offers Hydrogen medium at Economy, Neon medium at Balanced, and
+  Neon high at High. GPT-5.6 Sol remains available for explicit Cursor
+  configurations. Native pin evidence covers model selection and fallback
+  behavior. Workload comparisons remain separate.
 - CursorBench supports Composer 2.5 as an economical bounded coding worker.
   Cursor explicitly documents Composer fast as the same intelligence at a
   higher latency tier price.
