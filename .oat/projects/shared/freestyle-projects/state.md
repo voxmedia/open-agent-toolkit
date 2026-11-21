@@ -21,6 +21,20 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p01:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: freestyle-projects-p01-recovery-1
+        original_request_id: freestyle-projects-p01-implementation-1
+        original_task_id: p01-t01
+        original_commit: 012945d67e70b7d413ca8fd2241e26938ba379aa
+        discovered_by: 'pnpm test:evidence (packages/cli src/commands/help-snapshots.test.ts > project new --help matches snapshot)'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: d17399de98aaf7d9128a90d80fa319aa451ef6ed
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
