@@ -79,11 +79,38 @@ function figureChildren(node: Code, body: DocsFenceBody): RootContent[] {
   );
 }
 
+function lookupFence(lang: string) {
+  return Object.hasOwn(DOCS_FENCES, lang) ? DOCS_FENCES[lang] : undefined;
+}
+
+function atLine(node: Code): string {
+  const line = node.position?.start.line;
+  return line === undefined ? '' : ` at line ${line}`;
+}
+
+function unknownFenceMessage(node: Code): string {
+  return `Unknown docs fence \`${node.lang}\`${atLine(node)}. Known docs fences: ${Object.keys(DOCS_FENCES).join(', ')}.`;
+}
+
+/** First `docs-*` code node anywhere in `nodes`, in document order. */
+function findDocsFence(nodes: RootContent[]): Code | undefined {
+  for (const node of nodes) {
+    if (node.type === 'code') {
+      if (node.lang?.startsWith(DOCS_FENCE_PREFIX)) return node;
+    } else if ('children' in node) {
+      const found = findDocsFence(node.children as RootContent[]);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Remark plugin that turns `docs-*` fenced code blocks into `Docs*` MDX JSX
  * flow elements, for example ` ```docs-tree title="App" ` into
  * `<DocsTree title="App">`. Fence meta becomes string attributes; bare flags
- * become `true`. An unknown `docs-*` name fails the file.
+ * become `true`. An unknown `docs-*` name fails the file, and so does any
+ * `docs-*` fence inside a figure body: figures never nest.
  *
  * Runs after `remarkTabs`, so figures inside tab bodies are transformed, and
  * before `remarkLinks`, so links inside figures are normalized.
@@ -98,17 +125,30 @@ export const remarkDocsFences: Plugin<[], Root> = function remarkDocsFences() {
         }
         if (!child.lang?.startsWith(DOCS_FENCE_PREFIX)) return;
 
-        const entry = Object.hasOwn(DOCS_FENCES, child.lang)
-          ? DOCS_FENCES[child.lang]
-          : undefined;
+        const entry = lookupFence(child.lang);
         if (!entry) {
-          const line = child.position?.start.line;
           // `fail` throws; `return` makes the narrowing explicit for tsc.
+          return file.fail(unknownFenceMessage(child), {
+            place: child.position,
+            ruleId: 'unknown-docs-fence',
+          });
+        }
+
+        const children = figureChildren(child, entry.body);
+        // Raw bodies are one literal code child, so only reparsed Markdown
+        // bodies can contain a fence.
+        const nested =
+          entry.body === 'markdown' ? findDocsFence(children) : undefined;
+        if (nested) {
+          if (!lookupFence(nested.lang!)) {
+            return file.fail(unknownFenceMessage(nested), {
+              place: nested.position,
+              ruleId: 'unknown-docs-fence',
+            });
+          }
           return file.fail(
-            `Unknown docs fence \`${child.lang}\`${
-              line === undefined ? '' : ` at line ${line}`
-            }. Known docs fences: ${Object.keys(DOCS_FENCES).join(', ')}.`,
-            { place: child.position, ruleId: 'unknown-docs-fence' },
+            `Docs figure fences cannot be nested inside another figure: \`${nested.lang}\`${atLine(nested)} is inside \`${child.lang}\`${atLine(child)}.`,
+            { place: nested.position, ruleId: 'nested-docs-fence' },
           );
         }
 
@@ -116,7 +156,7 @@ export const remarkDocsFences: Plugin<[], Root> = function remarkDocsFences() {
           type: 'mdxJsxFlowElement',
           name: entry.component,
           attributes: parseMeta(child.meta),
-          children: figureChildren(child, entry.body),
+          children,
           position: child.position,
         } as unknown as RootContent;
       });

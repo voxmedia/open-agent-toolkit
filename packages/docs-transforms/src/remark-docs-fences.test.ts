@@ -207,6 +207,53 @@ describe('remarkDocsFences', () => {
     expect(error!.line).toBe(3);
   });
 
+  it('fails an unknown docs-* fence nested in a figure list item', async () => {
+    const markdown = [
+      '````docs-steps',
+      '1. **Run**',
+      '',
+      '   ```docs-nope',
+      '   - x',
+      '   ```',
+      '````',
+    ].join('\n');
+    const error = await transform(markdown).then(
+      () => undefined,
+      (reason: unknown) => reason as { reason: string; line?: number },
+    );
+
+    expect(error?.reason).toContain('Unknown docs fence `docs-nope` at line 4');
+    for (const name of Object.keys(EXPECTED_COMPONENTS)) {
+      expect(error!.reason).toContain(name);
+    }
+    expect(error!.line).toBe(4);
+  });
+
+  it('fails a known docs-* fence nested inside another figure', async () => {
+    const markdown = [
+      '# Page',
+      '',
+      '````docs-steps',
+      '1. **Install**',
+      '',
+      '   ```docs-terminal',
+      '   $ pnpm install',
+      '   ```',
+      '````',
+    ].join('\n');
+    const error = await transform(markdown).then(
+      () => undefined,
+      (reason: unknown) => reason as { reason: string; line?: number },
+    );
+
+    expect(error?.reason).toContain(
+      'Docs figure fences cannot be nested inside another figure',
+    );
+    expect(error!.reason).toContain('`docs-terminal` at line 6');
+    expect(error!.reason).toContain('`docs-steps`');
+    expect(error!.line).toBe(6);
+  });
+
   it('passes ts, mermaid and bare fences through unchanged', async () => {
     const markdown = [
       fence('ts', ['const a = 1;']),
