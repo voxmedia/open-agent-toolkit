@@ -339,8 +339,14 @@ Port upstream `graph-frame` and `graph-markdown` with these changes:
 Each vendored file gets a header with the upstream source, its date or version,
 the local patches and the full mdxcn MIT notice. The notice is required because
 docs-theme redistributes the code, and NOTICES.md ships only in the CLI. Keep
-the header as a `/*! … */` or leading block comment that `tsc` preserves in
-`dist`, and confirm that it does.
+the header as a `/*! … */` block comment that `tsc` preserves in `dist`, and
+confirm that it does. Inside the comment, write the `Copyright …` line and the
+licence text with no `*` line prefixes, so the packed file contains
+`Copyright …\n\n${MIT_LICENSE_BODY}` exactly as p04-t03 pins it. Before
+writing it, confirm that the upstream LICENSE wording and wrapping match
+`MIT_LICENSE_BODY` (`packages/cli/src/release/public-package-contract.ts`).
+Record any difference in `implementation.md`; if there is one, the pin uses the
+upstream text.
 
 Run: same as Step 1.
 Expected: passes.
@@ -501,19 +507,28 @@ Expected: all pass, and `dist/` contains the figures.
 
 - Modify: `packages/docs-theme/package.json`:
   - dev dependencies `@open-agent-toolkit/docs-transforms: workspace:*`,
-    `@open-agent-toolkit/docs-config: workspace:*` and whatever MDX compiler
-    and code-highlighting plugin fumadocs-mdx uses (reuse the versions already
-    in the lockfile);
+    `@open-agent-toolkit/docs-config: workspace:*`, `@mdx-js/mdx` and
+    `fumadocs-mdx`. Use the versions already in the lockfile (`@mdx-js/mdx`
+    3.1.1, the workspace's fumadocs-mdx). `fumadocs-core`, which provides
+    `rehypeCode`, is already a dev dependency.
 - Modify: `pnpm-lock.yaml`
 - Modify: `packages/docs-theme/tsconfig.json` (exclude
   `src/**/__fixtures__/**`)
+- Modify: `.oxfmtrc.jsonc` (add `packages/docs-theme/src/figures/__fixtures__/**`
+  to `ignorePatterns`, with the existing captured-fixture provenance comment)
+  and `.oxlintrc.json` (add the same path to `ignorePatterns`, because the
+  captured module is JavaScript). lint-staged and `oxfmt --check .` would
+  otherwise rewrite or fail the byte-for-byte captures.
 - Modify: `packages/cli/src/release/public-package-contract.ts` (add
   `src/**/__fixtures__/**` to docs-theme `versionPolicyIgnorePatterns`, kept
   equal to the tsconfig test exclusion)
 - Create: `packages/docs-theme/src/figures/fence-contract.test.ts`
 - Create: `packages/docs-theme/src/figures/__fixtures__/all-fences.md`
-- Create: `packages/docs-theme/src/figures/__fixtures__/compiled/*` (captured
-  output, with a provenance header)
+- Create: `packages/docs-theme/src/figures/__fixtures__/all-fences.compiled.js`
+  (the captured function-body MDX output, with a provenance header)
+- Create: `packages/docs-theme/scripts/capture-figure-fixtures.ts`, or an
+  equivalent documented command recorded in the fixture header, so the capture
+  can be reproduced
 - Create: `packages/docs-theme/src/figures/compiled-fixtures.test.ts`
 
 **Step 1: Contract test (RED, then GREEN)**
@@ -530,30 +545,54 @@ fails, then restore.
 `all-fences.md` holds one realistic example of each of the eight fences,
 including one figure inside a `=== "Tab"` and one containing a `.md` link.
 
-1. Compile it the way a Fumadocs app does: the shared
-   `createSourceConfig()` remark plugins, then fumadocs-mdx's
-   code-highlighting rehype step.
-2. Render with `withDocsFigures({ ...defaultMdxComponents })` from
-   `fumadocs-ui/mdx`.
-3. Write the compiled element shape and rendered HTML into
-   `__fixtures__/compiled/`. Record the tool versions and the capture command
-   in the header.
+1. **Capture:** compile `all-fences.md` the way fumadocs-mdx compiles a `.md`
+   page:
+   `compile(source, { format: 'md', ...(await applyMdxPreset({ remarkPlugins: createSourceConfig().remarkPlugins })('runtime')) })`.
+   `compile` comes from `@mdx-js/mdx`, `applyMdxPreset` from
+   `fumadocs-mdx/config` and `createSourceConfig` from
+   `@open-agent-toolkit/docs-config`. The preset adds Fumadocs' own remark
+   steps around the shared chain, plus `rehypeCode` and `rehypeToc`. Its
+   `'runtime'` mode emits function-body output.
+2. Commit that output as `all-fences.compiled.js`. Its header records the
+   `@mdx-js/mdx`, fumadocs-mdx and fumadocs-core versions and the capture
+   command.
+3. **Replay:** `compiled-fixtures.test.ts` `run`s the captured module with
+   React's JSX runtime. It renders the result through `renderToStaticMarkup`
+   with the live scaffold map,
+   `withDocsFigures({ ...defaultMdxComponents, Mermaid, Tab, Tabs, img: ZoomImage })`.
+   `defaultMdxComponents` comes from `fumadocs-ui/mdx`, and the others come
+   from docs-theme's own `src`. The test asserts on that fresh render, not on
+   frozen HTML, so a component regression fails it.
 
-`compiled-fixtures.test.ts` asserts the parsed figure states from the real
-output: timeline done/now/next, decision chosen/rejected, check `[x]`, compare
-✓/–, terminal command/comment/output and annotate marker/note pairing. It also
-asserts that the server HTML hides nothing. Fix any component that misreads the
-real Fumadocs `pre`, `table` or `a` overrides, and record each fix in
-`implementation.md`.
+The test asserts these parsed figure states:
+
+- timeline done/now/next;
+- decision chosen/rejected;
+- check `[x]`;
+- compare ✓/–;
+- terminal command/comment/output;
+- annotate marker/note pairing;
+- the tabbed figure and the normalized link;
+- server HTML that hides nothing.
+
+Fix any component that misreads the real Fumadocs `pre`, `table` or `a`
+overrides, and record each fix in `implementation.md`.
+
+**Can-fail proof:** temporarily invert the timeline's bold/italic state
+detection and confirm the compiled-fixture test fails on the timeline
+assertion. Then restore it and record the result.
 
 Run: `pnpm --filter @open-agent-toolkit/docs-theme exec vitest run src/figures/compiled-fixtures.test.ts`
 Expected: passes against the captured real output.
 
 **Step 3: Format, verify and commit**
 
-Run: `pnpm exec oxfmt packages/docs-theme/package.json packages/docs-theme/tsconfig.json packages/docs-theme/src/figures/fence-contract.test.ts packages/docs-theme/src/figures/compiled-fixtures.test.ts packages/cli/src/release/public-package-contract.ts && pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme build && ! find packages/docs-theme/dist -path '*__fixtures__*' | grep -q . && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
-Expected: tests pass, `dist` has no fixtures, and the version-policy contract
-test passes.
+Do not format the `__fixtures__/` files. They are captures, and the ignore
+patterns above exempt them.
+
+Run: `pnpm exec oxfmt packages/docs-theme/package.json packages/docs-theme/tsconfig.json packages/docs-theme/src/figures/fence-contract.test.ts packages/docs-theme/src/figures/compiled-fixtures.test.ts packages/cli/src/release/public-package-contract.ts .oxfmtrc.jsonc .oxlintrc.json && pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme build && ! find packages/docs-theme/dist -path '*__fixtures__*' | grep -q . && pnpm --filter @open-agent-toolkit/docs-theme check && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+Expected: tests pass, `dist` has no fixtures, the docs-theme check passes with
+the fixtures ignored, and the version-policy contract test passes.
 
 Commit: `test(p03-t01): pin fence names and capture compiled figure fixtures`
 
@@ -638,8 +677,12 @@ Build all workspace packages with `pnpm build`. Then:
 
 1. Run the branch CLI's `docs init` (Fumadocs, non-interactive) into a
    temporary directory outside the repository.
-2. Point its `@open-agent-toolkit/docs-*` dependencies at the built workspace
-   packages, using `link:` or locally packed tarballs.
+2. Point its `@open-agent-toolkit/docs-*` dependencies and its
+   `@open-agent-toolkit/cli` dev dependency at the branch build. Prefer
+   `pnpm pack` tarballs of all four packages. Otherwise the template's
+   `{{OAT_CLI_DEP}}` resolves to the published CLI (`scaffold.ts:272-277`),
+   and the app's prebuild `oat docs check` would not exercise the branch's
+   `docs-fences` rule.
 3. Add one page with a `docs-tree` fence and install.
 4. Run the app's build.
 

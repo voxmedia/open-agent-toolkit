@@ -192,11 +192,19 @@ These are server components with no `motion`.
 
 The file ships as a new `./figures.css` package export and contains:
 
-- the `--graph-*` tokens, mapped onto `--color-fd-*` for light and dark;
+- the `--graph-*` tokens, mapped onto `--color-fd-*` for light and dark. Only
+  `--graph-*` and `--color-graph-*` names are defined, so a downstream app's
+  own `--background`, `--foreground` and `--destructive` are never overridden.
+  Upstream's generic token classes are rewritten to `fd-*` or `graph-*` ones;
 - an `@theme inline` block;
-- the `graph-frame`, `graph-rule`, `graph-rule-y` and `graph-scroll-x`
-  utilities;
-- an MIT attribution comment.
+- the `graph-frame`, `graph-rule`, `graph-rule-y`, `scrollbar-graph` and
+  `graph-scroll-x` utilities;
+- the full mdxcn MIT notice.
+
+Each vendored component file also carries the full MIT notice in a header that
+`tsc` preserves, because docs-theme redistributes the code and `NOTICES.md`
+ships only with the CLI. The release contract pins the notice in the CLI's
+`NOTICES.md` and in one packed docs-theme file.
 
 ### Checker rule (CLI `docs check`)
 
@@ -238,8 +246,21 @@ error. It is reported with its line and the known list.
 
 ### Fixture Provenance
 
-Grammar fixtures for the eight components come from upstream mdxcn registry
-examples and doc comments. Each fixture file's header records the version.
+Two kinds of test input exist:
+
+- **Hand-built inputs (component unit tests, p02).** Inline element trees are
+  modeled on upstream mdxcn registry examples and doc comments, and each test
+  file header says so. They stay inline in `.test.ts` files so nothing compiles
+  into `dist`.
+- **Captured compile fixtures (p03).** One page holds all eight fences,
+  including one inside a tab and one with a `.md` link. It is compiled the way
+  fumadocs-mdx compiles `.md`: `@mdx-js/mdx` `compile` with `format: 'md'`
+  and `applyMdxPreset` over the shared remark chain, which adds `rehypeCode`.
+  The function-body output is committed under `src/**/__fixtures__/` with a
+  provenance header. That directory is excluded from `tsc`, the version policy,
+  oxfmt and oxlint. The test runs the captured module and renders it through
+  the live scaffold component map, so a component regression fails it.
+
 The spike's converted lifecycle page is the end-to-end artifact.
 
 ### Unit Tests: docs-transforms
@@ -258,13 +279,18 @@ The spike's converted lifecycle page is the end-to-end artifact.
 
 ### Unit Tests: docs-theme
 
-- `renderToStaticMarkup` of each component from its fixture. The tests assert
-  the frame, the title, item states (done/now/next, chosen/rejected, `[x]`)
-  and tree nesting and indents.
+- `renderToStaticMarkup` of each component from its inline input. The tests
+  assert the frame, the title, item states (done/now/next, chosen/rejected,
+  `[x]`) and tree nesting and indents.
+- Host-tag detection covers Fumadocs' `pre`, `table` and `a` overrides.
 - The server HTML contains no `opacity:0` or `motion` markup.
 - `withDocsFigures` keeps existing entries and adds all eight.
-- Contract: the component names equal `DOCS_FENCES`.
-- The `figures.css` export is present in the package.
+- Contract: the component names equal `DOCS_FENCES`. For this, docs-theme
+  takes docs-transforms and docs-config as workspace dev dependencies.
+- Captured compile fixtures replayed through the live component map (see
+  Fixture Provenance).
+- The `figures.css` export is present, and the CSS defines no unprefixed custom
+  properties.
 
 ### CLI Tests
 
@@ -285,7 +311,9 @@ The spike's converted lifecycle page is the end-to-end artifact.
 
 - `pnpm build:docs` succeeds with the lifecycle page and the Markdown Features
   examples.
-- A scaffolded Fumadocs app builds with one figure page.
+- A freshly scaffolded Fumadocs app builds with one figure page. It is wired
+  to packed branch builds of the docs packages and the CLI, so its prebuild
+  `docs check` runs the branch's `docs-fences` rule.
 - Manual check in light and dark at desktop and phone widths:
   - no figure overflow, thanks to `graph-scroll-x`;
   - no hydration warning in the console.
