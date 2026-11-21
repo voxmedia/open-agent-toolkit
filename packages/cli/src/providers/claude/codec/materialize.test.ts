@@ -61,6 +61,7 @@ describe('Claude effort materializer', () => {
     ['claude-sonnet-5-5', 'max', 'sonnet-5-5'],
     ['claude-sonnet-5.5', 'low', 'sonnet-5-5'],
     ['claude-opus-5-5', 'low', 'opus-5-5'],
+    ['claude-fable-5-2', 'high', 'fable-5-2'],
     ['claude-fable-5-1', 'low', 'fable-5-1'],
     ['claude-fable-5', 'medium', 'fable-5'],
   ])(

@@ -101,6 +101,12 @@ This is an OAT recommendation update based on maintainer direction and model
 availability. The local evidence is the Codex model catalog. It covers available
 settings, while a native launch is needed to verify the resolved execution.
 
+The same refresh replaces Fable 5.1 high with Fable 5.2 high in the Claude
+Code Frontier recommendation. [Claude Code's model documentation](https://code.claude.com/docs/en/model-config)
+lists the exact ID `claude-fable-5-2`, a minimum version of 2.1.321, and
+support for all five efforts. Local Claude Code 2.1.326 assistant records
+report that exact ID. Fable 5.1 remains available for explicit configurations.
+
 ## Change and Validate
 
 1. Update the supported catalog for each verified runtime and its tests. Preserve

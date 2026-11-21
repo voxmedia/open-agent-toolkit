@@ -3121,7 +3121,7 @@ describe('oat config', () => {
             candidates: [
               { model: 'claude-opus-5-5', effort: 'xhigh' },
               { model: 'claude-opus-5-5', effort: 'max' },
-              { model: 'claude-fable-5-1', effort: 'high' },
+              { model: 'claude-fable-5-2', effort: 'high' },
             ],
           },
         },
@@ -3183,9 +3183,9 @@ describe('oat config', () => {
       ],
       [
         'frontier',
-        'claude-fable-5-1',
+        'claude-fable-5-2',
         'high',
-        'oat-reviewer-claude-claude-fable-5-1-high',
+        'oat-reviewer-claude-claude-fable-5-2-high',
       ],
     ] as const)(
       'resolves the bundled Claude %s terminal reviewer pair through the real resolver',

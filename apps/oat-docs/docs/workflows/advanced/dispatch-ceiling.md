@@ -350,8 +350,9 @@ The bundled ladder is a curated subset of the supported targets:
   `xhigh`. Explicit configurations support both GPT-6.2 models at `low`
   through `max`.
 - **Claude:** `haiku` and Sonnet 5.5 medium at Economy; Opus 5.5 low at
-  Balanced, low/medium/high at High, and xhigh/max at Frontier; Fable 5.1
-  high ends Frontier. Sonnet 5 remains supported for explicit configurations.
+  Balanced, low/medium/high at High, and xhigh/max at Frontier. Fable 5.2
+  high ends Frontier. Fable 5.1 and Sonnet 5 remain supported for explicit
+  configurations.
 - **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
   4.6, Opus 5.5, and Fable 5.1 targets. The catalogue maps each flat ladder ID
   to its separately verified frontmatter model. Sonnet 5.5 exact-ID pins
@@ -463,7 +464,7 @@ branch replaces, rather than supplements, preferred selection.
 
 An effort-pinned Claude candidate must establish the exact generation and that
 generation's supported effort. Current directly recognized generations include
-`claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-sonnet-5`,
+`claude-fable-5-2`, `claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-sonnet-5`,
 `claude-opus-4-7`, `claude-opus-4-6`, and `claude-sonnet-4-6`.
 Opus 5.5 and Sonnet 5.5 support `low`, `medium`, `high`, `xhigh`, and `max`; consult the
 [updating guide](../../contributing/updating-model-guidance.md) before adding

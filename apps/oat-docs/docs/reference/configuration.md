@@ -563,7 +563,7 @@ Terra at `low` and `medium`, GPT-6 Luna at `low` through `max`, GPT-6.2 Sol at
 `low` through `high` plus `xhigh`, and GPT-6.2 Astra at `high` and `xhigh`.
 Claude covers `haiku`, plus explicit Sonnet, Opus, and Fable
 model/effort pairs. Effort-pinned Claude cells require a recognized versioned
-model ID (`fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5-5`, `sonnet-5`,
+model ID (`fable-5-2`, `fable-5-1`, `fable-5`, `opus-5-5`, `sonnet-5-5`, `sonnet-5`,
 `opus-4-7`, `opus-4-6`, or `sonnet-4-6`) or a matching
 `ANTHROPIC_DEFAULT_<FAMILY>_MODEL` pin. A custom provider pin must declare
 matching capability through `<PIN>_SUPPORTED_CAPABILITIES`: `effort` enables

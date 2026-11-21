@@ -103,10 +103,11 @@ publish a provider-independent effort conversion.
   approved evidence and registry entry. Sonnet 5 remains
   supported for compatibility and established workflows. Sonnet is a
   conditional route when measured latency, throughput, access,
-  rate limits, or end-to-end workload economics win. Fable 5 is an
-  eligibility-gated specialist; its missing-domain-concept or long-horizon
-  reviewer instantiation remains provisional, and zero-data-retention
-  requirements exclude the current route.
+  rate limits, or end-to-end workload economics win. Claude Code Frontier
+  uses Fable 5.2 high as the eligibility-gated specialist. The placement
+  carries forward the prior reviewer slot without a new workload comparison.
+  Fable 5.2 requires 30-day retention unless Anthropic expressly authorizes
+  zero data retention.
 - CursorBench supports Composer 2.5 as an economical bounded coding worker.
   Cursor explicitly documents Composer fast as the same intelligence at a
   higher latency tier price.

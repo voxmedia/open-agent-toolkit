@@ -3437,7 +3437,7 @@ describe('validateOatSkills', () => {
       /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Luna\/max[\s\S]{0,500}Sol\/xhigh[\s\S]{0,120}Astra\/high[\s\S]{0,120}Astra\/xhigh/i,
     );
     expect(shared).toMatch(
-      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5-5[\s\S]{0,200}claude-fable-5-1/i,
+      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5-5[\s\S]{0,200}claude-fable-5-2/i,
     );
     for (const cursorTarget of [
       'composer-2.5',
