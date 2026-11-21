@@ -60,6 +60,9 @@ oat_template: false
 **Status:** in_progress
 **Base:** f6e8b9c92a3870fea4580480116e67c2bf503f82
 **Executor:** phase-implementer:freestyle-projects-p01-implementation-1
+**Head:** 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862
+
+Phase verification at `8220a9dab`: `pnpm test:evidence` exit 0 (12 tasks, 0 cached; cli 9734, control-plane 325, docs packages 85 passed), `pnpm build`, `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts` and `pnpm oat:validate-skills` each exit 0. Recovery 1/10: the first forced run failed the `project new --help` inline snapshot (stale `--mode` choices from `012945d67`); `8220a9dab` updated it and passed the focused test and the forced suite again on the committed head. Branch-build scratch projects in shared, local and synced scopes passed `oat project check-state`, listed and showed as freestyle with no recommendation, completed through `complete-state` and archived; all were removed.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: no parallel group is declared. Rung 2 does not apply: the inventory, the `WORKFLOW_MODES` member and its consumers share types, fixtures and the mode parser, so no two slices pass the independence test. Rung 4 does not apply: the phase adds a new mode surface across many consumers.
 
