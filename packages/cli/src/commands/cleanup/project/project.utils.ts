@@ -52,6 +52,13 @@ export function stateLifecycleIsComplete(stateContent: string): boolean {
   return /^oat_lifecycle:\s*complete$/m.test(stateContent);
 }
 
+/** True when the state declares `oat_workflow_mode: freestyle` (optionally quoted or commented). */
+export function stateIsFreestyle(stateContent: string): boolean {
+  return /^oat_workflow_mode:[ \t]*(['"]?)freestyle\1[ \t]*(?:#.*)?$/m.test(
+    stateContent,
+  );
+}
+
 export function projectNeedsLifecycleComplete(
   planContent: string,
   stateContent: string,

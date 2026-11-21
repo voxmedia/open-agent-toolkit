@@ -1265,6 +1265,13 @@ export async function evaluateCloseout(
     snapshotSource: null,
   };
 
+  // Freestyle has no lifecycle, so no post-implementation sequence: the
+  // snapshot requirement (lite, autonomous or configured) and any stored
+  // snapshot never apply to it.
+  if (workflowMode === 'freestyle') {
+    return { status: 'not_required', inputs };
+  }
+
   // Goal: declaration, an exhaustive audit and delivery coverage are required
   // before either success return; a complete snapshot cannot waive them.
   if (workflowMode === 'goal') {

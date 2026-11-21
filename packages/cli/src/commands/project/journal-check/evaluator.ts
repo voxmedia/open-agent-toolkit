@@ -93,15 +93,30 @@ export function evaluateJournal(input: JournalCheckInput): JournalCheckResult {
   const stateMeta = readFrontmatterMetadata(input.stateContent);
   const stateRecord = stateMeta.state === 'ok' ? stateMeta.record : null;
   const workflowMode = workflowModeOf(stateRecord);
+  const scope =
+    input.boundary === 'review' && input.scope != null
+      ? [...new Set(input.scope)]
+      : null;
+
+  // Freestyle is recognized before the spec-driven default and has no
+  // lifecycle journal contract, so no task-mode or phase-unit rule applies.
+  if (workflowMode === 'freestyle') {
+    return {
+      status: 'ok',
+      boundary: input.boundary,
+      workflowMode,
+      scope,
+      reasons: [],
+      warnings: [],
+      overrides: [],
+    };
+  }
+
   const briefMode = isBriefMode(workflowMode);
   const progress = parseTaskProgress(input.planContent, input.journalContent, {
     phaseUnits: briefMode,
     extractedUnits: workflowMode === 'goal',
   });
-  const scope =
-    input.boundary === 'review' && input.scope != null
-      ? [...new Set(input.scope)]
-      : null;
 
   const context: RuleContext = {
     boundary: input.boundary,

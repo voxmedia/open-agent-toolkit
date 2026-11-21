@@ -262,4 +262,49 @@ describe('complete-state evaluates the final journal before its write', () => {
     await writeFile(join(fixture.projectPath, 'plan.md'), PLAN, 'utf8');
     await expectRefusedWithoutWrite(fixture, 'journal-missing');
   });
+
+  describe('freestyle', () => {
+    const FREESTYLE_STATE = [
+      '---',
+      'oat_workflow_mode: freestyle',
+      'oat_project_created: "2026-11-21T00:00:00.000Z"',
+      'oat_project_state_updated: "2026-11-21T00:00:00.000Z"',
+      'oat_generated: false',
+      '---',
+      '',
+      '# Project State: demo',
+      '',
+    ].join('\n');
+
+    it('completes a freestyle project with a plan and no journal', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        state: FREESTYLE_STATE,
+      });
+      await writeFile(join(fixture.projectPath, 'plan.md'), PLAN, 'utf8');
+
+      const completed = await completeState(fixture);
+
+      expect(completed.exitCode).toBe(0);
+      const state = await readFile(fixture.statePath, 'utf8');
+      expect(state).toContain('oat_lifecycle: complete');
+      expect(state).toContain(
+        'oat_project_completed: "2026-10-12T12:00:00.000Z"',
+      );
+      expect(state).not.toMatch(/^oat_phase/m);
+    });
+
+    it('completes a freestyle project whose journal every lifecycle rule would refuse', async () => {
+      const fixture = await project(
+        NEGATIVE_VARIANTS[0]!.apply(VALID, RUNNING_LINE),
+        FREESTYLE_STATE,
+      );
+      expect((await completeState(fixture)).exitCode).toBe(0);
+    });
+
+    it('still refuses the same journal under quick mode (control)', async () => {
+      const variant = NEGATIVE_VARIANTS[0]!;
+      const fixture = await project(variant.apply(VALID, RUNNING_LINE));
+      await expectRefusedWithoutWrite(fixture, variant.code);
+    });
+  });
 });

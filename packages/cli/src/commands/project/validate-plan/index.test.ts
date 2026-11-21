@@ -419,6 +419,70 @@ describe('oat project validate-plan', () => {
     });
   });
 
+  describe('freestyle', () => {
+    async function writeStateOnly(mode: string): Promise<string> {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-vplan-'));
+      tempDirs.push(dir);
+      await writeFile(
+        join(dir, 'state.md'),
+        ['---', `oat_workflow_mode: ${mode}`, '---', '', '# State'].join('\n'),
+        'utf8',
+      );
+      return dir;
+    }
+
+    it('skips plan validation for a freestyle project with no plan.md', async () => {
+      const dir = await writeStateOnly('freestyle');
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(command, ['--project-path', dir], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        valid: true,
+        skipped: 'freestyle',
+        message:
+          'Plan validation skipped: a freestyle project has no lifecycle plan contract.',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('skips the parallel-group rule a task-mode plan would fail', async () => {
+      const dir = await writeInvalidPlan();
+      await writeFile(
+        join(dir, 'state.md'),
+        ['---', 'oat_workflow_mode: freestyle', '---'].join('\n'),
+        'utf8',
+      );
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--project-path', dir]);
+
+      expect(capture.success.join('\n')).toContain(
+        'Plan validation skipped: a freestyle project has no lifecycle plan contract.',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('still fails the same plan under spec-driven, and a missing plan without a freestyle state', async () => {
+      const dir = await writeInvalidPlan();
+      await writeFile(
+        join(dir, 'state.md'),
+        ['---', 'oat_workflow_mode: spec-driven', '---'].join('\n'),
+        'utf8',
+      );
+      const invalid = createHarness({ json: true });
+      await runCommand(invalid.command, ['--project-path', dir], ['--json']);
+      expect(invalid.capture.jsonPayloads[0]).toMatchObject({ valid: false });
+      expect(process.exitCode).toBe(1);
+
+      const missing = await writeStateOnly('quick');
+      const unread = createHarness({ json: true });
+      await runCommand(unread.command, ['--project-path', missing], ['--json']);
+      expect(unread.capture.jsonPayloads[0]).toMatchObject({ valid: false });
+      expect(process.exitCode).toBe(2);
+    });
+  });
+
   describe('--cwd resolution', () => {
     it('resolves a relative --project-path against the command cwd, not the process cwd', async () => {
       const dir = await writeValidPlan();

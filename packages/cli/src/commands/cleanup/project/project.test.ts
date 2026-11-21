@@ -12,7 +12,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCleanupProjectCommand, runCleanupProject } from './project';
-import { projectPlanMarksComplete } from './project.utils';
+import { projectPlanMarksComplete, stateIsFreestyle } from './project.utils';
 
 async function createRepoRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-cleanup-project-'));
@@ -154,6 +154,27 @@ describe('projectPlanMarksComplete', () => {
   });
 });
 
+describe('stateIsFreestyle', () => {
+  it('reads plain, quoted and commented freestyle declarations only', () => {
+    expect(stateIsFreestyle('---\noat_workflow_mode: freestyle\n---')).toBe(
+      true,
+    );
+    expect(stateIsFreestyle('---\noat_workflow_mode: "freestyle"\n---')).toBe(
+      true,
+    );
+    expect(
+      stateIsFreestyle('---\noat_workflow_mode: freestyle # note\n---'),
+    ).toBe(true);
+    expect(stateIsFreestyle('---\noat_workflow_mode: quick\n---')).toBe(false);
+    expect(stateIsFreestyle('---\noat_workflow_mode: freestyle-ish\n---')).toBe(
+      false,
+    );
+    expect(stateIsFreestyle('---\noat_workflow_mode: "freestyle\n---')).toBe(
+      false,
+    );
+  });
+});
+
 describe('cleanup project drift scanning', () => {
   const tempDirs: string[] = [];
   let originalExitCode: number | undefined;
@@ -245,6 +266,38 @@ describe('cleanup project drift scanning', () => {
         }),
       ]),
     );
+  });
+
+  it('never infers completion for a freestyle project from a passed final review row', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    const plan = [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '|-------|------|--------|------|----------|',
+      '| final | code | passed | 2026-11-21 | reviews/final.md |',
+    ].join('\n');
+    for (const [name, mode] of [
+      ['free', "'freestyle' # no lifecycle"],
+      ['spec', 'spec-driven'],
+    ]) {
+      const projectDir = join(root, '.oat', 'projects', 'shared', name!);
+      await mkdir(projectDir, { recursive: true });
+      await writeFile(join(projectDir, 'plan.md'), plan, 'utf8');
+      await writeFile(
+        join(projectDir, 'state.md'),
+        ['---', `oat_workflow_mode: ${mode}`, '---'].join('\n'),
+        'utf8',
+      );
+    }
+
+    const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
+    const updated = payload.actions
+      .filter((action) => action.type === 'update')
+      .map((action) => action.target);
+
+    expect(updated).toEqual(['.oat/projects/shared/spec/state.md']);
   });
 
   it('apply clears invalid active project pointer', async () => {

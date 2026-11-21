@@ -97,8 +97,16 @@ async function runProjectCompleteState(
     // closeout invariant above.
     const journalPath = join(targetProjectPath, 'implementation.md');
     const planPath = join(targetProjectPath, 'plan.md');
-    const hasJournal = await dependencies.fileExists(journalPath);
-    if (!hasJournal && (await dependencies.fileExists(planPath))) {
+    // Freestyle has no lifecycle journal contract: its documents follow the
+    // project's own shape, so neither journal guard applies to it.
+    const freestyle = readStateWorkflowMode(content) === 'freestyle';
+    const hasJournal =
+      !freestyle && (await dependencies.fileExists(journalPath));
+    if (
+      !freestyle &&
+      !hasJournal &&
+      (await dependencies.fileExists(planPath))
+    ) {
       // A planned project completes only through its journal: a missing
       // journal must never silently turn the final evaluator off.
       throw new CliError(

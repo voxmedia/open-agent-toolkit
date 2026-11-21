@@ -89,6 +89,36 @@ describe('valid baseline', () => {
   });
 });
 
+describe('freestyle', () => {
+  const FREESTYLE_STATE = '---\noat_workflow_mode: freestyle\n---\n';
+
+  it('applies no lifecycle journal rule to a freestyle project at any boundary', () => {
+    // A plan task with no journal block refuses under the task-mode default.
+    expect(codes('# Implementation\n')).toContain('task-block-missing');
+    for (const boundary of [
+      'implement-preflight',
+      'review',
+      'completion',
+    ] as const) {
+      expect(
+        check('# Implementation\n', {
+          boundary,
+          scope: boundary === 'review' ? ['p01'] : undefined,
+          state: FREESTYLE_STATE,
+        }),
+      ).toEqual({
+        status: 'ok',
+        boundary,
+        workflowMode: 'freestyle',
+        scope: boundary === 'review' ? ['p01'] : null,
+        reasons: [],
+        warnings: [],
+        overrides: [],
+      });
+    }
+  });
+});
+
 describe('negative controls at completion (baseline accepted, refused for the named reason)', () => {
   it('fenced fake task heading', async () => {
     const fake = replaceOnce(

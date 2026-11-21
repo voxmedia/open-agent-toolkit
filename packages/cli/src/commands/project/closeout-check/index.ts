@@ -466,6 +466,13 @@ async function runCloseoutCheck(
           ...formatCloseoutWaivers(waivers),
         ].join('\n'),
       );
+    } else if (result.inputs.workflowMode === 'freestyle') {
+      context.logger.info(
+        [
+          `Closeout invariant not required for ${projectPath}: a freestyle project has no lifecycle closeout sequence.`,
+          ...formatCloseoutWaivers(waivers),
+        ].join('\n'),
+      );
     } else {
       context.logger.info(
         [
