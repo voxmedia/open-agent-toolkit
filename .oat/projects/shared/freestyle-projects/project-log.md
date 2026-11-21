@@ -59,6 +59,19 @@ Observation: apps/oat-docs/scripts/skill-mapping.ts requires a skill-docs.json e
 
 Observation: Outcome 6 (shaping with a brainstorm detour, fresh resume, reshape) was exercised by three nested Opus subagents given scripted user answers in a scratch repo; the runs surfaced two real prose defects (recoveries 2 and 3) and the reviewer judged them credible. Impact: interactive-skill evidence without a live user. Recommendation: reuse scripted-user nested runs for interactive skill exit evidence, keeping transcripts in gitignored analysis/. Uncertainty: a scripted user tests the paths the script chooses, not unexpected answers. freestyle-projects-learning-p02-02
 
+### 2026-11-21 · structural · oat-project-implement · p03
+
+p03 accepted: review freestyle-projects-p03-review-1 passed (0 critical, 0 high, 0 medium, 4 low), all four fixed in p03-t04; fix loops 1; recovery attempts 0/10. freestyle-projects-p03-outcome
+
+### 2026-11-21 · project · worked-well · Real-corpus parse diff proves a log grammar change is compatible
+
+**Category:** efficiency
+**Source:** freestyle-projects-learning-p03-01
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-21T23:48:43Z
+
+Observation: before rebuilding, p03 captured log check --json over 57 local archived project logs with the base build and diffed it after the grammar change; output was byte-identical. Impact: cheap evidence against real, untracked artifacts that committed fixtures cannot cover. Recommendation: capture the base build's output over the local corpus before changing a parser of project artifacts, then diff after. freestyle-projects-learning-p03-01
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

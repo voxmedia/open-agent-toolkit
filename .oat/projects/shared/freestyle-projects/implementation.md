@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p03
+oat_current_task_id: p04
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | in_progress | 1     | 0/1      |
-| p04   | pending     | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | pending  | 1     | 0/1      |
+| p05   | pending  | 1     | 0/1      |
+| p06   | pending  | 1     | 0/1      |
+| p07   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 2/9 phases accepted
+**Total:** 3/9 phases accepted
 
 ---
 
@@ -329,7 +329,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ## Phase p03: Records commands
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 780af7710458118ac3103dddcd1711674dccbdc4
 **Executor:** phase-implementer:freestyle-projects-p03-implementation-1
 **Head:** 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1
@@ -393,6 +393,8 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Proof: `vitest run src/commands/project/log src/commands/project/journal-check src/commands/project/complete-state src/commands/help-snapshots.test.ts` (15 files, 504 passed; +16 tests) under `scripts/with-isolated-home.sh`; CLI `check`, `type-check`, `lint` exit 0; `pnpm build` exit 0; `pnpm test:evidence` exit 0 (12 tasks, 0 cached; cli 9826, control-plane 325 passed). New tests: the reviewer's repro (flagless `--body "**Subject:** fake rest"` parses with no event fields) and a written-event round-trip control; eight writer-strictness cases with no head (whitespace value, no blank line, no body, blank body, out of order, repeated, time without seconds, time without `Z`) and a partial head in order; `--time 10:00` refused plus the stray-operand-without-`--time` control; the head-only key refused plus the judgment `--source` key control (append then `already-appended`); the untitled `## Phase p01:` and `## Phase 2:` headings beside a native id. The earlier lenient assertion (a malformed time line followed by a subject still read the subject) now asserts no head. Branch-build replay of the reviewer's probes A, B, D and J2 in a scratch repo (removed): A refused exit 1, B stored with no event fields, D refused exit 1, J2 reports p01 `untitled-phase-heading`; transcript `references/analysis/p03-t04-review-probes.txt` (gitignored).
 - Can-fail: a whitespace-tolerant subject failed the whitespace case; dropping the blank-line and body rules failed five no-head cases; dropping only the body rule failed the blank-body case; resetting the field order per line failed the out-of-order and repeated cases; a loose time failed three time cases; dropping the `--time` refusal failed its test; checking the key against the head plus body failed the head-only refusal; turning off untitled detection failed the L4 test. The repro is held by two independent guards (one-word value; blank line plus body), so neutralizing them together failed it. Each restored (diffs empty).
 
+- Review: `freestyle-projects-p03-review-1` (oat-reviewer, claude-opus-5-5 high) on `780af7710..a95453772`, ledger head `484684daf`: pass, 0 critical, 0 high, 0 medium, 4 low (L1 head parser looser than the writer; L2 `--time` silently dropped a value; L3 idempotency-key rule vs its help text; L4 untitled phase heading misreported). All four are regressions inside p03's own code; fixed through the original handle in fix mode as p03-t04 (`c8e6f80a7`; 16 new tests, forced suite exit 0, each guard can fail). No re-review round: the fixes are Low and the m01 milestone review covers the range. Fix loops: 1. Artifact `reviews/p03-code-review-2026-11-21T233055Z.md` (local-only).
+
 ---
 
 ## Phase p04: m01 docs and release
@@ -443,6 +445,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - run/v1 · request=freestyle-projects-p02-review-1 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p02-review-2 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p03-implementation-1 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p03-review-1 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
