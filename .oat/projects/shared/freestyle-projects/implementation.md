@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p02
+oat_current_task_id: p03
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | in_progress | 1     | 0/1      |
-| p03   | pending     | 1     | 0/1      |
-| p04   | pending     | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | pending  | 1     | 0/1      |
+| p04   | pending  | 1     | 0/1      |
+| p05   | pending  | 1     | 0/1      |
+| p06   | pending  | 1     | 0/1      |
+| p07   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 1/9 phases accepted
+**Total:** 2/9 phases accepted
 
 ---
 
@@ -173,12 +173,12 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 
 ## Phase p02: Project AGENTS.md, shape.md and the shaping skill
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 8f44e379bf69fe9e4e5e401a42aaf9ea335dc34a
 **Executor:** phase-implementer:freestyle-projects-p02-implementation-1
 **Head:** 539e419e891bdbacf1993cb88e4ce23444eaba32
 
-Phase verification at `df0f6cadf` on a clean tree (only the ignored-by-convention `references/` and `reviews/` untracked): `pnpm test:evidence` exit 0 (12 tasks, 0 cached, `oat-docs#build` force-executed; cli 9765, control-plane 325, docs packages 85 passed), `pnpm build`, `pnpm check` (every `check` task a cache miss), `pnpm type-check`, `pnpm lint`, `pnpm format`, `pnpm test:smoke` (165), `pnpm test:skills` (754), `pnpm test:scripts` (7), `pnpm oat:validate-skills` (69 OK), `pnpm build:docs`, and the docs-index freshness step (`generate-index`, then `git diff --exit-code -- apps/oat-docs/index.md`) each exit 0; `turbo run type-check lint format --force` exit 0 (21 tasks, 0 cached). Recovery 3/10: recovery 1 (`189f05edf`, synced status file paths), recovery 2 (`9751e3a2f`, kickoff leftover check) and recovery 3 (`b4a42cd0f`, brainstorm destinations freestyle exceptions), each passing its focused and phase-relevant checks before and after its commit; recovery 3's `completed` marker awaits root. The docs skill-catalog gate that failed the first verification is closed by p02-t05, and the unpulled synced `status` reading by p02-t06. `origin/main` gained `23cb59a6a` (#425) and `a5c28dca2` (#426) since the branch base; neither touches a file this branch changes.
+Phase verification at `df0f6cadf` on a clean tree (only the ignored-by-convention `references/` and `reviews/` untracked): `pnpm test:evidence` exit 0 (12 tasks, 0 cached, `oat-docs#build` force-executed; cli 9765, control-plane 325, docs packages 85 passed), `pnpm build`, `pnpm check` (every `check` task a cache miss), `pnpm type-check`, `pnpm lint`, `pnpm format`, `pnpm test:smoke` (165), `pnpm test:skills` (754), `pnpm test:scripts` (7), `pnpm oat:validate-skills` (69 OK), `pnpm build:docs`, and the docs-index freshness step (`generate-index`, then `git diff --exit-code -- apps/oat-docs/index.md`) each exit 0; `turbo run type-check lint format --force` exit 0 (21 tasks, 0 cached). Recovery 3/10: recovery 1 (`189f05edf`, synced status file paths), recovery 2 (`9751e3a2f`, kickoff leftover check) and recovery 3 (`b4a42cd0f`, brainstorm destinations freestyle exceptions), each passing its focused and phase-relevant checks before and after its commit; root cleared recovery 3's `completed` marker in `c1b54e9d9`. The docs skill-catalog gate that failed the first verification is closed by p02-t05, and the unpulled synced `status` reading by p02-t06. `origin/main` gained `23cb59a6a` (#425) and `a5c28dca2` (#426) since the branch base; neither touches a file this branch changes.
 
 Late fix p02-t07 (review round 1, M1 and L1–L4) at `539e419e8`: skill-prose contract tests (`src/commands/init/tools/shared src/validation`, 1301 passed), scaffold/status/list/integration tests (186), `pnpm oat:validate-skills`, `pnpm test:skills` (754), `pnpm lint`, `pnpm format` and `pnpm check` each exit 0.
 
@@ -232,6 +232,9 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Evidence 6 (adaptation): `oat template resolve plan-brief` (bundle tier) copied raw had 18 leftover-grep hits; after kickoff rules 1-3 the grep was clean, but reading the document found two leftovers the rules and grep miss (the Commit Convention line and the strict phase-grammar paragraph), removed under rule 3's general clause. Defect recorded as direction-required event `freestyle-projects-p02-recovery-2` (no edit: the single `pending_attempt` slot still holds recovery 1's unsettled `completed` marker).
 - Evidence 7 (Outcome 6, nested `general-purpose` workers on claude-opus-5-5 in the scratch repo, skills installed from the branch build, scripted user, no commits by workers): (a) `freestyle-projects-p02-outcome6-a` created `o6-dryrun` (shared, scaffold commit only), shaped Goal, detoured to `oat-brainstorm` with `result: pending` and a `**Shaping resumes at:**` line, the brainstorm wrote its reference file uncommitted because the commit agreement was unshaped and handed back, and shaping resumed at Documents with the line deleted; (b) `freestyle-projects-p02-outcome6-b`, a fresh session, resumed at Documents without re-asking Goal or Brainstorm (diff-verified) and shaped or deferred every remaining topic, Reviews as intent plus an observed mechanism, Commits deferred with an Undecided line; (c) `freestyle-projects-p02-outcome6-c` reshaped the review mechanism only: diff against the run (b) snapshot shows the Mechanism bullet replaced plus a `**Takes effect:**` bullet, intent unchanged, `**Last shaped:**` 2026-11-21 → 2026-11-24 (scripted date), and `oat project log append --category decision` returned `appended`. After all three runs the scratch repo's history is the scaffold commit only and origin is unchanged.
 - Findings: run (a) found `oat-brainstorm/references/destinations.md` still describes the reference file and related→fold-back entries with no freestyle exception (SKILL.md branch 9j governs and was followed); recorded as direction-required event `freestyle-projects-p02-recovery-3`. Other noted ambiguities are in the phase report.
+
+- Review round 1: `freestyle-projects-p02-review-1` (oat-reviewer, claude-opus-5-5 high) on `8f44e379b..df0f6cadf`, ledger head `022933b71`: 0 critical, 0 high, 1 medium, 6 low. Receive: M1 (a resume by name did not make the project active, so a brainstorm detour could write to another project; regression against the Shaping guard decision) and L1-L4 (consistency of p02's own prose) fixed through the original handle in fix mode as p02-t07 (`2ba0cb0a8`); L5 deferred (see Deferred Findings); L6 (stale recovery-3 marker sentence) fixed by root at Step 7b. Artifact `reviews/p02-code-review-2026-11-21T223516Z.md` (local-only).
+- Review round 2: `freestyle-projects-p02-review-2` (fresh oat-reviewer, claude-opus-5-5 high) on the fix range `022933b71..539e419e8`: pass; M1 and L1-L4 resolved, each new contract test fails when its clause is reverted; 3 new low wording gaps in the rewritten Resume block, deferred to p04. Fix loops: 1. Artifact `reviews/p02-code-review-2026-11-21T225453Z.md` (local-only).
 
 ### Recovery Event freestyle-projects-p02-recovery-1
 
@@ -375,6 +378,8 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - run/v1 · request=freestyle-projects-p01-implementation-1 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p01-review-1 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p02-implementation-1 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p02-review-1 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p02-review-2 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -387,6 +392,9 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
+
+- p02 review round 1 L5: `oat project status` exits 1 on a corrupt synced record while `list` shows a `restore record from Git` row (`packages/cli/src/commands/project/status.ts:94`). Never a lifecycle recommendation; existing failure posture. Deferred by root (agent authority over phase acceptance); trigger: p04, align status with list's row or document the difference.
+- p02 review round 2 L1-L3 (`.agents/skills/oat-project-freestyle/SKILL.md`): the Resume path bullet does not say a named project wins over an active freestyle project (~:97); the unpulled synced case names no detection command (~:99-101; safe, `oat project new` refuses the duplicate); Success Criteria lists two resume triggers where Step 2 has three (~:199-200). Deferred by root; trigger: p04 skill-prose pass (no extra version bump, the skill is new in this PR).
 
 ## Deviations from Plan / Design
 

@@ -209,7 +209,7 @@ Default is `[]` (fully sequential, no worktrees).
 | plan  | artifact | passed  | 2026-11-21 | -                                     | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
 | plan  | artifact | passed  | 2026-11-21 | -                                     | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
 | p01   | code     | passed  | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
-| p02   | code     | pending | -          | -                                     | -                                        | -          | -           |
+| p02   | code     | passed  | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
 | p03   | code     | pending | -          | -                                     | -                                        | -          | -           |
 | p04   | code     | pending | -          | -                                     | -                                        | -          | -           |
 | final | code     | pending | -          | -                                     | -                                        | -          | -           |
