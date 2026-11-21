@@ -3434,7 +3434,7 @@ describe('validateOatSkills', () => {
     expect(shared).toContain('ladderCompleteness.missingCells');
     expect(shared).toMatch(/unresolvedReason` is `ladder` or `both`/);
     expect(shared).toMatch(
-      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Luna\/max[\s\S]{0,500}Sol\/xhigh[\s\S]{0,120}Astra\/high[\s\S]{0,120}Astra\/xhigh/i,
+      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Luna\/max[\s\S]{0,500}gpt-6\.2-sol\/xhigh[\s\S]{0,120}gpt-6\.2-astra\/high[\s\S]{0,120}gpt-6\.2-astra\/xhigh/i,
     );
     expect(shared).toMatch(
       /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5-5[\s\S]{0,200}claude-fable-5-2/i,
