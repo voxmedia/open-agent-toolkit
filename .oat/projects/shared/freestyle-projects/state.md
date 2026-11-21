@@ -27,8 +27,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p02:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: freestyle-projects-p02-recovery-2
+        original_request_id: freestyle-projects-p02-implementation-1
+        original_task_id: p02-t02
+        original_commit: 5f4689889f58791ae4809772e285ea15b8f719f6
+        discovered_by: 'phase exit evidence 6: reading the plan-brief copy adapted by kickoff rules 1-3 and the rule-4 grep (Commit Convention line and phase-grammar paragraph left over)'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: 3842bd1293b24d01b60b8967900647df724a5a92
+        status: pending
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
