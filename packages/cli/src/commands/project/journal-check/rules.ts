@@ -608,6 +608,87 @@ export function checkPhaseUnitRecords(context: RuleContext): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Freestyle: record consistency of validated phases only
+// ---------------------------------------------------------------------------
+
+/**
+ * Who corrects a freestyle finding: the project's own rules in `shape.md`, not
+ * a lifecycle skill.
+ */
+export const FREESTYLE_FINDING_OWNER = 'shape.md';
+
+/**
+ * The record rules a freestyle journal is held to, for the phases the coverage
+ * report validated. They are only the rules under which one journal has two
+ * readings in every mode: a phase with two sections or two status lines, a
+ * record with two blocks, two statuses, or no single commit behind a
+ * `completed` claim, and a record outside its own phase. Lifecycle rules
+ * (acceptance, heads, pointers, totals, plan coverage, open records) do not
+ * apply, because freestyle has no lifecycle; neither does a status
+ * vocabulary, because the project's own documents choose it.
+ */
+export function checkFreestyleRecords(
+  context: RuleContext,
+  validated: ReadonlySet<string>,
+): void {
+  const first = context.findings.length;
+  const seen = new Map<string, JournalSectionRecord>();
+  for (const section of context.journal.sections) {
+    const phaseId = section.phase?.declaredPhaseId;
+    if (phaseId === undefined || !validated.has(phaseId)) {
+      continue;
+    }
+    const earlier = seen.get(phaseId);
+    if (earlier !== undefined) {
+      push(context, {
+        code: 'phase-duplicate-section',
+        path: 'implementation.md',
+        line: section.line,
+        owner: IMPLEMENT,
+        message: `Phase ${phaseId} has a second journal section (first at line ${earlier.line}).`,
+      });
+      continue;
+    }
+    seen.set(phaseId, section);
+    if (section.statuses.length > 1) {
+      push(context, {
+        code: 'phase-status-ambiguous',
+        path: 'implementation.md',
+        line: section.statuses[1]?.line ?? section.line,
+        owner: IMPLEMENT,
+        message: `Phase ${phaseId} carries ${section.statuses.length} **Status:** lines.`,
+      });
+    }
+  }
+
+  for (const blocks of groupTasks(context.journal.tasks).values()) {
+    const [block] = blocks;
+    if (block === undefined || !validated.has(block.phaseId)) {
+      continue;
+    }
+    checkDuplicates(context, blocks);
+    checkPlacement(context, block);
+    if (block.statuses.length > 1) {
+      push(context, {
+        code: 'task-status-ambiguous',
+        path: 'implementation.md',
+        line: block.statuses[1]?.line ?? block.line,
+        owner: IMPLEMENT,
+        message: `Task ${block.taskId} owns ${block.statuses.length} **Status:** lines; at most one is allowed.`,
+      });
+      continue;
+    }
+    if (block.status === 'completed') {
+      checkCommitEvidence(context, block);
+    }
+  }
+
+  for (const finding of context.findings.slice(first)) {
+    finding.owner = FREESTYLE_FINDING_OWNER;
+  }
+}
+
 function headMarker(
   context: RuleContext,
   section: JournalSectionRecord,

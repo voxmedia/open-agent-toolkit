@@ -121,4 +121,55 @@ export interface JournalCheckResult {
   /** Non-refusing findings (live runs at review, unused overrides). */
   warnings: JournalCheckReason[];
   overrides: JournalOverride[];
+  /**
+   * Freestyle only: which phases the check recognized, validated and skipped.
+   * Absent for every lifecycle mode, whose result shape is unchanged.
+   */
+  coverage?: JournalCoverage;
+}
+
+/** The two documents a freestyle project may or may not have. */
+export type JournalCoverageInput = 'plan.md' | 'implementation.md';
+
+/**
+ * Why a phase was not validated:
+ *
+ * - `journal-missing`: the project has no `implementation.md`;
+ * - `no-journal-section`: `plan.md` declares the phase and the journal has no
+ *   section for it, so there are no records to check;
+ * - `unrecognized-phase-id`: a `## Phase <id>:` heading whose id is not an OAT
+ *   phase id (`pNN`, `p-revN`), such as a project-native `P7` or `A-1a`;
+ * - `out-of-scope`: outside an explicit `--scope`.
+ */
+export type JournalCoverageSkipReason =
+  | 'journal-missing'
+  | 'no-journal-section'
+  | 'unrecognized-phase-id'
+  | 'out-of-scope';
+
+export interface JournalCoveragePhase {
+  /** Normalized OAT phase id, or the id exactly as authored when unrecognized. */
+  id: string;
+  /** The first heading that names the phase, without its `## ` marker. */
+  heading: string;
+  outcome: 'validated' | 'skipped';
+  reason: JournalCoverageSkipReason | null;
+  message: string | null;
+  /** Every heading naming the phase, in document order per file. */
+  sources: Array<{ path: JournalCoverageInput; line: number }>;
+}
+
+/**
+ * The freestyle coverage report. `recognized` counts distinct OAT phase ids;
+ * `skipped` counts every skipped entry, unrecognized ids included, so
+ * `recognized - validated` plus the unrecognized ids equals `skipped`. A count
+ * of zero validated phases is reported as such and never reads as a pass over
+ * work that was checked.
+ */
+export interface JournalCoverage {
+  missing: JournalCoverageInput[];
+  recognized: number;
+  validated: number;
+  skipped: number;
+  phases: JournalCoveragePhase[];
 }

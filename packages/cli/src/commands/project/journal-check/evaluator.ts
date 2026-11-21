@@ -8,6 +8,7 @@ import {
 
 import {
   checkDispatchPayloads,
+  checkFreestyleRecords,
   checkMetadata,
   checkOverviewTotals,
   checkPhaseUnitRecords,
@@ -28,6 +29,9 @@ import type {
   JournalCheckInput,
   JournalCheckReason,
   JournalCheckResult,
+  JournalCoverage,
+  JournalCoverageInput,
+  JournalCoveragePhase,
   JournalOverride,
 } from './types';
 
@@ -99,17 +103,10 @@ export function evaluateJournal(input: JournalCheckInput): JournalCheckResult {
       : null;
 
   // Freestyle is recognized before the spec-driven default and has no
-  // lifecycle journal contract, so no task-mode or phase-unit rule applies.
+  // lifecycle journal contract, so no task-mode or phase-unit rule applies;
+  // it gets the coverage report instead.
   if (workflowMode === 'freestyle') {
-    return {
-      status: 'ok',
-      boundary: input.boundary,
-      workflowMode,
-      scope,
-      reasons: [],
-      warnings: [],
-      overrides: [],
-    };
+    return evaluateFreestyleJournal(input);
   }
 
   const briefMode = isBriefMode(workflowMode);
@@ -210,5 +207,208 @@ export function evaluateJournal(input: JournalCheckInput): JournalCheckResult {
     reasons,
     warnings,
     overrides,
+  };
+}
+
+/**
+ * A `## Phase <id>:` heading whose id the shared reader does not recognize,
+ * such as a project-native `P7`, `A-1a` or `FM-1`. The trailing colon is part
+ * of the shape so ordinary prose headings (`## Phases`, `## Phase notes`) are
+ * never read as phases.
+ */
+const NATIVE_PHASE_HEADING_PATTERN = /^(?:Revision )?Phase ([^\s:]+):/;
+
+export interface FreestyleJournalCheckInput {
+  boundary: JournalCheckInput['boundary'];
+  /** Validated phase scope (normalized ids), or null for every phase. */
+  scope?: readonly string[] | null;
+  /** `null` when the project has no `plan.md`. */
+  planContent: string | null;
+  /** `null` when the project has no `implementation.md`. */
+  journalContent: string | null;
+  stateContent: string;
+}
+
+interface PhaseOccurrence {
+  heading: string;
+  sources: Array<{ path: JournalCoverageInput; line: number }>;
+}
+
+function collectPhases(
+  documents: ReadonlyArray<
+    [JournalCoverageInput, ReturnType<typeof readJournalRecords> | null]
+  >,
+): {
+  recognized: Map<string, PhaseOccurrence>;
+  native: Map<string, PhaseOccurrence>;
+} {
+  const recognized = new Map<string, PhaseOccurrence>();
+  const native = new Map<string, PhaseOccurrence>();
+  const add = (
+    map: Map<string, PhaseOccurrence>,
+    id: string,
+    heading: string,
+    path: JournalCoverageInput,
+    line: number,
+  ): void => {
+    const occurrence = map.get(id) ?? { heading, sources: [] };
+    occurrence.sources.push({ path, line });
+    map.set(id, occurrence);
+  };
+  for (const [path, records] of documents) {
+    for (const section of records?.sections ?? []) {
+      if (section.phase !== null) {
+        add(
+          recognized,
+          section.phase.declaredPhaseId,
+          section.text,
+          path,
+          section.line,
+        );
+        continue;
+      }
+      const nativeId = NATIVE_PHASE_HEADING_PATTERN.exec(section.text)?.[1];
+      if (nativeId !== undefined) {
+        add(native, nativeId, section.text, path, section.line);
+      }
+    }
+  }
+  return { recognized, native };
+}
+
+/**
+ * The phase ids a freestyle project's documents name, for validating
+ * `--scope`: every recognized OAT phase id in either document.
+ */
+export function freestylePhaseIds(
+  planContent: string | null,
+  journalContent: string | null,
+): Set<string> {
+  const { recognized } = collectPhases([
+    ['plan.md', planContent === null ? null : readJournalRecords(planContent)],
+    [
+      'implementation.md',
+      journalContent === null ? null : readJournalRecords(journalContent),
+    ],
+  ]);
+  return new Set(recognized.keys());
+}
+
+/**
+ * Evaluate a freestyle project's journal: report coverage, then hold the
+ * validated phases to the record-consistency rules.
+ *
+ * Neither document is required. A missing `plan.md` or `implementation.md` is
+ * listed under `coverage.missing` and the check still succeeds; phases come
+ * from whichever document exists. Only a recognized phase with a journal
+ * section is validated, and a refusal comes only from a record-consistency
+ * finding on such a phase, so an empty or absent journal reports zero
+ * validated phases rather than a pass over work.
+ */
+export function evaluateFreestyleJournal(
+  input: FreestyleJournalCheckInput,
+): JournalCheckResult {
+  const scope =
+    input.boundary === 'review' && input.scope != null
+      ? [...new Set(input.scope)]
+      : null;
+  const plan =
+    input.planContent === null ? null : readJournalRecords(input.planContent);
+  const journal =
+    input.journalContent === null
+      ? null
+      : readJournalRecords(input.journalContent);
+  const missing: JournalCoverageInput[] = [
+    ...(plan === null ? (['plan.md'] as const) : []),
+    ...(journal === null ? (['implementation.md'] as const) : []),
+  ];
+  const { recognized, native } = collectPhases([
+    ['plan.md', plan],
+    ['implementation.md', journal],
+  ]);
+
+  const phases: JournalCoveragePhase[] = [];
+  const validated = new Set<string>();
+  for (const [id, occurrence] of recognized) {
+    const inJournal = occurrence.sources.some(
+      (source) => source.path === 'implementation.md',
+    );
+    const skip =
+      scope !== null && !scope.includes(id)
+        ? {
+            reason: 'out-of-scope' as const,
+            message: `Phase ${id} is outside --scope.`,
+          }
+        : journal === null
+          ? {
+              reason: 'journal-missing' as const,
+              message: `implementation.md is absent, so phase ${id} has no records to validate.`,
+            }
+          : !inJournal
+            ? {
+                reason: 'no-journal-section' as const,
+                message: `plan.md declares phase ${id} and implementation.md has no section for it, so it has no records to validate.`,
+              }
+            : null;
+    if (skip === null) {
+      validated.add(id);
+    }
+    phases.push({
+      id,
+      heading: occurrence.heading,
+      outcome: skip === null ? 'validated' : 'skipped',
+      reason: skip?.reason ?? null,
+      message: skip?.message ?? null,
+      sources: occurrence.sources,
+    });
+  }
+  for (const [id, occurrence] of native) {
+    phases.push({
+      id,
+      heading: occurrence.heading,
+      outcome: 'skipped',
+      reason: 'unrecognized-phase-id',
+      message: `${id} is not an OAT phase id (pNN or p-revN), so no record rule applies to it and its records are not validated.`,
+      sources: occurrence.sources,
+    });
+  }
+
+  const context: RuleContext = {
+    boundary: input.boundary,
+    workflowMode: 'freestyle',
+    scope: scope === null ? null : new Set(scope),
+    journal: journal ?? readJournalRecords(''),
+    plan: plan ?? readJournalRecords(''),
+    journalMeta: readFrontmatterMetadata(input.journalContent ?? ''),
+    stateMeta: readFrontmatterMetadata(input.stateContent),
+    progress: parseTaskProgress('', ''),
+    approvedDeferredPhases: new Set(),
+    findings: [],
+  };
+  checkFreestyleRecords(context, validated);
+  const reasons = context.findings
+    .map(toReason)
+    .sort(
+      (left, right) =>
+        (left.line ?? Number.MAX_SAFE_INTEGER) -
+        (right.line ?? Number.MAX_SAFE_INTEGER),
+    );
+
+  const coverage: JournalCoverage = {
+    missing,
+    recognized: recognized.size,
+    validated: validated.size,
+    skipped: phases.filter((phase) => phase.outcome === 'skipped').length,
+    phases,
+  };
+  return {
+    status: reasons.length === 0 ? 'ok' : 'refused',
+    boundary: input.boundary,
+    workflowMode: 'freestyle',
+    scope,
+    reasons,
+    warnings: [],
+    overrides: [],
+    coverage,
   };
 }

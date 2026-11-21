@@ -23,15 +23,20 @@ import {
 } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 
-import { evaluateJournal } from './evaluator';
+import {
+  evaluateFreestyleJournal,
+  evaluateJournal,
+  freestylePhaseIds,
+} from './evaluator';
 import {
   JOURNAL_CHECK_BOUNDARIES,
   type JournalCheckBoundary,
   type JournalCheckReason,
   type JournalCheckResult,
+  type JournalCoverage,
 } from './types';
 
-export { evaluateJournal } from './evaluator';
+export { evaluateFreestyleJournal, evaluateJournal } from './evaluator';
 export type {
   JournalCheckBoundary,
   JournalCheckReason,
@@ -192,6 +197,108 @@ async function readCommittedJournal(
   return blob.stdout;
 }
 
+/**
+ * Read a freestyle project's inputs. Only `state.md` is required (the project
+ * directory is resolved by it); `plan.md` and `implementation.md` are each
+ * optional and read as `null` when absent, so the coverage report can say
+ * which one is missing instead of the command failing.
+ */
+export async function readFreestyleJournalCheckFiles(
+  projectDir: string,
+  stateContent: string,
+  dependencies: Pick<JournalCheckDependencies, 'readFile' | 'fileExists'>,
+): Promise<{
+  planContent: string | null;
+  journalContent: string | null;
+  stateContent: string;
+}> {
+  const read = async (name: string): Promise<string | null> => {
+    const path = join(projectDir, name);
+    return (await dependencies.fileExists(path))
+      ? dependencies.readFile(path, 'utf8')
+      : null;
+  };
+  return {
+    planContent: await read('plan.md'),
+    journalContent: await read('implementation.md'),
+    stateContent,
+  };
+}
+
+/**
+ * The workflow mode `state.md` declares, or null when the project directory
+ * has no `state.md` (the lifecycle path then reports the missing files exactly
+ * as before).
+ */
+async function readDeclaredWorkflowMode(
+  projectDir: string,
+  dependencies: Pick<JournalCheckDependencies, 'readFile' | 'fileExists'>,
+): Promise<{ mode: string; stateContent: string } | null> {
+  const path = join(projectDir, 'state.md');
+  if (!(await dependencies.fileExists(path))) {
+    return null;
+  }
+  const stateContent = await dependencies.readFile(path, 'utf8');
+  return { mode: readWorkflowMode(stateContent), stateContent };
+}
+
+function parseFreestyleScope(
+  raw: string,
+  phaseIds: ReadonlySet<string>,
+): string[] {
+  const tokens = raw
+    .split(',')
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+  if (tokens.length === 0) {
+    throw new CliError('--scope needs at least one phase id (pNN).', 1);
+  }
+  return tokens.map((token) => {
+    const phaseId = normalizePhaseId(token);
+    if (phaseId === null) {
+      throw new CliError(`--scope ${token} is not a phase id (pNN).`, 1);
+    }
+    if (!phaseIds.has(phaseId)) {
+      throw new CliError(
+        `--scope ${token} names no phase in plan.md or implementation.md.`,
+        1,
+      );
+    }
+    return phaseId;
+  });
+}
+
+/** Human-readable lines for a freestyle coverage report. */
+export function formatJournalCoverage(
+  boundary: JournalCheckBoundary,
+  coverage: JournalCoverage,
+): string[] {
+  const plural = (count: number, noun: string): string =>
+    `${count} ${noun}${count === 1 ? '' : 's'}`;
+  const lines = [
+    `Journal coverage (freestyle) at ${boundary}: ${plural(coverage.recognized, 'phase')} recognized, ${coverage.validated} validated, ${coverage.skipped} skipped.`,
+  ];
+  if (coverage.missing.length > 0) {
+    lines.push(
+      `Missing: ${coverage.missing.join(', ')} (reported, not an error).`,
+    );
+  }
+  if (coverage.validated === 0) {
+    lines.push('No phase records were validated.');
+  }
+  for (const phase of coverage.phases) {
+    const where = phase.sources
+      .map((source) => `${source.path}:${source.line}`)
+      .join(', ');
+    lines.push(
+      phase.outcome === 'validated'
+        ? `- ${phase.id} validated (${where})`
+        : `- ${phase.id} skipped, ${phase.reason} (${where}): ${phase.message}`,
+    );
+  }
+  return lines;
+}
+
 export function formatJournalReason(reason: JournalCheckReason): string {
   const location =
     reason.line === null ? reason.path : `${reason.path}:${reason.line}`;
@@ -269,6 +376,44 @@ async function runJournalCheck(
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const projectDir = await resolveProjectDir(options, repoRoot, dependencies);
+    const declared = await readDeclaredWorkflowMode(projectDir, dependencies);
+    if (declared?.mode === 'freestyle') {
+      const freestyleFiles = await readFreestyleJournalCheckFiles(
+        projectDir,
+        declared.stateContent,
+        dependencies,
+      );
+      const freestyleScope =
+        boundary === 'review' && options.scope
+          ? parseFreestyleScope(
+              options.scope,
+              freestylePhaseIds(
+                freestyleFiles.planContent,
+                freestyleFiles.journalContent,
+              ),
+            )
+          : null;
+      const freestyle = evaluateFreestyleJournal({
+        boundary,
+        scope: freestyleScope,
+        ...freestyleFiles,
+      });
+      if (context.json) {
+        context.logger.json({ ...freestyle, projectPath: projectDir });
+      } else {
+        for (const line of formatJournalCoverage(
+          boundary,
+          freestyle.coverage!,
+        )) {
+          context.logger.info(line);
+        }
+        if (freestyle.status === 'refused') {
+          context.logger.info(formatJournalRefusal(projectDir, freestyle));
+        }
+      }
+      process.exitCode = freestyle.status === 'ok' ? 0 : 1;
+      return;
+    }
     const files = await readJournalCheckFiles(projectDir, dependencies);
     const workflowMode = readWorkflowMode(files.stateContent);
     const scope =
@@ -369,7 +514,7 @@ export function createProjectJournalCommand(
     .addCommand(
       new Command('check')
         .description(
-          'Evaluate implementation.md against plan.md and state.md at one lifecycle boundary (writes nothing)',
+          'Evaluate implementation.md against plan.md and state.md at one lifecycle boundary (writes nothing); a freestyle project gets a phase coverage report and needs neither plan.md nor implementation.md',
         )
         .option(
           '--project <path>',
