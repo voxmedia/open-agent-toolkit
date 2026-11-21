@@ -1,11 +1,11 @@
 ---
-oat_template: true
-oat_status: in_progress
-oat_ready_for: null
+oat_template: false
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-11-21
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: goal
@@ -121,6 +121,7 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 
 - **Endpoint:** merged — a milestone is delivered when its PR is merged into `main`.
 - **Authority:** the operator approves the brief, each milestone's re-alignment and each delivery's merge. The agent decides alone on phase-internal implementation choices and on dispatching review and fix rounds. Anything that adds scope or a new guarantee goes to the operator first (AGENTS.md Feature Planning Triage; bookkeeping-findings `new-hardening`).
+- **Brief approved:** 2026-11-21 by user at 4c6881ac5e2c5a431f6e7d479cf0122ab750e8b7
 
 ## Milestones
 
