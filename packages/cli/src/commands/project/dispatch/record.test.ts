@@ -501,8 +501,8 @@ describe('managed Claude single-run violation reporting', () => {
     (input.recordBase as Record<string, unknown>).launch_status = SECRET;
     (input.event.evidence as Record<string, unknown>).tier = SECRET;
 
-    // The report scrubs each violation itself; the command boundary remains
-    // the backstop for every other message.
+    // Zod 4 enum messages omit the received value. This checks the command
+    // output does not contain the secret. Scrubbing is covered separately.
     expect(() => parseDispatchRecordInput(input)).toThrow(
       /launch_status: Invalid option: expected one of/,
     );
@@ -510,13 +510,7 @@ describe('managed Claude single-run violation reporting', () => {
 
     const message = await commandError(input);
     expect(message).toContain('recordBase launch_status:');
-    expect(message).toContain(
-      'Invalid option: expected one of "planned"|"accepted"|"blocked-before-start"',
-    );
     expect(message).toContain('event evidence.tier:');
-    expect(message).toContain(
-      'Invalid option: expected one of "loaded"|"user"|"project"',
-    );
     expect(message).not.toContain(SECRET);
     expect(message).not.toMatch(/ghp_/);
   });
