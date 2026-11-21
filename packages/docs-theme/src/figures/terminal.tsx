@@ -38,7 +38,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 import { cn } from './cn.js';
 import { frameOf, GraphBody, GraphFrame } from './graph-frame.js';

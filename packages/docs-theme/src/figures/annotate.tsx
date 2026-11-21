@@ -37,7 +37,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import type { ReactElement, ReactNode } from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 
 import { cn } from './cn.js';
 import {

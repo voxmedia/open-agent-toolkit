@@ -41,6 +41,24 @@ oat_dispatch_policy:
     codex: xhigh
     claude: opus
   source: project-state
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: mdxcn-p02-rec-002
+        original_request_id: mdxcn-p02-implementation-20261121
+        original_task_id:
+          - p02-t02
+          - p02-t03
+        original_commit:
+          - 8fda0f59e5b243a57e0bac117fc0d88f1ec020a0
+          - a8c2b90e2d78c5aa59352eb0e33b29533d6e430e
+        discovered_by: packed-notice check over dist/figures/*.js after pnpm --filter @open-agent-toolkit/docs-theme build
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: 6f7c021f1434ac830d819799f9ce3d062314192d
+        status: completed
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
