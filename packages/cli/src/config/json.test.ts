@@ -341,9 +341,8 @@ describe('parseJsonConfig', () => {
         '__proto__',
       ),
     ).toBe(true);
-    // What zod then does with it is zod's business, and it is safe: `z.record`
-    // validates the entry (the control below proves it is not skipped) but
-    // omits it from the output object, whose prototype stays ordinary.
+    // Zod 4 omits a `__proto__` key from `z.record` output without validating
+    // its value. The parsed object stays ordinary and does not carry the key.
     expect(result.success && Object.keys(result.data.providers ?? {})).toEqual([
       'claude',
     ]);
@@ -351,14 +350,20 @@ describe('parseJsonConfig', () => {
       result.success && Object.getPrototypeOf(result.data.providers ?? {}),
     ).toBe(Object.prototype);
 
-    // A control that must fail, so the acceptance above is not vacuous.
+    // A non-object value under that key is dropped too, not rejected and not kept.
+    const invalidProto = SyncConfigSchema.safeParse(
+      parseJsonConfig(
+        '{"version":1,"defaultStrategy":"auto","providers":{"__proto__":"not-an-object"}}',
+        CONFIG_PATH,
+      ),
+    );
+    expect(invalidProto.success).toBe(true);
     expect(
-      SyncConfigSchema.safeParse(
-        parseJsonConfig(
-          '{"version":1,"defaultStrategy":"auto","providers":{"__proto__":"not-an-object"}}',
-          CONFIG_PATH,
-        ),
-      ).success,
-    ).toBe(false);
+      invalidProto.success && Object.keys(invalidProto.data.providers ?? {}),
+    ).toEqual([]);
+    expect(
+      invalidProto.success &&
+        Object.getPrototypeOf(invalidProto.data.providers),
+    ).toBe(Object.prototype);
   });
 });
