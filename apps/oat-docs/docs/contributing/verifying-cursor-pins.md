@@ -95,6 +95,14 @@ included a working Opus 5.5 low control and unknown-family and unsupported-effor
 controls that fell back. The summary and 64 correlated native events are
 retained beside the earlier fixtures.
 
+The November 21, 2026 Cursor 3.29.9 editor Agent Chat probe matched exact IDs
+for Fable 5.2 medium and high, Gemini 4 Neon low through xhigh, Hydrogen
+medium, and Carbon high. The Opus and Sonnet controls resolved to their pins.
+An unknown family and the unsupported Neon max ID fell back to Grok 4.7 High
+Fast. An earlier Agents Window attempt also fell back for its positive
+control. Reproduce the passing editor setup with `cursor --classic --new-window`
+and plain frontmatter model scalars before interpreting new probe results.
+
 [Cursor documents specific model IDs and bracket parameters](https://cursor.com/docs/subagents#model-configuration).
 Choose a candidate from the live catalog, then probe its exact frontmatter
 spelling. Documentation and catalog presence do not replace native evidence.
@@ -246,8 +254,12 @@ component it cannot resolve, with no error or warning:
 
 - An unknown **family** falls back to the account default model. Probing
   `claude-opus-9[effort=high]` resolved to `cursor-grok-4.5-high-fast`.
-- An unknown **effort** falls back to that family's default rung. Probing
-  `claude-opus-5[effort=ultra]` resolved to `claude-opus-5-thinking-high`.
+- An unknown **bracket effort** can fall back to the family's default rung.
+  Probing `claude-opus-5[effort=ultra]` resolved to
+  `claude-opus-5-thinking-high`.
+- An unrecognized **exact ID** can fall back to the parent model. Probing
+  `gemini-4-neon-max` resolved to `grok-4.7-high-fast` in the November 21
+  editor run.
 
 This makes a typo in a selector more dangerous than a plain downgrade: the pin
 silently tracks whatever Cursor currently designates as the default, so a
@@ -306,8 +318,8 @@ The record asserts that `submittedSelector` equals the mapping's
 edited later without re-probing therefore fails its own consistency test rather
 than inheriting an approval that never covered the new selector.
 
-Retain the raw payloads alongside the summary. They are the primary evidence;
-the summary is an interpretation of them.
+Retain redacted native hook payloads alongside the summary so reviewers can
+verify the observations against the primary evidence.
 
 For an exact-ID mapping, use the `explicit-model-id` syntax family and a
 mapping-specific probe record. The frontmatter selector must equal the ladder

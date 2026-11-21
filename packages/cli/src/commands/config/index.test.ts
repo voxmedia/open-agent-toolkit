@@ -3067,7 +3067,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-11-21.1');
+      expect(recommendation.version).toBe('2026-11-21.2');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -3155,7 +3155,7 @@ describe('oat config', () => {
               'gpt-5.6-sol-max',
               'claude-opus-5-5-high',
               'claude-opus-5-5-xhigh',
-              'claude-fable-5-1-thinking-high',
+              'claude-fable-5-2-high',
             ],
           },
         },

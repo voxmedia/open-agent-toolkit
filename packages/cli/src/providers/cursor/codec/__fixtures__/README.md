@@ -63,3 +63,25 @@ was checked against original call and conversation IDs before replacing them
 with stable pseudonymous references. Identity fields, absolute paths, original
 IDs, task prose, and discovery payloads are omitted. The retained timestamps,
 model fields, exact echo commands, and categorical controls are captured data.
+
+# Cursor Fable 5.2 and Gemini 4 native pin probe
+
+- Capture date and runtime: 2026-11-21, Cursor Desktop 3.29.9, editor Agent
+  Chat with a local synthetic workspace.
+- Subjects: exact IDs for Fable 5.2 medium and high, Gemini 4 Neon low through
+  xhigh, Hydrogen medium, and Carbon high.
+- Controls: approved Opus 5.5 low bracket and Sonnet 5.5 medium exact pins;
+  an unknown family and unsupported Neon max. Both negatives resolved to the
+  editor parent default, `grok-4.7-high-fast`.
+- `cursor-pin-probe-2026-11-21.jsonl` contains the observed selectors and
+  results. Its adjacent `-events.jsonl` contains the native Task,
+  subagent start, child Shell, and subagent stop events. Task and start
+  share a tool call reference, start and stop share a subagent reference, and
+  the child Shell command uses a unique name for each probe.
+- The event file retains the stopped Agents Window attempt. The Opus control
+  fell back there. The passing editor run used plain YAML model values and
+  the runbook's minimal synthetic echo. Interpret its evidence within that
+  setup.
+- The capture kept model, tool, status, synthetic command, version, and
+  timestamp fields. Correlation identifiers were replaced with local
+  references. Identity and filesystem fields were excluded.

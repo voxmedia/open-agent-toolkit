@@ -9,6 +9,17 @@ import {
   SUPPORTED_CURSOR_ROLE_TARGETS,
 } from './catalog';
 
+const NEW_EXACT_IDS = [
+  'claude-fable-5-2-medium',
+  'claude-fable-5-2-high',
+  'gemini-4-neon-low',
+  'gemini-4-neon-medium',
+  'gemini-4-neon-high',
+  'gemini-4-neon-xhigh',
+  'gemini-4-hydrogen-medium',
+  'gemini-4-carbon-high',
+] as const;
+
 const APPROVED_G01_MAPPINGS = [
   ['composer-2.5', 'composer-2.5[fast=true]'],
   ['composer-2.5-fast', 'composer-2.5[fast=true]'],
@@ -45,6 +56,7 @@ const APPROVED_G01_MAPPINGS = [
   ['claude-fable-5-1-thinking-max', 'claude-fable-5-1[effort=max]'],
   ['gpt-5.6-sol-xhigh', 'gpt-5.6-sol[reasoning=xhigh]'],
   ['gpt-5.6-sol-max', 'gpt-5.6-sol[reasoning=max]'],
+  ...NEW_EXACT_IDS.map((id) => [id, id] as const),
 ] as const;
 
 describe('cursor model pin catalogue', () => {
@@ -95,7 +107,7 @@ describe('cursor model pin catalogue', () => {
       gateEvidence.probeName.startsWith('zz-pin-probe-'),
     );
 
-    expect(probed).toHaveLength(20);
+    expect(probed).toHaveLength(28);
     expect(probed.map(({ ladderModelId }) => ladderModelId)).toEqual([
       'claude-sonnet-5-thinking-high',
       ...['low', 'medium', 'high', 'xhigh', 'max'].map(
@@ -110,6 +122,7 @@ describe('cursor model pin catalogue', () => {
       ...['low', 'medium', 'high', 'xhigh', 'max'].map(
         (effort) => `claude-fable-5-1-thinking-${effort}`,
       ),
+      ...NEW_EXACT_IDS,
     ]);
     expect(
       findCursorModelPinMapping('claude-opus-5-thinking-high'),
@@ -464,6 +477,121 @@ describe('cursor model pin catalogue', () => {
     }
   });
 
+  it('binds Fable 5.2 and Gemini 4 exact pins to native editor evidence', () => {
+    type Observation = {
+      agent: string;
+      class: string;
+      submitted_selector: string;
+      subagent_start_model: string;
+      shell_command: string;
+      cursor_version: string;
+      verified_at: string;
+    };
+    type NativeEvent = {
+      surface: string;
+      probe: string;
+      hook_event_name: string;
+      conversation_id_ref: string;
+      cursor_version: string;
+      tool_name?: string;
+      model?: string;
+      model_override_present?: boolean;
+      subagent_model?: string;
+      command?: string;
+      status?: string;
+      tool_use_id_ref?: string;
+      tool_call_id_ref?: string;
+      subagent_id_ref?: string;
+    };
+    const readJsonl = <T>(name: string): T[] =>
+      readFileSync(new URL(`./__fixtures__/${name}`, import.meta.url), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as T);
+    const file = 'cursor-pin-probe-2026-11-21.jsonl';
+    const observations = readJsonl<Observation>(file);
+    const events = readJsonl<NativeEvent>(
+      'cursor-pin-probe-2026-11-21-events.jsonl',
+    );
+
+    const subjects = observations.filter((row) => row.class === 'subject');
+    expect(subjects.map((row) => row.submitted_selector).sort()).toEqual(
+      [...NEW_EXACT_IDS].sort(),
+    );
+    for (const row of observations) {
+      const [task, start, shell, stop, ...extra] = events.filter(
+        (event) => event.surface === 'editor' && event.probe === row.agent,
+      );
+      expect(extra).toEqual([]);
+      expect(row.cursor_version).toBe('3.29.9');
+      expect(
+        [task, start, shell, stop].map((event) => event?.cursor_version),
+      ).toEqual(Array(4).fill(row.cursor_version));
+      expect(task).toMatchObject({
+        hook_event_name: 'preToolUse',
+        tool_name: 'Task',
+        model_override_present: false,
+        tool_use_id_ref: expect.any(String),
+        conversation_id_ref: expect.any(String),
+      });
+      expect(start).toMatchObject({
+        hook_event_name: 'subagentStart',
+        subagent_model: row.subagent_start_model,
+        tool_call_id_ref: task.tool_use_id_ref,
+        subagent_id_ref: expect.any(String),
+      });
+      expect(shell).toMatchObject({
+        hook_event_name: 'preToolUse',
+        tool_name: 'Shell',
+        command: row.shell_command,
+        model: row.subagent_start_model,
+        conversation_id_ref: expect.any(String),
+      });
+      expect(stop).toMatchObject({
+        hook_event_name: 'subagentStop',
+        status: 'completed',
+        model: row.subagent_start_model,
+        subagent_id_ref: start.subagent_id_ref,
+      });
+      expect(shell.conversation_id_ref).not.toBe(task.conversation_id_ref);
+
+      if (row.class === 'subject') {
+        expect(findCursorModelPinMapping(row.submitted_selector)).toMatchObject(
+          {
+            ladderModelId: row.subagent_start_model,
+            frontmatterModel: row.submitted_selector,
+            syntaxFamily: 'explicit-model-id',
+            gateEvidence: {
+              probeName: row.agent,
+              probeRecord: {
+                submittedSelector: row.submitted_selector,
+                resolvedModel: row.subagent_start_model,
+                verifiedAt: row.verified_at,
+                evidencePath: `packages/cli/src/providers/cursor/codec/__fixtures__/${file}`,
+              },
+            },
+          },
+        );
+      }
+    }
+    expect(
+      observations
+        .filter((row) => row.class === 'positive-control')
+        .map((row) => row.subagent_start_model),
+    ).toEqual(['claude-opus-5-5-low', 'claude-sonnet-5-5-medium']);
+    const negatives = observations.filter(
+      (row) => row.class === 'negative-control',
+    );
+    expect(negatives.map((row) => row.submitted_selector)).toEqual([
+      'zz-oat-unknown-model-20261121',
+      'gemini-4-neon-max',
+    ]);
+    for (const row of negatives) {
+      expect(row.subagent_start_model).toBe('grok-4.7-high-fast');
+      expect(findCursorModelPinMapping(row.submitted_selector)).toBeUndefined();
+    }
+  });
+
   it('keeps approved aliases materializable outside the supported catalogue', () => {
     const supported = new Set(
       SUPPORTED_CURSOR_ROLE_TARGETS.map(({ ladderModelId }) => ladderModelId),
@@ -477,7 +605,7 @@ describe('cursor model pin catalogue', () => {
     expect(supported).not.toContain('composer-2.5-fast');
     expect(supported).not.toContain('cursor-grok-4.5-high-fast');
     expect(supported).not.toContain('claude-fable-5-xhigh');
-    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(31);
+    expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(39);
   });
 
   it('materializes every Cursor candidate in the bundled recommendation', () => {
@@ -493,7 +621,7 @@ describe('cursor model pin catalogue', () => {
       };
     };
 
-    expect(recommendation.version).toBe('2026-11-21.1');
+    expect(recommendation.version).toBe('2026-11-21.2');
     const candidates = Object.values(recommendation.providers.cursor).flatMap(
       ({ candidates: tierCandidates }) => tierCandidates,
     );

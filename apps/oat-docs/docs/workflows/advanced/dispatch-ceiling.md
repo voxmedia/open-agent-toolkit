@@ -178,7 +178,7 @@ Run the same command without `--dry-run` to replace bundled cells. Use
 `--shared` or `--local` instead when that scope owns the ladder. Add
 `--keep-existing` to fill only missing cells and preserve existing choices.
 
-Version `2026-11-21.1` is the current bundled recommendation. Codex Economy and
+Version `2026-11-21.2` is the current bundled recommendation. Codex Economy and
 Balanced include GPT-6.1 Terra and GPT-6 Luna. High uses GPT-6.2 Sol, and
 Frontier orders Sol 6.2 xhigh, Astra 6.2 high, and Astra 6.2 xhigh. The
 maintainers carried forward the prior Sol and Astra placements at the same
@@ -190,12 +190,11 @@ medium remains the implementation starting point under High. The older Codex
 models remain available for explicit configuration. Cursor's preferred
 ladder interleaves verified GPT-5.6 and Opus 5.5 mappings: Balanced adds
 Opus 5.5 low above Terra high, High orders Sol medium, Opus low, Sol high,
-Opus medium, then Opus high, and Frontier places Opus high and xhigh between
-Sol max and Fable 5.1. Grok 4.6 medium replaces Grok 4.5 high at the bottom of
-Balanced, and Fable 5.1 thinking high replaces Fable 5 as Frontier's terminal
-target. OAT's maintainers chose this ordering using vendor benchmarks and their
-model-selection guidance; it is not the result of comparing models on OAT's own
-workloads. Grok 4.5 and Fable 5 stay supported for explicit configurations.
+Opus medium, then Opus high. Frontier places Opus high and xhigh between
+Sol max and Fable 5.2 high. Grok 4.6 medium starts Balanced. OAT's maintainers
+carried these placements forward with an updated Fable pin. Explicit
+configurations can still select the earlier Fable and Grok pins or try a
+verified Gemini 4 pin.
 Rerunning adoption replaces the bundled cells in the chosen scope; use
 `--keep-existing` to preserve explicit older cells. For the complete
 maintenance procedure, see
@@ -354,15 +353,13 @@ The bundled ladder is a curated subset of the supported targets:
   high ends Frontier. Fable 5.1 and Sonnet 5 remain supported for explicit
   configurations.
 - **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
-  4.6, Opus 5.5, and Fable 5.1 targets. The catalogue maps each flat ladder ID
-  to its separately verified frontmatter model. Sonnet 5.5 exact-ID pins
-  remain supported outside the ladder; existing families keep their bracket
-  selectors. Grok 4.6 (`low`
-  through `xhigh`) and Fable 5.1 (`low` through `max`, thinking variants) were
-  approved from a 2026-09-25 [native desktop probe](../../contributing/verifying-cursor-pins.md);
-  targets outside the ladder remain available for explicit selection. Grok
-  4.7 stays outside the shipped catalogue pending its own approved mapping
-  and per-pin evidence; exact-ID support does not admit arbitrary CLI IDs.
+  4.6, Opus 5.5, and Fable 5.2 targets. Fable 5.2 high ends Frontier.
+  Explicit configurations can select Fable 5.2 medium, Gemini 4 Neon
+  `low` through `xhigh`, Gemini 4 Hydrogen `medium`, and Gemini 4 Carbon
+  `high`. These use exact IDs verified in the
+  [native desktop probe](../../contributing/verifying-cursor-pins.md).
+  Fable 5.1 and the other approved bracket mappings remain available for
+  explicit selection. Grok 4.7 requires its own mapping and per-pin evidence.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
@@ -516,7 +513,8 @@ separate evidence layers:
 - The candidate ladder and resolver use an opaque flat ID.
 - The materialized definition uses the mapping's explicit frontmatter model,
   either a verified bracket selector or a separately verified exact ID.
-  Sonnet 5.5 uses exact IDs; existing families keep their bracket mappings.
+  Sonnet 5.5, Fable 5.2, and Gemini 4 use exact IDs. Other verified families
+  keep their bracket mappings.
 - Mapping-specific native-launch evidence authorizes the shipped mapping data.
   An approved mapping may carry a probe record whose `submittedSelector` must
   equal the mapping's `frontmatterModel` and whose `resolvedModel` must equal
