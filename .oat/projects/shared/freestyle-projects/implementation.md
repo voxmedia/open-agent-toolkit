@@ -228,6 +228,27 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Evidence 7 (Outcome 6, nested `general-purpose` workers on claude-opus-5-5 in the scratch repo, skills installed from the branch build, scripted user, no commits by workers): (a) `freestyle-projects-p02-outcome6-a` created `o6-dryrun` (shared, scaffold commit only), shaped Goal, detoured to `oat-brainstorm` with `result: pending` and a `**Shaping resumes at:**` line, the brainstorm wrote its reference file uncommitted because the commit agreement was unshaped and handed back, and shaping resumed at Documents with the line deleted; (b) `freestyle-projects-p02-outcome6-b`, a fresh session, resumed at Documents without re-asking Goal or Brainstorm (diff-verified) and shaped or deferred every remaining topic, Reviews as intent plus an observed mechanism, Commits deferred with an Undecided line; (c) `freestyle-projects-p02-outcome6-c` reshaped the review mechanism only: diff against the run (b) snapshot shows the Mechanism bullet replaced plus a `**Takes effect:**` bullet, intent unchanged, `**Last shaped:**` 2026-11-21 → 2026-11-24 (scripted date), and `oat project log append --category decision` returned `appended`. After all three runs the scratch repo's history is the scaffold commit only and origin is unchanged.
 - Findings: run (a) found `oat-brainstorm/references/destinations.md` still describes the reference file and related→fold-back entries with no freestyle exception (SKILL.md branch 9j governs and was followed); recorded as direction-required event `freestyle-projects-p02-recovery-3`. Other noted ambiguities are in the phase report.
 
+### Recovery Event freestyle-projects-p02-recovery-1
+
+- Phase/task: p02 / p02-t01
+- Original request: freestyle-projects-p02-implementation-1
+- Original commit: 78ffeb3a2231cf51d319bf795eee511271eb5932
+- Defect class: composition
+- Discovered by: phase exit evidence 4 (`oat project status` on a branch-build scratch synced project named bare `AGENTS.md`/`shape.md`)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 189f05edffd0633f98155409dd461834f0cdc211
+- Verification: focused status tests (28) and `src/commands/project`, `src/commands/state` plus integration (1982) passed before the commit and again on committed HEAD `189f05edf`; check and type-check exit 0; the full forced suite (9761) passed afterwards
+- Reason: `project.path` is empty for synced projects (existing control-plane behavior), so freestyle status now joins the directory it read. Root validated the unchanged original commit and the three-file recovery diff and cleared the `completed` marker in `7110c84d9` (`used_attempts: 1` kept).
+
+### Root direction after the first p02 report (BLOCKED before Head)
+
+- Recovery events `freestyle-projects-p02-recovery-2` (kickoff adaptation list misses the Commit Convention line and the phase-grammar paragraph) and `-3` (`oat-brainstorm/references/destinations.md` lacks the freestyle exception) were reported direction-required only because the pending slot was occupied. Root authorizes both as phase-standing recovery attempts 2 and 3 under the same event IDs.
+- Recovery event `freestyle-projects-p02-recovery-4` (docs skill-catalog gate: `Missing guide for oat-project-freestyle`) is resolved by a new execution record rather than a recovery: the minimal `apps/oat-docs/skill-docs.json` entry and guide anchor are brought forward from p04, because the gate fails for any phase that adds an eligible skill. p04 still owns the full docs pages. Recorded under Deviations.
+- The unpulled synced `status` recommending a lifecycle step contradicts Outcome 1 ("a synced project not yet pulled into a checkout shows only the storage instruction to pull it, never a lifecycle recommendation") and sits in p02's exit evidence 4. Root authorizes a new execution record that makes `status` on an unpulled synced project show only the pull instruction, as `list` already does. This is mode-independent because no mode is known before the pull; materialized projects of every mode keep their current output.
+
 ---
 
 ## Phase p03: Records commands
@@ -297,9 +318,10 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 Document any intentional deviations from the brief. Include accepted review findings where the shipped implementation is source of truth and the brief needs alignment.
 
-| Phase / Review | Source Artifact                                  | Planned / Documented                | Actual / Accepted                                                                                                                                                 | Reason                                                                                                                       | Source of Truth | Follow-up                  |
-| -------------- | ------------------------------------------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- | -------------------------- |
-| p01 review L2  | plan.md Decisions (freestyle recommends nothing) | freestyle surfaces recommend `none` | a paused active freestyle project keeps the dashboard's mode-independent `oat project open` resume step; the router and every other dashboard route return `none` | resuming a paused active project is mode-independent, and the same dashboard/router split already exists for lifecycle modes | implementation  | none; p04 docs describe it |
+| Phase / Review       | Source Artifact                                  | Planned / Documented                                    | Actual / Accepted                                                                                                                                                 | Reason                                                                                                                       | Source of Truth | Follow-up                                        |
+| -------------------- | ------------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------ |
+| p01 review L2        | plan.md Decisions (freestyle recommends nothing) | freestyle surfaces recommend `none`                     | a paused active freestyle project keeps the dashboard's mode-independent `oat project open` resume step; the router and every other dashboard route return `none` | resuming a paused active project is mode-independent, and the same dashboard/router split already exists for lifecycle modes | implementation  | none; p04 docs describe it                       |
+| p02 (root direction) | plan.md p04 Intent (docs pages)                  | the docs guide for `oat-project-freestyle` lands in p04 | the minimal `skill-docs.json` entry and guide anchor land in p02                                                                                                  | the docs skill-catalog check fails `pnpm check` for any phase that adds an eligible skill                                    | implementation  | p04 writes the full docs pages around the anchor |
 
 ## Final Summary (for PR/docs)
 
