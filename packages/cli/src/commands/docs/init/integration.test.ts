@@ -628,6 +628,25 @@ describe('scaffold integration', () => {
       expect(page).toContain('export async function generateMetadata');
       expect(page).toContain('title: page.data.title');
       expect(page).toContain('description: page.data.description');
+      // docs-* figure fences render with no manual wiring.
+      expect(page).toMatch(
+        /import \{[^}]*\bwithDocsFigures\b[^}]*\} from '@open-agent-toolkit\/docs-theme';/,
+      );
+      expect(page.replace(/\s+/g, ' ')).toContain(
+        'const mdxComponents = withDocsFigures({ ...defaultComponents, Mermaid, Tab, Tabs, img: ZoomImage, });',
+      );
+      expect(page).toContain('<MDX components={mdxComponents} />');
+
+      const globalsCss = await readFile(
+        join(result.appRoot, 'app', 'globals.css'),
+        'utf8',
+      );
+      expect(globalsCss).toContain(
+        "@import 'fumadocs-ui/css/preset.css';\n@import '@open-agent-toolkit/docs-theme/figures.css';\n",
+      );
+      expect(globalsCss).toContain(
+        "@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';",
+      );
 
       const tsconfig = JSON.parse(
         await readFile(join(result.appRoot, 'tsconfig.json'), 'utf8'),
@@ -838,6 +857,12 @@ describe('scaffold integration', () => {
       }
 
       expect(result.documentationConfig.tooling).toBe('mkdocs');
+      // MkDocs renders docs-* fences as plain code: no figure wiring.
+      for (const file of allFiles) {
+        const content = await readFile(file, 'utf8');
+        expect(content, file).not.toContain('withDocsFigures');
+        expect(content, file).not.toContain('docs-theme/figures.css');
+      }
       const packageJson = JSON.parse(
         await readFile(join(result.appRoot, 'package.json'), 'utf8'),
       ) as { packageManager?: string };
