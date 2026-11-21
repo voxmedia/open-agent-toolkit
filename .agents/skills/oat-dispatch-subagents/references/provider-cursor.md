@@ -47,11 +47,11 @@ prohibited.
 Outer lifecycle implementer and reviewer dispatch uses the exact
 `providers.cursor.dispatchArgs.variant` returned by the lifecycle resolver.
 The resolver maps an opaque flat model ID to the mapping's explicit frontmatter
-pin inside the materialized definition. Existing families keep their verified
-bracket-form pins; Sonnet 5.5 uses verified exact-ID pins. Each exact ID needs
-its own native evidence and approved registry entry: this is not generic
-pass-through of any CLI catalog ID. Skills never parse, normalize, or
-reconstruct either model string.
+pin inside the materialized definition. The mapping supplies an approved
+bracket selector or exact ID. Sonnet 5.5, Fable 5.2, and Gemini 4 use verified
+exact-ID pins. Each exact ID needs its own native evidence and approved
+registry entry. Skills never parse, normalize, or reconstruct either model
+string.
 
 1. Require a non-empty resolver-returned variant for managed dispatch.
 2. Launch that exact native agent type first.
