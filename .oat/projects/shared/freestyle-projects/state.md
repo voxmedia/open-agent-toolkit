@@ -50,6 +50,9 @@ oat_dispatch_policy:
     codex: xhigh
     claude: opus
   source: project-state
+oat_skill_gate_overrides:
+  oat-project-goal: disabled
+  oat-project-implement: disabled
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
