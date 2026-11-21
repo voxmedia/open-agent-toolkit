@@ -962,6 +962,7 @@ gates.
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
+| plan  | artifact | received        | 2026-11-21 | reviews/artifact-plan-review-2026-11-21T164854Z.md          | -                                        | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto` or `gate`.
