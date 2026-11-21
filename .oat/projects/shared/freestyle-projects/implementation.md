@@ -203,6 +203,18 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Can-fail: renaming a `shape.md` topic failed the heading pin and the named-heading check; renaming a kickoff topic failed the topic walk; dropping `plan-lite` from the table failed the starting-points list; removing the bundled `plan-lite.md` failed its resolve case. Each was restored.
 - Decision: the skill's Step 1 reports a dirty tree but auto-commits nothing (no manifest auto-commit), so it is not enrolled in the `PROJECT_START_SKILLS` preflight contract, which requires that auto-commit; freestyle has no automatic commits. `oat-project-freestyle` is not gate-aware.
 
+### Task p02-t03: Add the oat-brainstorm freestyle route and the freestyle Quick Command
+
+**Status:** completed
+**Commit:** 7bdb5c22c0031976d5b0f6cb99f8357d35c34dd9
+**Executor:** phase-implementer:freestyle-projects-p02-implementation-1
+
+- Intent: inventory rows 27 (brainstorm route) and 35. `oat-brainstorm` 1.3.11 → 1.4.0 (the one bump this PR needs; p04 must not bump it again unless it edits the skill after this commit, and then the PR still carries one bump): a freestyle active project has no fold-back (9h routes Related to 9j; the picker offers only the reference file), branch 9j reads `shape.md`'s `## Commits, PRs and merges` before its persistence block and commits and pushes nothing while that section is `_Not yet shaped._` or `Deferred:`, follows the agreement once shaped (a local project never commits), and hands back with a `Return to \`oat-project-freestyle\``prompt naming the topic on`**Shaping resumes at:**`. The `oat state refresh`Quick Commands list gains`oat-project-freestyle`.
+- Files: `.agents/skills/oat-brainstorm/SKILL.md`, `packages/cli/src/commands/state/{generate.ts,generate.test.ts}`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`
+- Proof: `pnpm build`; `pnpm oat:validate-skills` (69 OK); `vitest run src/commands/init/tools/shared src/validation src/commands/state src/__tests__/skills src/commands/init/tools/brainstorm` (41 files, 1402 passed) under an isolated `HOME`; `pnpm lint`, `pnpm format`, CLI `check`, `type-check` exit 0. The synced-bookkeeping inventory anchors for branch 9j are unchanged (prose was added around the fenced block, not inside it).
+- Can-fail: making 9j run the persistence block for freestyle and restoring fold-back failed the two route tests; removing the Quick Commands line failed the freestyle dashboard test and the goal-dashboard control. Restored.
+- Record note: this record was written at close rather than opened before the edit; its scope matches the lookahead named in the phase start.
+
 ---
 
 ## Phase p03: Records commands
