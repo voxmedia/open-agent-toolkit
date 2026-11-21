@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status  | Units | Accepted |
-| ----- | ------- | ----- | -------- |
-| p01   | pending | 1     | 0/1      |
-| p02   | pending | 1     | 0/1      |
-| p03   | pending | 1     | 0/1      |
-| p04   | pending | 1     | 0/1      |
-| p05   | pending | 1     | 0/1      |
-| p06   | pending | 1     | 0/1      |
-| p07   | pending | 1     | 0/1      |
-| p08   | pending | 1     | 0/1      |
-| p09   | pending | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | in_progress | 1     | 0/1      |
+| p02   | pending     | 1     | 0/1      |
+| p03   | pending     | 1     | 0/1      |
+| p04   | pending     | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 0/9 phases accepted
 
@@ -57,7 +57,11 @@ oat_template: false
 
 ## Phase p01: Mode recognition and opt-outs
 
-**Status:** pending
+**Status:** in_progress
+**Base:** f6e8b9c92a3870fea4580480116e67c2bf503f82
+**Executor:** phase-implementer:freestyle-projects-p01-implementation-1
+
+Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: no parallel group is declared. Rung 2 does not apply: the inventory, the `WORKFLOW_MODES` member and its consumers share types, fixtures and the mode parser, so no two slices pass the independence test. Rung 4 does not apply: the phase adds a new mode surface across many consumers.
 
 ---
 
