@@ -89,8 +89,8 @@ figure.
    (lists, `**bold**`, `*italic*`, `label: value`, `— note`) and draws the
    frame.
 4. The app stylesheet imports `@open-agent-toolkit/docs-theme/figures.css`,
-   which holds the frame utilities and the `--graph-*` tokens mapped onto the
-   existing `--color-fd-*` theme variables. Scaffolded apps already `@source`
+   which holds the frame utilities and the `--graph-*` tokens. The accent and
+   muted tokens map onto the existing `--color-fd-*` theme variables. Scaffolded apps already `@source`
    the docs-theme `dist`, so the components' Tailwind classes are generated.
 
 ### Decisions
@@ -160,16 +160,16 @@ figure.
 
 These are server components with no `motion`.
 
-| Fence           | Component      | Body grammar (from mdxcn)                                                                     |
-| --------------- | -------------- | --------------------------------------------------------------------------------------------- |
-| `docs-steps`    | `DocsSteps`    | Ordered or unordered list. Each item has a bold title, then Markdown.                         |
-| `docs-tree`     | `DocsTree`     | Nested list. `name — note`. A trailing `/` marks a folder.                                    |
-| `docs-timeline` | `DocsTimeline` | List. Plain = done, **bold** = now, _italic_ = next.                                          |
-| `docs-terminal` | `DocsTerminal` | Raw lines. `$ cmd` = command, `# …` = comment, the rest is output.                            |
-| `docs-decision` | `DocsDecision` | List of options. **bold** = chosen, _italic_ = rejected, `— reason`.                          |
-| `docs-check`    | `DocsCheck`    | GFM task list. `[x]` = done. A nested list holds sub-tasks.                                   |
-| `docs-compare`  | `DocsCompare`  | GFM table. Option columns, with ✓/– or text cells.                                            |
-| `docs-annotate` | `DocsAnnotate` | A code fence with `// (1)` markers, then an ordered list. The outer fence has four backticks. |
+| Fence           | Component      | Body grammar (as shipped; from mdxcn)                                                                                                                                                                                                                                                                                               | Fence attributes                                                                               |
+| --------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `docs-steps`    | `DocsSteps`    | Ordered or unordered list, one item per step, numbered `01`, `02`, …. A loose item's first paragraph is the title and every block after it is the body. A tight item reads `Title — body` and keeps nested lists. A **bold** title marks the current step, an _italic_ title the next; a plain title is done.                       | `title`, `frame`                                                                               |
+| `docs-tree`     | `DocsTree`     | Nested list. `name — note` draws the note right-aligned. A **bold** node and its path (every ancestor) take the accent while the other rows recede. A trailing `/` is only an authoring convention; it is not parsed.                                                                                                               | `title`, `frame`                                                                               |
+| `docs-timeline` | `DocsTimeline` | List of `label: text` items (split at the first `: `). `— note` or a loose item's body blocks add a muted note. Plain = done (●), **bold** = now (● accent), _italic_ = next (○).                                                                                                                                                   | `title`, `frame`                                                                               |
+| `docs-terminal` | `DocsTerminal` | Raw lines. `$ cmd` = command, `# …` = comment, a line starting with `✓` (or `✔`, `√`) = pass, the rest is output.                                                                                                                                                                                                                   | `title` (default `shell`), `frame`, `prompt` (`prompt="#"` changes the command glyph from `$`) |
+| `docs-decision` | `DocsDecision` | List of options, then optional paragraphs for what follows (drawn under a rule). **bold** = chosen (●), _italic_ = rejected (×), plain = open (○). `— reason` is drawn muted after the option.                                                                                                                                      | `title` (default `decision`), `frame`, `status`, `date`                                        |
+| `docs-check`    | `DocsCheck`    | GFM task list, tight or loose. `[x]` = done, `[ ]` = open. `— note` goes under the item. A nested list holds sub-tasks.                                                                                                                                                                                                             | `title`, `frame`                                                                               |
+| `docs-compare`  | `DocsCompare`  | GFM table. The first column always holds the row labels; a named first header labels that column (a blank, `—` or `-` header leaves it unnamed). The other headers are option columns. `yes`/`true`/`✓`/`x` draw ✓ and `no`/`false`/`-`/`–`/`—` draw –; any other text is drawn as written. A last bold or `Total` row stays a row. | `title`, `frame`, `accent="Col"` (highlights one column; the others recede)                    |
+| `docs-annotate` | `DocsAnnotate` | A code fence whose lines end in markers such as `// (1)`, `# (2)`, `-- (3)`, `/* (4) */` or `<!-- (5) -->`, then an ordered list: item 1 explains (1). Marked lines stay bright and the rest recede. The outer fence has four backticks.                                                                                            | `title` (defaults to `code`: Fumadocs adds no `language-*` class, so set `title`), `frame`     |
 
 - **Shared pieces:**
   - `GraphFrame`: a dashed frame with corners and a `[ TITLE ]` label. Its root
@@ -197,7 +197,9 @@ These are server components with no `motion`.
 
 The file ships as a new `./figures.css` package export and contains:
 
-- the `--graph-*` tokens, mapped onto `--color-fd-*` for light and dark. Only
+- the `--graph-*` tokens. `--graph-accent` and `--graph-muted` map onto
+  `--color-fd-*`; the frame and faint tokens (and the two spare accent
+  tokens) keep fixed light and dark values. Only
   `--graph-*` and `--color-graph-*` names are defined, so a downstream app's
   own `--background`, `--foreground` and `--destructive` are never overridden.
   Upstream's generic token classes are rewritten to `fd-*` or `graph-*` ones;
@@ -321,7 +323,8 @@ The spike's converted lifecycle page is the end-to-end artifact.
   to packed branch builds of the docs packages and the CLI, so its prebuild
   `docs check` runs the branch's `docs-fences` rule.
 - Manual check in light and dark at desktop and phone widths:
-  - no figure overflow, thanks to `graph-scroll-x`;
+  - no figure overflow: the wide figures (tree, terminal, compare and
+    annotate) scroll with `overflow-x-auto`;
   - no hydration warning in the console.
 - The full Definition of Done gate list, including the skill-bump,
   lockstep-version and manifest-freshness checks.

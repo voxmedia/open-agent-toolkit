@@ -15,6 +15,7 @@
   },
   "files": [
     "dist",
+    "figures.css",
     "README.md"
   ],
   "type": "module",
@@ -24,7 +25,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./figures.css": "./figures.css"
   },
   "publishConfig": {
     "access": "public"
