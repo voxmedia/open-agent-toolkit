@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 90cf42c53
+oat_current_task: p04-t01
+oat_last_commit: 740ef27c0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -123,7 +123,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. p01 and p02 are complete and merged; p03 is next.
+Implementation in progress. p01 and p02 are complete and merged; p03 tasks are complete (740ef27c0) and its phase review is next.
 
 ## Artifacts
 
