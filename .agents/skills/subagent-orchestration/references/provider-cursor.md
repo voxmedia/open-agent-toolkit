@@ -78,10 +78,11 @@ observations are described in
 `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
 
 Fable 5.2 high replaces Fable 5.1 high in the bundled Frontier tier.
-Use the Gemini pins for explicit trials. Candidates include Neon medium for
-ordinary implementation, Neon high for difficult changes, Neon low and
-Hydrogen medium for scoped recon, and Carbon high for specialist work. Treat
-Neon xhigh as a workload-dependent escalation.
+The bundled ladder offers Neon medium at Balanced for ordinary implementation
+and Neon high at High for difficult changes. Opus 5.5 low and high remain the
+reviewers at those respective ceilings. Explicit configurations can use
+Neon low and Hydrogen medium for scoped recon, Carbon high for specialist
+work, and Neon xhigh when the workload warrants it.
 
 ## Current Opus 5.5 Pin Evidence
 

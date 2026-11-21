@@ -110,8 +110,10 @@ report that exact ID. Fable 5.1 remains available for explicit configurations.
 A separate Cursor refresh on November 21 verified Fable 5.2 medium and high,
 Gemini 4 Neon low through xhigh, Hydrogen medium, and Carbon high in desktop
 3.29.9. The bundled Cursor Frontier recommendation moves to Fable 5.2 high.
-The Gemini pins are available for explicit selection while workload routing
-is being evaluated. See the [Cursor probe runbook](verifying-cursor-pins.md).
+The follow-up recommendation adds Neon medium at Balanced for ordinary
+implementation and Neon high at High for harder changes. Opus 5.5 low and high
+still end those tiers, respectively. The other Gemini pins remain available
+for explicit configurations. See the [Cursor probe runbook](verifying-cursor-pins.md).
 
 ## Change and Validate
 
