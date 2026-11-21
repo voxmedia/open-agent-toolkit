@@ -129,6 +129,9 @@ function createHarness(options: HarnessOptions): {
     resolveProjectRoot,
     resolveActiveProject,
     getProjectState,
+    // The unpulled synced reading runs against a real repository in
+    // list.integration.test.ts; these mocked paths never name one.
+    resolveUnpulledSyncedProject: async () => null,
   });
 
   return {

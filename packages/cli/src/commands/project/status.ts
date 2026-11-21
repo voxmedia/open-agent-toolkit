@@ -1,11 +1,26 @@
-import { isAbsolute, join } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import {
+  classifyUnmaterializedSyncedRecord,
+  directoryExists,
+  probeAuthoritativeCompletedRef,
+  projectListHint,
+} from '@commands/project/list';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import { readSyncedRecord } from '@commands/project/sync/record';
+import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
 import { getProjectStateWithReviewAncestry } from '@commands/review/head-ancestry';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  canonicalizePath,
+  resolveScopeRoot,
+  syncedRecordPath,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
@@ -20,7 +35,16 @@ interface ProjectStatusDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveActiveProject: (repoRoot: string) => Promise<ActiveProjectResolution>;
   getProjectState: (projectPath: string) => Promise<ProjectState>;
+  resolveUnpulledSyncedProject: (
+    projectDir: string,
+    repoRoot?: string,
+  ) => Promise<UnpulledSyncedProject | null>;
 }
+
+/** A synced project recorded on this branch whose checkout is not here. */
+type UnpulledSyncedProject = Awaited<
+  ReturnType<typeof classifyUnmaterializedSyncedRecord>
+>;
 
 interface ProjectStatusOptions {
   field?: string;
@@ -33,7 +57,77 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   resolveProjectRoot,
   resolveActiveProject,
   getProjectState: getProjectStateWithReviewAncestry,
+  resolveUnpulledSyncedProject,
 };
+
+/**
+ * A synced project that has a record on this branch but no checkout in this
+ * worktree has no readable state, so no mode is known: status reports the
+ * storage instruction `list` gives for it (`oat project pull`), never a
+ * lifecycle recommendation. Returns null for every other path, including any
+ * project folder that exists. Without a repository root (an absolute
+ * `--project-path`), the root is the repository holding the path, never the
+ * working directory's.
+ */
+async function resolveUnpulledSyncedProject(
+  projectDir: string,
+  knownRepoRoot?: string,
+): Promise<UnpulledSyncedProject | null> {
+  if (await directoryExists(projectDir)) {
+    return null;
+  }
+  const repoRoot = knownRepoRoot ?? (await repositoryHolding(projectDir));
+  if (!repoRoot) {
+    return null;
+  }
+  const projectsRoot = await resolveProjectsRoot(repoRoot, process.env);
+  const scopeRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
+  if (canonicalizePath(dirname(projectDir)) !== canonicalizePath(scopeRoot)) {
+    return null;
+  }
+  let recordPath: string;
+  try {
+    recordPath = syncedRecordPath(scopeRoot, basename(projectDir));
+  } catch {
+    return null;
+  }
+  const record = await readSyncedRecord(recordPath);
+  if (!record) {
+    return null;
+  }
+  return classifyUnmaterializedSyncedRecord(repoRoot, projectsRoot, record, {
+    probeAuthoritativeCompletedRef,
+    probeSyncedTerminalRefs,
+    gitRunner: defaultGitRunner,
+  });
+}
+
+async function repositoryHolding(path: string): Promise<string | null> {
+  let current = dirname(path);
+  while (!(await directoryExists(current))) {
+    const parent = dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+  try {
+    return await resolveProjectRoot(current);
+  } catch {
+    return null;
+  }
+}
+
+function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
+  return [
+    `Project: ${project.name}`,
+    `Path: ${project.path}`,
+    `Scope: synced (checkout ${project.checkout})`,
+    `Recommendation: ${project.recommendation.skill}`,
+    `Reason: ${project.recommendation.reason}`,
+    `Hint: ${projectListHint(project)}`,
+  ];
+}
 
 function resolveTargetProjectPath(
   repoRoot: string,
@@ -159,6 +253,13 @@ async function runProjectStatus(
 ): Promise<void> {
   try {
     if (options.projectPath && isAbsolute(options.projectPath)) {
+      const unpulled = await dependencies.resolveUnpulledSyncedProject(
+        options.projectPath,
+      );
+      if (unpulled) {
+        writeUnpulledStatusOutput(context, options, unpulled);
+        return;
+      }
       const project = await dependencies.getProjectState(options.projectPath);
       writeProjectStatusOutput(
         context,
@@ -172,9 +273,19 @@ async function runProjectStatus(
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
 
     if (options.projectPath) {
-      const project = await dependencies.getProjectState(
-        resolveTargetProjectPath(repoRoot, options.projectPath),
+      const targetPath = resolveTargetProjectPath(
+        repoRoot,
+        options.projectPath,
       );
+      const unpulled = await dependencies.resolveUnpulledSyncedProject(
+        targetPath,
+        repoRoot,
+      );
+      if (unpulled) {
+        writeUnpulledStatusOutput(context, options, unpulled);
+        return;
+      }
+      const project = await dependencies.getProjectState(targetPath);
       writeProjectStatusOutput(
         context,
         options,
@@ -236,6 +347,16 @@ async function runProjectStatus(
   }
 }
 
+function writeUnpulledStatusOutput(
+  context: CommandContext,
+  options: ProjectStatusOptions,
+  project: UnpulledSyncedProject,
+): void {
+  writeStatusPayload(context, options, { status: 'ok', project }, () =>
+    formatUnpulledStatusLines(project),
+  );
+}
+
 function writeProjectStatusOutput(
   context: CommandContext,
   options: ProjectStatusOptions,
@@ -244,6 +365,17 @@ function writeProjectStatusOutput(
 ): void {
   const files = freestyleProjectFiles(status.project, projectDir);
   const payload = files ? { ...status, projectFiles: files } : status;
+  writeStatusPayload(context, options, payload, () =>
+    formatProjectStatusLines(payload.project, files),
+  );
+}
+
+function writeStatusPayload(
+  context: CommandContext,
+  options: ProjectStatusOptions,
+  payload: unknown,
+  textLines: () => string[],
+): void {
   if (options.field && options.shell?.length) {
     context.logger.error(
       '`--field` and `--shell` are mutually exclusive; pass only one.',
@@ -281,7 +413,7 @@ function writeProjectStatusOutput(
   if (context.json) {
     context.logger.json(payload);
   } else {
-    for (const line of formatProjectStatusLines(payload.project, files)) {
+    for (const line of textLines()) {
       context.logger.info(line);
     }
   }
