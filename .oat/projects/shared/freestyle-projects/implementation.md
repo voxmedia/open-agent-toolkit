@@ -88,6 +88,8 @@ Intent, files, proof command, result.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
+- 2026-11-21 · brief and m01 amendment review, manual substitute for the project-disabled `oat-project-goal` gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `987d479b798cbc2b2b28df9a3b414d3262cea1df` · 0 blocking; all findings folded into the brief across rounds at `dc3d90918`, `ec7dd284f`, `9b16c94d6`.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
