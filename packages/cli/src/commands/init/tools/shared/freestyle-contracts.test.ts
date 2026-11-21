@@ -166,6 +166,31 @@ describe('freestyle kickoff document starting points', () => {
     ).toEqual([...KICKOFF_TEMPLATES]);
   });
 
+  it('flags the lifecycle convention lines of the starting points with its leftover check', () => {
+    const kickoff = skillFiles()['references/kickoff.md'];
+    const pattern =
+      /grep -nE '([^']+)' "\{project-path\}\/\{document\}\.md"/.exec(
+        kickoff,
+      )?.[1];
+    expect(pattern, 'kickoff carries the leftover grep').toBeDefined();
+    const leftover = new RegExp(pattern as string);
+    const conventionLines = KICKOFF_TEMPLATES.flatMap((name) =>
+      read(join(TEMPLATES_DIR, `${name}.md`))
+        .split('\n')
+        .filter((line) =>
+          /^\*\*(Commit Convention|Phase block grammar)/.test(line),
+        )
+        .map((line) => `${name}: ${line}`),
+    );
+    // plan-brief carries both lines and plan carries the commit convention.
+    expect(conventionLines.length).toBeGreaterThanOrEqual(3);
+    for (const line of conventionLines) {
+      expect(leftover.test(line.slice(line.indexOf(': ') + 2)), line).toBe(
+        true,
+      );
+    }
+  });
+
   it.each(KICKOFF_TEMPLATES)(
     'resolves %s from the bundle with no repository or user tier',
     async (name) => {

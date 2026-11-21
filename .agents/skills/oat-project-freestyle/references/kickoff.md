@@ -111,12 +111,16 @@ instructions written for OAT's lifecycle skills. Before the document is used:
    - lifecycle sections: `## Parallelism`, the `## Reviews` status table and
      its status values, `## Reviews and Gates`, `## Implementation Complete`
      and "Ready for final code review and PR preparation". Reviews are
-     recorded in `shape.md` instead.
+     recorded in `shape.md` instead;
+   - lifecycle conventions: the `**Commit Convention:**` line in
+     `plan-brief.md` and `plan.md` (commits follow `shape.md` instead), and
+     `plan-brief.md`'s `**Phase block grammar (strict):**` paragraph with its
+     example block, which only OAT's lifecycle parsers need.
 4. Check the result. This prints nothing when the copy is clean; keep a line
    only when the project deliberately uses it:
 
    ```bash
-   grep -nE 'oat_|oat-project-|HiLL|Ready for final code review' "{project-path}/{document}.md"
+   grep -nE 'oat_|oat-project-|HiLL|Ready for final code review|Commit Convention|block grammar' "{project-path}/{document}.md"
    ```
 
 Record each document in the section: its path, what it is for, and the
