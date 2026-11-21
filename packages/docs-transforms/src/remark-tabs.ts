@@ -1,8 +1,7 @@
 import type { Code, Paragraph, Root, RootContent } from 'mdast';
-import remarkGfm from 'remark-gfm';
-import remarkParse from 'remark-parse';
 import type { Plugin } from 'unified';
-import { unified } from 'unified';
+
+import { reparseMarkdown } from './reparse.js';
 
 const TAB_MARKER_RE = /^===\s+"(.+)"$/;
 
@@ -18,28 +17,6 @@ function extractTabTitle(node: RootContent): string | null {
   if (!firstChild || firstChild.type !== 'text') return null;
   const match = TAB_MARKER_RE.exec(firstChild.value);
   return match?.[1] ?? null;
-}
-
-function reparseContent(value: string, block?: Code): RootContent[] {
-  const tree = unified().use(remarkParse).use(remarkGfm).parse(value);
-  transformChildren(tree, value);
-  // Reparsed tab content still reports authored physical source locations.
-  const relocate = (node: {
-    position?: Code['position'];
-    children?: unknown[];
-  }): void => {
-    if (node.position && block?.position) {
-      for (const point of [node.position.start, node.position.end]) {
-        point.line += block.position.start.line - 1;
-        point.column += block.position.start.column - 1;
-        // Deindentation changes offsets; line/column remain authoritative.
-        delete point.offset;
-      }
-    }
-    node.children?.forEach((child) => relocate(child as typeof node));
-  };
-  tree.children.forEach(relocate);
-  return tree.children;
 }
 
 function createTabsElement(
@@ -108,8 +85,15 @@ function transformChildren(
         )
       ) {
         const codeBlock = tree.children[i] as Code;
-        // Re-parse the code block value as markdown to restore original structure
-        content.push(...reparseContent(codeBlock.value, codeBlock));
+        // Re-parse the code block value as markdown to restore original
+        // structure; reparsed tab content still reports authored locations.
+        content.push(
+          ...reparseMarkdown(
+            codeBlock.value,
+            codeBlock.position?.start,
+            transformChildren,
+          ),
+        );
         i++;
       }
 
