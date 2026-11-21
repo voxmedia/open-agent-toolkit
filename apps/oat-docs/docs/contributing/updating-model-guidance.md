@@ -107,6 +107,12 @@ lists the exact ID `claude-fable-5-2`, a minimum version of 2.1.321, and
 support for all five efforts. Local Claude Code 2.1.326 assistant records
 report that exact ID. Fable 5.1 remains available for explicit configurations.
 
+A separate Cursor refresh on November 21 verified Fable 5.2 medium and high,
+Gemini 4 Neon low through xhigh, Hydrogen medium, and Carbon high in desktop
+3.29.9. The bundled Cursor Frontier recommendation moves to Fable 5.2 high.
+The Gemini pins are available for explicit selection while workload routing
+is being evaluated. See the [Cursor probe runbook](verifying-cursor-pins.md).
+
 ## Change and Validate
 
 1. Update the supported catalog for each verified runtime and its tests. Preserve

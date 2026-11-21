@@ -443,6 +443,126 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     'gpt-5.6-sol[reasoning=max]',
     'gpt-reasoning',
   ),
+  approvedMapping(
+    'claude-fable-5-2-medium',
+    'claude-fable-5-2-medium',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-fable-medium',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-2-medium',
+        resolvedModel: 'claude-fable-5-2-medium',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'claude-fable-5-2-high',
+    'claude-fable-5-2-high',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-fable-high',
+      probeRecord: {
+        submittedSelector: 'claude-fable-5-2-high',
+        resolvedModel: 'claude-fable-5-2-high',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'gemini-4-neon-low',
+    'gemini-4-neon-low',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-neon-low',
+      probeRecord: {
+        submittedSelector: 'gemini-4-neon-low',
+        resolvedModel: 'gemini-4-neon-low',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'gemini-4-neon-medium',
+    'gemini-4-neon-medium',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-neon-medium',
+      probeRecord: {
+        submittedSelector: 'gemini-4-neon-medium',
+        resolvedModel: 'gemini-4-neon-medium',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'gemini-4-neon-high',
+    'gemini-4-neon-high',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-neon-high',
+      probeRecord: {
+        submittedSelector: 'gemini-4-neon-high',
+        resolvedModel: 'gemini-4-neon-high',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'gemini-4-neon-xhigh',
+    'gemini-4-neon-xhigh',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-neon-xhigh',
+      probeRecord: {
+        submittedSelector: 'gemini-4-neon-xhigh',
+        resolvedModel: 'gemini-4-neon-xhigh',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'gemini-4-hydrogen-medium',
+    'gemini-4-hydrogen-medium',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-hydrogen-medium',
+      probeRecord: {
+        submittedSelector: 'gemini-4-hydrogen-medium',
+        resolvedModel: 'gemini-4-hydrogen-medium',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
+  approvedMapping(
+    'gemini-4-carbon-high',
+    'gemini-4-carbon-high',
+    'explicit-model-id',
+    {
+      probeName: 'zz-pin-probe-carbon-high',
+      probeRecord: {
+        submittedSelector: 'gemini-4-carbon-high',
+        resolvedModel: 'gemini-4-carbon-high',
+        verifiedAt: '2026-11-21',
+        evidencePath:
+          'packages/cli/src/providers/cursor/codec/__fixtures__/cursor-pin-probe-2026-11-21.jsonl',
+      },
+    },
+  ),
 ] as const satisfies readonly CursorModelPinMapping[];
 
 export const SUPPORTED_CURSOR_ROLE_TARGETS = CURSOR_MODEL_PIN_MAPPINGS.filter(

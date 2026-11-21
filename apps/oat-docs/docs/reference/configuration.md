@@ -575,12 +575,10 @@ Model-only Claude aliases remain compatible through the per-call model argument
 and report `effortAxis: not-applicable` because the Agent API exposes no
 per-call effort argument. The recommendation carries 16 Cursor candidates
 across four tiers, drawn from a materialization
-catalogue with 31 catalogued multi-family flat IDs spanning Composer, Claude
-(Sonnet 5, Sonnet 5.5, Opus 5.5, Fable 5, and Fable 5.1), GPT, and Grok 4.5 and 4.6; the two figures differ because some
-approved mappings stay materializable without being recommended. An explicit
-mapping connects each flat ladder ID to its verified frontmatter model.
-Existing mappings keep their bracket selectors; Sonnet 5.5 uses per-pin
-verified exact IDs. The 31 mappings produce 62 pinned role variants.
+catalogue with 39 flat IDs spanning Composer, Claude, Gemini, GPT, and Grok.
+An explicit mapping connects each ladder ID to its verified frontmatter model,
+using an approved bracket selector or exact ID. Sonnet 5.5, Fable 5.2, and
+Gemini 4 use exact IDs. The 39 mappings produce 78 pinned role variants.
 Configuration and skills never derive selectors or admit arbitrary flat IDs.
 Verified Cursor entries include `gpt-5.6-luna-high`, `gpt-5.6-luna-xhigh`,
 `gpt-5.6-terra-high`, `gpt-5.6-sol-high`, and `gpt-5.6-sol-max`.
