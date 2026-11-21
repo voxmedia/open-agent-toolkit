@@ -130,4 +130,81 @@ describe('composed Markdown transforms', () => {
     ]);
     expect(nodes(tree, 'code').some((n) => n.lang === 'text')).toBe(true);
   });
+
+  it('transforms a docs-tree figure inside a tab body', async () => {
+    const tree = await transform(
+      [
+        '=== "Layout"',
+        '',
+        '    ```docs-tree title="App"',
+        '    - src/',
+        '      - index.ts — entry',
+        '    ```',
+      ].join('\n'),
+    );
+    const [tab] = nodes(tree, 'mdxJsxFlowElement').filter(
+      (n) => n.name === 'Tab',
+    );
+    expect(tab).toMatchObject({
+      children: [
+        {
+          type: 'mdxJsxFlowElement',
+          name: 'DocsTree',
+          attributes: [{ name: 'title', value: 'App' }],
+          children: [{ type: 'list' }],
+        },
+      ],
+    });
+    expect(nodes(tree, 'code')).toHaveLength(0);
+  });
+
+  it('normalizes a .md link inside a figure', async () => {
+    const tree = await transform(
+      ['```docs-steps', '1. **Read** the [guide](guide.md)', '```'].join('\n'),
+    );
+    const [figure] = nodes(tree, 'mdxJsxFlowElement');
+    expect(figure).toMatchObject({ name: 'DocsSteps' });
+    expect(nodes(tree, 'link')).toMatchObject([{ url: './guide/' }]);
+  });
+
+  it('leaves an alert and a Mermaid fence beside a figure to their own transforms', async () => {
+    const tree = await transform(
+      [
+        '> [!NOTE]',
+        '> Keep reading.',
+        '',
+        '```docs-check',
+        '- [x] Done',
+        '```',
+        '',
+        '```mermaid',
+        'flowchart LR',
+        '```',
+      ].join('\n'),
+    );
+    expect(tree.children.map((n) => n.type)).toEqual([
+      'blockquote',
+      'mdxJsxFlowElement',
+      'mdxJsxFlowElement',
+    ]);
+    expect(nodes(tree, 'blockquote')).toMatchObject([
+      {
+        children: [
+          {
+            type: 'paragraph',
+            children: [{ type: 'text', value: '[!NOTE]\nKeep reading.' }],
+          },
+        ],
+      },
+    ]);
+    expect(nodes(tree, 'mdxJsxFlowElement').map((n) => n.name)).toEqual([
+      'DocsCheck',
+      'Mermaid',
+    ]);
+    expect(
+      nodes(tree, 'mdxJsxFlowElement').find((n) => n.name === 'Mermaid'),
+    ).toMatchObject({
+      attributes: [{ name: 'chart', value: 'flowchart LR' }],
+    });
+  });
 });

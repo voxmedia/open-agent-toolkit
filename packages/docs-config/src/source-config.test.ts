@@ -49,6 +49,81 @@ describe('createSourceConfig', () => {
     });
   });
 
+  it('orders the chain tabs, docs fences, links, alert, Mermaid', () => {
+    const pluginNames = createSourceConfig().remarkPlugins.map((p) => {
+      const plugin = Array.isArray(p) ? p[0] : p;
+      return typeof plugin === 'function' ? plugin.name : String(plugin);
+    });
+    expect(pluginNames).toEqual([
+      'remarkTabs',
+      'remarkDocsFences',
+      'remarkLinks',
+      'remarkAlert',
+      'remarkMermaid',
+    ]);
+  });
+
+  it('composes figures with tabs, link rewriting and alerts', async () => {
+    const processor = unified()
+      .use(remarkParse)
+      .use(createSourceConfig().remarkPlugins);
+    const markdown = [
+      '=== "Layout"',
+      '',
+      '    ```docs-tree',
+      '    - [Guide](guide.md)',
+      '    ```',
+      '',
+      '> [!NOTE]',
+      '> Beside a figure.',
+    ].join('\n');
+    const tree = await processor.run(processor.parse(markdown), {
+      path: '/repo/docs/index.md',
+      value: markdown,
+    });
+    expect(tree).toMatchObject({
+      children: [
+        {
+          name: 'Tabs',
+          children: [
+            {
+              name: 'Tab',
+              children: [
+                {
+                  type: 'mdxJsxFlowElement',
+                  name: 'DocsTree',
+                  children: [
+                    {
+                      type: 'list',
+                      children: [
+                        {
+                          children: [
+                            {
+                              type: 'paragraph',
+                              children: [{ type: 'link', url: './guide/' }],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'blockquote',
+          data: {
+            hProperties: {
+              className: ['markdown-alert', 'markdown-alert-note'],
+            },
+          },
+        },
+      ],
+    });
+  });
+
   it('should include remarkTabs in remarkPlugins', () => {
     const config = createSourceConfig();
 
