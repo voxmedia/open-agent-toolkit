@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-11-21
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p04'] # phases to pause AFTER completing (empty = every phase)
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p01', 'p02']] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported | lite | brief
 oat_import_reference: null # e.g., references/imported-plan.md
@@ -90,7 +91,7 @@ packaged capability.
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user (confirmed at `oat-project-implement` start)
+- [x] Confirmed HiLL checkpoints (p04 only, from workflow.hillCheckpointDefault=final)
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
