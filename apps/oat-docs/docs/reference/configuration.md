@@ -573,7 +573,7 @@ rungs. A present declaration is authoritative. Host-managed routing through
 bare effort-pinned alias fails closed when its generation cannot be proven.
 Model-only Claude aliases remain compatible through the per-call model argument
 and report `effortAxis: not-applicable` because the Agent API exposes no
-per-call effort argument. The recommendation carries 16 Cursor candidates
+per-call effort argument. The recommendation carries 15 Cursor candidates
 across four tiers, drawn from a materialization
 catalogue with 39 flat IDs spanning Composer, Claude, Gemini, GPT, and Grok.
 An explicit mapping connects each ladder ID to its verified frontmatter model,
@@ -663,7 +663,7 @@ oat project dispatch-ceiling resolve \
   --provider cursor \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model gpt-5.6-sol-high \
+  --candidate-model gemini-4-neon-high \
   --task-class default-implementation \
   --report-scope p02 \
   --report-action implementation \

@@ -59,13 +59,13 @@ probe records at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md
 The observed Cursor catalogue did not list GPT-6.x selectors. Verify Cursor
 availability and pin evidence independently of Codex.
 
-| Task class               | Default                                                             | Economy                                            | Escalation                                                  | Floor notes                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | `composer-2.5`                                                      | Same with mechanical verification                  | `gpt-5.6-luna-high`                                         | Fast aliases select service tier, not capability.                                                                |
-| `intelligent-recon`      | `cursor-grok-4.6-medium` or `gpt-5.6-sol-medium`                    | `gpt-5.6-terra-high`                               | `gpt-5.6-sol-high`                                          | Verify silent-miss-prone conclusions.                                                                            |
-| `default-implementation` | `gpt-5.6-sol-medium`                                                | `composer-2.5` for bounded, testable changes       | `gpt-5.6-sol-high`                                          | `cursor-grok-4.6-medium` or `-high` is the Cursor-native alternative by difficulty.                              |
-| `hard-reasoning`         | `gpt-5.6-sol-high`                                                  | `cursor-grok-4.6-high` with corroborating evidence | `gpt-5.6-sol-xhigh`                                         | Opus 5.5 high/xhigh and Fable 5.2 high are verified alternatives. Qualify task performance separately.           |
-| `consequential`          | An eligible high-effort author with independent cross-family review | No routine economy route                           | Sol xhigh for a depth bottleneck; max only after evaluation | If independent review cannot be met among approved Cursor mappings, use a separately qualified provider or stop. |
+| Task class               | Default                                                             | Economy                                                  | Escalation                                       | Floor notes                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | `composer-2.5`                                                      | Same with mechanical verification                        | `gpt-5.6-luna-high`                              | Fast aliases select service tier, not capability.                                                                |
+| `intelligent-recon`      | `cursor-grok-4.6-medium` or `gemini-4-hydrogen-medium`              | `gemini-4-hydrogen-medium`                               | `gemini-4-neon-medium`                           | Verify silent-miss-prone conclusions.                                                                            |
+| `default-implementation` | `gemini-4-neon-medium` or `claude-opus-5-5-low`                     | `gemini-4-hydrogen-medium` for bounded, testable changes | `claude-opus-5-5-medium`                         | Use an eligible candidate from the configured ladder.                                                            |
+| `hard-reasoning`         | `claude-opus-5-5-high` or `gemini-4-neon-high`                      | No routine economy route                                 | `claude-opus-5-5-xhigh`                          | Fable 5.2 high is a verified specialist option. Qualify task performance separately.                             |
+| `consequential`          | An eligible high-effort author with independent cross-family review | No routine economy route                                 | Eligible Opus xhigh or Fable high when warranted | If independent review cannot be met among approved Cursor mappings, use a separately qualified provider or stop. |
 
 ## Fable 5.2 and Gemini 4 Pin Evidence
 
@@ -78,10 +78,10 @@ observations are described in
 `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
 
 Fable 5.2 high replaces Fable 5.1 high in the bundled Frontier tier.
-Use the Gemini pins for explicit trials. Candidates include Neon medium for
-ordinary implementation, Neon high for difficult changes, Neon low and
-Hydrogen medium for scoped recon, and Carbon high for specialist work. Treat
-Neon xhigh as a workload-dependent escalation.
+The bundled ladder adds Hydrogen medium at Economy, Neon medium at Balanced,
+and Neon high at High. Opus 5.5 low and high end Balanced and High,
+respectively. The verified GPT-5.6 Sol pins remain available for explicit
+configurations, alongside Neon low and xhigh and Carbon high.
 
 ## Current Opus 5.5 Pin Evidence
 

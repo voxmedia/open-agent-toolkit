@@ -621,11 +621,11 @@ describe('cursor model pin catalogue', () => {
       };
     };
 
-    expect(recommendation.version).toBe('2026-11-21.2');
+    expect(recommendation.version).toBe('2026-11-21.3');
     const candidates = Object.values(recommendation.providers.cursor).flatMap(
       ({ candidates: tierCandidates }) => tierCandidates,
     );
-    expect(candidates).toHaveLength(16);
+    expect(candidates).toHaveLength(15);
     for (const candidate of candidates) {
       expect(
         findCursorModelPinMapping(candidate),

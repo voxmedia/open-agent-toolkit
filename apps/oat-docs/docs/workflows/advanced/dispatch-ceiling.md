@@ -178,7 +178,7 @@ Run the same command without `--dry-run` to replace bundled cells. Use
 `--shared` or `--local` instead when that scope owns the ladder. Add
 `--keep-existing` to fill only missing cells and preserve existing choices.
 
-Version `2026-11-21.2` is the current bundled recommendation. Codex Economy and
+Version `2026-11-21.3` is the current bundled recommendation. Codex Economy and
 Balanced include GPT-6.1 Terra and GPT-6 Luna. High uses GPT-6.2 Sol, and
 Frontier orders Sol 6.2 xhigh, Astra 6.2 high, and Astra 6.2 xhigh. The
 maintainers carried forward the prior Sol and Astra placements at the same
@@ -187,14 +187,12 @@ in Claude Economy; the older generation stays supported for explicit cells.
 Opus 5.5 low/medium/high remains in Claude High.
 The Claude low option suits bounded intelligent recon in Balanced or High;
 medium remains the implementation starting point under High. The older Codex
-models remain available for explicit configuration. Cursor's preferred
-ladder interleaves verified GPT-5.6 and Opus 5.5 mappings: Balanced adds
-Opus 5.5 low above Terra high, High orders Sol medium, Opus low, Sol high,
-Opus medium, then Opus high. Frontier places Opus high and xhigh between
-Sol max and Fable 5.2 high. Grok 4.6 medium starts Balanced. OAT's maintainers
-carried these placements forward with an updated Fable pin. Explicit
-configurations can still select the earlier Fable and Grok pins or try a
-verified Gemini 4 pin.
+models remain available for explicit configuration. Cursor Economy orders
+Composer 2.5, Luna high, Hydrogen medium, then Luna xhigh. Balanced orders
+Grok 4.6 medium, Terra high, Neon medium, then Opus 5.5 low. High orders Opus
+low, Opus medium, Neon high, then Opus high. Frontier orders Opus high, Opus
+xhigh, then Fable 5.2 high. Explicit configurations can still select the
+GPT-5.6 Sol pins, earlier Fable and Grok pins, and other verified Gemini 4 efforts.
 Rerunning adoption replaces the bundled cells in the chosen scope; use
 `--keep-existing` to preserve explicit older cells. For the complete
 maintenance procedure, see
@@ -352,11 +350,11 @@ The bundled ladder is a curated subset of the supported targets:
   Balanced, low/medium/high at High, and xhigh/max at Frontier. Fable 5.2
   high ends Frontier. Fable 5.1 and Sonnet 5 remain supported for explicit
   configurations.
-- **Cursor:** the preferred ladder uses approved Composer 2.5, GPT-5.6, Grok
-  4.6, Opus 5.5, and Fable 5.2 targets. Fable 5.2 high ends Frontier.
-  Explicit configurations can select Fable 5.2 medium, Gemini 4 Neon
-  `low` through `xhigh`, Gemini 4 Hydrogen `medium`, and Gemini 4 Carbon
-  `high`. These use exact IDs verified in the
+- **Cursor:** Economy includes Gemini 4 Hydrogen `medium`. Balanced offers
+  Neon `medium` before Opus `low`. High offers Neon `high` before Opus `high`.
+  Fable 5.2 high ends Frontier. Explicit configurations can also select the
+  GPT-5.6 Sol pins, Fable 5.2 medium, Neon `low` and `xhigh`, and Gemini 4
+  Carbon `high`. The Fable 5.2 and Gemini 4 pins use exact IDs verified in the
   [native desktop probe](../../contributing/verifying-cursor-pins.md).
   Fable 5.1 and the other approved bracket mappings remain available for
   explicit selection. Grok 4.7 requires its own mapping and per-pin evidence.
@@ -412,7 +410,7 @@ oat project dispatch-ceiling resolve \
   --provider cursor \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model gpt-5.6-sol-high \
+  --candidate-model gemini-4-neon-high \
   --task-class default-implementation \
   --report-scope p02 \
   --report-action implementation \
