@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-11-21
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: [['p01', 'p02']] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported | lite | brief
@@ -12,7 +12,7 @@ oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: mdxcn
@@ -962,7 +962,7 @@ gates.
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
-| plan  | artifact | received        | 2026-11-21 | reviews/artifact-plan-review-2026-11-21T164854Z.md          | -                                        | gate       | codex-6-sol-xhigh |
+| plan  | artifact | passed          | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T164854Z.md | 08d0588d801d7cd59afd08323f645b8a0735021b | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto` or `gate`.
@@ -976,6 +976,7 @@ cell, and never truncate a widened row back to five columns.
 - Round 2 confirmed those fixes and found 3 Medium and 2 Low; all were applied in `87753e28c`.
 - Round 3 confirmed those fixes and found 1 Low: the root `.oxlintrc.json` ignore does not reach docs-theme's package oxlint. The retry bound was exhausted, so that Low was fixed after review (a package-script `--ignore-pattern`, no capture script file). The fix was not re-reviewed. The configured quick-start gate reviews the final plan.
 - Gate attempt 1 (`codex-6-sol-xhigh`, reviewed `2b41627f1`) blocked with 1 High and 1 Medium. Both were resolved in the artifacts. H1: p02-t01 and design.md now remove the upstream frame context and add a `react-server` import check. M1: p04-t03 no longer runs `pnpm release:validate` before the p04-t04 bump. Gate attempt 2 re-reviews the plan.
+- Gate attempt 2 (`codex-6-sol-xhigh`, reviewed `08d0588d8`) passed with 0 critical, 0 high, 0 medium and 0 low findings, and confirmed both attempt-1 fixes. The plan is ready for implementation.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
