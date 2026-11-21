@@ -117,10 +117,18 @@ export interface ProjectLogStructuralHead {
   sourceProject?: string;
 }
 
-export const PROJECT_LOG_TIME_OF_DAY_RE = /^\d{2}:\d{2}:\d{2}Z$/;
-
-const STRUCTURAL_HEAD_LINE_RE =
-  /^\*\*(Time|Subject|Source project):\*\* (\S.*)$/;
+/**
+ * The head lines exactly as `append` writes them, in writing order. Subject
+ * and source project are one whitespace-free word, as `append` validates them,
+ * and the time is `HH:MM:SSZ`.
+ */
+const STRUCTURAL_HEAD_LINES: ReadonlyArray<
+  [keyof ProjectLogStructuralHead, RegExp]
+> = [
+  ['time', /^\*\*Time:\*\* (\d{2}:\d{2}:\d{2}Z)$/],
+  ['subject', /^\*\*Subject:\*\* (\S+)$/],
+  ['sourceProject', /^\*\*Source project:\*\* (\S+)$/],
+];
 
 /** The UTC time of day `append --time` records for `now`. */
 export function projectLogTimeOfDay(now: Date): string {
@@ -145,37 +153,41 @@ export function composeStructuralBodyHead(
  *
  * It is a separate reader from `parseProjectLogBodyHead` on purpose: the
  * judgment head's line set is unchanged, so a judgment body that happens to
- * open with `**Subject:**` keeps exactly the reading it had. Only the leading
- * run of head lines counts, the first occurrence of a field wins, and a time
- * that is not `HH:MM:SSZ` is not reported as a time.
+ * open with `**Subject:**` keeps exactly the reading it had.
+ *
+ * It is exactly as strict as the writer, so only a head `append` could have
+ * written is read as one: the leading lines must match the written shapes,
+ * each field at most once and in writing order, followed by a blank line and
+ * a non-empty body. Anything else, including a one-line body that merely
+ * opens with `**Subject:** two words`, has no head and stays body text.
  */
 export function parseProjectLogStructuralHead(body: string): {
   head: ProjectLogStructuralHead;
   rest: string;
 } {
+  const none = { head: {}, rest: body };
   const lines = body.split(/\r?\n/);
   const head: ProjectLogStructuralHead = {};
+  let field = 0;
   let index = 0;
   for (; index < lines.length; index += 1) {
-    const match = STRUCTURAL_HEAD_LINE_RE.exec(lines[index] ?? '');
-    if (!match) break;
-    const value = match[2]!.trim();
-    switch (match[1]) {
-      case 'Time':
-        if (head.time === undefined && PROJECT_LOG_TIME_OF_DAY_RE.test(value)) {
-          head.time = value;
-        }
+    const line = lines[index] ?? '';
+    let matched = false;
+    for (; field < STRUCTURAL_HEAD_LINES.length; field += 1) {
+      const [key, pattern] = STRUCTURAL_HEAD_LINES[field]!;
+      const value = pattern.exec(line)?.[1];
+      if (value !== undefined) {
+        head[key] = value;
+        field += 1;
+        matched = true;
         break;
-      case 'Subject':
-        head.subject ??= value;
-        break;
-      case 'Source project':
-        head.sourceProject ??= value;
-        break;
+      }
     }
+    if (!matched) break;
   }
-  if (index === 0) return { head, rest: body };
-  return { head, rest: lines.slice(index).join('\n').trim() };
+  if (index === 0 || lines[index] !== '') return none;
+  const rest = lines.slice(index).join('\n').trim();
+  return rest === '' ? none : { head, rest };
 }
 
 export const PROJECT_LOG_AREA_MAX_LENGTH = 120;

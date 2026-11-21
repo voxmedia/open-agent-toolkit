@@ -409,6 +409,43 @@ describe('oat project journal check on a freestyle project', () => {
     },
   );
 
+  it('gives an untitled OAT phase heading its own skip reason', () => {
+    const result = evaluateFreestyleJournal({
+      boundary: 'completion',
+      planContent:
+        '# Plan\n\n## Phase p01:\n\n## Phase 2:\n\n## Phase A-1a: native\n\n## Phases\n',
+      journalContent: null,
+      stateContent: FREESTYLE_STATE,
+    });
+    expect(result.status).toBe('ok');
+    expect(result.coverage).toEqual({
+      missing: ['implementation.md'],
+      recognized: 0,
+      validated: 0,
+      skipped: 3,
+      phases: [
+        {
+          id: 'p01',
+          heading: 'Phase p01:',
+          outcome: 'skipped',
+          reason: 'untitled-phase-heading',
+          message:
+            'The heading "## Phase p01:" has no title, so it is not read as phase p01\'s section and its records are not validated; add a title after the colon.',
+          sources: [{ path: 'plan.md', line: 3 }],
+        },
+        expect.objectContaining({
+          id: 'p02',
+          heading: 'Phase 2:',
+          reason: 'untitled-phase-heading',
+        }),
+        expect.objectContaining({
+          id: 'A-1a',
+          reason: 'unrecognized-phase-id',
+        }),
+      ],
+    });
+  });
+
   it('applies no record rule to a phase it skipped', () => {
     // p02-t09 is completed with no commit, but it sits under the native A-1a
     // section and p02 has no journal section, so p02 is skipped, not checked.

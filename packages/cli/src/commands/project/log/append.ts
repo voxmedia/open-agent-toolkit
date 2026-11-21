@@ -1430,6 +1430,13 @@ function validateEntry(
   versionNote: string | undefined;
   /** True when an accepted CRLF body was canonicalized to LF before storage. */
   normalized: boolean;
+  /**
+   * The text `--idempotency-key` must appear in: the caller's `--body` for a
+   * structural entry, so an event head never satisfies "must appear in
+   * --body"; the composed body for a judgment entry, whose `**Source:**` head
+   * line is documented to carry the key.
+   */
+  keyBody: string;
 } {
   // The lone-terminator rule is tested against the *raw* body, before trimming.
   // `String.prototype.trim` strips CR, LF, U+2028 and U+2029 as whitespace, so a
@@ -1497,6 +1504,7 @@ function validateEntry(
           : `${composeStructuralBodyHead(head).join('\n')}\n\n${body}`,
       versionNote,
       normalized,
+      keyBody: body,
     };
   }
 
@@ -1558,6 +1566,12 @@ function validateEntry(
   }
   const area = validateHeadingField(input.area, '--area');
   const head = validateBodyHead(input);
+  const judgmentBody = composeJudgmentBody(
+    head === undefined
+      ? undefined
+      : { ...head, recorded: now.toISOString().replace(/\.\d{3}Z$/, 'Z') },
+    body,
+  );
   return {
     heading: composeJudgmentHeading({
       date,
@@ -1565,14 +1579,10 @@ function validateEntry(
       scope: input.scope as ProjectLogScope,
       area,
     }),
-    body: composeJudgmentBody(
-      head === undefined
-        ? undefined
-        : { ...head, recorded: now.toISOString().replace(/\.\d{3}Z$/, 'Z') },
-      body,
-    ),
+    body: judgmentBody,
     versionNote,
     normalized,
+    keyBody: judgmentBody,
   };
 }
 
@@ -1823,8 +1833,11 @@ async function prepareProjectLogAppend(
 
   const now = dependencies.now();
   const date = now.toISOString().slice(0, 10);
-  const { heading, body, versionNote, normalized } = validateEntry(input, now);
-  const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, body);
+  const { heading, body, versionNote, normalized, keyBody } = validateEntry(
+    input,
+    now,
+  );
+  const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, keyBody);
   let instantiated: string | undefined;
 
   if (logExists) {
@@ -1895,7 +1908,7 @@ async function prepareProjectLogAppend(
         const existing = findProjectLogEntryByIdempotencyKey(
           content,
           idempotencyKey,
-          body,
+          keyBody,
         );
         if (existing !== undefined) {
           // Append-only order is preserved (DR-260714): a replay observes the
@@ -2150,8 +2163,17 @@ async function runAppendCommand(
   options: AppendCommandOptions,
   context: CommandContext,
   dependencies: ProjectLogAppendCommandDependencies,
+  operands: readonly string[] = [],
 ): Promise<void> {
   try {
+    // `--time` is a flag, and `append` accepts stray operands, so `--time 10:00`
+    // would record the append's own clock and silently drop `10:00`. Refusing
+    // only when `--time` is present leaves every other invocation as it was.
+    if (options.time === true && operands.length > 0) {
+      throw new Error(
+        `--time takes no value (got ${operands.join(' ')}); it records the append's own UTC time of day. Put an event's own time in --body.`,
+      );
+    }
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const body =
       options.body === '-' ? await dependencies.readStdin() : options.body;
@@ -2383,6 +2405,6 @@ Heading grammars:
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      await runAppendCommand(options, context, dependencies);
+      await runAppendCommand(options, context, dependencies, command.args);
     });
 }

@@ -1,4 +1,5 @@
 import {
+  normalizePhaseId,
   parseBriefOutcomes,
   parseTaskProgress,
   readFrontmatterMetadata,
@@ -240,9 +241,11 @@ function collectPhases(
   >,
 ): {
   recognized: Map<string, PhaseOccurrence>;
+  untitled: Map<string, PhaseOccurrence>;
   native: Map<string, PhaseOccurrence>;
 } {
   const recognized = new Map<string, PhaseOccurrence>();
+  const untitled = new Map<string, PhaseOccurrence>();
   const native = new Map<string, PhaseOccurrence>();
   const add = (
     map: Map<string, PhaseOccurrence>,
@@ -268,12 +271,23 @@ function collectPhases(
         continue;
       }
       const nativeId = NATIVE_PHASE_HEADING_PATTERN.exec(section.text)?.[1];
-      if (nativeId !== undefined) {
+      if (nativeId === undefined) {
+        continue;
+      }
+      // An OAT phase id with nothing after the colon: the shared reader needs
+      // a title (`## Phase p01: <title>`), so this is a missing title, not a
+      // project-native id.
+      const titleless =
+        normalizePhaseId(nativeId) ??
+        (/^\d+$/.test(nativeId) ? normalizePhaseId(`p${nativeId}`) : null);
+      if (titleless !== null) {
+        add(untitled, titleless, section.text, path, section.line);
+      } else {
         add(native, nativeId, section.text, path, section.line);
       }
     }
   }
-  return { recognized, native };
+  return { recognized, untitled, native };
 }
 
 /**
@@ -322,7 +336,7 @@ export function evaluateFreestyleJournal(
     ...(plan === null ? (['plan.md'] as const) : []),
     ...(journal === null ? (['implementation.md'] as const) : []),
   ];
-  const { recognized, native } = collectPhases([
+  const { recognized, untitled, native } = collectPhases([
     ['plan.md', plan],
     ['implementation.md', journal],
   ]);
@@ -359,6 +373,16 @@ export function evaluateFreestyleJournal(
       outcome: skip === null ? 'validated' : 'skipped',
       reason: skip?.reason ?? null,
       message: skip?.message ?? null,
+      sources: occurrence.sources,
+    });
+  }
+  for (const [id, occurrence] of untitled) {
+    phases.push({
+      id,
+      heading: occurrence.heading,
+      outcome: 'skipped',
+      reason: 'untitled-phase-heading',
+      message: `The heading "## ${occurrence.heading}" has no title, so it is not read as phase ${id}'s section and its records are not validated; add a title after the colon.`,
       sources: occurrence.sources,
     });
   }

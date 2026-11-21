@@ -139,12 +139,15 @@ export type JournalCoverageInput = 'plan.md' | 'implementation.md';
  *   section for it, so there are no records to check;
  * - `unrecognized-phase-id`: a `## Phase <id>:` heading whose id is not an OAT
  *   phase id (`pNN`, `p-revN`), such as a project-native `P7` or `A-1a`;
+ * - `untitled-phase-heading`: a `## Phase pNN:` heading with an OAT phase id
+ *   and no title, which the shared reader does not read as a phase section;
  * - `out-of-scope`: outside an explicit `--scope`.
  */
 export type JournalCoverageSkipReason =
   | 'journal-missing'
   | 'no-journal-section'
   | 'unrecognized-phase-id'
+  | 'untitled-phase-heading'
   | 'out-of-scope';
 
 export interface JournalCoveragePhase {
@@ -161,8 +164,8 @@ export interface JournalCoveragePhase {
 
 /**
  * The freestyle coverage report. `recognized` counts distinct OAT phase ids;
- * `skipped` counts every skipped entry, unrecognized ids included, so
- * `recognized - validated` plus the unrecognized ids equals `skipped`. A count
+ * `skipped` counts every skipped entry, so `recognized - validated` plus the
+ * untitled headings and unrecognized ids equals `skipped`. A count
  * of zero validated phases is reported as such and never reads as a pass over
  * work that was checked.
  */

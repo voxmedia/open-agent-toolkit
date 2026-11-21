@@ -538,10 +538,13 @@ describe('structural event fields', () => {
     await expect(readFile(logPath, 'utf8')).rejects.toThrow();
   });
 
-  it('reads no event head from a judgment body and ignores a malformed time', () => {
+  it('reads no event head from a judgment body and none past a malformed time', () => {
     expect(
       parseProjectLogStructuralHead('**Time:** 2pm\n**Subject:** l07\n\nBody.'),
-    ).toEqual({ head: { subject: 'l07' }, rest: 'Body.' });
+    ).toEqual({
+      head: {},
+      rest: '**Time:** 2pm\n**Subject:** l07\n\nBody.',
+    });
     const content = [
       '## Entries',
       '',
@@ -562,6 +565,235 @@ describe('structural event fields', () => {
       area: 'merge',
       body: '**Subject:** l07\n\nA judgment that opens with a subject-like line.',
     });
+  });
+});
+
+describe('review round 1 fixes (p03-t04)', () => {
+  const tempDirs: string[] = [];
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
+  afterEach(async () => {
+    process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function createProject(): Promise<{
+    root: string;
+    projectPath: string;
+    logPath: string;
+  }> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-log-fixes-'));
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), FREESTYLE_STATE, 'utf8');
+    return { root, projectPath, logPath: join(projectPath, 'project-log.md') };
+  }
+
+  const NOW = new Date('2026-07-17T14:05:09.000Z');
+  const structural = (projectPath: string, extra: string[]): string[] => [
+    '--project',
+    projectPath,
+    '--structural',
+    '--producer',
+    'orchestrator',
+    '--ref',
+    'merged',
+    ...extra,
+  ];
+
+  // L1: the reader is exactly as strict as the writer.
+  it('reads no event fields from a flagless body that opens with a head-like line (review repro)', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const harness = createHarness(root, NOW);
+    await run(
+      harness.command,
+      'append',
+      structural(projectPath, ['--body', '**Subject:** fake rest']),
+    );
+    expect(process.exitCode).toBe(0);
+    const [entry] = parseProjectLogEntries(
+      await readFile(logPath, 'utf8'),
+    ).entries;
+    expect(entry).toEqual({
+      class: 'structural',
+      heading: '### 2026-07-17 · structural · orchestrator · merged',
+      date: '2026-07-17',
+      producer: 'orchestrator',
+      ref: 'merged',
+      body: '**Subject:** fake rest',
+    });
+  });
+
+  it('still round-trips a written event entry (control)', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const harness = createHarness(root, NOW);
+    await run(
+      harness.command,
+      'append',
+      structural(projectPath, [
+        '--time',
+        '--subject',
+        'l07',
+        '--source-project',
+        'child',
+        '--body',
+        'Merged PR #12.',
+      ]),
+    );
+    expect(process.exitCode).toBe(0);
+    const [entry] = parseProjectLogEntries(
+      await readFile(logPath, 'utf8'),
+    ).entries;
+    expect(entry).toMatchObject({
+      time: '14:05:09Z',
+      subject: 'l07',
+      sourceProject: 'child',
+    });
+    expect(
+      parseProjectLogStructuralHead((entry as { body: string }).body),
+    ).toEqual({
+      head: { time: '14:05:09Z', subject: 'l07', sourceProject: 'child' },
+      rest: 'Merged PR #12.',
+    });
+  });
+
+  it.each([
+    ['a value with whitespace', '**Subject:** fake rest\n\nBody.'],
+    ['no blank line after the head', '**Subject:** l07\nBody.'],
+    ['no body after the head', '**Subject:** l07'],
+    ['a blank body after the head', '**Subject:** l07\n\n   '],
+    [
+      'fields out of writing order',
+      '**Subject:** l07\n**Time:** 10:00:00Z\n\nBody.',
+    ],
+    ['a repeated field', '**Subject:** l07\n**Subject:** l08\n\nBody.'],
+    ['a time without seconds', '**Time:** 10:00Z\n\nBody.'],
+    ['a time without the UTC suffix', '**Time:** 10:00:00\n\nBody.'],
+  ])('reads no head from %s', (_label, body) => {
+    expect(parseProjectLogStructuralHead(body)).toEqual({
+      head: {},
+      rest: body,
+    });
+  });
+
+  it('reads a partial head written in order', () => {
+    expect(
+      parseProjectLogStructuralHead(
+        '**Time:** 10:00:00Z\n**Source project:** child\n\nBody.',
+      ),
+    ).toEqual({
+      head: { time: '10:00:00Z', sourceProject: 'child' },
+      rest: 'Body.',
+    });
+  });
+
+  // L2: a value given to --time is refused, not silently dropped.
+  it('refuses a value given to --time', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const harness = createHarness(root, NOW);
+    await run(
+      harness.command,
+      'append',
+      structural(projectPath, ['--time', '10:00', '--body', 'Merged PR #12.']),
+    );
+    expect(process.exitCode).toBe(1);
+    expect(harness.capture.jsonPayloads).toEqual([
+      {
+        status: 'error',
+        message:
+          "--time takes no value (got 10:00); it records the append's own UTC time of day. Put an event's own time in --body.",
+      },
+    ]);
+    await expect(readFile(logPath, 'utf8')).rejects.toThrow();
+  });
+
+  it('still accepts a stray operand when --time is absent (existing-flag control)', async () => {
+    const { root, projectPath } = await createProject();
+    const harness = createHarness(root, NOW);
+    await run(harness.command, 'append', [
+      '--project',
+      projectPath,
+      '--type',
+      'bug',
+      '--scope',
+      'project',
+      '--area',
+      'merge',
+      '--body',
+      'A judgment.',
+      'stray',
+    ]);
+    expect(process.exitCode).toBe(0);
+    expect(harness.capture.jsonPayloads).toEqual([
+      expect.objectContaining({ status: 'appended' }),
+    ]);
+  });
+
+  // L3: a structural key must appear in the caller's --body.
+  it('refuses a structural idempotency key that appears only in the event head (review repro)', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const harness = createHarness(root, NOW);
+    await run(
+      harness.command,
+      'append',
+      structural(projectPath, [
+        '--subject',
+        'k1',
+        '--idempotency-key',
+        'k1',
+        '--body',
+        'no key here',
+      ]),
+    );
+    expect(process.exitCode).toBe(1);
+    expect(harness.capture.jsonPayloads).toEqual([
+      {
+        status: 'error',
+        message:
+          '--idempotency-key must appear in --body so a replayed append can recognize its own entry.',
+      },
+    ]);
+    await expect(readFile(logPath, 'utf8')).rejects.toThrow();
+  });
+
+  it('keeps the documented judgment rule: a --source equal to the key satisfies it (control)', async () => {
+    const { root, projectPath } = await createProject();
+    const args = [
+      '--project',
+      projectPath,
+      '--type',
+      'friction',
+      '--scope',
+      'project',
+      '--area',
+      'merge',
+      '--category',
+      'gotcha',
+      '--source',
+      'k1',
+      '--idempotency-key',
+      'k1',
+      '--body',
+      'no key here',
+    ];
+    const first = createHarness(root, NOW);
+    await run(first.command, 'append', args);
+    expect(process.exitCode).toBe(0);
+    const replay = createHarness(root, NOW);
+    await run(replay.command, 'append', args);
+    expect(process.exitCode).toBe(0);
+    expect(replay.capture.jsonPayloads).toEqual([
+      expect.objectContaining({ status: 'already-appended' }),
+    ]);
   });
 });
 
