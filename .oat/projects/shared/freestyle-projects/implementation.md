@@ -122,6 +122,18 @@ phase that owns it.
 - Can-fail: neutralizing the router guard failed the freestyle router test and the all-mode tier-3 test; neutralizing the reader recognition failed the freestyle reader test; mapping freestyle to the lifecycle templates failed both freestyle scaffold tests. Each guard was restored.
 - Decision: `ProjectState.phase`/`phaseStatus` and `ProjectSummary.phase`/`phaseStatus` widen to `| null`, null only for freestyle, so JSON consumers never read a fabricated `discovery` phase; `recommendSkill` applies the readers' defaults to a lifecycle-mode input that arrives without a phase.
 
+### Task p01-t02: Show freestyle in list, status and the dashboard with no recommendation
+
+**Status:** completed
+**Commit:** 7fa0dbd60d2669911ccff3f6efa60c29b834ac89
+**Executor:** phase-implementer:freestyle-projects-p01-implementation-1
+
+- Intent: inventory rows 8-10. `oat project list` shows `freestyle` in PHASE, `—` in PROGRESS and `none`; `oat project status` prints `Mode: freestyle (no lifecycle workflow)` instead of the phase, progress and current-task lines; the `oat state refresh` dashboard shows only the Mode row (plus Lifecycle when not active), recommends `none` with the router's exact reason, and lists the project as `freestyle`.
+- Files: `packages/cli/src/commands/project/{list.ts,list.test.ts,status.ts,status.test.ts}`, `packages/cli/src/commands/state/{generate.ts,generate.test.ts}`; mechanically widened to `packages/control-plane/src/{recommender/router.ts,index.ts}` and `packages/control-plane/README.md` to export `freestyleRecommendation()`, following the `quickPlanNotReadyReason` precedent so the dashboard and the router cannot disagree.
+- Proof: CLI `check`, `type-check`; `vitest run src/commands/state src/commands/project/list.test.ts src/commands/project/status.test.ts src/commands/project/list.integration.test.ts` (116 passed) under an isolated `HOME`; control-plane `check`, `type-check`, `test` (325 passed). Each changed view also asserts an unchanged lifecycle row, line or table beside the freestyle one.
+- Can-fail: neutralizing the three freestyle branches failed exactly the three freestyle view tests; restored.
+- Decision: a paused freestyle project that is still the active project keeps the dashboard's mode-independent `oat project open` resume step, as pull is accepted for a synced checkout; every other freestyle dashboard route is `none`.
+
 ---
 
 ## Phase p02: Project AGENTS.md, shape.md and the shaping skill
