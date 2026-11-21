@@ -221,4 +221,45 @@ describe('remarkTabs', () => {
 
     expect(tabsNodes).toHaveLength(0);
   });
+
+  it('reports authored positions for content under one and two tab levels', async () => {
+    const md = [
+      '# Page',
+      '',
+      '=== "Outer"',
+      '',
+      '    === "Inner"',
+      '',
+      '        - item **bold**',
+      '',
+      '    Outer text',
+    ].join('\n');
+
+    const tree = await transformTabs(md);
+    const position = (type: string) =>
+      (
+        findNodes(tree, type)[0] as unknown as {
+          position: {
+            start: { line: number; column: number; offset?: number };
+          };
+        }
+      ).position.start;
+
+    // Lines are authored lines under both one and two tab levels. Columns
+    // are relative to the deindented tab body: an indented code block's
+    // position starts at column 1, so the tab origin adds no column offset.
+    // This pins the behaviour from before the reparse extraction.
+    // Two levels of tab indentation: authored at line 7, column 9.
+    expect(position('listItem')).toEqual({ line: 7, column: 1 });
+    expect(position('strong')).toEqual({ line: 7, column: 8 });
+    // One level: authored at line 9, column 5.
+    expect(
+      findNodes(tree, 'paragraph')
+        .map(
+          (n) =>
+            (n as unknown as { position: { start: unknown } }).position.start,
+        )
+        .at(-1),
+    ).toEqual({ line: 9, column: 1 });
+  });
 });
