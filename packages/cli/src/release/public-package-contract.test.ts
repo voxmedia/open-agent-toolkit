@@ -677,7 +677,13 @@ describe('getPublicPackageContracts', () => {
       expect(packageJson.bugs).toEqual({
         url: 'https://github.com/voxmedia/open-agent-toolkit/issues',
       });
-      expect(packageJson.files).toEqual(['dist', 'README.md']);
+      const isDocsTheme =
+        contract.publicName === '@open-agent-toolkit/docs-theme';
+      expect(packageJson.files).toEqual(
+        isDocsTheme
+          ? ['dist', 'figures.css', 'README.md']
+          : ['dist', 'README.md'],
+      );
       expect(packageJson.publishConfig).toEqual({ access: 'public' });
       expect(packageJson.main).toBe('dist/index.js');
       expect(packageJson.types).toBe('dist/index.d.ts');
@@ -694,6 +700,7 @@ describe('getPublicPackageContracts', () => {
               },
             }
           : {}),
+        ...(isDocsTheme ? { './figures.css': './figures.css' } : {}),
       });
     }
 

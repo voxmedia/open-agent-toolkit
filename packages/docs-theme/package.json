@@ -34,12 +34,12 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "check": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt --check .",
-    "check:fix": "oxlint --fix . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt .",
+    "check": "oxlint --ignore-pattern 'src/**/__fixtures__/**' . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' --ignore-pattern 'src/**/__fixtures__/**' . && oxfmt --check .",
+    "check:fix": "oxlint --fix --ignore-pattern 'src/**/__fixtures__/**' . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' --ignore-pattern 'src/**/__fixtures__/**' . && oxfmt .",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
-    "lint": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' .",
-    "lint:fix": "oxlint --fix . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' .",
+    "lint": "oxlint --ignore-pattern 'src/**/__fixtures__/**' . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' --ignore-pattern 'src/**/__fixtures__/**' .",
+    "lint:fix": "oxlint --fix --ignore-pattern 'src/**/__fixtures__/**' . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' --ignore-pattern 'src/**/__fixtures__/**' .",
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit"
@@ -49,10 +49,14 @@
     "pele": "1.10.0"
   },
   "devDependencies": {
+    "@mdx-js/mdx": "^3.1.1",
+    "@open-agent-toolkit/docs-config": "workspace:*",
+    "@open-agent-toolkit/docs-transforms": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "fumadocs-core": "^16.10.2",
+    "fumadocs-mdx": "^14.3.2",
     "fumadocs-ui": "^16.10.2",
     "next": "^16.1.6",
     "react": "^19.1.0",
