@@ -260,6 +260,37 @@ describe('oat-brainstorm freestyle route', () => {
     );
   });
 
+  it('carries the freestyle exceptions into the destinations catalog', () => {
+    const destinations = read(
+      join(
+        REPO_ROOT,
+        '.agents',
+        'skills',
+        'oat-brainstorm',
+        'references',
+        'destinations.md',
+      ),
+    );
+    const entry = (title: string) => {
+      const start = destinations.indexOf(`### Destination: ${title}`);
+      expect(start, title).toBeGreaterThan(0);
+      const end = destinations.indexOf('\n### ', start + 1);
+      return destinations.slice(start, end === -1 ? undefined : end);
+    };
+    expect(entry('Active project — fold-back to upstream artifact')).toContain(
+      '**Freestyle projects:** not offered.',
+    );
+    const reference = entry('Active project — brainstorming reference file');
+    const exception = reference.slice(
+      reference.indexOf(
+        'A freestyle project is the exception (SKILL.md branch 9j)',
+      ),
+    );
+    expect(exception).toContain('`## Commits, PRs and merges`');
+    expect(exception).toContain('commit and push nothing');
+    expect(exception).toContain('`oat-project-freestyle`');
+  });
+
   it('names only shape.md headings in its freestyle rules', () => {
     const shapeHeadings = new Set(
       h2Headings(read(join(TEMPLATES_DIR, 'shape.md'))),

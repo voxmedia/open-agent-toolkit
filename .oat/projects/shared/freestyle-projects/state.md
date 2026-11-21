@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
         discovered_by: 'Outcome 6 run (a) finding A8: oat-brainstorm/references/destinations.md has no freestyle exception for the active-project fold-back and reference-file persistence entries'
         dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
         reservation_head: 9751e3a2f7f99f3758edfab3fe83d828ed4b31da
-        status: pending
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
