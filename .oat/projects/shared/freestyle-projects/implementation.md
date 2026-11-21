@@ -362,6 +362,16 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Can-fail: turning freestyle routing off failed the ten missing-input and scope tests (lifecycle not-found exit 1); routing every mode through it failed the three existing-mode controls; dropping native-id detection failed nine count and text tests; validating with no journal failed the three plan-only tests; dropping the record rules failed the four refusals; dropping the zero-validated line failed both text tests; ignoring the scope failed the scope test. Each restored (diffs empty).
 - Record note: opened at close; work ran in one session under the same handle.
 
+### Task p03-t03: Branch-build records run on a scratch freestyle project
+
+**Status:** no-change
+**Executor:** phase-implementer:freestyle-projects-p03-implementation-1
+
+- Intent: exit evidence 3. With the branch build (`node packages/cli/dist/index.js`, 0.3.51, after `pnpm build` at `22a7c271f`), in a scratch repository under `$TMPDIR` with an isolated `HOME`: create a shared freestyle project, append a judgment entry and a `merged` event with `--time`, `--subject` and `--source-project` by path, check, synthesize, check again, and run journal check as the project gains `plan.md` and `implementation.md`. No repository change.
+- Files: none in the repository; transcript in gitignored `references/analysis/p03-t03-records-run.txt`.
+- Run: `oat init --scope project` then `oat project new fs-records --mode freestyle --scope shared` (exit 0; scaffold commit holds `state.md`, `AGENTS.md`, `shape.md`). Every records command passed `--project .oat/projects/shared/fs-records`. Judgment append `appended`, `created: true`; event append `### 2026-11-21 · structural · orchestrator · merged` with body head `**Time:** 23:22:06Z`, `**Subject:** l07`, `**Source project:** fs-child` above the one-line body; the keyed replay returned `already-appended`; `log check --json` `synthesis_pending` with 1 structural and 1 friction entry and no grammar violations; `log synthesize` `synthesized`; `log check` `ok; entries: 2`. Journal check at `completion` with neither document: `0 phases recognized, 0 validated, 0 skipped`, `Missing: plan.md, implementation.md (reported, not an error)`, `No phase records were validated.`; after `oat template resolve plan-brief --output plan.md`: 2 recognized, 0 validated, 2 skipped `journal-missing`; after `oat template resolve implementation-brief --output implementation.md` plus a `## Phase L7:` section: 2 recognized, 2 validated, 1 skipped `unrecognized-phase-id`; with `plan.md` removed at `implement-preflight`: `Missing: plan.md`, 2 validated from the journal alone, L7 skipped. Every command exit 0. The scratch directory was removed (checked).
+- Proof: the transcript's exit codes and outputs above.
+
 ---
 
 ## Phase p04: m01 docs and release
