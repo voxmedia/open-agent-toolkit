@@ -332,6 +332,9 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** in_progress
 **Base:** 780af7710458118ac3103dddcd1711674dccbdc4
 **Executor:** phase-implementer:freestyle-projects-p03-implementation-1
+**Head:** a9545377291c5fb4daaf9066e313ce2fb35ca663
+
+Phase verification at `a95453772` on a clean tree (only the untracked `references/` and `reviews/`): `pnpm build`, `pnpm test:evidence` (12 tasks, 0 cached; cli 9810, control-plane 325, docs packages 85 passed; `oat-docs#build` force-executed), `pnpm test:smoke` (165), `pnpm test:skills` (754), `pnpm test:scripts` (7), `pnpm oat:validate-skills` (69 OK), `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format` (each CLI task a cache miss; unchanged packages replayed), `pnpm build:docs` (replays the `oat-docs#build` hash the forced run executed), and the docs-index freshness step (`generate-index`, then `git diff --exit-code -- apps/oat-docs/index.md`) each exit 0. Recovery attempts: 0/10. Inventory rows 23 (p03-t01) and 24 (p03-t02) are closed by this phase. Known Unknowns (a), (b) and (c) are settled in p03-t01.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the log commands (append, check, synthesize) share the entry parser and its fixtures, and the journal-check coverage report shares the freestyle fixtures with them, so no two slices pass the independence test. Rung 4 does not apply: the phase changes an entry format and adds a report. Main drift since the branch base: `23cb59a6a` (#425) and `a5c28dca2` (#426) change only `packages/control-plane/package.json` among p03's paths, which matters at p04's version bump.
 
