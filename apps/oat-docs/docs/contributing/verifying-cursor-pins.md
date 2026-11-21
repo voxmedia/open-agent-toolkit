@@ -318,8 +318,8 @@ The record asserts that `submittedSelector` equals the mapping's
 edited later without re-probing therefore fails its own consistency test rather
 than inheriting an approval that never covered the new selector.
 
-Retain the raw payloads alongside the summary. They are the primary evidence;
-the summary is an interpretation of them.
+Retain redacted native hook payloads alongside the summary so reviewers can
+verify the observations against the primary evidence.
 
 For an exact-ID mapping, use the `explicit-model-id` syntax family and a
 mapping-specific probe record. The frontmatter selector must equal the ladder

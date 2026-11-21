@@ -491,6 +491,8 @@ describe('cursor model pin catalogue', () => {
       surface: string;
       probe: string;
       hook_event_name: string;
+      conversation_id_ref: string;
+      cursor_version: string;
       tool_name?: string;
       model?: string;
       model_override_present?: boolean;
@@ -521,11 +523,16 @@ describe('cursor model pin catalogue', () => {
         (event) => event.surface === 'editor' && event.probe === row.agent,
       );
       expect(extra).toEqual([]);
+      expect(row.cursor_version).toBe('3.29.9');
+      expect(
+        [task, start, shell, stop].map((event) => event?.cursor_version),
+      ).toEqual(Array(4).fill(row.cursor_version));
       expect(task).toMatchObject({
         hook_event_name: 'preToolUse',
         tool_name: 'Task',
         model_override_present: false,
         tool_use_id_ref: expect.any(String),
+        conversation_id_ref: expect.any(String),
       });
       expect(start).toMatchObject({
         hook_event_name: 'subagentStart',
@@ -538,6 +545,7 @@ describe('cursor model pin catalogue', () => {
         tool_name: 'Shell',
         command: row.shell_command,
         model: row.subagent_start_model,
+        conversation_id_ref: expect.any(String),
       });
       expect(stop).toMatchObject({
         hook_event_name: 'subagentStop',
@@ -545,7 +553,7 @@ describe('cursor model pin catalogue', () => {
         model: row.subagent_start_model,
         subagent_id_ref: start.subagent_id_ref,
       });
-      expect(row.cursor_version).toBe('3.29.9');
+      expect(shell.conversation_id_ref).not.toBe(task.conversation_id_ref);
 
       if (row.class === 'subject') {
         expect(findCursorModelPinMapping(row.submitted_selector)).toMatchObject(
