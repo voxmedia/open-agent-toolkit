@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | pending  | 1     | 0/1      |
-| p03   | pending  | 1     | 0/1      |
-| p04   | pending  | 1     | 0/1      |
-| p05   | pending  | 1     | 0/1      |
-| p06   | pending  | 1     | 0/1      |
-| p07   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
-| p09   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | in_progress | 1     | 0/1      |
+| p03   | pending     | 1     | 0/1      |
+| p04   | pending     | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 1/9 phases accepted
 
