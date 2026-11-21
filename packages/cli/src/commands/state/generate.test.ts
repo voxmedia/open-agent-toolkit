@@ -718,6 +718,9 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain(`**none** - ${recommendation.reason}`);
     expect(dashboard).toContain('**free** - freestyle');
     expect(dashboard).toContain('**proj-b** - implement');
+    expect(dashboard).toContain(
+      '- `oat-project-freestyle` - Create or shape a freestyle project',
+    );
   });
 
   it('still resumes a paused freestyle project through project open', async () => {
@@ -1481,6 +1484,10 @@ describe('generateStateDashboard goal routes', () => {
     expect(planning.markdown).toContain('| Mode | goal |');
     expect(planning.markdown).toContain(
       '- `oat-project-goal` - Create a goal workflow project',
+    );
+    // Quick Commands is mode-independent: a goal dashboard lists it too.
+    expect(planning.markdown).toContain(
+      '- `oat-project-freestyle` - Create or shape a freestyle project',
     );
     expect(planning.markdown).not.toContain('Goal projects route');
 

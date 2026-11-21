@@ -187,3 +187,60 @@ describe('freestyle kickoff document starting points', () => {
     },
   );
 });
+
+describe('oat-brainstorm freestyle route', () => {
+  const brainstorm = read(
+    join(REPO_ROOT, '.agents', 'skills', 'oat-brainstorm', 'SKILL.md'),
+  );
+  const branch9j = brainstorm.slice(
+    brainstorm.indexOf('#### 9j'),
+    brainstorm.indexOf('#### 9k'),
+  );
+
+  it('routes a related freestyle brainstorm to the reference file, never fold-back', () => {
+    const router = brainstorm.slice(
+      brainstorm.indexOf('#### 9h'),
+      brainstorm.indexOf('#### 9i'),
+    );
+    expect(router).toContain(
+      'For a freestyle project (`ACTIVE_PROJECT_MODE == "freestyle"`) there is no fold-back: proceed to branch 9j instead.',
+    );
+  });
+
+  it("decides persistence from shape.md's commit agreement before the persistence block", () => {
+    const decision = branch9j.indexOf('**Freestyle projects.**');
+    const persistence = branch9j.indexOf(
+      'PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value)',
+    );
+    expect(decision).toBeGreaterThan(0);
+    expect(persistence).toBeGreaterThan(decision);
+    const rule = branch9j.slice(decision, persistence);
+    expect(rule).toContain('`## Commits, PRs and merges`');
+    expect(rule).toContain('`_Not yet shaped._`');
+    expect(rule).toContain('`Deferred:`');
+    expect(rule).toContain(
+      'skip the persistence block below: commit and push nothing',
+    );
+  });
+
+  it('hands back to oat-project-freestyle at the topic shape.md records', () => {
+    const handBack = branch9j.slice(
+      branch9j.indexOf('**Freestyle hand-back.**'),
+    );
+    expect(handBack).toContain('Return to `oat-project-freestyle`');
+    expect(handBack).toContain('`**Shaping resumes at:**`');
+    // The kickoff reference writes the line the brainstorm reads back.
+    expect(skillFiles()['references/kickoff.md']).toContain(
+      '`**Shaping resumes at:** <next topic not yet shaped>',
+    );
+  });
+
+  it('names only shape.md headings in its freestyle rules', () => {
+    const shapeHeadings = new Set(
+      h2Headings(read(join(TEMPLATES_DIR, 'shape.md'))),
+    );
+    for (const match of branch9j.matchAll(/`## ([^`]+)`/g)) {
+      expect(shapeHeadings.has(match[1] as string), match[1]).toBe(true);
+    }
+  });
+});

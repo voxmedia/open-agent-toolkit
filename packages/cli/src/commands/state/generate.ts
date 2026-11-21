@@ -891,6 +891,7 @@ function buildDashboardMarkdown(
   lines.push('- `oat-project-lite` - Create a lite workflow project');
   lines.push('- `oat-project-brief` - Create a brief workflow project');
   lines.push('- `oat-project-goal` - Create a goal workflow project');
+  lines.push('- `oat-project-freestyle` - Create or shape a freestyle project');
   lines.push('- `oat project open <name>` - Open or resume a project');
   lines.push('- `oat project pause [name]` - Pause active or named project');
   lines.push('- `oat-project-complete` - Mark project complete');
