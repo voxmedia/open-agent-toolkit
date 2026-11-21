@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02
-oat_last_commit: d66723b7b659feef9b4c1f39b7e311e6d88f2eff
+oat_last_commit: da10c3271daad2eec1f350e1ebd4a9640eb4cd00
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -28,16 +28,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p02:
       used_attempts: 3
-      pending_attempt:
-        attempt: 3
-        event_id: freestyle-projects-p02-recovery-3
-        original_request_id: freestyle-projects-p02-implementation-1
-        original_task_id: p02-t03
-        original_commit: 7bdb5c22c0031976d5b0f6cb99f8357d35c34dd9
-        discovered_by: 'Outcome 6 run (a) finding A8: oat-brainstorm/references/destinations.md has no freestyle exception for the active-project fold-back and reference-file persistence entries'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 9751e3a2f7f99f3758edfab3fe83d828ed4b31da
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

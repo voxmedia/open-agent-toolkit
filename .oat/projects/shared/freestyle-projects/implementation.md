@@ -276,6 +276,36 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Can-fail: disabling the resolver failed the unpulled test (status payload differs from the list row); dropping the existing-folder guard failed the materialized control (`recorded-absent` instead of freestyle). Restored.
 - Evidence 4 rerun (branch build 0.3.51, scratch bare origin with HEAD `refs/heads/main`, isolated `HOME`): clone a created `fs-synced` (freestyle, synced; scaffold commit holds the record) and pushed `main`; clone b before its first pull: `list` shows `fs-synced synced — — oat project pull oat project pull fs-synced`, and `status` (relative, absolute `--json`, `--field project.recommendation.skill`) shows only `oat project pull` with reason `checkout absent`; after `oat project pull fs-synced`: `list` shows `freestyle … none`, `status` shows `Mode: freestyle`, `Rules:`/`Shape:` and recommendation `none`. `Path:` is empty for the pulled synced project (existing control-plane behavior, unchanged). Transcript: `references/analysis/p02-t06-second-checkout-status.txt`.
 
+### Recovery Event freestyle-projects-p02-recovery-2
+
+- Phase/task: p02 / p02-t02
+- Original request: freestyle-projects-p02-implementation-1
+- Original commit: 5f4689889f58791ae4809772e285ea15b8f719f6
+- Defect class: other
+- Discovered by: phase exit evidence 6 (the plan-brief copy adapted by kickoff rules 1-3 and the rule-4 grep kept the Commit Convention line and the phase-grammar paragraph)
+- Disposition: recovered
+- Authorization: phase-standing (root direction in `3842bd129`)
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 9751e3a2f7f99f3758edfab3fe83d828ed4b31da
+- Verification: new contract test plus `src/commands/init/tools/shared src/validation` (1295) passed before the commit and again on committed `9751e3a2f`; `oat:validate-skills`, `format:root`, CLI `check` exit 0; can-fail: removing the widening fails the new test
+- Reason: kickoff rule 3 now lists the `**Commit Convention:**` line and plan-brief's phase-grammar paragraph, and the rule-4 grep matches them. Reservation `4b37dc26a`; marker settled inside attempt 3's reservation `2b4cde069`, as root directed.
+
+### Recovery Event freestyle-projects-p02-recovery-3
+
+- Phase/task: p02 / p02-t03
+- Original request: freestyle-projects-p02-implementation-1
+- Original commit: 7bdb5c22c0031976d5b0f6cb99f8357d35c34dd9
+- Defect class: other
+- Discovered by: Outcome 6 run (a), finding A8 (`oat-brainstorm/references/destinations.md` had no freestyle exception for the active-project fold-back and reference-file persistence entries)
+- Disposition: recovered
+- Authorization: phase-standing (root direction in `3842bd129`)
+- Attempt: 3/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: b4a42cd0f8831f30d83f591650ef824d2d6371e4
+- Verification: `src/commands/init/tools/shared src/validation src/__tests__/skills src/commands/init/tools/brainstorm` (1343) and `test:skills` (754) passed before the commit; 1343 again on committed `b4a42cd0f`; validate, `format:root`, CLI `check` exit 0; can-fail: reverting either clause fails its assertion
+- Reason: the catalog now matches SKILL.md branches 9h and 9j (no fold-back for freestyle; `shape.md` decides persistence; no commit or push while commits are unshaped or deferred). No second `oat-brainstorm` bump (1.4.0). Root validated both events, the unchanged original commits and the three-file recovery diffs, and cleared attempt 3's `completed` marker (`used_attempts: 3` kept). Three attempts reached the elevated recovery-volume warning; all three were mechanical, in-phase fixes.
+
 ---
 
 ## Phase p03: Records commands
@@ -328,6 +358,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 - run/v1 · request=freestyle-projects-p01-implementation-1 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p01-review-1 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p02-implementation-1 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
