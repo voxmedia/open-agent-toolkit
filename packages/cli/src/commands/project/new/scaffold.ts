@@ -25,6 +25,7 @@ import {
   syncedRecordPath,
   type ProjectScope,
 } from '@commands/shared/project-scope';
+import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import {
   resolveTemplate,
   type ResolvedTemplate,
@@ -149,10 +150,25 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     { source: 'plan-brief.md', target: 'plan.md' },
     { source: 'implementation-brief.md', target: 'implementation.md' },
   ],
-  // Freestyle scaffolds only its minimal, lifecycle-free state: documents are
-  // chosen while the project is shaped, never scaffolded.
-  freestyle: [{ source: 'state-freestyle.md', target: 'state.md' }],
+  // Freestyle scaffolds its minimal, lifecycle-free state, the OAT-owned
+  // project AGENTS.md and the not-yet-shaped shape.md. Documents are chosen
+  // while the project is shaped, never scaffolded.
+  freestyle: [
+    { source: 'state-freestyle.md', target: 'state.md' },
+    { source: 'project-agents.md', target: 'AGENTS.md' },
+    { source: 'shape.md', target: 'shape.md' },
+  ],
 };
+
+/**
+ * Scaffolded targets written as plain Markdown: their template frontmatter
+ * carries only template markers, so it is dropped whole rather than left as an
+ * empty block. Applies to freestyle's `AGENTS.md` and `shape.md`.
+ */
+const PLAIN_MARKDOWN_TARGETS: ReadonlySet<string> = new Set([
+  'AGENTS.md',
+  'shape.md',
+]);
 
 function normalizeTemplateEntry(entry: TemplateEntry): {
   source: string;
@@ -546,11 +562,14 @@ async function scaffoldModeTemplates(
       continue;
     }
 
-    const { content: template } = await resolveProjectTemplate(
+    const { content: resolvedTemplate } = await resolveProjectTemplate(
       home,
       repoRoot,
       source,
     );
+    const template = PLAIN_MARKDOWN_TARGETS.has(target)
+      ? stripTemplateFrontmatter(resolvedTemplate)
+      : resolvedTemplate;
     let rendered = applyTemplateReplacements(
       template,
       projectName,

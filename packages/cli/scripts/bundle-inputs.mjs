@@ -104,6 +104,8 @@ export const BUNDLE_INPUTS = Object.freeze({
     'pjm-handoffs-readme.md',
     'state.md',
     'state-freestyle.md',
+    'project-agents.md',
+    'shape.md',
     'discovery.md',
     'spec.md',
     'design.md',

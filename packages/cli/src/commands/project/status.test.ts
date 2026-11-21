@@ -914,12 +914,27 @@ oat_generated: false
           phaseStatus: null,
           recommendation: { skill: 'none' },
         },
+        projectFiles: {
+          agents: join(projectPath, 'AGENTS.md'),
+          shape: join(projectPath, 'shape.md'),
+        },
       });
+
+      const field = createRealHarness(projectPath);
+      await runCommand(field.command, [
+        '--project-path',
+        projectPath,
+        '--field',
+        'projectFiles.shape',
+      ]);
+      expect(field.capture.info).toEqual([join(projectPath, 'shape.md')]);
 
       const text = createRealHarness(projectPath);
       await runCommand(text.command, ['--project-path', projectPath]);
       const lines = text.capture.info.join('\n');
       expect(lines).toContain('Mode: freestyle (no lifecycle workflow)');
+      expect(lines).toContain(`Rules: ${join(projectPath, 'AGENTS.md')}`);
+      expect(lines).toContain(`Shape: ${join(projectPath, 'shape.md')}`);
       expect(lines).not.toMatch(/^(Phase|Progress|Current task):/m);
       expect(lines).toContain('Recommendation: none');
       expect(process.exitCode).toBe(0);
@@ -937,6 +952,15 @@ oat_generated: false
       expect(lines).toMatch(/^Progress: 0\/0$/m);
       expect(lines).toContain('Current task: none');
       expect(lines).not.toContain('Mode:');
+      expect(lines).not.toMatch(/^(Rules|Shape):/m);
+
+      const json = createRealHarness(projectPath);
+      await runCommand(
+        json.command,
+        ['--project-path', projectPath],
+        ['--json'],
+      );
+      expect(json.capture.jsonPayloads[0]).not.toHaveProperty('projectFiles');
     });
   });
 });

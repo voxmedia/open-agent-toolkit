@@ -42,16 +42,37 @@ function resolveTargetProjectPath(
   return isAbsolute(projectPath) ? projectPath : join(repoRoot, projectPath);
 }
 
+/**
+ * Freestyle's project `AGENTS.md` and `shape.md` sit in the project folder,
+ * where instruction sync never reaches, so status names both paths.
+ */
+function freestyleProjectFiles(project: ProjectState): {
+  agents: string;
+  shape: string;
+} | null {
+  if (project.workflowMode !== 'freestyle') {
+    return null;
+  }
+  return {
+    agents: join(project.path, 'AGENTS.md'),
+    shape: join(project.path, 'shape.md'),
+  };
+}
+
 function formatProjectStatusLines(project: ProjectState): string[] {
   // Freestyle has no lifecycle phase, progress or current task to report.
-  const position =
-    project.workflowMode === 'freestyle'
-      ? ['Mode: freestyle (no lifecycle workflow)']
-      : [
-          `Phase: ${project.phase} (${project.phaseStatus})`,
-          `Progress: ${project.progress.completed}/${project.progress.total}`,
-          `Current task: ${project.progress.currentTaskId ?? 'none'}`,
-        ];
+  const files = freestyleProjectFiles(project);
+  const position = files
+    ? [
+        'Mode: freestyle (no lifecycle workflow)',
+        `Rules: ${files.agents}`,
+        `Shape: ${files.shape}`,
+      ]
+    : [
+        `Phase: ${project.phase} (${project.phaseStatus})`,
+        `Progress: ${project.progress.completed}/${project.progress.total}`,
+        `Current task: ${project.progress.currentTaskId ?? 'none'}`,
+      ];
   return [
     `Project: ${project.name}`,
     `Path: ${project.path}`,
@@ -193,8 +214,10 @@ async function runProjectStatus(
 function writeProjectStatusOutput(
   context: CommandContext,
   options: ProjectStatusOptions,
-  payload: { status: 'ok'; project: ProjectState },
+  status: { status: 'ok'; project: ProjectState },
 ): void {
+  const files = freestyleProjectFiles(status.project);
+  const payload = files ? { ...status, projectFiles: files } : status;
   if (options.field && options.shell?.length) {
     context.logger.error(
       '`--field` and `--shell` are mutually exclusive; pass only one.',

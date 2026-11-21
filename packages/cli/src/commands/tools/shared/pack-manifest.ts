@@ -241,6 +241,8 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
       ...[
         'state.md',
         'state-freestyle.md',
+        'project-agents.md',
+        'shape.md',
         'discovery.md',
         'spec.md',
         'design.md',
