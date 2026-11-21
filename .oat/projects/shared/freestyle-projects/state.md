@@ -27,17 +27,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p02:
-      used_attempts: 2
+      used_attempts: 3
       pending_attempt:
-        attempt: 2
-        event_id: freestyle-projects-p02-recovery-2
+        attempt: 3
+        event_id: freestyle-projects-p02-recovery-3
         original_request_id: freestyle-projects-p02-implementation-1
-        original_task_id: p02-t02
-        original_commit: 5f4689889f58791ae4809772e285ea15b8f719f6
-        discovered_by: 'phase exit evidence 6: reading the plan-brief copy adapted by kickoff rules 1-3 and the rule-4 grep (Commit Convention line and phase-grammar paragraph left over)'
+        original_task_id: p02-t03
+        original_commit: 7bdb5c22c0031976d5b0f6cb99f8357d35c34dd9
+        discovered_by: 'Outcome 6 run (a) finding A8: oat-brainstorm/references/destinations.md has no freestyle exception for the active-project fold-back and reference-file persistence entries'
         dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 3842bd1293b24d01b60b8967900647df724a5a92
-        status: completed
+        reservation_head: 9751e3a2f7f99f3758edfab3fe83d828ed4b31da
+        status: pending
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
