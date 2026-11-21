@@ -204,15 +204,15 @@ Default is `[]` (fully sequential, no worktrees).
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact | Reviewed Head                            | Invocation | Gate Target |
-| ----- | -------- | ------- | ---------- | -------- | ---------------------------------------- | ---------- | ----------- |
-| plan  | artifact | passed  | 2026-11-21 | -        | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
-| plan  | artifact | passed  | 2026-11-21 | -        | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
-| p01   | code     | pending | -          | -        | -                                        | -          | -           |
-| p02   | code     | pending | -          | -        | -                                        | -          | -           |
-| p03   | code     | pending | -          | -        | -                                        | -          | -           |
-| p04   | code     | pending | -          | -        | -                                        | -          | -           |
-| final | code     | pending | -          | -        | -                                        | -          | -           |
+| Scope | Type     | Status  | Date       | Artifact                              | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | ------- | ---------- | ------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| plan  | artifact | passed  | 2026-11-21 | -                                     | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
+| plan  | artifact | passed  | 2026-11-21 | -                                     | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
+| p01   | code     | passed  | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
+| p02   | code     | pending | -          | -                                     | -                                        | -          | -           |
+| p03   | code     | pending | -          | -                                     | -                                        | -          | -           |
+| p04   | code     | pending | -          | -                                     | -                                        | -          | -           |
+| final | code     | pending | -          | -                                     | -                                        | -          | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 

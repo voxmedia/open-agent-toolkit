@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p01
+oat_current_task_id: p02
 oat_generated: false
 oat_template: false
 ---
@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | in_progress | 1     | 0/1      |
-| p02   | pending     | 1     | 0/1      |
-| p03   | pending     | 1     | 0/1      |
-| p04   | pending     | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | pending  | 1     | 0/1      |
+| p03   | pending  | 1     | 0/1      |
+| p04   | pending  | 1     | 0/1      |
+| p05   | pending  | 1     | 0/1      |
+| p06   | pending  | 1     | 0/1      |
+| p07   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 0/9 phases accepted
+**Total:** 1/9 phases accepted
 
 ---
 
 ## Phase p01: Mode recognition and opt-outs
 
-**Status:** in_progress
+**Status:** completed
 **Base:** f6e8b9c92a3870fea4580480116e67c2bf503f82
 **Executor:** phase-implementer:freestyle-projects-p01-implementation-1
 **Head:** 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862
@@ -112,6 +112,7 @@ phase that owns it.
 | 32  | Root `AGENTS.md` Workflow Options and Recommendation Heuristic; root `README.md`; `packages/cli/README.md`; CLI help prose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | p04                                | instructions and READMEs name freestyle; `--mode` choices already come from `WORKFLOW_MODES`                                                                                                          |
 | 33  | `packages/control-plane/README.md` `WORKFLOW_MODES` list and `ProjectState.phase` nullability                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | handled (p01-t02)                  | README states the public type change, per the package `AGENTS.md` completion check                                                                                                                    |
 | 34  | Provider views, skill bumps, lockstep version bump                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | p04                                | `oat sync --scope all` with the branch build; `check:skill-bumps`, `release:check-versions`, `release:validate`                                                                                       |
+| 35  | `oat state refresh` dashboard "Quick Commands" list (`packages/cli/src/commands/state/generate.ts`), a hard-coded skill list                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | p02                                | adds `oat-project-freestyle` once the skill exists; added after the p01 review (L1)                                                                                                                   |
 
 Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive scaffold maps and the router's all-mode test tie the mode member, the scaffold and control-plane recognition into one commit); rows 8-10 in p01-t02; rows 11-15 and 18 in p01-t03. The `p01-t02`/`p01-t03`/`p01-t04` labels in the Disposition column above predate that merge; there is no p01-t04.
 
@@ -150,6 +151,8 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 - Proof: `vitest run src/commands/project/validate-plan src/commands/project/closeout-check src/commands/project/complete-state src/commands/project/journal-check src/commands/cleanup` (314 passed) and the promote freestyle test under an isolated `HOME`; CLI `check`, `type-check`. Every freestyle test sits beside an existing-mode control on the same path (task-mode plan still fails, quick still needs its snapshot, spec-driven still refuses `journal-missing` and the negative journal variant, spec-driven still gets the cleanup update).
 - Can-fail: neutralizing each of the five guards failed exactly its freestyle tests (validate-plan 2, closeout 2, complete-state 1, evaluator 1, cleanup 1); restored. The complete-state "journal every lifecycle rule would refuse" case stays green with the complete-state guard neutralized because the evaluator opt-out also covers it.
 - Commit note: the first attempt was refused by commitlint (header over 100 characters) before any commit; retried with a shorter header under the same identity.
+
+- Review: `freestyle-projects-p01-review-1` (oat-reviewer, claude-opus-5-5 high) on `e47e3efce..8220a9dab`, ledger head `2bc23b3f6`: pass, 0 critical, 0 high, 0 medium, 2 low. L1 (dashboard Quick Commands list missing from the inventory) folded as inventory row 35, owned by p02; L2 (paused freestyle dashboard resume step versus "recommends nothing") recorded under Deviations. Both bookkeeping, no code change. Artifact `reviews/p01-code-review-2026-11-21T204635Z.md` (local-only).
 
 ### Recovery Event freestyle-projects-p01-recovery-1
 
@@ -223,6 +226,7 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 <!-- orchestration-runs-start -->
 
 - run/v1 · request=freestyle-projects-p01-implementation-1 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p01-review-1 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -240,9 +244,9 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 
 Document any intentional deviations from the brief. Include accepted review findings where the shipped implementation is source of truth and the brief needs alignment.
 
-| Phase / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| -------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -              | -               | -                    | -                 | -      | -               | -         |
+| Phase / Review | Source Artifact                                  | Planned / Documented                | Actual / Accepted                                                                                                                                                 | Reason                                                                                                                       | Source of Truth | Follow-up                  |
+| -------------- | ------------------------------------------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- | -------------------------- |
+| p01 review L2  | plan.md Decisions (freestyle recommends nothing) | freestyle surfaces recommend `none` | a paused active freestyle project keeps the dashboard's mode-independent `oat project open` resume step; the router and every other dashboard route return `none` | resuming a paused active project is mode-independent, and the same dashboard/router split already exists for lifecycle modes | implementation  | none; p04 docs describe it |
 
 ## Final Summary (for PR/docs)
 
