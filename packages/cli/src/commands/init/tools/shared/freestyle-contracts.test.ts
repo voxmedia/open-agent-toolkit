@@ -150,6 +150,99 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
   });
 });
 
+function between(content: string, start: string, end: string): string {
+  const from = content.indexOf(start);
+  expect(from, `finds ${start}`).toBeGreaterThanOrEqual(0);
+  const to = content.indexOf(end, from + start.length);
+  expect(to, `finds ${end} after ${start}`).toBeGreaterThan(from);
+  return content.slice(from, to);
+}
+
+describe('freestyle resume and review rules', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const shape = read(join(TEMPLATES_DIR, 'shape.md'));
+
+  it('makes a resumed project the active project before shaping or a brainstorm detour', () => {
+    const { 'SKILL.md': skill, 'references/kickoff.md': kickoff } =
+      skillFiles();
+    const resume = between(skill, '**Resume.**', '**Another mode.**');
+    const lines = [
+      'PROJECT_PATH="{project-path}"',
+      'oat config set activeProject "$PROJECT_PATH"',
+      'PROJECT_PATH=$(oat config get activeProject)',
+    ];
+    const offsets = lines.map((line) => resume.indexOf(line));
+    expect(
+      offsets.every((offset) => offset >= 0),
+      'resume sets PROJECT_PATH',
+    ).toBe(true);
+    expect([...offsets].sort((x, y) => x - y)).toEqual(offsets);
+    expect(resume).toContain('`oat-brainstorm`');
+    expect(skill.indexOf('**Resume.**')).toBeLessThan(
+      skill.indexOf('### Step 2'),
+    );
+    const detour = between(
+      kickoff,
+      '**Brainstorm with `oat-brainstorm`.** Before handing off:',
+      'Record in this section:',
+    );
+    expect(detour).toContain('`oat config get activeProject`');
+  });
+
+  it('checks the same reshape triggers on every resume in SKILL.md and reshape.md', () => {
+    const { 'SKILL.md': skill, 'references/reshape.md': reshape } =
+      skillFiles();
+    const step2 = between(skill, '### Step 2', '### Step 3');
+    for (const text of [step2, reshape].map((part) =>
+      part.replace(/\s+/g, ' '),
+    )) {
+      const rule = text.slice(
+        text.indexOf('triggers to check on every resume'),
+      );
+      expect(rule.length, 'names the resume trigger check').toBeGreaterThan(
+        'triggers to check on every resume'.length,
+      );
+      const sentence = rule.slice(0, rule.indexOf('.') + 1);
+      expect(sentence).toMatch(/checkpoints/);
+      expect(sentence).toMatch(/Undecided/);
+      expect(sentence).toMatch(/stopped working/);
+    }
+  });
+
+  it('tells a resuming session what to do with a pending brainstorm result', () => {
+    const { 'SKILL.md': skill, 'references/kickoff.md': kickoff } =
+      skillFiles();
+    const step2 = between(skill, '### Step 2', '### Step 3');
+    const guard = between(kickoff, '## Shaping Guard', '## Topics');
+    for (const text of [step2, guard]) {
+      expect(text).toContain('`result: pending`');
+      expect(text).toContain('`brainstorming/`');
+      expect(text).toContain('resume the brainstorm');
+    }
+  });
+
+  it('carries the review-mechanism re-check into the files read at review time', () => {
+    const reviewsPrompt = between(
+      shape,
+      '## Reviews',
+      '## Commits, PRs and merges',
+    );
+    expect(reviewsPrompt).toContain('re-check its mechanism');
+    expect(reviewsPrompt).toContain('keep the intent');
+    const shaping = agents.slice(agents.indexOf('## Shaping and reshaping'));
+    expect(shaping).toContain('re-check its mechanism');
+    expect(shaping).toContain("keep the review's intent");
+  });
+
+  it("names the skill's own reshape reference, not the project's references folder", () => {
+    const shaping = agents.slice(agents.indexOf('## Shaping and reshaping'));
+    expect(shaping).toContain(
+      "the `oat-project-freestyle` skill's own `references/reshape.md`",
+    );
+    expect(shaping).toContain("not this project's `references/`");
+  });
+});
+
 describe('freestyle kickoff document starting points', () => {
   const tempDirs: string[] = [];
 

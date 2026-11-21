@@ -2994,7 +2994,7 @@ function expectFreestyleGuidance(
   expect(records).toContain('`oat project push`');
   expect(records).toContain('`oat internal commit-paths`');
   expect(markdownSection(agents, 'Shaping and reshaping')).toContain(
-    '`references/reshape.md`',
+    "the `oat-project-freestyle` skill's own `references/reshape.md`",
   );
 
   expect(shape).toContain(`# Shape: ${projectName}`);

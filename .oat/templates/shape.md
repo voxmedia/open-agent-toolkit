@@ -43,7 +43,7 @@ _Not yet shaped._
 
 ## Reviews
 
-<!-- When reviews happen, then who and how. Record each as intent (when, required independence, effort) and mechanism (tool or skill, host, source, date verified). Reviews never block. -->
+<!-- When reviews happen, then who and how. Record each as intent (when, required independence, effort) and mechanism (tool or skill, host, source, date verified). When a review comes due, re-check its mechanism first; if it is unavailable, keep the intent, tell the user and log it. Reviews never block. -->
 
 _Not yet shaped._
 

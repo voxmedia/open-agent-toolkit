@@ -14,7 +14,9 @@ Reshaping is guidance, not a command: there is no reshape command and no
   repeatedly.
 - An item under `## Undecided` comes due.
 
-Check the last two on every resume, before acting on the shape.
+The reshape triggers to check on every resume, before acting on the shape:
+reached checkpoints, Undecided items that are due, and agreements that stopped
+working. `SKILL.md` Step 2 runs the same check.
 
 ## Procedure
 

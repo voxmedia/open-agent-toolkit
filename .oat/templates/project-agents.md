@@ -75,6 +75,11 @@ that section is not yet shaped or is deferred, commit and push nothing.
 
 `shape.md` is shaped with the user through the `oat-project-freestyle` skill,
 which resumes at the first section not yet shaped. To change how the project
-runs, follow that skill's reshape reference (`references/reshape.md`): edit only
+runs, follow the `oat-project-freestyle` skill's own `references/reshape.md`
+(in the installed skill's folder, not this project's `references/`): edit only
 the affected `shape.md` sections, update `Last shaped:`, state when the change
 takes effect, and attempt a `decision` entry in the project log.
+
+When a review recorded in `shape.md` comes due, re-check its mechanism before
+using it. If it is unavailable, keep the review's intent, tell the user, log
+it, and reshape: an agreement that stopped working is a reshape trigger.

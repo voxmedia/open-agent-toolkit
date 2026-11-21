@@ -24,7 +24,10 @@ compaction.
   put decisions to the user.
 - When a `**Shaping resumes at:**` line is present, a detour paused shaping:
   resume at the topic it names, then delete the line. Never redo answered
-  topics.
+  topics. If `## Brainstorm or discovery` still reads `result: pending`, the
+  detour never handed back: look for its reference file in the project's
+  `brainstorming/` folder and, with the user, record it (replacing `pending`
+  with its path and a one-line summary) or resume the brainstorm first.
 
 ## Topics
 
@@ -42,11 +45,14 @@ written. The options:
 
 - **None.** Record `None.` and continue.
 - **Brainstorm with `oat-brainstorm`.** Before handing off:
-  1. Record in this section:
+  1. Confirm that `oat config get activeProject` prints this project's path:
+     `oat-brainstorm` writes to the active project. If it does not, set it as
+     `SKILL.md` Step 1 does.
+  2. Record in this section:
      `Brainstorm with oat-brainstorm, started <date>; result: pending.`
-  2. Add a line directly below `**Last shaped:**`:
+  3. Add a line directly below `**Last shaped:**`:
      `**Shaping resumes at:** <next topic not yet shaped> (paused <date> for oat-brainstorm)`.
-  3. Tell the user that `oat-brainstorm` writes its result as a brainstorming
+  4. Tell the user that `oat-brainstorm` writes its result as a brainstorming
      reference file in the project's `brainstorming/` folder, follows the
      commit agreement in `shape.md` (with that topic not yet shaped, it writes
      the file and commits and pushes nothing), and hands back to this skill.

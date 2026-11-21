@@ -390,6 +390,12 @@
     "guard": "project-scope"
   },
   {
+    "file": ".agents/skills/oat-project-freestyle/SKILL.md",
+    "anchor": "oat config set activeProject \"$PROJECT_PATH\"",
+    "kind": "write",
+    "guard": "PROJECT_PATH=$(oat config get activeProject)"
+  },
+  {
     "file": ".agents/skills/oat-project-implement/references/completion-and-closeout.md",
     "anchor": "oat project push \"$PROJECT_PATH\" --message \"chore(oat): mark implementation complete\"",
     "kind": "write",

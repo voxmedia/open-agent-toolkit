@@ -92,11 +92,31 @@ the files it creates, so unrelated changes stay where they are.
 **Resume.** When the user names an existing project, or the active project
 (`oat config get activeProject`) has `oat_workflow_mode: freestyle` in its
 `state.md`, resume it: never re-scaffold, and never copy a template over
-`shape.md`. Continue at Step 2.
+`shape.md`.
 
-**Another mode.** When the active project is in another mode and the user did
-not ask for a new project, say that this skill only shapes freestyle projects
-and stop. Promotion to or from freestyle does not exist.
+- `{project-path}` is the active project's path, or the named project's folder
+  under its scope root (`.oat/projects/<scope>/<name>`, beside
+  `oat config get projects.root`). A name found in more than one scope is
+  ambiguous: ask which. A synced project with no folder here is not pulled
+  yet: tell the user to run `oat project pull <name>` and stop.
+- Confirm that `{project-path}/state.md` reports `oat_workflow_mode: freestyle`;
+  any other mode is the Another mode case below.
+- Make it the active project before reading, shaping or any brainstorm detour:
+  `oat-brainstorm` and the records commands act on the active project, so a
+  named project that is not active would send their writes elsewhere.
+
+```bash
+PROJECT_PATH="{project-path}"
+oat config set activeProject "$PROJECT_PATH"
+PROJECT_PATH=$(oat config get activeProject)
+```
+
+Continue at Step 2.
+
+**Another mode.** When the named project, or the active project when none is
+named, is in another mode and the user did not ask for a new project, say that
+this skill only shapes freestyle projects and stop, leaving the active project
+unchanged. Promotion to or from freestyle does not exist.
 
 **Create.** Otherwise resolve a project name and a one-line description from
 the arguments, asking for whatever is missing. Choose the scope with the user,
@@ -125,17 +145,24 @@ Read `"$PROJECT_PATH/AGENTS.md"` first, then `"$PROJECT_PATH/shape.md"`.
 Determine:
 
 1. the first topic section, in order, that still reads `_Not yet shaped._`,
-   and any `**Shaping resumes at:**` line left by a detour;
-2. the `## Undecided` items whose moment has come; and
-3. the checkpoints under `## Reshape checkpoints` that have been reached.
+   and any `**Shaping resumes at:**` line left by a detour. When
+   `## Brainstorm or discovery` still reads `result: pending`, the detour never
+   handed back: look for its reference file in the project's `brainstorming/`
+   folder and, with the user, either record it (its path and a one-line
+   summary, replacing `pending`) or resume the brainstorm before shaping
+   continues at the topic the line names;
+2. the reshape triggers to check on every resume: the checkpoints under
+   `## Reshape checkpoints` that have been reached, the `## Undecided` items
+   whose moment has come, and any agreement that stopped working (a reviewer
+   unavailable, a rule bypassed repeatedly).
 
 Then choose what to load:
 
 - A topic is not yet shaped → read `references/kickoff.md` and continue at
   Step 3.
-- Every topic is shaped, and an Undecided item is due, a reshape checkpoint is
-  reached, or the user wants to change how the project runs → read
-  `references/reshape.md` and continue at Step 4.
+- Every topic is shaped, and a resume trigger from item 2 holds or the user
+  wants to change how the project runs → read `references/reshape.md` and
+  continue at Step 4.
 - Otherwise report that the shape is complete and nothing is due, and stop.
 
 Report what you found before asking anything: which topics are shaped, which
