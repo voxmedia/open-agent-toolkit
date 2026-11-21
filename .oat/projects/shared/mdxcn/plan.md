@@ -515,10 +515,15 @@ Expected: all pass, and `dist/` contains the figures.
 - Modify: `packages/docs-theme/tsconfig.json` (exclude
   `src/**/__fixtures__/**`)
 - Modify: `.oxfmtrc.jsonc` (add `packages/docs-theme/src/figures/__fixtures__/**`
-  to `ignorePatterns`, with the existing captured-fixture provenance comment)
-  and `.oxlintrc.json` (add the same path to `ignorePatterns`, because the
-  captured module is JavaScript). lint-staged and `oxfmt --check .` would
-  otherwise rewrite or fail the byte-for-byte captures.
+  to `ignorePatterns`, with the existing captured-fixture provenance comment).
+  lint-staged and `oxfmt --check .` would otherwise rewrite or fail the
+  byte-for-byte captures. Run from the package directory, oxfmt still reads the
+  root config.
+- Modify: `packages/docs-theme/package.json` scripts. Add
+  `--ignore-pattern 'src/**/__fixtures__/**'` to both oxlint passes in
+  `lint`, `lint:fix`, `check` and `check:fix`. The package runs `oxlint .` with
+  no package config, and the root `.oxlintrc.json` ignorePatterns do not apply
+  there, so the captured JavaScript would otherwise be linted.
 - Modify: `packages/cli/src/release/public-package-contract.ts` (add
   `src/**/__fixtures__/**` to docs-theme `versionPolicyIgnorePatterns`, kept
   equal to the tsconfig test exclusion)
@@ -526,9 +531,9 @@ Expected: all pass, and `dist/` contains the figures.
 - Create: `packages/docs-theme/src/figures/__fixtures__/all-fences.md`
 - Create: `packages/docs-theme/src/figures/__fixtures__/all-fences.compiled.js`
   (the captured function-body MDX output, with a provenance header)
-- Create: `packages/docs-theme/scripts/capture-figure-fixtures.ts`, or an
-  equivalent documented command recorded in the fixture header, so the capture
-  can be reproduced
+- No capture script file. The exact capture command, a `node --input-type=module`
+  or `tsx -e` one-liner, is recorded in the fixture header so the capture can be
+  reproduced. A script outside `src/` would not be type-checked.
 - Create: `packages/docs-theme/src/figures/compiled-fixtures.test.ts`
 
 **Step 1: Contract test (RED, then GREEN)**
@@ -590,7 +595,7 @@ Expected: passes against the captured real output.
 Do not format the `__fixtures__/` files. They are captures, and the ignore
 patterns above exempt them.
 
-Run: `pnpm exec oxfmt packages/docs-theme/package.json packages/docs-theme/tsconfig.json packages/docs-theme/src/figures/fence-contract.test.ts packages/docs-theme/src/figures/compiled-fixtures.test.ts packages/cli/src/release/public-package-contract.ts .oxfmtrc.jsonc .oxlintrc.json && pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme build && ! find packages/docs-theme/dist -path '*__fixtures__*' | grep -q . && pnpm --filter @open-agent-toolkit/docs-theme check && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+Run: `pnpm exec oxfmt packages/docs-theme/package.json packages/docs-theme/tsconfig.json packages/docs-theme/src/figures/fence-contract.test.ts packages/docs-theme/src/figures/compiled-fixtures.test.ts packages/cli/src/release/public-package-contract.ts .oxfmtrc.jsonc && pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme build && ! find packages/docs-theme/dist -path '*__fixtures__*' | grep -q . && pnpm --filter @open-agent-toolkit/docs-theme check && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
 Expected: tests pass, `dist` has no fixtures, the docs-theme check passes with
 the fixtures ignored, and the version-policy contract test passes.
 
@@ -918,20 +923,26 @@ gates.
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| p02   | code     | pending | -    | -        | -             | -          | -           |
-| p03   | code     | pending | -    | -        | -             | -          | -           |
-| p04   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status          | Date       | Artifact               | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | --------------- | ---------- | ---------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01   | code     | pending         | -          | -                      | -                                        | -          | -           |
+| p02   | code     | pending         | -          | -                      | -                                        | -          | -           |
+| p03   | code     | pending         | -          | -                      | -                                        | -          | -           |
+| p04   | code     | pending         | -          | -                      | -                                        | -          | -           |
+| final | code     | pending         | -          | -                      | -                                        | -          | -           |
+| plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory) | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto` or `gate`.
 `Gate Target` is filled in only for gate events. Legacy five-column rows remain
 valid. Writers must preserve every existing row and every unknown trailing
 cell, and never truncate a widened row back to five columns.
+
+**Plan artifact review disposition (2026-11-21):** three structured review rounds by `oat-reviewer-claude-claude-opus-5-5-high`, dispatched as the resolved `high` ceiling exception.
+
+- Round 1 found 2 High, 8 Medium and 2 Low; all were applied in `ccfebeb04`.
+- Round 2 confirmed those fixes and found 3 Medium and 2 Low; all were applied in `87753e28c`.
+- Round 3 confirmed those fixes and found 1 Low: the root `.oxlintrc.json` ignore does not reach docs-theme's package oxlint. The retry bound was exhausted, so that Low was fixed after review (a package-script `--ignore-pattern`, no capture script file). The fix was not re-reviewed. The configured quick-start gate reviews the final plan.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

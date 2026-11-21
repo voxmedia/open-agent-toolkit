@@ -258,7 +258,8 @@ Two kinds of test input exist:
   and `applyMdxPreset` over the shared remark chain, which adds `rehypeCode`.
   The function-body output is committed under `src/**/__fixtures__/` with a
   provenance header. That directory is excluded from `tsc`, the version policy,
-  oxfmt and oxlint. The test runs the captured module and renders it through
+  oxfmt (root `.oxfmtrc.jsonc`) and the package's oxlint passes (an
+  `--ignore-pattern` in its scripts). The test runs the captured module and renders it through
   the live scaffold component map, so a component regression fails it.
 
 The spike's converted lifecycle page is the end-to-end artifact.
