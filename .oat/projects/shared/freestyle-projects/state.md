@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02
-oat_last_commit: 2bc23b3f6ea016dbc3fa49323101b9c7e17787bb
+oat_last_commit: d66723b7b659feef9b4c1f39b7e311e6d88f2eff
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -28,16 +28,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p02:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: freestyle-projects-p02-recovery-1
-        original_request_id: freestyle-projects-p02-implementation-1
-        original_task_id: p02-t01
-        original_commit: 78ffeb3a2231cf51d319bf795eee511271eb5932
-        discovered_by: 'phase exit evidence 4: oat project status --project-path .oat/projects/synced/fs-synced on a branch-build scratch synced project (Rules/Shape named bare AGENTS.md/shape.md)'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 7af7593573f81f0b946911058e9d760aead013bb
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
