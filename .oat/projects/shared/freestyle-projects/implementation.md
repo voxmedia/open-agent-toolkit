@@ -173,7 +173,11 @@ Record mapping as executed: rows 1-7 and 33 landed in p01-t01 (the exhaustive sc
 
 ## Phase p02: Project AGENTS.md, shape.md and the shaping skill
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 8f44e379bf69fe9e4e5e401a42aaf9ea335dc34a
+**Executor:** phase-implementer:freestyle-projects-p02-implementation-1
+
+Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the scaffold, its two OAT-owned templates, the `new`/`status` output and the skill's references all describe the same AGENTS.md and shape.md section contract and share the scaffold tests and the bundle inputs, so no two slices pass the independence test. Rung 4 does not apply: the phase adds a new skill and new scaffolded files. Main drift since the branch base (`git fetch origin main`): `23cb59a6a` (#425) touches none of p02's planned paths; its package versions matter only at p04.
 
 ---
 
