@@ -836,6 +836,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'Names a reference file to read before execution, rather than invoking the owning skill.',
   },
   {
+    file: '.agents/skills/oat-project-freestyle/references/kickoff.md',
+    anchor: 'Adapting a Copied Template',
+    match:
+      'a line that names an `oat-project-*` skill as the way to execute, review or continue the document',
+    classification: 'non-executing',
+    skills: ['oat-project-implement', 'oat-project-plan'],
+    reason:
+      'Quotes lifecycle instructions in copied templates as text to remove; nothing here invokes the named skills.',
+  },
+  {
     file: '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
     anchor: 'Kickoff disclosure',
     match:
