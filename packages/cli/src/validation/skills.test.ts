@@ -3442,7 +3442,8 @@ describe('validateOatSkills', () => {
     for (const cursorTarget of [
       'composer-2.5',
       'gpt-5.6-terra-high',
-      'gpt-5.6-sol-high',
+      'gemini-4-hydrogen-medium',
+      'gemini-4-neon-high',
       'cursor-grok-4.6-medium',
       'claude-opus-5-5-high',
       'claude-fable-5-2-high',
@@ -5959,12 +5960,19 @@ describe('validateOatSkills', () => {
     for (const model of [
       'gpt-5.6-luna-high',
       'gpt-5.6-terra-high',
+      'gemini-4-hydrogen-medium',
+      'gemini-4-neon-high',
+    ]) {
+      expect(planWriting, `artifact contract includes ${model}`).toContain(
+        model,
+      );
+    }
+    for (const model of [
+      'gpt-5.6-luna-high',
+      'gpt-5.6-terra-high',
       'gpt-5.6-sol-high',
       'gpt-5.6-sol-max',
     ]) {
-      expect(planWriting, `artifact contract preserves ${model}`).toContain(
-        model,
-      );
       expect(configuration, `configuration preserves ${model}`).toContain(
         model,
       );

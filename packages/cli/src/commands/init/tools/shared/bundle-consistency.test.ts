@@ -690,6 +690,7 @@ describe('bundle asset inventory consistency', () => {
             candidates: [
               'composer-2.5',
               'gpt-5.6-luna-high',
+              'gemini-4-hydrogen-medium',
               'gpt-5.6-luna-xhigh',
             ],
           },
@@ -703,9 +704,7 @@ describe('bundle asset inventory consistency', () => {
           },
           high: {
             candidates: [
-              'gpt-5.6-sol-medium',
               'claude-opus-5-5-low',
-              'gpt-5.6-sol-high',
               'claude-opus-5-5-medium',
               'gemini-4-neon-high',
               'claude-opus-5-5-high',
@@ -713,8 +712,6 @@ describe('bundle asset inventory consistency', () => {
           },
           frontier: {
             candidates: [
-              'gpt-5.6-sol-xhigh',
-              'gpt-5.6-sol-max',
               'claude-opus-5-5-high',
               'claude-opus-5-5-xhigh',
               'claude-fable-5-2-high',

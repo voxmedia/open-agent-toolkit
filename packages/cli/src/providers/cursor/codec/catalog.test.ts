@@ -625,7 +625,7 @@ describe('cursor model pin catalogue', () => {
     const candidates = Object.values(recommendation.providers.cursor).flatMap(
       ({ candidates: tierCandidates }) => tierCandidates,
     );
-    expect(candidates).toHaveLength(18);
+    expect(candidates).toHaveLength(15);
     for (const candidate of candidates) {
       expect(
         findCursorModelPinMapping(candidate),
