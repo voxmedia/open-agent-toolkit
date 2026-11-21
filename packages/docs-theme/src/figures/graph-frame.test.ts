@@ -211,7 +211,7 @@ describe('figures.css', () => {
 
 describe('figure modules are server components', () => {
   const modules = readdirSync(figuresDir)
-    .filter((name) => name.endsWith('.tsx'))
+    .filter((name) => /\.tsx?$/.test(name) && !name.endsWith('.test.ts'))
     .map((name) => join(figuresDir, name));
 
   const forbidden: [string, RegExp][] = [
@@ -248,8 +248,17 @@ describe('figure modules are server components', () => {
     );
   }
 
-  it('finds the figure modules', () => {
-    expect(modules.length).toBeGreaterThan(0);
+  it('covers every non-test figure module, .ts included', () => {
+    const names = modules.map((file) => file.slice(figuresDir.length + 1));
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'graph-frame.tsx',
+        'graph-markdown.ts',
+        'index.ts',
+        'steps.tsx',
+      ]),
+    );
+    expect(names.some((name) => name.endsWith('.test.ts'))).toBe(false);
   });
 
   it.each(modules)('%s has no client-only code', (file) => {
