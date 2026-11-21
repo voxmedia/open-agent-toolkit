@@ -940,6 +940,36 @@ oat_generated: false
       expect(process.exitCode).toBe(0);
     });
 
+    it('names the files under the directory it read when project.path is empty, as for a synced project', async () => {
+      // A synced project read from its nested worktree reports an empty
+      // project.path; the file lines must still name usable paths.
+      const synced = '.oat/projects/synced/demo';
+      const projectState: ProjectState = {
+        ...makeProjectState(''),
+        workflowMode: 'freestyle',
+        phase: null,
+        phaseStatus: null,
+      };
+
+      const explicit = createHarness({ cwd: '/repo', projectState });
+      await runCommand(explicit.command, ['--project-path', synced]);
+      expect(explicit.capture.info).toContain(`Rules: ${synced}/AGENTS.md`);
+      expect(explicit.capture.info).toContain(`Shape: ${synced}/shape.md`);
+
+      const active = createHarness({
+        cwd: '/repo',
+        activeProjectPath: synced,
+        projectState,
+      });
+      await runCommand(active.command, [], ['--json']);
+      expect(active.capture.jsonPayloads[0]).toMatchObject({
+        projectFiles: {
+          agents: `${synced}/AGENTS.md`,
+          shape: `${synced}/shape.md`,
+        },
+      });
+    });
+
     it('keeps the lifecycle lines for a quick project read through the same path', async () => {
       const projectPath = await createProject(
         `---\noat_status: in_progress\n---\n`,

@@ -42,26 +42,36 @@ function resolveTargetProjectPath(
   return isAbsolute(projectPath) ? projectPath : join(repoRoot, projectPath);
 }
 
-/**
- * Freestyle's project `AGENTS.md` and `shape.md` sit in the project folder,
- * where instruction sync never reaches, so status names both paths.
- */
-function freestyleProjectFiles(project: ProjectState): {
+interface FreestyleProjectFiles {
   agents: string;
   shape: string;
-} | null {
+}
+
+/**
+ * Freestyle's project `AGENTS.md` and `shape.md` sit in the project folder,
+ * where instruction sync never reaches, so status names both paths. They are
+ * joined to the project directory status read, as the caller named it, rather
+ * than to `project.path`, which is empty for a synced project read from its
+ * nested worktree.
+ */
+function freestyleProjectFiles(
+  project: ProjectState,
+  projectDir: string,
+): FreestyleProjectFiles | null {
   if (project.workflowMode !== 'freestyle') {
     return null;
   }
   return {
-    agents: join(project.path, 'AGENTS.md'),
-    shape: join(project.path, 'shape.md'),
+    agents: join(projectDir, 'AGENTS.md'),
+    shape: join(projectDir, 'shape.md'),
   };
 }
 
-function formatProjectStatusLines(project: ProjectState): string[] {
+function formatProjectStatusLines(
+  project: ProjectState,
+  files: FreestyleProjectFiles | null,
+): string[] {
   // Freestyle has no lifecycle phase, progress or current task to report.
-  const files = freestyleProjectFiles(project);
   const position = files
     ? [
         'Mode: freestyle (no lifecycle workflow)',
@@ -150,7 +160,12 @@ async function runProjectStatus(
   try {
     if (options.projectPath && isAbsolute(options.projectPath)) {
       const project = await dependencies.getProjectState(options.projectPath);
-      writeProjectStatusOutput(context, options, { status: 'ok', project });
+      writeProjectStatusOutput(
+        context,
+        options,
+        { status: 'ok', project },
+        options.projectPath,
+      );
       return;
     }
 
@@ -160,7 +175,12 @@ async function runProjectStatus(
       const project = await dependencies.getProjectState(
         resolveTargetProjectPath(repoRoot, options.projectPath),
       );
-      writeProjectStatusOutput(context, options, { status: 'ok', project });
+      writeProjectStatusOutput(
+        context,
+        options,
+        { status: 'ok', project },
+        options.projectPath,
+      );
       return;
     }
 
@@ -199,7 +219,12 @@ async function runProjectStatus(
     const project = await dependencies.getProjectState(
       join(repoRoot, activeProject.path),
     );
-    writeProjectStatusOutput(context, options, { status: 'ok', project });
+    writeProjectStatusOutput(
+      context,
+      options,
+      { status: 'ok', project },
+      activeProject.path,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -215,8 +240,9 @@ function writeProjectStatusOutput(
   context: CommandContext,
   options: ProjectStatusOptions,
   status: { status: 'ok'; project: ProjectState },
+  projectDir: string,
 ): void {
-  const files = freestyleProjectFiles(status.project);
+  const files = freestyleProjectFiles(status.project, projectDir);
   const payload = files ? { ...status, projectFiles: files } : status;
   if (options.field && options.shell?.length) {
     context.logger.error(
@@ -255,7 +281,7 @@ function writeProjectStatusOutput(
   if (context.json) {
     context.logger.json(payload);
   } else {
-    for (const line of formatProjectStatusLines(payload.project)) {
+    for (const line of formatProjectStatusLines(payload.project, files)) {
       context.logger.info(line);
     }
   }
