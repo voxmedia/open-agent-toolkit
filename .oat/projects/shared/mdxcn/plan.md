@@ -309,6 +309,22 @@ that `figures.css` defines only `--graph-*` and `--color-graph-*` custom
 properties, with no unprefixed `--background`, `--foreground` or
 `--destructive`.
 
+Add a server-component check to the same test file, covering every
+`src/figures/*.tsx` module present, so later tasks are covered automatically.
+`renderToStaticMarkup` under vitest uses React's ordinary export and cannot
+detect the problem: React's `react-server` condition exposes neither
+`createContext` nor `useContext`.
+
+- A source scan asserts that no figure module contains `"use client"`,
+  `createContext`, `useContext`, `useState`, `useEffect`, `useReducer`,
+  `useLayoutEffect` or a `motion` import. `useId` and `useMemo` stay allowed.
+- A child process runs `node --conditions=react-server` with the repository
+  root's `tsx` loader (`--import tsx`). It imports each figure module and
+  exits 0.
+- A control proves the check can fail. A temporary module that calls
+  `React.createContext` at the top level makes the child exit non-zero, and
+  that module is removed afterwards. Report the failure reason it produces.
+
 Run: `pnpm --filter @open-agent-toolkit/docs-theme exec vitest run src/figures/graph-frame.test.ts`
 Expected: fails.
 
@@ -317,6 +333,17 @@ Expected: fails.
 Port upstream `graph-frame` and `graph-markdown` with these changes:
 
 - Remove `"use client"`, `graph-motion` and every `motion` import.
+- Remove upstream's frame context: `GraphFrameContext`, `GraphFrameProvider`
+  and `useGraphFrame`, and `React.useContext` in `GraphFrame`.
+  - `GraphFrame` takes an explicit `frame` prop (default `"box"`) and passes
+    it to the parts that need it, such as `GraphBody` and the title placement.
+  - Every ported consumer that called `useGraphFrame` or wrapped content in
+    `GraphFrameProvider frame="none"` gets that value from a prop or a fixed
+    default instead.
+  - OAT fences render one frame per figure and never nest frames, so nothing
+    needs inherited frame state.
+  - Do not add a client boundary, because the design specifies server
+    components.
 - Render visible markup only.
 - Put `not-prose` on the frame root.
 - Render inline `code` as a code chip, not bold.
@@ -863,7 +890,10 @@ Commit: `docs(p04-t02): cover figure fences in docs bootstrap and analyze skills
 
 **Step 1: Verify**
 
-Run: `pnpm build && pnpm release:validate && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+Run: `pnpm build && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+(`pnpm release:validate` is left out here. Until p04-t04 bumps the lockstep
+versions, it rejects packages that changed but still carry their merge-base
+version. p04-t04's committed-tree gates run it.)
 Then run: `pnpm build:docs && pnpm --filter oat-docs docs:check && pnpm check`
 Then run, sequentially, the generate-index command and the
 `git diff --exit-code -- apps/oat-docs/index.md` check from p03-t04.
@@ -923,15 +953,15 @@ gates.
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target       |
-| ----- | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01   | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
-| p02   | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
-| p03   | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
-| p04   | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
-| final | code     | pending         | -          | -                                                  | -                                        | -          | -                 |
-| plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                             | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
-| plan  | artifact | received        | 2026-11-21 | reviews/artifact-plan-review-2026-11-21T162334Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
+| plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto` or `gate`.
@@ -944,6 +974,7 @@ cell, and never truncate a widened row back to five columns.
 - Round 1 found 2 High, 8 Medium and 2 Low; all were applied in `ccfebeb04`.
 - Round 2 confirmed those fixes and found 3 Medium and 2 Low; all were applied in `87753e28c`.
 - Round 3 confirmed those fixes and found 1 Low: the root `.oxlintrc.json` ignore does not reach docs-theme's package oxlint. The retry bound was exhausted, so that Low was fixed after review (a package-script `--ignore-pattern`, no capture script file). The fix was not re-reviewed. The configured quick-start gate reviews the final plan.
+- Gate attempt 1 (`codex-6-sol-xhigh`, reviewed `2b41627f1`) blocked with 1 High and 1 Medium. Both were resolved in the artifacts. H1: p02-t01 and design.md now remove the upstream frame context and add a `react-server` import check. M1: p04-t03 no longer runs `pnpm release:validate` before the p04-t04 bump. Gate attempt 2 re-reviews the plan.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

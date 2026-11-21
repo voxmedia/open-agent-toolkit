@@ -176,8 +176,13 @@ These are server components with no `motion`.
     carries `not-prose`, so the transform no longer injects a class.
   - `graph-markdown`: the child parser, including host-tag marking.
 - **Changes from upstream:**
-  - `motion` and `"use client"` are removed. Upstream uses no state or effect
-    hooks in these components, so they can be server components.
+  - `motion` and `"use client"` are removed, and so is upstream's frame
+    context (`GraphFrameContext`, `GraphFrameProvider`, `useGraphFrame`).
+    React's `react-server` build has no `createContext` or `useContext`, so
+    the frame style is an explicit `frame` prop (default `"box"`) that
+    `GraphFrame` passes to its parts. Fences never nest frames. No state,
+    effect or context hooks remain, so the components are server components.
+    A test imports each one under `node --conditions=react-server`.
   - The tree `whitespace-pre` indent fix is applied.
   - Inline code renders as a code chip, not bold.
 - **Provenance:** each vendored file header records the upstream mdxcn version
