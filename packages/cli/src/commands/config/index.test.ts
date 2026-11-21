@@ -3067,7 +3067,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-10-31.1');
+      expect(recommendation.version).toBe('2026-11-21.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -3087,16 +3087,16 @@ describe('oat config', () => {
           },
           high: {
             candidates: [
-              { model: 'gpt-6.1-sol', effort: 'low' },
-              { model: 'gpt-6.1-sol', effort: 'medium' },
-              { model: 'gpt-6.1-sol', effort: 'high' },
+              { model: 'gpt-6.2-sol', effort: 'low' },
+              { model: 'gpt-6.2-sol', effort: 'medium' },
+              { model: 'gpt-6.2-sol', effort: 'high' },
             ],
           },
           frontier: {
             candidates: [
-              { model: 'gpt-6.1-sol', effort: 'xhigh' },
-              { model: 'gpt-6-astra', effort: 'high' },
-              { model: 'gpt-6-astra', effort: 'xhigh' },
+              { model: 'gpt-6.2-sol', effort: 'xhigh' },
+              { model: 'gpt-6.2-astra', effort: 'high' },
+              { model: 'gpt-6.2-astra', effort: 'xhigh' },
             ],
           },
         },
@@ -3121,7 +3121,7 @@ describe('oat config', () => {
             candidates: [
               { model: 'claude-opus-5-5', effort: 'xhigh' },
               { model: 'claude-opus-5-5', effort: 'max' },
-              { model: 'claude-fable-5-1', effort: 'high' },
+              { model: 'claude-fable-5-2', effort: 'high' },
             ],
           },
         },
@@ -3183,9 +3183,9 @@ describe('oat config', () => {
       ],
       [
         'frontier',
-        'claude-fable-5-1',
+        'claude-fable-5-2',
         'high',
-        'oat-reviewer-claude-claude-fable-5-1-high',
+        'oat-reviewer-claude-claude-fable-5-2-high',
       ],
     ] as const)(
       'resolves the bundled Claude %s terminal reviewer pair through the real resolver',
@@ -3248,7 +3248,7 @@ describe('oat config', () => {
       },
     );
 
-    it('resolves the bundled Codex Frontier terminal reviewer to Astra xhigh', async () => {
+    it('resolves the bundled Codex Frontier terminal reviewer to GPT-6.2 Astra xhigh', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
       const recommendation = await readFile(
@@ -3289,14 +3289,14 @@ describe('oat config', () => {
         providers: {
           codex: {
             dispatchArgs: {
-              variant: 'oat-reviewer-gpt-6-astra-xhigh',
+              variant: 'oat-reviewer-gpt-6-2-astra-xhigh',
             },
-            modelAxis: 'selected:gpt-6-astra',
+            modelAxis: 'selected:gpt-6.2-astra',
             effortAxis: 'selected:xhigh',
             selection: {
               ceilingTier: 'frontier',
               selectedValue: 'xhigh',
-              target: { model: 'gpt-6-astra', effort: 'xhigh' },
+              target: { model: 'gpt-6.2-astra', effort: 'xhigh' },
             },
           },
         },

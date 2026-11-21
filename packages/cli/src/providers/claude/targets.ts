@@ -9,6 +9,7 @@ export const CLAUDE_EFFORT_ORDER = [
 ] as const;
 
 const CLAUDE_GENERATION_EFFORTS = {
+  'fable-5-2': CLAUDE_EFFORT_ORDER,
   'fable-5-1': CLAUDE_EFFORT_ORDER,
   'fable-5': CLAUDE_EFFORT_ORDER,
   'opus-5-5': CLAUDE_EFFORT_ORDER,

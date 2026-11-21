@@ -24,28 +24,20 @@ they choose to adopt a newer recommendation.
 | Published CLI asset                    | `packages/cli/assets/config/dispatch-matrix-recommendation.json`                                                                                                        | Generated copy of the canonical recommendation; regenerate via the CLI asset build.                                                                                                         |
 | Generated project agent views          | `.codex/agents`, `.codex/config.toml`, `.claude/agents`, `.cursor/agents`                                                                                               | Outputs of `oat sync`; never use them as catalog sources.                                                                                                                                   |
 
-A model can remain supported for a user's explicit configuration without being
-recommended by the new ladder. For example, this refresh keeps GPT-5.6 Codex
-and Cursor targets available while preferring GPT-6.1 Sol and GPT-6 Luna in
-Codex. GPT-6 Sol remains supported for explicit compatibility configurations.
-Claude Opus 4.8
-and 5.0 have left current supported generations and recommendations; historical
-probe records can still describe past behavior, clearly labeled as historical.
+A model can remain supported for explicit configuration after it leaves the
+bundled ladder. Codex still ships pins for GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol,
+and the GPT-5.6 variants. Claude Opus 4.8 and 5.0 have left the supported catalog.
+Keep historical probe records labeled with the runtime and date they cover.
 
 ## Establish Provider Evidence
 
 Check the provider's official model documentation and the local runtime before
 editing an ID or effort range. The [OpenAI model catalog](https://developers.openai.com/api/docs/models)
-lists GPT-6.1 Sol and GPT-6 Astra, Sol, and Luna. The
-[GPT-6.1 Sol model page](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
-identifies `gpt-6.1-sol` and supports `low`, `medium`, `high`, `xhigh`, and
-`max`; `none` and `minimal` are not supported efforts for this family. Direct
-API tool calls require the Responses API. The
-[Astra model page](https://developers.openai.com/api/docs/models/gpt-6-astra)
-names `gpt-6-astra` and documents `low`, `medium`, `high`, `xhigh`, and `max`;
-compare it with the installed Codex runtime model cache for the exact names and
-local effort set. Catalog presence establishes support, not relative task
-quality. The
+lists `gpt-6.2-sol` and `gpt-6.2-astra` with `low`, `medium`, `high`,
+`xhigh`, and `max`. The November 20, 2026 Codex runtime model cache also lists
+both IDs at those efforts. Use those five efforts for OAT pins. Compare future
+model IDs and effort ranges with the installed Codex runtime model cache.
+Measure relative task quality separately. The
 [Anthropic Opus 5.5 documentation](https://www.anthropic.com/claude-opus-5-5)
 names `claude-opus-5-5`; confirm a Claude Code invocation reports that exact
 assistant model before admitting it to the Claude catalog. The
@@ -84,7 +76,7 @@ resolves only bare flat IDs, never bracket selectors. It still needs its own
 approved registry entry and complete per-pin evidence before admission; see [Verifying Cursor Pins](verifying-cursor-pins.md). See [Dispatch Policy](../workflows/advanced/dispatch-ceiling.md#cursor-evidence-authority)
 for the distinction between catalog, configured mapping, and runtime identity.
 
-The October 1 refresh migrates Codex Sol defaults and examples to
+The October 1, 2026 refresh migrated Codex Sol defaults and examples to
 `gpt-6.1-sol` while preserving existing effort choices, including medium for
 intelligent recon. Claude Economy moves to `claude-sonnet-5-5` medium by user
 direction. GPT-6 Sol and Sonnet 5 remain explicitly supported. Cursor lists
@@ -101,6 +93,19 @@ pass-through of CLI IDs. Cursor does not list GPT-6 Sol or
 GPT-6.1 Sol in the observed catalog. Do not carry Codex model IDs into Cursor
 configurations. These selector changes do not import a separate vault policy
 refresh or claim newly measured task-performance gains.
+
+The November 21, 2026 refresh puts GPT-6.2 Sol and GPT-6.2 Astra in the prior
+Sol and Astra slots, with the same efforts and order. The High tier ends at
+Sol 6.2 high. Frontier orders Sol 6.2 xhigh, Astra 6.2 high, and Astra 6.2 xhigh.
+This is an OAT recommendation update based on maintainer direction and model
+availability. The local evidence is the Codex model catalog. It covers available
+settings, while a native launch is needed to verify the resolved execution.
+
+The same refresh replaces Fable 5.1 high with Fable 5.2 high in the Claude
+Code Frontier recommendation. [Claude Code's model documentation](https://code.claude.com/docs/en/model-config)
+lists the exact ID `claude-fable-5-2`, a minimum version of 2.1.321, and
+support for all five efforts. Local Claude Code 2.1.326 assistant records
+report that exact ID. Fable 5.1 remains available for explicit configurations.
 
 ## Change and Validate
 

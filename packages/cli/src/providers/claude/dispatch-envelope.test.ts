@@ -118,20 +118,21 @@ describe('collectClaudeLaunchViolations', () => {
     },
   );
 
-  it('accepts the distinct Sonnet 5.5 capability through the launch envelope', () => {
-    expect(
-      collectClaudeLaunchViolations({
-        resolution: resolution(
-          'reviewer',
-          'max',
-          'claude-sonnet-5-5',
-          'sonnet-5-5',
-        ),
-        definition: definition('reviewer', 'max', 'claude-sonnet-5-5'),
-        payload: { variant: 'oat-reviewer-claude-claude-sonnet-5-5-max' },
-      }),
-    ).toEqual({ resolverRole: 'reviewer', violations: [], skipped: [] });
-  });
+  it.each([
+    ['claude-sonnet-5-5', 'sonnet-5-5', 'max'],
+    ['claude-fable-5-2', 'fable-5-2', 'high'],
+  ])(
+    'accepts %s as a distinct generation through the launch envelope',
+    (model, generation, effort) => {
+      expect(
+        collectClaudeLaunchViolations({
+          resolution: resolution('reviewer', effort, model, generation),
+          definition: definition('reviewer', effort, model),
+          payload: { variant: `oat-reviewer-claude-${model}-${effort}` },
+        }),
+      ).toEqual({ resolverRole: 'reviewer', violations: [], skipped: [] });
+    },
+  );
 
   it('reports every independent launch inconsistency in one run', () => {
     const launch = claudeLaunch();
