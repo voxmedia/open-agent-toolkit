@@ -267,6 +267,90 @@ Expected: all pass.
 
 ---
 
+### Task p01-t04: (review) Fail the build on docs-\* fences nested in a figure body
+
+**Files:**
+
+- Modify: `packages/docs-transforms/src/remark-docs-fences.ts`
+- Modify: `packages/docs-transforms/src/remark-docs-fences.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p01 review M1, `reviews/archived/code-p01-review-2026-11-21T231056Z.md`):
+`walk` never examines the reparsed children of a figure it has just built. A
+`docs-*` fence inside a Markdown-body figure is therefore never checked: an
+unknown `docs-nope` inside `docs-steps` passes silently, and a known
+`docs-terminal` there stays a plain code block. Discovery Key Decision 1 and
+the Success Criteria require an unknown fence to fail with a clear message.
+Location: `packages/docs-transforms/src/remark-docs-fences.ts:90`
+
+**Step 2: Write test (RED)**
+
+Add cases for:
+
+- an unknown `docs-nope` fence nested in a `docs-steps` list item, which fails
+  with the existing unknown-fence message listing the known names;
+- a known `docs-terminal` fence nested in a `docs-steps` body, which fails
+  with a message saying that docs figure fences cannot be nested inside
+  another figure, naming both fences and the nested fence's line.
+
+Prove each case can fail by temporarily removing the nested scan, checking
+that the case's own assertion is the one that fails, and then restoring the
+scan.
+
+**Step 3: Implement fix (GREEN)**
+
+After building the element for a `markdown`-body entry, scan its reparsed
+children for `code` nodes whose `lang` starts with `docs-`, and fail through
+`file.fail`. Report unknown names with the existing message, and report known
+names as not nestable. This keeps design's rule that fences never nest frames.
+`raw`-body entries (terminal) need no scan.
+
+**Step 4: Verify**
+
+Run: `pnpm exec oxfmt packages/docs-transforms/src/remark-docs-fences.ts packages/docs-transforms/src/remark-docs-fences.test.ts && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-transforms test && pnpm --filter @open-agent-toolkit/docs-transforms type-check && pnpm --filter @open-agent-toolkit/docs-transforms check`
+Expected: all pass.
+
+**Step 5: Commit**
+
+`fix(p01-t04): reject docs fences nested inside a figure body`
+
+---
+
+### Task p01-t05: (review) Pin tab-origin positions after the reparse extraction
+
+**Files:**
+
+- Modify: `packages/docs-transforms/src/remark-tabs.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p01 review L1, `reviews/archived/code-p01-review-2026-11-21T231056Z.md`):
+design's Testing Strategy requires positions that map to authored lines for
+both the fence and the tab origins, and p01-t01 expects tabs "with positions
+unchanged". No test asserts a position inside reparsed tab content, so an
+off-by-one or missing origin would stay green.
+Location: `packages/docs-transforms/src/remark-tabs.ts:90`
+
+**Step 2: Add the test**
+
+Add one `remark-tabs.test.ts` case asserting the start line and column of a
+node in a tab body. Include a nested `=== "Inner"` tab, for example a list item
+authored under two levels of tab indentation. Prove the test can fail by
+temporarily passing `undefined` as the origin in `remark-tabs.ts`, then restore
+the file.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt packages/docs-transforms/src/remark-tabs.test.ts && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-transforms test && pnpm --filter @open-agent-toolkit/docs-transforms check`
+Expected: all pass.
+
+**Step 4: Commit**
+
+`test(p01-t05): pin reparsed tab content positions`
+
+---
+
 ## Phase 2: Figure components (docs-theme)
 
 Tests in docs-theme use `.test.ts` with `React.createElement`. The vitest
@@ -524,6 +608,84 @@ Expected: all pass, and `dist/` contains the figures.
 **Step 5: Commit**
 
 `feat(p02-t04): export figure components and withDocsFigures`
+
+---
+
+### Task p02-t05: (review) Align design.md's figure grammar and CSS notes with the shipped components
+
+**Files:**
+
+- Modify: `.oat/projects/shared/mdxcn/design.md`
+
+**Step 1: Understand the issue**
+
+Review findings (p02 review M1 and L1, `reviews/archived/code-p02-review-2026-11-21T231835Z.md`):
+the Component Design grammar table no longer matches the upstream-faithful
+grammar the components ship, and p04-t01 writes the contributing grammar from
+that table. The token-mapping and overflow notes are also stale. The code is
+the source of truth.
+Location: `design.md:165` (grammar table), `design.md:200` (tokens),
+`design.md:324` (overflow)
+
+**Step 2: Update design.md**
+
+- **steps:** the first paragraph (or `Title — body` in a tight list) is the
+  title. A **bold** title marks the current step, an _italic_ title the next.
+- **decision:** a plain option is open. Add the `status` and `date`
+  attributes.
+- **compare:** the first column always holds row labels, and a named first
+  header labels that column. `yes`/`true`/`✓`/`x` draw ✓, and
+  `no`/`false`/`-`/`–`/`—` draw –. Add the `accent="Col"` attribute.
+- **annotate:** the title defaults to `code` unless the fence sets `title`.
+- **terminal:** a leading `✓` line is a pass, and `prompt="#"` changes the
+  command glyph.
+- **tree:** a bold node and its path take the accent while other rows recede.
+  A trailing `/` is only an authoring convention.
+- **figures.css:** `--graph-accent` and `--graph-muted` map onto
+  `--color-fd-*`; the frame and faint tokens keep fixed light and dark values.
+  Wide figures handle overflow with `overflow-x-auto`.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt .oat/projects/shared/mdxcn/design.md`
+Expected: formatted. Every grammar row matches the component source.
+
+**Step 4: Commit**
+
+`docs(p02-t05): align design grammar with shipped figure components`
+
+---
+
+### Task p02-t06: (review) Extend the server-component check to every non-test figure module
+
+**Files:**
+
+- Modify: `packages/docs-theme/src/figures/graph-frame.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p02 review L2, `reviews/archived/code-p02-review-2026-11-21T231835Z.md`):
+the hook and context scan and the react-server import select only `.tsx`
+files. `graph-markdown.ts` and `index.ts` (`withDocsFigures`) are therefore
+unscanned, though design.md states that no state, effect or context hooks
+remain in any figure module.
+Location: `packages/docs-theme/src/figures/graph-frame.test.ts:214`
+
+**Step 2: Implement fix**
+
+Select `/\.tsx?$/` and exclude `*.test.ts`, so the scan and the import cover
+every non-test figure module. Prove the change can fail by temporarily adding
+a `useContext` call to `graph-markdown.ts` and checking that the scan reports
+it, then restore the file.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt packages/docs-theme/src/figures/graph-frame.test.ts && pnpm --filter @open-agent-toolkit/docs-theme build && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme check`
+Expected: all pass.
+
+**Step 4: Commit**
+
+`test(p02-t06): scan every figure module for server-component hooks`
 
 ---
 
@@ -956,8 +1118,8 @@ gates.
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
-| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p01   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p01-review-2026-11-21T231056Z.md      | 1dfaecafbb523e1a41e0623659cfeaa3fa9b9b88 | auto       | -                 |
+| p02   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p02-review-2026-11-21T231835Z.md      | 228d3e3ddff659c1b93795b1505ba83121df163f | auto       | -                 |
 | p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -987,16 +1149,16 @@ cell, and never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 3 tasks. The fence transform, shared reparse helper and chain
-  wiring.
-- Phase 2: 4 tasks. Static figure components, `figures.css` and
-  `withDocsFigures`.
+- Phase 1: 5 tasks. The fence transform, shared reparse helper and chain
+  wiring, plus two review fixes.
+- Phase 2: 6 tasks. Static figure components, `figures.css` and
+  `withDocsFigures`, plus two review fixes.
 - Phase 3: 4 tasks. The contract test and captured compile fixtures, the
   checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption.
 - Phase 4: 4 tasks. Scaffold and skill guidance, OAT docs and instructions,
   and the lockstep release.
 
-**Total: 15 tasks**
+**Total: 19 tasks**
 
 ---
 
