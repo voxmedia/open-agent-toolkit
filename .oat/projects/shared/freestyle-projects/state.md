@@ -43,6 +43,13 @@ oat_goal_outcome_audit: null
 oat_goal_recovery: null
 oat_milestone_gates: {}
 oat_deliveries: []
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  providers:
+    codex: xhigh
+    claude: opus
+  source: project-state
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
