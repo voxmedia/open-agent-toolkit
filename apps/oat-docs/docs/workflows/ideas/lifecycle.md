@@ -94,10 +94,23 @@ Good to know:
 Backlog items need project management (PJM, OAT's file-backed backlog,
 roadmap, and decision records) adopted with `oat pjm init`. Run it once.
 
-1. Quick capture: `oat-idea-scratchpad` to review or capture idea seeds
-2. Start brainstorming: `oat-idea-new` (scaffolds directory, then invokes `oat-idea-ideate`)
-3. Resume brainstorming: `oat-idea-ideate` (multiple sessions over time)
-4. Finalize: `oat-idea-summarize` (generates summary, updates backlog)
+```docs-steps title="Ideas flow"
+1. Quick capture
+
+   `oat-idea-scratchpad` reviews or captures idea seeds.
+
+2. Start brainstorming
+
+   `oat-idea-new` scaffolds the idea directory, then invokes `oat-idea-ideate`.
+
+3. Resume brainstorming
+
+   `oat-idea-ideate` runs as many sessions as you need over time.
+
+4. Finalize
+
+   `oat-idea-summarize` generates the summary and updates the ideas backlog.
+```
 
 ## Relationship to `oat-brainstorm`
 
@@ -111,30 +124,28 @@ The always-on `oat-brainstorm` skill (in the `brainstorm` tool pack) can feed in
 
 ## Directory structure
 
-```text
-# Project level
-.oat/ideas/
-├── backlog.md              # Aggregated list of all ideas
-├── scratchpad.md           # Quick-capture pad for idea seeds
-└── {idea-name}/
-    ├── discovery.md        # Brainstorming document
-    └── summary.md          # Generated when finalized
-
-# User level (global) — same structure
-~/.oat/ideas/
-├── backlog.md
-├── scratchpad.md
-└── {idea-name}/
-    ├── discovery.md
-    └── summary.md
+```docs-tree title="Project level"
+- .oat/ideas/
+  - backlog.md — aggregated list of all ideas
+  - scratchpad.md — quick-capture pad for idea seeds
+  - {idea-name}/
+    - discovery.md — brainstorming document
+    - summary.md — generated when finalized
 ```
+
+The user level (global, `~/.oat/ideas/`) has the same structure.
 
 ## State model
 
-Ideas track two states in `discovery.md` frontmatter:
+Ideas track two states in `discovery.md` frontmatter, `brainstorming` and
+`summarized`. A seed in the scratchpad comes before both and has no
+`discovery.md` yet:
 
-- `brainstorming` — actively being explored
-- `summarized` — finalized with a summary document
+```docs-timeline title="Idea states"
+- seed: captured in scratchpad.md, before any state is recorded
+- **brainstorming: actively being explored (the state while you ideate)**
+- *summarized: finalized with a summary document (the state after oat-idea-summarize)*
+```
 
 No `state.md` per idea. No HiLL gates. No knowledge base dependency.
 
