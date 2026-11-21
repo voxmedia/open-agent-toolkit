@@ -18,7 +18,11 @@ export type {
   ReviewInvocationClass,
   ReviewSupersession,
 } from './state/review-supersession';
-export { quickPlanNotReadyReason, recommendSkill } from './recommender/router';
+export {
+  freestyleRecommendation,
+  quickPlanNotReadyReason,
+  recommendSkill,
+} from './recommender/router';
 export {
   evaluateQuickPlanReadiness,
   hasPlanReviewSkipLine,

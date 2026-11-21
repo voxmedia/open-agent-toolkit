@@ -152,12 +152,16 @@ function formatProjectTable(projects: ProjectListRow[]): string[] {
   const rows = projects.map((project) => ({
     name: project.name,
     scope: project.scope,
+    // Freestyle has no lifecycle phase or progress; its mode stands in the
+    // PHASE column so the row still reads as freestyle.
     phase:
-      project.phase === null
-        ? '—'
-        : `${project.phase} (${project.phaseStatus})`,
+      project.workflowMode === 'freestyle'
+        ? 'freestyle'
+        : project.phase === null
+          ? '—'
+          : `${project.phase} (${project.phaseStatus})`,
     progress:
-      project.progress === null
+      project.progress === null || project.workflowMode === 'freestyle'
         ? '—'
         : `${project.progress.completed}/${project.progress.total}`,
     recommendation: project.recommendation.skill,

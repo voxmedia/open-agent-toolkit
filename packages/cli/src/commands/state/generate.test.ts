@@ -673,6 +673,74 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('**proj-b** - implement');
   });
 
+  it('shows an active freestyle project by mode only and recommends nothing, matching the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/free';
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: 'freestyle',
+      oat_project_created: '"2026-11-21T00:00:00Z"',
+    });
+    // A lifecycle sibling keeps its phase line in Available Projects.
+    await writeStateFile(root, '.oat/projects/shared/proj-b', {
+      oat_phase: 'implement',
+    });
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    const { recommendation } = await getProjectState(join(root, projectPath));
+    expect(recommendation.skill).toBe('none');
+    expect({
+      skill: result.recommendedStep,
+      reason: result.recommendedReason,
+    }).toEqual(recommendation);
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    const summary = dashboard.slice(
+      dashboard.indexOf('## Active Project Summary'),
+      dashboard.indexOf('## Knowledge Status'),
+    );
+    expect(summary).toContain('| Mode | freestyle |');
+    for (const row of [
+      '| Phase |',
+      '| Status |',
+      '| HiLL Gate |',
+      '| Current Task |',
+      '| Docs Updated |',
+    ]) {
+      expect(summary).not.toContain(row);
+    }
+    expect(dashboard).toContain(`**none** - ${recommendation.reason}`);
+    expect(dashboard).toContain('**free** - freestyle');
+    expect(dashboard).toContain('**proj-b** - implement');
+  });
+
+  it('still resumes a paused freestyle project through project open', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/free';
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: 'freestyle',
+      oat_lifecycle: 'paused',
+    });
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat project open free');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Lifecycle | paused |');
+  });
+
   it('renders legacy terminal cleanup without a continuation recommendation', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

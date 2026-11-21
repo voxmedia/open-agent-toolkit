@@ -881,4 +881,62 @@ ${BRIEF_PHASES}`;
       });
     });
   });
+
+  describe('freestyle', () => {
+    const FREESTYLE_STATE = `---
+oat_workflow_mode: freestyle
+oat_project_created: "2026-11-21T00:00:00Z"
+oat_project_state_updated: "2026-11-21T00:00:00Z"
+oat_generated: false
+---
+
+# Project State: demo
+`;
+
+    it('shows the freestyle mode with no lifecycle position and recommends nothing', async () => {
+      const projectPath = await mkdtemp(
+        join(tmpdir(), 'oat-status-freestyle-'),
+      );
+      tempDirs.push(projectPath);
+      await writeFile(join(projectPath, 'state.md'), FREESTYLE_STATE, 'utf8');
+
+      const json = createRealHarness(projectPath);
+      await runCommand(
+        json.command,
+        ['--project-path', projectPath],
+        ['--json'],
+      );
+      expect(json.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        project: {
+          workflowMode: 'freestyle',
+          phase: null,
+          phaseStatus: null,
+          recommendation: { skill: 'none' },
+        },
+      });
+
+      const text = createRealHarness(projectPath);
+      await runCommand(text.command, ['--project-path', projectPath]);
+      const lines = text.capture.info.join('\n');
+      expect(lines).toContain('Mode: freestyle (no lifecycle workflow)');
+      expect(lines).not.toMatch(/^(Phase|Progress|Current task):/m);
+      expect(lines).toContain('Recommendation: none');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('keeps the lifecycle lines for a quick project read through the same path', async () => {
+      const projectPath = await createProject(
+        `---\noat_status: in_progress\n---\n`,
+      );
+
+      const text = createRealHarness(projectPath);
+      await runCommand(text.command, ['--project-path', projectPath]);
+      const lines = text.capture.info.join('\n');
+      expect(lines).toContain('Phase: plan (complete)');
+      expect(lines).toMatch(/^Progress: 0\/0$/m);
+      expect(lines).toContain('Current task: none');
+      expect(lines).not.toContain('Mode:');
+    });
+  });
 });

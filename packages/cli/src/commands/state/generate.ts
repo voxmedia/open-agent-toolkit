@@ -21,6 +21,7 @@ import { ensureDir, fileExists } from '@fs/io';
 import {
   BRIEF_MODES,
   evaluateQuickPlanReadiness,
+  freestyleRecommendation,
   quickPlanNotReadyReason,
   type QuickPlanReadiness,
 } from '@open-agent-toolkit/control-plane';
@@ -453,6 +454,13 @@ function computeNextStep(
     };
   }
 
+  // Freestyle has no lifecycle workflow: like the control-plane router, the
+  // dashboard recommends no skill, before every phase-based route.
+  if (state.workflowMode === 'freestyle') {
+    const { skill, reason } = freestyleRecommendation();
+    return { step: skill, reason };
+  }
+
   // HiLL checkpoint gating. A quick plan phase checks a pending checkpoint at
   // any status before quick plan readiness, as the control-plane router does.
   const quickPlanPhase =
@@ -716,7 +724,11 @@ async function listAvailableProjects(
         const kind =
           (await parseFrontmatterField(stateFile, 'oat_kind')) ||
           'implementation';
-        const line = `- **${dir.name}** - ${phase}`;
+        // A freestyle project has no phase; its mode identifies it instead.
+        const freestyle =
+          (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ===
+          'freestyle';
+        const line = `- **${dir.name}** - ${freestyle ? 'freestyle' : phase}`;
         if (isTerminalCoordinationProject(kind, phase, phaseStatus)) {
           decompositions.push(line);
         } else {
@@ -807,8 +819,12 @@ function buildDashboardMarkdown(
     lines.push('| Field | Value |');
     lines.push('|-------|-------|');
     lines.push(`| Mode | ${state.workflowMode} |`);
-    lines.push(`| Phase | ${state.phase} |`);
-    lines.push(`| Status | ${state.phaseStatus} |`);
+    // Freestyle has no phase, HiLL gate, current task or docs-sync status.
+    const freestyle = state.workflowMode === 'freestyle';
+    if (!freestyle) {
+      lines.push(`| Phase | ${state.phase} |`);
+      lines.push(`| Status | ${state.phaseStatus} |`);
+    }
     if (state.lifecycle !== 'active') {
       lines.push(`| Lifecycle | ${state.lifecycle} |`);
       if (state.pauseTimestamp) {
@@ -818,15 +834,17 @@ function buildDashboardMarkdown(
         lines.push(`| Pause Reason | ${state.pauseReason} |`);
       }
     }
-    lines.push(`| HiLL Gate | ${state.hillStatus} |`);
-    lines.push(`| Current Task | ${state.currentTask} |`);
-    const docsLabel =
-      state.docsUpdated === 'complete'
-        ? '✓ complete'
-        : state.docsUpdated === 'skipped'
-          ? '⊘ skipped'
-          : '⚠ not yet run';
-    lines.push(`| Docs Updated | ${docsLabel} |`);
+    if (!freestyle) {
+      lines.push(`| HiLL Gate | ${state.hillStatus} |`);
+      lines.push(`| Current Task | ${state.currentTask} |`);
+      const docsLabel =
+        state.docsUpdated === 'complete'
+          ? '✓ complete'
+          : state.docsUpdated === 'skipped'
+            ? '⊘ skipped'
+            : '⚠ not yet run';
+      lines.push(`| Docs Updated | ${docsLabel} |`);
+    }
     lines.push('');
     lines.push(`Details: \`${project.path}/state.md\``);
     lines.push('');

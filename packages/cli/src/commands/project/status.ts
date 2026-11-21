@@ -43,12 +43,19 @@ function resolveTargetProjectPath(
 }
 
 function formatProjectStatusLines(project: ProjectState): string[] {
+  // Freestyle has no lifecycle phase, progress or current task to report.
+  const position =
+    project.workflowMode === 'freestyle'
+      ? ['Mode: freestyle (no lifecycle workflow)']
+      : [
+          `Phase: ${project.phase} (${project.phaseStatus})`,
+          `Progress: ${project.progress.completed}/${project.progress.total}`,
+          `Current task: ${project.progress.currentTaskId ?? 'none'}`,
+        ];
   return [
     `Project: ${project.name}`,
     `Path: ${project.path}`,
-    `Phase: ${project.phase} (${project.phaseStatus})`,
-    `Progress: ${project.progress.completed}/${project.progress.total}`,
-    `Current task: ${project.progress.currentTaskId ?? 'none'}`,
+    ...position,
     ...project.blockers.map((blocker) =>
       typeof blocker === 'string'
         ? `Blocker: ${blocker}`

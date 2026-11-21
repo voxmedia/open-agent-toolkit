@@ -162,13 +162,21 @@ const FREESTYLE_RECOMMENDATION: SkillRecommendation = {
     'Freestyle project: no lifecycle workflow, so OAT recommends no skill; the project decides its own next step',
 };
 
+/**
+ * The recommendation for every freestyle project. The CLI dashboard reports
+ * the same value, so the router and the dashboard cannot disagree.
+ */
+export function freestyleRecommendation(): SkillRecommendation {
+  return { ...FREESTYLE_RECOMMENDATION };
+}
+
 export function recommendSkill(
   input: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
   // Freestyle is recognized before every lifecycle branch, including the
   // decomposition, HiLL and goal routes.
   if (input.workflowMode === 'freestyle') {
-    return { ...FREESTYLE_RECOMMENDATION };
+    return freestyleRecommendation();
   }
   // Lifecycle modes read the same defaults the project readers apply.
   const state: LifecycleProjectState = {
