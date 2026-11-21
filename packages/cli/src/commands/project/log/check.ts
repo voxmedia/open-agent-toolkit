@@ -24,6 +24,7 @@ import {
   isProjectLogSealEntry,
   JUDGMENT_HEADING_RE,
   parseProjectLogBodyHead,
+  parseProjectLogStructuralHead,
   PROJECT_LOG_TYPES,
   STRUCTURAL_HEADING_RE,
   type ProjectLogCategory,
@@ -121,6 +122,15 @@ export type ParsedProjectLogEntry =
       producer: string;
       ref: string;
       body: string;
+      /**
+       * Event-head fields, present only when the entry's body opens with them
+       * (`append --time/--subject/--source-project`). Absent rather than null
+       * so a log written before the head existed parses to exactly the same
+       * entries.
+       */
+      time?: string;
+      subject?: string;
+      sourceProject?: string;
     };
 
 export interface ParsedProjectLog {
@@ -275,6 +285,7 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
 
     const structural = STRUCTURAL_HEADING_RE.exec(heading);
     if (structural) {
+      const { head } = parseProjectLogStructuralHead(body);
       entries.push({
         class: 'structural',
         heading,
@@ -282,6 +293,11 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
         producer: structural[2]!.trim(),
         ref: structural[3]!.trim(),
         body,
+        ...(head.time !== undefined ? { time: head.time } : {}),
+        ...(head.subject !== undefined ? { subject: head.subject } : {}),
+        ...(head.sourceProject !== undefined
+          ? { sourceProject: head.sourceProject }
+          : {}),
       });
       continue;
     }

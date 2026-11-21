@@ -54,6 +54,7 @@ import {
 import {
   composeJudgmentBodyHead,
   composeJudgmentHeading,
+  composeStructuralBodyHead,
   composeStructuralHeading,
   containsAmbiguousProjectLogMarker,
   isProjectLogCategory,
@@ -69,8 +70,10 @@ import {
   PROJECT_LOG_SCOPES,
   PROJECT_LOG_TYPES,
   normalizeProjectLogLineEndings,
+  projectLogTimeOfDay,
   splitProjectLogLines,
   type ProjectLogBodyHead,
+  type ProjectLogStructuralHead,
   type ProjectLogScope,
   type ProjectLogType,
 } from './grammar';
@@ -1095,6 +1098,12 @@ export interface AppendProjectLogInput {
   source?: string;
   /** The producer that recorded the learning. */
   origin?: string;
+  /** Structural only: record the UTC time of day of the append. */
+  time?: boolean;
+  /** Structural only: the lane, phase or other id the event is about. */
+  subject?: string;
+  /** Structural only: the project the event came from. */
+  sourceProject?: string;
 }
 
 /**
@@ -1204,6 +1213,9 @@ interface AppendCommandOptions {
   category?: string;
   source?: string;
   origin?: string;
+  time?: boolean;
+  subject?: string;
+  sourceProject?: string;
 }
 
 export interface ProjectLogAppendCommandDependencies extends AppendProjectLogDependencies {
@@ -1335,6 +1347,52 @@ function validateBodyHead(
 }
 
 /**
+ * Validates one event-head word (`--subject`, `--source-project`): a single
+ * whitespace-free word, so a lane, phase or project id reads back exactly.
+ */
+function validateEventWord(value: string, option: string): string {
+  const word = validateSingleLine(value, option);
+  if (/\s/.test(word)) {
+    throw new Error(`${option} must be one word without whitespace.`);
+  }
+  return word;
+}
+
+/**
+ * The structural event head requested by `--time`, `--subject` and
+ * `--source-project`, or undefined when none was passed. `--time` takes the
+ * append's own clock reading, the same one the heading date comes from, so the
+ * heading date and the time of day always name one UTC instant; an event's own
+ * time on another system (a forge merge time, say) belongs in the body.
+ */
+function validateStructuralHead(
+  input: AppendProjectLogInput,
+  now: Date,
+): ProjectLogStructuralHead | undefined {
+  if (
+    input.time !== true &&
+    input.subject === undefined &&
+    input.sourceProject === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    ...(input.time === true ? { time: projectLogTimeOfDay(now) } : {}),
+    ...(input.subject !== undefined
+      ? { subject: validateEventWord(input.subject, '--subject') }
+      : {}),
+    ...(input.sourceProject !== undefined
+      ? {
+          sourceProject: validateEventWord(
+            input.sourceProject,
+            '--source-project',
+          ),
+        }
+      : {}),
+  };
+}
+
+/**
  * The body a judgment entry is stored with: the head lines, a blank line, then
  * the caller's body. Without a head the body is returned unchanged, so an entry
  * written without the new flags keeps exactly the bytes it always had.
@@ -1430,9 +1488,13 @@ function validateEntry(
     }
     const producer = validateHeadingField(input.producer, '--producer');
     const ref = validateHeadingField(input.ref, '--ref');
+    const head = validateStructuralHead(input, now);
     return {
       heading: composeStructuralHeading({ date, producer, ref }),
-      body,
+      body:
+        head === undefined
+          ? body
+          : `${composeStructuralBodyHead(head).join('\n')}\n\n${body}`,
       versionNote,
       normalized,
     };
@@ -1441,6 +1503,15 @@ function validateEntry(
   if (input.producer !== undefined || input.ref !== undefined) {
     throw new Error(
       'Judgment entries cannot use structural flags --producer or --ref; add --structural or remove those flags.',
+    );
+  }
+  if (
+    input.time !== undefined ||
+    input.subject !== undefined ||
+    input.sourceProject !== undefined
+  ) {
+    throw new Error(
+      'Judgment entries cannot use structural event flags --time, --subject, or --source-project; add --structural or remove those flags.',
     );
   }
   if (!input.type) {
@@ -2271,6 +2342,18 @@ export function createProjectLogAppendCommand(
       'Producer that recorded a judgment entry, for example oat-project-autonomous',
     )
     .option(
+      '--time',
+      'Structural only: record the UTC time of day of the append (**Time:** HH:MM:SSZ)',
+    )
+    .option(
+      '--subject <id>',
+      'Structural only: the lane, phase or other id the event is about (one word)',
+    )
+    .option(
+      '--source-project <name>',
+      'Structural only: the project the event came from (one word)',
+    )
+    .option(
       '--commit',
       'Stage and commit the project log after appending, retrying across a transient index lock',
     )
@@ -2282,6 +2365,7 @@ Entry contract:
   worked-well entries are do-not-regress evidence. Judgment bodies should use 1–3 sentences.
   High-value judgments may use Observation:, Impact:, and Recommendation: fields.
   Structural bodies are one line and reference artifacts by path instead of inlining them.
+  Events ("merged", a dispatch, a review verdict) are structural entries: --time, --subject, and --source-project write an optional head (**Time:**, **Subject:**, **Source project:**) above the one-line body; the time is the UTC time of day of the heading's date.
   Add --version-note for tool-related observations.
   Learnings: --category, --source, and --origin write a body head (**Category:**, **Source:**, **Origin:**, **Recorded:**) above a judgment body; --category requires --source, and the category must be one of the six.
   Pass --idempotency-key so a replay reports already-appended instead of duplicating the entry; the key must appear in --body as its own word. Adding --commit also finalizes a gate partial-finalization receipt.

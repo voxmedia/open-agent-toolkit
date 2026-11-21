@@ -99,6 +99,85 @@ export function parseProjectLogBodyHead(body: string): {
   return { head, rest: lines.slice(index).join('\n').trim() };
 }
 
+/**
+ * The optional event head a structural body may open with, in the order the
+ * command writes it: the UTC time of day of the append, the subject the event
+ * is about (a lane or phase id) and the project it came from.
+ *
+ * The time of day is `HH:MM:SSZ`, taken from the same clock reading as the
+ * heading's UTC date, so the two together name one ISO 8601 instant and never
+ * disagree. Every field is optional; a structural entry written without
+ * `--time`, `--subject` or `--source-project` has no head and its bytes are
+ * unchanged, and the heading grammar is the same either way, so every existing
+ * reader keeps parsing every existing and every new log.
+ */
+export interface ProjectLogStructuralHead {
+  time?: string;
+  subject?: string;
+  sourceProject?: string;
+}
+
+export const PROJECT_LOG_TIME_OF_DAY_RE = /^\d{2}:\d{2}:\d{2}Z$/;
+
+const STRUCTURAL_HEAD_LINE_RE =
+  /^\*\*(Time|Subject|Source project):\*\* (\S.*)$/;
+
+/** The UTC time of day `append --time` records for `now`. */
+export function projectLogTimeOfDay(now: Date): string {
+  return `${now.toISOString().slice(11, 19)}Z`;
+}
+
+/** Renders the head lines `append` writes above a structural body. */
+export function composeStructuralBodyHead(
+  head: ProjectLogStructuralHead,
+): string[] {
+  const lines: string[] = [];
+  if (head.time !== undefined) lines.push(`**Time:** ${head.time}`);
+  if (head.subject !== undefined) lines.push(`**Subject:** ${head.subject}`);
+  if (head.sourceProject !== undefined) {
+    lines.push(`**Source project:** ${head.sourceProject}`);
+  }
+  return lines;
+}
+
+/**
+ * Reads the event head off the top of a structural body.
+ *
+ * It is a separate reader from `parseProjectLogBodyHead` on purpose: the
+ * judgment head's line set is unchanged, so a judgment body that happens to
+ * open with `**Subject:**` keeps exactly the reading it had. Only the leading
+ * run of head lines counts, the first occurrence of a field wins, and a time
+ * that is not `HH:MM:SSZ` is not reported as a time.
+ */
+export function parseProjectLogStructuralHead(body: string): {
+  head: ProjectLogStructuralHead;
+  rest: string;
+} {
+  const lines = body.split(/\r?\n/);
+  const head: ProjectLogStructuralHead = {};
+  let index = 0;
+  for (; index < lines.length; index += 1) {
+    const match = STRUCTURAL_HEAD_LINE_RE.exec(lines[index] ?? '');
+    if (!match) break;
+    const value = match[2]!.trim();
+    switch (match[1]) {
+      case 'Time':
+        if (head.time === undefined && PROJECT_LOG_TIME_OF_DAY_RE.test(value)) {
+          head.time = value;
+        }
+        break;
+      case 'Subject':
+        head.subject ??= value;
+        break;
+      case 'Source project':
+        head.sourceProject ??= value;
+        break;
+    }
+  }
+  if (index === 0) return { head, rest: body };
+  return { head, rest: lines.slice(index).join('\n').trim() };
+}
+
 export const PROJECT_LOG_AREA_MAX_LENGTH = 120;
 export const PROJECT_LOG_HEADING_DELIMITER = '·';
 
