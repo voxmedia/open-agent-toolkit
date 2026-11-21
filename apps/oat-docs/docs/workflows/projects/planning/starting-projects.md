@@ -425,6 +425,47 @@ the re-alignment questions, and declaring the goal met.
 activated. Between milestones, `oat-project-goal` re-aligns and activates the
 next milestone once the previous delivery reaches its agreed endpoint.
 
+## oat-project-freestyle
+
+Use freestyle when you want OAT's project structure and records without a
+lifecycle workflow: no gates, checkpoints, required reviews, or automatic
+commits after creation. How the project runs is agreed with you in a shaping
+conversation and written into the project's `shape.md`.
+
+**Invocation:** Provide the slug, an optional description, and optionally a
+scope.
+
+```text
+/oat-project-freestyle layout-spike "Try three layouts for the CLI reference pages." --scope local
+```
+
+**Prerequisites:** You need an OAT-initialized repository and an `oat` CLI whose
+`oat project new --help` lists `freestyle` as a mode. If the active project is a
+freestyle project, the skill resumes it. With a project of another mode active
+and no new project named, it stops: there is no promotion to or from freestyle.
+
+**Example scenario:** You want to try page layouts without a plan or review
+gates. Freestyle creates the project, asks for the goal and its size first, then
+walks the remaining topics in order (brainstorm or discovery, documents,
+execution, reviews, commits and merges, your involvement, reshape checkpoints),
+writing each answer into `shape.md` as you give it. Any topic can be deferred to
+a named moment, such as "before the first PR".
+
+**Expected output:** A project folder with `state.md`, an OAT-owned `AGENTS.md`
+that tells agents to read `shape.md` first, and a `shape.md` in which every
+topic holds an answer or a deferral. `oat project status` names both files.
+
+**What it does without asking:** It creates the project through
+`oat project new --mode freestyle`. In shared scope that commits the three
+scaffolded files, in synced scope it publishes them to the project ref, and in
+local scope nothing is committed. After creation it commits and pushes nothing
+unless the commits topic in `shape.md` says so. It asks you to choose the scope,
+recommending the repository default, and each shaping decision.
+
+**Next step:** No lifecycle skill follows: agents work the project as `shape.md`
+says. To change how the project runs, run `oat-project-freestyle` again; it
+edits only the affected topics and records the change.
+
 ## oat-project-import-plan
 
 Use import when the plan already exists, including one produced in a provider's
