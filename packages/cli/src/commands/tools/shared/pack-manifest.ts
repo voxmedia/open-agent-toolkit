@@ -240,6 +240,7 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
       ].map((name) => agent(name)),
       ...[
         'state.md',
+        'state-freestyle.md',
         'discovery.md',
         'spec.md',
         'design.md',

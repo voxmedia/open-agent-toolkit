@@ -149,6 +149,9 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     { source: 'plan-brief.md', target: 'plan.md' },
     { source: 'implementation-brief.md', target: 'implementation.md' },
   ],
+  // Freestyle scaffolds only its minimal, lifecycle-free state: documents are
+  // chosen while the project is shaped, never scaffolded.
+  freestyle: [{ source: 'state-freestyle.md', target: 'state.md' }],
 };
 
 function normalizeTemplateEntry(entry: TemplateEntry): {
@@ -170,7 +173,15 @@ interface StateTemplateContent {
   nextMilestone: string;
 }
 
-const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
+/**
+ * Lifecycle placeholder values for each mode's `state.md`. Freestyle is `null`:
+ * its state template carries no lifecycle placeholders, so rendering the
+ * lifecycle template for it fails on the unresolved placeholders.
+ */
+const STATE_TEMPLATE_BY_MODE: Record<
+  WorkflowMode,
+  StateTemplateContent | null
+> = {
   'spec-driven': {
     hillCheckpoints: "['discovery', 'design']",
     phase: 'discovery',
@@ -284,6 +295,7 @@ const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
     nextMilestone:
       'Run `oat-project-goal` to author the brief and its milestones and approve the first milestone',
   },
+  freestyle: null,
 };
 
 function replaceOatPlaceholders(
@@ -341,16 +353,19 @@ export function applyTemplateReplacements(
   mode: WorkflowMode,
 ): string {
   const stateContent = STATE_TEMPLATE_BY_MODE[mode];
-  const oatReplacements = {
-    OAT_HILL_CHECKPOINTS: stateContent.hillCheckpoints,
-    OAT_WORKFLOW_MODE: mode,
-    OAT_PHASE: stateContent.phase,
-    OAT_STATUS: stateContent.status,
-    OAT_CURRENT_PHASE: stateContent.currentPhase,
-    OAT_ARTIFACTS: stateContent.artifacts.join('\n'),
-    OAT_PROGRESS: stateContent.progress.join('\n'),
-    OAT_NEXT_MILESTONE: stateContent.nextMilestone,
-  };
+  const oatReplacements: Record<string, string> =
+    stateContent === null
+      ? { OAT_WORKFLOW_MODE: mode }
+      : {
+          OAT_HILL_CHECKPOINTS: stateContent.hillCheckpoints,
+          OAT_WORKFLOW_MODE: mode,
+          OAT_PHASE: stateContent.phase,
+          OAT_STATUS: stateContent.status,
+          OAT_CURRENT_PHASE: stateContent.currentPhase,
+          OAT_ARTIFACTS: stateContent.artifacts.join('\n'),
+          OAT_PROGRESS: stateContent.progress.join('\n'),
+          OAT_NEXT_MILESTONE: stateContent.nextMilestone,
+        };
   const rendered = replaceOatPlaceholders(template, oatReplacements)
     .replaceAll('{Project Name}', projectName)
     .replaceAll('YYYY-MM-DD', today)

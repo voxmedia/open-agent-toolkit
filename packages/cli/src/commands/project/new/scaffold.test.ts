@@ -45,6 +45,7 @@ import {
 const REPO_ROOT = join(process.cwd(), '..', '..');
 const PROJECT_TEMPLATE_NAMES = [
   'state.md',
+  'state-freestyle.md',
   'discovery.md',
   'spec.md',
   'design.md',
@@ -1389,6 +1390,34 @@ describe('scaffoldProject', () => {
     expect(implementation).toContain('<!-- orchestration-runs-start -->');
   });
 
+  it('uses the bundled freestyle state template when neither installed tier exists', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await rm(join(repoRoot, '.oat', 'templates'), {
+      recursive: true,
+      force: true,
+    });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'bundled-freestyle-floor',
+      mode: 'freestyle',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+    });
+
+    expect(result.createdFiles).toEqual(['state.md']);
+    const state = await readFile(
+      join(repoRoot, result.projectPath, 'state.md'),
+      'utf8',
+    );
+    expect(parseFrontmatter(state).oat_workflow_mode).toBe('freestyle');
+    expect(state).toContain('# Project State: bundled-freestyle-floor');
+  });
+
   it('resolves partial template tiers independently for every file', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
@@ -2299,6 +2328,77 @@ describe('scaffoldProject', () => {
     expect(implementation).toContain('# Implementation: brief-mode');
     expect(implementation).toMatch(
       /^## Phase p01: .+\n\n\*\*Status:\*\* pending$/m,
+    );
+  });
+
+  it('creates a bare freestyle scaffold: a minimal state.md with no lifecycle fields and no documents', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'freestyle-mode',
+      mode: 'freestyle',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+      nowUtc: '2026-11-21T12:00:00.000Z',
+    });
+
+    expect(result.mode).toBe('freestyle');
+    expect(result.createdFiles).toEqual(['state.md']);
+    const projectRoot = join(repoRoot, result.projectPath);
+    for (const file of [
+      'discovery.md',
+      'spec.md',
+      'design.md',
+      'plan.md',
+      'implementation.md',
+    ]) {
+      await expect(readFile(join(projectRoot, file), 'utf8')).rejects.toThrow();
+    }
+    await expect(stat(join(projectRoot, 'references'))).rejects.toThrow();
+
+    const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    expect(parseFrontmatter(state)).toEqual({
+      oat_workflow_mode: 'freestyle',
+      oat_project_created: '2026-11-21T12:00:00.000Z',
+      oat_project_state_updated: '2026-11-21T12:00:00.000Z',
+      oat_generated: false,
+    });
+    expect(state).toContain('# Project State: freestyle-mode');
+    expect(state).toContain('**Started:** 2026-11-21');
+    expect(state).not.toMatch(/\{\s*OAT_[A-Z0-9_]+\s*\}/);
+
+    const projectState = await getProjectState(projectRoot);
+    expect(projectState).toMatchObject({
+      workflowMode: 'freestyle',
+      phase: null,
+      phaseStatus: null,
+      recommendation: { skill: 'none' },
+    });
+  });
+
+  it('refuses to render the lifecycle state template for freestyle', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+    // A repository override that is the lifecycle state template, not a
+    // freestyle one, leaves lifecycle placeholders unresolved.
+    await copyFile(
+      join(repoRoot, '.oat', 'templates', 'state.md'),
+      join(repoRoot, '.oat', 'templates', 'state-freestyle.md'),
+    );
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: 'freestyle-lifecycle-template',
+        mode: 'freestyle',
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(
+      /unresolved OAT placeholder\(s\): \{ OAT_HILL_CHECKPOINTS \}/,
     );
   });
 

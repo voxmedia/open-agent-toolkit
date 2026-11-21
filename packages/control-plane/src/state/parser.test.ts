@@ -238,7 +238,23 @@ oat_workflow_mode: bogus
       'lite',
       'brief',
       'goal',
+      'freestyle',
     ]);
+  });
+
+  it('parses freestyle workflow mode from a minimal state with no lifecycle fields', () => {
+    expect(
+      parseStateFrontmatter(`---
+oat_workflow_mode: freestyle
+oat_project_created: '2026-11-21T00:00:00.000Z'
+---
+`),
+    ).toMatchObject({
+      workflowMode: 'freestyle',
+      phase: null,
+      phaseStatus: null,
+      hillCheckpoints: [],
+    });
   });
 
   it('exports the phase-unit parser surface from the package barrel', () => {

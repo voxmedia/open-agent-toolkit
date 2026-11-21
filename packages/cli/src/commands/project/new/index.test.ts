@@ -171,6 +171,19 @@ describe('createProjectNewCommand', () => {
     ).toContain('goal');
   });
 
+  it('forwards freestyle mode to scaffold core', async () => {
+    const { command, scaffoldProject } = createHarness();
+
+    await runCommand(command, ['demo', '--mode', 'freestyle']);
+
+    expect(scaffoldProject).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'freestyle' }),
+    );
+    expect(
+      command.options.find((option) => option.long === '--mode')?.argChoices,
+    ).toContain('freestyle');
+  });
+
   it('forwards an omitted scope as undefined for scaffold defaulting', async () => {
     const { command, scaffoldProject } = createHarness();
 
