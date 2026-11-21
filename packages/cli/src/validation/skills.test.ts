@@ -3309,7 +3309,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.42');
+    expect(readDeclaredVersion(shared)).toBe('1.2.43');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -3354,7 +3354,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.42');
+    expect(readDeclaredVersion(shared)).toBe('1.2.43');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -3498,7 +3498,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(readDeclaredVersion(shared)).toBe('1.2.42');
+    expect(readDeclaredVersion(shared)).toBe('1.2.43');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -5192,7 +5192,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.42'],
+      ['oat-project-plan-writing', '1.2.43'],
       ['oat-project-review-provide', '1.5.20'],
       ['oat-project-review-receive', '1.6.18'],
       ['oat-project-review-receive-remote', '1.5.6'],
@@ -6543,10 +6543,10 @@ describe('validateOatSkills', () => {
     expect(scope).not.toMatch(/user-scope role generation remains.*deferred/i);
 
     expect(providers).toMatch(
-      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}GPT-6\.1 Sol and GPT-6 Luna, Sol, and Astra[\s\S]{0,350}66 pinned variants/i,
+      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}94 pinned variants[\s\S]{0,180}GPT-6\.1 Terra/i,
     );
     expect(providers).toMatch(
-      /Codex `max`[\s\S]{0,120}GPT-6\.1 Sol, GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
+      /Codex `max`[\s\S]{0,120}GPT-6\.2 Sol and Astra, GPT-6\.1 Sol, GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
     );
     expect(providers).not.toMatch(
       /26 pinned variants|max.*only for the Sol family/i,
@@ -6605,7 +6605,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.42'],
+      ['oat-project-plan-writing', '1.2.43'],
       ['oat-project-plan', '1.4.23'],
       ['oat-project-quick-start', '2.3.27'],
       ['oat-project-import-plan', '1.4.25'],

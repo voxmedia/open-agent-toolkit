@@ -178,19 +178,16 @@ Run the same command without `--dry-run` to replace bundled cells. Use
 `--shared` or `--local` instead when that scope owns the ladder. Add
 `--keep-existing` to fill only missing cells and preserve existing choices.
 
-Version `2026-10-31.1` is the current bundled recommendation. It prefers
-GPT-6.1 Terra low in Codex Economy and Terra medium in Codex Balanced, then
-GPT-6 Luna and GPT-6.1 Sol, and Sol 6.1 xhigh, Astra high, and Astra xhigh in
-Codex Frontier. Cursor stays on GPT-5.6 selectors; that runtime does not list
-GPT-6 or GPT-6.1. OAT's maintainers added the Astra entries as a preference:
-public benchmarks show task-dependent gains for Astra over GPT-6 Sol, but OAT
-has not tested Astra on its own workloads, and the maintainers' separate
-model-selection review has not yet confirmed the choice. Sonnet 5.5 medium replaces Sonnet 5 medium
+Version `2026-11-21.1` is the current bundled recommendation. Codex Economy and
+Balanced include GPT-6.1 Terra and GPT-6 Luna. High uses GPT-6.2 Sol, and
+Frontier orders Sol 6.2 xhigh, Astra 6.2 high, and Astra 6.2 xhigh. The
+maintainers carried forward the prior Sol and Astra placements at the same
+effort levels. Cursor uses separately verified GPT-5.6 selectors. Sonnet 5.5 medium replaces Sonnet 5 medium
 in Claude Economy; the older generation stays supported for explicit cells.
 Opus 5.5 low/medium/high remains in Claude High.
 The Claude low option suits bounded intelligent recon in Balanced or High;
-medium remains the implementation starting point under High. GPT-6 Sol and GPT-5.6 targets remain
-supported for explicit Codex and Cursor configurations. Cursor's preferred
+medium remains the implementation starting point under High. The older Codex
+models remain available for explicit configuration. Cursor's preferred
 ladder interleaves verified GPT-5.6 and Opus 5.5 mappings: Balanced adds
 Opus 5.5 low above Terra high, High orders Sol medium, Opus low, Sol high,
 Opus medium, then Opus high, and Frontier places Opus high and xhigh between
@@ -346,11 +343,12 @@ oat_dispatch_policy:
 
 The bundled ladder is a curated subset of the supported targets:
 
-- **Codex:** GPT-6 Luna at `low` through `max` across Economy and Balanced;
-  GPT-6.1 Sol at `low` through `high` in High and `xhigh` in Frontier; then
-  GPT-6 Astra at `high` and `xhigh` in Frontier. Astra and Sol remain supported
-  at `low`, `medium`, `high`, `xhigh`, and `max`, while GPT-6 Sol and GPT-5.6 variants remain
-  available outside this preferred ladder.
+- **Codex:** Economy and Balanced start with GPT-6.1 Terra at `low` and
+  `medium`, respectively, followed by GPT-6 Luna at `low` through `max`
+  across those tiers. High uses GPT-6.2 Sol at `low`, `medium`, and `high`.
+  Frontier orders GPT-6.2 Sol at `xhigh`, then GPT-6.2 Astra at `high` and
+  `xhigh`. Explicit configurations support both GPT-6.2 models at `low`
+  through `max`.
 - **Claude:** `haiku` and Sonnet 5.5 medium at Economy; Opus 5.5 low at
   Balanced, low/medium/high at High, and xhigh/max at Frontier; Fable 5.1
   high ends Frontier. Sonnet 5 remains supported for explicit configurations.
