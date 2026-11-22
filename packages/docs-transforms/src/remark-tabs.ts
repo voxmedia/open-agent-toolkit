@@ -3,6 +3,9 @@ import type { Plugin } from 'unified';
 
 import { reparseMarkdown } from './reparse.js';
 
+/** Columns an indented code block strips from each line of tab content. */
+const INDENTED_CODE_WIDTH = 4;
+
 const TAB_MARKER_RE = /^===\s+"(.+)"$/;
 
 interface TabEntry {
@@ -85,12 +88,20 @@ function transformChildren(
         )
       ) {
         const codeBlock = tree.children[i] as Code;
+        const blockStart = codeBlock.position?.start;
         // Re-parse the code block value as markdown to restore original
-        // structure; reparsed tab content still reports authored locations.
+        // structure. The value is deindented by the indented-code width, so
+        // its first column sits four columns in from the block's start;
+        // reparsed tab content then reports authored lines and columns.
         content.push(
           ...reparseMarkdown(
             codeBlock.value,
-            codeBlock.position?.start,
+            blockStart
+              ? {
+                  line: blockStart.line,
+                  column: blockStart.column + INDENTED_CODE_WIDTH,
+                }
+              : undefined,
             transformChildren,
           ),
         );

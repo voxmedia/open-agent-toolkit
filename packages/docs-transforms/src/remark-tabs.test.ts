@@ -2,6 +2,7 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 
+import { remarkDocsFences } from './remark-docs-fences.js';
 import { remarkTabs } from './remark-tabs.js';
 
 interface MdxJsxAttribute {
@@ -245,13 +246,12 @@ describe('remarkTabs', () => {
         }
       ).position.start;
 
-    // Lines are authored lines under both one and two tab levels. Columns
-    // are relative to the deindented tab body: an indented code block's
-    // position starts at column 1, so the tab origin adds no column offset.
-    // This pins the behaviour from before the reparse extraction.
+    // Lines and columns are the authored ones under both one and two tab
+    // levels: each tab body starts four columns in from its code block, and
+    // nested tabs compose because the inner block is relocated first.
     // Two levels of tab indentation: authored at line 7, column 9.
-    expect(position('listItem')).toEqual({ line: 7, column: 1 });
-    expect(position('strong')).toEqual({ line: 7, column: 8 });
+    expect(position('listItem')).toEqual({ line: 7, column: 9 });
+    expect(position('strong')).toEqual({ line: 7, column: 16 });
     // One level: authored at line 9, column 5.
     expect(
       findNodes(tree, 'paragraph')
@@ -260,6 +260,29 @@ describe('remarkTabs', () => {
             (n as unknown as { position: { start: unknown } }).position.start,
         )
         .at(-1),
-    ).toEqual({ line: 9, column: 1 });
+    ).toEqual({ line: 9, column: 5 });
+  });
+
+  it('reports the authored column for an unknown docs fence inside a tab', async () => {
+    const md = [
+      '=== "Outer"',
+      '',
+      '    === "Inner"',
+      '',
+      '        ```docs-nope',
+      '        - x',
+      '        ```',
+    ].join('\n');
+    const processor = unified()
+      .use(remarkParse)
+      .use(remarkTabs)
+      .use(remarkDocsFences);
+    const error = await processor.run(processor.parse(md)).then(
+      () => undefined,
+      (reason: unknown) => reason as { line?: number; column?: number },
+    );
+
+    // The fence is authored at line 5, column 9, two tab levels deep.
+    expect(error).toMatchObject({ line: 5, column: 9 });
   });
 });
