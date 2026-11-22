@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-21
+oat_last_updated: 2026-11-22
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -863,7 +863,52 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Final Summary (for PR/docs)
 
-Filled at completion.
+**What shipped:**
+
+- **`docs-*` figure fences:** eight fenced code block languages render as static, server-rendered figure components on Fumadocs docs apps. They are `docs-steps`, `docs-tree`, `docs-timeline`, `docs-terminal`, `docs-decision`, `docs-check`, `docs-compare` and `docs-annotate`, adapted from mdxcn under MIT.
+  - The `remarkDocsFences` transform (docs-transforms) turns a fence into a component. Fence meta becomes props, the body is reparsed as Markdown (raw for terminal), and authored line positions are kept.
+  - An unknown or nested `docs-*` fence fails the build.
+  - The shared docs-config chain runs `remarkTabs → remarkDocsFences → remarkLinks → remarkMermaid`.
+- **docs-theme:** the eight components, `withDocsFigures(components)` and a `./figures.css` export with scoped `--graph-*` tokens. There is no motion, no React context, and no content hidden in the server HTML. Every vendored module carries the mdxcn MIT notice.
+- **`oat docs check`:** a new `docs-fences` error rule reports unknown fence names on Fumadocs apps, everywhere except inside a figure body (the build catches those).
+- **Scaffold:** new Fumadocs apps are wired for figures with no manual steps. The contributing page documents every fence with Syntax/Rendered examples, grammar, and the agent-readability, plain-text and no-nesting rules. MkDocs apps get a one-line note that the fences render as plain code.
+- **Skills:**
+  - `oat-docs-bootstrap` (1.4.6) covers figures.
+  - `oat-docs-analyze` (1.9.2) repairs legacy scaffolds that miss the wrapper, the `figures.css` import or the docs-theme `@source`.
+- **OAT docs:** the lifecycle page and `tool-packs.md` use figures. Markdown Features, `documentation.md`, `check.md`, `file-locations.md`, `cli-reference.md` and `workflows.md` are updated.
+- **Release:** `NOTICES.md` has the mdxcn entry, the release contract pins `figures.css` and the notice, and the five public packages moved to 0.3.54 in lockstep.
+
+**Key files/modules:**
+
+- `packages/docs-transforms/src/{remark-docs-fences.ts,reparse.ts}`
+- `packages/docs-config/src/source-config.ts`
+- `packages/docs-theme/src/figures/`
+- `packages/docs-theme/figures.css`
+- `packages/cli/src/commands/docs/check/docs-fences.ts`
+- `.oat/templates/docs-app-fuma/`
+- `.agents/skills/oat-docs-{bootstrap,analyze}/`
+- `apps/oat-docs/`
+- `NOTICES.md`
+
+**Verification:**
+
+- Per-phase suites with RED-first tests and recorded can-fail controls.
+- A replay of a real captured Fumadocs compile, with its provenance header.
+- A fresh-scaffold build from packed tarballs.
+- Root visual checks in light and dark mode at 1440px and 390px.
+- The nine Definition of Done gates pass at `d4fe17878`, and the fix-round gates pass at `b1e2ea5c7`.
+- The forced `test:evidence` hit load-induced timeouts in untouched suites; root reruns passed (p04-t04).
+- Final verification is recorded under Reviews and Gates.
+
+**Design deltas:** see Deviations from Plan / Design. The main ones:
+
+- The upstream-faithful figure grammar (p02-t05).
+- Nested `docs-*` fences fail the build (p01-t04).
+- The checker scope excludes figure bodies (p03-t05).
+- Legacy scaffolds may lack the docs-theme `@source` (p04-t05).
+- The replay test lives at `src/compiled-fixtures.test.ts`.
+
+**Open:** the p01-t05 tab-column concern is awaiting the operator (see Deferred Findings).
 
 ## References
 

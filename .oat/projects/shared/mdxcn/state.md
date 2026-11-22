@@ -114,7 +114,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-21T23:27:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T01:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation tasks complete. All four phases are complete; the final review at the p04 HiLL checkpoint is next.
+Implementation - Tasks complete; awaiting final review.
 
 ## Artifacts
 
@@ -134,7 +134,7 @@ Implementation tasks complete. All four phases are complete; the final review at
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete, lightweight)
 - **Plan:** `plan.md` (complete; plan gate passed on attempt 2)
-- **Implementation:** `implementation.md` (initialized at p01-t01)
+- **Implementation:** `implementation.md` (all 23 tasks complete; final summary written)
 
 ## Progress
 
@@ -142,7 +142,9 @@ Implementation tasks complete. All four phases are complete; the final review at
 - ✓ Lightweight design complete
 - ✓ Plan complete, with 3 structured review rounds and the configured plan gate passed
 - ✓ p01 and p02 complete (parallel group, merged)
-- ⧗ p03 next
+- ✓ p03 and p04 complete
+- ✓ Implementation tasks complete
+- ⧗ Awaiting final review
 
 ## Blockers
 
@@ -150,4 +152,4 @@ None
 
 ## Next Milestone
 
-Complete p03 (integration)
+Final review, implementation exit gate and the p04 HiLL approval
