@@ -402,7 +402,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** in_progress
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
-**Head:** 2d50c28883abdf20b10afc9885823a9fdb05af2e
+**Head:** 7d919db66cddcb4c56eb9d5cbf7e78d0b0f74bb9
 
 Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
 
@@ -426,6 +426,14 @@ Phase verification at `2d50c2888` on a clean tree (only the untracked `reference
 p04 changes no file those suites exercise; its only `packages/cli/src` edits are validation tests. I judged the failures to be host-load timeouts, not defects, made no edit and opened no recovery. A forced evidence run on an idle host is still owed.
 
 Inventory: rows 28 to 32 and 34 are handled (p04-t01 to p04-t04). The post-merge re-check is p04-t05: it found 16 files with no freestyle mention. 14 are p04-t01 opt-outs, one more is opted out (`contributing/skills.md`), and one was fixed (`workflows/projects/index.md`). All four deferred items are closed (p04-t01 and p04-t02). Recovery: 1/10 used (`freestyle-projects-p04-recovery-1`, recovered). Its committed `completed` marker stays in `state.md` for root.
+
+Late fix p04-t06 (review round 1: M1 to M3, L1 to L5) at `c20ef22d5`, recorded at `7d919db66`. The checks:
+
+- Before the commit, each exit 0: the isolated skill-contract, validation, help-snapshot and log suites (42 files, 1689 passed), `oat:validate-skills`, `lint`, `format`, `check` and `type-check`.
+- Forced `build` and forced docs build (0 cached each), `docs:validate`, docs-index freshness and `test:skills` (754 passed), each exit 0.
+- After the commit, each exit 0: `check:skill-bumps` (25 checks), `release:check-versions` and `release:validate`.
+
+The only CLI source change is the `--subject` help text, so `test:evidence` was not rerun, per root. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
