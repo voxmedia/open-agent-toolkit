@@ -545,7 +545,7 @@ describe('oat-brainstorm freestyle route', () => {
     );
   });
 
-  it('publishes a synced reference only when the agreement publishes now (m01 I-1)', () => {
+  it('publishes a synced reference only when the agreement publishes now (m01 I-1, R7-1)', () => {
     // Run the published 9j persistence block, with the receipt parser the
     // skill defines, against a real synced project and a scratch origin.
     const persistence = /```bash\n([\s\S]*?)```/.exec(
@@ -597,15 +597,25 @@ describe('oat-brainstorm freestyle route', () => {
       sh(
         'oat --json project new demo --mode freestyle --scope synced --no-dashboard >/dev/null',
       );
+      sh(
+        'oat --json project new quickie --mode quick --scope synced --no-dashboard >/dev/null',
+      );
       const project = '.oat/projects/synced/demo';
-      const remoteRef = () =>
-        sh('git ls-remote origin refs/oat/projects/demo').split(/\s/)[0];
+      const quickProject = '.oat/projects/synced/quickie';
+      const remoteRef = (slug = 'demo') =>
+        sh(`git ls-remote origin refs/oat/projects/${slug}`).split(/\s/)[0];
       const parentHead = sh('git rev-parse HEAD');
 
-      const persist = (file: string, publish?: string) => {
-        mkdirSync(join(repo, project, 'brainstorming'), { recursive: true });
+      const persist = (
+        file: string,
+        publish?: string,
+        target = { path: project, mode: 'freestyle' },
+      ) => {
+        mkdirSync(join(repo, target.path, 'brainstorming'), {
+          recursive: true,
+        });
         writeFileSync(
-          join(repo, project, 'brainstorming', file),
+          join(repo, target.path, 'brainstorming', file),
           `# ${file}\n`,
         );
         const result = spawnSync('/bin/bash', ['-c', script], {
@@ -613,8 +623,9 @@ describe('oat-brainstorm freestyle route', () => {
           encoding: 'utf8',
           env: {
             ...env,
-            ACTIVE_PROJECT: project,
-            REFERENCE_PATH: `${project}/brainstorming/${file}`,
+            ACTIVE_PROJECT: target.path,
+            ACTIVE_PROJECT_MODE: target.mode,
+            REFERENCE_PATH: `${target.path}/brainstorming/${file}`,
             COMMIT_IDENTITY: `test-${file}`,
             ...(publish === undefined ? {} : { REFERENCE_PUBLISH: publish }),
           },
@@ -635,6 +646,18 @@ describe('oat-brainstorm freestyle route', () => {
       const pushed = persist('2026-11-22-pushed.md');
       expect(pushed).not.toBe(commitOnly);
       expect(remoteRef(), 'push agreement: origin ref advanced').toBe(pushed);
+      // A REFERENCE_PUBLISH=no left in the shell by a freestyle run never
+      // stops another mode's push (m01 R7-1).
+      const quickBefore = remoteRef('quickie');
+      const quickPushed = persist('2026-11-22-quick.md', 'no', {
+        path: quickProject,
+        mode: 'quick',
+      });
+      expect(quickPushed).not.toBe(quickBefore);
+      expect(
+        remoteRef('quickie'),
+        'synced quick with a stale REFERENCE_PUBLISH=no: origin ref advanced',
+      ).toBe(quickPushed);
       expect(sh('git rev-parse HEAD'), 'no parent branch commit').toBe(
         parentHead,
       );

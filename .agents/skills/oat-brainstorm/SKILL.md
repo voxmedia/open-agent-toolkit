@@ -847,7 +847,9 @@ branch. Read its `## Commits, PRs and merges` section:
   checkout through `oat internal commit-paths --cwd`, and its
   `refs/oat/projects/<slug>` stays unchanged until a later `oat project push`.
   Tell the user the commit is not yet published. Leave `REFERENCE_PUBLISH`
-  unset only when the agreement also publishes now.
+  unset only when the agreement also publishes now. Only a freestyle project
+  (`ACTIVE_PROJECT_MODE == "freestyle"`) reads it: every other synced project
+  publishes through `oat project push` whatever `REFERENCE_PUBLISH` holds.
 
 Otherwise (every other mode, or a freestyle agreement that commits now), after
 writing, persist the file with the same fail-closed scope guard:
@@ -855,9 +857,10 @@ writing, persist the file with the same fail-closed scope guard:
 ```bash
 PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
-# Every run except a freestyle commit-only agreement publishes: REFERENCE_PUBLISH defaults to yes.
+# Every run except a freestyle commit-only agreement publishes: REFERENCE_PUBLISH defaults to yes,
+# and only a freestyle project reads it, so a value left in the shell never stops another mode's push.
 REFERENCE_PUBLISH="${REFERENCE_PUBLISH:-yes}"
-if [ "$PROJECT_SCOPE" = "synced" ] && [ "$REFERENCE_PUBLISH" = "yes" ]; then
+if [ "$PROJECT_SCOPE" = "synced" ] && { [ "$ACTIVE_PROJECT_MODE" != "freestyle" ] || [ "$REFERENCE_PUBLISH" != "no" ]; }; then
   REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   REFERENCE_COMMIT_SHA=$(parse_synced_push_receipt "$REFERENCE_PUSH") || { printf '%s\n' "$REFERENCE_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
 elif [ "$PROJECT_SCOPE" = "synced" ]; then
@@ -877,7 +880,7 @@ For shared/local scope, commit only the exact produced path through `oat interna
 For synced projects, the preceding short-hash sentence is superseded by the
 full `REFERENCE_COMMIT_SHA` returned from `oat project push --json`; no parent
 branch artifact commit occurs.
-With `REFERENCE_PUBLISH=no`, a synced project reports the full
+With `REFERENCE_PUBLISH=no`, a synced freestyle project reports the full
 `REFERENCE_COMMIT_SHA` of its own checkout instead, says it is not yet
 published, and still makes no parent branch artifact commit.
 
