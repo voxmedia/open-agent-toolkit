@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: null
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 6     | 6/6       |
-| Phase 4 | complete | 9     | 9/9       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 6     | 6/6       |
+| Phase 4 | in_progress | 10    | 9/10      |
 
-**Total:** 26/26 tasks completed
+**Total:** 26/27 tasks completed
 
 ---
 
@@ -584,7 +584,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-11-22
 
 ### Phase Summary
@@ -926,6 +926,27 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 **Outcome:** fix completed in `b668002c2`. A third final review follows.
 
+### Task p04-t10: (final review r3) Measure tab-content indentation from the code block start
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: final (round 3)
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T023657Z.md` (local only), reviewed head `b0bd1399db4613654f2d9e19556f1994f77e7e9f`, invocation `auto`, request `mdxcn-final-review-r3-20261122`
+**Findings:** 0 critical, 0 high, 0 medium, 1 low
+**Finding classes:**
+
+- L1: regression (p04-t09 broke blockquoted tab columns, which were correct at `967e15728`).
+- L1 note (split tabs across container prefixes): new-hardening (no contract source names container columns; it predates p04-t08). Routed to the operator.
+
+- **Round 2:** the finding was confirmed resolved outside blockquotes.
+- **L1 (Low):** `lineColumnsOf` measures the prefix from the source line start, so blockquoted tab content reports columns 4 too small. Converted to p04-t10.
+- **L1 note:** a tab character split across a list or blockquote prefix gives a wrong column, both before and after the fix. Deferred by the operator (see Deferred Findings).
+- **Review cap:** the final review reached its three-cycle cap. A complexity review ran (`reviews/archived/complexity-final-2026-11-22T024150Z.md`, local only). Its verdict was deletion-rule compliant, provisional, with a recommended corrective revision. The operator chose that revision on 2026-11-22: fix the regression, defer the split-tab case, then one review narrowed to the delta.
+
+**Outcome:** fixes pending. One narrowed final review follows p04-t10.
+
 ---
 
 ## Orchestration Runs
@@ -959,26 +980,29 @@ The implementer handles continued through the same handle for the p02 recovery a
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
 - Plan quick-start gate: attempt 1 was blocked with 1 High and 1 Medium, which were resolved in artifacts (`08d0588d8`). Attempt 2 passed with 0 findings at `08d0588d8`. The phase review gate is disabled (operator choice).
+- Final review cap (2026-11-22): three final rounds (4L, 1L, 1L). Complexity review `reviews/archived/complexity-final-2026-11-22T024150Z.md` (local only): deletion-rule compliant, provisional. Operator choice: corrective revision (p04-t10), defer the split-tab container case, then one review narrowed to the delta.
 
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
 - **p01-t05 concern (Low):** resolved by operator decision at the final review (2026-11-22): fix now, converted to p04-t08. It is no longer deferred.
+- **Final review round 3, L1 note (Low, new-hardening):** a tab character split across a list-item or blockquote prefix gives tab content the wrong column; lines are correct. It predates p04-t08, no tracked page uses it, and only the `file.fail` place reads it. Deferred by the operator at the final-review cap (2026-11-22). **Trigger:** a page with tabs inside a blockquote or list item that uses tab-character indentation; an author report of a misleading fence-error column; or a consumer that starts reading tab-content columns.
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review                    | Source Artifact                      | Planned / Documented                                                                                           | Actual / Accepted                                                                                                                                                                                                                                                                                                             | Reason                                                                                                                                           | Source of Truth | Follow-up                                                                                    |
-| -------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------- |
-| p02-t02, p02-t03 / p02 review M1 | design.md grammar table              | Steps "bold title", decision without an open state, compare option columns, and no annotate/terminal fallbacks | Upstream-faithful grammar: bold is the current step and italic the next; plain options are open; the first column of compare holds row labels; annotate titles fall back to `code`; a `✓` terminal line is a pass                                                                                                             | Matches upstream mdxcn and fixes the compare column shift                                                                                        | Implementation  | design.md aligned in p02-t05 (`8c3eeecdd`); p04-t01 takes its grammar from the aligned table |
-| p02-t03                          | plan p02-t01 patch list              | Patches listed in the plan                                                                                     | Further patches: steps reads its state from the title only, and every body block is kept; check finds a checkbox inside a loose item; compare keeps a bold or `Total` last row; dimming uses the `opacity-40` class; `a` is added as a host tag; JSX item forms and the `palette`, `corner` and `className` props are dropped | Static server rendering and Markdown-only authoring                                                                                              | Implementation  | Recorded in each vendored file header                                                        |
-| p01-t02                          | plan p01-t02 exports                 | `remarkDocsFences`, `DOCS_FENCES`                                                                              | Also exports the `DocsFenceBody` type                                                                                                                                                                                                                                                                                         | Additive type for consumers                                                                                                                      | Implementation  | p04-t03 README export list                                                                   |
-| p03-t01                          | plan p03-t01 files                   | `compiled-fixtures.test.ts` under `src/figures/`; the CLI public-package contract test was not listed          | The replay test is at `packages/docs-theme/src/compiled-fixtures.test.ts`; `public-package-contract.test.ts` was updated for p02's `figures.css` export                                                                                                                                                                       | Avoids parent-relative imports (docs-theme has no aliases); the contract test was already failing after p02-t01 and the task requires it to pass | Implementation  | None                                                                                         |
-| p01-t04 / p01 review M1          | design Error Handling                | Unknown fence fails                                                                                            | A nested `docs-*` fence also fails (`nested-docs-fence`)                                                                                                                                                                                                                                                                      | Unknown nested fences passed silently; failing keeps frames from nesting                                                                         | Implementation  | p04 guidance states that fences cannot nest                                                  |
-| p03-t05 / p03 review L1          | design Checker rule / Error Handling | Unknown fences fail both the build and `docs check`                                                            | The checker covers every fence except those inside a figure body; only the build catches a nested one                                                                                                                                                                                                                         | The checker's parse treats figure bodies as literal code; the build already fails loudly, and discovery defers grammar checking                  | Implementation  | design.md aligned in `4612758bd`; the guidance states the scope                              |
-| p04-t05 / p04 review M1          | design Data Flow / upgrade path      | Apps already `@source` the docs-theme `dist`                                                                   | Scaffolds before 0.3.15 (#350) lack the line; the analyze legacy repair adds it                                                                                                                                                                                                                                               | Older apps would otherwise build with unstyled figures                                                                                           | Implementation  | design.md and `legacy-scaffold-checks.md` aligned in `d2b88a404`                             |
+| Task / Review                                                      | Source Artifact                      | Planned / Documented                                                                                           | Actual / Accepted                                                                                                                                                                                                                                                                                                             | Reason                                                                                                                                           | Source of Truth | Follow-up                                                                                    |
+| ------------------------------------------------------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------- |
+| p02-t02, p02-t03 / p02 review M1                                   | design.md grammar table              | Steps "bold title", decision without an open state, compare option columns, and no annotate/terminal fallbacks | Upstream-faithful grammar: bold is the current step and italic the next; plain options are open; the first column of compare holds row labels; annotate titles fall back to `code`; a `✓` terminal line is a pass                                                                                                             | Matches upstream mdxcn and fixes the compare column shift                                                                                        | Implementation  | design.md aligned in p02-t05 (`8c3eeecdd`); p04-t01 takes its grammar from the aligned table |
+| p02-t03                                                            | plan p02-t01 patch list              | Patches listed in the plan                                                                                     | Further patches: steps reads its state from the title only, and every body block is kept; check finds a checkbox inside a loose item; compare keeps a bold or `Total` last row; dimming uses the `opacity-40` class; `a` is added as a host tag; JSX item forms and the `palette`, `corner` and `className` props are dropped | Static server rendering and Markdown-only authoring                                                                                              | Implementation  | Recorded in each vendored file header                                                        |
+| p01-t02                                                            | plan p01-t02 exports                 | `remarkDocsFences`, `DOCS_FENCES`                                                                              | Also exports the `DocsFenceBody` type                                                                                                                                                                                                                                                                                         | Additive type for consumers                                                                                                                      | Implementation  | p04-t03 README export list                                                                   |
+| p03-t01                                                            | plan p03-t01 files                   | `compiled-fixtures.test.ts` under `src/figures/`; the CLI public-package contract test was not listed          | The replay test is at `packages/docs-theme/src/compiled-fixtures.test.ts`; `public-package-contract.test.ts` was updated for p02's `figures.css` export                                                                                                                                                                       | Avoids parent-relative imports (docs-theme has no aliases); the contract test was already failing after p02-t01 and the task requires it to pass | Implementation  | None                                                                                         |
+| p01-t04 / p01 review M1                                            | design Error Handling                | Unknown fence fails                                                                                            | A nested `docs-*` fence also fails (`nested-docs-fence`)                                                                                                                                                                                                                                                                      | Unknown nested fences passed silently; failing keeps frames from nesting                                                                         | Implementation  | p04 guidance states that fences cannot nest                                                  |
+| p03-t05 / p03 review L1                                            | design Checker rule / Error Handling | Unknown fences fail both the build and `docs check`                                                            | The checker covers every fence except those inside a figure body; only the build catches a nested one                                                                                                                                                                                                                         | The checker's parse treats figure bodies as literal code; the build already fails loudly, and discovery defers grammar checking                  | Implementation  | design.md aligned in `4612758bd`; the guidance states the scope                              |
+| p04-t05 / p04 review M1                                            | design Data Flow / upgrade path      | Apps already `@source` the docs-theme `dist`                                                                   | Scaffolds before 0.3.15 (#350) lack the line; the analyze legacy repair adds it                                                                                                                                                                                                                                               | Older apps would otherwise build with unstyled figures                                                                                           | Implementation  | design.md and `legacy-scaffold-checks.md` aligned in `d2b88a404`                             |
+| p04-t08, p04-t09, p04-t10 / operator decisions at the final review | design.md positions (authored lines) | Reparsed content reports authored lines                                                                        | Tab content also reports authored columns, computed per line from the indented-code prefix measured from the block start; a tab split across a container prefix is a deferred limitation                                                                                                                                      | Operator chose to fix the p01-t05 concern and then to compute from source                                                                        | Implementation  | Recorded here and in Deferred Findings; design.md keeps the lines-only requirement           |
 
 ## Final Summary (for PR/docs)
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t10
 oat_last_commit: b668002c2
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -114,7 +114,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T02:33:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T03:47:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; final-review fixes done; awaiting final review round 3.
+Implementation - Final review at its cap; the operator chose a corrective revision (p04-t10), then one narrowed review.
 
 ## Artifacts
 
@@ -148,7 +148,8 @@ Implementation - Tasks complete; final-review fixes done; awaiting final review 
 - ✓ Final-review fixes p04-t07 and p04-t08 complete
 - ✓ Final review round 2 received (0C/0H/0M/1L)
 - ✓ Fix p04-t09 complete
-- ⧗ Awaiting final review round 3
+- ✓ Final review round 3 received (0C/0H/0M/1L); cap reached, complexity review run
+- ⧗ Fix p04-t10, then one narrowed final review
 
 ## Blockers
 
