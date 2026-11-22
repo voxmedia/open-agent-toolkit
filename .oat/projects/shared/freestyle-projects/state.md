@@ -95,7 +95,7 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
         base: '78b88baba57847a417cbba1f8294e82ffa3d34c6'
         reviewed_head: '32919c56a87403c526f8d7251b791d8210f192c7'
-        observed_head: ffaefa31b64842dfe7604f439bae1fe461ca99fa
+        observed_head: aeaa9b46977d8003cfe5fb05f70a2e05bcb12be2
         observed_base: 78b88baba57847a417cbba1f8294e82ffa3d34c6
         status: open
     integrated_review:
@@ -109,7 +109,7 @@ oat_deliveries:
             head: '32919c56a87403c526f8d7251b791d8210f192c7',
           },
         ]
-      disposition: stale
+      disposition: passed
     exit_gate:
       status: allowed
       disposition: project_disabled
@@ -121,6 +121,13 @@ oat_deliveries:
       freshness_reason: null
       decided_at: '2026-11-22T16:02:01Z'
     endpoint_attainment: null
+    freshness_waivers:
+      - waived_by: Thomas Stang
+        reason: 'Operator (2026-11-22): fine waiving another review for straightforward fixes. Head moved by test-only PR #429 self-review fixes (ffaefa31b: T-1..T-4) plus OAT bookkeeping; no product code changed.'
+        waived_at: 2026-11-22T18:07:56.650Z
+        members:
+          - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
+            waived_head: aeaa9b46977d8003cfe5fb05f70a2e05bcb12be2
 oat_dispatch_policy:
   mode: managed
   policy: high
