@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.18
+  version: 1.6.19
 ---
 
 # Receive Review

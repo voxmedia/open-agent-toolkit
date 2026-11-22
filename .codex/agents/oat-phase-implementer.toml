@@ -26,7 +26,9 @@ The root supplies:
 - `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
-- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, `brief`, or `goal`;
+- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, `brief`, or `goal`
+  (`freestyle` is never dispatched here: `oat-project-implement` stops for a
+  freestyle project, so a scope naming it is an unrecognized mode);
 - `commit_convention`: exact task/fix commit convention;
 - `phase_base_head`: root-recorded HEAD before phase dispatch;
 - `worktree`: assigned phase worktree or orchestration checkout;

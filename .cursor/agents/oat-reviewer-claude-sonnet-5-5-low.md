@@ -54,7 +54,7 @@ You will be given a "Review Scope" block including:
 - **commits/range**: Git commits or SHA range for changed files. For code review, this is the authoritative review surface.
 - **files_changed**: Optional orientation hint listing files believed to be modified in scope. If this disagrees with the commit range, trust the commit range.
 - **analysis_artifact**: For `type: analysis`, path to the severity-rated analysis artifact to fact-check.
-- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` | `brief` | `goal` (default to `spec-driven` if absent)
+- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` | `brief` | `goal` | `freestyle` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope). In `brief` mode these are the execution-record IDs under the phases in scope; they label commits and never narrow the range.
 - **Brief anchor record**: For `brief` code reviews, the caller supplies `oat_review_requested_scope`, `oat_review_phase_ids` (ordered), `oat_review_base_sha`, `oat_review_scope_source` (`anchors` | `merge-base-range` | `explicit` | `merge-base` | `narrowed`), and, when they apply, `oat_review_fallback_reason`, `oat_review_integration_commits`, and `oat_review_narrowed_from`. Copy them verbatim into artifact frontmatter (Step 8). In `goal` mode the same record applies; for an integrated milestone or delivery review `oat_review_requested_scope` is the milestone or delivery ID (`mNN` or `mNN/dNN`) and `oat_review_phase_ids` is the explicit ordered phase set.
@@ -136,6 +136,7 @@ Use workflow mode to determine required evidence:
 - **lite**: `plan.md` and `implementation.md` are expected; discovery, spec, and design are absent by design.
 - **brief**: `plan.md` (a Project Brief) and `implementation.md` (the per-phase journal) are expected; discovery, spec, and design are absent by design. `oat-project-brief/references/brief-contract.md` defines the brief sections, phase grammar, journal markers, and anchor rules, and the caller supplies it with the Review Scope.
 - **goal**: as **brief**, plus the canonical `## Milestones` table in `plan.md` and the goal state in `state.md`; section 12 of the brief contract defines milestones, explicit review scopes, the delivery registry, and the terminal audit.
+- **freestyle**: no lifecycle artifact is expected. `oat-project-review-provide` stops for a freestyle project, so a freestyle Review Scope comes from the project's orchestrator: review against the documents it supplies (`shape.md` lists the project's documents), and never report a missing lifecycle artifact, phase, gate, or review row as a finding.
 
 Do not mark missing optional artifacts as findings.
 If required artifacts for the mode are unexpectedly missing, record a workflow contract gap.

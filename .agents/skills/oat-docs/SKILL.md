@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.7
+  version: 1.0.8
 ---
 
 # OAT Docs

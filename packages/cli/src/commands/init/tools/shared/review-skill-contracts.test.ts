@@ -358,7 +358,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.15');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -1498,7 +1498,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.7.20');
+    expect(readDeclaredVersion(content)).toBe('1.7.21');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );

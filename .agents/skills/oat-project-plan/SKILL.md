@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.23
+  version: 1.4.24
 ---
 
 # Planning Phase
