@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p04-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | in_progress | 9     | 8/9       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | complete | 9     | 9/9       |
 
-**Total:** 25/26 tasks completed
+**Total:** 26/26 tasks completed
 
 ---
 
@@ -584,7 +584,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-22
 
 ### Phase Summary
@@ -880,8 +880,37 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ### Task p04-t09: (final review r2) Compute tab-content columns from the authored indentation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b668002c2dbfb01b68c19cc2e4a26bf0953ede9d
+
+**Outcome:**
+
+- `reparseMarkdown`'s origin gains an optional per-line `lineColumns`. `remark-tabs` computes each content line's authored column from the characters its indented-code prefix consumed, with a tab advancing to the next stop.
+- Space, tab, mixed and nested-tab indentation all report authored columns.
+- `INDENTED_CODE_WIDTH` is now the tab-stop width and the fallback when there is no source text. The `remark-docs-fences` caller is unchanged.
+
+**Files changed:**
+
+- `packages/docs-transforms/src/remark-tabs.ts`
+- `packages/docs-transforms/src/remark-tabs.test.ts`
+- `packages/docs-transforms/src/reparse.ts`
+- `packages/docs-transforms/src/reparse.test.ts`
+
+**Verification:**
+
+- The tests failed first (RED): the tab case got 5 instead of 2, with the line correct. Then the suites passed: docs-transforms 71, docs-config 24, docs-theme 153 (no recapture needed) and CLI `src/commands/docs` 460.
+- Gates at `b668002c2`, all exit 0:
+  - `pnpm check` (fresh)
+  - `pnpm type-check`
+  - `pnpm build`
+  - both release gates
+  - `build:docs`
+  - gate 9
+  - `test:smoke` (165)
+
+**Notes / Decisions:**
+
+- **Can-fail control:** dropping `lineColumns` (the fixed `+4` path) failed both new tests (got 5, expected 2). Built-output probes match the authored columns: tab 3:2, mixed 3:4, nested 5:3, and a per-line block 3:5 / 5:2.
 
 ### Review Received: final (round 2)
 
@@ -895,7 +924,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - **L1 (Low):** tab-character indentation inside tab content still reports too large a column, because p04-t08 adds a fixed 4. It is not a regression (it previously reported column 1), and lines are correct.
 - **Operator decision (2026-11-22):** compute the column from the source. Converted to p04-t09.
 
-**Outcome:** fixes pending. The final review re-runs after p04-t09.
+**Outcome:** fix completed in `b668002c2`. A third final review follows.
 
 ---
 
@@ -966,7 +995,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
   - `oat-docs-bootstrap` (1.4.6) covers figures.
   - `oat-docs-analyze` (1.9.2) repairs legacy scaffolds that miss the wrapper, the `figures.css` import or the docs-theme `@source`.
 - **OAT docs:** the lifecycle page and `tool-packs.md` use figures. Markdown Features, `documentation.md`, `check.md`, `file-locations.md`, `cli-reference.md` and `workflows.md` are updated.
-- **Tab positions:** content inside tabs now reports authored columns as well as lines (an operator decision at the final review, p04-t08).
+- **Tab positions:** content inside tabs now reports authored columns as well as lines, computed from each line's actual indentation, including tab characters. These were operator decisions at the final review (p04-t08, p04-t09).
 - **Release:** `NOTICES.md` has the mdxcn entry, the release contract pins `figures.css` and the notice, and the five public packages moved to 0.3.54 in lockstep.
 
 **Key files/modules:**
