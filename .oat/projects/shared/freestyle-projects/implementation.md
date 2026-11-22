@@ -852,12 +852,29 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ### Task p04-t15: (review) Keep synced brainstorm publication behind an explicit push agreement
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** e6c5b19ff31477de4ffb0e4e33a038957da580e2
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-1)
 
 Intent: `.agents/skills/oat-brainstorm/SKILL.md:841-853` enters the persistence block when the agreement allows a commit or a push, and the synced branch always runs `oat project push`, so a commit-only agreement publishes `refs/oat/projects/<slug>`. Distinguish permission to commit from permission to publish; with publication deferred, commit locally in the nested worktree and leave the remote ref unchanged. Class: accepted-requirement (plan.md Outcome 6, p02 Intent, Constraint: `shape.md` controls commits and pushes after creation).
 Files: `.agents/skills/oat-brainstorm/SKILL.md`, its contract test.
 Proof: a published-block test against a scratch origin where a commit-only agreement leaves the remote ref unchanged and a push agreement advances it; can-fail per clause.
+
+- **I-1:** in 9j, committing and publishing are now separate permissions.
+  - The block defaults `REFERENCE_PUBLISH` to `yes`, so every other mode and a freestyle agreement that publishes now still run `oat project push` unchanged.
+  - A freestyle agreement that commits but does not publish now sets `REFERENCE_PUBLISH=no`. A synced project then commits only the reference file in its own checkout through the existing `oat --cwd "$ACTIVE_PROJECT" internal commit-paths`, takes `REFERENCE_COMMIT_SHA` from that checkout, and says the commit is not yet published.
+  - `refs/oat/projects/<slug>` stays unchanged. A scratch check confirmed that a later `oat project pull` reports `up-to-date` and keeps the local commit, and that `oat project push` publishes it.
+  - Shared and local scope keep their branch commit path; a local project still never commits. The inventory anchor for the push line is unchanged.
+- **Test:** in `freestyle-contracts.test.ts`, the published 9j block runs verbatim, with the skill's own `parse_synced_push_receipt`, against a real synced freestyle project scaffolded by the built CLI and a bare scratch origin.
+  - Commit-only: the commit lands in the project checkout, the tree is clean and the origin ref is unchanged.
+  - Push agreement, `REFERENCE_PUBLISH` unset: the origin ref advances to the new commit.
+  - Neither case makes a parent branch commit.
+- **Can-fail**, each neutralized, failing on its own assertion, then restored and byte-compared:
+  - Ignoring `REFERENCE_PUBLISH` in the synced branch fails `commit-only agreement: origin ref unchanged`.
+  - Defaulting it to `no` fails `push agreement: origin ref advanced`.
+- **Version:** no new bump; oat-brainstorm is already bumped in this PR.
+- Proof before the commit, each exit 0: the skill-prose vitest over `src/commands/init/tools/shared src/validation` (33 files, 1315 passed), `oat:validate-skills`, and `oxfmt --check` and `oxlint` on the changed files.
 
 ### Task p04-t16: (review) Resolve the repository root in the freestyle Create and Resume blocks
 
