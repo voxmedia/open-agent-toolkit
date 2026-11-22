@@ -1195,7 +1195,7 @@ gates.
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p01-review-2026-11-21T231056Z.md      | 1dfaecafbb523e1a41e0623659cfeaa3fa9b9b88 | auto       | -                 |
 | p02   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p02-review-2026-11-21T231835Z.md      | 228d3e3ddff659c1b93795b1505ba83121df163f | auto       | -                 |
-| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p03-review-2026-11-22T000358Z.md      | 2c8d3b84bc075c96a4731fd0bd4fedd27990fb5f | auto       | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |

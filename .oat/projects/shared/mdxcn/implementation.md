@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 6     | 4/6       |
-| Phase 4 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | pending  | 4     | 0/4       |
 
-**Total:** 15/21 tasks completed
+**Total:** 17/21 tasks completed
 
 ---
 
@@ -357,8 +357,35 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 3: Integration (contract, checker, scaffold, OAT docs app)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-21
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- A contract test pins the fence names to the docs-theme components. A replay of a real, captured Fumadocs compile checks every figure's parsed state and that server HTML hides nothing.
+- `oat docs check` reports unknown top-level and tab-nested `docs-*` fences for Fumadocs apps.
+- The Fumadocs scaffold wires `withDocsFigures` and `figures.css`; a fresh app built from packed tarballs works with no manual steps.
+- The OAT docs app uses the packaged figures on the ideas lifecycle page and `tool-packs.md`. The spike is gone.
+
+**Key files touched:**
+
+- `packages/docs-theme/src/compiled-fixtures.test.ts`, `src/figures/fence-contract.test.ts` and `src/figures/__fixtures__/`: the contract test and the replay.
+- `packages/cli/src/commands/docs/check/docs-fences.ts`: the checker rule.
+- `.oat/templates/docs-app-fuma/app/`: the scaffold wiring.
+- `apps/oat-docs/`: adoption.
+
+**Verification:**
+
+- At `740ef27c0`: `pnpm check`, `pnpm type-check`, forced `pnpm test:evidence`, `pnpm build:docs`, the index freshness check and `docs:check` passed.
+- The visual check passed in light and dark mode at 1440px and 390px.
+- The review fixes were verified per task.
+
+**Notes / Decisions:**
+
+- Sequential phase in the root checkout. The implementer stopped at the IMPLEMENT-20 visual-proof boundary, and the root ran the visual check.
+- The root review passed with 0 Critical, 0 High and 3 Low findings. Two Lows became p03-t05 and p03-t06, now done, and L3 was fixed in bookkeeping.
 
 ### Task p03-t01: Add the fence/component contract test and captured compile fixtures
 
@@ -448,6 +475,25 @@ This journal resumes interrupted implementation sessions. Every plan task has on
   - `pnpm build` exited 0.
   - The exported HTML shows the figure with no `opacity:0`, and the emitted CSS contains the `graph-*` tokens and utilities.
 
+**Fresh-scaffold commands** (added for p03 review L3): these are as the implementer ran them. `$REPO` is the worktree root; `$T` is `mktemp -d /tmp/p03-scaffold.XXXXXX`, which was removed afterwards.
+
+````bash
+pnpm build
+for p in cli control-plane docs-config docs-theme docs-transforms; do (cd packages/$p && pnpm pack --pack-destination $T/tarballs); done
+cd $T/repo && git init -q . && node $REPO/packages/cli/dist/index.js docs init --framework fumadocs --yes --target-dir site --app-name fresh-docs --site-name "Fresh Docs" --description "A fresh scaffold that exercises docs figure fences." --cwd $T/repo
+# in $T/repo/site: package.json dependencies @open-agent-toolkit/docs-{config,theme,transforms} and devDependency @open-agent-toolkit/cli
+# set to file:$T/tarballs/open-agent-toolkit-<name>-0.3.50.tgz; the same five file: specifiers appended
+# (cli, control-plane, docs-config, docs-theme, docs-transforms) under the scaffold's pnpm-workspace.yaml overrides block
+# add docs/project-layout.md with a docs-tree fence and list it in docs/index.md Contents
+pnpm install --no-frozen-lockfile
+pnpm exec oat docs nav sync --target-dir .
+sed -i '' 's/```docs-tree title/```docs-nope title/' docs/project-layout.md && pnpm docs:check   # exit 1, reports [docs-fences]
+# restore the page, then: pnpm docs:check   # exit 0
+pnpm build   # exit 0
+H=out/project-layout/index.html; grep -o '\[ PROJECT LEVEL \]' $H; grep -o 'data-frame="box"' $H; grep -c 'opacity:0' $H   # last is 0
+cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph-accent' -e '--graph-accent:'
+````
+
 ### Task p03-t04: Replace the spike in the OAT docs app with the packaged capability
 
 **Status:** completed
@@ -485,13 +531,38 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p03-t05: (review) State the checker's fence-name scope in design.md
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4612758bde8de9995220411c9597edd7fb5ad9e0
+
+**Outcome:**
+
+- design.md's Checker rule and Error Handling now say the checker validates top-level and tab-nested fence names. A `docs-*` fence nested in a figure body fails the build only.
+
+**Files changed:**
+
+- `.oat/projects/shared/mdxcn/design.md`
+
+**Verification:** `oxfmt` and `--check` passed. The wording matches `docs-fences.ts`, `markdown.ts:91` and the rule IDs in `remark-docs-fences.ts`.
 
 ### Task p03-t06: (review) Catch class-based hiding in the no-hidden-content replay assertion
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1023c377591578268c3949d0961f33eede64661c
+
+**Outcome:**
+
+- A new replay assertion splits every figure `class` attribute into tokens and rejects `hidden`, `invisible` and `opacity-0`.
+- It also asserts that the legal look-alikes (`overflow-y-hidden`, `aria-hidden="true"`) are present, so the check never passes vacuously.
+
+**Files changed:**
+
+- `packages/docs-theme/src/compiled-fixtures.test.ts`
+
+**Verification:** build passed, the docs-theme suite passed (153) and check passed.
+
+**Notes / Decisions:**
+
+- **Can-fail control:** a leading `hidden` class on the frame root failed only the new test, once per figure. The old attribute test still passed, which was the gap the review reported. The replay passed 12/12 after the file was restored.
 
 ### Review Received: p03
 
@@ -507,7 +578,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - **L2 (Low):** the replay's no-hidden-content assertion misses class-based hiding at the ends of a class list. Converted to p03-t06.
 - **L3 (Low):** the fresh-scaffold record gives outcomes but not the exact commands. Fixed in root bookkeeping from the implementer's verbatim commands; no plan task.
 
-**Outcome:** fixes pending. These are Low findings, so there is no re-review.
+**Outcome:** fixes completed: L1 in `4612758bd`, L2 in `1023c3775`, and L3 in this bookkeeping commit. These were Low findings, so there was no re-review. Phase accepted.
 
 ---
 
@@ -549,6 +620,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=mdxcn-p02-implementation-20261121 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p02-review-r1-20261121 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p03-implementation-20261121 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-p03-review-r1-20261121 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
