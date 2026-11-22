@@ -83,7 +83,7 @@ oat_deliveries:
     scope: [p01, p02, p03, p04]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -95,9 +95,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
         base: '78b88baba57847a417cbba1f8294e82ffa3d34c6'
         reviewed_head: '32919c56a87403c526f8d7251b791d8210f192c7'
-        observed_head: e711fdade8db9045cf486d9f24a48a250e853386
+        observed_head: cbb0dfe4a2bc1eab5a43cf7c1b2ae0f5249e1584
         observed_base: 78b88baba57847a417cbba1f8294e82ffa3d34c6
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/m01-integrated-review-2026-11-22T174038Z.md
       scope: [p01, p02, p03, p04]
@@ -120,7 +120,13 @@ oat_deliveries:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-22T16:02:01Z'
-    endpoint_attainment: null
+    endpoint_attainment:
+      observed_at: 2026-11-22T18:35:20.274Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
+          head: cbb0dfe4a2bc1eab5a43cf7c1b2ae0f5249e1584
+          base: 78b88baba57847a417cbba1f8294e82ffa3d34c6
+          status: merged
     freshness_waivers:
       - waived_by: Thomas Stang
         reason: 'Operator (2026-11-22): fine waiving another review for straightforward fixes. Head moved by test-only PR #429 self-review fixes (ffaefa31b: T-1..T-4) plus OAT bookkeeping; no product code changed.'
