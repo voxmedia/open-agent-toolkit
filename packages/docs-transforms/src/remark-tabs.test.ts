@@ -290,6 +290,20 @@ describe('remarkTabs', () => {
     ).toEqual({ line: 5, column: 3 });
   });
 
+  it('measures tab-content indentation from the code block start in a blockquote', async () => {
+    // `>     alpha`: the blockquote prefix `> ` ends at column 2, the code
+    // block starts at column 3 and its four-space indent puts alpha at 7.
+    const md = ['> === "T"', '>', '>     alpha'].join('\n');
+    const tree = await transformTabs(md);
+    const paragraph = findNodes(tree, 'paragraph').find(
+      (n) =>
+        (n as unknown as { children: { value?: string }[] }).children[0]
+          ?.value === 'alpha',
+    ) as unknown as { position: { start: { line: number; column: number } } };
+
+    expect(paragraph.position.start).toEqual({ line: 3, column: 7 });
+  });
+
   it('relocates each line of one tab body by its own indentation', async () => {
     const tree = await transformTabs(
       ['=== "T"', '', '    alpha', '', '\tbeta'].join('\n'),

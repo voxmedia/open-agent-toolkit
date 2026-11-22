@@ -12,8 +12,9 @@ const INDENTED_CODE_WIDTH = 4;
 
 /**
  * Source characters the indented-code prefix consumed on one line: spaces
- * and tabs up to `INDENTED_CODE_WIDTH` virtual columns. A line that starts
- * at column 1 never splits a tab, because tab stops fall on that width.
+ * and tabs up to `INDENTED_CODE_WIDTH` virtual columns, measured from the
+ * code block's start column. Known limitation: a tab character split across
+ * a container prefix (list item or blockquote) is not modeled.
  */
 function prefixLength(line: string): number {
   let columns = 0;
@@ -45,7 +46,10 @@ function lineColumnsOf(
     .split('\n')
     .map(
       (_, index) =>
-        start.column + prefixLength(lines[start.line - 1 + index] ?? ''),
+        start.column +
+        prefixLength(
+          (lines[start.line - 1 + index] ?? '').slice(start.column - 1),
+        ),
     );
 }
 
