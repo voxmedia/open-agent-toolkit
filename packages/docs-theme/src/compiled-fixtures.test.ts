@@ -68,6 +68,16 @@ function figure(title: string): string {
   return html.slice(start, end + '</figure>'.length);
 }
 
+/** Class tokens that hide content outright: Tailwind `hidden`, `invisible`, `opacity-0`. */
+const HIDING_CLASS_TOKENS = new Set(['hidden', 'invisible', 'opacity-0']);
+
+/** Every whitespace-separated token of every `class` attribute in `source`. */
+function classTokens(source: string): string[] {
+  return [...source.matchAll(/\sclass="([^"]*)"/g)].flatMap((match) =>
+    (match[1] ?? '').split(/\s+/).filter(Boolean),
+  );
+}
+
 function figures(): string[] {
   return html.match(/<figure[\s\S]*?<\/figure>/g) ?? [];
 }
@@ -247,5 +257,17 @@ describe('captured Fumadocs compile output', () => {
       expect(source).not.toMatch(/style="[^"]*(transform|visibility)/);
       expect(source).not.toMatch(/data-motion|whileinview|\sinitial=/i);
     }
+  });
+
+  it('carries no hiding class token anywhere in a figure class list', () => {
+    const tokens = figures().flatMap(classTokens);
+    expect(tokens.filter((token) => HIDING_CLASS_TOKENS.has(token))).toEqual(
+      [],
+    );
+    // The legal look-alikes are really present, so the filter is not passing
+    // on an empty input: `aria-hidden` is an attribute, not a class, and
+    // `overflow-y-hidden` clips a scroll area without hiding its content.
+    expect(tokens).toContain('overflow-y-hidden');
+    expect(figures().join('')).toContain('aria-hidden="true"');
   });
 });
