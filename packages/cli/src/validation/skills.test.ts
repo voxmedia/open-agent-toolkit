@@ -2923,9 +2923,11 @@ describe('validateOatSkills', () => {
     // append points the entry lists for the same reason. Raised again from
     // 251 for the freestyle stop, which must run in Step 0 before the route
     // table loads dispatch preflight (a route that can write `state.md`), so
-    // it cannot live in a reference. The structural assertions below still
-    // enforce that step bodies stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(266);
+    // it cannot live in a reference. Raised again from 266 for the read-only
+    // mode read that lets that stop run before the synced pull, which can
+    // commit. The structural assertions below still enforce that step bodies
+    // stay out of the entry.
+    expect(entry.split('\n').length).toBeLessThanOrEqual(278);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -9501,7 +9503,7 @@ describe('freestyle mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-implement/SKILL.md',
-        /\*\*Freestyle projects\.\*\*[^]*?When `WORKFLOW_MODE` is `freestyle`, stop here and write nothing/,
+        /\*\*Freestyle projects\.\*\*[^]*?`WORKFLOW_MODE` is `freestyle`, stop there and write nothing: no synced pull/,
       ],
       [
         '.agents/skills/oat-project-design/SKILL.md',
@@ -9640,11 +9642,12 @@ describe('freestyle mode skill contracts', () => {
         ],
       ],
       [
-        // Dispatch preflight can write state.md, so the stop sits in Step 0,
-        // before the route table loads its first reference.
+        // Dispatch preflight can write state.md and the synced pull can
+        // commit, so the stop sits in Step 0 before both.
         '.agents/skills/oat-project-implement/SKILL.md',
-        'When `WORKFLOW_MODE` is `freestyle`, stop here and write nothing',
+        '`WORKFLOW_MODE` is `freestyle`, stop there and write nothing',
         [
+          'oat project pull "$PROJECT_PATH"',
           '### Route Loading Contract',
           '| `references/dispatch-and-dry-run.md`',
           '### Execution Order',
@@ -9747,17 +9750,41 @@ describe('freestyle mode skill contracts', () => {
       'quick-start: named-project stop before the scaffold',
     ).toBeLessThan(scaffold);
 
+    // With no active project and no name argument, the name is gathered and
+    // checked before Step 0, whose manifest-only auto-commit can commit.
+    const earlyName = quickStart.indexOf(
+      'Resolve the name first when it is missing.',
+    );
+    const firstCommit = quickStart.indexOf(
+      'oat internal commit-paths --identity',
+    );
+    expect(earlyName, 'quick-start early name resolution').toBeGreaterThan(0);
+    expect(
+      earlyName,
+      'quick-start: name resolved before the first commit-capable step',
+    ).toBeLessThan(firstCommit);
+    expect(earlyName).toBeLessThan(
+      quickStart.indexOf('### Step 0 (Preflight): Inherited Git State'),
+    );
+
     // A project resolved by name in Step 0 is checked before its pointer is
     // written, in each skill whose stop follows that write in the text.
-    for (const path of [
-      '.agents/skills/oat-project-implement/SKILL.md',
-      '.agents/skills/oat-project-design/SKILL.md',
-      '.agents/skills/oat-project-spec/SKILL.md',
-    ]) {
-      const content = await readRepoFile(path);
-      const guard = content.indexOf(
+    for (const [path, guardText] of [
+      [
+        '.agents/skills/oat-project-implement/SKILL.md',
+        'Run the freestyle check above on it first; a freestyle project stops there,',
+      ],
+      [
+        '.agents/skills/oat-project-design/SKILL.md',
         'Run the freestyle check below on it first; a freestyle project stops there,',
-      );
+      ],
+      [
+        '.agents/skills/oat-project-spec/SKILL.md',
+        'Run the freestyle check below on it first; a freestyle project stops there,',
+      ],
+    ] as const) {
+      const content = await readRepoFile(path);
+      const guard = content.indexOf(guardText);
       const write = content.indexOf(
         'oat config set activeProject "$PROJECT_PATH"',
       );
@@ -9766,6 +9793,113 @@ describe('freestyle mode skill contracts', () => {
         write,
       );
     }
+  });
+
+  it('reads the implement mode before the synced pull and pulls only for other modes', async () => {
+    // Runs Step 0's arrival block against stub `oat` and `git`: a freestyle
+    // project, with or without its checkout here, stops before any pull, and
+    // every other mode keeps its arrival pull.
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const step0 = implement.slice(
+      implement.indexOf('### Step 0: Resolve Active Project'),
+      implement.indexOf('### Route Loading Contract'),
+    );
+    const block = /```bash\n([\s\S]*?)```/.exec(step0)?.[1];
+    expect(block, 'Step 0 arrival block').toBeDefined();
+    expect(
+      (block as string).indexOf('if [ "$WORKFLOW_MODE" = "freestyle" ]; then'),
+      'the freestyle check precedes the pull',
+    ).toBeLessThan(
+      (block as string).indexOf('oat project pull "$PROJECT_PATH"'),
+    );
+
+    const run = async (options: {
+      checkout: string | null;
+      refMode: string;
+    }): Promise<{ pulled: boolean; stderr: string }> => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-implement-arrival-'));
+      try {
+        const bin = join(root, 'bin');
+        await mkdir(bin);
+        const projectPath = '.oat/projects/synced/proj';
+        if (options.checkout !== null) {
+          await mkdir(join(root, projectPath), { recursive: true });
+          await writeFile(
+            join(root, projectPath, 'state.md'),
+            `---\noat_workflow_mode: ${options.checkout}\n---\n`,
+          );
+        }
+        await writeFile(
+          join(bin, 'oat'),
+          [
+            '#!/bin/bash',
+            'case "$1 $2" in',
+            `  "config get") echo "${projectPath}" ;;`,
+            '  "project scope") echo synced ;;',
+            '  "project status") sed -n "s/^oat_workflow_mode: //p" "$4/state.md" ;;',
+            '  "project pull") echo pulled > "$PULL_MARK" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        await writeFile(
+          join(bin, 'git'),
+          [
+            '#!/bin/bash',
+            'case "$1" in',
+            '  ls-remote) printf "abc123\\trefs/oat/projects/proj\\n" ;;',
+            '  fetch) exit 0 ;;',
+            '  show) printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        const mark = join(root, 'pulled');
+        let stderr = '';
+        try {
+          const result = await execFileAsync(
+            '/bin/bash',
+            ['-c', block as string],
+            {
+              cwd: root,
+              env: {
+                ...process.env,
+                PATH: `${bin}:${process.env.PATH}`,
+                PULL_MARK: mark,
+                STUB_REF_MODE: options.refMode,
+              },
+            },
+          );
+          stderr = result.stderr;
+        } catch (error) {
+          stderr = String((error as { stderr?: string }).stderr ?? error);
+        }
+        return { pulled: existsSync(mark), stderr };
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    };
+
+    const here = await run({ checkout: 'freestyle', refMode: 'freestyle' });
+    expect(here.pulled, 'freestyle checkout here: no pull').toBe(false);
+    expect(here.stderr).toContain(
+      'is a freestyle project; stopping before arrival',
+    );
+    const absent = await run({ checkout: null, refMode: 'freestyle' });
+    expect(absent.pulled, 'freestyle read from the ref: no pull').toBe(false);
+    expect(absent.stderr).toContain(
+      'is a freestyle project; stopping before arrival',
+    );
+    const quickAbsent = await run({ checkout: null, refMode: 'quick' });
+    expect(quickAbsent.pulled, 'quick, checkout absent: arrival pull').toBe(
+      true,
+    );
+    const quickHere = await run({ checkout: 'quick', refMode: 'quick' });
+    expect(quickHere.pulled, 'quick, checkout here: arrival pull').toBe(true);
   });
 
   it('makes reviewer and implementer contracts name freestyle', async () => {

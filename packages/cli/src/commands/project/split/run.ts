@@ -6,9 +6,9 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { readStateWorkflowMode } from '@commands/project/closeout-check/closeout-invariant';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { pushSynced as defaultPushSynced } from '@commands/project/sync/ref-sync';
+import { isFreestyleState } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   resolveProjectScope,
@@ -226,7 +226,7 @@ async function isFreestyleProject(projectPath: string): Promise<boolean> {
   } catch {
     return false;
   }
-  return readStateWorkflowMode(content) === 'freestyle';
+  return isFreestyleState(content);
 }
 
 async function runFreshSplit(

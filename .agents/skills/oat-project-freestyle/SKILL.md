@@ -150,10 +150,16 @@ SCAFFOLD=$(oat project new "{project-name}" --mode freestyle --scope "{scope}" -
 }
 printf '%s\n' "$SCAFFOLD"
 # Use the path the scaffold reports, never a re-read of the pointer: a pointer
-# that was not repointed still names the previous project.
-PROJECT_PATH=$(printf '%s\n' "$SCAFFOLD" |
-  sed -n 's/.*"projectPath"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
-  head -1)
+# that was not repointed still names the previous project. Decode it as JSON,
+# so any character a path may hold survives.
+PROJECT_PATH=$(printf '%s' "$SCAFFOLD" | node -e '
+let raw = "";
+process.stdin.on("data", (chunk) => (raw += chunk)).on("end", () => {
+  try {
+    const path = JSON.parse(raw).projectPath;
+    if (typeof path === "string") process.stdout.write(path);
+  } catch {}
+});')
 if [ -z "$PROJECT_PATH" ] || [ ! -f "$PROJECT_PATH/state.md" ]; then
   echo "freestyle: the scaffold reported no project path with a state.md; stopping" >&2
   exit 1

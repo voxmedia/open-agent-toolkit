@@ -466,58 +466,90 @@ describe('oat project split run', () => {
     expect(localConfig.activeProject).toBe('.oat/projects/shared/foundation');
   });
 
-  it('refuses to convert an active detected freestyle project and leaves it untouched', async () => {
-    // Converting a freestyle parent would rewrite it as a quick coordination
-    // project and delete its files: a promotion from freestyle.
-    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
-    tempDirs.push(repoRoot);
-    await seedTemplates(repoRoot);
-    const parentRoot = join(repoRoot, '.oat', 'projects', 'shared', 'umbrella');
-    await mkdir(parentRoot, { recursive: true });
-    const freestyleState = [
-      '---',
+  // The mode is read as `oat project status` reads it, so a padded value is
+  // freestyle here too. A CRLF state.md is refused one step earlier, by the
+  // split's existing state validation (unchanged for every mode), and is
+  // still left untouched.
+  it.each([
+    [
+      'plain',
       'oat_workflow_mode: freestyle',
-      '---',
-      '',
-      '# Project State: umbrella',
-    ].join('\n');
-    await writeFile(join(parentRoot, 'state.md'), freestyleState, 'utf8');
-    await writeFile(join(parentRoot, 'AGENTS.md'), '# Rules\n', 'utf8');
-    await writeFile(join(parentRoot, 'shape.md'), '# Shape\n', 'utf8');
-    await writeFile(join(parentRoot, 'plan.md'), '# Adopted plan\n', 'utf8');
-    await mkdir(join(repoRoot, '.oat'), { recursive: true });
-    const config = `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/umbrella' })}\n`;
-    await writeFile(
-      join(repoRoot, '.oat', 'config.local.json'),
-      config,
-      'utf8',
-    );
-    const planFile = await writePlanFile(
-      repoRoot,
-      document({ origin: 'detected-mid-stream', interactive: true }),
-    );
-    const { capture, command } = createHarness(repoRoot);
-
-    await runCommand(command, ['--plan-file', planFile]);
-
-    expect(process.exitCode).toBe(1);
-    expect(capture.error.join('\n')).toContain(
+      '\n',
       'umbrella is a freestyle project; split cannot convert it',
-    );
-    await expect(readFile(join(parentRoot, 'state.md'), 'utf8')).resolves.toBe(
-      freestyleState,
-    );
-    await expect(readFile(join(parentRoot, 'plan.md'), 'utf8')).resolves.toBe(
-      '# Adopted plan\n',
-    );
-    await expect(exists(join(parentRoot, 'discovery.md'))).resolves.toBe(false);
-    await expect(
-      exists(join(repoRoot, '.oat', 'projects', 'shared', 'foundation')),
-    ).resolves.toBe(false);
-    await expect(
-      readFile(join(repoRoot, '.oat', 'config.local.json'), 'utf8'),
-    ).resolves.toBe(config);
-  });
+    ],
+    [
+      'padded',
+      'oat_workflow_mode: " freestyle "',
+      '\n',
+      'umbrella is a freestyle project; split cannot convert it',
+    ],
+    [
+      'CRLF',
+      'oat_workflow_mode: freestyle',
+      '\r\n',
+      'umbrella/state.md is missing frontmatter',
+    ],
+  ])(
+    'refuses to convert an active detected freestyle project and leaves it untouched (%s)',
+    async (_label, modeLine, eol, refusal) => {
+      // Converting a freestyle parent would rewrite it as a quick coordination
+      // project and delete its files: a promotion from freestyle.
+      const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+      tempDirs.push(repoRoot);
+      await seedTemplates(repoRoot);
+      const parentRoot = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'shared',
+        'umbrella',
+      );
+      await mkdir(parentRoot, { recursive: true });
+      const freestyleState = [
+        '---',
+        modeLine,
+        '---',
+        '',
+        '# Project State: umbrella',
+      ].join(eol);
+      await writeFile(join(parentRoot, 'state.md'), freestyleState, 'utf8');
+      await writeFile(join(parentRoot, 'AGENTS.md'), '# Rules\n', 'utf8');
+      await writeFile(join(parentRoot, 'shape.md'), '# Shape\n', 'utf8');
+      await writeFile(join(parentRoot, 'plan.md'), '# Adopted plan\n', 'utf8');
+      await mkdir(join(repoRoot, '.oat'), { recursive: true });
+      const config = `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/umbrella' })}\n`;
+      await writeFile(
+        join(repoRoot, '.oat', 'config.local.json'),
+        config,
+        'utf8',
+      );
+      const planFile = await writePlanFile(
+        repoRoot,
+        document({ origin: 'detected-mid-stream', interactive: true }),
+      );
+      const { capture, command } = createHarness(repoRoot);
+
+      await runCommand(command, ['--plan-file', planFile]);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error.join('\n')).toContain(refusal);
+      await expect(
+        readFile(join(parentRoot, 'state.md'), 'utf8'),
+      ).resolves.toBe(freestyleState);
+      await expect(readFile(join(parentRoot, 'plan.md'), 'utf8')).resolves.toBe(
+        '# Adopted plan\n',
+      );
+      await expect(exists(join(parentRoot, 'discovery.md'))).resolves.toBe(
+        false,
+      );
+      await expect(
+        exists(join(repoRoot, '.oat', 'projects', 'shared', 'foundation')),
+      ).resolves.toBe(false);
+      await expect(
+        readFile(join(repoRoot, '.oat', 'config.local.json'), 'utf8'),
+      ).resolves.toBe(config);
+    },
+  );
 
   it('emits JSON result under --json when convertActiveDetectedParent path succeeds', async () => {
     // This test exercises the second JSON emission branch inside `run.ts`:

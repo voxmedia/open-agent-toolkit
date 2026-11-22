@@ -1475,6 +1475,42 @@ describe('scaffoldProject', () => {
     expect(lifecycleChange.createdFiles).toContain('spec.md');
   });
 
+  it('reads a CRLF freestyle state.md as freestyle for the same-mode rerun and the mixed-mode refusal', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    const base = {
+      repoRoot,
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+    };
+    await scaffoldProject({ ...base, projectName: 'crlf', mode: 'freestyle' });
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'crlf');
+    const statePath = join(projectDir, 'state.md');
+    const crlfState = (await readFile(statePath, 'utf8'))
+      .replaceAll('\r\n', '\n')
+      .replaceAll('\n', '\r\n');
+    await writeFile(statePath, crlfState, 'utf8');
+    const before = (await readdir(projectDir)).sort();
+
+    await expect(
+      scaffoldProject({ ...base, projectName: 'crlf', mode: 'quick' }),
+    ).rejects.toThrow(
+      'Project crlf already exists as a freestyle project; scaffolding it as quick',
+    );
+    expect((await readdir(projectDir)).sort()).toEqual(before);
+
+    const rerun = await scaffoldProject({
+      ...base,
+      projectName: 'crlf',
+      mode: 'freestyle',
+    });
+    expect(rerun.createdFiles).toEqual([]);
+    expect(await readFile(statePath, 'utf8')).toBe(crlfState);
+  });
+
   it('resolves partial template tiers independently for every file', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));

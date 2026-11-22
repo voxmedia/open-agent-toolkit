@@ -64,7 +64,11 @@ export {
   parseBriefOutcomes,
   validateGoalOutcomeAudit,
 } from './state/goal-audit';
-export { normalizeMilestoneId } from './state/parser';
+export {
+  isFreestyleState,
+  normalizeMilestoneId,
+  parseStateWorkflowMode,
+} from './state/parser';
 export type {
   JournalPhaseStatus,
   PhaseMarkers,

@@ -328,6 +328,46 @@ describe('cleanup project drift scanning', () => {
     ]);
   });
 
+  it('leaves a CRLF freestyle state.md byte-identical on apply, with no second frontmatter block', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    const plan = [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '|-------|------|--------|------|----------|',
+      '| final | code | passed | 2026-11-21 | reviews/final.md |',
+    ].join('\n');
+    const projectDir = join(root, '.oat', 'projects', 'shared', 'crlf-free');
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 'plan.md'), plan, 'utf8');
+    const crlfState = [
+      '---',
+      'oat_workflow_mode: freestyle',
+      '---',
+      '',
+      '# Project State: crlf-free',
+      '',
+    ].join('\r\n');
+    await writeFile(join(projectDir, 'state.md'), crlfState, 'utf8');
+
+    const payload = await runCleanupProject(
+      { repoRoot: root, dryRun: false },
+      { refreshDashboard: async () => {} },
+    );
+
+    expect(
+      payload.actions.filter(
+        (action) =>
+          action.type === 'update' &&
+          action.target === '.oat/projects/shared/crlf-free/state.md',
+      ),
+    ).toEqual([]);
+    await expect(readFile(join(projectDir, 'state.md'), 'utf8')).resolves.toBe(
+      crlfState,
+    );
+  });
+
   it('apply clears invalid active project pointer', async () => {
     const root = await createRepoRoot();
     tempDirs.push(root);

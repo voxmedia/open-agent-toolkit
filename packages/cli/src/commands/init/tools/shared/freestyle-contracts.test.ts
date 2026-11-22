@@ -216,7 +216,7 @@ describe('freestyle resume and review rules', () => {
     ): { status: number | null; stdout: string; stderr: string } {
       const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-pointer-'));
       try {
-        for (const name of ['new-one', 'old-one']) {
+        for (const name of ['new-one', 'old-one', 'quo"te']) {
           mkdirSync(join(root, '.oat/projects/shared', name), {
             recursive: true,
           });
@@ -305,6 +305,15 @@ describe('freestyle resume and review rules', () => {
       const ok = run(create, { STUB_NEW_JSON: reported, STUB_GET: NEW });
       expect(ok.status).toBe(0);
       expect(ok.stdout).toContain(`reached=${NEW}`);
+      // The reported path is decoded as JSON, so a `"` in it survives.
+      const QUOTED = '.oat/projects/shared/quo"te';
+      const quoted = run(create, {
+        STUB_NEW_JSON: JSON.stringify({ status: 'ok', projectPath: QUOTED }),
+        STUB_GET: QUOTED,
+      });
+      expect(quoted.stderr).toBe('');
+      expect(quoted.status).toBe(0);
+      expect(quoted.stdout).toContain(`reached=${QUOTED}`);
     });
   });
 
@@ -330,16 +339,52 @@ describe('freestyle resume and review rules', () => {
 
   it('gives each reshape decision its own log idempotency identity', () => {
     const { 'references/reshape.md': reshape } = skillFiles();
-    const id = /RESHAPE_ID="([^"]+)"/.exec(reshape)?.[1];
-    // The identity carries a per-decision time to the second, so two reshapes
-    // of one topic on one UTC date never share a key.
-    expect(id).toBe('reshape-{YYYYMMDDTHHMMSSZ}-{topic-slug}');
-    expect(reshape).toContain('--idempotency-key "$RESHAPE_ID"');
+    const blocks = [...reshape.matchAll(/```bash\n([\s\S]*?)```/g)].map(
+      (match) => match[1] as string,
+    );
+    const mint = blocks.find((body) => body.includes('RESHAPE_ID='));
+    const append = blocks.find((body) =>
+      body.includes('oat project log append'),
+    );
+    expect(mint, 'a mint block').toBeDefined();
+    expect(append, 'an append block').toBeDefined();
+    // A retry re-runs the append block alone, so the append never re-mints.
+    expect(append).not.toContain('RESHAPE_ID=');
+    expect(append).toContain('--idempotency-key "$RESHAPE_ID"');
     const rule = reshape.replace(/\s+/g, ' ');
     expect(rule).toContain('Mint `RESHAPE_ID` once for this reshape decision');
     expect(rule).toContain(
       "reuse that same value only to retry this decision's append",
     );
+
+    // Two decisions on the same topic within the same second still get two
+    // identities: `date` is pinned, so only the minted suffix can differ.
+    const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-reshape-'));
+    try {
+      const bin = join(root, 'bin');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'date'), '#!/bin/bash\necho 20261122T010203Z\n');
+      chmodSync(join(bin, 'date'), 0o755);
+      const mintOnce = (): string => {
+        const result = spawnSync(
+          '/bin/bash',
+          ['-c', (mint as string).replaceAll('{topic-slug}', 'review')],
+          {
+            encoding: 'utf8',
+            env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+          },
+        );
+        expect(result.status).toBe(0);
+        return result.stdout.trim();
+      };
+      const first = mintOnce();
+      const second = mintOnce();
+      expect(first).toMatch(/^reshape-20261122T010203Z-review-[0-9a-f]{8}$/);
+      expect(second).toMatch(/^reshape-20261122T010203Z-review-[0-9a-f]{8}$/);
+      expect(second).not.toBe(first);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('tells a resuming session what to do with a pending brainstorm result', () => {

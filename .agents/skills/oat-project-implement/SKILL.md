@@ -165,12 +165,37 @@ If you catch yourself:
 
 OAT stores active project context in `.oat/config.local.json` (`activeProject`, local-only).
 
+**Freestyle projects.** The block below reads the mode before any arrival
+write: from the checkout when it is here, otherwise read-only from the synced
+ref (an objects-only fetch; no local ref, record, checkout or commit). When
+`WORKFLOW_MODE` is `freestyle`, stop there and write nothing: no synced pull,
+dispatch preflight, policy resolution, `state.md` write or phase dispatch
+runs, because a freestyle project has no lifecycle plan, phases or gates. Tell
+the user: "This is a freestyle project; OAT runs no implementation workflow
+for it. Its orchestrator works as `shape.md` says." With no checkout here yet,
+add: "Run `oat project pull <slug>` to bring it here."
+
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+WORKFLOW_MODE=null
 if [ -n "$PROJECT_PATH" ]; then
   PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing project arrival" >&2; exit 1; }
+  PROJECT_SLUG=$(basename "$PROJECT_PATH")
+  if [ -f "$PROJECT_PATH/state.md" ]; then
+    WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+  elif [ "$PROJECT_SCOPE" = "synced" ]; then
+    REF_SHA=$(git ls-remote origin "refs/oat/projects/$PROJECT_SLUG" 2>/dev/null | cut -f1)
+    if [ -n "$REF_SHA" ] && git fetch --quiet --no-write-fetch-head origin "refs/oat/projects/$PROJECT_SLUG" 2>/dev/null; then
+      REF_STATE=$(mktemp -d)
+      git show "$REF_SHA:state.md" > "$REF_STATE/state.md" 2>/dev/null && WORKFLOW_MODE=$(oat project status --project-path "$REF_STATE" --field project.workflowMode 2>/dev/null || echo null)
+      rm -rf "$REF_STATE"
+    fi
+  fi
+  if [ "$WORKFLOW_MODE" = "freestyle" ]; then
+    echo "oat: $PROJECT_SLUG is a freestyle project; stopping before arrival" >&2
+    exit 0
+  fi
   if [ "$PROJECT_SCOPE" = "synced" ]; then
-    PROJECT_SLUG=$(basename "$PROJECT_PATH")
     if [ -f "$PROJECT_PATH.json" ] || git ls-remote --exit-code origin "refs/oat/projects/$PROJECT_SLUG" >/dev/null 2>&1; then
       oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
     fi
@@ -186,7 +211,7 @@ the remote ref when the current branch does not yet have a record.
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Run the freestyle check below on it first; a freestyle project stops there,
+- Run the freestyle check above on it first; a freestyle project stops there,
   before this pointer write.
 - Write it for future phases:
   ```bash
@@ -195,19 +220,6 @@ the remote ref when the current branch does not yet have a record.
   ```
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
-
-**Freestyle projects.** Before the Route Loading Contract below loads any
-reference, read the mode:
-
-```bash
-WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
-```
-
-When `WORKFLOW_MODE` is `freestyle`, stop here and write nothing: no dispatch
-preflight, policy resolution, `state.md` write or phase dispatch runs, because
-a freestyle project has no lifecycle plan, phases or gates. Tell the user:
-"This is a freestyle project; OAT runs no implementation workflow for it. Its
-orchestrator works as `shape.md` says."
 
 ### Route Loading Contract
 

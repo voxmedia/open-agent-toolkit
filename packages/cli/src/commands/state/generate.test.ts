@@ -769,6 +769,60 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('**quick-fence** - implement');
   });
 
+  it('reads a CRLF or padded freestyle mode as status does, in the summary and the project list', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const write = async (name: string, lines: string[], eol: string) => {
+      const dir = join(root, '.oat/projects/shared', name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'state.md'), lines.join(eol), 'utf8');
+    };
+    await write(
+      'crlf-free',
+      [
+        '---',
+        'oat_phase: discovery',
+        'oat_workflow_mode: freestyle',
+        '---',
+        '',
+      ],
+      '\r\n',
+    );
+    await write(
+      'padded-free',
+      [
+        '---',
+        'oat_phase: discovery',
+        'oat_workflow_mode: " freestyle "',
+        '---',
+        '',
+      ],
+      '\n',
+    );
+    await write(
+      'crlf-quick',
+      ['---', 'oat_phase: implement', 'oat_workflow_mode: quick', '---', ''],
+      '\r\n',
+    );
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/crlf-free',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('none');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Mode | freestyle |');
+    expect(dashboard).not.toContain('| Phase |');
+    expect(dashboard).toContain('**crlf-free** - freestyle');
+    expect(dashboard).toContain('**padded-free** - freestyle');
+    expect(dashboard).not.toContain('**crlf-quick** - freestyle');
+  });
+
   it('still resumes a paused freestyle project through project open', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

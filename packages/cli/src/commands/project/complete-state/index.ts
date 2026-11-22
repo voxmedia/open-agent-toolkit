@@ -17,6 +17,7 @@ import {
   evaluateJournal,
   formatJournalRefusal,
 } from '@commands/project/journal-check/index';
+import { isFreestyleState } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveEffectiveConfig } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
@@ -99,7 +100,7 @@ async function runProjectCompleteState(
     const planPath = join(targetProjectPath, 'plan.md');
     // Freestyle has no lifecycle journal contract: its documents follow the
     // project's own shape, so neither journal guard applies to it.
-    const freestyle = readStateWorkflowMode(content) === 'freestyle';
+    const freestyle = isFreestyleState(content);
     const hasJournal =
       !freestyle && (await dependencies.fileExists(journalPath));
     if (

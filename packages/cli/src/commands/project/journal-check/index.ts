@@ -17,6 +17,7 @@ import { CliError } from '@errors/cli-error';
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import {
+  isFreestyleState,
   normalizePhaseId,
   parseTaskProgress,
   readFrontmatterMetadata,
@@ -126,6 +127,9 @@ export function parseJournalScope(
 }
 
 function readWorkflowMode(stateContent: string): string {
+  // Freestyle is read as `oat project status` reads it; every other mode keeps
+  // its existing raw reading.
+  if (isFreestyleState(stateContent)) return 'freestyle';
   const metadata = readFrontmatterMetadata(stateContent);
   const mode =
     metadata.state === 'ok' ? metadata.record.oat_workflow_mode : undefined;

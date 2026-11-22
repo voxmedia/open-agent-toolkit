@@ -3,12 +3,13 @@ import type {
   ReviewEvaluation,
 } from '@commands/project/delivery/evidence';
 import {
+  type GoalDelivery,
+  type GoalOutcomeAudit,
+  isFreestyleState,
   parseBriefOutcomes,
   parsePhaseMarkers,
   parseTaskProgress,
   validateGoalOutcomeAudit,
-  type GoalDelivery,
-  type GoalOutcomeAudit,
 } from '@open-agent-toolkit/control-plane';
 import YAML, { isMap } from 'yaml';
 
@@ -1243,8 +1244,11 @@ export async function evaluateCloseout(
   options: EvaluateCloseoutOptions,
 ): Promise<CloseoutResult> {
   const frontmatter = readFrontmatter(options.stateContent);
-  const workflowMode =
-    typeof frontmatter.oat_workflow_mode === 'string'
+  // Freestyle is read as `oat project status` reads it; every other mode keeps
+  // its existing raw reading.
+  const workflowMode = isFreestyleState(options.stateContent)
+    ? 'freestyle'
+    : typeof frontmatter.oat_workflow_mode === 'string'
       ? frontmatter.oat_workflow_mode
       : 'spec-driven';
   const autonomousSource = options.autonomousFlag

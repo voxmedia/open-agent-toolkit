@@ -1,4 +1,5 @@
 import {
+  isFreestyleState,
   normalizePhaseId,
   parseBriefOutcomes,
   parseTaskProgress,
@@ -97,7 +98,9 @@ export function evaluateJournal(input: JournalCheckInput): JournalCheckResult {
   const journalMeta = readFrontmatterMetadata(input.journalContent);
   const stateMeta = readFrontmatterMetadata(input.stateContent);
   const stateRecord = stateMeta.state === 'ok' ? stateMeta.record : null;
-  const workflowMode = workflowModeOf(stateRecord);
+  const workflowMode = isFreestyleState(input.stateContent)
+    ? 'freestyle'
+    : workflowModeOf(stateRecord);
   const scope =
     input.boundary === 'review' && input.scope != null
       ? [...new Set(input.scope)]

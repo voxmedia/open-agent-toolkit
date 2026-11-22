@@ -39,13 +39,19 @@ working. `SKILL.md` Step 2 runs the same check.
    for work already in flight: for example "from the next dispatch; lanes
    already running keep the previous rule until their next report".
 6. Attempt a `decision` entry in the project log with what changed and why.
-   Mint `RESHAPE_ID` once for this reshape decision, from the UTC time the
-   change was agreed to the second, and reuse that same value only to retry
-   this decision's append. Another reshape, even of the same topic on the same
-   day, mints its own, so it is never read as a retry of this one:
+   Mint `RESHAPE_ID` once for this reshape decision: the UTC time the change
+   was agreed, to the second, plus a random suffix, so two decisions never
+   share it even within one second. Run the mint block once; reuse that same
+   value only to retry this decision's append, by re-running the append block
+   alone. Another reshape, even of the same topic on the same day, mints its
+   own, so it is never read as a retry of this one:
 
    ```bash
-   RESHAPE_ID="reshape-{YYYYMMDDTHHMMSSZ}-{topic-slug}"
+   RESHAPE_ID="reshape-$(date -u +%Y%m%dT%H%M%SZ)-{topic-slug}-$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
+   echo "$RESHAPE_ID"
+   ```
+
+   ```bash
    oat project log append --json --project "{project-path}" \
      --type feedback --scope project --area "Reshape: {topic}" \
      --category decision --source "$RESHAPE_ID" \
