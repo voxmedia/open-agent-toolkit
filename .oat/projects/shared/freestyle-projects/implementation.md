@@ -659,6 +659,17 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
   - Ordering assertions: moving each new stop after its markers, or dropping the quick-start named check or a pointer guard, fails the named clause. This was checked eight times, covering quick-start, implement, design, spec and review-receive-remote.
   - H1, H2, M6 and M7 were checked earlier in this record's work.
 
+### Task p04-t10: Fix m01 review H4 (operator-approved hardening)
+
+**Status:** in_progress
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `m01-code-review-2026-11-22T022415Z.md` (m01 milestone-exit review on `a5c28dca2..7c35a902e`): H4
+**Approval:** operator chose Fix in m01, 2026-11-22. Class new-hardening, operator-approved.
+
+- Intent: in `oat-project-freestyle` Step 1, stop when the resume pointer write fails or the pointer does not name the intended project, and on creation stop when `oat project new` fails and use the path the scaffold reports instead of re-reading the old pointer.
+- Files: `.agents/skills/oat-project-freestyle/SKILL.md`, `references/kickoff.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- Proof: executable contract tests against a stub `oat`, a clause-by-clause can-fail check, and the scoped gate list.
+
 ---
 
 ## Phase p05: Linked projects
