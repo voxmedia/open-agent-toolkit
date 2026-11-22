@@ -479,6 +479,18 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Proof: `pnpm build` exit 0 (0 cached); sync exit 0; `vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` under an isolated `HOME` exit 0 (41 files, 1487 passed; 20 failed before the pin update, all stale pins); `oxfmt --check` and `pnpm oat:validate-skills` (69 OK) exit 0. After the commit: `git fetch origin main`, `pnpm run check:skill-bumps` exit 0 (24 changed skills and agent roles validated) and `pnpm release:check-versions` exit 0.
 - Can-fail: not applicable; the gates are existing checks, and the pin test failed on the stale pins before the update.
 
+### Task p04-t05: Inventory re-check after the main merge
+
+**Status:** completed
+**Commit:** c80472951d5bf5c376910b77ca159d9405cb5175
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+
+- Intent: re-run the inventory search on the committed tree after `91ba64a6e` merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426), disposition every surface it finds, and fix any page that misstates freestyle.
+- Search: files under `.agents/skills`, `.agents/agents`, `apps/oat-docs/docs`, `.oat/templates`, root `README.md`/`AGENTS.md` and `packages/*/README.md` matching `oat_workflow_mode`, `WORKFLOW_MODE`, a `brief ... goal` list or `` `goal` `` that do not mention freestyle, at `f6780a738`. 16 files: 14 are the p04-t01 opt-outs (`create-oat-skill`, `oat-brainstorm/references/dogfood-results.md`, `oat-project-brief` SKILL and `brief-contract.md`, `oat-project-complete/tests/prepare-completion-branch.test.mjs`, `oat-project-goal`, `oat-project-implement` `completion-and-closeout.md` and `phase-execution.md`, `oat-project-import-plan`, `oat-project-lite`, `oat-project-plan-writing` (also edited by #425; still loaded only by the lifecycle plan skills), `oat-project-promote-spec-driven`, `oat-project-quick-start`, `oat-wave-execute`). New: `contributing/skills.md` (opted out: it shows how a skill reads `project.workflowMode` and lists no modes) and `workflows/projects/index.md` (handled here: its artifact diagram called `plan.md` and `implementation.md` files every project has). `subagent-orchestration`, the other skill #425/#426 changed, does not read the mode. No other surface found.
+- Fix: `workflows/projects/index.md` says the solid boxes are what every lifecycle project has and adds that a freestyle project runs none of the stages and holds `state.md`, `AGENTS.md`, `shape.md`, empty `reviews/` and `pr/`, and the documents `shape.md` lists (`scaffold.ts` `TEMPLATES_BY_MODE.freestyle` and `ensureStructure`). The diagram is unchanged.
+- Files: `apps/oat-docs/docs/workflows/projects/index.md`.
+- Proof: `pnpm --filter oat-docs docs:validate` exit 0 (0 errors, 776 warnings, the baseline), `pnpm --filter oat-docs check` exit 0, `generate-index` leaves `apps/oat-docs/index.md` unchanged.
+
 ---
 
 ## Phase p05: Linked projects
