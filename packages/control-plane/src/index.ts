@@ -18,7 +18,11 @@ export type {
   ReviewInvocationClass,
   ReviewSupersession,
 } from './state/review-supersession';
-export { quickPlanNotReadyReason, recommendSkill } from './recommender/router';
+export {
+  freestyleRecommendation,
+  quickPlanNotReadyReason,
+  recommendSkill,
+} from './recommender/router';
 export {
   evaluateQuickPlanReadiness,
   hasPlanReviewSkipLine,
@@ -60,7 +64,11 @@ export {
   parseBriefOutcomes,
   validateGoalOutcomeAudit,
 } from './state/goal-audit';
-export { normalizeMilestoneId } from './state/parser';
+export {
+  isFreestyleState,
+  normalizeMilestoneId,
+  parseStateWorkflowMode,
+} from './state/parser';
 export type {
   JournalPhaseStatus,
   PhaseMarkers,

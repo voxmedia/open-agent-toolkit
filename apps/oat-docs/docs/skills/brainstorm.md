@@ -53,6 +53,15 @@ under `references/research/` and leaves the brief to `oat-project-brief` or
 idea in local OAT config. Each destination is confirmed before anything is
 written.
 
+When the active project is a freestyle project, there is no fold-back: a
+related brainstorm is saved as a reference file in the project's
+`brainstorming/` folder. Whether that file is committed or pushed follows the
+`## Commits, PRs and merges` section of the project's `shape.md`; while that
+section is not yet shaped or is deferred, the skill writes the file without
+committing or pushing and tells you where it is. It then prints a prompt to
+return to `oat-project-freestyle` and resume shaping at the topic `shape.md`
+records.
+
 **What it does without asking:** During the conversation it only reads: it
 checks which tool packs are installed and whether a project is active. If the
 topic is visual it offers, as a separate question, to start a local

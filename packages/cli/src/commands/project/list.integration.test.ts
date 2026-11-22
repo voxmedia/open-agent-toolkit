@@ -442,3 +442,164 @@ describe('oat project list coordination integration', () => {
     expect(payload.projects).toBeUndefined();
   });
 });
+
+describe('oat project status shares the unpulled synced detection', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) =>
+        rm(dir, {
+          recursive: true,
+          force: true,
+          maxRetries: 5,
+          retryDelay: 50,
+        }),
+      ),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function writeSyncedRecord(root: string, slug: string): Promise<void> {
+    await mkdir(join(root, '.oat', 'projects', 'synced'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', `${slug}.json`),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug,
+        scope: 'synced',
+        ref: `refs/oat/projects/${slug}`,
+        remote: 'origin',
+        status: 'active',
+        createdAt: '2026-11-21T00:00:00.000Z',
+        completedAt: null,
+      })}\n`,
+      'utf8',
+    );
+  }
+
+  it('shows only the pull instruction for a synced project recorded here but not pulled', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const root = fixture.cloneA;
+    await writeSyncedRecord(root, 'synced-absent');
+    const projectPath = '.oat/projects/synced/synced-absent';
+
+    const listed = await runCli(root, ['project', 'list', '--json']);
+    const listRow = (
+      JSON.parse(listed.stdout) as { projects: Array<Record<string, unknown>> }
+    ).projects.find((row) => row.name === 'synced-absent');
+
+    const json = await runCli(root, [
+      'project',
+      'status',
+      '--project-path',
+      projectPath,
+      '--json',
+    ]);
+    expect(json.exitCode).toBe(0);
+    const payload = JSON.parse(json.stdout) as {
+      status: string;
+      project: Record<string, unknown>;
+    };
+    expect(payload).toEqual({ status: 'ok', project: listRow });
+    expect(payload.project).toMatchObject({
+      kind: 'recorded-absent',
+      path: projectPath,
+      checkout: 'absent',
+      workflowMode: null,
+      recommendation: { skill: 'oat project pull', reason: 'checkout absent' },
+    });
+
+    for (const target of [projectPath, join(root, projectPath)]) {
+      const text = await runCli(root, [
+        'project',
+        'status',
+        '--project-path',
+        target,
+      ]);
+      expect(text.exitCode).toBe(0);
+      expect(text.stdout.trim().split('\n')).toEqual([
+        'Project: synced-absent',
+        `Path: ${projectPath}`,
+        'Scope: synced (checkout absent)',
+        'Recommendation: oat project pull',
+        'Reason: checkout absent',
+        'Hint: oat project pull synced-absent',
+      ]);
+      expect(text.stdout).not.toMatch(/oat-project-|Phase:/);
+    }
+  });
+
+  it('keeps the current status output for materialized projects and unrecorded paths', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const root = fixture.cloneA;
+    await writeStateFile(
+      root,
+      'synced-freestyle',
+      { oat_workflow_mode: 'freestyle' },
+      'synced',
+    );
+    await writeSyncedRecord(root, 'synced-freestyle');
+    await writeStateFile(
+      root,
+      'synced-spec',
+      {
+        oat_phase: 'implement',
+        oat_phase_status: 'in_progress',
+        oat_workflow_mode: 'spec-driven',
+      },
+      'synced',
+    );
+    await writeSyncedRecord(root, 'synced-spec');
+    await writeStateFile(root, 'shared-quick', {
+      oat_phase: 'plan',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+    });
+
+    const status = async (slugPath: string) => {
+      const result = await runCli(root, [
+        'project',
+        'status',
+        '--project-path',
+        slugPath,
+        '--json',
+      ]);
+      expect(result.exitCode).toBe(0);
+      return (JSON.parse(result.stdout) as { project: Record<string, unknown> })
+        .project;
+    };
+
+    const freestyle = await status('.oat/projects/synced/synced-freestyle');
+    expect(freestyle).toMatchObject({
+      workflowMode: 'freestyle',
+      recommendation: { skill: 'none' },
+    });
+    expect(freestyle).not.toHaveProperty('kind');
+    const spec = await status('.oat/projects/synced/synced-spec');
+    expect(spec).toMatchObject({
+      workflowMode: 'spec-driven',
+      phase: 'implement',
+    });
+    expect(spec).not.toHaveProperty('kind');
+    const quick = await status('.oat/projects/shared/shared-quick');
+    expect(quick).toMatchObject({ workflowMode: 'quick', phase: 'plan' });
+    // A synced path with no record keeps the existing default reading.
+    const unrecorded = await status('.oat/projects/synced/never-recorded');
+    expect(unrecorded).not.toHaveProperty('kind');
+    expect((unrecorded.recommendation as { skill: string }).skill).not.toBe(
+      'oat project pull',
+    );
+
+    const text = await runCli(root, [
+      'project',
+      'status',
+      '--project-path',
+      '.oat/projects/synced/synced-spec',
+    ]);
+    expect(text.stdout).toContain('Phase: implement (in_progress)');
+    expect(text.stdout).not.toContain('Hint:');
+  });
+});

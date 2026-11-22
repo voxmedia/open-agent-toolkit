@@ -59,11 +59,35 @@ const DEFAULT_DEPENDENCIES: ProjectNewDependencies = {
   scaffoldProject: defaultScaffoldProject,
 };
 
+/** The skill that creates, shapes and reshapes a freestyle project. */
+const FREESTYLE_SKILL = 'oat-project-freestyle';
+
+/**
+ * Freestyle's two scaffolded guidance files, named in creation output because
+ * they sit in the project folder rather than above the code.
+ */
+function freestyleProjectFiles(projectPath: string): {
+  agents: string;
+  shape: string;
+} {
+  return {
+    agents: `${projectPath}/AGENTS.md`,
+    shape: `${projectPath}/shape.md`,
+  };
+}
+
 function reportSuccess(
   context: CommandContext,
   projectName: string,
   result: ScaffoldProjectResult,
 ): void {
+  const freestyle =
+    result.mode === 'freestyle'
+      ? {
+          projectFiles: freestyleProjectFiles(result.projectPath),
+          nextSkill: FREESTYLE_SKILL,
+        }
+      : undefined;
   if (context.json) {
     context.logger.json({
       status: 'ok',
@@ -83,6 +107,7 @@ function reportSuccess(
       commitSha: result.commitSha,
       commitStatus: result.commitStatus,
       commitError: result.commitError,
+      ...freestyle,
     });
     return;
   }
@@ -111,6 +136,17 @@ function reportSuccess(
     );
   } else {
     context.logger.info(COMMIT_STATUS_MESSAGES[result.commitStatus]);
+  }
+  if (freestyle) {
+    context.logger.info(
+      `Project rules: ${freestyle.projectFiles.agents} (OAT-owned; read shape.md first)`,
+    );
+    context.logger.info(
+      `Project shape: ${freestyle.projectFiles.shape} (not yet shaped)`,
+    );
+    context.logger.info(
+      `Next: shape the project with the user through the ${FREESTYLE_SKILL} skill.`,
+    );
   }
 }
 

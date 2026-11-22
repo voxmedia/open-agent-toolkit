@@ -1,6 +1,10 @@
 import YAML from 'yaml';
 
-const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
+// Both delimiters accept `\r\n`: the opening `\s*` already consumes a `\r`,
+// and `\r?` before the closing fence keeps a CRLF block's last line free of a
+// trailing `\r`, which would otherwise break a quoted final scalar. LF input
+// matches exactly as before.
+const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\r?\n---\s*(?:\n|$)/;
 
 export function extractFrontmatter(content: string): string | null {
   const match = content.match(FRONTMATTER_PATTERN);

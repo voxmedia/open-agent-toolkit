@@ -1189,6 +1189,55 @@ describe('recommendSkill brief routes', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-plan');
   });
 
+  it('recommends no skill for freestyle before every lifecycle branch', () => {
+    const shapes: Array<Partial<Omit<ProjectState, 'recommendation'>>> = [
+      { phase: null, phaseStatus: null },
+      // Stray lifecycle values never reach a lifecycle route.
+      { phase: 'decomposition', phaseStatus: 'in_progress' },
+      {
+        phase: 'plan',
+        phaseStatus: 'complete',
+        hillCheckpoints: ['plan'],
+        hillCompleted: [],
+      },
+      { phase: 'implement', phaseStatus: 'complete' },
+      { phase: 'implement', phaseStatus: 'pr_open', lifecycle: 'complete' },
+      {
+        phase: 'implement',
+        phaseStatus: 'in_progress',
+        reviews: [
+          {
+            scope: 'final',
+            type: 'code',
+            status: 'received',
+            date: '2026-11-21',
+            artifact: 'reviews/final.md',
+          },
+        ],
+      },
+    ];
+
+    for (const shape of shapes) {
+      const recommendation = recommendSkill(
+        makeState({ ...shape, workflowMode: 'freestyle' }),
+      );
+      expect(recommendation.skill, JSON.stringify(shape)).toBe('none');
+      expect(recommendation.reason).toMatch(/^Freestyle project:/);
+    }
+  });
+
+  it('applies the discovery defaults to a lifecycle state passed without a phase', () => {
+    expect(
+      recommendSkill(
+        makeState({
+          workflowMode: 'spec-driven',
+          phase: null,
+          phaseStatus: null,
+        }),
+      ).skill,
+    ).toBe('oat-project-discover');
+  });
+
   it('never routes a non-spec-driven tier-3 plan to the spec-driven planning skill', () => {
     const routed = WORKFLOW_MODES.map((workflowMode) => ({
       workflowMode,

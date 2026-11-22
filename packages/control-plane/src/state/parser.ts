@@ -146,6 +146,21 @@ const EMPTY_PARSED_STATE: ParsedStateFrontmatter = {
   template: false,
 };
 
+/**
+ * The state's `oat_workflow_mode`, read exactly as `getProjectState` (and so
+ * `oat project status`) reads it: CRLF-tolerant frontmatter, a trimmed value,
+ * and only the known modes. Every freestyle check shares this one reading so
+ * that a project status calls freestyle is freestyle everywhere.
+ */
+export function parseStateWorkflowMode(content: string): WorkflowMode | null {
+  return parseStateFrontmatter(content).workflowMode;
+}
+
+/** Whether `parseStateWorkflowMode` reads the state as `freestyle`. */
+export function isFreestyleState(content: string): boolean {
+  return parseStateWorkflowMode(content) === 'freestyle';
+}
+
 export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
   const parsed = parseFrontmatterRecord(content);
   if (Object.keys(parsed).length === 0) {

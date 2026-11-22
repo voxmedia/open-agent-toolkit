@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.6
+  version: 1.5.7
 ---
 
 # Project Remote Review Receive
@@ -95,6 +95,13 @@ PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
+
+**If `"$PROJECT_PATH/state.md"` records `oat_workflow_mode: freestyle`:** stop
+here, before the validation below, the PR fetch and any write. A freestyle
+project has no plan tasks, review table or journal bookkeeping for this skill
+to update, and OAT commits nothing for it automatically. Tell the user: "This
+is a freestyle project; receive the PR feedback with
+`oat-review-receive-remote` and record its outcome as `shape.md` says."
 
 Validation:
 

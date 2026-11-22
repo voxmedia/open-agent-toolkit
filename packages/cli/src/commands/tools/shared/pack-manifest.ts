@@ -135,6 +135,7 @@ const WORKFLOW_SKILL_NAMES = [
   'oat-project-dispatch-subagents',
   'oat-project-discover',
   'oat-project-document',
+  'oat-project-freestyle',
   'oat-project-goal',
   'oat-project-implement',
   'oat-project-import-plan',
@@ -240,6 +241,9 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
       ].map((name) => agent(name)),
       ...[
         'state.md',
+        'state-freestyle.md',
+        'project-agents.md',
+        'shape.md',
         'discovery.md',
         'spec.md',
         'design.md',

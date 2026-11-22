@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.7
+  version: 1.0.8
 ---
 
 # OAT Docs
@@ -132,7 +132,7 @@ Based on the docs, here's how OAT project workflows work: [answer]
 Cite the installed workflow page discovered through Contents.
 
 Would you like me to:
-- Start a new project? (I'd invoke oat-project-lite for single-sitting work, oat-project-brief for one delivery planned as a Project Brief, oat-project-goal for an outcome delivered over several milestones, or oat-project-quick-start for a larger quick workflow)
+- Start a new project? (I'd invoke oat-project-lite for single-sitting work, oat-project-brief for one delivery planned as a Project Brief, oat-project-goal for an outcome delivered over several milestones, oat-project-freestyle for a project that keeps OAT's records and runs no lifecycle workflow, or oat-project-quick-start for a larger quick workflow)
 - Check your current project status? (I'd read your active project's state.md)
 ```
 
@@ -162,6 +162,10 @@ conversation:
 
 Goal mode is a fifth option for an outcome delivered over several milestones:
    oat-project-goal <project-name> "project description"
+
+Freestyle mode keeps OAT's project structure and records with no lifecycle
+workflow; how the project runs is agreed in its shape.md:
+   oat-project-freestyle <project-name> "project description"
 
 Lite combines the interview and requirements contract in one plan for a
 single sitting. Brief writes one reviewed Project Brief whose phases carry

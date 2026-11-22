@@ -99,6 +99,97 @@ export function parseProjectLogBodyHead(body: string): {
   return { head, rest: lines.slice(index).join('\n').trim() };
 }
 
+/**
+ * The optional event head a structural body may open with, in the order the
+ * command writes it: the UTC time of day of the append, the subject the event
+ * is about (a lane or phase id) and the project it came from.
+ *
+ * The time of day is `HH:MM:SSZ`, taken from the same clock reading as the
+ * heading's UTC date, so the two together name one ISO 8601 instant and never
+ * disagree. Every field is optional; a structural entry written without
+ * `--time`, `--subject` or `--source-project` has no head and its bytes are
+ * unchanged, and the heading grammar is the same either way, so every existing
+ * reader keeps parsing every existing and every new log.
+ */
+export interface ProjectLogStructuralHead {
+  time?: string;
+  subject?: string;
+  sourceProject?: string;
+}
+
+/**
+ * The head lines exactly as `append` writes them, in writing order. Subject
+ * and source project are one whitespace-free word, as `append` validates them,
+ * and the time is `HH:MM:SSZ`.
+ */
+const STRUCTURAL_HEAD_LINES: ReadonlyArray<
+  [keyof ProjectLogStructuralHead, RegExp]
+> = [
+  ['time', /^\*\*Time:\*\* (\d{2}:\d{2}:\d{2}Z)$/],
+  ['subject', /^\*\*Subject:\*\* (\S+)$/],
+  ['sourceProject', /^\*\*Source project:\*\* (\S+)$/],
+];
+
+/** The UTC time of day `append --time` records for `now`. */
+export function projectLogTimeOfDay(now: Date): string {
+  return `${now.toISOString().slice(11, 19)}Z`;
+}
+
+/** Renders the head lines `append` writes above a structural body. */
+export function composeStructuralBodyHead(
+  head: ProjectLogStructuralHead,
+): string[] {
+  const lines: string[] = [];
+  if (head.time !== undefined) lines.push(`**Time:** ${head.time}`);
+  if (head.subject !== undefined) lines.push(`**Subject:** ${head.subject}`);
+  if (head.sourceProject !== undefined) {
+    lines.push(`**Source project:** ${head.sourceProject}`);
+  }
+  return lines;
+}
+
+/**
+ * Reads the event head off the top of a structural body.
+ *
+ * It is a separate reader from `parseProjectLogBodyHead` on purpose: the
+ * judgment head's line set is unchanged, so a judgment body that happens to
+ * open with `**Subject:**` keeps exactly the reading it had.
+ *
+ * It is exactly as strict as the writer, so only a head `append` could have
+ * written is read as one: the leading lines must match the written shapes,
+ * each field at most once and in writing order, followed by a blank line and
+ * a non-empty body. Anything else, including a one-line body that merely
+ * opens with `**Subject:** two words`, has no head and stays body text.
+ */
+export function parseProjectLogStructuralHead(body: string): {
+  head: ProjectLogStructuralHead;
+  rest: string;
+} {
+  const none = { head: {}, rest: body };
+  const lines = body.split(/\r?\n/);
+  const head: ProjectLogStructuralHead = {};
+  let field = 0;
+  let index = 0;
+  for (; index < lines.length; index += 1) {
+    const line = lines[index] ?? '';
+    let matched = false;
+    for (; field < STRUCTURAL_HEAD_LINES.length; field += 1) {
+      const [key, pattern] = STRUCTURAL_HEAD_LINES[field]!;
+      const value = pattern.exec(line)?.[1];
+      if (value !== undefined) {
+        head[key] = value;
+        field += 1;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) break;
+  }
+  if (index === 0 || lines[index] !== '') return none;
+  const rest = lines.slice(index).join('\n').trim();
+  return rest === '' ? none : { head, rest };
+}
+
 export const PROJECT_LOG_AREA_MAX_LENGTH = 120;
 export const PROJECT_LOG_HEADING_DELIMITER = '·';
 

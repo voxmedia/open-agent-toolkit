@@ -1312,6 +1312,102 @@ describe('CLI command integration', () => {
     }
   });
 
+  it('project new --mode freestyle names AGENTS.md and shape.md and directs to oat-project-freestyle; status names both paths', async () => {
+    const root = await createWorkspace();
+    const isolatedHome = await mkdtemp(
+      join(tmpdir(), 'oat-cli-freestyle-home-'),
+    );
+    tempDirs.push(root, isolatedHome);
+    const previousHome = process.env.HOME;
+    process.env.HOME = isolatedHome;
+
+    try {
+      const projectPath = '.oat/projects/shared/freestyle-route';
+      const scaffold = await runCli(root, [
+        'project',
+        'new',
+        'freestyle-route',
+        '--mode',
+        'freestyle',
+        '--scope',
+        'shared',
+        '--no-dashboard',
+        '--no-commit',
+      ]);
+      expect(scaffold.exitCode).toBe(0);
+      expect(scaffold.stdout).toContain(
+        `Project rules: ${projectPath}/AGENTS.md (OAT-owned; read shape.md first)`,
+      );
+      expect(scaffold.stdout).toContain(
+        `Project shape: ${projectPath}/shape.md (not yet shaped)`,
+      );
+      expect(scaffold.stdout).toContain(
+        'Next: shape the project with the user through the oat-project-freestyle skill.',
+      );
+
+      const json = await runCli(
+        root,
+        [
+          'project',
+          'new',
+          'freestyle-json',
+          '--mode',
+          'freestyle',
+          '--scope',
+          'shared',
+          '--no-dashboard',
+          '--no-commit',
+        ],
+        ['--json'],
+      );
+      expect(json.exitCode).toBe(0);
+      expect(JSON.parse(json.stdout)).toMatchObject({
+        status: 'ok',
+        mode: 'freestyle',
+        createdFiles: ['state.md', 'AGENTS.md', 'shape.md'],
+        projectFiles: {
+          agents: '.oat/projects/shared/freestyle-json/AGENTS.md',
+          shape: '.oat/projects/shared/freestyle-json/shape.md',
+        },
+        nextSkill: 'oat-project-freestyle',
+      });
+
+      const status = await runCli(root, [
+        'project',
+        'status',
+        '--project-path',
+        projectPath,
+      ]);
+      expect(status.exitCode).toBe(0);
+      expect(status.stdout).toContain(`Path: ${projectPath}`);
+      expect(status.stdout).toContain(`Rules: ${projectPath}/AGENTS.md`);
+      expect(status.stdout).toContain(`Shape: ${projectPath}/shape.md`);
+
+      // Control: a brief scaffold names neither file and no freestyle skill.
+      const brief = await runCli(
+        root,
+        [
+          'project',
+          'new',
+          'brief-control',
+          '--mode',
+          'brief',
+          '--scope',
+          'shared',
+          '--no-dashboard',
+          '--no-commit',
+        ],
+        ['--json'],
+      );
+      const briefPayload = JSON.parse(brief.stdout) as Record<string, unknown>;
+      expect(briefPayload).not.toHaveProperty('projectFiles');
+      expect(briefPayload).not.toHaveProperty('nextSkill');
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
   it('project promote --to quick converts a brief project and keeps quick readiness pending', async () => {
     const root = await createWorkspace();
     const isolatedHome = await mkdtemp(join(tmpdir(), 'oat-cli-brief-home-'));

@@ -1,6 +1,6 @@
 ---
 title: Lifecycle
-description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, goal, and import paths.'
+description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, goal, and import paths; freestyle projects have none.'
 ---
 
 # Lifecycle
@@ -54,7 +54,10 @@ For a one-page view of where people approve and what runs automatically in each 
 This map shows the spec-driven default. The quick, lite, brief, goal, import,
 and capture lanes each skip part of it — see [Lane diagrams](#lane-diagrams)
 below. Lite, brief, and goal in particular have no discovery, spec, or design
-step at all.
+step at all. A freestyle project follows none of this map: it has no phases,
+gates, checkpoints or required reviews, OAT recommends no next skill for it,
+and its `shape.md` says how it runs (see
+[oat-project-freestyle](planning/starting-projects.md#oat-project-freestyle)).
 
 ## Post-implementation flow
 

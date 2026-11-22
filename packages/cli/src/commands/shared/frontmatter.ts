@@ -1,6 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import {
+  isFreestyleState as isControlPlaneFreestyleState,
+  parseStateWorkflowMode as parseControlPlaneStateWorkflowMode,
+} from '@open-agent-toolkit/control-plane';
 import YAML, {
   isMap,
   isScalar,
@@ -221,6 +225,52 @@ export function parseSkillGateOverrides(
 export function getFrontmatterBlock(content: string): string | null {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   return match?.[1] ?? null;
+}
+
+/**
+ * The `oat_workflow_mode` a `state.md` declares, read through the same parser
+ * `oat project status` uses (`@open-agent-toolkit/control-plane`): CRLF-tolerant
+ * frontmatter, YAML quotes and comments handled, the value trimmed, body text
+ * never read. Null when there is no frontmatter, no field, or an unknown mode.
+ */
+export function parseStateWorkflowMode(content: string): string | null {
+  return parseControlPlaneStateWorkflowMode(content);
+}
+
+/** Whether the state reads as `freestyle` under {@link parseStateWorkflowMode}. */
+export function isFreestyleState(content: string): boolean {
+  return isControlPlaneFreestyleState(content);
+}
+
+/**
+ * The LF-only frontmatter editors (`getFrontmatterBlock`, `replaceFrontmatter`
+ * and the state validator) handle a CRLF freestyle `state.md` as LF: `content`
+ * is what to edit and validate, and `restore` puts the file's own line ending
+ * back before the write. Every other state is returned unchanged, so lifecycle
+ * modes keep their existing behavior.
+ */
+export function freestyleStateLineEndings(raw: string): {
+  content: string;
+  restore: (next: string) => string;
+} {
+  if (!/^---[ \t]*\r\n/.test(raw) || !isFreestyleState(raw)) {
+    return { content: raw, restore: (next) => next };
+  }
+  return {
+    content: raw.replaceAll('\r\n', '\n'),
+    restore: (next) => next.replaceAll('\n', '\r\n'),
+  };
+}
+
+/** {@link parseStateWorkflowMode} for a file; null when it cannot be read. */
+export async function readStateWorkflowModeFile(
+  filePath: string,
+): Promise<string | null> {
+  try {
+    return parseStateWorkflowMode(await readFile(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 export function getFrontmatterField(

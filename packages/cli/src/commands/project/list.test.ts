@@ -242,6 +242,62 @@ describe('oat project list', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('shows a freestyle row by mode with no progress or recommendation beside an unchanged lifecycle row', async () => {
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      projects: [
+        {
+          name: 'alpha',
+          path: '.oat/projects/shared/alpha',
+          phase: 'plan',
+          phaseStatus: 'complete',
+          workflowMode: 'quick',
+          lifecycle: 'active',
+          progress: { completed: 3, total: 3 },
+          recommendation: {
+            skill: 'oat-project-implement',
+            reason: 'Ready to implement.',
+          },
+        },
+        {
+          name: 'free',
+          path: '.oat/projects/shared/free',
+          phase: null,
+          phaseStatus: null,
+          workflowMode: 'freestyle',
+          lifecycle: 'active',
+          progress: { completed: 0, total: 0 },
+          recommendation: { skill: 'none', reason: 'Freestyle project' },
+        },
+      ],
+    });
+
+    await runCommand(command, []);
+
+    const rows = capture.info.join('\n').split('\n');
+    const cells = (name: string): string[] =>
+      rows
+        .find((row) => row.startsWith(`${name} `))!
+        .trim()
+        .split(/\s{2,}/);
+    expect(cells('alpha')).toEqual([
+      'alpha',
+      'shared',
+      'plan (complete)',
+      '3/3',
+      'oat-project-implement',
+      '—',
+    ]);
+    expect(cells('free')).toEqual([
+      'free',
+      'shared',
+      'freestyle',
+      '—',
+      'none',
+      '—',
+    ]);
+  });
+
   it('hides coordination parents in decomposition+complete state by default', async () => {
     const { command, capture } = createHarness({
       cwd: '/repo',

@@ -37,6 +37,11 @@ It stays in place under `.oat/projects/<scope>/<parent>/` with:
 - broad context, split rationale, shared constraints, child registry, and integration sketch
 - `references/split-plan.json` as the durable resume source
 
+A freestyle project never becomes a coordination parent: converting an active
+detected freestyle parent is refused before any scaffold or removal, because
+there is no promotion from freestyle. Name a new parent slug in the split plan
+instead.
+
 Coordination parents do not keep executable phase artifacts. They should not contain `spec.md`, `design.md`, `plan.md`, or `implementation.md`.
 
 ## Child Projects

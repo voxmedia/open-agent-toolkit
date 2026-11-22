@@ -64,8 +64,9 @@ Where to start:
   start one from a scratchpad seed, and can reopen a summarized idea.
 - **Scoped work for later:** `oat-pjm-add-backlog-item` (needs `oat pjm init`).
 - **Ready to build:** `oat-project-lite`, `oat-project-brief`,
-  `oat-project-goal`, `oat-project-quick-start`, `oat-project-new`, or
-  `oat-project-import-plan` for a plan written elsewhere.
+  `oat-project-goal`, `oat-project-quick-start`, `oat-project-new`,
+  `oat-project-freestyle` when an orchestrating agent will run it without a
+  lifecycle, or `oat-project-import-plan` for a plan written elsewhere.
 
 Optional moves:
 

@@ -15,7 +15,10 @@ import {
   resolveSyncedTarget,
   type ResolvedSyncTarget,
 } from '@commands/project/sync/resolve-target';
-import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import {
+  freestyleStateLineEndings,
+  getFrontmatterBlock,
+} from '@commands/shared/frontmatter';
 import {
   removeFrontmatterField,
   replaceFrontmatter,
@@ -263,7 +266,11 @@ async function runProjectPause(
       throw new CliError(`Project state.md not found: ${statePath}`, 1);
     }
 
-    const content = await dependencies.readFile(statePath, 'utf8');
+    // A CRLF freestyle state is edited and validated as LF, then written back
+    // with its own line ending.
+    const rawContent = await dependencies.readFile(statePath, 'utf8');
+    const lineEndings = freestyleStateLineEndings(rawContent);
+    const content = lineEndings.content;
     const prePauseHead = resolved.syncTarget
       ? (
           await dependencies.gitRunner.run(['rev-parse', 'HEAD'], {
@@ -320,7 +327,11 @@ async function runProjectPause(
           1,
         );
       }
-      await dependencies.writeFile(statePath, nextContent, 'utf8');
+      await dependencies.writeFile(
+        statePath,
+        lineEndings.restore(nextContent),
+        'utf8',
+      );
     }
 
     if (resolved.syncTarget) {
@@ -347,7 +358,7 @@ async function runProjectPause(
               'failed',
             );
           }
-          await dependencies.writeFile(statePath, content, 'utf8');
+          await dependencies.writeFile(statePath, rawContent, 'utf8');
         }
         throw error;
       }

@@ -381,6 +381,47 @@ describe('oat project complete-state', () => {
       );
     });
 
+    it('needs no closeout snapshot for freestyle when configured and autonomous', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        configured: CONFIGURED,
+        state: [
+          '---',
+          'oat_workflow_mode: freestyle',
+          'oat_project_state_updated: "2026-10-01T00:00:00.000Z"',
+          '---',
+          '',
+          '# Project State: demo',
+          '',
+        ].join('\n'),
+      });
+      const setup = { args: ['--autonomous'], env: { OAT_AUTONOMOUS: '1' } };
+
+      expect(await closeoutMessage(fixture, setup)).toBe(
+        `Closeout invariant not required for ${PROJECT_REL}: a freestyle project has no lifecycle closeout sequence.`,
+      );
+      const { exitCode } = await completeState(fixture, setup);
+      expect(exitCode).toBe(0);
+      expect(await readFile(fixture.statePath, 'utf8')).toContain(
+        'oat_lifecycle: complete',
+      );
+    });
+
+    it('ignores a stored snapshot on a freestyle project', async () => {
+      const fixture = await createProjectFixture(tempDirs, {
+        state: [
+          '---',
+          'oat_workflow_mode: freestyle',
+          ...snapshotYaml({ preApprovalCompleted: ['summary'] }),
+          '---',
+          '',
+        ].join('\n'),
+      });
+      expect(await closeoutMessage(fixture)).toContain(
+        'Closeout invariant not required',
+      );
+      expect((await completeState(fixture)).exitCode).toBe(0);
+    });
+
     it('takes --autonomous and documents it', () => {
       const command = createProjectCompleteStateCommand();
       expect(command.options.map((option) => option.long)).toContain(

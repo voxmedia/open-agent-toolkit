@@ -459,7 +459,9 @@ request.
 or an explicitly supplied project/review target. Its core artifacts must be
 committed before review. Code review needs completed implementation work and
 the mode-appropriate requirements sources; lite, brief, and goal reviews do not
-require absent discovery, spec or design artifacts. A brief code review takes
+require absent discovery, spec or design artifacts. A freestyle project is not
+reviewed through this skill: it stops before writing and points to
+`oat-review-provide`. A brief code review takes
 its range from the journal's phase anchors. A goal integrated review names its
 milestone or delivery and its exact ordered phase set; see
 [Phase and final review](index.md#phase-and-final-review). Code reviews and plan artifact reviews

@@ -1727,7 +1727,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(readDeclaredVersion(content)).toBe('1.2.14');
+    expect(readDeclaredVersion(content)).toBe('1.2.15');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -2217,7 +2217,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.15',
+        version: '2.2.16',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -2226,7 +2226,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.12',
+        version: '2.3.13',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -2236,7 +2236,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.23',
+        version: '1.4.24',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -2244,7 +2244,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.27',
+        version: '2.3.28',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2261,7 +2261,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.30',
+        version: '2.3.31',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2762,7 +2762,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.30');
+    expect(readDeclaredVersion(content)).toBe('2.3.31');
   });
 
   it('allows model invocation of oat-project-implement only when the user asked', async () => {
@@ -2920,9 +2920,18 @@ describe('validateOatSkills', () => {
     // `metadata.version` migration, which moves the frontmatter version under a
     // `metadata:` key and so costs every bundled skill exactly one line.
     // Raised again from 246 for root-judgment logging, which joins the
-    // append points the entry lists for the same reason. The structural
-    // assertions below still enforce that step bodies stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(251);
+    // append points the entry lists for the same reason. Raised again from
+    // 251 for the freestyle stop, which must run in Step 0 before the route
+    // table loads dispatch preflight (a route that can write `state.md`), so
+    // it cannot live in a reference. Raised again from 266 for the read-only
+    // mode read that lets that stop run before the synced pull, which can
+    // commit. Raised again from 278 for that read's failure handling: an
+    // `ls-remote --exit-code` status split so a failed lookup or an unreadable
+    // ref mode stops before the pull, and a repository-root `cd` so the
+    // repo-relative active project resolves from a subdirectory. The
+    // structural assertions below still enforce that step bodies stay out of
+    // the entry.
+    expect(entry.split('\n').length).toBeLessThanOrEqual(296);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -3105,7 +3114,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.30');
+    expect(readDeclaredVersion(content)).toBe('2.3.31');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3203,7 +3212,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.30');
+    expect(readDeclaredVersion(content)).toBe('2.3.31');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3222,7 +3231,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.5.20');
+    expect(readDeclaredVersion(content)).toBe('1.5.21');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -3382,14 +3391,14 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.10'],
-      ['.agents/agents/oat-reviewer.md', '1.2.14'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.20'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.18'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.11'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.16'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.19'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.27'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.11'],
+      ['.agents/agents/oat-reviewer.md', '1.2.15'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.21'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.19'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.12'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.17'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.20'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.28'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3701,12 +3710,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(agent)).toBe('1.1.10');
+    expect(readDeclaredVersion(agent)).toBe('1.1.11');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.30');
+    expect(readDeclaredVersion(implement)).toBe('2.3.31');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -5194,14 +5203,14 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.45'],
-      ['oat-project-review-provide', '1.5.20'],
-      ['oat-project-review-receive', '1.6.18'],
-      ['oat-project-review-receive-remote', '1.5.6'],
-      ['oat-project-implement', '2.3.30'],
-      ['oat-project-pr-final', '1.6.19'],
-      ['oat-project-pr-progress', '1.3.11'],
-      ['oat-project-complete', '1.7.20'],
-      ['oat-project-next', '1.1.9'],
+      ['oat-project-review-provide', '1.5.21'],
+      ['oat-project-review-receive', '1.6.19'],
+      ['oat-project-review-receive-remote', '1.5.7'],
+      ['oat-project-implement', '2.3.31'],
+      ['oat-project-pr-final', '1.6.20'],
+      ['oat-project-pr-progress', '1.3.12'],
+      ['oat-project-complete', '1.7.21'],
+      ['oat-project-next', '1.1.10'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5276,7 +5285,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(readDeclaredVersion(receive)).toBe('1.6.18');
+    expect(readDeclaredVersion(receive)).toBe('1.6.19');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -6322,7 +6331,7 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
     expect(planTier3Row(liteTable)).toContain('`oat-project-lite`');
-    expect(readDeclaredVersion(next)).toBe('1.1.9');
+    expect(readDeclaredVersion(next)).toBe('1.1.10');
   });
 
   it('reports both lifecycle gate records in next and progress without routing on them', async () => {
@@ -6401,7 +6410,7 @@ describe('validateOatSkills', () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(readDeclaredVersion(progress)).toBe('1.4.9');
+    expect(readDeclaredVersion(progress)).toBe('1.4.10');
 
     const modeSections = [
       [
@@ -6614,11 +6623,11 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.45'],
-      ['oat-project-plan', '1.4.23'],
-      ['oat-project-quick-start', '2.3.27'],
-      ['oat-project-import-plan', '1.4.25'],
+      ['oat-project-plan', '1.4.24'],
+      ['oat-project-quick-start', '2.3.28'],
+      ['oat-project-import-plan', '1.4.26'],
       ['oat-project-lite', '1.1.16'],
-      ['oat-project-review-provide', '1.5.20'],
+      ['oat-project-review-provide', '1.5.21'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6687,9 +6696,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.30'],
-      ['oat-project-review-provide', '1.5.20'],
-      ['oat-project-review-provide-remote', '1.1.10'],
+      ['oat-project-implement', '2.3.31'],
+      ['oat-project-review-provide', '1.5.21'],
+      ['oat-project-review-provide-remote', '1.1.11'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6834,8 +6843,8 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.10'],
-      ['.agents/agents/oat-reviewer.md', '1.2.14'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.11'],
+      ['.agents/agents/oat-reviewer.md', '1.2.15'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.2'],
     ] as const;
 
@@ -7665,7 +7674,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.27');
+    expect(readDeclaredVersion(content)).toBe('2.3.28');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -7718,7 +7727,7 @@ describe('validateOatSkills', () => {
     expect(
       readDeclaredVersion(skillContent),
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toBe('2.3.12');
+    ).toBe('2.3.13');
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -8386,7 +8395,7 @@ describe('lite mode skill contracts', () => {
     expect(stateWrite).toContain('oat_workflow_origin: imported');
     expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
     expect(stateWrite).toContain('oat_plan_source: imported');
-    expect(readDeclaredVersion(content)).toBe('1.4.25');
+    expect(readDeclaredVersion(content)).toBe('1.4.26');
   });
 
   it('lite bypasses implementation checkpoints', async () => {
@@ -8645,8 +8654,8 @@ describe('lite mode skill contracts', () => {
     expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
       '`Assumptions`',
     );
-    expect(readDeclaredVersion(summary)).toBe('1.5.11');
-    expect(readDeclaredVersion(document)).toBe('1.8.16');
+    expect(readDeclaredVersion(summary)).toBe('1.5.12');
+    expect(readDeclaredVersion(document)).toBe('1.8.17');
   });
 
   it('routes lite projects through progress and next', async () => {
@@ -8862,8 +8871,8 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.30');
-    expect(readDeclaredVersion(implementer)).toBe('1.1.10');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.31');
+    expect(readDeclaredVersion(implementer)).toBe('1.1.11');
   });
 
   it('keeps lite review and PR prerequisites reduced but explicit', async () => {
@@ -9158,7 +9167,7 @@ describe('brief mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-new/SKILL.md',
-        /Quick, lite, brief, and goal projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
+        /Quick, lite, brief, goal, and freestyle projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
       ],
       [
         '.agents/skills/oat-project-plan/SKILL.md',
@@ -9307,7 +9316,7 @@ describe('goal mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-new/SKILL.md',
-        /Quick, lite, brief, and goal projects[\s\S]{0,120}start from their entry skills[\s\S]{0,160}`oat-project-goal`/,
+        /Quick, lite, brief, goal, and freestyle projects[\s\S]{0,120}start from their entry skills[\s\S]{0,160}`oat-project-goal`/,
       ],
       [
         '.agents/skills/oat-project-plan/SKILL.md',
@@ -9431,6 +9440,1119 @@ describe('goal mode skill contracts', () => {
     expect(implementer).toContain('## Goal Mode');
     expect(planAndResume).toContain('### Goal Projects');
     expect(closeout).toContain('### Goal Milestone Closeout');
+  });
+});
+
+describe('freestyle mode skill contracts', () => {
+  it('exposes freestyle from every declared project-entry surface', async () => {
+    const checks = [
+      [
+        '.agents/skills/oat-docs/SKILL.md',
+        /three main approaches[\s\S]{0,1100}oat-project-freestyle/i,
+      ],
+      [
+        '.agents/skills/oat-project-capture/SKILL.md',
+        /started any work[^\n]*oat-project-freestyle/i,
+      ],
+      [
+        '.agents/skills/oat-pjm-review-backlog/SKILL.md',
+        /recommended project mode[^\n]*oat-project-freestyle/i,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Start a new project[\s\S]{0,700}oat-project-freestyle/,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Workflow:[\s\S]{0,700}oat-project-freestyle/,
+      ],
+      [
+        '.agents/skills/oat-project-next/SKILL.md',
+        /projects` array is empty[\s\S]{0,700}oat-project-freestyle/,
+      ],
+      [
+        '.agents/skills/oat-project-new/SKILL.md',
+        /Quick, lite, brief, goal, and freestyle projects[\s\S]{0,120}start from their entry skills[\s\S]{0,200}`oat-project-freestyle`/,
+      ],
+      [
+        '.agents/skills/oat-project-discover/SKILL.md',
+        /decline this skill\. Offer[^\n]*`oat-project-freestyle`/,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+  });
+
+  it('stops every lifecycle skill that reads the mode for a freestyle project', async () => {
+    // Freestyle has no lifecycle workflow, so a skill that would otherwise
+    // read it with the spec-driven default names it and stops.
+    // Skills whose stop the ordering test below locates are checked there.
+    const checks = [
+      [
+        '.agents/skills/oat-project-next/SKILL.md',
+        /\*\*If `oat_workflow_mode` is `freestyle`:\*\*[^]*?Do not route to or invoke any\s+skill/,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /\*\*Freestyle mode \(`oat_workflow_mode: freestyle`\):\*\* there is no next skill\./,
+      ],
+      [
+        '.agents/skills/oat-project-plan/SKILL.md',
+        /\*\*`freestyle`\*\*: \*\*Stop\.\*\*/,
+      ],
+      [
+        '.agents/skills/oat-project-discover/SKILL.md',
+        /- freestyle project: no lifecycle skill continues it/,
+      ],
+      [
+        '.agents/skills/oat-project-implement/SKILL.md',
+        /\*\*Freestyle projects\.\*\*[^]*?`WORKFLOW_MODE` is `freestyle`, stop there and write nothing: no synced pull/,
+      ],
+      [
+        '.agents/skills/oat-project-quick-start/SKILL.md',
+        /When `TARGET_MODE` is `freestyle`, stop before any write[^]*?promotion from freestyle is not supported/,
+      ],
+      [
+        '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+        /records `oat_workflow_mode: freestyle`:\*\* stop\s+here, before the validation below, the PR fetch and any write/,
+      ],
+      [
+        '.agents/skills/oat-project-autonomous/SKILL.md',
+        /\| Existing freestyle project \(`oat_workflow_mode: freestyle`\)\s*\| Stop at a product-judgment boundary: freestyle has no lifecycle workflow/,
+      ],
+      [
+        '.agents/skills/oat-project-review-provide/SKILL.md',
+        /### Step 1\.6: Enforce Committed Artifact Baseline\s+\*\*Freestyle projects\.\*\*[^]*?stop before any write/,
+      ],
+      [
+        '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+        /If the mode is `freestyle`, stop before posting anything/,
+      ],
+      [
+        '.agents/skills/oat-project-review-receive/SKILL.md',
+        /records `oat_workflow_mode: freestyle`:\*\* stop\s+before any write/,
+      ],
+      [
+        '.agents/skills/oat-project-complete/SKILL.md',
+        /\*\*Freestyle projects\.\*\*[^]*?stop before any write[^]*?### Step 1\.5: Closeout Invariant Gate/,
+      ],
+      [
+        '.agents/skills/oat-project-import-plan/SKILL.md',
+        /When `TARGET_MODE` is `freestyle`, stop before any write[^]*?promotion from freestyle is not supported/,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+  });
+
+  it('places each freestyle stop before the first step that writes or checks lifecycle artifacts', async () => {
+    // A stop whose text exists but sits after a writing step does not stop
+    // anything, so each stop must come before the named later markers.
+    const checks: ReadonlyArray<
+      readonly [path: string, stop: string, later: readonly string[]]
+    > = [
+      [
+        '.agents/skills/oat-project-pr-progress/SKILL.md',
+        'This is a freestyle project; OAT opens no PR for it.',
+        [
+          'oat config set activeProject',
+          '### Step 0.5: Archive Residual Active Review Artifacts',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-pr-final/SKILL.md',
+        'This is a freestyle project; OAT opens no PR for it.',
+        [
+          'oat config set activeProject',
+          '### Step 0.5: Archive Residual Active Review Artifacts',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-document/SKILL.md',
+        'For `oat_workflow_mode: freestyle`, stop:',
+        [
+          'Verify at least one of `plan.md` or `implementation.md` exists',
+          '### Step 1: Check for PJM Infrastructure',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-summary/SKILL.md',
+        'For `oat_workflow_mode: freestyle`, stop before reading or writing anything',
+        [
+          'oat config set activeProject',
+          '### Step 1: Validate Implementation State',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-reconcile/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop before any write',
+        [
+          'oat config set activeProject',
+          'test -f "$PROJECT_PATH/plan.md"',
+          '### Step 1: Find Checkpoint',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-revise/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop before any write',
+        ['oat config set activeProject', '### Step 1: Validate Project State'],
+      ],
+      [
+        '.agents/skills/oat-project-import-plan/SKILL.md',
+        'When `TARGET_MODE` is `freestyle`, stop before any write',
+        [
+          '### Step 0 (Preflight): Inherited Git State',
+          'oat config set activeProject',
+          '### Step 3: Normalize Into Canonical OAT plan.md',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-quick-start/SKILL.md',
+        'When `TARGET_MODE` is `freestyle`, stop before any write',
+        [
+          '### Step 0 (Preflight): Inherited Git State',
+          'oat project new "{project-name}" --mode quick',
+          '### Step 1: Set Quick Workflow Metadata',
+        ],
+      ],
+      [
+        // Dispatch preflight can write state.md and the synced pull can
+        // commit, so the stop sits in Step 0 before both.
+        '.agents/skills/oat-project-implement/SKILL.md',
+        '`WORKFLOW_MODE` is `freestyle`, stop there and write nothing',
+        [
+          'oat project pull "$PROJECT_PATH"',
+          '### Route Loading Contract',
+          '| `references/dispatch-and-dry-run.md`',
+          '### Execution Order',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-design/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy',
+        [
+          '### Step 1: Check Specification Complete',
+          '### Step 2: Requirements Confirmation (folded spec authoring)',
+          'oat template resolve',
+          'oat internal commit-paths --identity',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-spec/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy',
+        [
+          '### Step 1: Check Discovery Complete',
+          'oat template resolve spec --output',
+          'oat internal commit-paths --identity',
+        ],
+      ],
+      [
+        // The synced arrival pulls (review-provide can commit an adoption),
+        // so each stop reads the mode before it (m01 J-1).
+        '.agents/skills/oat-project-review-provide/SKILL.md',
+        'When `WORKFLOW_MODE` is `freestyle`, stop there,',
+        [
+          'oat project pull "$PROJECT_PATH"',
+          '### Step 1: Parse Arguments or Ask',
+          '### Step 1.6: Enforce Committed Artifact Baseline',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-complete/SKILL.md',
+        '`WORKFLOW_MODE` is `freestyle`, stop there, before the synced archive entry',
+        [
+          'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
+          '### Step 1.5: Closeout Invariant Gate',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-autonomous/SKILL.md',
+        'When `WORKFLOW_MODE` is `freestyle`, stop there,',
+        [
+          'oat project pull "$PROJECT_PATH"',
+          '### Step 0.5: Capability Detection and Tier Selection',
+          '### Step 1: Detect the Persisted Entry State',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+        'records `oat_workflow_mode: freestyle`:** stop',
+        [
+          'Validation:',
+          '### Step 1: Resolve PR Number',
+          'npx agent-reviews --json --unresolved',
+          'reviews/archived/remote-pr-',
+          'oat internal commit-paths --identity',
+        ],
+      ],
+    ];
+
+    for (const [path, stop, later] of checks) {
+      const content = await readRepoFile(path);
+      const stopIndex = content.indexOf(stop);
+      expect(stopIndex, `${path} freestyle stop`).toBeGreaterThanOrEqual(0);
+      expect(
+        content.indexOf(stop, stopIndex + stop.length),
+        `${path} has one freestyle stop`,
+      ).toBe(-1);
+      for (const marker of later) {
+        const markerIndex = content.indexOf(marker);
+        expect(markerIndex, `${path} marker ${marker}`).toBeGreaterThan(0);
+        expect(stopIndex, `${path}: stop before ${marker}`).toBeLessThan(
+          markerIndex,
+        );
+      }
+    }
+
+    // import-plan adopts an existing project named at its Step 0.5 prompt, so
+    // that branch checks the named project's mode before its pointer write.
+    const importPlan = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+    const branch = importPlan.indexOf('If no valid active project exists:');
+    const promptedStop = importPlan.indexOf(
+      'If `TARGET_MODE` is `freestyle`, stop here, before the pointer write',
+      branch,
+    );
+    const pointerWrite = importPlan.indexOf(
+      'oat config set activeProject "$TARGET_PROJECT_PATH"',
+      branch,
+    );
+    expect(branch, 'import-plan Step 0.5 branch').toBeGreaterThan(0);
+    expect(promptedStop, 'import-plan prompted-name stop').toBeGreaterThan(
+      branch,
+    );
+    expect(
+      promptedStop,
+      'import-plan: prompted-name stop before the pointer write',
+    ).toBeLessThan(pointerWrite);
+
+    // quick-start scaffolds a named project, so that branch checks an
+    // existing project's mode before `oat project new` runs.
+    const quickStart = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const quickBranch = quickStart.indexOf(
+      'If no valid active project exists:',
+    );
+    const namedStop = quickStart.indexOf(
+      'If `TARGET_MODE` is `freestyle`, stop here, before the scaffold below',
+      quickBranch,
+    );
+    const scaffold = quickStart.indexOf(
+      'oat project new "{project-name}" --mode quick',
+      quickBranch,
+    );
+    expect(quickBranch, 'quick-start Step 0.5 branch').toBeGreaterThan(0);
+    expect(namedStop, 'quick-start named-project stop').toBeGreaterThan(
+      quickBranch,
+    );
+    expect(
+      namedStop,
+      'quick-start: named-project stop before the scaffold',
+    ).toBeLessThan(scaffold);
+
+    // With no active project and no name argument, the name is gathered and
+    // checked before Step 0, whose manifest-only auto-commit can commit.
+    const earlyName = quickStart.indexOf(
+      'Resolve the name first when it is missing.',
+    );
+    const firstCommit = quickStart.indexOf(
+      'oat internal commit-paths --identity',
+    );
+    expect(earlyName, 'quick-start early name resolution').toBeGreaterThan(0);
+    expect(
+      earlyName,
+      'quick-start: name resolved before the first commit-capable step',
+    ).toBeLessThan(firstCommit);
+    expect(earlyName).toBeLessThan(
+      quickStart.indexOf('### Step 0 (Preflight): Inherited Git State'),
+    );
+
+    // A project resolved by name in Step 0 is checked before its pointer is
+    // written, in each skill whose stop follows that write in the text.
+    for (const [path, guardText] of [
+      [
+        '.agents/skills/oat-project-implement/SKILL.md',
+        'Run the freestyle check above on it first; a freestyle project stops there,',
+      ],
+      [
+        '.agents/skills/oat-project-design/SKILL.md',
+        'Run the freestyle check below on it first; a freestyle project stops there,',
+      ],
+      [
+        '.agents/skills/oat-project-spec/SKILL.md',
+        'Run the freestyle check below on it first; a freestyle project stops there,',
+      ],
+    ] as const) {
+      const content = await readRepoFile(path);
+      const guard = content.indexOf(guardText);
+      const write = content.indexOf(
+        'oat config set activeProject "$PROJECT_PATH"',
+      );
+      expect(guard, `${path} pointer-write guard`).toBeGreaterThan(0);
+      expect(guard, `${path}: guard before the pointer write`).toBeLessThan(
+        write,
+      );
+    }
+  });
+
+  it('runs the published quick-start freestyle blocks against the path `oat project new` scaffolds (m01 R3-5, R4-1, R4-2, R5-1)', async () => {
+    const quickStart = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const section = quickStart.slice(
+      quickStart.indexOf('### Freestyle Projects'),
+      quickStart.indexOf('### Step 0 (Preflight): Inherited Git State'),
+    );
+    const preStep0 = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
+    expect(preStep0, 'pre-Step-0 freestyle block').toBeDefined();
+    const branch = quickStart.indexOf('If no valid active project exists:');
+    const namedCheck = quickStart.indexOf(
+      'Read the mode of an existing project at `NAMED_PATH` first',
+      branch,
+    );
+    const scaffoldCall = quickStart.indexOf(
+      'oat project new "{project-name}" --mode quick',
+      branch,
+    );
+    expect(namedCheck, 'Step 0.5 named check').toBeGreaterThan(branch);
+    expect(namedCheck, 'named check before the scaffold').toBeLessThan(
+      scaffoldCall,
+    );
+    const step05 = /```bash\n([\s\S]*?)```/
+      .exec(quickStart.slice(namedCheck, scaffoldCall))?.[1]
+      ?.replace(/^ {2}/gm, '');
+    expect(step05, 'Step 0.5 named block').toBeDefined();
+    // Ordering: the pre-Step-0 block resolves the name before Step 0's first
+    // commit-capable step.
+    expect(quickStart.indexOf('NAMED_PATH=')).toBeLessThan(
+      quickStart.indexOf('oat internal commit-paths --identity'),
+    );
+    // Run the published blocks verbatim; only the name placeholder is bound.
+    const bind = (block: string, name = 'proj') =>
+      block.replaceAll('{project-name}', name);
+    const preStep0Script = `${bind(preStep0 as string)}\nprintf '%s\\n' "$TARGET_PATH" "$TARGET_MODE"\n`;
+    const preStep0UnusedName = `${bind(preStep0 as string, 'unused')}\nprintf '%s\\n' "$TARGET_PATH" "$TARGET_MODE"\n`;
+    const step05Script = `${bind(step05 as string)}\nprintf '%s\\n' "$NAMED_PATH" "$TARGET_MODE"\n`;
+
+    const cli = join(process.cwd(), 'dist', 'index.js');
+    const root = await mkdtemp(join(tmpdir(), 'oat-quick-named-'));
+    try {
+      const bin = join(root, 'bin');
+      await mkdir(bin);
+      await writeFile(
+        join(bin, 'oat'),
+        `#!/bin/bash\nexec node "${cli}" "$@"\n`,
+        { mode: 0o755 },
+      );
+      const cases: Array<{
+        label: string;
+        scope?: string;
+        projectsRoot?: string;
+        expected: string;
+      }> = [
+        {
+          label: 'shared',
+          scope: 'shared',
+          expected: '.oat/projects/shared/proj',
+        },
+        {
+          label: 'local',
+          scope: 'local',
+          expected: '.oat/projects/local/proj',
+        },
+        // No configured scope: `oat project new` defaults to synced.
+        { label: 'synced (default)', expected: '.oat/projects/synced/proj' },
+        {
+          label: 'local under records/shared/.',
+          scope: 'local',
+          projectsRoot: 'records/shared/.',
+          expected: 'records/local/proj',
+        },
+      ];
+      let index = 0;
+      for (const testCase of cases) {
+        index += 1;
+        const repo = join(root, `repo-${index}`);
+        const origin = join(root, `origin-${index}.git`);
+        await execFileAsync('git', ['init', '-q', '--bare', origin]);
+        await execFileAsync('git', ['init', '-q', repo]);
+        const git = (...args: string[]) =>
+          execFileAsync('git', args, { cwd: repo });
+        await git('remote', 'add', 'origin', origin);
+        await git(
+          '-c',
+          'user.email=test@example.com',
+          '-c',
+          'user.name=Test',
+          'commit',
+          '-q',
+          '--allow-empty',
+          '-m',
+          'init',
+        );
+        const env = {
+          ...process.env,
+          HOME: join(root, 'home'),
+          PATH: `${bin}:${process.env.PATH}`,
+          GIT_AUTHOR_NAME: 'Test',
+          GIT_AUTHOR_EMAIL: 'test@example.com',
+          GIT_COMMITTER_NAME: 'Test',
+          GIT_COMMITTER_EMAIL: 'test@example.com',
+          OAT_PROJECTS_DEFAULT_SCOPE: testCase.scope ?? '',
+          OAT_PROJECTS_ROOT: testCase.projectsRoot ?? '',
+        };
+        const { stdout: scaffoldOut } = await execFileAsync(
+          'node',
+          [
+            cli,
+            '--json',
+            'project',
+            'new',
+            'proj',
+            '--mode',
+            'freestyle',
+            '--no-set-active',
+            '--no-dashboard',
+          ],
+          { cwd: repo, env },
+        );
+        const scaffolded = (JSON.parse(scaffoldOut) as { projectPath: string })
+          .projectPath;
+        expect(scaffolded, `${testCase.label}: scaffold path`).toBe(
+          testCase.expected,
+        );
+        const runBlock = async (script: string, cwd = repo) =>
+          (
+            await execFileAsync('/bin/bash', ['-c', script], { cwd, env })
+          ).stdout
+            .trim()
+            .split('\n');
+        // Step 0.5 reads only the named path, so it runs once per case; the
+        // stale-pointer fallback of the pre-Step-0 block is exercised once.
+        expect(
+          await runBlock(step05Script),
+          `${testCase.label}: Step 0.5 block`,
+        ).toEqual([scaffolded, 'freestyle']);
+        const pointers =
+          index === 1 ? (['unset', 'stale'] as const) : (['unset'] as const);
+        for (const pointer of pointers) {
+          if (pointer === 'stale') {
+            await mkdir(join(repo, '.oat/projects/shared/gone'), {
+              recursive: true,
+            });
+            await execFileAsync(
+              'node',
+              [
+                cli,
+                'config',
+                'set',
+                'activeProject',
+                '.oat/projects/shared/gone',
+              ],
+              { cwd: repo, env },
+            );
+          }
+          expect(
+            await runBlock(preStep0Script),
+            `${testCase.label}, ${pointer} pointer: pre-Step-0 block`,
+          ).toEqual([scaffolded, 'freestyle']);
+        }
+        // From a subdirectory (m01 R5-1): a valid repo-relative active
+        // freestyle pointer wins over an unused name, and Step 0.5 still finds
+        // the named freestyle project.
+        const subdir = join(repo, 'src');
+        await mkdir(subdir, { recursive: true });
+        await execFileAsync(
+          'node',
+          [cli, 'config', 'set', 'activeProject', scaffolded],
+          { cwd: repo, env },
+        );
+        expect(
+          await runBlock(preStep0UnusedName, subdir),
+          `${testCase.label}, subdirectory, active freestyle pointer: pre-Step-0 block`,
+        ).toEqual([scaffolded, 'freestyle']);
+        expect(
+          await runBlock(step05Script, subdir),
+          `${testCase.label}, subdirectory, named freestyle project: Step 0.5 block`,
+        ).toEqual([scaffolded, 'freestyle']);
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  describe('review-provide, complete and autonomous read the mode before the synced arrival (m01 J-1)', () => {
+    const PROJECT = '.oat/projects/synced/proj';
+    type Skill = 'review-provide' | 'complete' | 'autonomous';
+    const SKILLS: Record<Skill, { path: string; paragraph: string }> = {
+      'review-provide': {
+        path: '.agents/skills/oat-project-review-provide/SKILL.md',
+        paragraph: '**Freestyle projects.** Before the arrival pull below',
+      },
+      complete: {
+        path: '.agents/skills/oat-project-complete/SKILL.md',
+        paragraph:
+          '**Freestyle projects.** Before the synced archive entry below',
+      },
+      autonomous: {
+        path: '.agents/skills/oat-project-autonomous/SKILL.md',
+        paragraph: '**Freestyle projects.** Before the synced pull below',
+      },
+    };
+
+    function bashBlocks(text: string): string[] {
+      return [...text.matchAll(/```bash\n([\s\S]*?)```/g)].map(
+        (match) => match[1] as string,
+      );
+    }
+
+    /** The mode read, the unchanged arrival after it, and any prefix. */
+    async function blocks(skill: Skill): Promise<{
+      prefix: string;
+      modeRead: string;
+      arrival: string;
+      paragraph: string;
+    }> {
+      const content = await readRawRepoFile(SKILLS[skill].path);
+      const at = content.indexOf(SKILLS[skill].paragraph);
+      expect(at, `${skill} freestyle arrival paragraph`).toBeGreaterThan(0);
+      const [modeRead, arrival] = bashBlocks(content.slice(at));
+      expect(modeRead, `${skill} mode-read block`).toContain(
+        'WORKFLOW_MODE=null',
+      );
+      expect(modeRead).not.toContain('oat project pull');
+      // Autonomous resolves PROJECT_PATH in the block before the paragraph.
+      const prefix =
+        skill === 'autonomous'
+          ? (bashBlocks(content.slice(0, at))
+              .reverse()
+              .find((block) => block.includes('PROJECT_PATH=')) ?? '')
+          : '';
+      return {
+        prefix,
+        modeRead: modeRead as string,
+        arrival: arrival as string,
+        paragraph: content.slice(at, content.indexOf('```bash', at)),
+      };
+    }
+
+    const CONTINUES = 'oat-test: arrival continues';
+
+    async function run(
+      skill: Skill,
+      options: {
+        checkout?: string;
+        record?: boolean;
+        refMode?: string;
+        lsRemote?: number;
+      },
+    ): Promise<{
+      pulled: boolean;
+      stopped: boolean;
+      status: number;
+      stderr: string;
+    }> {
+      const { prefix, modeRead, arrival } = await blocks(skill);
+      const root = await mkdtemp(join(tmpdir(), `oat-${skill}-arrival-`));
+      try {
+        const bin = join(root, 'bin');
+        await mkdir(bin);
+        await mkdir(join(root, '.oat/projects/synced'), { recursive: true });
+        if (options.checkout !== undefined) {
+          await mkdir(join(root, PROJECT), { recursive: true });
+          await writeFile(
+            join(root, PROJECT, 'state.md'),
+            `---\noat_workflow_mode: ${options.checkout}\n---\n`,
+          );
+        }
+        if (options.record) {
+          await writeFile(join(root, `${PROJECT}.json`), '{}\n');
+        }
+        await writeFile(
+          join(bin, 'oat'),
+          [
+            '#!/bin/bash',
+            'case "$1 $2" in',
+            `  "config get") echo "${PROJECT}" ;;`,
+            '  "project scope") echo synced ;;',
+            '  "project status") sed -n "s/^oat_workflow_mode: //p" "$4/state.md" ;;',
+            '  "project pull") echo pulled > "$PULL_MARK" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        await writeFile(
+          join(bin, 'git'),
+          [
+            '#!/bin/bash',
+            'case "$1" in',
+            '  rev-parse) echo "$STUB_ROOT" ;;',
+            '  ls-remote)',
+            '    code="${STUB_LS:-0}"',
+            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            // Like git, an absent ref exits 2 only under --exit-code.
+            '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
+            '    exit "$code" ;;',
+            '  fetch) exit 0 ;;',
+            '  show)',
+            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        // Complete's arrival is its synced archive entry executor, which
+        // pulls; stand in for it and pass every other node call through.
+        await writeFile(
+          join(bin, 'node'),
+          [
+            '#!/bin/bash',
+            'case "$1" in',
+            '  *execute-synced-archive-entry.mjs)',
+            '    echo pulled > "$PULL_MARK"',
+            '    printf \'{"status":"ok","route":"continue-active"}\\n\' ;;',
+            `  *) exec "${process.execPath}" "$@" ;;`,
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        const mark = join(root, 'pulled');
+        const env = {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          PULL_MARK: mark,
+          STUB_ROOT: root,
+          STUB_REF_MODE: options.refMode ?? 'quick',
+          STUB_LS: String(options.lsRemote ?? 0),
+          SKILL_DIR: join(
+            process.cwd(),
+            '..',
+            '..',
+            '.agents/skills/oat-project-complete',
+          ),
+        };
+        const exec = async (script: string) => {
+          try {
+            const result = await execFileAsync('/bin/bash', ['-c', script], {
+              cwd: root,
+              env,
+            });
+            return { status: 0, stderr: result.stderr };
+          } catch (error) {
+            const failure = error as { code?: number; stderr?: string };
+            return {
+              status: failure.code ?? 1,
+              stderr: String(failure.stderr ?? error),
+            };
+          }
+        };
+        // The skill stops at the freestyle stop or a failed read; only
+        // otherwise does it run the arrival that follows. A marker after the
+        // mode read, in the same shell, shows whether the block itself ended
+        // execution: the stop message alone is not a stop.
+        const read = await exec(
+          `${prefix}\n${modeRead}\necho ${CONTINUES} >&2`,
+        );
+        const stopped = !read.stderr.includes(CONTINUES);
+        if (stopped) {
+          return { pulled: existsSync(mark), stopped, ...read };
+        }
+        const arrived = await exec(`${prefix}\n${arrival}`);
+        return {
+          pulled: existsSync(mark),
+          stopped,
+          status: arrived.status,
+          stderr: read.stderr + arrived.stderr,
+        };
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    }
+
+    for (const skill of Object.keys(SKILLS) as Skill[]) {
+      it(`${skill}: a freestyle project stops before the arrival and other modes still arrive`, async () => {
+        const { paragraph } = await blocks(skill);
+        expect(paragraph.replace(/\s+/g, ' ')).toContain(
+          'With no checkout here yet, add: "Run `oat project pull <slug>` to bring it here."',
+        );
+
+        const here = await run(skill, { checkout: 'freestyle', record: true });
+        expect(here.stopped, `${skill}: freestyle checkout here stops`).toBe(
+          true,
+        );
+        expect(here.status, here.stderr).toBe(0);
+        expect(here.pulled, `${skill}: freestyle checkout here: no pull`).toBe(
+          false,
+        );
+        expect(here.stderr).toContain(
+          'proj is a freestyle project; stopping before arrival',
+        );
+
+        const fromRef = await run(skill, { refMode: 'freestyle' });
+        expect(fromRef.stopped, `${skill}: freestyle from the ref stops`).toBe(
+          true,
+        );
+        expect(fromRef.status, fromRef.stderr).toBe(0);
+        expect(
+          fromRef.pulled,
+          `${skill}: freestyle read from the ref: no pull`,
+        ).toBe(false);
+        expect(fromRef.stderr).toContain(
+          'proj is a freestyle project; stopping before arrival',
+        );
+
+        const quick = await run(skill, { refMode: 'quick' });
+        expect(quick.stopped, `${skill}: quick does not stop`).toBe(false);
+        expect(quick.status, quick.stderr).toBe(0);
+        expect(quick.pulled, `${skill}: quick control: arrival runs`).toBe(
+          true,
+        );
+        const quickHere = await run(skill, { checkout: 'quick', record: true });
+        expect(
+          quickHere.pulled,
+          `${skill}: quick checkout here: arrival runs`,
+        ).toBe(true);
+
+        const failedLookup = await run(skill, { lsRemote: 128, record: true });
+        expect(failedLookup.stopped, `${skill}: failed lookup stops`).toBe(
+          true,
+        );
+        expect(failedLookup.status).toBe(1);
+        expect(failedLookup.stderr).toContain(
+          'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
+        );
+        expect(failedLookup.pulled, `${skill}: failed lookup: no pull`).toBe(
+          false,
+        );
+      });
+    }
+
+    it('keeps each existing arrival block byte-identical to the one before the mode read', async () => {
+      // The mode read is a separate block placed before the arrival; the
+      // arrival block itself, and so every other mode's pull, is unchanged.
+      const expected: Record<Skill, string> = {
+        'review-provide':
+          'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
+        complete:
+          'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" \\',
+        autonomous:
+          'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before autonomous work continues" >&2; exit 1; }',
+      };
+      for (const skill of Object.keys(SKILLS) as Skill[]) {
+        const { arrival } = await blocks(skill);
+        expect(arrival, `${skill} arrival`).toContain(expected[skill]);
+        expect(arrival, `${skill} arrival has no mode read`).not.toContain(
+          'WORKFLOW_MODE=',
+        );
+      }
+    });
+  });
+
+  it('the freestyle completion sequence pushes a synced project between complete-state and archive (m01 J-3)', async () => {
+    // Archive refuses a dirty synced project, so the documented sequence
+    // must name the push between the two commands that bracket it.
+    const sites = [
+      {
+        path: '.agents/skills/oat-project-complete/SKILL.md',
+        anchor: 'freestyle project. When `shape.md`',
+      },
+      {
+        path: 'apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md',
+        anchor: 'A freestyle project has no closeout sequence',
+      },
+    ];
+    for (const site of sites) {
+      const content = await readRawRepoFile(site.path);
+      const at = content.indexOf(site.anchor);
+      expect(at, `${site.path} freestyle completion anchor`).toBeGreaterThan(0);
+      const passage = content
+        .slice(at, content.indexOf('\n\n', at))
+        .replace(/\s+/g, ' ');
+      const completeState = passage.indexOf(
+        '`oat project complete-state <project-path>`',
+      );
+      const push = passage.indexOf('`oat project push <project-path>`');
+      const archive = passage.indexOf('`oat project archive <project-path>`');
+      expect(completeState, `${site.path} complete-state`).toBeGreaterThan(-1);
+      expect(push, `${site.path} push after complete-state`).toBeGreaterThan(
+        completeState,
+      );
+      expect(archive, `${site.path} archive after push`).toBeGreaterThan(push);
+      expect(passage, `${site.path} push is synced-only`).toContain(
+        'for a synced project, `oat project push <project-path>`',
+      );
+      expect(passage, `${site.path} push follows shape.md`).toContain(
+        'subject to the publication agreement in `shape.md`',
+      );
+    }
+  });
+
+  describe('implement Step 0 reads the mode before the synced pull', () => {
+    async function arrivalBlock(): Promise<string> {
+      const implement = await readRepoFile(
+        '.agents/skills/oat-project-implement/SKILL.md',
+      );
+      const step0 = implement.slice(
+        implement.indexOf('### Step 0: Resolve Active Project'),
+        implement.indexOf('### Route Loading Contract'),
+      );
+      const block = /```bash\n([\s\S]*?)```/.exec(step0)?.[1];
+      expect(block, 'Step 0 arrival block').toBeDefined();
+      return block as string;
+    }
+
+    const PROJECT = '.oat/projects/synced/proj';
+
+    /** A stub `oat` that reads the mode from `state.md` and marks a pull. */
+    async function writeStubOat(bin: string): Promise<void> {
+      await writeFile(
+        join(bin, 'oat'),
+        [
+          '#!/bin/bash',
+          'case "$1 $2" in',
+          `  "config get") echo "${PROJECT}" ;;`,
+          '  "project scope") echo synced ;;',
+          '  "project status") sed -n "s/^oat_workflow_mode: //p" "$4/state.md" ;;',
+          '  "project pull") echo pulled > "$PULL_MARK" ;;',
+          'esac',
+          '',
+        ].join('\n'),
+        { mode: 0o755 },
+      );
+    }
+
+    async function run(
+      block: string,
+      options: {
+        checkout?: string;
+        record?: boolean;
+        refMode?: string;
+        /** Exit code of each `git ls-remote` call, in order; the last repeats. */
+        lsRemote?: number[];
+        subdir?: string;
+      },
+    ): Promise<{ pulled: boolean; status: number; stderr: string }> {
+      const root = await mkdtemp(join(tmpdir(), 'oat-implement-arrival-'));
+      try {
+        const bin = join(root, 'bin');
+        await mkdir(bin);
+        await mkdir(join(root, '.oat/projects/synced'), { recursive: true });
+        if (options.checkout !== undefined) {
+          await mkdir(join(root, PROJECT), { recursive: true });
+          await writeFile(
+            join(root, PROJECT, 'state.md'),
+            `---\noat_workflow_mode: ${options.checkout}\n---\n`,
+          );
+        }
+        if (options.record) {
+          await writeFile(join(root, `${PROJECT}.json`), '{}\n');
+        }
+        await writeStubOat(bin);
+        await writeFile(
+          join(root, 'ls-codes'),
+          (options.lsRemote ?? [0]).join('\n'),
+        );
+        await writeFile(
+          join(bin, 'git'),
+          [
+            '#!/bin/bash',
+            'case "$1" in',
+            '  rev-parse) echo "$STUB_ROOT" ;;',
+            '  ls-remote)',
+            '    code=$(head -1 "$STUB_ROOT/ls-codes")',
+            '    [ "$(wc -l < "$STUB_ROOT/ls-codes")" -gt 0 ] && sed -i.bak 1d "$STUB_ROOT/ls-codes"',
+            '    [ -n "$code" ] || code=$(cat "$STUB_ROOT/ls-last")',
+            '    echo "$code" > "$STUB_ROOT/ls-last"',
+            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            // Like git, an absent ref exits 2 only under --exit-code.
+            '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
+            '    exit "$code" ;;',
+            '  fetch) exit 0 ;;',
+            '  show)',
+            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        const cwd = join(root, options.subdir ?? '');
+        await mkdir(cwd, { recursive: true });
+        const mark = join(root, 'pulled');
+        let status = 0;
+        let stderr = '';
+        try {
+          const result = await execFileAsync('/bin/bash', ['-c', block], {
+            cwd,
+            env: {
+              ...process.env,
+              PATH: `${bin}:${process.env.PATH}`,
+              PULL_MARK: mark,
+              STUB_ROOT: root,
+              STUB_REF_MODE: options.refMode ?? 'quick',
+            },
+          });
+          stderr = result.stderr;
+        } catch (error) {
+          const failure = error as { code?: number; stderr?: string };
+          status = failure.code ?? 1;
+          stderr = String(failure.stderr ?? error);
+        }
+        return { pulled: existsSync(mark), status, stderr };
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    }
+
+    it('stops a freestyle project before the pull and keeps the pull for other modes', async () => {
+      const block = await arrivalBlock();
+      expect(
+        block.indexOf('if [ "$WORKFLOW_MODE" = "freestyle" ]; then'),
+        'the freestyle check precedes the pull',
+      ).toBeLessThan(block.indexOf('oat project pull "$PROJECT_PATH"'));
+
+      const here = await run(block, { checkout: 'freestyle' });
+      expect(here.pulled, 'freestyle checkout here: no pull').toBe(false);
+      expect(here.stderr).toContain(
+        'is a freestyle project; stopping before arrival',
+      );
+      const absent = await run(block, { refMode: 'freestyle' });
+      expect(absent.pulled, 'freestyle read from the ref: no pull').toBe(false);
+      expect(absent.stderr).toContain(
+        'is a freestyle project; stopping before arrival',
+      );
+      const quickAbsent = await run(block, { refMode: 'quick' });
+      expect(quickAbsent.pulled, 'quick, checkout absent: arrival pull').toBe(
+        true,
+      );
+      const quickHere = await run(block, { checkout: 'quick' });
+      expect(quickHere.pulled, 'quick, checkout here: arrival pull').toBe(true);
+    });
+
+    it('stops before the pull when the first ref lookup fails, and continues when the ref is absent (m01 R3-2)', async () => {
+      const block = await arrivalBlock();
+      // Only the first `git ls-remote` fails; a retry would succeed and pull.
+      const failedLookup = await run(block, {
+        record: true,
+        lsRemote: [128, 0],
+      });
+      expect(failedLookup.status).toBe(1);
+      expect(failedLookup.stderr).toContain(
+        'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
+      );
+      expect(failedLookup.pulled, 'failed lookup: no pull').toBe(false);
+      // Exit 2 is an absent ref: arrival continues as before and the recorded
+      // project still pulls.
+      const absentRef = await run(block, { record: true, lsRemote: [2] });
+      expect(absentRef.status).toBe(0);
+      expect(absentRef.pulled, 'absent ref with a record: arrival pull').toBe(
+        true,
+      );
+      // A ref whose mode cannot be read stops before the pull.
+      const unreadable = await run(block, { record: true, refMode: '' });
+      expect(unreadable.status).toBe(1);
+      expect(unreadable.stderr).toContain('cannot read the mode of proj');
+      expect(unreadable.pulled).toBe(false);
+    });
+
+    it('resolves the repo-relative project from the repository root when run in a subdirectory (m01 R3-4)', async () => {
+      const block = await arrivalBlock();
+      // The checkout says freestyle; the ref says quick. Reading from `src`
+      // without resolving the root would miss the checkout and pull.
+      const fromSubdir = await run(block, {
+        checkout: 'freestyle',
+        record: true,
+        refMode: 'quick',
+        subdir: 'src',
+      });
+      expect(fromSubdir.pulled, 'subdirectory: no pull').toBe(false);
+      expect(fromSubdir.stderr).toContain(
+        'is a freestyle project; stopping before arrival',
+      );
+    });
+
+    it('leaves a local ref unchanged under a refs/oat/projects/* fetch refspec (m01 R3-3)', async () => {
+      const block = await arrivalBlock();
+      const root = await mkdtemp(join(tmpdir(), 'oat-implement-refmap-'));
+      try {
+        const git = (cwd: string, ...args: string[]) =>
+          execFileAsync('git', args, { cwd }).then((r) => r.stdout.trim());
+        const remote = join(root, 'remote.git');
+        const repo = join(root, 'repo');
+        const seed = join(root, 'seed');
+        await git(root, 'init', '--bare', '-q', remote);
+        await mkdir(seed);
+        await git(seed, 'init', '-q');
+        await git(seed, 'config', 'user.email', 'test@example.com');
+        await git(seed, 'config', 'user.name', 'Test');
+        await writeFile(
+          join(seed, 'state.md'),
+          '---\noat_workflow_mode: quick\n---\n',
+        );
+        await git(seed, 'add', 'state.md');
+        await git(seed, 'commit', '-q', '-m', 'published');
+        const published = await git(seed, 'rev-parse', 'HEAD');
+        await git(seed, 'push', '-q', remote, `HEAD:refs/oat/projects/proj`);
+        await git(seed, 'commit', '-q', '--allow-empty', '-m', 'unpublished');
+        const ahead = await git(seed, 'rev-parse', 'HEAD');
+
+        await git(root, 'clone', '-q', remote, repo);
+        await git(
+          repo,
+          'config',
+          '--add',
+          'remote.origin.fetch',
+          '+refs/oat/projects/*:refs/oat/projects/*',
+        );
+        await git(repo, 'fetch', '-q', seed, `${ahead}`);
+        await git(repo, 'update-ref', 'refs/oat/projects/proj', ahead);
+        const bin = join(root, 'bin');
+        await mkdir(bin);
+        await writeStubOat(bin);
+
+        await execFileAsync('/bin/bash', ['-c', block], {
+          cwd: repo,
+          env: {
+            ...process.env,
+            PATH: `${bin}:${process.env.PATH}`,
+            PULL_MARK: join(root, 'pulled'),
+          },
+        });
+
+        expect(published).not.toBe(ahead);
+        expect(await git(repo, 'rev-parse', 'refs/oat/projects/proj')).toBe(
+          ahead,
+        );
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+  });
+
+  it('makes reviewer and implementer contracts name freestyle', async () => {
+    const [reviewer, implementer] = await Promise.all([
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+    ]);
+
+    expect(reviewer).toMatch(
+      /\*\*workflow_mode\*\*: [^\n]*`goal` \| `freestyle`/,
+    );
+    expect(reviewer).toMatch(
+      /- \*\*freestyle\*\*: no lifecycle artifact is expected\./,
+    );
+    expect(implementer).toMatch(
+      /\(`freestyle` is never dispatched here: `oat-project-implement` stops for a\s+freestyle project/,
+    );
   });
 });
 

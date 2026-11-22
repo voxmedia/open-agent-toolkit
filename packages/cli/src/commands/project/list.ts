@@ -88,7 +88,7 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   gitRunner: defaultGitRunner,
 };
 
-async function directoryExists(path: string): Promise<boolean> {
+export async function directoryExists(path: string): Promise<boolean> {
   try {
     return (await stat(path)).isDirectory();
   } catch (error) {
@@ -144,6 +144,23 @@ async function filterProjectsForList(
   return filtered;
 }
 
+/** The HINT column: the storage action a row needs, or `—` when none. */
+export function projectListHint(project: ProjectListRow): string {
+  return project.kind === 'materialized'
+    ? project.recordError
+      ? 'restore record from Git'
+      : '—'
+    : project.kind === 'recorded-invalid'
+      ? 'restore record from Git'
+      : project.kind === 'recorded-terminal'
+        ? project.archiveSnapshot
+          ? 'retry completion cleanup'
+          : 'retry archive completion'
+        : project.kind === 'terminal-invalid'
+          ? 'repair terminal ref mismatch'
+          : `oat project pull ${project.name}`;
+}
+
 function formatProjectTable(projects: ProjectListRow[]): string[] {
   if (projects.length === 0) {
     return ['No tracked projects found.'];
@@ -152,29 +169,20 @@ function formatProjectTable(projects: ProjectListRow[]): string[] {
   const rows = projects.map((project) => ({
     name: project.name,
     scope: project.scope,
+    // Freestyle has no lifecycle phase or progress; its mode stands in the
+    // PHASE column so the row still reads as freestyle.
     phase:
-      project.phase === null
-        ? '—'
-        : `${project.phase} (${project.phaseStatus})`,
+      project.workflowMode === 'freestyle'
+        ? 'freestyle'
+        : project.phase === null
+          ? '—'
+          : `${project.phase} (${project.phaseStatus})`,
     progress:
-      project.progress === null
+      project.progress === null || project.workflowMode === 'freestyle'
         ? '—'
         : `${project.progress.completed}/${project.progress.total}`,
     recommendation: project.recommendation.skill,
-    hint:
-      project.kind === 'materialized'
-        ? project.recordError
-          ? 'restore record from Git'
-          : '—'
-        : project.kind === 'recorded-invalid'
-          ? 'restore record from Git'
-          : project.kind === 'recorded-terminal'
-            ? project.archiveSnapshot
-              ? 'retry completion cleanup'
-              : 'retry archive completion'
-            : project.kind === 'terminal-invalid'
-              ? 'repair terminal ref mismatch'
-              : `oat project pull ${project.name}`,
+    hint: projectListHint(project),
   }));
 
   const widths = {
@@ -367,6 +375,47 @@ export async function probeAuthoritativeCompletedRef(
   return probeSyncedTerminalRefs(target, sha!, git);
 }
 
+export interface UnmaterializedSyncedDependencies {
+  probeSyncedTerminalRefs: typeof probeSyncedTerminalRefs;
+  probeAuthoritativeCompletedRef: typeof probeAuthoritativeCompletedRef;
+  gitRunner: GitRunner;
+}
+
+/**
+ * Classifies a synced project record with no checkout in this worktree: not
+ * pulled yet (`oat project pull`), or terminal on origin. `list` and `status`
+ * share it so both report an unpulled project the same way.
+ */
+export async function classifyUnmaterializedSyncedRecord(
+  repoRoot: string,
+  projectsRoot: string,
+  record: SyncedProjectRecord,
+  dependencies: UnmaterializedSyncedDependencies,
+): Promise<ReturnType<typeof classifyLegacySyncedRecord>> {
+  const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
+  const authoritative = await dependencies.probeAuthoritativeCompletedRef(
+    target,
+    dependencies.gitRunner,
+  );
+  const probe =
+    authoritative ??
+    (record.archiveSourceRefSha
+      ? await dependencies.probeSyncedTerminalRefs(
+          target,
+          record.archiveSourceRefSha,
+          dependencies.gitRunner,
+        )
+      : undefined);
+  return classifyLegacySyncedRecord(
+    record,
+    displayPath(
+      repoRoot,
+      join(resolveScopeRoot(repoRoot, projectsRoot, 'synced'), record.slug),
+    ),
+    probe,
+  );
+}
+
 function classifyMaterializedTerminalRow(
   row: Extract<ProjectListRow, { kind: 'materialized' }>,
   probe: SyncedTerminalRefProbe,
@@ -497,26 +546,12 @@ async function collectProjectRows(
       );
       for (const record of records) {
         if (!represented.has(record.slug)) {
-          const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
-          const authoritative =
-            await dependencies.probeAuthoritativeCompletedRef(
-              target,
-              dependencies.gitRunner,
-            );
-          const probe =
-            authoritative ??
-            (record.archiveSourceRefSha
-              ? await dependencies.probeSyncedTerminalRefs(
-                  target,
-                  record.archiveSourceRefSha,
-                  dependencies.gitRunner,
-                )
-              : undefined);
           rows.push(
-            classifyLegacySyncedRecord(
+            await classifyUnmaterializedSyncedRecord(
+              repoRoot,
+              projectsRoot,
               record,
-              displayPath(repoRoot, join(root.path, record.slug)),
-              probe,
+              dependencies,
             ),
           );
         }

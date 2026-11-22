@@ -86,9 +86,7 @@ export async function getProjectState(
   > = {
     name: basename(projectPath),
     path: displayPath,
-    phase: parsedState.phase ?? 'discovery',
-    phaseStatus: parsedState.phaseStatus ?? 'in_progress',
-    workflowMode: parsedState.workflowMode ?? 'spec-driven',
+    ...readLifecyclePosition(parsedState),
     executionMode: parsedState.executionMode,
     lifecycle: parsedState.lifecycle ?? 'active',
     pauseTimestamp: parsedState.pauseTimestamp,
@@ -168,9 +166,7 @@ export async function listProjects(
       const stateWithoutRecommendation: Omit<ProjectState, 'recommendation'> = {
         name: basename(projectDir),
         path: formatProjectDisplayPath(projectDir, repoRoot),
-        phase: parsedState.phase ?? 'discovery',
-        phaseStatus: parsedState.phaseStatus ?? 'in_progress',
-        workflowMode: parsedState.workflowMode ?? 'spec-driven',
+        ...readLifecyclePosition(parsedState),
         executionMode: parsedState.executionMode,
         lifecycle: parsedState.lifecycle ?? 'active',
         pauseTimestamp: parsedState.pauseTimestamp,
@@ -223,14 +219,43 @@ export async function listProjects(
 }
 
 /**
+ * The mode and lifecycle position both readers report. Freestyle is recognized
+ * before the spec-driven and discovery defaults: it has no lifecycle, so it
+ * reports no phase or phase status even when `state.md` carries one.
+ */
+function readLifecyclePosition(
+  parsedState: ParsedStateFrontmatter,
+): Pick<ProjectState, 'phase' | 'phaseStatus' | 'workflowMode'> {
+  if (parsedState.workflowMode === 'freestyle') {
+    return { workflowMode: 'freestyle', phase: null, phaseStatus: null };
+  }
+  return {
+    workflowMode: parsedState.workflowMode ?? 'spec-driven',
+    phase: parsedState.phase ?? 'discovery',
+    phaseStatus: parsedState.phaseStatus ?? 'in_progress',
+  };
+}
+
+/** Freestyle has no lifecycle progress: its documents follow its own shape. */
+const NO_LIFECYCLE_PROGRESS: TaskProgress = {
+  total: 0,
+  completed: 0,
+  currentTaskId: null,
+  phases: [],
+};
+
+/**
  * Progress for one project. Brief modes count phase-units; goal additionally
- * honors the extraction precedence.
+ * honors the extraction precedence; freestyle reports none.
  */
 function parseProjectProgress(
   parsedState: ParsedStateFrontmatter,
   planContent: string,
   implementationContent: string,
 ): TaskProgress {
+  if (parsedState.workflowMode === 'freestyle') {
+    return { ...NO_LIFECYCLE_PROGRESS, phases: [] };
+  }
   return parseTaskProgress(planContent, implementationContent, {
     phaseUnits: isBriefMode(parsedState.workflowMode),
     extractedUnits: parsedState.workflowMode === 'goal',

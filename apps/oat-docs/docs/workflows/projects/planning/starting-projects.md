@@ -7,19 +7,21 @@ description: 'Choose a project entry skill, import an existing plan, capture com
 
 Choose an entry path based on what you already know and what already exists.
 These skills do not require an existing active project. They create or import
-tracked work, although quick-start, lite, brief, and goal resume an active
-project of their own mode, and import writes into whichever project is active.
+tracked work, although quick-start, lite, brief, goal, and freestyle resume an
+active project of their own mode, and import writes into whichever project is
+active unless it is a freestyle project.
 
-| Your situation                                                       | Entry skill               | Result                                                                            |
-| -------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
-| Requirements need discovery and a full technical design.             | `oat-project-new`         | A spec-driven scaffold, ready to begin discovery.                                 |
-| The outcome is bounded, with optional design decisions to resolve.   | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.            |
-| The change fits one implementation sitting.                          | `oat-project-lite`        | One approved plan with requirements and validation criteria.                      |
-| One delivery whose outcome and design you can agree in conversation. | `oat-project-brief`       | One reviewed, approved Project Brief whose phases carry intent and exit evidence. |
-| An outcome that needs several deliveries over time.                  | `oat-project-goal`        | One approved Project Brief with milestones, delivered and re-aligned in turn.     |
-| You already have a Markdown plan.                                    | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                       |
-| Implementation happened without project tracking.                    | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits.    |
-| A confirmed scope contains several coordinated projects.             | `oat-project-split`       | A coordination parent and children that resume at discovery.                      |
+| Your situation                                                             | Entry skill               | Result                                                                                |
+| -------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
+| Requirements need discovery and a full technical design.                   | `oat-project-new`         | A spec-driven scaffold, ready to begin discovery.                                     |
+| The outcome is bounded, with optional design decisions to resolve.         | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.                |
+| The change fits one implementation sitting.                                | `oat-project-lite`        | One approved plan with requirements and validation criteria.                          |
+| One delivery whose outcome and design you can agree in conversation.       | `oat-project-brief`       | One reviewed, approved Project Brief whose phases carry intent and exit evidence.     |
+| An outcome that needs several deliveries over time.                        | `oat-project-goal`        | One approved Project Brief with milestones, delivered and re-aligned in turn.         |
+| An orchestrating agent will run the work its own way, without a lifecycle. | `oat-project-freestyle`   | A project folder with OAT-owned rules (`AGENTS.md`) and a `shape.md` agreed with you. |
+| You already have a Markdown plan.                                          | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                           |
+| Implementation happened without project tracking.                          | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits.        |
+| A confirmed scope contains several coordinated projects.                   | `oat-project-split`       | A coordination parent and children that resume at discovery.                          |
 
 For the broader mode decision, see [Choose a workflow](../../choose-workflow.md).
 For an existing project's discovery, design, or plan, see
@@ -69,7 +71,9 @@ in a fresh repository.
    `.oat/config.json`. The `OAT_PROJECTS_DEFAULT_SCOPE` environment variable
    overrides the setting for one shell.
 
-3. **Only `oat-project-new` takes a scope.** It accepts `--scope shared|local|synced`.
+3. **Only `oat-project-new` and `oat-project-freestyle` take a scope.** Both
+   accept `--scope shared|local|synced`; freestyle asks you to choose one,
+   recommending the default.
    Quick-start, lite, brief, goal, import, capture, and split have no scope argument.
    Quick-start, lite, brief, goal, import, and capture always create projects in the
    default scope. Split uses the active project's scope, or `shared` when no
@@ -78,7 +82,7 @@ in a fresh repository.
 4. **Build the knowledge index before spec-driven discovery.** `oat-project-discover`
    refuses to start until `.oat/repo/knowledge/project-index.md` exists. Run
    `/oat-repo-knowledge-index` once before your first spec-driven project.
-   Quick-start, lite, brief, goal, import, and capture do not check for it.
+   Quick-start, lite, brief, goal, freestyle, import, and capture do not check for it.
 
 5. **Know what happens when a project is already active.** Check with
    `oat config get activeProject` before you start:
@@ -93,8 +97,13 @@ in a fresh repository.
    - `oat-project-brief` resumes an active brief project at the earliest step
      whose output is missing. With any other project active, it creates a new
      brief project.
-   - `oat-project-import-plan` writes into any active project, whatever its
-     mode. It rewrites that project's `plan.md` and switches it to import mode.
+   - `oat-project-freestyle` resumes the freestyle project you name, or the
+     active project when it is freestyle, and makes it active. With a project
+     of another mode active and no new project named, it stops.
+   - `oat-project-import-plan` writes into any active project except a
+     freestyle one. It rewrites that project's `plan.md` and switches it to
+     import mode. With a freestyle project active, or named with `--project`,
+     it stops before any write, because OAT has no promotion from freestyle.
    - `oat-project-split` makes its first child the active project.
 
    To start fresh work, run `/oat-project-clear-active` (or switch with
@@ -115,10 +124,13 @@ The new, quick-start, lite, brief, goal, and import skills check inherited Git c
 scaffolding. Unrelated changes require an explicit disposition in interactive
 runs. One exception: if the only change is `.oat/sync/manifest.json`, it is
 committed automatically as `chore: run sync`. Capture does not run this check.
+Freestyle shows you a dirty tree but commits none of it, and asks for no
+disposition.
 Do not assume starting a project also authorizes implementation or a PR.
 
 **Dispatch policy.** Before a plan is marked ready, quick-start, lite, brief,
-goal, and import ask you to choose a _dispatch policy_: the highest tier of models and
+goal, and import ask you to choose a _dispatch policy_ (a freestyle project
+does not: OAT dispatches nothing for it): the highest tier of models and
 effort OAT may use when it dispatches implementation and review agents. The
 choices come from `oat project dispatch-ceiling choices`. If your configuration
 has no complete dispatch ladder (the list of models for each tier), the skill
@@ -131,7 +143,8 @@ deliberately. The plan stays not ready until this resolves. See
 a point where a skill stops and waits for your explicit approval before it marks
 a phase complete. Projects created by `oat-project-new` have checkpoints on
 discovery and design by default. Quick, lite, brief, goal, import, and
-captured projects have no workflow-phase checkpoints before implementation.
+captured projects have no workflow-phase checkpoints before implementation,
+and a freestyle project has no checkpoints at all.
 Lite still asks you to approve its plan once, brief asks you to approve its
 reviewed brief once, and goal asks for that approval and then one per later
 milestone. See [HiLL checkpoints](hill-checkpoints.md).
@@ -425,6 +438,47 @@ the re-alignment questions, and declaring the goal met.
 activated. Between milestones, `oat-project-goal` re-aligns and activates the
 next milestone once the previous delivery reaches its agreed endpoint.
 
+## oat-project-freestyle
+
+Use freestyle when you want OAT's project structure and records without a
+lifecycle workflow: no gates, checkpoints, required reviews, or automatic
+commits after creation. How the project runs is agreed with you in a shaping
+conversation and written into the project's `shape.md`.
+
+**Invocation:** Provide the slug, an optional description, and optionally a
+scope.
+
+```text
+/oat-project-freestyle layout-spike "Try three layouts for the CLI reference pages." --scope local
+```
+
+**Prerequisites:** You need an OAT-initialized repository and an `oat` CLI whose
+`oat project new --help` lists `freestyle` as a mode. If the active project is a
+freestyle project, the skill resumes it. With a project of another mode active
+and no new project named, it stops: there is no promotion to or from freestyle.
+
+**Example scenario:** You want to try page layouts without a plan or review
+gates. Freestyle creates the project, asks for the goal and its size first, then
+walks the remaining topics in order (brainstorm or discovery, documents,
+execution, reviews, commits and merges, your involvement, reshape checkpoints),
+writing each answer into `shape.md` as you give it. Any topic can be deferred to
+a named moment, such as "before the first PR".
+
+**Expected output:** A project folder with `state.md`, an OAT-owned `AGENTS.md`
+that tells agents to read `shape.md` first, and a `shape.md` in which every
+topic holds an answer or a deferral. `oat project status` names both files.
+
+**What it does without asking:** It creates the project through
+`oat project new --mode freestyle`. In shared scope that commits the three
+scaffolded files, in synced scope it publishes them to the project ref, and in
+local scope nothing is committed. After creation it commits and pushes nothing
+unless the commits topic in `shape.md` says so. It asks you to choose the scope,
+recommending the repository default, and each shaping decision.
+
+**Next step:** No lifecycle skill follows: agents work the project as `shape.md`
+says. To change how the project runs, run `oat-project-freestyle` again; it
+edits only the affected topics and records the change.
+
 ## oat-project-import-plan
 
 Use import when the plan already exists, including one produced in a provider's
@@ -443,10 +497,13 @@ contain content, and use `.md` unless you explicitly confirm another Markdown
 extension. OAT repository scaffolding must be available.
 
 If any project is active, import writes into **that** project, whatever its
-mode: it normalizes the plan into its `plan.md` and switches it to import mode.
-That includes a spec-driven project in the middle of design. `--project` is read
-only when no project is active. To import into a new project, run
-`oat-project-clear-active` first.
+lifecycle mode: it normalizes the plan into its `plan.md` and switches it to
+import mode. That includes a spec-driven project in the middle of design. A
+freestyle project is the exception: there is no promotion from freestyle, so
+import stops before writing into the project or changing its mode when the
+active project, or the existing project you name with `--project` or when it
+asks, is freestyle. `--project` is read only when no project is active. To
+import into a new project, run `oat-project-clear-active` first.
 
 In the default `synced` scope, the import contract can resolve the wrong
 project directory for a new project: it looks for the new project under

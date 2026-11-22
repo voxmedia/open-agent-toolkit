@@ -5,14 +5,17 @@ import { basename, dirname, join, resolve } from 'node:path';
 import {
   classifyLegacySyncedRecord,
   probeAuthoritativeCompletedRef,
+  projectListHint,
 } from '@commands/project/list';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { listSyncedRecords } from '@commands/project/sync/record';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
+import { resolveUnpulledSyncedProject } from '@commands/project/unpulled-synced';
 import {
   getFrontmatterBlock,
   parseFrontmatterField,
+  readStateWorkflowModeFile,
 } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveScopeRoot } from '@commands/shared/project-scope';
@@ -21,6 +24,7 @@ import { ensureDir, fileExists } from '@fs/io';
 import {
   BRIEF_MODES,
   evaluateQuickPlanReadiness,
+  freestyleRecommendation,
   quickPlanNotReadyReason,
   type QuickPlanReadiness,
 } from '@open-agent-toolkit/control-plane';
@@ -250,9 +254,14 @@ async function readProjectState(
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
   const { checkpoints: hillCheckpoints, completed: hillCompleted } =
     await readHillLists(stateFile);
+  // A freestyle project is recognized from the parsed YAML, as `status` does,
+  // so a quoted or commented declaration still reads as freestyle. Other
+  // modes keep the line reading they always had.
   const workflowMode =
-    (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
-    'spec-driven';
+    (await readStateWorkflowModeFile(stateFile)) === 'freestyle'
+      ? 'freestyle'
+      : (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
+        'spec-driven';
   const docsUpdatedRaw = await parseFrontmatterField(
     stateFile,
     'oat_docs_updated',
@@ -451,6 +460,13 @@ function computeNextStep(
       step: `oat project open ${project.name}`,
       reason: 'Project is paused — open to resume',
     };
+  }
+
+  // Freestyle has no lifecycle workflow: like the control-plane router, the
+  // dashboard recommends no skill, before every phase-based route.
+  if (state.workflowMode === 'freestyle') {
+    const { skill, reason } = freestyleRecommendation();
+    return { step: skill, reason };
   }
 
   // HiLL checkpoint gating. A quick plan phase checks a pending checkpoint at
@@ -716,7 +732,10 @@ async function listAvailableProjects(
         const kind =
           (await parseFrontmatterField(stateFile, 'oat_kind')) ||
           'implementation';
-        const line = `- **${dir.name}** - ${phase}`;
+        // A freestyle project has no phase; its mode identifies it instead.
+        const freestyle =
+          (await readStateWorkflowModeFile(stateFile)) === 'freestyle';
+        const line = `- **${dir.name}** - ${freestyle ? 'freestyle' : phase}`;
         if (isTerminalCoordinationProject(kind, phase, phaseStatus)) {
           decompositions.push(line);
         } else {
@@ -807,8 +826,12 @@ function buildDashboardMarkdown(
     lines.push('| Field | Value |');
     lines.push('|-------|-------|');
     lines.push(`| Mode | ${state.workflowMode} |`);
-    lines.push(`| Phase | ${state.phase} |`);
-    lines.push(`| Status | ${state.phaseStatus} |`);
+    // Freestyle has no phase, HiLL gate, current task or docs-sync status.
+    const freestyle = state.workflowMode === 'freestyle';
+    if (!freestyle) {
+      lines.push(`| Phase | ${state.phase} |`);
+      lines.push(`| Status | ${state.phaseStatus} |`);
+    }
     if (state.lifecycle !== 'active') {
       lines.push(`| Lifecycle | ${state.lifecycle} |`);
       if (state.pauseTimestamp) {
@@ -818,15 +841,17 @@ function buildDashboardMarkdown(
         lines.push(`| Pause Reason | ${state.pauseReason} |`);
       }
     }
-    lines.push(`| HiLL Gate | ${state.hillStatus} |`);
-    lines.push(`| Current Task | ${state.currentTask} |`);
-    const docsLabel =
-      state.docsUpdated === 'complete'
-        ? '✓ complete'
-        : state.docsUpdated === 'skipped'
-          ? '⊘ skipped'
-          : '⚠ not yet run';
-    lines.push(`| Docs Updated | ${docsLabel} |`);
+    if (!freestyle) {
+      lines.push(`| HiLL Gate | ${state.hillStatus} |`);
+      lines.push(`| Current Task | ${state.currentTask} |`);
+      const docsLabel =
+        state.docsUpdated === 'complete'
+          ? '✓ complete'
+          : state.docsUpdated === 'skipped'
+            ? '⊘ skipped'
+            : '⚠ not yet run';
+      lines.push(`| Docs Updated | ${docsLabel} |`);
+    }
     lines.push('');
     lines.push(`Details: \`${project.path}/state.md\``);
     lines.push('');
@@ -873,6 +898,7 @@ function buildDashboardMarkdown(
   lines.push('- `oat-project-lite` - Create a lite workflow project');
   lines.push('- `oat-project-brief` - Create a brief workflow project');
   lines.push('- `oat-project-goal` - Create a goal workflow project');
+  lines.push('- `oat-project-freestyle` - Create or shape a freestyle project');
   lines.push('- `oat project open <name>` - Open or resume a project');
   lines.push('- `oat project pause [name]` - Pause active or named project');
   lines.push('- `oat-project-complete` - Mark project complete');
@@ -939,6 +965,25 @@ export async function generateStateDashboard(
     }
   }
 
+  // An active synced project recorded on this branch but not pulled here gets
+  // the storage instruction `oat project status` gives for it, in every mode.
+  // A record the classifier cannot read keeps the missing-directory row.
+  let unpulledNextStep: { step: string; reason: string } | null = null;
+  if (!terminalNextStep && project.status === 'directory missing') {
+    const unpulled = await resolveUnpulledSyncedProject(
+      resolve(repoRoot, project.path),
+      repoRoot,
+      { env, gitRunner },
+    ).catch(() => null);
+    if (unpulled) {
+      project.status = `checkout ${unpulled.checkout}`;
+      unpulledNextStep = {
+        step: projectListHint(unpulled),
+        reason: unpulled.recommendation.reason,
+      };
+    }
+  }
+
   let state: ProjectState | null = null;
   if (project.status === 'active') {
     state = await readProjectState(repoRoot, project.path);
@@ -947,7 +992,9 @@ export async function generateStateDashboard(
   const knowledge = await readKnowledgeStatus(repoRoot);
   const staleness = calculateStaleness(knowledge, git, repoRoot, today);
   const nextStep =
-    terminalNextStep ?? computeNextStep(project, hasProjects, state);
+    terminalNextStep ??
+    unpulledNextStep ??
+    computeNextStep(project, hasProjects, state);
 
   const projectsList = await listAvailableProjects(
     repoRoot,

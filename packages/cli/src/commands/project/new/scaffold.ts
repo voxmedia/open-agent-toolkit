@@ -16,6 +16,7 @@ import {
   pushSynced,
   rollbackCreatedSyncedProject,
 } from '@commands/project/sync/ref-sync';
+import { readStateWorkflowModeFile } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   canonicalizePath,
@@ -25,6 +26,7 @@ import {
   syncedRecordPath,
   type ProjectScope,
 } from '@commands/shared/project-scope';
+import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import {
   resolveTemplate,
   type ResolvedTemplate,
@@ -149,7 +151,25 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     { source: 'plan-brief.md', target: 'plan.md' },
     { source: 'implementation-brief.md', target: 'implementation.md' },
   ],
+  // Freestyle scaffolds its minimal, lifecycle-free state, the OAT-owned
+  // project AGENTS.md and the not-yet-shaped shape.md. Documents are chosen
+  // while the project is shaped, never scaffolded.
+  freestyle: [
+    { source: 'state-freestyle.md', target: 'state.md' },
+    { source: 'project-agents.md', target: 'AGENTS.md' },
+    { source: 'shape.md', target: 'shape.md' },
+  ],
 };
+
+/**
+ * Scaffolded targets written as plain Markdown: their template frontmatter
+ * carries only template markers, so it is dropped whole rather than left as an
+ * empty block. Applies to freestyle's `AGENTS.md` and `shape.md`.
+ */
+const PLAIN_MARKDOWN_TARGETS: ReadonlySet<string> = new Set([
+  'AGENTS.md',
+  'shape.md',
+]);
 
 function normalizeTemplateEntry(entry: TemplateEntry): {
   source: string;
@@ -170,7 +190,15 @@ interface StateTemplateContent {
   nextMilestone: string;
 }
 
-const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
+/**
+ * Lifecycle placeholder values for each mode's `state.md`. Freestyle is `null`:
+ * its state template carries no lifecycle placeholders, so rendering the
+ * lifecycle template for it fails on the unresolved placeholders.
+ */
+const STATE_TEMPLATE_BY_MODE: Record<
+  WorkflowMode,
+  StateTemplateContent | null
+> = {
   'spec-driven': {
     hillCheckpoints: "['discovery', 'design']",
     phase: 'discovery',
@@ -284,6 +312,7 @@ const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
     nextMilestone:
       'Run `oat-project-goal` to author the brief and its milestones and approve the first milestone',
   },
+  freestyle: null,
 };
 
 function replaceOatPlaceholders(
@@ -341,16 +370,19 @@ export function applyTemplateReplacements(
   mode: WorkflowMode,
 ): string {
   const stateContent = STATE_TEMPLATE_BY_MODE[mode];
-  const oatReplacements = {
-    OAT_HILL_CHECKPOINTS: stateContent.hillCheckpoints,
-    OAT_WORKFLOW_MODE: mode,
-    OAT_PHASE: stateContent.phase,
-    OAT_STATUS: stateContent.status,
-    OAT_CURRENT_PHASE: stateContent.currentPhase,
-    OAT_ARTIFACTS: stateContent.artifacts.join('\n'),
-    OAT_PROGRESS: stateContent.progress.join('\n'),
-    OAT_NEXT_MILESTONE: stateContent.nextMilestone,
-  };
+  const oatReplacements: Record<string, string> =
+    stateContent === null
+      ? { OAT_WORKFLOW_MODE: mode }
+      : {
+          OAT_HILL_CHECKPOINTS: stateContent.hillCheckpoints,
+          OAT_WORKFLOW_MODE: mode,
+          OAT_PHASE: stateContent.phase,
+          OAT_STATUS: stateContent.status,
+          OAT_CURRENT_PHASE: stateContent.currentPhase,
+          OAT_ARTIFACTS: stateContent.artifacts.join('\n'),
+          OAT_PROGRESS: stateContent.progress.join('\n'),
+          OAT_NEXT_MILESTONE: stateContent.nextMilestone,
+        };
   const rendered = replaceOatPlaceholders(template, oatReplacements)
     .replaceAll('{Project Name}', projectName)
     .replaceAll('YYYY-MM-DD', today)
@@ -510,6 +542,33 @@ async function commitScaffold(
   }
 }
 
+/**
+ * A rerun of `project new` on an existing project skips the files that exist
+ * and writes the rest, so a different mode would leave freestyle and lifecycle
+ * files side by side. Refuse that before any write when either side is
+ * freestyle: there is no promotion to or from freestyle. A same-mode rerun and
+ * a change between two lifecycle modes behave as before.
+ */
+async function assertNoFreestyleModeChange(
+  absoluteProjectPath: string,
+  projectName: string,
+  mode: WorkflowMode,
+): Promise<void> {
+  const statePath = join(absoluteProjectPath, 'state.md');
+  if (!(await fileExists(statePath))) {
+    return;
+  }
+  const existing =
+    (await readStateWorkflowModeFile(statePath)) ?? 'spec-driven';
+  if (existing === mode || (existing !== 'freestyle' && mode !== 'freestyle')) {
+    return;
+  }
+  throw new CliError(
+    `Project ${projectName} already exists as a ${existing} project; scaffolding it as ${mode} would mix freestyle and lifecycle files, and there is no promotion to or from freestyle. Pick a new project name.`,
+    1,
+  );
+}
+
 async function scaffoldModeTemplates(
   home: string,
   repoRoot: string,
@@ -531,11 +590,14 @@ async function scaffoldModeTemplates(
       continue;
     }
 
-    const { content: template } = await resolveProjectTemplate(
+    const { content: resolvedTemplate } = await resolveProjectTemplate(
       home,
       repoRoot,
       source,
     );
+    const template = PLAIN_MARKDOWN_TARGETS.has(target)
+      ? stripTemplateFrontmatter(resolvedTemplate)
+      : resolvedTemplate;
     let rendered = applyTemplateReplacements(
       template,
       projectName,
@@ -815,6 +877,11 @@ export async function scaffoldProject(
       dependencies,
     );
   }
+  await assertNoFreestyleModeChange(
+    absoluteProjectPath,
+    options.projectName,
+    mode,
+  );
 
   let gitignoreChanged = false;
   let gitignoreBefore: string | null | undefined;

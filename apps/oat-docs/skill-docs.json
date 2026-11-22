@@ -290,6 +290,14 @@
       "applicabilityNotes": "Interviews for and scaffolds a goal project; resumes an active goal project at authoring, activation, re-alignment or the terminal declaration."
     },
     {
+      "name": "oat-project-freestyle",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-freestyle",
+      "applicability": "none",
+      "applicabilityNotes": "Scaffolds a freestyle project; resumes an active freestyle project to shape or reshape it."
+    },
+    {
       "name": "oat-project-import-plan",
       "family": "Project entry",
       "page": "workflows/projects/planning/starting-projects.md",

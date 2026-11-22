@@ -342,14 +342,18 @@ Present these options to the user, with a recommendation based on the assessment
    _Best for: an outcome that needs several deliveries over time, where the first milestone can be agreed in conversation and later milestones are re-aligned after each delivery. Not available to autonomous runs._
    → Use `oat-project-goal`
 
-6. **Import external plan** — Normalize an existing plan into OAT format → Implement
+6. **Freestyle project** — OAT's project structure and records with no lifecycle workflow → a shaping conversation writes how the project runs into its `shape.md` → the orchestrator works as `shape.md` says
+   _Best for: an orchestrating agent running long work its own way, with many delegated lanes and PRs across sessions, that needs its state in files rather than in the conversation. No gates, checkpoints, required reviews, automatic commits or PRs after creation, and no promotion to or from it._
+   → Use `oat-project-freestyle`
+
+7. **Import external plan** — Normalize an existing plan into OAT format → Implement
    _Best for: plans already drafted in another tool, session, or document._
    → Use `oat-project-import-plan`
 
-7. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
+8. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
    _Best for: users who prefer provider planning UX but want OAT tracking._
 
-8. **No project workflow** — Proceed without OAT project tracking.
+9. **No project workflow** — Proceed without OAT project tracking.
    _Best for: small fixes, straightforward changes, or explicit user preference._
 
 ### Recommendation Heuristic
@@ -361,9 +365,10 @@ Before presenting options, assess the request and lead with a recommendation:
 - **Single-sitting change with a clear outcome** → Recommend lite (#3)
 - **One delivery whose outcome and design can be agreed in conversation, no up-front task plan wanted** → Recommend brief (#4)
 - **An outcome that needs several deliveries over time, re-aligned between them** → Recommend goal (#5)
-- **User references an existing plan or external artifact** → Recommend import (#6)
-- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#7)
-- **User explicitly says "just do it" or declines tracking** → Recommend no workflow (#8)
+- **An orchestrating agent will run the work its own way (many lanes, PRs or sessions) and wants OAT's records without a lifecycle** → Recommend freestyle (#6)
+- **User references an existing plan or external artifact** → Recommend import (#7)
+- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#8)
+- **User explicitly says "just do it" or declines tracking** → Recommend no workflow (#9)
 
 The distinguishing factor is **requirements clarity and design risk**, not task count. A large but well-understood migration is fine for quick mode. A small but architecturally unclear feature might need spec-driven.
 

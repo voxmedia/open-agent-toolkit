@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.3.12
+  version: 2.3.13
 ---
 
 # Design Phase
@@ -59,6 +59,8 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
+- Run the freestyle check below on it first; a freestyle project stops there,
+  before this pointer write.
 - Write it for future phases:
   ```bash
   mkdir -p .oat
@@ -66,6 +68,18 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   ```
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+**Freestyle projects.** Read the resolved project's mode before Step 1:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy, write
+or commit: a freestyle project has no lifecycle design phase, and its
+documents are the ones `shape.md` lists. Tell the user: "This is a freestyle
+project; OAT writes no lifecycle design or `spec.md` for it. Agree its documents in
+`shape.md`."
 
 ### Step 1: Check Specification Complete
 

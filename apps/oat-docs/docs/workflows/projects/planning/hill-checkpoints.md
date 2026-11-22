@@ -10,6 +10,9 @@ OAT supports two checkpoint classes:
 - Workflow phase checkpoints
 - Plan phase checkpoints
 
+A freestyle project has neither: its `state.md` carries no checkpoint keys,
+and anything you approve is agreed in its `shape.md`.
+
 The [Phase gate review](../reviews/index.md#phase-review-gate) (`oat_phase_review_gate`) is a separate, non-pausing mechanism — it does not pause on a passing gate and never modifies the HiLL keys below (`oat_hill_completed`, `oat_plan_hill_phases`).
 
 ## Workflow checkpoints (`state.md`)

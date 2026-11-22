@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.11
+  version: 1.4.0
 ---
 
 # Brainstorm
@@ -238,7 +238,7 @@ ACTIVE_PROJECT_PR_STATUS=""
 if [ -n "$ACTIVE_PROJECT" ] && [ -f "$ACTIVE_PROJECT/state.md" ]; then
   ACTIVE_PROJECT_VALID="true"
   # Read state.md frontmatter — extract:
-  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick", "import", "lite", "brief", "goal")
+  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick", "import", "lite", "brief", "goal", "freestyle")
   #   oat_phase         → ACTIVE_PROJECT_PHASE       (e.g., "discovery", "design", "plan", "implement")
   #   oat_pr_status     → ACTIVE_PROJECT_PR_STATUS   (e.g., "none", "open", "closed")
 fi
@@ -304,7 +304,7 @@ If "keep going", return to step 5. If "wrap up", surface the **pack-filtered ter
      repository adoption never enables this write destination; for `none` or
      `partial-initialization`, explain that `oat pjm init` is required.
    - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID != "true"`: `Promote to new OAT project`.
-   - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"`: `Active project: fold-back` and `Active project: brainstorming reference file`. When this branch fires, present the **3-way active-project router first** (see step 9 active-project branches) — its outcome controls whether the rest of the picker is even surfaced.
+   - Gated by `WORKFLOWS_INSTALLED == "true"` AND `ACTIVE_PROJECT_VALID == "true"`: `Active project: fold-back` and `Active project: brainstorming reference file` (a freestyle project offers only the reference file). When this branch fires, present the **3-way active-project router first** (see step 9 active-project branches) — its outcome controls whether the rest of the picker is even surfaced.
 3. Evaluate whether the accumulated brainstorm scope is large enough to offer a split destination. Track the same four split signals used by discovery and evaluate them through the installed CLI:
 
    Define this fail-closed parser once before any synced persistence below. If
@@ -611,7 +611,7 @@ Ask one question:
 
 Three answers, three branches:
 
-1. **Related** → fold-back. Proceed to branch 9i below.
+1. **Related** → fold-back. Proceed to branch 9i below. For a freestyle project (`ACTIVE_PROJECT_MODE == "freestyle"`) there is no fold-back: proceed to branch 9j instead.
 2. **Independent** → the active project is acknowledged but ignored from this point. Route through the **standard pack-filtered terminal-state picker** as if no active project existed. The picker still includes `Promote to new OAT project` even though there is an active project — independence means the active project doesn't constrain the destination.
 3. **Related but supplementary** → brainstorming reference file. Proceed to branch 9j below.
 
@@ -619,7 +619,7 @@ The 3-way router fires once per session. After convergence resumes (e.g., the us
 
 #### 9i — Active project: fold-back to upstream artifact
 
-Uniform across spec-driven, quick, import, lite, brief, and goal modes. Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
+Uniform across spec-driven, quick, import, lite, brief, and goal modes; freestyle has no fold-back (branch 9h routes a related freestyle brainstorm to 9j). Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
 
 **Step 1 — Pick upstream artifact.** Prefer the most-specific existing one:
 
@@ -818,7 +818,7 @@ After printing the prompt, **stop**. End mode assertion. The user runs the plan-
 
 #### 9j — Active project: brainstorming reference file
 
-Available regardless of project phase or PR status. The reference file is a **durable tracked artifact** — after writing it, the skill commits it on the active branch so the working tree is clean when the skill exits and the reference travels with the project.
+Available regardless of project phase or PR status. The reference file is a **durable tracked artifact** — after writing it, the skill commits it on the active branch so the working tree is clean when the skill exits and the reference travels with the project. A freestyle project is the exception: its `shape.md` decides whether the file is committed (see **Freestyle projects** below).
 
 The filename was confirmed at step 8 (default `YYYY-MM-DD-<topic>.md`). Resolve the target path:
 
@@ -830,14 +830,44 @@ If `<ACTIVE_PROJECT>/brainstorming/` does not exist, create it (`mkdir -p`). The
 
 Set `REFERENCE_PATH` to the exact resolved file path before writing. Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to `REFERENCE_PATH`. Retain that produced filename for commit/retry.
 
-After writing, persist the file with the same fail-closed scope guard:
+**Freestyle projects.** When `ACTIVE_PROJECT_MODE == "freestyle"`, the
+project's `shape.md` decides whether the reference file is committed, not this
+branch. Read its `## Commits, PRs and merges` section:
+
+- While that section still reads `_Not yet shaped._`, or its agreement is
+  deferred (`Deferred:`, with an entry under `## Undecided`), write the file and
+  skip the persistence block below: commit and push nothing, and tell the user
+  the absolute path of the uncommitted file.
+- Once it holds an agreement, follow it: run the persistence block below only
+  when the agreement says records are committed at this point, and otherwise
+  leave the file uncommitted and say so. A local project never commits.
+- Committing and publishing are separate permissions. Set
+  `REFERENCE_PUBLISH=no` before the block when the agreement commits records
+  now but does not publish them now. A synced project then commits in its own
+  checkout through `oat internal commit-paths --cwd`, and its
+  `refs/oat/projects/<slug>` stays unchanged until a later `oat project push`.
+  Tell the user the commit is not yet published. Leave `REFERENCE_PUBLISH`
+  unset only when the agreement also publishes now. Only a freestyle project
+  (`ACTIVE_PROJECT_MODE == "freestyle"`) reads it: every other synced project
+  publishes through `oat project push` whatever `REFERENCE_PUBLISH` holds.
+
+Otherwise (every other mode, or a freestyle agreement that commits now), after
+writing, persist the file with the same fail-closed scope guard:
 
 ```bash
 PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value) || { echo "oat: cannot resolve project scope for $ACTIVE_PROJECT; refusing to commit artifacts" >&2; exit 1; }
 # fail closed: never fall back to branch bookkeeping when scope resolution fails
-if [ "$PROJECT_SCOPE" = "synced" ]; then
+# Every run except a freestyle commit-only agreement publishes: REFERENCE_PUBLISH defaults to yes,
+# and only a freestyle project reads it, so a value left in the shell never stops another mode's push.
+REFERENCE_PUBLISH="${REFERENCE_PUBLISH:-yes}"
+if [ "$PROJECT_SCOPE" = "synced" ] && { [ "$ACTIVE_PROJECT_MODE" != "freestyle" ] || [ "$REFERENCE_PUBLISH" != "no" ]; }; then
   REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   REFERENCE_COMMIT_SHA=$(parse_synced_push_receipt "$REFERENCE_PUSH") || { printf '%s\n' "$REFERENCE_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
+elif [ "$PROJECT_SCOPE" = "synced" ]; then
+  # Commit in the project's own checkout without publishing; a later oat project push publishes it.
+  OWNED_COMMIT_PATHS=("${REFERENCE_PATH#"$ACTIVE_PROJECT"/}")
+  oat --cwd "$ACTIVE_PROJECT" internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:5" --message "chore(oat): capture brainstorming reference for <project-name>" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
+  REFERENCE_COMMIT_SHA=$(git -C "$ACTIVE_PROJECT" rev-parse HEAD)
 else
   OWNED_COMMIT_PATHS=("$REFERENCE_PATH")
   oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:5" --message "chore(oat): capture brainstorming reference for <project-name>" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
@@ -850,6 +880,26 @@ For shared/local scope, commit only the exact produced path through `oat interna
 For synced projects, the preceding short-hash sentence is superseded by the
 full `REFERENCE_COMMIT_SHA` returned from `oat project push --json`; no parent
 branch artifact commit occurs.
+With `REFERENCE_PUBLISH=no`, a synced freestyle project reports the full
+`REFERENCE_COMMIT_SHA` of its own checkout instead, says it is not yet
+published, and still makes no parent branch artifact commit.
+
+**Freestyle hand-back.** For a freestyle project, once the file is written (and
+persisted only when the agreement said so), hand back to the shaping skill
+instead of ending at the report. Print this prompt, substituting the path, the
+commit when one was made, and the topic named on `shape.md`'s
+`**Shaping resumes at:**` line (or the first topic still `_Not yet shaped._`):
+
+```
+Return to `oat-project-freestyle` with this context:
+
+"The brainstorm is captured in <reference-path> (<committed at <hash> |
+uncommitted>). Resume shaping at <topic> as recorded in shape.md; record
+the reference path in the Brainstorm or discovery section."
+```
+
+After printing the prompt, end mode assertion. The brainstorming skill never
+edits `shape.md` and never runs the shaping skill itself.
 
 #### 9k — Promote to N projects
 
@@ -876,6 +926,7 @@ End mode assertion when the split handoff completes or reports its own blocker.
 - ✅ Each handoff branch (9a-9k) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` for quick/spec-driven, `plan.md` for lite, and a `references/research/` note for brief and goal — never `design.md` — and does not auto-chain into the next phase.
 - ✅ Doc-to-path validation handles all four cases: path-is-directory, parent-missing (with explicit out-of-repo confirmation), file-already-exists (overwrite or rename), unwritable (surface OS error).
 - ✅ Fold-back persistence safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + exact-path branch commit for shared/local or validated `oat project push --json` for synced; dirty → three-option picker (persist-prior-first / mix / abort-to-reference-file); handoff prompt prints only after the scope-appropriate receipt succeeds.
-- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-lite` (lite, no/closed PR) / `oat-project-import-plan` (import, no/closed PR) / `oat-project-brief` or `oat-project-implement` (brief, no/closed PR, by phase) / `oat-project-goal` or `oat-project-implement` (goal, no/closed PR, by milestone state) / `oat-project-revise` (any mode, open PR; goal names the target delivery).
+- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-lite` (lite, no/closed PR) / `oat-project-import-plan` (import, no/closed PR) / `oat-project-brief` or `oat-project-implement` (brief, no/closed PR, by phase) / `oat-project-goal` or `oat-project-implement` (goal, no/closed PR, by milestone state) / `oat-project-revise` (any lifecycle mode, open PR; goal names the target delivery). A freestyle project has no fold-back: its brainstorm becomes a reference file and hands back to `oat-project-freestyle`.
+- ✅ A freestyle active project gets no fold-back: related and supplementary brainstorms both write a branch 9j reference file, commit and push nothing while `shape.md`'s commit agreement is not yet shaped or deferred, follow that agreement once it is shaped, and hand back to `oat-project-freestyle` at the topic `shape.md` records.
 - ✅ Active-project 3-way router (related / independent / supplementary) fires before the standard pack-filtered picker when both `WORKFLOWS_INSTALLED == "true"` and `ACTIVE_PROJECT_VALID == "true"`.
 - ✅ Skill validates cleanly under `pnpm oat:validate-skills` (frontmatter contract, allowed-tools, mode-assertion structure).

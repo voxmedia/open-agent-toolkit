@@ -22,6 +22,7 @@ import {
   type ResolvedSyncTarget,
 } from '@commands/project/sync/resolve-target';
 import {
+  freestyleStateLineEndings,
   getFrontmatterBlock,
   getFrontmatterField,
 } from '@commands/shared/frontmatter';
@@ -353,7 +354,12 @@ async function maybeResumePausedProject(
   projectPath: string,
   dependencies: ProjectOpenDependencies,
 ): Promise<boolean> {
-  const stateContent = await dependencies.readFile(statePath, 'utf8');
+  // A CRLF freestyle state is edited and validated as LF, then written back
+  // with its own line ending.
+  const lineEndings = freestyleStateLineEndings(
+    await dependencies.readFile(statePath, 'utf8'),
+  );
+  const stateContent = lineEndings.content;
   const frontmatter = getFrontmatterBlock(stateContent);
   if (!frontmatter) {
     throw new CliError(`state.md is missing frontmatter: ${statePath}`, 1);
@@ -391,7 +397,11 @@ async function maybeResumePausedProject(
         1,
       );
     }
-    await dependencies.writeFile(statePath, nextContent, 'utf8');
+    await dependencies.writeFile(
+      statePath,
+      lineEndings.restore(nextContent),
+      'utf8',
+    );
   }
 
   return true;

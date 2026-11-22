@@ -821,6 +821,93 @@ ${audit(p03Line)}`;
     ]);
   });
 
+  it('reads a freestyle project with no phase, progress or recommendation through both readers', async () => {
+    const repoRoot = await createDir('oat-control-plane-freestyle-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'freestyle-demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await mkdir(projectDir, { recursive: true });
+    // A stray lifecycle field and brief-shaped documents must not give a
+    // freestyle project a phase, progress or a lifecycle route.
+    await Promise.all([
+      writeFile(
+        join(projectDir, 'state.md'),
+        `---
+oat_workflow_mode: freestyle
+oat_phase: implement
+oat_project_created: '2026-11-21T00:00:00.000Z'
+---
+
+# Project State: freestyle-demo
+`,
+      ),
+      writeFile(
+        join(projectDir, 'plan.md'),
+        `## Phase p01: Research
+
+**Intent:** Research.
+**Exit evidence:** Done.
+`,
+      ),
+      writeFile(
+        join(projectDir, 'implementation.md'),
+        `## Phase p01: Research
+
+**Status:** completed
+`,
+      ),
+    ]);
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState).toMatchObject({
+      workflowMode: 'freestyle',
+      phase: null,
+      phaseStatus: null,
+      progress: { total: 0, completed: 0, currentTaskId: null, phases: [] },
+      recommendation: { skill: 'none' },
+    });
+    expect(projectState).not.toHaveProperty('milestoneMembership');
+
+    const [summary] = await listProjects(projectsRoot);
+    expect(summary).toMatchObject({
+      name: 'freestyle-demo',
+      workflowMode: 'freestyle',
+      phase: null,
+      phaseStatus: null,
+      progress: { total: 0, completed: 0 },
+      recommendation: { skill: 'none' },
+    });
+  });
+
+  it('keeps the spec-driven and discovery defaults for a state with no mode or phase', async () => {
+    const repoRoot = await createDir('oat-control-plane-defaults-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'legacy-demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(
+      join(projectDir, 'state.md'),
+      `---
+oat_project_created: '2026-11-21T00:00:00.000Z'
+---
+`,
+    );
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState).toMatchObject({
+      workflowMode: 'spec-driven',
+      phase: 'discovery',
+      phaseStatus: 'in_progress',
+      recommendation: { skill: 'oat-project-discover' },
+    });
+    const [summary] = await listProjects(projectsRoot);
+    expect(summary).toMatchObject({
+      workflowMode: 'spec-driven',
+      phase: 'discovery',
+      phaseStatus: 'in_progress',
+    });
+  });
+
   it('exposes no goal fields for a brief project', async () => {
     const repoRoot = await createDir('oat-control-plane-brief-no-goal-');
     const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'brief');

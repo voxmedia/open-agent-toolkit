@@ -20,11 +20,11 @@
   - [Recon Evidence Packets](docs/skills/recon.md) — Use recon to gather and validate bounded evidence through approved worker waves, then hand off one durable packet directory.
 - Workflows
   - [Workflows](docs/workflows/index.md) — Choose a workflow and find its planning, execution and closeout guides.
-  - [Choose a Workflow](docs/workflows/choose-workflow.md) — Choose how to run tracked, resumable work in OAT, from no project to lite, brief, goal, quick, spec-driven, or imported projects, and what each mode does at the end.
+  - [Choose a Workflow](docs/workflows/choose-workflow.md) — Choose how to run tracked, resumable work in OAT, from no project to lite, brief, goal, quick, spec-driven, imported, or freestyle projects, and what each mode does at the end.
   - [Approvals and Automation](docs/workflows/approvals-and-automation.md) — Where a person approves in each OAT workflow mode, what runs without asking, how many agent runs a project starts, and which controls are advisory rather than enforced.
   - Projects
     - [Projects](docs/workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
-    - [Lifecycle](docs/workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, goal, and import paths.
+    - [Lifecycle](docs/workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, goal, and import paths; freestyle projects have none.
     - Reviews
       - [Reviews](docs/workflows/projects/reviews/index.md) — Review request/receive loop, status progression, severity policy, and quality gates.
       - [Review Flavors](docs/workflows/projects/reviews/review-flavors.md) — The four OAT project review flavors, when each fires in the lifecycle, and who resolves its reviewer target.

@@ -1,3 +1,5 @@
+import { parseStateWorkflowMode } from '@commands/shared/frontmatter';
+
 const LIFECYCLE_ARTIFACTS = [
   'discovery.md',
   'spec.md',
@@ -50,6 +52,15 @@ export function projectPlanMarksComplete(planContent: string): boolean {
 
 export function stateLifecycleIsComplete(stateContent: string): boolean {
   return /^oat_lifecycle:\s*complete$/m.test(stateContent);
+}
+
+/**
+ * True when the state's parsed frontmatter declares `oat_workflow_mode:
+ * freestyle`. Only the frontmatter is read, so a freestyle example in the body
+ * (for instance a fenced snippet) never marks a lifecycle project freestyle.
+ */
+export function stateIsFreestyle(stateContent: string): boolean {
+  return parseStateWorkflowMode(stateContent) === 'freestyle';
 }
 
 export function projectNeedsLifecycleComplete(

@@ -1,6 +1,6 @@
 ---
 title: Choose a Workflow
-description: Choose how to run tracked, resumable work in OAT, from no project to lite, brief, goal, quick, spec-driven, or imported projects, and what each mode does at the end.
+description: Choose how to run tracked, resumable work in OAT, from no project to lite, brief, goal, quick, spec-driven, imported, or freestyle projects, and what each mode does at the end.
 ---
 
 # Choose a Workflow
@@ -53,6 +53,7 @@ Stay with direct CLI usage when:
 - Quick mode: tracked work with a lighter upfront planning path
 - Spec-driven mode: explicit discovery, requirements, design, and plan artifacts
 - Import mode: an externally-authored plan imported into OAT for tracked execution
+- Freestyle mode: OAT's project folder and records with no lifecycle workflow; how the project runs is agreed with you and written into its `shape.md`
 
 ## Start Here
 
@@ -89,6 +90,7 @@ an agent pick the work up again in a later session.
 | Quick       | `/oat-project-quick-start`                      | The work is bounded and the requirements are clear                                                    | A formal requirements document (`spec.md`). Design is optional                                                                       | Pushes your branch and opens a pull request only when `workflow.postImplementSequence` asks for it, or in an autonomous run                                                                     |
 | Spec-driven | `/oat-project-new`                              | The requirements are unclear, or the change cuts across many parts of the code                        | Speed: you approve discovery and design before any planning or code                                                                  | Same as quick                                                                                                                                                                                   |
 | Import      | `/oat-project-import-plan` with the plan's path | A plan already exists in another tool or document                                                     | OAT's own discovery and design steps                                                                                                 | Same as quick                                                                                                                                                                                   |
+| Freestyle   | `/oat-project-freestyle`                        | An orchestrating agent runs the work its own way, across many sessions, lanes or PRs                  | Every lifecycle step: no plan, phases, gates, checkpoints, required reviews or next-step routing                                     | OAT pushes nothing and opens no pull request after creation; commits, PRs and merges follow what `shape.md` says                                                                                |
 
 Type the skill names in your coding agent's chat, not a terminal; Codex uses
 `$` instead of `/`. No mode ever merges a pull request. Separately,
@@ -128,16 +130,25 @@ is what holds the planning conversation, so start with the skill.
   implementation starts.
 - If you already have an approved plan from another tool, import it rather than
   repeating discovery and design.
+- If an orchestrating agent will run long work its own way, with many
+  delegated lanes and pull requests, and you want its state in files rather
+  than in the conversation, choose freestyle. OAT scaffolds the project folder,
+  its rules (`AGENTS.md`) and `shape.md`, and keeps the records commands
+  working; the shaping conversation agrees how the project runs, and no
+  lifecycle skill or gate runs on it. There is no promotion to or from
+  freestyle.
 
 ### Where each way in joins the lifecycle
 
-Every tracked mode joins the same lifecycle; what differs is the stage it
+Every lifecycle mode joins the same lifecycle; what differs is the stage it
 starts at. Spec-driven and quick start at discovery (quick skips the spec);
 lite, brief, goal and import start at the plan. Capture
 (`/oat-project-capture`) is not a mode: it records work already done as a
 quick-mode project. Once the work is ready, it joins at review, or you open a
 PR directly; while the work is still in progress, keep working, then re-run
-capture or use `oat-project-reconcile`.
+capture or use `oat-project-reconcile`. Freestyle is the one tracked mode that
+joins none of these stages: like no project, it stays outside the lifecycle,
+and its `shape.md` says how it runs.
 
 === "Diagram"
 

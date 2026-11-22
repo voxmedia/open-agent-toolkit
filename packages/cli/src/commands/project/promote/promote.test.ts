@@ -1095,6 +1095,25 @@ describe('oat project promote', () => {
     ]);
   });
 
+  it('refuses a freestyle project with no writes (promotion is out of scope)', async () => {
+    const repoRoot = await createRepo();
+    const { projectPath, projectRoot } = await seedRepo(repoRoot, {
+      mode: 'freestyle',
+    });
+    const originalPlan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
+    const originalState = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    const { capture, command, gitRunner } = createHarness(repoRoot, true);
+
+    await runCommand(command, projectPath, 'quick', true);
+
+    expect(process.exitCode).toBe(1);
+    await expectNoPromotionWrites(projectRoot, originalPlan, originalState);
+    expect(gitRunner.run).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads).toEqual([
+      { status: 'refused', reason: 'not-lite', files: [] },
+    ]);
+  });
+
   it('refuses an unsupported promotion target before any write', async () => {
     const repoRoot = await createRepo();
     const { projectPath, projectRoot } = await seedRepo(repoRoot);
