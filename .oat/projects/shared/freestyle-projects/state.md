@@ -95,7 +95,7 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
         base: '78b88baba57847a417cbba1f8294e82ffa3d34c6'
         reviewed_head: '32919c56a87403c526f8d7251b791d8210f192c7'
-        observed_head: fe875a4a16f9e8c4bc23b034a73afb6b9b8c9c8e
+        observed_head: e711fdade8db9045cf486d9f24a48a250e853386
         observed_base: 78b88baba57847a417cbba1f8294e82ffa3d34c6
         status: open
     integrated_review:
@@ -128,6 +128,12 @@ oat_deliveries:
         members:
           - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
             waived_head: aeaa9b46977d8003cfe5fb05f70a2e05bcb12be2
+      - waived_by: Thomas Stang
+        reason: 'Head moved only through the PR #429 Bugbot fix (ca5f8c338, oat-project-revise reads the mode before writing the pointer) and a test-only CI fix (16f859911); both are straightforward and verified, and the operator waived re-review for straightforward fixes.'
+        waived_at: 2026-11-22T18:26:10.002Z
+        members:
+          - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
+            waived_head: e711fdade8db9045cf486d9f24a48a250e853386
 oat_dispatch_policy:
   mode: managed
   policy: high
