@@ -114,10 +114,13 @@ oat config set activeProject "$PROJECT_PATH" || {
   exit 1
 }
 # The pointer must now name this project, or brainstorm and the records
-# commands would act on the previous one. Compare canonical directories.
+# commands would act on the previous one. Compare canonical directories, and
+# stop when either does not resolve: two failed lookups are not a match.
 ACTIVE_PATH=$(oat config get activeProject 2>/dev/null || true)
-if [ -z "$ACTIVE_PATH" ] ||
-  [ "$(cd "$ACTIVE_PATH" 2>/dev/null && pwd -P)" != "$(cd "$PROJECT_PATH" && pwd -P)" ]; then
+ACTIVE_DIR=$(cd "$ACTIVE_PATH" 2>/dev/null && pwd -P)
+PROJECT_DIR=$(cd "$PROJECT_PATH" 2>/dev/null && pwd -P)
+if [ -z "$ACTIVE_PATH" ] || [ -z "$ACTIVE_DIR" ] || [ -z "$PROJECT_DIR" ] ||
+  [ "$ACTIVE_DIR" != "$PROJECT_DIR" ]; then
   echo "freestyle: the active project is '$ACTIVE_PATH', not $PROJECT_PATH; stopping" >&2
   exit 1
 fi

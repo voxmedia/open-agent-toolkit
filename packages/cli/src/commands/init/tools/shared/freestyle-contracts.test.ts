@@ -213,6 +213,7 @@ describe('freestyle resume and review rules', () => {
     function run(
       script: string,
       env: Record<string, string>,
+      subdir = '',
     ): { status: number | null; stdout: string; stderr: string } {
       const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-pointer-'));
       try {
@@ -240,11 +241,12 @@ describe('freestyle resume and review rules', () => {
           ].join('\n'),
         );
         chmodSync(join(bin, 'oat'), 0o755);
+        mkdirSync(join(root, subdir), { recursive: true });
         const result = spawnSync(
           '/bin/bash',
           ['-c', `${script}\nprintf 'reached=%s\\n' "$PROJECT_PATH"`],
           {
-            cwd: root,
+            cwd: join(root, subdir),
             encoding: 'utf8',
             env: { ...process.env, ...env, PATH: `${bin}:${process.env.PATH}` },
           },
@@ -280,6 +282,30 @@ describe('freestyle resume and review rules', () => {
       const ok = run(resume, { STUB_GET: NEW });
       expect(ok.status).toBe(0);
       expect(ok.stdout).toContain(`reached=${NEW}`);
+    });
+
+    it('resume stops when neither directory resolves, and still passes at the repository root (m01 I-2)', () => {
+      const resume = block('**Resume.**', '**Another mode.**').replaceAll(
+        '{project-path}',
+        NEW,
+      );
+      // From a subdirectory the repo-relative paths resolve nowhere; two
+      // failed lookups must not compare equal.
+      const fromSubdir = run(resume, { STUB_GET: NEW }, 'src');
+      expect(fromSubdir.stderr, 'subdirectory: stop message').toContain(
+        `the active project is '${NEW}'`,
+      );
+      expect(fromSubdir.status, 'subdirectory: stops').toBe(1);
+      expect(fromSubdir.stdout).not.toContain('reached=');
+      const MISSING = '.oat/projects/shared/missing';
+      const missing = run(resume.replaceAll(NEW, MISSING), {
+        STUB_GET: MISSING,
+      });
+      expect(missing.status, 'missing on both sides: stops').toBe(1);
+      expect(missing.stdout).not.toContain('reached=');
+      const atRoot = run(resume, { STUB_GET: NEW });
+      expect(atRoot.status, 'repository root: continues').toBe(0);
+      expect(atRoot.stdout).toContain(`reached=${NEW}`);
     });
 
     it('create stops on a failed scaffold and uses the path the scaffold reports', () => {
