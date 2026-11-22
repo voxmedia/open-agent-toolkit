@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p04-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | in_progress | 8     | 6/8       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | complete | 8     | 8/8       |
 
-**Total:** 23/25 tasks completed
+**Total:** 25/25 tasks completed
 
 ---
 
@@ -584,7 +584,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-22
 
 ### Phase Summary
@@ -811,13 +811,53 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ### Task p04-t07: (final review) Name figure fences in the contributing Contents map and the docs-config README
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6336744053c15a13786d157cce0f5d1b0f27779e
+
+**Outcome:**
+
+- The contributing Contents entry names figure fences.
+- The docs-config README says `createSourceConfig().remarkPlugins` transforms `docs-*` fences, which need `withDocsFigures` and `figures.css` from docs-theme. It links to the docs-theme README's figure section.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/contributing/index.md`
+- `packages/docs-config/README.md`
+
+**Verification:** `pnpm --filter oat-docs check` and the docs-config check passed. The docs index is unchanged.
 
 ### Task p04-t08: (operator decision) Report authored columns for tab content
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e4fc7a2bbb9f3a3b27006cd5c188fe2108dbe08e
+
+**Outcome:**
+
+- Tab content is relocated from the code block start plus `INDENTED_CODE_WIDTH` (4), so it reports authored columns. Nested tabs compose.
+- A tab-nested unknown figure fence's error now reports its authored column.
+
+**Files changed:**
+
+- `packages/docs-transforms/src/remark-tabs.ts`
+- `packages/docs-transforms/src/remark-tabs.test.ts`
+
+**Verification:**
+
+- The tests failed first (RED), with column 1 on the right line. After the fix, the suites passed: docs-transforms 68, docs-config 24, docs-theme 153 (the captured replay needed no recapture) and CLI `src/commands/docs` 460.
+- Fix-round gates at `e4fc7a2bb`, all exit 0:
+  - `pnpm check` (fresh)
+  - `pnpm type-check`
+  - `pnpm build`
+  - `check:skill-bumps`
+  - `release:check-versions` (`origin/main` `a5c28dca2` at 0.3.53)
+  - `release:validate`
+  - `build:docs`
+  - gate 9
+  - `test:smoke` (165)
+
+**Notes / Decisions:**
+
+- **Can-fail control:** removing the `+ 4` failed both column tests (expected 9, got 1). The file was restored.
 
 ### Review Received: final
 
@@ -836,7 +876,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - **L4 (Low):** the docs-config README did not mention the fence transform or its rendering requirements. Converted to p04-t07.
 - **Operator decisions (2026-11-22):** convert all four Lows, and fix the deferred p01-t05 tab-column concern now, as p04-t08.
 
-**Outcome:** fixes pending. The final review re-runs after p04-t07 and p04-t08.
+**Outcome:** fixes completed: L1 and L2 at receive; L3 and L4 in `633674405`; tab columns in `e4fc7a2bb`. A final re-review follows.
 
 ---
 
@@ -907,6 +947,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
   - `oat-docs-bootstrap` (1.4.6) covers figures.
   - `oat-docs-analyze` (1.9.2) repairs legacy scaffolds that miss the wrapper, the `figures.css` import or the docs-theme `@source`.
 - **OAT docs:** the lifecycle page and `tool-packs.md` use figures. Markdown Features, `documentation.md`, `check.md`, `file-locations.md`, `cli-reference.md` and `workflows.md` are updated.
+- **Tab positions:** content inside tabs now reports authored columns as well as lines (an operator decision at the final review, p04-t08).
 - **Release:** `NOTICES.md` has the mdxcn entry, the release contract pins `figures.css` and the notice, and the five public packages moved to 0.3.54 in lockstep.
 
 **Key files/modules:**

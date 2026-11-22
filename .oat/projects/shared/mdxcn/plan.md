@@ -1375,7 +1375,7 @@ and report.
 | p02   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p02-review-2026-11-21T231835Z.md      | 228d3e3ddff659c1b93795b1505ba83121df163f | auto       | -                 |
 | p03   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p03-review-2026-11-22T000358Z.md      | 2c8d3b84bc075c96a4731fd0bd4fedd27990fb5f | auto       | -                 |
 | p04   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p04-review-2026-11-22T013926Z.md      | dcc24fc8ff0387b2dbf44339b5b87fa46964a1f6 | auto       | -                 |
-| final | code     | fixes_added     | 2026-11-22 | reviews/archived/code-final-review-2026-11-22T015824Z.md    | 2d992742e6de26415c3caa5ffc2356a3790e50dc | auto       | -                 |
+| final | code     | fixes_completed | 2026-11-22 | reviews/archived/code-final-review-2026-11-22T015824Z.md    | 2d992742e6de26415c3caa5ffc2356a3790e50dc | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
 | plan  | artifact | passed          | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T164854Z.md | 08d0588d801d7cd59afd08323f645b8a0735021b | gate       | codex-6-sol-xhigh |
