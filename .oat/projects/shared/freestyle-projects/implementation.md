@@ -1061,13 +1061,18 @@ Proof: skill-prose vitest; a branch-build scratch run of complete-state, push, a
 
 ### Task p04-t25: (review) Name the freestyle exception in the import checklist line
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** cc7404be1dd7dad58f08e3cbf282ab98eb5301a2
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-4)
 
 Intent: `starting-projects.md:103` says `oat-project-import-plan` writes into any active project whatever its mode; since `c20ef22d5` it stops for a freestyle project. Add the exception. Class: regression (the import guard made the line inaccurate).
 Files: `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`.
 Proof: `build:docs`, docs index freshness.
+
+- **J-4:** the entry-skill list in `starting-projects.md` now says `oat-project-import-plan` writes into any active project except a freestyle one, and that with a freestyle project active, or named with `--project`, it stops before any write because OAT has no promotion from freestyle. This matches the skill's `### Freestyle Projects` stop from `c20ef22d5`. No other page or test repeats the old "whatever its mode" claim (grep over `apps/oat-docs/docs`, `.agents`, `packages`, `tools` and `scripts`).
+- Proof before the commit, each exit 0: `oxfmt`, markdownlint on the page, `pnpm build:docs` (6 tasks, 0 cached, `oat-docs:build` cache miss, executed), and the docs index freshness check (`generate-index`, then `git diff --exit-code -- apps/oat-docs/index.md`, exit 0).
+- No test: the change is one docs sentence with no behaviour behind it beyond the skill stop, whose `TARGET_MODE` freestyle stop `skills.test.ts` already pins.
 
 ---
 
