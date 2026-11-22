@@ -945,6 +945,81 @@ Commit: `feat(p03-t04): adopt packaged docs figures in OAT docs`
 
 ---
 
+### Task p03-t05: (review) State the checker's fence-name scope in design.md
+
+**Files:**
+
+- Modify: `.oat/projects/shared/mdxcn/design.md`
+
+**Step 1: Understand the issue**
+
+Review finding (p03 review L1, `reviews/archived/code-p03-review-2026-11-22T000358Z.md`):
+design.md's Error Handling says both the build and the fast `docs check` pass
+report an unknown `docs-*` fence. The checker parses with
+`remarkParse + remarkGfm + remarkTabs`, though, so a `docs-*` fence inside a
+figure body is opaque text to it. Only the build, which reparses figure bodies,
+rejects such a fence (`unknown-docs-fence` / `nested-docs-fence`). The build
+fails loudly, so nothing broken ships, and discovery defers grammar checking.
+The design is aligned to the shipped checker rather than adding a
+nested-body scan.
+Location: `design.md:216` (Checker rule), `design.md:244` (Error Handling)
+
+**Step 2: Update design.md**
+
+- **Checker rule:** the checker validates top-level and tab-nested fence
+  names. A `docs-*` fence inside a figure body is left to the build, which
+  rejects any nested `docs-*` fence.
+- **Error Handling:** an unknown top-level or tab-nested `docs-*` fence fails
+  both the build and `docs check`. A `docs-*` fence nested in a figure body
+  fails the build only.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt .oat/projects/shared/mdxcn/design.md`
+
+Expected: formatted. Both sections match `docs-fences.ts` and
+`remark-docs-fences.ts`.
+
+**Step 4: Commit**
+
+`docs(p03-t05): scope the docs check fence rule in design`
+
+---
+
+### Task p03-t06: (review) Catch class-based hiding in the no-hidden-content replay assertion
+
+**Files:**
+
+- Modify: `packages/docs-theme/src/compiled-fixtures.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p03 review L2, `reviews/archived/code-p03-review-2026-11-22T000358Z.md`):
+`/\shidden(=|\s|>)/` misses a `hidden` class at either end of a class list,
+and Tailwind's `invisible`. The assertion is therefore weaker than its name,
+"hides no figure content".
+Location: `packages/docs-theme/src/compiled-fixtures.test.ts:240-248`
+
+**Step 2: Implement fix**
+
+Add a class-token assertion that rejects standalone `hidden`, `invisible` and
+`opacity-0` tokens anywhere in a `class` attribute. It must still allow
+`aria-hidden` and `overflow-*-hidden`. Prove it can fail: temporarily add a
+`hidden` class as the first token on one figure element, confirm the new
+assertion fails on that token, then restore the file.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt packages/docs-theme/src/compiled-fixtures.test.ts && pnpm --filter @open-agent-toolkit/docs-theme build && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-theme check`
+
+Expected: all pass.
+
+**Step 4: Commit**
+
+`test(p03-t06): reject class-based hiding in the figure replay`
+
+---
+
 ## Phase 4: Guidance, instructions and release
 
 ### Task p04-t01: Document the figures in the scaffold contributing pages and app AGENTS guidance
@@ -1153,12 +1228,13 @@ cell, and never truncate a widened row back to five columns.
   wiring, plus two review fixes.
 - Phase 2: 6 tasks. Static figure components, `figures.css` and
   `withDocsFigures`, plus two review fixes.
-- Phase 3: 4 tasks. The contract test and captured compile fixtures, the
-  checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption.
+- Phase 3: 6 tasks. The contract test and captured compile fixtures, the
+  checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption,
+  plus two review fixes.
 - Phase 4: 4 tasks. Scaffold and skill guidance, OAT docs and instructions,
   and the lockstep release.
 
-**Total: 19 tasks**
+**Total: 21 tasks**
 
 ---
 

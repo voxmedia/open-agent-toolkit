@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -20,10 +20,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | in_progress | 4     | 4/4       |
+| Phase 3 | in_progress | 6     | 4/6       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 15/19 tasks completed
+**Total:** 15/21 tasks completed
 
 ---
 
@@ -482,6 +482,32 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - `pnpm type-check`: unchanged packages were replayed from cache.
 - `pnpm test:evidence` was forced with an isolated HOME. The suites passed: cli 450 files, control-plane 14, docs-theme 10, docs-transforms 5, docs-config 5.
 - The docs index is fresh.
+
+### Task p03-t05: (review) State the checker's fence-name scope in design.md
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t06: (review) Catch class-based hiding in the no-hidden-content replay assertion
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p03
+
+**Review:** `reviews/archived/code-p03-review-2026-11-22T000358Z.md` (local only), reviewed head `2c8d3b84bc075c96a4731fd0bd4fedd27990fb5f`, invocation `auto`, request `mdxcn-p03-review-r1-20261121`
+**Findings:** 0 critical, 0 high, 0 medium, 3 low
+**Finding classes:**
+
+- L1: accepted-requirement (design.md Error Handling: unknown fences are reported by both the build and `docs check`).
+- L2: accepted-requirement (discovery and design: figures hide no content in server HTML).
+- L3: bookkeeping (plan p03-t03 Step 3 asks for the commands to be recorded in implementation.md).
+
+- **L1 (Low):** `docs check` misses a `docs-*` fence nested in a figure body, which the build rejects. Converted to p03-t05 as artifact alignment. design.md is narrowed to the shipped checker scope rather than a nested-body scan being added: the build already fails loudly, and discovery defers grammar checking.
+- **L2 (Low):** the replay's no-hidden-content assertion misses class-based hiding at the ends of a class list. Converted to p03-t06.
+- **L3 (Low):** the fresh-scaffold record gives outcomes but not the exact commands. Fixed in root bookkeeping from the implementer's verbatim commands; no plan task.
+
+**Outcome:** fixes pending. These are Low findings, so there is no re-review.
 
 ---
 
