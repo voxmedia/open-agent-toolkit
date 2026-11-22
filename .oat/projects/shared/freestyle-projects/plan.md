@@ -204,15 +204,16 @@ Default is `[]` (fully sequential, no worktrees).
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact                              | Reviewed Head                            | Invocation | Gate Target |
-| ----- | -------- | ------- | ---------- | ------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| plan  | artifact | passed  | 2026-11-21 | -                                     | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
-| plan  | artifact | passed  | 2026-11-21 | -                                     | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
-| p01   | code     | passed  | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
-| p02   | code     | passed  | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
-| p03   | code     | passed  | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
-| p04   | code     | passed  | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
-| final | code     | pending | -          | -                                     | -                                        | -          | -           |
+| Scope | Type     | Status   | Date       | Artifact                                    | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | -------- | ---------- | ------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| plan  | artifact | passed   | 2026-11-21 | -                                           | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
+| plan  | artifact | passed   | 2026-11-21 | -                                           | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
+| p01   | code     | passed   | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md       | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
+| p02   | code     | passed   | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md       | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
+| p03   | code     | passed   | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md       | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
+| p04   | code     | passed   | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md       | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
+| final | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| m01   | code     | received | 2026-11-22 | m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 
