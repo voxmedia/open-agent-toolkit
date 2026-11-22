@@ -89,37 +89,41 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it for future phases:
-  ```bash
-  mkdir -p .oat
-  oat config set activeProject "$PROJECT_PATH"
-  ```
+- Write the active-project pointer only after the freestyle check below.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+Then resolve the workflow mode, before the active-project pointer is written
+and before the Step 0.5 lifecycle checks:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
+project has no plan tasks or lifecycle journal to map commits onto. Tell the
+user: "This is a freestyle project; reconcile its records against the forge
+as its `AGENTS.md` and `shape.md` say."
+
+When the project name was asked for above, write the pointer now for future
+phases:
+
+```bash
+mkdir -p .oat
+oat config set activeProject "$PROJECT_PATH"
+```
 
 ### Step 0.5: Prerequisite Check
 
 Verify the project is ready for reconciliation:
 
-1. **Resolve the workflow mode** (first, so a freestyle project stops before the
-   lifecycle checks below):
-
-   ```bash
-   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
-   ```
-
-   If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
-   project has no plan tasks or lifecycle journal to map commits onto. Tell the
-   user: "This is a freestyle project; reconcile its records against the forge
-   as its `AGENTS.md` and `shape.md` say."
-
-2. **Check `plan.md` exists:**
+1. **Check `plan.md` exists:**
 
    ```bash
    test -f "$PROJECT_PATH/plan.md" || { echo "ERROR: plan.md not found. Run oat-project-plan first."; exit 1; }
    ```
 
-3. **Check project phase:**
+2. **Check project phase:**
 
    The shell snippet below is indented so it remains inside this numbered list;
    the leading whitespace is shell-safe when copied.
@@ -134,7 +138,7 @@ Verify the project is ready for reconciliation:
    - If `PHASE` is `plan` and `PHASE_STATUS` is `complete`: proceed (plan just finished, implementation starting)
    - Otherwise: STOP — tell user the project is not in implementation phase
 
-4. **Check for untracked commits:**
+3. **Check for untracked commits:**
    - Read `implementation.md` if it exists — find the last recorded commit SHA
    - If all recent commits are already tracked, inform user: "No untracked commits found. Nothing to reconcile."
 

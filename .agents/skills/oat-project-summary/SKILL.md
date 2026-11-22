@@ -127,15 +127,12 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it for future use:
-  ```bash
-  mkdir -p .oat
-  oat config set activeProject "$PROJECT_PATH"
-  ```
+- Write the active-project pointer only after the freestyle check below.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
-Then read the mode, before Step 1's artifact checks:
+Then read the mode, before the active-project pointer is written and before
+Step 1's artifact checks:
 
 ```bash
 WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
@@ -145,6 +142,14 @@ For `oat_workflow_mode: freestyle`, stop before reading or writing anything: a
 freestyle project has no lifecycle summary contract, and its documents are the
 ones `shape.md` lists. Tell the user: "This is a freestyle project; OAT writes
 no lifecycle summary for it. Keep whatever summary `shape.md` agrees on."
+
+When the project name was asked for above, write the pointer now for future
+use:
+
+```bash
+mkdir -p .oat
+oat config set activeProject "$PROJECT_PATH"
+```
 
 ### Step 1: Validate Implementation State
 

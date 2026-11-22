@@ -96,11 +96,18 @@ TARGET_MODE=$(oat project status --project-path "$TARGET_PATH" --field project.w
 When `TARGET_MODE` is `freestyle`, stop before any write, including Step 0's
 sync-manifest commit and Step 0.5's active-project pointer. OAT has no
 promotion from freestyle, so this skill never writes an imported `plan.md`
-into a freestyle project or changes its mode. Tell the user: "`{project-name}`
+into a freestyle project or changes its mode; Step 0.5 repeats this check for
+a name the user gives when it asks for one. Tell the user: "`{project-name}`
 is a freestyle project, and promotion from freestyle is not supported: this
-skill will not import a plan into it. To import this plan as a new lifecycle
-project, clear the active project with `oat-project-clear-active`, then run
-`oat-project-import-plan` again with `--project <new-name>`."
+skill will not import a plan into it." Then give the next step that fits what
+triggered the stop:
+
+- The active project: "To import this plan as a new lifecycle project, clear
+  the active project with `oat-project-clear-active`, then run
+  `oat-project-import-plan` again with `--project <new-name>`."
+- The `--project` name, or the name the user gave when Step 0.5 asked: "Pick a
+  new project name for the import; an existing freestyle project cannot take
+  it."
 
 ### Step 0 (Preflight): Inherited Git State
 
@@ -133,7 +140,12 @@ If no valid active project exists:
 
 - Use `--project` if provided, else ask user.
 - Resolve `TARGET_PROJECT_PATH="${PROJECTS_ROOT}/{project-name}"`.
-- If `TARGET_PROJECT_PATH/state.md` exists, set:
+- If `TARGET_PROJECT_PATH/state.md` exists, read its mode first:
+  ```bash
+  TARGET_MODE=$(oat project status --project-path "$TARGET_PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+  ```
+  If `TARGET_MODE` is `freestyle`, stop here, before the pointer write below,
+  with the freestyle stop above and its new-name next step. Otherwise set:
   ```bash
   oat config set activeProject "$TARGET_PROJECT_PATH"
   PROJECT_PATH="$TARGET_PROJECT_PATH"

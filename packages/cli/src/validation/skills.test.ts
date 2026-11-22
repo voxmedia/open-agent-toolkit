@@ -9564,12 +9564,18 @@ describe('freestyle mode skill contracts', () => {
       [
         '.agents/skills/oat-project-pr-progress/SKILL.md',
         '**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply',
-        ['### Step 0.5: Archive Residual Active Review Artifacts'],
+        [
+          'oat config set activeProject',
+          '### Step 0.5: Archive Residual Active Review Artifacts',
+        ],
       ],
       [
         '.agents/skills/oat-project-pr-final/SKILL.md',
         '**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply',
-        ['### Step 0.5: Archive Residual Active Review Artifacts'],
+        [
+          'oat config set activeProject',
+          '### Step 0.5: Archive Residual Active Review Artifacts',
+        ],
       ],
       [
         '.agents/skills/oat-project-document/SKILL.md',
@@ -9582,12 +9588,19 @@ describe('freestyle mode skill contracts', () => {
       [
         '.agents/skills/oat-project-summary/SKILL.md',
         'For `oat_workflow_mode: freestyle`, stop before reading or writing anything',
-        ['### Step 1: Validate Implementation State'],
+        [
+          'oat config set activeProject',
+          '### Step 1: Validate Implementation State',
+        ],
       ],
       [
         '.agents/skills/oat-project-reconcile/SKILL.md',
         'If `WORKFLOW_MODE` is `freestyle`, stop before any write',
-        ['test -f "$PROJECT_PATH/plan.md"', '### Step 1: Find Checkpoint'],
+        [
+          'oat config set activeProject',
+          'test -f "$PROJECT_PATH/plan.md"',
+          '### Step 1: Find Checkpoint',
+        ],
       ],
       [
         '.agents/skills/oat-project-import-plan/SKILL.md',
@@ -9616,6 +9629,29 @@ describe('freestyle mode skill contracts', () => {
         );
       }
     }
+
+    // import-plan adopts an existing project named at its Step 0.5 prompt, so
+    // that branch checks the named project's mode before its pointer write.
+    const importPlan = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+    const branch = importPlan.indexOf('If no valid active project exists:');
+    const promptedStop = importPlan.indexOf(
+      'If `TARGET_MODE` is `freestyle`, stop here, before the pointer write',
+      branch,
+    );
+    const pointerWrite = importPlan.indexOf(
+      'oat config set activeProject "$TARGET_PROJECT_PATH"',
+      branch,
+    );
+    expect(branch, 'import-plan Step 0.5 branch').toBeGreaterThan(0);
+    expect(promptedStop, 'import-plan prompted-name stop').toBeGreaterThan(
+      branch,
+    );
+    expect(
+      promptedStop,
+      'import-plan: prompted-name stop before the pointer write',
+    ).toBeLessThan(pointerWrite);
   });
 
   it('makes reviewer and implementer contracts name freestyle', async () => {
