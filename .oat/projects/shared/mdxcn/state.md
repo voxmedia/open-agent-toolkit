@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -110,11 +110,11 @@ oat_quick_start_gate:
   reviewed_head: '08d0588d801d7cd59afd08323f645b8a0735021b'
   decided_at: '2026-11-21T16:53:11Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 'f03b317909cec452cd92ee6d4c0870dadf08ad53'
   implementation_base_ref: 'origin/main'
   implementation_fingerprint: 'sha256:effective-delta-v2:f0dd98de83268fcef5b5c434619c4a886d35e3f1f0b075d54228742e3522b311'
-  freshness_head: '125c37a4c1d082207acefad3e1349369a7dddf37'
+  freshness_head: 'cddfd94a2a9250eb2526e08676e491235bc51dbc'
   freshness_fingerprint: 'sha256:effective-delta-v2:885fa7a0bc53e691ff1af0730be11460c893d288aaf6f4928f5973438adf31ba'
   waivers: []
   launch_state: result_persisted
@@ -156,14 +156,14 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-11-22T13:48:50Z'
+  updated_at: '2026-11-22T13:51:40Z'
   decided_at: '2026-11-22T04:48:48Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/428' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T13:48:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T13:51:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -179,7 +179,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation - Tasks complete (27/27); final review passed; implementation exit gate passed (codex-6-sol-xhigh, 0 findings); awaiting the final HiLL approval.
+Implementation — PR open; completion may run before or after merge. Final HiLL approval (p04) is pending.
 
 ## Artifacts
 
@@ -187,7 +187,8 @@ Implementation - Tasks complete (27/27); final review passed; implementation exi
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete, lightweight)
 - **Plan:** `plan.md` (complete; plan gate passed on attempt 2)
-- **Implementation:** `implementation.md` (all 23 tasks complete; final summary written)
+- **Implementation:** `implementation.md` (all 27 tasks complete; final summary written)
+- **Summary:** `summary.md` (complete)
 
 ## Progress
 
@@ -205,6 +206,9 @@ Implementation - Tasks complete (27/27); final review passed; implementation exi
 - ✓ p04-t10 fixed (`eda765135`)
 - ✓ Final review passed (round 4, narrowed; 2 Lows dispositioned)
 - ✓ Implementation exit gate passed (run `09abb358`, 0 findings)
+- ✓ Summary, documentation and final PR complete
+- ✓ PR created
+- ⧗ Awaiting human review
 - ⧗ Final HiLL approval
 
 ## Blockers
@@ -213,4 +217,8 @@ None
 
 ## Next Milestone
 
-Final review, implementation exit gate and the p04 HiLL approval
+PR is open for review. Final HiLL approval (p04) is pending.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.

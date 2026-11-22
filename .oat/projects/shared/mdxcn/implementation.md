@@ -965,6 +965,7 @@ The implementer handles continued through the same handle for the p02 recovery a
 - **Gate:** oat-project-implement exit gate · **Scope:** final · **Outcome:** ok, then passed (0C/0H/0M/0L, run `09abb358`, codex-6-sol-xhigh) · attempt 1 of 2, no waiver
 - Final verification (Step 12) at `36a6f7789`, forced and uncached (0 cached): `pnpm lint`, `pnpm type-check`, `pnpm build` and `pnpm test` all exit 0. `pnpm test` ran 12 of 12 turbo tasks; the CLI ran 450 test files. Logs are in `.oat/repo/analysis/mdxcn/step12-044931/` (local only).
 - Project recap: skipped by operator choice (`oat_project_recap` skip/interactive, 2026-11-22).
+- Final PR: https://github.com/voxmedia/open-agent-toolkit/pull/428 (scope final, 2026-11-22). DoD gates before push: `pnpm check`, `check:skill-bumps`, `release:check-versions`, `release:validate`, `build:docs` and gate 9 all exit 0.
 
 ### Review Received: final
 
