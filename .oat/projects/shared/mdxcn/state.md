@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t04
+oat_current_task: p04-t05
 oat_last_commit: d4fe17878
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. p01–p03 are complete; p04 tasks are complete (d4fe17878) and its phase review is next.
+Implementation in progress. p01–p03 are complete; the p04 review passed with 1 Medium and 3 Low, and fixes p04-t05 and p04-t06 are next.
 
 ## Artifacts
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 | complete    | 5     | 5/5       |
 | Phase 2 | complete    | 6     | 6/6       |
 | Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | in_progress | 4     | 4/4       |
+| Phase 4 | in_progress | 6     | 4/6       |
 
-**Total:** 21/21 tasks completed
+**Total:** 21/23 tasks completed
 
 ---
 
@@ -639,7 +639,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 - The OAT Markdown Features page has a figure section with every fence; `documentation.md`, `check.md` and `file-locations.md` are updated.
 - The package `AGENTS.md` files and READMEs are updated, and `NOTICES.md` has the mdxcn MIT entry.
-- The release contract now requires the packed `figures.css` and the mdxcn notice in the vendored `dist` modules.
+- The release contract now requires the packed `figures.css` and the mdxcn notice in the packed `dist/figures/graph-frame.js`. Each vendored module is covered by `license-notice.test.ts`.
 
 **Files changed:**
 
@@ -713,7 +713,35 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - **Original commit:** `e5f525af6b99ffd382cebff91c445a99310a7766` (unchanged).
 - **Recovery commit:** `d4fe17878db97880c7248df0b1f28d4ede32d1f2`. It rewords the description to "figure fences" and regenerates the index.
 - **Disposition:** recovered. Gate 9 passes on the committed head.
-- **Root validation:** the original commit is unchanged, the recovery is in scope (p04-t03 files only), and the committed `completed` marker matches. The marker is cleared here, and `used_attempts: 1` is kept.
+- **Root validation:** the original commit is unchanged, the recovery is in scope (p04-t03 files plus the recovery reservation in `state.md`), and the committed `completed` marker matches. The marker is cleared here, and `used_attempts: 1` is kept.
+
+### Task p04-t05: (review) Add the missing docs-theme `@source` to the legacy-scaffold figure repair
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t06: (review) Correct the checker-scope wording and the `docs check` summaries
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p04
+
+**Review:** `reviews/archived/code-p04-review-2026-11-22T013926Z.md` (local only), reviewed head `dcc24fc8ff0387b2dbf44339b5b87fa46964a1f6`, invocation `auto`, request `mdxcn-p04-review-r1-20261122`
+**Findings:** 0 critical, 0 high, 1 medium, 3 low
+**Finding classes:**
+
+- M1: accepted-requirement (design.md: `oat-docs-analyze` gets a legacy-scaffold check for a missing wrapper or CSS import, and figures must render styled).
+- L1: accepted-requirement (design.md Checker rule, aligned in p03-t05; the guidance must state it accurately).
+- L2: accepted-requirement (root AGENTS.md Definition of Done: the affected package README and docs pages describe changed behavior).
+- L3: bookkeeping (implementation.md p04 wording).
+
+- **M1 (Medium):** the legacy-scaffold figure repair assumes a docs-theme `@source` that pre-0.3.15 scaffolds lack, so their figures would render unstyled. Converted to p04-t05.
+- **L1 (Low):** "top level and inside tabs only" understates the checker, which checks everything except figure bodies. Converted to p04-t06.
+- **L2 (Low):** the CLI README and `cli-reference.md` `docs check` summaries omit `docs-fences`. Folded into p04-t06.
+- **L3 (Low):** the ledger overstated the release contract's notice coverage and the recovery's file scope. Fixed at receive in this bookkeeping commit.
+
+**Outcome:** fixes pending. These are Medium and Low findings, so there is no re-review.
 
 ---
 

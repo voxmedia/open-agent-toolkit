@@ -1189,6 +1189,95 @@ gates.
 
 ---
 
+### Task p04-t05: (review) Add the missing docs-theme `@source` to the legacy-scaffold figure repair
+
+**Files:**
+
+- Modify: `.agents/skills/oat-docs-analyze/references/legacy-scaffold-checks.md`
+- Modify: `.oat/projects/shared/mdxcn/design.md`
+
+**Step 1: Understand the issue**
+
+Review finding (p04 review M1, `reviews/archived/code-p04-review-2026-11-22T013926Z.md`):
+the new legacy-scaffold row tells the agent to keep the existing docs-theme
+`@source`. Fumadocs scaffolds made before #350 (`be168345e`, lockstep
+0.3.15) have no such line. An older app that follows the repair builds
+cleanly, but Tailwind never scans the docs-theme `dist`, so every figure
+renders unstyled with no error. design.md makes the same assumption for
+current scaffolds.
+Location: `legacy-scaffold-checks.md:19`, `design.md:93`
+
+**Step 2: Implement fix**
+
+- **Observed shape:** add a missing docs-theme `@source` line to the row's
+  observed shape.
+- **Repair:** add
+  `@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';`
+  when the line is absent, adjusted to the app's `node_modules` location.
+  Keep it when it is present.
+- **design.md:** note that current scaffolds carry the `@source` since
+  0.3.15, and that the analyze repair adds it to older apps.
+- **Versioning:** `oat-docs-analyze` already moved to 1.9.2 in this PR. The
+  bump is PR-scoped, so no second bump is made.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt .agents/skills/oat-docs-analyze/references/legacy-scaffold-checks.md .oat/projects/shared/mdxcn/design.md && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && pnpm oat:validate-skills && pnpm lint && pnpm format`
+
+Expected: all pass. Commit, then run `pnpm run check:skill-bumps`.
+
+**Step 4: Commit**
+
+`docs(p04-t05): add the docs-theme source line to the legacy figure repair`
+
+---
+
+### Task p04-t06: (review) Correct the checker-scope wording and the `docs check` summaries
+
+**Files:**
+
+- Modify: `.oat/templates/docs-app-fuma/docs/contributing.md`
+- Modify: `apps/oat-docs/docs/contributing/markdown-features.md`
+- Modify: `packages/cli/README.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: any CLI test that pins the changed template sentence
+
+**Step 1: Understand the issue**
+
+Review findings (p04 review L1 and L2, `reviews/archived/code-p04-review-2026-11-22T013926Z.md`):
+
+- **L1:** both contributing pages say the checker looks at fence names "at
+  the top level and inside tabs only". It actually checks every `code` node
+  after `remarkTabs`, so only figure bodies are skipped.
+- **L2:** the `oat docs check` summaries in the CLI README and in
+  `cli-reference.md` do not mention the `docs-fences` rule.
+
+Location: `contributing.md:98`, `markdown-features.md:157`,
+`packages/cli/README.md:52`, `cli-reference.md:84`
+
+**Step 2: Implement fix**
+
+- **Contributing pages:** reword both to say that `docs:check` checks fence
+  names everywhere except inside a figure body, so the build is what catches
+  a nested one. Change the template and OAT's page together.
+- **Summaries:** add "and unknown `docs-*` figure fence names on Fumadocs
+  apps" to both.
+- **Index:** check whether the generated docs index changes. If it does,
+  regenerate it with the generate-index command. Avoid unescaped `*` in any
+  page description.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt <edited files> && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init src/validation && pnpm --filter oat-docs check && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md`
+
+Expected: all pass, and the index is unchanged or committed regenerated.
+
+**Step 4: Commit**
+
+`docs(p04-t06): state the docs check fence scope and list the docs-fences rule`
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
@@ -1231,10 +1320,10 @@ cell, and never truncate a widened row back to five columns.
 - Phase 3: 6 tasks. The contract test and captured compile fixtures, the
   checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption,
   plus two review fixes.
-- Phase 4: 4 tasks. Scaffold and skill guidance, OAT docs and instructions,
-  and the lockstep release.
+- Phase 4: 6 tasks. Scaffold and skill guidance, OAT docs and instructions,
+  and the lockstep release, plus two review fixes.
 
-**Total: 21 tasks**
+**Total: 23 tasks**
 
 ---
 
