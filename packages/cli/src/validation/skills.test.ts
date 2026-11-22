@@ -9502,7 +9502,7 @@ describe('freestyle mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-autonomous/SKILL.md',
-        /\| Existing freestyle project \(`oat_workflow_mode: freestyle`\)\s*\| Stop:/,
+        /\| Existing freestyle project \(`oat_workflow_mode: freestyle`\)\s*\| Stop at a product-judgment boundary: freestyle has no lifecycle workflow/,
       ],
       [
         '.agents/skills/oat-project-review-provide/SKILL.md',

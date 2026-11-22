@@ -40,7 +40,7 @@ oat_phase_recovery_policy:
         discovered_by: 'p04-t01 to p04-t02 transition check: the oat-project-autonomous route-table freestyle row says Stop without a boundary class'
         dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
         reservation_head: 73f3496731002e55562df89e5abb324e30e49ec8
-        status: pending
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

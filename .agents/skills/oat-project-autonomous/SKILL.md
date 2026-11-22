@@ -222,21 +222,21 @@ skill's documented resume behavior.
 
 Select the earliest incomplete lifecycle owner:
 
-| Persisted state                                             | Route                                                                                |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| No project yet                                              | Continue to Step 2, then invoke the selected creation skill                          |
-| Lite plan incomplete                                        | `oat-project-lite`                                                                   |
-| Brief not yet reviewed and approved                         | `oat-project-brief`                                                                  |
-| Existing goal project (`oat_workflow_mode: goal`)           | Stop at a product-judgment boundary: goal is not autonomous                          |
-| Existing freestyle project (`oat_workflow_mode: freestyle`) | Stop: freestyle has no lifecycle workflow to run; its `shape.md` decides how it runs |
-| Quick-mode discovery, optional design, or plan incomplete   | `oat-project-quick-start`                                                            |
-| Spec-driven discovery incomplete                            | `oat-project-discover`                                                               |
-| Spec-driven design/spec incomplete                          | `oat-project-design`                                                                 |
-| Design complete, plan incomplete                            | `oat-project-plan`                                                                   |
-| Imported plan requested                                     | `oat-project-import-plan`                                                            |
-| Plan ready for implementation                               | `oat-project-implement`                                                              |
-| Implementation closeout snapshot incomplete                 | `oat-project-implement`                                                              |
-| PR already open                                             | Report the tracked PR; do not create a duplicate                                     |
+| Persisted state                                             | Route                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| No project yet                                              | Continue to Step 2, then invoke the selected creation skill                                                         |
+| Lite plan incomplete                                        | `oat-project-lite`                                                                                                  |
+| Brief not yet reviewed and approved                         | `oat-project-brief`                                                                                                 |
+| Existing goal project (`oat_workflow_mode: goal`)           | Stop at a product-judgment boundary: goal is not autonomous                                                         |
+| Existing freestyle project (`oat_workflow_mode: freestyle`) | Stop at a product-judgment boundary: freestyle has no lifecycle workflow to run; its `shape.md` decides how it runs |
+| Quick-mode discovery, optional design, or plan incomplete   | `oat-project-quick-start`                                                                                           |
+| Spec-driven discovery incomplete                            | `oat-project-discover`                                                                                              |
+| Spec-driven design/spec incomplete                          | `oat-project-design`                                                                                                |
+| Design complete, plan incomplete                            | `oat-project-plan`                                                                                                  |
+| Imported plan requested                                     | `oat-project-import-plan`                                                                                           |
+| Plan ready for implementation                               | `oat-project-implement`                                                                                             |
+| Implementation closeout snapshot incomplete                 | `oat-project-implement`                                                                                             |
+| PR already open                                             | Report the tracked PR; do not create a duplicate                                                                    |
 
 An approved plan enters at implementation. Never replay completed phases solely
 because this is a new session.
