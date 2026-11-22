@@ -242,6 +242,26 @@ export function isFreestyleState(content: string): boolean {
   return isControlPlaneFreestyleState(content);
 }
 
+/**
+ * The LF-only frontmatter editors (`getFrontmatterBlock`, `replaceFrontmatter`
+ * and the state validator) handle a CRLF freestyle `state.md` as LF: `content`
+ * is what to edit and validate, and `restore` puts the file's own line ending
+ * back before the write. Every other state is returned unchanged, so lifecycle
+ * modes keep their existing behavior.
+ */
+export function freestyleStateLineEndings(raw: string): {
+  content: string;
+  restore: (next: string) => string;
+} {
+  if (!/^---[ \t]*\r\n/.test(raw) || !isFreestyleState(raw)) {
+    return { content: raw, restore: (next) => next };
+  }
+  return {
+    content: raw.replaceAll('\r\n', '\n'),
+    restore: (next) => next.replaceAll('\n', '\r\n'),
+  };
+}
+
 /** {@link parseStateWorkflowMode} for a file; null when it cannot be read. */
 export async function readStateWorkflowModeFile(
   filePath: string,

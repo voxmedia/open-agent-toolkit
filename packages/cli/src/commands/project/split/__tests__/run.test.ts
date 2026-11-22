@@ -467,9 +467,9 @@ describe('oat project split run', () => {
   });
 
   // The mode is read as `oat project status` reads it, so a padded value is
-  // freestyle here too. A CRLF state.md is refused one step earlier, by the
-  // split's existing state validation (unchanged for every mode), and is
-  // still left untouched.
+  // freestyle here too. CRLF is not a case here: split's existing state
+  // validation refuses a CRLF parent for every mode before the freestyle
+  // check and before any write, so the check cannot be reached with one.
   it.each([
     [
       'plain',
@@ -482,12 +482,6 @@ describe('oat project split run', () => {
       'oat_workflow_mode: " freestyle "',
       '\n',
       'umbrella is a freestyle project; split cannot convert it',
-    ],
-    [
-      'CRLF',
-      'oat_workflow_mode: freestyle',
-      '\r\n',
-      'umbrella/state.md is missing frontmatter',
     ],
   ])(
     'refuses to convert an active detected freestyle project and leaves it untouched (%s)',

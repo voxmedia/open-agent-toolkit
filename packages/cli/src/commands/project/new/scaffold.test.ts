@@ -1511,6 +1511,58 @@ describe('scaffoldProject', () => {
     expect(await readFile(statePath, 'utf8')).toBe(crlfState);
   });
 
+  // m01 R3-1: a CRLF block whose last field is quoted used to fail YAML
+  // parsing (a trailing `\r` stuck to the closing quote) and read as
+  // spec-driven, so `project new --mode quick` added lifecycle files.
+  it.each([
+    ['a quoted mode', ['oat_workflow_mode: "freestyle"']],
+    [
+      'a quoted timestamp after the mode',
+      [
+        'oat_workflow_mode: freestyle',
+        'oat_project_state_updated: "2026-11-22T00:00:00Z"',
+      ],
+    ],
+  ])(
+    'reads a CRLF freestyle state.md whose last field is %s',
+    async (_label, fields) => {
+      const repoRoot = await createRepoRoot();
+      const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+      tempDirs.push(repoRoot, home);
+      const base = {
+        repoRoot,
+        home,
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-11-22',
+      };
+      await scaffoldProject({
+        ...base,
+        projectName: 'crlf',
+        mode: 'freestyle',
+      });
+      const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'crlf');
+      const statePath = join(projectDir, 'state.md');
+      const crlfState = ['---', ...fields, '---', '', '# State', ''].join(
+        '\r\n',
+      );
+      await writeFile(statePath, crlfState, 'utf8');
+      const before = (await readdir(projectDir)).sort();
+
+      await expect(
+        scaffoldProject({ ...base, projectName: 'crlf', mode: 'quick' }),
+      ).rejects.toThrow('already exists as a freestyle project');
+      expect((await readdir(projectDir)).sort()).toEqual(before);
+      const rerun = await scaffoldProject({
+        ...base,
+        projectName: 'crlf',
+        mode: 'freestyle',
+      });
+      expect(rerun.createdFiles).toEqual([]);
+      expect(await readFile(statePath, 'utf8')).toBe(crlfState);
+    },
+  );
+
   it('resolves partial template tiers independently for every file', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));

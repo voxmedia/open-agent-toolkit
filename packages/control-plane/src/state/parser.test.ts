@@ -14,6 +14,22 @@ import {
 import { parseStateFrontmatter } from './parser';
 
 describe('parseStateFrontmatter', () => {
+  it('reads a lifecycle CRLF state whose last field is quoted (m01 R3-1)', () => {
+    const parsed = parseStateFrontmatter(
+      [
+        '---',
+        'oat_workflow_mode: quick',
+        'oat_phase: plan',
+        'oat_project_state_updated: "2026-11-22T00:00:00Z"',
+        '---',
+        '',
+      ].join('\r\n'),
+    );
+    expect(parsed.workflowMode).toBe('quick');
+    expect(parsed.phase).toBe('plan');
+    expect(parsed.projectStateUpdated).toBe('2026-11-22T00:00:00Z');
+  });
+
   it('parses valid state frontmatter into typed fields', () => {
     const content = `---
 oat_current_task: p01-t03

@@ -23,7 +23,9 @@ and updates project state.
 - **Freestyle:** a freestyle project has no plan phases, so
   `oat-project-implement` stops for it as soon as the project resolves, before
   a synced project's pull, dispatch preflight or any `state.md` write, and
-  dispatches no phase implementer.
+  dispatches no phase implementer. For a synced project with no checkout it
+  reads the mode from origin's project ref; when that lookup fails or the mode
+  cannot be read, it stops before the pull with a message.
 - **Prevention boundary:** formatting, declared task verification, and
   applicable cheap checks run before the task commit.
 - **Recovery boundary:** an eligible post-commit defect may produce a separate

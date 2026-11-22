@@ -17,7 +17,10 @@ import {
   evaluateJournal,
   formatJournalRefusal,
 } from '@commands/project/journal-check/index';
-import { isFreestyleState } from '@commands/shared/frontmatter';
+import {
+  freestyleStateLineEndings,
+  isFreestyleState,
+} from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveEffectiveConfig } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
@@ -148,7 +151,10 @@ async function runProjectCompleteState(
     }
 
     const now = dependencies.now();
-    const updatedContent = renderCompletedProjectState(content, {
+    // A CRLF freestyle state is rendered and validated as LF, then written
+    // back with its own line ending.
+    const lineEndings = freestyleStateLineEndings(content);
+    const updatedContent = renderCompletedProjectState(lineEndings.content, {
       archived: options.archived ?? false,
       nowUtc: now.toISOString(),
       today: now.toISOString().slice(0, 10),
@@ -157,8 +163,9 @@ async function runProjectCompleteState(
       filePath: statePath,
       projectPath: targetProjectPath,
     });
-    if (updatedContent !== content) {
-      await dependencies.writeFile(statePath, updatedContent, 'utf8');
+    const writtenContent = lineEndings.restore(updatedContent);
+    if (writtenContent !== content) {
+      await dependencies.writeFile(statePath, writtenContent, 'utf8');
     }
 
     if (context.json) {

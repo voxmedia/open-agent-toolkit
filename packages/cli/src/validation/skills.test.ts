@@ -2925,9 +2925,13 @@ describe('validateOatSkills', () => {
     // table loads dispatch preflight (a route that can write `state.md`), so
     // it cannot live in a reference. Raised again from 266 for the read-only
     // mode read that lets that stop run before the synced pull, which can
-    // commit. The structural assertions below still enforce that step bodies
-    // stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(278);
+    // commit. Raised again from 278 for that read's failure handling: an
+    // `ls-remote --exit-code` status split so a failed lookup or an unreadable
+    // ref mode stops before the pull, and a repository-root `cd` so the
+    // repo-relative active project resolves from a subdirectory. The
+    // structural assertions below still enforce that step bodies stay out of
+    // the entry.
+    expect(entry.split('\n').length).toBeLessThanOrEqual(296);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -9795,111 +9799,362 @@ describe('freestyle mode skill contracts', () => {
     }
   });
 
-  it('reads the implement mode before the synced pull and pulls only for other modes', async () => {
-    // Runs Step 0's arrival block against stub `oat` and `git`: a freestyle
-    // project, with or without its checkout here, stops before any pull, and
-    // every other mode keeps its arrival pull.
-    const implement = await readRepoFile(
-      '.agents/skills/oat-project-implement/SKILL.md',
+  it('resolves the quick-start named target at the scope `oat project new` uses (m01 R3-5)', async () => {
+    const quickStart = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
     );
-    const step0 = implement.slice(
-      implement.indexOf('### Step 0: Resolve Active Project'),
-      implement.indexOf('### Route Loading Contract'),
+    const section = quickStart.slice(
+      quickStart.indexOf('### Freestyle Projects'),
+      quickStart.indexOf('### Step 0 (Preflight): Inherited Git State'),
     );
-    const block = /```bash\n([\s\S]*?)```/.exec(step0)?.[1];
-    expect(block, 'Step 0 arrival block').toBeDefined();
-    expect(
-      (block as string).indexOf('if [ "$WORKFLOW_MODE" = "freestyle" ]; then'),
-      'the freestyle check precedes the pull',
-    ).toBeLessThan(
-      (block as string).indexOf('oat project pull "$PROJECT_PATH"'),
+    const block = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
+    expect(block, 'freestyle block').toBeDefined();
+    const resolver = (block as string)
+      .split('\n')
+      .filter((line) => !line.startsWith('TARGET_'))
+      .join('\n')
+      .replaceAll('{project-name}', 'proj');
+    expect(resolver).toContain('NAMED_PATH=');
+    // Ordering: the name resolves before Step 0's first commit-capable step,
+    // and the Step 0.5 named check reads the same NAMED_PATH before scaffolding.
+    expect(quickStart.indexOf('NAMED_PATH=')).toBeLessThan(
+      quickStart.indexOf('oat internal commit-paths --identity'),
+    );
+    const branch = quickStart.indexOf('If no valid active project exists:');
+    const namedCheck = quickStart.indexOf(
+      'oat project status --project-path "$NAMED_PATH"',
+      branch,
+    );
+    expect(namedCheck).toBeGreaterThan(branch);
+    expect(namedCheck).toBeLessThan(
+      quickStart.indexOf(
+        'oat project new "{project-name}" --mode quick',
+        branch,
+      ),
     );
 
-    const run = async (options: {
-      checkout: string | null;
-      refMode: string;
-    }): Promise<{ pulled: boolean; stderr: string }> => {
+    const cli = join(process.cwd(), 'dist', 'index.js');
+    const root = await mkdtemp(join(tmpdir(), 'oat-quick-named-'));
+    try {
+      const bin = join(root, 'bin');
+      const repo = join(root, 'repo');
+      await mkdir(bin);
+      await mkdir(repo);
+      await writeFile(
+        join(bin, 'oat'),
+        `#!/bin/bash\nexec node "${cli}" "$@"\n`,
+        { mode: 0o755 },
+      );
+      await execFileAsync('git', ['init', '-q'], { cwd: repo });
+      const env = {
+        ...process.env,
+        HOME: root,
+        PATH: `${bin}:${process.env.PATH}`,
+        OAT_PROJECTS_DEFAULT_SCOPE: '',
+        OAT_PROJECTS_ROOT: '',
+      };
+      const modeAt = async (scope: string | undefined) => {
+        const { stdout } = await execFileAsync(
+          '/bin/bash',
+          [
+            '-c',
+            `${resolver}\nprintf '%s\\n' "$NAMED_PATH" "$(oat project status --project-path "$NAMED_PATH" --field project.workflowMode 2>/dev/null || echo null)"`,
+          ],
+          {
+            cwd: repo,
+            env: scope ? { ...env, OAT_PROJECTS_DEFAULT_SCOPE: scope } : env,
+          },
+        );
+        return stdout.trim().split('\n');
+      };
+      for (const scope of ['local', 'synced']) {
+        await mkdir(join(repo, '.oat/projects', scope, 'proj'), {
+          recursive: true,
+        });
+        await writeFile(
+          join(repo, '.oat/projects', scope, 'proj', 'state.md'),
+          '---\noat_workflow_mode: freestyle\n---\n',
+        );
+      }
+      expect(await modeAt('local')).toEqual([
+        '.oat/projects/local/proj',
+        'freestyle',
+      ]);
+      // With no configured scope, `oat project new` defaults to synced.
+      expect(await modeAt(undefined)).toEqual([
+        '.oat/projects/synced/proj',
+        'freestyle',
+      ]);
+      // The real scaffolder writes a new local name exactly where the
+      // resolver points for it.
+      const { stdout } = await execFileAsync(
+        'node',
+        [
+          cli,
+          '--json',
+          'project',
+          'new',
+          'fresh',
+          '--mode',
+          'quick',
+          '--no-commit',
+          '--no-set-active',
+          '--no-dashboard',
+        ],
+        { cwd: repo, env: { ...env, OAT_PROJECTS_DEFAULT_SCOPE: 'local' } },
+      );
+      const scaffolded = JSON.parse(stdout) as { projectPath: string };
+      const [freshPath] = await execFileAsync(
+        '/bin/bash',
+        ['-c', `${resolver.replaceAll('/proj', '/fresh')}\necho "$NAMED_PATH"`],
+        { cwd: repo, env: { ...env, OAT_PROJECTS_DEFAULT_SCOPE: 'local' } },
+      ).then((r) => r.stdout.trim().split('\n'));
+      expect(scaffolded.projectPath).toBe(freshPath);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  describe('implement Step 0 reads the mode before the synced pull', () => {
+    async function arrivalBlock(): Promise<string> {
+      const implement = await readRepoFile(
+        '.agents/skills/oat-project-implement/SKILL.md',
+      );
+      const step0 = implement.slice(
+        implement.indexOf('### Step 0: Resolve Active Project'),
+        implement.indexOf('### Route Loading Contract'),
+      );
+      const block = /```bash\n([\s\S]*?)```/.exec(step0)?.[1];
+      expect(block, 'Step 0 arrival block').toBeDefined();
+      return block as string;
+    }
+
+    const PROJECT = '.oat/projects/synced/proj';
+
+    /** A stub `oat` that reads the mode from `state.md` and marks a pull. */
+    async function writeStubOat(bin: string): Promise<void> {
+      await writeFile(
+        join(bin, 'oat'),
+        [
+          '#!/bin/bash',
+          'case "$1 $2" in',
+          `  "config get") echo "${PROJECT}" ;;`,
+          '  "project scope") echo synced ;;',
+          '  "project status") sed -n "s/^oat_workflow_mode: //p" "$4/state.md" ;;',
+          '  "project pull") echo pulled > "$PULL_MARK" ;;',
+          'esac',
+          '',
+        ].join('\n'),
+        { mode: 0o755 },
+      );
+    }
+
+    async function run(
+      block: string,
+      options: {
+        checkout?: string;
+        record?: boolean;
+        refMode?: string;
+        /** Exit code of each `git ls-remote` call, in order; the last repeats. */
+        lsRemote?: number[];
+        subdir?: string;
+      },
+    ): Promise<{ pulled: boolean; status: number; stderr: string }> {
       const root = await mkdtemp(join(tmpdir(), 'oat-implement-arrival-'));
       try {
         const bin = join(root, 'bin');
         await mkdir(bin);
-        const projectPath = '.oat/projects/synced/proj';
-        if (options.checkout !== null) {
-          await mkdir(join(root, projectPath), { recursive: true });
+        await mkdir(join(root, '.oat/projects/synced'), { recursive: true });
+        if (options.checkout !== undefined) {
+          await mkdir(join(root, PROJECT), { recursive: true });
           await writeFile(
-            join(root, projectPath, 'state.md'),
+            join(root, PROJECT, 'state.md'),
             `---\noat_workflow_mode: ${options.checkout}\n---\n`,
           );
         }
+        if (options.record) {
+          await writeFile(join(root, `${PROJECT}.json`), '{}\n');
+        }
+        await writeStubOat(bin);
         await writeFile(
-          join(bin, 'oat'),
-          [
-            '#!/bin/bash',
-            'case "$1 $2" in',
-            `  "config get") echo "${projectPath}" ;;`,
-            '  "project scope") echo synced ;;',
-            '  "project status") sed -n "s/^oat_workflow_mode: //p" "$4/state.md" ;;',
-            '  "project pull") echo pulled > "$PULL_MARK" ;;',
-            'esac',
-            '',
-          ].join('\n'),
-          { mode: 0o755 },
+          join(root, 'ls-codes'),
+          (options.lsRemote ?? [0]).join('\n'),
         );
         await writeFile(
           join(bin, 'git'),
           [
             '#!/bin/bash',
             'case "$1" in',
-            '  ls-remote) printf "abc123\\trefs/oat/projects/proj\\n" ;;',
+            '  rev-parse) echo "$STUB_ROOT" ;;',
+            '  ls-remote)',
+            '    code=$(head -1 "$STUB_ROOT/ls-codes")',
+            '    [ "$(wc -l < "$STUB_ROOT/ls-codes")" -gt 0 ] && sed -i.bak 1d "$STUB_ROOT/ls-codes"',
+            '    [ -n "$code" ] || code=$(cat "$STUB_ROOT/ls-last")',
+            '    echo "$code" > "$STUB_ROOT/ls-last"',
+            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            // Like git, an absent ref exits 2 only under --exit-code.
+            '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
+            '    exit "$code" ;;',
             '  fetch) exit 0 ;;',
-            '  show) printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
+            '  show)',
+            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
             'esac',
             '',
           ].join('\n'),
           { mode: 0o755 },
         );
+        const cwd = join(root, options.subdir ?? '');
+        await mkdir(cwd, { recursive: true });
         const mark = join(root, 'pulled');
+        let status = 0;
         let stderr = '';
         try {
-          const result = await execFileAsync(
-            '/bin/bash',
-            ['-c', block as string],
-            {
-              cwd: root,
-              env: {
-                ...process.env,
-                PATH: `${bin}:${process.env.PATH}`,
-                PULL_MARK: mark,
-                STUB_REF_MODE: options.refMode,
-              },
+          const result = await execFileAsync('/bin/bash', ['-c', block], {
+            cwd,
+            env: {
+              ...process.env,
+              PATH: `${bin}:${process.env.PATH}`,
+              PULL_MARK: mark,
+              STUB_ROOT: root,
+              STUB_REF_MODE: options.refMode ?? 'quick',
             },
-          );
+          });
           stderr = result.stderr;
         } catch (error) {
-          stderr = String((error as { stderr?: string }).stderr ?? error);
+          const failure = error as { code?: number; stderr?: string };
+          status = failure.code ?? 1;
+          stderr = String(failure.stderr ?? error);
         }
-        return { pulled: existsSync(mark), stderr };
+        return { pulled: existsSync(mark), status, stderr };
       } finally {
         await rm(root, { recursive: true, force: true });
       }
-    };
+    }
 
-    const here = await run({ checkout: 'freestyle', refMode: 'freestyle' });
-    expect(here.pulled, 'freestyle checkout here: no pull').toBe(false);
-    expect(here.stderr).toContain(
-      'is a freestyle project; stopping before arrival',
-    );
-    const absent = await run({ checkout: null, refMode: 'freestyle' });
-    expect(absent.pulled, 'freestyle read from the ref: no pull').toBe(false);
-    expect(absent.stderr).toContain(
-      'is a freestyle project; stopping before arrival',
-    );
-    const quickAbsent = await run({ checkout: null, refMode: 'quick' });
-    expect(quickAbsent.pulled, 'quick, checkout absent: arrival pull').toBe(
-      true,
-    );
-    const quickHere = await run({ checkout: 'quick', refMode: 'quick' });
-    expect(quickHere.pulled, 'quick, checkout here: arrival pull').toBe(true);
+    it('stops a freestyle project before the pull and keeps the pull for other modes', async () => {
+      const block = await arrivalBlock();
+      expect(
+        block.indexOf('if [ "$WORKFLOW_MODE" = "freestyle" ]; then'),
+        'the freestyle check precedes the pull',
+      ).toBeLessThan(block.indexOf('oat project pull "$PROJECT_PATH"'));
+
+      const here = await run(block, { checkout: 'freestyle' });
+      expect(here.pulled, 'freestyle checkout here: no pull').toBe(false);
+      expect(here.stderr).toContain(
+        'is a freestyle project; stopping before arrival',
+      );
+      const absent = await run(block, { refMode: 'freestyle' });
+      expect(absent.pulled, 'freestyle read from the ref: no pull').toBe(false);
+      expect(absent.stderr).toContain(
+        'is a freestyle project; stopping before arrival',
+      );
+      const quickAbsent = await run(block, { refMode: 'quick' });
+      expect(quickAbsent.pulled, 'quick, checkout absent: arrival pull').toBe(
+        true,
+      );
+      const quickHere = await run(block, { checkout: 'quick' });
+      expect(quickHere.pulled, 'quick, checkout here: arrival pull').toBe(true);
+    });
+
+    it('stops before the pull when the first ref lookup fails, and continues when the ref is absent (m01 R3-2)', async () => {
+      const block = await arrivalBlock();
+      // Only the first `git ls-remote` fails; a retry would succeed and pull.
+      const failedLookup = await run(block, {
+        record: true,
+        lsRemote: [128, 0],
+      });
+      expect(failedLookup.status).toBe(1);
+      expect(failedLookup.stderr).toContain(
+        'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
+      );
+      expect(failedLookup.pulled, 'failed lookup: no pull').toBe(false);
+      // Exit 2 is an absent ref: arrival continues as before and the recorded
+      // project still pulls.
+      const absentRef = await run(block, { record: true, lsRemote: [2] });
+      expect(absentRef.status).toBe(0);
+      expect(absentRef.pulled, 'absent ref with a record: arrival pull').toBe(
+        true,
+      );
+      // A ref whose mode cannot be read stops before the pull.
+      const unreadable = await run(block, { record: true, refMode: '' });
+      expect(unreadable.status).toBe(1);
+      expect(unreadable.stderr).toContain('cannot read the mode of proj');
+      expect(unreadable.pulled).toBe(false);
+    });
+
+    it('resolves the repo-relative project from the repository root when run in a subdirectory (m01 R3-4)', async () => {
+      const block = await arrivalBlock();
+      // The checkout says freestyle; the ref says quick. Reading from `src`
+      // without resolving the root would miss the checkout and pull.
+      const fromSubdir = await run(block, {
+        checkout: 'freestyle',
+        record: true,
+        refMode: 'quick',
+        subdir: 'src',
+      });
+      expect(fromSubdir.pulled, 'subdirectory: no pull').toBe(false);
+      expect(fromSubdir.stderr).toContain(
+        'is a freestyle project; stopping before arrival',
+      );
+    });
+
+    it('leaves a local ref unchanged under a refs/oat/projects/* fetch refspec (m01 R3-3)', async () => {
+      const block = await arrivalBlock();
+      const root = await mkdtemp(join(tmpdir(), 'oat-implement-refmap-'));
+      try {
+        const git = (cwd: string, ...args: string[]) =>
+          execFileAsync('git', args, { cwd }).then((r) => r.stdout.trim());
+        const remote = join(root, 'remote.git');
+        const repo = join(root, 'repo');
+        const seed = join(root, 'seed');
+        await git(root, 'init', '--bare', '-q', remote);
+        await mkdir(seed);
+        await git(seed, 'init', '-q');
+        await git(seed, 'config', 'user.email', 'test@example.com');
+        await git(seed, 'config', 'user.name', 'Test');
+        await writeFile(
+          join(seed, 'state.md'),
+          '---\noat_workflow_mode: quick\n---\n',
+        );
+        await git(seed, 'add', 'state.md');
+        await git(seed, 'commit', '-q', '-m', 'published');
+        const published = await git(seed, 'rev-parse', 'HEAD');
+        await git(seed, 'push', '-q', remote, `HEAD:refs/oat/projects/proj`);
+        await git(seed, 'commit', '-q', '--allow-empty', '-m', 'unpublished');
+        const ahead = await git(seed, 'rev-parse', 'HEAD');
+
+        await git(root, 'clone', '-q', remote, repo);
+        await git(
+          repo,
+          'config',
+          '--add',
+          'remote.origin.fetch',
+          '+refs/oat/projects/*:refs/oat/projects/*',
+        );
+        await git(repo, 'fetch', '-q', seed, `${ahead}`);
+        await git(repo, 'update-ref', 'refs/oat/projects/proj', ahead);
+        const bin = join(root, 'bin');
+        await mkdir(bin);
+        await writeStubOat(bin);
+
+        await execFileAsync('/bin/bash', ['-c', block], {
+          cwd: repo,
+          env: {
+            ...process.env,
+            PATH: `${bin}:${process.env.PATH}`,
+            PULL_MARK: join(root, 'pulled'),
+          },
+        });
+
+        expect(published).not.toBe(ahead);
+        expect(await git(repo, 'rev-parse', 'refs/oat/projects/proj')).toBe(
+          ahead,
+        );
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
   });
 
   it('makes reviewer and implementer contracts name freestyle', async () => {

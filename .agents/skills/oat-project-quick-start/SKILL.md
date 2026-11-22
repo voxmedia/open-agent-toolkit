@@ -101,8 +101,10 @@ writing lifecycle artifacts does not imply unrelated full test suites.
 
 Before Step 0, read the mode of the project this run would write into: the
 active project when its `state.md` exists, otherwise the existing project that
-`{project-name}` names (`${PROJECTS_ROOT}/{project-name}`, resolved as in
-Step 0.5) when its `state.md` exists.
+`{project-name}` names when its `state.md` exists. `NAMED_PATH` is the path
+`oat project new` scaffolds that name at: the CLI's effective
+`projects.defaultScope` and `projects.root`, where `shared` is the root itself
+and `local` or `synced` is the sibling directory of that name.
 
 Resolve the name first when it is missing. With no active project `state.md`
 and no `{project-name}` in the arguments, get the name and short description
@@ -111,8 +113,12 @@ before Step 0's first commit-capable step. Step 0.5 then reuses that name and
 description instead of requesting them again.
 
 ```bash
+PROJECTS_ROOT=$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+NEW_SCOPE=$(oat config get projects.defaultScope 2>/dev/null || echo synced)
+if [ "$NEW_SCOPE" = shared ]; then NAMED_PATH="$PROJECTS_ROOT/{project-name}"; else NAMED_PATH="$(dirname "$PROJECTS_ROOT")/$NEW_SCOPE/{project-name}"; fi
 TARGET_PATH=$(oat config get activeProject 2>/dev/null || true)
-# When TARGET_PATH has no state.md, set it to the {project-name} path instead.
+# When TARGET_PATH has no state.md, set it to NAMED_PATH instead.
 TARGET_MODE=$(oat project status --project-path "$TARGET_PATH" --field project.workflowMode 2>/dev/null || echo null)
 ```
 
@@ -227,9 +233,10 @@ If no valid active project exists:
   - If `$ARGUMENTS` contains only a bare `{project-name}` (for example a slug or short title) without a substantive description, ask the user for a short project description before scanning the repo or drafting discovery.
   - Do not infer requirements from the project name alone or go exploring the codebase to guess what the project means.
   - If neither field is available, ask for both the project name and a short project description. One or two sentences is enough for the description.
-- If `${PROJECTS_ROOT}/{project-name}/state.md` exists, read its mode first:
+- If `$NAMED_PATH/state.md` exists, with `NAMED_PATH` resolved as in
+  `### Freestyle Projects`, read its mode first:
   ```bash
-  TARGET_MODE=$(oat project status --project-path "${PROJECTS_ROOT}/{project-name}" --field project.workflowMode 2>/dev/null || echo null)
+  TARGET_MODE=$(oat project status --project-path "$NAMED_PATH" --field project.workflowMode 2>/dev/null || echo null)
   ```
   If `TARGET_MODE` is `freestyle`, stop here, before the scaffold below, with
   the freestyle stop above and its new-name next step.

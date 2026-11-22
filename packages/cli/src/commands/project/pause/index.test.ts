@@ -23,6 +23,7 @@ import {
   pullSynced,
   pushSynced as pushSyncedReal,
 } from '@commands/project/sync/ref-sync';
+import { isFreestyleState } from '@commands/shared/frontmatter';
 import { generateStateDashboard } from '@commands/state/generate';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@test-support/synced-fixture';
@@ -627,6 +628,58 @@ fi
     const state = await readFile(statePath, 'utf8');
     expect(state).toContain('oat_pause_reason: waiting on review');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('pauses a CRLF freestyle project and keeps it freestyle and CRLF; a CRLF lifecycle state still refuses (m01 R3-6)', async () => {
+    const root = await createRepoRoot();
+    const crlf = (lines: string[]): string => lines.join('\r\n');
+    for (const [name, mode] of [
+      ['free', 'freestyle'],
+      ['quick', 'quick'],
+    ] as const) {
+      const dir = join(root, '.oat', 'projects', 'shared', name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(
+        join(dir, 'state.md'),
+        crlf([
+          '---',
+          `oat_workflow_mode: ${mode}`,
+          'oat_lifecycle: active',
+          '---',
+          '',
+          '# State',
+          '',
+        ]),
+        'utf8',
+      );
+    }
+
+    const { command } = createHarness({ cwd: root });
+    await runCommand(command, ['free']);
+    expect(process.exitCode).toBe(0);
+    const state = await readFile(
+      join(root, '.oat', 'projects', 'shared', 'free', 'state.md'),
+      'utf8',
+    );
+    expect(isFreestyleState(state)).toBe(true);
+    expect(state).toContain('oat_lifecycle: paused\r\n');
+    expect(state.replaceAll('\r\n', '')).not.toContain('\n');
+
+    // Lifecycle modes keep their existing behavior: CRLF is still refused.
+    const quickPath = join(
+      root,
+      '.oat',
+      'projects',
+      'shared',
+      'quick',
+      'state.md',
+    );
+    const quickBefore = await readFile(quickPath, 'utf8');
+    process.exitCode = undefined;
+    const { command: quickCommand } = createHarness({ cwd: root });
+    await runCommand(quickCommand, ['quick']);
+    expect(process.exitCode).toBe(1);
+    expect(await readFile(quickPath, 'utf8')).toBe(quickBefore);
   });
 
   it('errors when project does not exist', async () => {

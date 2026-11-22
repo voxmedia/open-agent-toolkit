@@ -22,6 +22,7 @@ import {
   realRunLine,
   withDeviation,
 } from '@commands/project/journal-check/__tests__/fixtures';
+import { isFreestyleState } from '@commands/shared/frontmatter';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { createProjectCompleteStateCommand } from './index';
@@ -291,6 +292,29 @@ describe('complete-state evaluates the final journal before its write', () => {
         'oat_project_completed: "2026-10-12T12:00:00.000Z"',
       );
       expect(state).not.toMatch(/^oat_phase/m);
+    });
+
+    it('completes a CRLF freestyle project and keeps it freestyle, complete and CRLF (m01 R3-6)', async () => {
+      const crlfState = FREESTYLE_STATE.replaceAll('\n', '\r\n');
+      const fixture = await createProjectFixture(tempDirs, {
+        state: crlfState,
+      });
+      await writeFile(join(fixture.projectPath, 'plan.md'), PLAN, 'utf8');
+
+      const completed = await completeState(fixture);
+
+      expect(
+        completed.payload,
+        JSON.stringify(completed.payload),
+      ).toBeDefined();
+      expect(completed.exitCode, JSON.stringify(completed.payload)).toBe(0);
+      const state = await readFile(fixture.statePath, 'utf8');
+      expect(isFreestyleState(state)).toBe(true);
+      expect(state).toContain('oat_lifecycle: complete\r\n');
+      expect(state).toContain(
+        'oat_project_completed: "2026-10-12T12:00:00.000Z"',
+      );
+      expect(state.replaceAll('\r\n', '')).not.toContain('\n');
     });
 
     it('completes a freestyle project whose journal every lifecycle rule would refuse', async () => {
