@@ -878,13 +878,24 @@ Proof: a published-block test against a scratch origin where a commit-only agree
 
 ### Task p04-t16: (review) Resolve the repository root in the freestyle Create and Resume blocks
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 4295bb3c1e6fb194790eda2a736134825a28a6ea
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-2)
 
 Intent: `.agents/skills/oat-project-freestyle/SKILL.md:146` runs `oat project new` in the caller's directory (`project/new/index.ts:161` scaffolds at `context.cwd`), so a subdirectory run creates `<subdir>/.oat/...`; the resume check at `:120` compares two failed `cd` results as equal and continues. Establish the repository root before both Step 1 blocks and require each directory resolution to succeed before comparing. Class: accepted-requirement (plan.md Outcomes 1 and 6, p02 Intent, operator-approved target verification at p04-t10).
 Files: `.agents/skills/oat-project-freestyle/SKILL.md`, its contract test.
 Proof: verbatim-block tests from a real subdirectory with the built CLI for Create and Resume; can-fail per block.
 **Narrowed (2026-11-22, operator):** Resume half only. Require each directory in the Step 1 Resume pointer check (~:120, added in p04-t10) to resolve to a non-empty path before comparing, and stop otherwise; class regression (the check passes on the failure it exists to catch). The Create half (scaffold relative to the current directory) is deferred; see Deferred Findings. Proof: the verbatim Resume block stops when neither path resolves (for example from a subdirectory) and still passes at the repository root; can-fail.
+
+- **I-2 (Resume half, as narrowed):** the Step 1 Resume pointer check now resolves `ACTIVE_DIR` and `PROJECT_DIR` first. It stops with the existing message when the pointer is empty, either directory is empty, or the two differ, so two failed `cd` lookups no longer compare equal. The Create block is unchanged; its half is deferred.
+- **Test:** in `freestyle-contracts.test.ts`, the verbatim Resume block runs against the stub `oat` in three cases.
+  - From `src`, a subdirectory where neither repo-relative path resolves, it stops with exit 1 and the message.
+  - With the project missing on both sides, it stops too.
+  - At the repository root it still continues.
+- **Can-fail:** restoring the old comparison fails `subdirectory: stop message`; the file was then restored and byte-compared. Either empty-directory check alone also catches two failed lookups, and when only one side resolves the inequality stops the run, so the pair is symmetric rather than load-bearing per half.
+- **Version:** no new bump; oat-project-freestyle is new in this PR.
+- Proof before the commit, each exit 0: the skill-prose vitest (33 files, 1316 passed), `oat:validate-skills`, and `oxfmt --check` and `oxlint` on the changed files.
 
 ### Task p04-t17: (review) Resolve the active project from the repository root in brainstorm detection
 
