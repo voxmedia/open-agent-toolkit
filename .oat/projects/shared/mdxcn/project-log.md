@@ -35,6 +35,18 @@ Parallel group [p01, p02] merge: p01 849272f8f and p02 90cf42c53 merged --no-ff 
 
 p03 phase outcome: passed root review (0C/0H/0M/3L); L1 and L2 fixed in p03-t05/p03-t06 without re-review, L3 fixed in bookkeeping; visual proof run by the root at the IMPLEMENT-20 boundary; fix-loop rounds 0. Review: reviews/archived/code-p03-review-2026-11-22T000358Z.md
 
+### 2026-11-22 · structural · oat-project-implement · p04
+
+p04 phase outcome: passed root review (0C/0H/1M/3L); M1, L1 and L2 fixed in p04-t05/p04-t06 plus root follow-up c15736648 without re-review, L3 fixed at receive; one recovery (mdxcn-p04-rec-001, attempt 1/10) fixed docs-index drift under the format hook; origin/main merged at phase start (5f6b7f24f); fix-loop rounds 0. Review: reviews/archived/code-p04-review-2026-11-22T013926Z.md
+
+### 2026-11-22 · general · friction · Gate runs under heavy machine load
+
+**Category:** environment-limited
+**Source:** mdxcn-p04-load-timeouts
+**Recorded:** 2026-11-22T01:49:12Z
+
+mdxcn-p04-load-timeouts: at load average 38-80 from unrelated workloads, forced test:evidence timed out in CLI acceptance suites that spawn tsx (configured-gate, literals, exact-path-commit) though the branch touched none of them; isolated reruns at lower load passed 17/17. Rerun timed-out suites in isolation before treating them as regressions.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

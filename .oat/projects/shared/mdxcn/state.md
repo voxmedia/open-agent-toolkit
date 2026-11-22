@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t05
-oat_last_commit: d4fe17878
+oat_current_task: null
+oat_last_commit: c15736648
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. p01–p03 are complete; the p04 review passed with 1 Medium and 3 Low, and fixes p04-t05 and p04-t06 are next.
+Implementation tasks complete. All four phases are complete; the final review at the p04 HiLL checkpoint is next.
 
 ## Artifacts
 

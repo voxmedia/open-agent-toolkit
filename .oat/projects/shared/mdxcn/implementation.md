@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p04-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | in_progress | 6     | 4/6       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | complete | 6     | 6/6       |
 
-**Total:** 21/23 tasks completed
+**Total:** 23/23 tasks completed
 
 ---
 
@@ -584,8 +584,36 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-22
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- **Contributing guidance:** the Fumadocs scaffold and OAT contributing pages document every figure fence, with Syntax/Rendered examples and grammar. They also state the agent-readability, plain-text and no-nesting rules and the checker scope. The MkDocs page says the fences render as plain code.
+- **Skills:** `oat-docs-bootstrap` covers figures. `oat-docs-analyze` repairs legacy scaffolds that miss the wrapper, the `figures.css` import or the docs-theme `@source`.
+- **Instructions and release files:** the package READMEs and `AGENTS.md` files, the OAT docs pages and `NOTICES.md` (mdxcn MIT) are updated. The release contract pins the packed `figures.css` and the notice.
+- **Versions:** all five public packages moved in lockstep to 0.3.54.
+
+**Key files touched:**
+
+- `.oat/templates/docs-app-fuma/docs/contributing.md`
+- `apps/oat-docs/docs/contributing/markdown-features.md`
+- `.agents/skills/oat-docs-{bootstrap,analyze}/`
+- `NOTICES.md`
+- `packages/cli/src/release/public-package-contract.ts`
+
+**Verification:**
+
+- All nine Definition of Done gates exit 0 at `d4fe17878`. The fix-round gates exit 0 at `b1e2ea5c7`.
+- The forced `test:evidence` hit load-induced timeouts in suites the branch does not touch; root reruns pass (see p04-t04).
+
+**Notes / Decisions:**
+
+- `origin/main` was merged at the phase start (`5f6b7f24f`).
+- One recovery: mdxcn-p04-rec-001.
+- The root review passed with 0 Critical, 0 High, 1 Medium and 3 Low. All are fixed, and no re-review was needed.
 
 ### Task p04-t01: Document the figures in the scaffold contributing pages and app AGENTS guidance
 
@@ -717,13 +745,51 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ### Task p04-t05: (review) Add the missing docs-theme `@source` to the legacy-scaffold figure repair
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d2b88a40418091a9c11ee7e17998acf9651028a9
+
+**Outcome:**
+
+- The legacy-scaffold figure check also detects a missing docs-theme `dist` `@source`. The repair adds it, with the path adjusted to the app's `node_modules`, and keeps it when it is present.
+- design.md notes that scaffolds have carried the line since 0.3.15 (#350, `be168345e`).
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-analyze/references/legacy-scaffold-checks.md`
+- `.oat/projects/shared/mdxcn/design.md`
+
+**Verification:** the skill contract tests passed (1272), `oat:validate-skills` passed (68 skills), `pnpm lint` and `pnpm format` passed, and `check:skill-bumps` passed after the commit. `oat-docs-analyze` stays at 1.9.2, because the bump is PR-scoped.
 
 ### Task p04-t06: (review) Correct the checker-scope wording and the `docs check` summaries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b1e2ea5c7b219d8982def981677b7834ae0fc72f
+
+**Outcome:**
+
+- Both contributing pages say `docs:check` checks fence names everywhere except inside a figure body.
+- The `oat docs check` summaries in the CLI README and `cli-reference.md` list unknown `docs-*` figure fence names.
+- A root follow-up, `c15736648`, adds the same to the `docs-tooling/workflows.md` summary, which the implementer flagged as out of fix scope.
+
+**Files changed:**
+
+- `.oat/templates/docs-app-fuma/docs/contributing.md`
+- `apps/oat-docs/docs/contributing/markdown-features.md`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- `packages/cli/README.md`
+- `apps/oat-docs/docs/docs-tooling/workflows.md` (root follow-up `c15736648`)
+
+**Verification:** the `docs/init` and `src/validation` suites passed (571) and `pnpm --filter oat-docs check` passed. The index was unchanged, including after the root follow-up.
+
+**Fix-round gates** at `b1e2ea5c7`, clean tree; all exited 0:
+
+- `pnpm check` (fresh)
+- `check:skill-bumps`
+- `release:check-versions` (`origin/main` `a5c28dca2` at 0.3.53)
+- `release:validate`
+- `build:docs` (oat-docs fresh)
+- gate 9
+- the CLI tests for `docs/init`, `src/validation` and `init/tools/shared` (1422)
 
 ### Review Received: p04
 
@@ -741,7 +807,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - **L2 (Low):** the CLI README and `cli-reference.md` `docs check` summaries omit `docs-fences`. Folded into p04-t06.
 - **L3 (Low):** the ledger overstated the release contract's notice coverage and the recovery's file scope. Fixed at receive in this bookkeeping commit.
 
-**Outcome:** fixes pending. These are Medium and Low findings, so there is no re-review.
+**Outcome:** fixes completed: M1 in `d2b88a404`; L1 and L2 in `b1e2ea5c7`, plus the root follow-up `c15736648`; L3 at receive. These were Medium and Low findings, so there was no re-review. Phase accepted.
 
 ---
 
@@ -758,6 +824,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - run/v1 · request=mdxcn-p03-implementation-20261121 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p03-review-r1-20261121 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p04-implementation-20261122 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-p04-review-r1-20261122 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

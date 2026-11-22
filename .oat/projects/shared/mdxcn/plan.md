@@ -1285,7 +1285,7 @@ Expected: all pass, and the index is unchanged or committed regenerated.
 | p01   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p01-review-2026-11-21T231056Z.md      | 1dfaecafbb523e1a41e0623659cfeaa3fa9b9b88 | auto       | -                 |
 | p02   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p02-review-2026-11-21T231835Z.md      | 228d3e3ddff659c1b93795b1505ba83121df163f | auto       | -                 |
 | p03   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p03-review-2026-11-22T000358Z.md      | 2c8d3b84bc075c96a4731fd0bd4fedd27990fb5f | auto       | -                 |
-| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p04-review-2026-11-22T013926Z.md      | dcc24fc8ff0387b2dbf44339b5b87fa46964a1f6 | auto       | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
