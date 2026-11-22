@@ -859,25 +859,6 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 - **Can-fail control:** removing the `+ 4` failed both column tests (expected 9, got 1). The file was restored.
 
-### Review Received: final
-
-**Review:** `reviews/archived/code-final-review-2026-11-22T015824Z.md` (local only), reviewed head `2d992742e6de26415c3caa5ffc2356a3790e50dc`, invocation `auto`, request `mdxcn-final-review-r1-20261122`
-**Findings:** 0 critical, 0 high, 0 medium, 4 low
-**Finding classes:**
-
-- L1: bookkeeping (the implementation.md Deviations table).
-- L2: bookkeeping (the chain wording in implementation.md summaries).
-- L3: accepted-requirement (discovery: every surface listing docs authoring capabilities is updated).
-- L4: accepted-requirement (root AGENTS.md Definition of Done: the affected package README describes changed behavior).
-
-- **L1 (Low):** the Deviations table lacked the p03-t05 and p04-t05 design deltas. Fixed at receive: two rows added.
-- **L2 (Low):** three ledger summaries listed the docs-config chain without `remarkAlert`. Fixed at receive.
-- **L3 (Low):** the contributing Contents map omitted figure fences. Converted to p04-t07.
-- **L4 (Low):** the docs-config README did not mention the fence transform or its rendering requirements. Converted to p04-t07.
-- **Operator decisions (2026-11-22):** convert all four Lows, and fix the deferred p01-t05 tab-column concern now, as p04-t08.
-
-**Outcome:** fixes completed: L1 and L2 at receive; L3 and L4 in `633674405`; tab columns in `e4fc7a2bb`. A final re-review follows.
-
 ### Task p04-t09: (final review r2) Compute tab-content columns from the authored indentation
 
 **Status:** completed
@@ -912,20 +893,6 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 - **Can-fail control:** dropping `lineColumns` (the fixed `+4` path) failed both new tests (got 5, expected 2). Built-output probes match the authored columns: tab 3:2, mixed 3:4, nested 5:3, and a per-line block 3:5 / 5:2.
 
-### Review Received: final (round 2)
-
-**Review:** `reviews/archived/code-final-review-2026-11-22T021225Z.md` (local only), reviewed head `967e1572886de3468abd42ec338ab9641de189a6`, invocation `auto`, request `mdxcn-final-review-r2-20261122`
-**Findings:** 0 critical, 0 high, 0 medium, 1 low
-**Finding classes:**
-
-- L1: accepted-requirement (the operator's p04-t08 decision: tab content reports authored columns).
-
-- **Round 1:** all four findings were confirmed resolved.
-- **L1 (Low):** tab-character indentation inside tab content still reports too large a column, because p04-t08 adds a fixed 4. It is not a regression (it previously reported column 1), and lines are correct.
-- **Operator decision (2026-11-22):** compute the column from the source. Converted to p04-t09.
-
-**Outcome:** fix completed in `b668002c2`. A third final review follows.
-
 ### Task p04-t10: (final review r3) Measure tab-content indentation from the code block start
 
 **Status:** completed
@@ -955,22 +922,6 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 **Notes / Decisions:**
 
 - **Can-fail control:** removing `.slice(start.column - 1)` fails only the new assertion (got 3:3, expected 3:7). The restored file is byte-identical. No existing expectation changed.
-
-### Review Received: final (round 3)
-
-**Review:** `reviews/archived/code-final-review-2026-11-22T023657Z.md` (local only), reviewed head `b0bd1399db4613654f2d9e19556f1994f77e7e9f`, invocation `auto`, request `mdxcn-final-review-r3-20261122`
-**Findings:** 0 critical, 0 high, 0 medium, 1 low
-**Finding classes:**
-
-- L1: regression (p04-t09 broke blockquoted tab columns, which were correct at `967e15728`).
-- L1 note (split tabs across container prefixes): new-hardening (no contract source names container columns; it predates p04-t08). Routed to the operator.
-
-- **Round 2:** the finding was confirmed resolved outside blockquotes.
-- **L1 (Low):** `lineColumnsOf` measures the prefix from the source line start, so blockquoted tab content reports columns 4 too small. Converted to p04-t10.
-- **L1 note:** a tab character split across a list or blockquote prefix gives a wrong column, both before and after the fix. Deferred by the operator (see Deferred Findings).
-- **Review cap:** the final review reached its three-cycle cap. A complexity review ran (`reviews/archived/complexity-final-2026-11-22T024150Z.md`, local only). Its verdict was deletion-rule compliant, provisional, with a recommended corrective revision. The operator chose that revision on 2026-11-22: fix the regression, defer the split-tab case, then one review narrowed to the delta.
-
-**Outcome:** fix completed in `eda765135`. One final review narrowed to that delta follows.
 
 ---
 
@@ -1010,6 +961,55 @@ The implementer handles continued through the same handle for the p02 recovery a
 
 - Plan quick-start gate: attempt 1 was blocked with 1 High and 1 Medium, which were resolved in artifacts (`08d0588d8`). Attempt 2 passed with 0 findings at `08d0588d8`. The phase review gate is disabled (operator choice).
 - Final review cap (2026-11-22): three final rounds (4L, 1L, 1L). Complexity review `reviews/archived/complexity-final-2026-11-22T024150Z.md` (local only): deletion-rule compliant, provisional. Operator choice: corrective revision (p04-t10), defer the split-tab container case, then one review narrowed to the delta.
+
+### Review Received: final
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T015824Z.md` (local only), reviewed head `2d992742e6de26415c3caa5ffc2356a3790e50dc`, invocation `auto`, request `mdxcn-final-review-r1-20261122`
+**Findings:** 0 critical, 0 high, 0 medium, 4 low
+**Finding classes:**
+
+- L1: bookkeeping (the implementation.md Deviations table).
+- L2: bookkeeping (the chain wording in implementation.md summaries).
+- L3: accepted-requirement (discovery: every surface listing docs authoring capabilities is updated).
+- L4: accepted-requirement (root AGENTS.md Definition of Done: the affected package README describes changed behavior).
+
+- **L1 (Low):** the Deviations table lacked the p03-t05 and p04-t05 design deltas. Fixed at receive: two rows added.
+- **L2 (Low):** three ledger summaries listed the docs-config chain without `remarkAlert`. Fixed at receive.
+- **L3 (Low):** the contributing Contents map omitted figure fences. Converted to p04-t07.
+- **L4 (Low):** the docs-config README did not mention the fence transform or its rendering requirements. Converted to p04-t07.
+- **Operator decisions (2026-11-22):** convert all four Lows, and fix the deferred p01-t05 tab-column concern now, as p04-t08.
+
+**Outcome:** fixes completed: L1 and L2 at receive; L3 and L4 in `633674405`; tab columns in `e4fc7a2bb`. A final re-review follows.
+
+### Review Received: final (round 2)
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T021225Z.md` (local only), reviewed head `967e1572886de3468abd42ec338ab9641de189a6`, invocation `auto`, request `mdxcn-final-review-r2-20261122`
+**Findings:** 0 critical, 0 high, 0 medium, 1 low
+**Finding classes:**
+
+- L1: accepted-requirement (the operator's p04-t08 decision: tab content reports authored columns).
+
+- **Round 1:** all four findings were confirmed resolved.
+- **L1 (Low):** tab-character indentation inside tab content still reports too large a column, because p04-t08 adds a fixed 4. It is not a regression (it previously reported column 1), and lines are correct.
+- **Operator decision (2026-11-22):** compute the column from the source. Converted to p04-t09.
+
+**Outcome:** fix completed in `b668002c2`. A third final review follows.
+
+### Review Received: final (round 3)
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T023657Z.md` (local only), reviewed head `b0bd1399db4613654f2d9e19556f1994f77e7e9f`, invocation `auto`, request `mdxcn-final-review-r3-20261122`
+**Findings:** 0 critical, 0 high, 0 medium, 1 low
+**Finding classes:**
+
+- L1: regression (p04-t09 broke blockquoted tab columns, which were correct at `967e15728`).
+- L1 note (split tabs across container prefixes): new-hardening (no contract source names container columns; it predates p04-t08). Routed to the operator.
+
+- **Round 2:** the finding was confirmed resolved outside blockquotes.
+- **L1 (Low):** `lineColumnsOf` measures the prefix from the source line start, so blockquoted tab content reports columns 4 too small. Converted to p04-t10.
+- **L1 note:** a tab character split across a list or blockquote prefix gives a wrong column, both before and after the fix. Deferred by the operator (see Deferred Findings).
+- **Review cap:** the final review reached its three-cycle cap. A complexity review ran (`reviews/archived/complexity-final-2026-11-22T024150Z.md`, local only). Its verdict was deletion-rule compliant, provisional, with a recommended corrective revision. The operator chose that revision on 2026-11-22: fix the regression, defer the split-tab case, then one review narrowed to the delta.
+
+**Outcome:** fix completed in `eda765135`. One final review narrowed to that delta follows.
 
 ## Deferred Findings
 
