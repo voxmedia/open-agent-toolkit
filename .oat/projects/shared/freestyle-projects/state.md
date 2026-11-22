@@ -77,7 +77,37 @@ oat_milestone_gates:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-22T16:02:01Z'
-oat_deliveries: []
+oat_deliveries:
+  - delivery_id: d01
+    milestone: m01
+    scope: [p01, p02, p03, p04]
+    endpoint: merged
+    kind: pr
+    status: registering
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: feat/freestyle-projects
+      head_sha_at_registration: '80ac675110e82069dd9f222743d8e7d414468ca8'
+    members: []
+    integrated_review:
+      artifact: reviews/archived/m01-integrated-review-2026-11-22T174038Z.md
+      scope: [p01, p02, p03, p04]
+      bound_revisions: []
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [p01, p02, p03, p04] }
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-22T16:02:01Z'
+    endpoint_attainment: null
 oat_dispatch_policy:
   mode: managed
   policy: high
