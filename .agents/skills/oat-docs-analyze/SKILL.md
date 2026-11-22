@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(command -v:*), Bash(sed:*), Bash(npm root -g:*), Bash(test:*), Bash(oat --version), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.9.1'
+  version: '1.9.2'
 ---
 
 # Docs Analysis
@@ -549,7 +549,8 @@ Probe the installed `oat docs check --help`, then run its read-only
 `oat docs check --target-dir <resolved-root> --json` (or the repo’s documented
 source/local CLI equivalent). Retain exact findings and exit; errors fail while
 warning-only passes. Use stable rule IDs/locations as evidence for recommendations,
-including reader limits, contributor commands, Mermaid/SVG and provenance. It
+including reader limits, contributor commands, Mermaid/SVG, unknown `docs-*`
+figure fence names on Fumadocs apps (`docs-fences`) and provenance. It
 executes no page code or documented commands and needs no build. Missing capability
 or unusable Git diagram base is explicitly unverified. Preserve specialized local
 validators; portable success does not establish coverage or claim accuracy. Review
