@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p04
+oat_current_task_id: p05
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | in_progress | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | pending  | 1     | 0/1      |
+| p06   | pending  | 1     | 0/1      |
+| p07   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 3/9 phases accepted
+**Total:** 4/9 phases accepted
 
 ---
 
@@ -399,7 +399,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ## Phase p04: m01 docs and release
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Head:** f617afb91f79ec61527da943817246f627be2c9d
@@ -1136,6 +1136,7 @@ Proof: `build:docs`, docs index freshness.
 - 2026-11-21 · brief and m01 amendment review, manual substitute for the project-disabled `oat-project-goal` gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `987d479b798cbc2b2b28df9a3b414d3262cea1df` · 0 blocking; all findings folded into the brief across rounds at `dc3d90918`, `ec7dd284f`, `9b16c94d6`.
 - 2026-11-22 · m01 milestone exit review, manual substitute for the project-disabled `oat-project-implement` exit gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `c14f3517e3d2a925204093b359c6c330b6d1742f` · six rounds: round 1 on `a5c28dca2..7c35a902e` (H1–H4, M1–M7; H4 new-hardening, operator chose fix in m01), round 2 on `..86048bad1` (R2-1..R2-6), round 3 on `..749557100` (R3-1..R3-6; R3-1 and R3-2 operator chose fix in m01), round 4 on `..686d424bc` (R4-1, R4-2 fixed; R4-3 new-hardening Low, deferred), round 5 on `..4a3b2be5c` (R5-1), round 6 on `4a3b2be5c..c14f3517e` pass, 0 findings. Fixes p04-t09..p04-t14. Artifacts `reviews/m01-code-review-2026-11-22T{022415,040026,050000,055500,063000,070000}Z.md` (local-only). Exit carrier `project_disabled`.
 - 2026-11-22 · m01 milestone exit re-review after the integrated-review fixes, manual substitute for the project-disabled `oat-project-implement` exit gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `eece9b5fcd6b6943fb9cf89d818787e1e8e2845e` · two rounds: round 7 on `c14f3517e..7e8da0da6` (p04-t15, t16, t18, t20, merge `1cc893ed8` of origin/main `78b88baba`, bump `61f62885d`): R7-1 Medium, regression of the p04-t15 fix; I-1, I-2 Resume, I-4, I-6 and the Zod 4 integration confirmed; round 8 on `7e8da0da6..eece9b5fc` pass, 0 findings. Fix p04-t21. Artifacts `reviews/m01-code-review-2026-11-22T{150000,151300}Z.md` (local-only). Exit carrier `project_disabled`, refreshed to fresh.
+- 2026-11-22 · m01 milestone exit gate after the integrated review cycle 2 fixes (p04-t22..p04-t25, `0c0f294f0..d0573a6a5`) · **operator-waived re-review:** the operator chose to fix J-1 and J-2 case A "with no further review rounds". Root verified instead: each fix diff read; the three new Step 0 blocks are byte-identical to the reviewed `oat-project-implement` block apart from its inline pull; `vitest run` over `state/generate.test.ts`, `project/status.test.ts`, `validation/skills.test.ts` exit 0 (380 passed, load 11–16); implementer's full gate list at `f617afb91` exit 0 (forced `test:evidence`, 0 of 12 cached, cli 9871) with can-fail checks per fix. Exit carrier `project_disabled`, refreshed to fresh.
 
 ### Review Received: m01
 
