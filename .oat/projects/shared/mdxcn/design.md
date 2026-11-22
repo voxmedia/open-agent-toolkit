@@ -90,8 +90,10 @@ figure.
    frame.
 4. The app stylesheet imports `@open-agent-toolkit/docs-theme/figures.css`,
    which holds the frame utilities and the `--graph-*` tokens. The accent and
-   muted tokens map onto the existing `--color-fd-*` theme variables. Scaffolded apps already `@source`
-   the docs-theme `dist`, so the components' Tailwind classes are generated.
+   muted tokens map onto the existing `--color-fd-*` theme variables. Scaffolds since 0.3.15 (#350)
+   already `@source` the docs-theme `dist`, so the components' Tailwind classes
+   are generated. Older apps lack that line, and the `oat-docs-analyze`
+   legacy-scaffold repair adds it alongside the wrapper and the CSS import.
 
 ### Decisions
 
