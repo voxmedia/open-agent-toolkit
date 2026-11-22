@@ -351,6 +351,14 @@ TARGET_BRANCH="${TARGET_BRANCH:-$CURRENT_BRANCH}"  # from user scope, worktree c
 
 ### Step 1.6: Enforce Committed Artifact Baseline
 
+**Freestyle projects.** Before the baseline check, read the mode with the
+Step 2 command
+(`oat project status --project-path "$PROJECT_PATH" --field project.workflowMode`).
+If it is `freestyle`, stop before any write: a freestyle project has no
+lifecycle artifacts or review table for a project review. Tell the user: "This
+is a freestyle project; review it with `oat-review-provide`, using the review
+mechanism `shape.md` records."
+
 Before gathering review context, inspect the core project artifacts:
 
 - `"$PROJECT_PATH/discovery.md"`

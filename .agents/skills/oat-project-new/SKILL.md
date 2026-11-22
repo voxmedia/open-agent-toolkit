@@ -73,9 +73,9 @@ Use the CLI scaffolder:
 oat project new "{project-name}" --mode spec-driven [--scope shared|local|synced]
 ```
 
-This skill scaffolds spec-driven projects only. Quick, lite, brief, and goal projects
+This skill scaffolds spec-driven projects only. Quick, lite, brief, goal, and freestyle projects
 start from their entry skills (`oat-project-quick-start`, `oat-project-lite`,
-`oat-project-brief`, `oat-project-goal`), which run `oat project new --mode <mode>` themselves.
+`oat-project-brief`, `oat-project-goal`, `oat-project-freestyle`), which run `oat project new --mode <mode>` themselves.
 
 Optional flags:
 

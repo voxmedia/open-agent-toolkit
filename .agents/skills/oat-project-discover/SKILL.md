@@ -20,7 +20,7 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 
 **Required:** Knowledge base must exist. If missing, run the `oat-repo-knowledge-index` skill first.
 
-**Required for model invocation:** An active spec-driven OAT project must already exist. If no active project exists, route to `oat-project-new` for spec-driven setup, `oat-project-quick-start` for quick workflow, or `oat-project-lite` for single-sitting lite work. If the active project is quick, import, or lite mode, decline this skill and route to the current mode's next step instead.
+**Required for model invocation:** An active spec-driven OAT project must already exist. If no active project exists, route to `oat-project-new` for spec-driven setup, `oat-project-quick-start` for quick workflow, or `oat-project-lite` for single-sitting lite work. If the active project is quick, import, or lite mode, decline this skill and route to the current mode's next step instead. A freestyle project has no lifecycle next step: decline and point to its `shape.md`.
 
 ## Model Invocation Gate
 
@@ -32,7 +32,7 @@ Before acting:
 2. Confirm `{PROJECT_PATH}/state.md` exists.
 3. Confirm `oat_workflow_mode` is `spec-driven` or absent only in a legacy spec-driven project.
 
-If any check fails, decline this skill. Offer `oat-project-new` for a new spec-driven project, `oat-project-quick-start` for a quick project, `oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, `oat-project-goal` for an outcome delivered over several milestones, or `oat-project-open` for switching to an existing project. When the gate passes, summarize the active project and ask before continuing discovery.
+If any check fails, decline this skill. Offer `oat-project-new` for a new spec-driven project, `oat-project-quick-start` for a quick project, `oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, `oat-project-goal` for an outcome delivered over several milestones, `oat-project-freestyle` for a project with OAT's records and no lifecycle workflow, or `oat-project-open` for switching to an existing project. When the gate passes, summarize the active project and ask before continuing discovery.
 
 ## Mode Assertion
 
@@ -110,6 +110,9 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   - brief project: continue with `oat-project-brief` / `oat-project-progress`
   - goal project: continue with `oat-project-goal` / `oat-project-progress`
   - import project: continue with `oat-project-import-plan` / `oat-project-progress`
+  - freestyle project: no lifecycle skill continues it; it runs as its
+    `shape.md` says (`oat-project-freestyle` shapes or reshapes it). An informal
+    discovery pass in conversation is a shaping detour, not this skill.
 - Ask user:
   - **Continue** with active project, or
   - **Switch projects**:

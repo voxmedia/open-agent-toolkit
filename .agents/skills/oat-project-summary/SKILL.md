@@ -153,6 +153,11 @@ accepted phase-units found. Summary will be minimal."
 
 ### Step 2: Read Project Artifacts
 
+For `oat_workflow_mode: freestyle`, stop before reading or writing anything: a
+freestyle project has no lifecycle summary contract, and its documents are the
+ones `shape.md` lists. Tell the user: "This is a freestyle project; OAT writes
+no lifecycle summary for it. Keep whatever summary `shape.md` agrees on."
+
 For `oat_workflow_mode: lite`, use the reduced artifact contract and skip the
 ordinary artifact list below. Read the five `plan.md` sections `Summary`,
 `Decisions`, `Assumptions`, `Out of Scope`, and `Validation Criteria`, then read

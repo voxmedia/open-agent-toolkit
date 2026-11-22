@@ -205,6 +205,10 @@ Once resolved to `PROJECT_PATH`, read the project artifacts read-only for mode-a
 Resolve the workflow mode and the scope token:
 
 - Read `state.md` frontmatter for the workflow mode and current phase/status.
+- If the mode is `freestyle`, stop before posting anything: a freestyle project
+  has no phases or lifecycle artifacts to scope a project review. Tell the
+  user: "This is a freestyle project; review the PR with
+  `oat-review-provide-remote`, using the review mechanism `shape.md` records."
 - Parse the scope token from `$ARGUMENTS` (`code <scope>` / `artifact <scope>`), or infer it from PR state (default `code` with the current phase; `final` when the implementation is complete). For `final` scope, also gather the deferred-findings ledger from `implementation.md`.
 
 NEVER mutate, commit, or push any project artifact. This is a read-only project context on machine B.

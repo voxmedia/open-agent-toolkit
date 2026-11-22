@@ -1134,6 +1134,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-lite',
       'oat-project-quick-start',
@@ -1149,6 +1150,24 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-implement'],
     reason:
       'Brief routing rule inside the router table; Step 6 owns the invocation boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 1: Read Project State',
+    match: '`oat-project-freestyle` shapes or reshapes it when the user asks',
+    classification: 'non-executing',
+    skills: ['oat-project-freestyle'],
+    reason:
+      'Freestyle stop: the router invokes nothing and names the shaping skill for the user.',
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Prerequisites',
+    match: 'shape or reshape it with `oat-project-freestyle`',
+    classification: 'non-executing',
+    skills: ['oat-project-freestyle'],
+    reason:
+      'Terminal handoff: this skill stops for a freestyle project and names the shaping skill for the user.',
   },
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
@@ -1773,6 +1792,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-lite',
       'oat-project-new',
@@ -2011,6 +2031,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-import-plan',
       'oat-project-lite',
@@ -2408,6 +2429,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-import-plan',
       'oat-project-lite',

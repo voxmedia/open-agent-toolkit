@@ -168,6 +168,11 @@ Resolve workflow mode from `state.md` (default `spec-driven`):
 WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
 ```
 
+**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply:
+a freestyle project has no lifecycle workflow, and when PRs open is agreed in
+its `shape.md`. Stop before any write and tell the user: "This is a freestyle
+project; OAT opens no PR for it. Open PRs as `shape.md` agrees."
+
 ```bash
 ls "$PROJECT_PATH/plan.md" 2>/dev/null
 ```

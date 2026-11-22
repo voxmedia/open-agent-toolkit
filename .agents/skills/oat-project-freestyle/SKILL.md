@@ -94,11 +94,13 @@ the files it creates, so unrelated changes stay where they are.
 `state.md`, resume it: never re-scaffold, and never copy a template over
 `shape.md`.
 
-- `{project-path}` is the active project's path, or the named project's folder
-  under its scope root (`.oat/projects/<scope>/<name>`, beside
-  `oat config get projects.root`). A name found in more than one scope is
-  ambiguous: ask which. A synced project with no folder here is not pulled
-  yet: tell the user to run `oat project pull <name>` and stop.
+- `{project-path}` is the named project's folder under its scope root
+  (`.oat/projects/<scope>/<name>`, beside `oat config get projects.root`) when
+  the user names a project, even when another project is active;
+  otherwise it is the active project's path. A name found in more than one
+  scope is ambiguous: ask which. A synced project with no folder here is not
+  pulled yet: `oat project list` shows it with the hint
+  `oat project pull <name>`. Tell the user to run that command and stop.
 - Confirm that `{project-path}/state.md` reports `oat_workflow_mode: freestyle`;
   any other mode is the Another mode case below.
 - Make it the active project before reading, shaping or any brainstorm detour:
@@ -197,7 +199,9 @@ the orchestrator runs the project from here.
 - ✅ Every answer is in `shape.md` as soon as it is given, and
   `**Last shaped:**` is current.
 - ✅ A resumed project continues at the first topic not yet shaped, without
-  re-asking answered ones, and checks Undecided items and reshape checkpoints.
+  re-asking answered ones, and checks the three reshape triggers from Step 2:
+  reached reshape checkpoints, Undecided items that are due, and agreements
+  that stopped working.
 - ✅ No commit, push or PR is made except as `shape.md` agrees; none while the
   commit agreement is not yet shaped or is deferred.
 - ✅ The project `AGENTS.md` is never edited.

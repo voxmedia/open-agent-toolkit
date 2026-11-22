@@ -132,6 +132,11 @@ Verify the project is ready for reconciliation:
    WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
    ```
 
+   If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
+   project has no plan tasks or lifecycle journal to map commits onto. Tell the
+   user: "This is a freestyle project; reconcile its records against the forge
+   as its `AGENTS.md` and `shape.md` say."
+
 **Brief-mode branch (`WORKFLOW_MODE=brief`).** A brief has no planned tasks:
 the task source is the journal, and
 `oat-project-brief/references/brief-contract.md` (sections 3, 7, 8, and 10)

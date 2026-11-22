@@ -209,6 +209,11 @@ adoption could not be determined — the usual causes are `jq` missing from
 
 Read all available project artifacts to build an understanding of what was built.
 
+For `oat_workflow_mode: freestyle`, stop: a freestyle project has no lifecycle
+artifact set to document from. Tell the user: "This is a freestyle project;
+this skill reads lifecycle artifacts it does not have. Update documentation as
+`shape.md` agrees."
+
 For `oat_workflow_mode: lite`, use the reduced artifact contract instead of
 the numbered artifact list below. Read the five `plan.md` sections `Summary`,
 `Decisions`, `Assumptions`, `Out of Scope`, and `Validation Criteria`, then read

@@ -9158,7 +9158,7 @@ describe('brief mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-new/SKILL.md',
-        /Quick, lite, brief, and goal projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
+        /Quick, lite, brief, goal, and freestyle projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
       ],
       [
         '.agents/skills/oat-project-plan/SKILL.md',
@@ -9307,7 +9307,7 @@ describe('goal mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-new/SKILL.md',
-        /Quick, lite, brief, and goal projects[\s\S]{0,120}start from their entry skills[\s\S]{0,160}`oat-project-goal`/,
+        /Quick, lite, brief, goal, and freestyle projects[\s\S]{0,120}start from their entry skills[\s\S]{0,160}`oat-project-goal`/,
       ],
       [
         '.agents/skills/oat-project-plan/SKILL.md',
@@ -9431,6 +9431,141 @@ describe('goal mode skill contracts', () => {
     expect(implementer).toContain('## Goal Mode');
     expect(planAndResume).toContain('### Goal Projects');
     expect(closeout).toContain('### Goal Milestone Closeout');
+  });
+});
+
+describe('freestyle mode skill contracts', () => {
+  it('exposes freestyle from every declared project-entry surface', async () => {
+    const checks = [
+      [
+        '.agents/skills/oat-docs/SKILL.md',
+        /three main approaches[\s\S]{0,1100}oat-project-freestyle/i,
+      ],
+      [
+        '.agents/skills/oat-project-capture/SKILL.md',
+        /started any work[^\n]*oat-project-freestyle/i,
+      ],
+      [
+        '.agents/skills/oat-pjm-review-backlog/SKILL.md',
+        /recommended project mode[^\n]*oat-project-freestyle/i,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Start a new project[\s\S]{0,700}oat-project-freestyle/,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Workflow:[\s\S]{0,700}oat-project-freestyle/,
+      ],
+      [
+        '.agents/skills/oat-project-next/SKILL.md',
+        /projects` array is empty[\s\S]{0,700}oat-project-freestyle/,
+      ],
+      [
+        '.agents/skills/oat-project-new/SKILL.md',
+        /Quick, lite, brief, goal, and freestyle projects[\s\S]{0,120}start from their entry skills[\s\S]{0,200}`oat-project-freestyle`/,
+      ],
+      [
+        '.agents/skills/oat-project-discover/SKILL.md',
+        /decline this skill\. Offer[^\n]*`oat-project-freestyle`/,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+  });
+
+  it('stops every lifecycle skill that reads the mode for a freestyle project', async () => {
+    // Freestyle has no lifecycle workflow, so a skill that would otherwise
+    // read it with the spec-driven default names it and stops.
+    const checks = [
+      [
+        '.agents/skills/oat-project-next/SKILL.md',
+        /\*\*If `oat_workflow_mode` is `freestyle`:\*\*[^]*?Do not route to or invoke any\s+skill/,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /\*\*Freestyle mode \(`oat_workflow_mode: freestyle`\):\*\* there is no next skill\./,
+      ],
+      [
+        '.agents/skills/oat-project-plan/SKILL.md',
+        /\*\*`freestyle`\*\*: \*\*Stop\.\*\*/,
+      ],
+      [
+        '.agents/skills/oat-project-discover/SKILL.md',
+        /- freestyle project: no lifecycle skill continues it/,
+      ],
+      [
+        '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+        /### Freestyle Projects\s+When `state\.md` records `oat_workflow_mode: freestyle`, stop before Step 1/,
+      ],
+      [
+        '.agents/skills/oat-project-autonomous/SKILL.md',
+        /\| Existing freestyle project \(`oat_workflow_mode: freestyle`\)\s*\| Stop:/,
+      ],
+      [
+        '.agents/skills/oat-project-review-provide/SKILL.md',
+        /### Step 1\.6: Enforce Committed Artifact Baseline\s+\*\*Freestyle projects\.\*\*[^]*?stop before any write/,
+      ],
+      [
+        '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+        /If the mode is `freestyle`, stop before posting anything/,
+      ],
+      [
+        '.agents/skills/oat-project-review-receive/SKILL.md',
+        /records `oat_workflow_mode: freestyle`:\*\* stop\s+before any write/,
+      ],
+      [
+        '.agents/skills/oat-project-pr-final/SKILL.md',
+        /\*\*Freestyle projects \(`WORKFLOW_MODE=freestyle`\)\.\*\* This skill does not apply/,
+      ],
+      [
+        '.agents/skills/oat-project-pr-progress/SKILL.md',
+        /\*\*Freestyle projects \(`WORKFLOW_MODE=freestyle`\)\.\*\* This skill does not apply/,
+      ],
+      [
+        '.agents/skills/oat-project-summary/SKILL.md',
+        /For `oat_workflow_mode: freestyle`, stop before reading or writing anything/,
+      ],
+      [
+        '.agents/skills/oat-project-document/SKILL.md',
+        /For `oat_workflow_mode: freestyle`, stop:/,
+      ],
+      [
+        '.agents/skills/oat-project-revise/SKILL.md',
+        /If `oat_workflow_mode` is `freestyle`, stop before any write/,
+      ],
+      [
+        '.agents/skills/oat-project-reconcile/SKILL.md',
+        /If `WORKFLOW_MODE` is `freestyle`, stop before any write/,
+      ],
+      [
+        '.agents/skills/oat-project-complete/SKILL.md',
+        /\*\*Freestyle projects\.\*\*[^]*?stop before any write[^]*?### Step 1\.5: Closeout Invariant Gate/,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+  });
+
+  it('makes reviewer and implementer contracts name freestyle', async () => {
+    const [reviewer, implementer] = await Promise.all([
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+    ]);
+
+    expect(reviewer).toMatch(
+      /\*\*workflow_mode\*\*: [^\n]*`goal` \| `freestyle`/,
+    );
+    expect(reviewer).toMatch(
+      /- \*\*freestyle\*\*: no lifecycle artifact is expected\./,
+    );
+    expect(implementer).toMatch(
+      /\(`freestyle` is never dispatched here: `oat-project-implement` stops for a\s+freestyle project/,
+    );
   });
 });
 

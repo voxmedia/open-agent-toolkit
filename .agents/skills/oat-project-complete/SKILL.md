@@ -206,6 +206,15 @@ initialized every resume-safe downstream receipt and choice. A resume never
 opens a new PR from an unpersisted prior answer; `SHOULD_OPEN_PR="false"`, while
 an already-tracked open PR is updated by Step 11.5.
 
+**Freestyle projects.** If `"$PROJECT_PATH/state.md"` records
+`oat_workflow_mode: freestyle`, stop before any write: this skill's completion
+gates (final review, summary, documentation sync, PR) belong to the lifecycle
+modes, and a freestyle project has none of them. Tell the user: "This is a
+freestyle project. When `shape.md`'s done criteria are met,
+`oat project complete-state <project-path>` marks it complete (it needs no
+closeout snapshot or journal) and `oat project archive <project-path>` archives
+it."
+
 ### Step 1.5: Closeout Invariant Gate
 
 Before the upfront questions and before any completion write (a recap answer,

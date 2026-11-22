@@ -128,6 +128,12 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
 
+**If `"$PROJECT_PATH/state.md"` records `oat_workflow_mode: freestyle`:** stop
+before any write. A freestyle project has no plan tasks, review table or
+journal bookkeeping for this skill to update. Tell the user: "This is a
+freestyle project; receive the review with `oat-review-receive` and record its
+outcome as `shape.md` says."
+
 ### Step 1: Locate Latest Review Artifact
 
 **Gate event (gate paths only).** A caller that ran `oat gate review` hands

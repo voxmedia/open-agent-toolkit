@@ -21,7 +21,7 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 
 This skill is the plan authoring path for **spec-driven** projects only. Quick,
 import, lite, brief, and goal modes have dedicated entry skills that produce
-`plan.md` directly.
+`plan.md` directly, and a freestyle project has no lifecycle plan.
 
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
@@ -31,6 +31,7 @@ Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`)
 - **`lite`**: **Stop.** Tell the user: "Lite planning is owned by `oat-project-lite`; run it to author or resume the combined plan contract."
 - **`brief`**: **Stop.** Tell the user: "Brief planning is owned by `oat-project-brief`; run it to author or resume the Project Brief."
 - **`goal`**: **Stop.** Tell the user: "Goal planning is owned by `oat-project-goal`; run it to author, amend, or re-align the Project Brief and its milestones."
+- **`freestyle`**: **Stop.** Tell the user: "This is a freestyle project: it has no lifecycle plan. Its documents and how it runs are agreed in `shape.md`; shape or reshape it with `oat-project-freestyle`."
 
 ## Plan Format Contract
 

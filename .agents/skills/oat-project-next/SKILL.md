@@ -110,6 +110,7 @@ projects, and synced records whose detached checkout is absent.
   - `oat-project-lite` — Start a lite workflow project
   - `oat-project-brief` — Start a brief workflow project
   - `oat-project-goal` — Start a goal workflow project
+  - `oat-project-freestyle` — Start a freestyle project (no lifecycle workflow)
   - `oat-project-import-plan` — Import an external plan
   - **STOP.** Do not attempt routing.
 
@@ -128,19 +129,26 @@ projects, and synced records whose detached checkout is absent.
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                     | Used For                                                                                        |
-| ------------------------- | ----------------------------------------------------------------------------------------------- |
-| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                           |
-| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                         |
-| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite, brief, goal). Default: `spec-driven` |
-| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                              |
-| `oat_hill_completed`      | Which HiLL gates have been passed                                                               |
-| `oat_blockers`            | Informational warnings (not routing gates)                                                      |
-| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                       |
-| `oat_quick_start_gate`    | Reported only in the Step 6 announcement; never a routing input                                 |
-| `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads    |
+| Field                     | Used For                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                                                                 |
+| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                                                               |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite, brief, goal), or `freestyle`, which routes nothing. Default: `spec-driven` |
+| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                                                                    |
+| `oat_hill_completed`      | Which HiLL gates have been passed                                                                                                     |
+| `oat_blockers`            | Informational warnings (not routing gates)                                                                                            |
+| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                                                             |
+| `oat_quick_start_gate`    | Reported only in the Step 6 announcement; never a routing input                                                                       |
+| `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads                                          |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
+
+**If `oat_workflow_mode` is `freestyle`:** the project has no lifecycle workflow,
+and `oat project status` recommends `none`. Do not route to or invoke any
+skill, and skip every step below. Report the mode and the paths of the
+project's `AGENTS.md` and `shape.md` (`oat project status --project-path "$PROJECT_PATH"`
+names both), say that the project runs as `shape.md` says and that
+`oat-project-freestyle` shapes or reshapes it when the user asks, and STOP.
 
 Map `oat_phase` to the current artifact file:
 

@@ -5,6 +5,15 @@ This reference preserves the route-specific implementation contract. Load it onl
 Step 0 of the entry skill has already pulled and materialized any discoverable
 synced project before this route validates or reads its artifacts.
 
+### Freestyle Projects
+
+When `state.md` records `oat_workflow_mode: freestyle`, stop before Step 1 and
+write nothing: a freestyle project has no lifecycle plan, phases or gates for
+this route to execute, and `oat project status` recommends no skill for it.
+Tell the user: "This is a freestyle project; OAT runs no implementation
+workflow for it. Its orchestrator works as `shape.md` says." Do not dispatch a
+phase implementer.
+
 ### Brief-Family Projects
 
 When `state.md` records `oat_workflow_mode: brief`, `plan.md` is a Project

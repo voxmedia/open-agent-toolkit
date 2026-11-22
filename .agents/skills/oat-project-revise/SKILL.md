@@ -101,6 +101,11 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 Read `"$PROJECT_PATH/state.md"` frontmatter.
 
+If `oat_workflow_mode` is `freestyle`, stop before any write: a freestyle
+project has no plan phases to add revision work to. Tell the user: "This is a
+freestyle project; OAT adds no revision phase. Handle the feedback as
+`shape.md` says."
+
 **Accepted entry states for `oat_phase_status`:**
 
 - `pr_open` — expected happy path (PR is open, human has feedback)
