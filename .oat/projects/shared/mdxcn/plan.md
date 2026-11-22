@@ -1482,7 +1482,7 @@ Expected: all pass.
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
 | plan  | artifact | passed          | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T164854Z.md | 08d0588d801d7cd59afd08323f645b8a0735021b | gate       | codex-6-sol-xhigh |
-| final | code     | received        | 2026-11-22 | reviews/final-review-2026-11-22T044315Z.md                  | 06da295d9707e77f739ce7ddf8bfef152dc59ca9 | gate       | codex-6-sol-xhigh |
+| final | code     | passed          | 2026-11-22 | reviews/archived/final-review-2026-11-22T044315Z.md         | 06da295d9707e77f739ce7ddf8bfef152dc59ca9 | gate       | codex-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto` or `gate`.
