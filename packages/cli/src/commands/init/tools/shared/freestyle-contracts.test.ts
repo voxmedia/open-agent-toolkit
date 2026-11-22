@@ -519,6 +519,104 @@ describe('oat-brainstorm freestyle route', () => {
     );
   });
 
+  it('publishes a synced reference only when the agreement publishes now (m01 I-1)', () => {
+    // Run the published 9j persistence block, with the receipt parser the
+    // skill defines, against a real synced project and a scratch origin.
+    const persistence = /```bash\n([\s\S]*?)```/.exec(
+      branch9j.slice(branch9j.indexOf('**Freestyle projects.**')),
+    )?.[1];
+    expect(persistence, '9j persistence block').toContain(
+      'oat project push "$ACTIVE_PROJECT"',
+    );
+    const parserStart = brainstorm.indexOf('parse_synced_push_receipt() {');
+    const parser = brainstorm
+      .slice(parserStart, brainstorm.indexOf('\n   }\n', parserStart) + 5)
+      .replace(/^ {3}/gm, '');
+    expect(parser).toContain('process.stdout.write(value.sha)');
+    const script = `${parser}\n${(persistence as string).replaceAll('<project-name>', 'demo')}\nprintf 'sha=%s\\n' "$REFERENCE_COMMIT_SHA"\n`;
+
+    const root = mkdtempSync(join(tmpdir(), 'oat-brainstorm-publish-'));
+    try {
+      const cli = join(REPO_ROOT, 'packages', 'cli', 'dist', 'index.js');
+      const bin = join(root, 'bin');
+      const repo = join(root, 'repo');
+      const origin = join(root, 'origin.git');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'oat'), `#!/bin/bash\nexec node "${cli}" "$@"\n`);
+      chmodSync(join(bin, 'oat'), 0o755);
+      const env = {
+        ...process.env,
+        HOME: join(root, 'home'),
+        PATH: `${bin}:${process.env.PATH}`,
+        GIT_AUTHOR_NAME: 'Test',
+        GIT_AUTHOR_EMAIL: 'test@example.com',
+        GIT_COMMITTER_NAME: 'Test',
+        GIT_COMMITTER_EMAIL: 'test@example.com',
+        OAT_PROJECTS_DEFAULT_SCOPE: '',
+        OAT_PROJECTS_ROOT: '',
+      };
+      const sh = (command: string, cwd = repo) => {
+        const result = spawnSync('/bin/bash', ['-c', command], {
+          cwd,
+          encoding: 'utf8',
+          env,
+        });
+        expect(result.status, `${command}\n${result.stderr}`).toBe(0);
+        return result.stdout.trim();
+      };
+      sh(`git init -q --bare "${origin}" && git init -q "${repo}"`, root);
+      sh(
+        `git remote add origin "${origin}" && git commit -q --allow-empty -m init`,
+      );
+      sh(
+        'oat --json project new demo --mode freestyle --scope synced --no-dashboard >/dev/null',
+      );
+      const project = '.oat/projects/synced/demo';
+      const remoteRef = () =>
+        sh('git ls-remote origin refs/oat/projects/demo').split(/\s/)[0];
+      const parentHead = sh('git rev-parse HEAD');
+
+      const persist = (file: string, publish?: string) => {
+        mkdirSync(join(repo, project, 'brainstorming'), { recursive: true });
+        writeFileSync(
+          join(repo, project, 'brainstorming', file),
+          `# ${file}\n`,
+        );
+        const result = spawnSync('/bin/bash', ['-c', script], {
+          cwd: repo,
+          encoding: 'utf8',
+          env: {
+            ...env,
+            ACTIVE_PROJECT: project,
+            REFERENCE_PATH: `${project}/brainstorming/${file}`,
+            COMMIT_IDENTITY: `test-${file}`,
+            ...(publish === undefined ? {} : { REFERENCE_PUBLISH: publish }),
+          },
+        });
+        expect(result.status, result.stderr).toBe(0);
+        return /sha=([0-9a-f]{40})/.exec(result.stdout)?.[1];
+      };
+
+      // Commit-only: committed in the project checkout, origin unchanged.
+      const published = remoteRef();
+      const commitOnly = persist('2026-11-22-commit-only.md', 'no');
+      expect(commitOnly).toBe(sh(`git -C ${project} rev-parse HEAD`));
+      expect(sh(`git -C ${project} status --porcelain`)).toBe('');
+      expect(remoteRef(), 'commit-only agreement: origin ref unchanged').toBe(
+        published,
+      );
+      // A push agreement (REFERENCE_PUBLISH unset) advances the origin ref.
+      const pushed = persist('2026-11-22-pushed.md');
+      expect(pushed).not.toBe(commitOnly);
+      expect(remoteRef(), 'push agreement: origin ref advanced').toBe(pushed);
+      expect(sh('git rev-parse HEAD'), 'no parent branch commit').toBe(
+        parentHead,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('hands back to oat-project-freestyle at the topic shape.md records', () => {
     const handBack = branch9j.slice(
       branch9j.indexOf('**Freestyle hand-back.**'),
