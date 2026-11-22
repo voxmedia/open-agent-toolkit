@@ -29,6 +29,18 @@ oat_phase_recovery_policy:
     p02:
       used_attempts: 3
       pending_attempt: null
+    p04:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: freestyle-projects-p04-recovery-1
+        original_request_id: freestyle-projects-p04-implementation-1
+        original_task_id: p04-t01
+        original_commit: 4b0dfd3579c75509c9b3ee7c8ff73f3fb870321a
+        discovered_by: 'p04-t01 to p04-t02 transition check: the oat-project-autonomous route-table freestyle row says Stop without a boundary class'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: 73f3496731002e55562df89e5abb324e30e49ec8
+        status: pending
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
