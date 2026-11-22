@@ -1100,7 +1100,7 @@ export interface AppendProjectLogInput {
   origin?: string;
   /** Structural only: record the UTC time of day of the append. */
   time?: boolean;
-  /** Structural only: the lane, phase or other id the event is about. */
+  /** Structural only: the phase or other id the event is about. */
   subject?: string;
   /** Structural only: the project the event came from. */
   sourceProject?: string;
@@ -2369,7 +2369,7 @@ export function createProjectLogAppendCommand(
     )
     .option(
       '--subject <id>',
-      'Structural only: the lane, phase or other id the event is about (one word)',
+      'Structural only: the phase or other id the event is about (one word)',
     )
     .option(
       '--source-project <name>',

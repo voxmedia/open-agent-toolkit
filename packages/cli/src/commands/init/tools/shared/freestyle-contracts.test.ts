@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -391,5 +391,50 @@ describe('oat-brainstorm freestyle route', () => {
     for (const match of branch9j.matchAll(/`## ([^`]+)`/g)) {
       expect(shapeHeadings.has(match[1] as string), match[1]).toBe(true);
     }
+  });
+});
+
+/** Every Markdown file under `dir`, recursively. */
+function markdownFiles(dir: string): string[] {
+  return readdirSync(dir, { recursive: true, encoding: 'utf8' })
+    .filter((entry) => entry.endsWith('.md'))
+    .map((entry) => join(dir, entry));
+}
+
+describe('documented journal check commands', () => {
+  it('give every documented `oat project journal check` invocation a valid --at', () => {
+    // `journal check` rejects a missing `--at` before it reads the project,
+    // so a documented command without one always fails, freestyle included.
+    const files = [
+      join(TEMPLATES_DIR, 'project-agents.md'),
+      join(REPO_ROOT, 'README.md'),
+      join(REPO_ROOT, 'AGENTS.md'),
+      join(REPO_ROOT, 'packages', 'cli', 'README.md'),
+      ...markdownFiles(join(REPO_ROOT, '.agents', 'skills')),
+      ...markdownFiles(join(REPO_ROOT, 'apps', 'oat-docs', 'docs')),
+    ];
+    const invocations: string[] = [];
+    const missing: string[] = [];
+    for (const file of files) {
+      for (const match of read(file).matchAll(
+        /oat project journal check[ \t]+--[^`\n]*/g,
+      )) {
+        invocations.push(match[0]);
+        if (
+          !/--at[ \t]+(?:implement-preflight|review|completion|<)/.test(
+            match[0],
+          )
+        ) {
+          missing.push(`${file.slice(REPO_ROOT.length + 1)}: ${match[0]}`);
+        }
+      }
+    }
+
+    expect(
+      invocations.some((line) => line.includes('--project <project-path>')),
+      'finds the project AGENTS.md template command',
+    ).toBe(true);
+    expect(invocations.length).toBeGreaterThanOrEqual(10);
+    expect(missing).toEqual([]);
   });
 });

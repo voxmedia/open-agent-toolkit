@@ -68,12 +68,14 @@ that section is not yet shaped or is deferred, commit and push nothing.
   `shape.md` must still stand on its own. A structural entry
   (`--structural --producer <name> --ref <ref>`) can record an event such as
   `merged`: `--time` adds the UTC time of the append, `--subject <id>` the
-  lane, phase or other id it is about, and `--source-project <name>` the
+  phase or other id it is about, and `--source-project <name>` the
   project it came from.
-- `oat project journal check --project <project-path>`: a coverage report of
-  the phases it recognized, validated and skipped (with reasons) in `plan.md`
-  and `implementation.md`, when the project keeps them. A missing file is
-  reported, not an error.
+- `oat project journal check --at completion --project <project-path>`: a
+  coverage report of the phases it recognized, validated and skipped (with
+  reasons) in `plan.md` and `implementation.md`, when the project keeps them.
+  A missing file is reported, not an error. `--at` is required: `completion`
+  and `implement-preflight` give the same report, and `review` also needs a
+  `--scope` of phases those documents name.
 - `oat template resolve <name> --output <path>`: copy an OAT template as the
   starting point for a project document.
 - `oat project push` and `oat project pull`: publish and fetch the records of

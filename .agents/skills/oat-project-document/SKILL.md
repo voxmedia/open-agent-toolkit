@@ -130,6 +130,15 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 **Validation:**
 
 - Verify `$PROJECT_PATH/state.md` exists
+- Read the mode before any other check or write:
+  ```bash
+  WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+  ```
+  For `oat_workflow_mode: freestyle`, stop: a freestyle project has no
+  lifecycle artifact set to document from, so stop here, before the artifact
+  checks below and before Step 1 can invoke a PJM writer. Tell the user: "This
+  is a freestyle project; this skill reads lifecycle artifacts it does not
+  have. Update documentation as `shape.md` agrees."
 - Verify at least one of `plan.md` or `implementation.md` exists (need to know what was built)
 - If validation fails, report the error and STOP
 
@@ -208,11 +217,6 @@ adoption could not be determined — the usual causes are `jq` missing from
 ### Step 2: Read Project Artifacts
 
 Read all available project artifacts to build an understanding of what was built.
-
-For `oat_workflow_mode: freestyle`, stop: a freestyle project has no lifecycle
-artifact set to document from. Tell the user: "This is a freestyle project;
-this skill reads lifecycle artifacts it does not have. Update documentation as
-`shape.md` agrees."
 
 For `oat_workflow_mode: lite`, use the reduced artifact contract instead of
 the numbered artifact list below. Read the five `plan.md` sections `Summary`,

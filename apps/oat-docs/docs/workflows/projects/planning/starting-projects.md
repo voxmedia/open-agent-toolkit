@@ -9,7 +9,7 @@ Choose an entry path based on what you already know and what already exists.
 These skills do not require an existing active project. They create or import
 tracked work, although quick-start, lite, brief, goal, and freestyle resume an
 active project of their own mode, and import writes into whichever project is
-active.
+active unless it is a freestyle project.
 
 | Your situation                                                             | Entry skill               | Result                                                                                |
 | -------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
@@ -495,8 +495,11 @@ contain content, and use `.md` unless you explicitly confirm another Markdown
 extension. OAT repository scaffolding must be available.
 
 If any project is active, import writes into **that** project, whatever its
-mode: it normalizes the plan into its `plan.md` and switches it to import mode.
-That includes a spec-driven project in the middle of design. `--project` is read
+lifecycle mode: it normalizes the plan into its `plan.md` and switches it to
+import mode. That includes a spec-driven project in the middle of design. A
+freestyle project is the exception: there is no promotion from freestyle, so
+import stops before writing anything when the active project, or the existing
+project `--project` names, is freestyle. `--project` is read
 only when no project is active. To import into a new project, run
 `oat-project-clear-active` first.
 

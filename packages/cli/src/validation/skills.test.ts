@@ -6616,7 +6616,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-plan', '1.4.24'],
       ['oat-project-quick-start', '2.3.27'],
-      ['oat-project-import-plan', '1.4.25'],
+      ['oat-project-import-plan', '1.4.26'],
       ['oat-project-lite', '1.1.16'],
       ['oat-project-review-provide', '1.5.21'],
     ] as const;
@@ -8386,7 +8386,7 @@ describe('lite mode skill contracts', () => {
     expect(stateWrite).toContain('oat_workflow_origin: imported');
     expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
     expect(stateWrite).toContain('oat_plan_source: imported');
-    expect(readDeclaredVersion(content)).toBe('1.4.25');
+    expect(readDeclaredVersion(content)).toBe('1.4.26');
   });
 
   it('lite bypasses implementation checkpoints', async () => {
@@ -9544,10 +9544,77 @@ describe('freestyle mode skill contracts', () => {
         '.agents/skills/oat-project-complete/SKILL.md',
         /\*\*Freestyle projects\.\*\*[^]*?stop before any write[^]*?### Step 1\.5: Closeout Invariant Gate/,
       ],
+      [
+        '.agents/skills/oat-project-import-plan/SKILL.md',
+        /When `TARGET_MODE` is `freestyle`, stop before any write[^]*?promotion from freestyle is not supported/,
+      ],
     ] as const;
 
     for (const [path, pattern] of checks) {
       expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+  });
+
+  it('places each freestyle stop before the first step that writes or checks lifecycle artifacts', async () => {
+    // A stop whose text exists but sits after a writing step does not stop
+    // anything, so each stop must come before the named later markers.
+    const checks: ReadonlyArray<
+      readonly [path: string, stop: string, later: readonly string[]]
+    > = [
+      [
+        '.agents/skills/oat-project-pr-progress/SKILL.md',
+        '**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply',
+        ['### Step 0.5: Archive Residual Active Review Artifacts'],
+      ],
+      [
+        '.agents/skills/oat-project-pr-final/SKILL.md',
+        '**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply',
+        ['### Step 0.5: Archive Residual Active Review Artifacts'],
+      ],
+      [
+        '.agents/skills/oat-project-document/SKILL.md',
+        'For `oat_workflow_mode: freestyle`, stop:',
+        [
+          'Verify at least one of `plan.md` or `implementation.md` exists',
+          '### Step 1: Check for PJM Infrastructure',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-summary/SKILL.md',
+        'For `oat_workflow_mode: freestyle`, stop before reading or writing anything',
+        ['### Step 1: Validate Implementation State'],
+      ],
+      [
+        '.agents/skills/oat-project-reconcile/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop before any write',
+        ['test -f "$PROJECT_PATH/plan.md"', '### Step 1: Find Checkpoint'],
+      ],
+      [
+        '.agents/skills/oat-project-import-plan/SKILL.md',
+        'When `TARGET_MODE` is `freestyle`, stop before any write',
+        [
+          '### Step 0 (Preflight): Inherited Git State',
+          'oat config set activeProject',
+          '### Step 3: Normalize Into Canonical OAT plan.md',
+        ],
+      ],
+    ];
+
+    for (const [path, stop, later] of checks) {
+      const content = await readRepoFile(path);
+      const stopIndex = content.indexOf(stop);
+      expect(stopIndex, `${path} freestyle stop`).toBeGreaterThanOrEqual(0);
+      expect(
+        content.indexOf(stop, stopIndex + stop.length),
+        `${path} has one freestyle stop`,
+      ).toBe(-1);
+      for (const marker of later) {
+        const markerIndex = content.indexOf(marker);
+        expect(markerIndex, `${path} marker ${marker}`).toBeGreaterThan(0);
+        expect(stopIndex, `${path}: stop before ${marker}`).toBeLessThan(
+          markerIndex,
+        );
+      }
     }
   });
 

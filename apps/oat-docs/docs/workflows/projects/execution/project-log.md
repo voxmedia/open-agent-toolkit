@@ -204,8 +204,8 @@ The helper produces these heading grammars in UTC:
 
 A structural entry can also record an event, such as a merge, with up to three
 optional fields: `--time` (the UTC time of day of the append, from the same
-clock reading as the heading date), `--subject <id>` (the lane, phase or other
-id the event is about) and `--source-project <name>` (the project it came
+clock reading as the heading date), `--subject <id>` (the phase or other id the
+event is about) and `--source-project <name>` (the project it came
 from). Subject and source project are one word each, and the flags are refused
 on judgment entries. They are written as a head above the one-line body, in
 this order, so the heading keeps its grammar:
@@ -214,18 +214,20 @@ this order, so the heading keeps its grammar:
 ### 2026-07-17 · structural · orchestrator · merged
 
 **Time:** 14:05:09Z
-**Subject:** l07
+**Subject:** p03
 **Source project:** child-project
 
-Merged PR #12; lanes.md update u0031.
+Merged PR #12 into the integration branch.
 ```
 
 `--time` takes no value; put an event's own time on another system, such as a
 forge merge time, in the body. With `--idempotency-key`, the key must appear in
 the `--body` text of a structural entry, not only in the event fields.
 
-The log commands need only the project's `state.md`, so `--project <path>`
-works on a freestyle project with no plan or journal. When the project log is
+`append`, `check` and `synthesize` need only the project's `state.md`, so
+`--project <path>` works on a freestyle project with no plan or journal.
+`rollup` also needs a project summary: `summary.md`, or another document named
+with `--summary-path <path>`. When the project log is
 disabled (`workflow.projectLog: false`) and `project-log.md` does not exist,
 `append` returns `skipped` and writes nothing, in every mode.
 

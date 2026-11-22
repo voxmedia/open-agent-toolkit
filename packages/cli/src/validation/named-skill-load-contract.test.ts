@@ -2343,6 +2343,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   // --------------------------------------------------------------- import-plan
   {
     file: '.agents/skills/oat-project-import-plan/SKILL.md',
+    anchor: 'Freestyle Projects',
+    match: 'clear the active project with `oat-project-clear-active`, then run',
+    classification: 'non-executing',
+    skills: ['oat-project-clear-active', 'oat-project-import-plan'],
+    reason:
+      'Tells the user how to import into a new project after the freestyle stop; this skill invokes neither.',
+  },
+  {
+    file: '.agents/skills/oat-project-import-plan/SKILL.md',
     anchor: 'Step 3: Normalize Into Canonical OAT plan.md',
     match: 'Apply `oat-project-plan-writing` invariants after mapping',
     classification: 'load-required',

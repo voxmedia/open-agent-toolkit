@@ -101,13 +101,25 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 Verify the project is ready for reconciliation:
 
-1. **Check `plan.md` exists:**
+1. **Resolve the workflow mode** (first, so a freestyle project stops before the
+   lifecycle checks below):
+
+   ```bash
+   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+   ```
+
+   If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
+   project has no plan tasks or lifecycle journal to map commits onto. Tell the
+   user: "This is a freestyle project; reconcile its records against the forge
+   as its `AGENTS.md` and `shape.md` say."
+
+2. **Check `plan.md` exists:**
 
    ```bash
    test -f "$PROJECT_PATH/plan.md" || { echo "ERROR: plan.md not found. Run oat-project-plan first."; exit 1; }
    ```
 
-2. **Check project phase:**
+3. **Check project phase:**
 
    The shell snippet below is indented so it remains inside this numbered list;
    the leading whitespace is shell-safe when copied.
@@ -122,20 +134,9 @@ Verify the project is ready for reconciliation:
    - If `PHASE` is `plan` and `PHASE_STATUS` is `complete`: proceed (plan just finished, implementation starting)
    - Otherwise: STOP — tell user the project is not in implementation phase
 
-3. **Check for untracked commits:**
+4. **Check for untracked commits:**
    - Read `implementation.md` if it exists — find the last recorded commit SHA
    - If all recent commits are already tracked, inform user: "No untracked commits found. Nothing to reconcile."
-
-4. **Resolve the workflow mode:**
-
-   ```bash
-   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
-   ```
-
-   If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
-   project has no plan tasks or lifecycle journal to map commits onto. Tell the
-   user: "This is a freestyle project; reconcile its records against the forge
-   as its `AGENTS.md` and `shape.md` say."
 
 **Brief-mode branch (`WORKFLOW_MODE=brief`).** A brief has no planned tasks:
 the task source is the journal, and

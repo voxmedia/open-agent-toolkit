@@ -127,6 +127,18 @@ If missing/invalid:
   oat config set activeProject "$PROJECT_PATH"
   ```
 
+Then read the resolved project's mode, before any step that writes:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply:
+a freestyle project has no lifecycle workflow, and when PRs open is agreed in
+its `shape.md`. Stop here, before Step 0.5 archives review files and before
+any other write, and tell the user: "This is a freestyle project; OAT opens no
+PR for it. Open PRs as `shape.md` agrees."
+
 ### Step 0.5: Archive Residual Active Review Artifacts
 
 Before generating the final PR, detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
@@ -167,11 +179,6 @@ Resolve workflow mode from `state.md` (default `spec-driven`):
 ```bash
 WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
 ```
-
-**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply:
-a freestyle project has no lifecycle workflow, and when PRs open is agreed in
-its `shape.md`. Stop before any write and tell the user: "This is a freestyle
-project; OAT opens no PR for it. Open PRs as `shape.md` agrees."
 
 ```bash
 ls "$PROJECT_PATH/plan.md" 2>/dev/null
