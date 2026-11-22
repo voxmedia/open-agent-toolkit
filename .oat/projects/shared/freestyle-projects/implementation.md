@@ -826,6 +826,28 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Proof before the commit, each exit 0: `pnpm build` (0 cached), the skill-prose vitest over `src/commands/init/tools/shared src/validation` (33 files, 1314 passed), `oat:validate-skills`, `lint`, `format`, `check` (cli cache miss) and `test:skills` (754).
 - Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
 
+### Task p04-t14: Fix m01 review round 5 (R5-1)
+
+**Status:** completed
+**Commit:** 2b11c7b1cc6b01ed4dec8879c4f493cebb645679
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `m01-code-review-2026-11-22T063000Z.md`, m01 Astra re-review round 5 on `686d424bc..4a3b2be5c`: R5-1, verified against source by root. Class: regression introduced by the R4-1 fallback.
+
+- Late fix: p04 is the last phase of m01 and no later phase has a `**Base:**`, so this record lands in p04 and advances its `**Head:**`.
+- Intent: check the repo-relative `TARGET_PATH` and `NAMED_PATH` from the repository root in both quick-start freestyle blocks, so a run from a subdirectory keeps a valid active freestyle pointer and finds a named freestyle project.
+- Files: `.agents/skills/oat-project-quick-start/SKILL.md` and `packages/cli/src/validation/skills.test.ts`.
+- Proof: subdirectory cases in the verbatim-block test, a can-fail check per block, and the scoped gate list.
+- **R5-1:** both quick-start freestyle blocks start with `cd "$(git rev-parse --show-toplevel)"`, with a refusal message: the pre-Step-0 guard and the Step 0.5 named check. Every `TARGET_PATH`/`NAMED_PATH` test then runs from the repository root, and absolute paths still resolve as before.
+- **Test:** for each scope case (shared, local, synced default, and local under `records/shared/.`), the verbatim-block test now also runs from `repo/src`.
+  - The pre-Step-0 block, with a valid repo-relative active freestyle pointer and an unused name, must return the active project and `freestyle`.
+  - The Step 0.5 block, for the named freestyle project, must return its path and `freestyle`.
+- **Can-fail**, each neutralized, failing on its own assertion, then restored and byte-compared:
+  - Without the pre-Step-0 `cd`, `shared, subdirectory, active freestyle pointer: pre-Step-0 block` gets `.oat/projects/shared/unused`.
+  - Without the Step 0.5 `cd`, `shared, subdirectory, named freestyle project: Step 0.5 block` gets `null`.
+- **Version:** no new bump; quick-start is already bumped in this PR.
+- Proof before the commit, each exit 0: `pnpm build` (0 cached), the skill-prose vitest (33 files, 1314 passed), `oat:validate-skills`, `lint`, `format`, `check` (cli cache miss) and `test:skills` (754).
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
+
 ---
 
 ## Phase p05: Linked projects
