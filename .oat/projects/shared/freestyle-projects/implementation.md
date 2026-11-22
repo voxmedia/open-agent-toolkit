@@ -793,6 +793,37 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
   - Docs-index freshness, and the branch-build sync.
 - Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
 
+### Task p04-t13: Fix m01 review round 4 (R4-1, R4-2)
+
+**Status:** completed
+**Commit:** cf699ae3850998e5bfa8e2968435f9ad697a1ccf
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `m01-code-review-2026-11-22T055500Z.md`, m01 Astra re-review round 4 on `749557100..686d424bc`: R4-1 and R4-2, each verified against source by root. Class: regression of the accepted R3-5 fix. R4-3 is deferred by root (see Deferred Findings).
+
+- Late fix: p04 is the last phase of m01 and no later phase has a `**Base:**`, so this record lands in p04 and advances its `**Head:**`.
+- Intent: make the quick-start fallback from the active pointer to `NAMED_PATH` executable, and normalize the projects root as `resolveScopeRoot` does before taking its parent. Step 0.5's repeat of the check gets the same treatment.
+- Files: `.agents/skills/oat-project-quick-start/SKILL.md` and `packages/cli/src/validation/skills.test.ts`.
+- Proof: the published blocks run verbatim against the built CLI, a can-fail check per clause, and the scoped gate list.
+- **R4-1:**
+  - The pre-Step-0 block now runs `if [ -z "$TARGET_PATH" ] || [ ! -f "$TARGET_PATH/state.md" ]; then TARGET_PATH="$NAMED_PATH"; fi` before the status call.
+  - Step 0.5's repeat is a self-contained executable block: it resolves `NAMED_PATH` again and reads the mode only when `$NAMED_PATH/state.md` exists, otherwise `null`.
+- **R4-2:** `NAMED_PATH` comes from one `node -e` call that mirrors `resolveScopeRoot` and `canonicalizePath`.
+  - A relative root resolves against `git rev-parse --show-toplevel`, and an absolute one is canonicalized.
+  - Shared is that root; local and synced are its parent's sibling.
+  - The result is repo-relative, as `oat project new` reports it.
+  - `records/shared/.` with scope local now gives `records/local/proj`.
+- **Test:** the R3-5 test is replaced with one that runs both published blocks verbatim; only `{project-name}` is bound, and a `printf` reads the result.
+  - It uses the real built CLI for shared, local, synced (the unset default) and local under `records/shared/.`.
+  - Each case has its own repository and origin, and the real `oat project new --mode freestyle` scaffolds there.
+  - It runs with an unset and a stale active pointer. Both blocks must return the scaffolded path and `freestyle`.
+- **Can-fail**, each neutralized, failing on its own clause, then restored and byte-compared:
+  - The comment-only fallback fails on `shared, unset pointer: pre-Step-0 block` with `null`.
+  - A fallback that only handles an unset pointer fails on `shared, stale pointer`.
+  - Dropping normalization in the pre-Step-0 block fails on `records/shared/local/proj`, and dropping it in the Step 0.5 block fails that block the same way.
+- **Version:** no new bump; quick-start is already bumped in this PR.
+- Proof before the commit, each exit 0: `pnpm build` (0 cached), the skill-prose vitest over `src/commands/init/tools/shared src/validation` (33 files, 1314 passed), `oat:validate-skills`, `lint`, `format`, `check` (cli cache miss) and `test:skills` (754).
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
+
 ---
 
 ## Phase p05: Linked projects
@@ -858,6 +889,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 - p02 review round 1 L5: `oat project status` exits 1 on a corrupt synced record while `list` shows a `restore record from Git` row (`packages/cli/src/commands/project/status.ts:94`). Never a lifecycle recommendation; existing failure posture. Deferred by root (agent authority over phase acceptance); trigger: p04, align status with list's row or document the difference.
 - p02 review round 2 L1-L3 (`.agents/skills/oat-project-freestyle/SKILL.md`): the Resume path bullet does not say a named project wins over an active freestyle project (~:97); the unpulled synced case names no detection command (~:99-101; safe, `oat project new` refuses the duplicate); Success Criteria lists two resume triggers where Step 2 has three (~:199-200). Deferred by root; trigger: p04 skill-prose pass (no extra version bump, the skill is new in this PR).
+- m01 review round 4 R4-3 (`m01-code-review-2026-11-22T055500Z.md`; class new-hardening, Low): in `oat-project-implement` Step 0, an empty or malformed `oat_workflow_mode` on a synced ref reads as the legacy spec-driven default, so arrival continues instead of stopping. Deferred by root to the follow-up issue; the implement skill is unchanged in m01. Trigger: the freestyle follow-up issue.
 
 ## Deviations from Plan / Design
 
