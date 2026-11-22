@@ -9677,6 +9677,34 @@ describe('freestyle mode skill contracts', () => {
         ],
       ],
       [
+        // The synced arrival pulls (review-provide can commit an adoption),
+        // so each stop reads the mode before it (m01 J-1).
+        '.agents/skills/oat-project-review-provide/SKILL.md',
+        'When `WORKFLOW_MODE` is `freestyle`, stop there,',
+        [
+          'oat project pull "$PROJECT_PATH"',
+          '### Step 1: Parse Arguments or Ask',
+          '### Step 1.6: Enforce Committed Artifact Baseline',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-complete/SKILL.md',
+        '`WORKFLOW_MODE` is `freestyle`, stop there, before the synced archive entry',
+        [
+          'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
+          '### Step 1.5: Closeout Invariant Gate',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-autonomous/SKILL.md',
+        'When `WORKFLOW_MODE` is `freestyle`, stop there,',
+        [
+          'oat project pull "$PROJECT_PATH"',
+          '### Step 0.5: Capability Detection and Tier Selection',
+          '### Step 1: Detect the Persisted Entry State',
+        ],
+      ],
+      [
         '.agents/skills/oat-project-review-receive-remote/SKILL.md',
         'records `oat_workflow_mode: freestyle`:** stop',
         [
@@ -9980,6 +10008,263 @@ describe('freestyle mode skill contracts', () => {
       await rm(root, { recursive: true, force: true });
     }
   }, 120_000);
+
+  describe('review-provide, complete and autonomous read the mode before the synced arrival (m01 J-1)', () => {
+    const PROJECT = '.oat/projects/synced/proj';
+    type Skill = 'review-provide' | 'complete' | 'autonomous';
+    const SKILLS: Record<Skill, { path: string; paragraph: string }> = {
+      'review-provide': {
+        path: '.agents/skills/oat-project-review-provide/SKILL.md',
+        paragraph: '**Freestyle projects.** Before the arrival pull below',
+      },
+      complete: {
+        path: '.agents/skills/oat-project-complete/SKILL.md',
+        paragraph:
+          '**Freestyle projects.** Before the synced archive entry below',
+      },
+      autonomous: {
+        path: '.agents/skills/oat-project-autonomous/SKILL.md',
+        paragraph: '**Freestyle projects.** Before the synced pull below',
+      },
+    };
+
+    function bashBlocks(text: string): string[] {
+      return [...text.matchAll(/```bash\n([\s\S]*?)```/g)].map(
+        (match) => match[1] as string,
+      );
+    }
+
+    /** The mode read, the unchanged arrival after it, and any prefix. */
+    async function blocks(skill: Skill): Promise<{
+      prefix: string;
+      modeRead: string;
+      arrival: string;
+      paragraph: string;
+    }> {
+      const content = await readRawRepoFile(SKILLS[skill].path);
+      const at = content.indexOf(SKILLS[skill].paragraph);
+      expect(at, `${skill} freestyle arrival paragraph`).toBeGreaterThan(0);
+      const [modeRead, arrival] = bashBlocks(content.slice(at));
+      expect(modeRead, `${skill} mode-read block`).toContain(
+        'WORKFLOW_MODE=null',
+      );
+      expect(modeRead).not.toContain('oat project pull');
+      // Autonomous resolves PROJECT_PATH in the block before the paragraph.
+      const prefix =
+        skill === 'autonomous'
+          ? (bashBlocks(content.slice(0, at))
+              .reverse()
+              .find((block) => block.includes('PROJECT_PATH=')) ?? '')
+          : '';
+      return {
+        prefix,
+        modeRead: modeRead as string,
+        arrival: arrival as string,
+        paragraph: content.slice(at, content.indexOf('```bash', at)),
+      };
+    }
+
+    async function run(
+      skill: Skill,
+      options: {
+        checkout?: string;
+        record?: boolean;
+        refMode?: string;
+        lsRemote?: number;
+      },
+    ): Promise<{
+      pulled: boolean;
+      stopped: boolean;
+      status: number;
+      stderr: string;
+    }> {
+      const { prefix, modeRead, arrival } = await blocks(skill);
+      const root = await mkdtemp(join(tmpdir(), `oat-${skill}-arrival-`));
+      try {
+        const bin = join(root, 'bin');
+        await mkdir(bin);
+        await mkdir(join(root, '.oat/projects/synced'), { recursive: true });
+        if (options.checkout !== undefined) {
+          await mkdir(join(root, PROJECT), { recursive: true });
+          await writeFile(
+            join(root, PROJECT, 'state.md'),
+            `---\noat_workflow_mode: ${options.checkout}\n---\n`,
+          );
+        }
+        if (options.record) {
+          await writeFile(join(root, `${PROJECT}.json`), '{}\n');
+        }
+        await writeFile(
+          join(bin, 'oat'),
+          [
+            '#!/bin/bash',
+            'case "$1 $2" in',
+            `  "config get") echo "${PROJECT}" ;;`,
+            '  "project scope") echo synced ;;',
+            '  "project status") sed -n "s/^oat_workflow_mode: //p" "$4/state.md" ;;',
+            '  "project pull") echo pulled > "$PULL_MARK" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        await writeFile(
+          join(bin, 'git'),
+          [
+            '#!/bin/bash',
+            'case "$1" in',
+            '  rev-parse) echo "$STUB_ROOT" ;;',
+            '  ls-remote)',
+            '    code="${STUB_LS:-0}"',
+            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            // Like git, an absent ref exits 2 only under --exit-code.
+            '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
+            '    exit "$code" ;;',
+            '  fetch) exit 0 ;;',
+            '  show)',
+            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        // Complete's arrival is its synced archive entry executor, which
+        // pulls; stand in for it and pass every other node call through.
+        await writeFile(
+          join(bin, 'node'),
+          [
+            '#!/bin/bash',
+            'case "$1" in',
+            '  *execute-synced-archive-entry.mjs)',
+            '    echo pulled > "$PULL_MARK"',
+            '    printf \'{"status":"ok","route":"continue-active"}\\n\' ;;',
+            `  *) exec "${process.execPath}" "$@" ;;`,
+            'esac',
+            '',
+          ].join('\n'),
+          { mode: 0o755 },
+        );
+        const mark = join(root, 'pulled');
+        const env = {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          PULL_MARK: mark,
+          STUB_ROOT: root,
+          STUB_REF_MODE: options.refMode ?? 'quick',
+          STUB_LS: String(options.lsRemote ?? 0),
+          SKILL_DIR: join(
+            process.cwd(),
+            '..',
+            '..',
+            '.agents/skills/oat-project-complete',
+          ),
+        };
+        const exec = async (script: string) => {
+          try {
+            const result = await execFileAsync('/bin/bash', ['-c', script], {
+              cwd: root,
+              env,
+            });
+            return { status: 0, stderr: result.stderr };
+          } catch (error) {
+            const failure = error as { code?: number; stderr?: string };
+            return {
+              status: failure.code ?? 1,
+              stderr: String(failure.stderr ?? error),
+            };
+          }
+        };
+        // The skill stops at the freestyle stop or a failed read; only
+        // otherwise does it run the arrival that follows.
+        const read = await exec(`${prefix}\n${modeRead}`);
+        const stopped =
+          read.status !== 0 || read.stderr.includes('stopping before arrival');
+        if (stopped) {
+          return { pulled: existsSync(mark), stopped, ...read };
+        }
+        const arrived = await exec(`${prefix}\n${arrival}`);
+        return {
+          pulled: existsSync(mark),
+          stopped,
+          status: arrived.status,
+          stderr: read.stderr + arrived.stderr,
+        };
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    }
+
+    for (const skill of Object.keys(SKILLS) as Skill[]) {
+      it(`${skill}: a freestyle project stops before the arrival and other modes still arrive`, async () => {
+        const { paragraph } = await blocks(skill);
+        expect(paragraph.replace(/\s+/g, ' ')).toContain(
+          'With no checkout here yet, add: "Run `oat project pull <slug>` to bring it here."',
+        );
+
+        const here = await run(skill, { checkout: 'freestyle', record: true });
+        expect(here.stopped, `${skill}: freestyle checkout here stops`).toBe(
+          true,
+        );
+        expect(here.pulled, `${skill}: freestyle checkout here: no pull`).toBe(
+          false,
+        );
+        expect(here.stderr).toContain(
+          'proj is a freestyle project; stopping before arrival',
+        );
+
+        const fromRef = await run(skill, { refMode: 'freestyle' });
+        expect(
+          fromRef.pulled,
+          `${skill}: freestyle read from the ref: no pull`,
+        ).toBe(false);
+        expect(fromRef.stderr).toContain(
+          'proj is a freestyle project; stopping before arrival',
+        );
+
+        const quick = await run(skill, { refMode: 'quick' });
+        expect(quick.stopped, `${skill}: quick does not stop`).toBe(false);
+        expect(quick.status, quick.stderr).toBe(0);
+        expect(quick.pulled, `${skill}: quick control: arrival runs`).toBe(
+          true,
+        );
+        const quickHere = await run(skill, { checkout: 'quick', record: true });
+        expect(
+          quickHere.pulled,
+          `${skill}: quick checkout here: arrival runs`,
+        ).toBe(true);
+
+        const failedLookup = await run(skill, { lsRemote: 128, record: true });
+        expect(failedLookup.status).toBe(1);
+        expect(failedLookup.stderr).toContain(
+          'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
+        );
+        expect(failedLookup.pulled, `${skill}: failed lookup: no pull`).toBe(
+          false,
+        );
+      });
+    }
+
+    it('keeps each existing arrival block byte-identical to the one before the mode read', async () => {
+      // The mode read is a separate block placed before the arrival; the
+      // arrival block itself, and so every other mode's pull, is unchanged.
+      const expected: Record<Skill, string> = {
+        'review-provide':
+          'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
+        complete:
+          'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" \\',
+        autonomous:
+          'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before autonomous work continues" >&2; exit 1; }',
+      };
+      for (const skill of Object.keys(SKILLS) as Skill[]) {
+        const { arrival } = await blocks(skill);
+        expect(arrival, `${skill} arrival`).toContain(expected[skill]);
+        expect(arrival, `${skill} arrival has no mode read`).not.toContain(
+          'WORKFLOW_MODE=',
+        );
+      }
+    });
+  });
 
   describe('implement Step 0 reads the mode before the synced pull', () => {
     async function arrivalBlock(): Promise<string> {

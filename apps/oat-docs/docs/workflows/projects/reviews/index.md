@@ -14,7 +14,8 @@ Review loop:
 
 Project reviews do not apply to a freestyle project: `oat-project-review-provide`,
 `oat-project-review-provide-remote` and `oat-project-review-receive` stop for
-it before writing. Review its work with the ad-hoc skills
+it before writing; `oat-project-review-provide` reads the mode before pulling a
+synced project, so it adopts and commits nothing. Review its work with the ad-hoc skills
 ([`oat-review-provide`](review-flavors.md#oat-review-provide) and
 [`oat-review-receive`](review-flavors.md#oat-review-receive)) or the
 mechanism its `shape.md` records; reviews never block a freestyle project.
