@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 1023c3775
+oat_current_task: p04-t04
+oat_last_commit: d4fe17878
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -48,16 +48,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: mdxcn-p04-rec-001
-        original_request_id: mdxcn-p04-implementation-20261122
-        original_task_id: p04-t03
-        original_commit: e5f525af6b99ffd382cebff91c445a99310a7766
-        discovered_by: pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md (DoD gate 9)
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 342ae29a0125ed6c2bb6c67a3d6ee0695bb0d19c
-        status: completed
+      pending_attempt: null
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
@@ -135,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation in progress. p01, p02 and p03 are complete; p04 (guidance, instructions and release) is next.
+Implementation in progress. p01–p03 are complete; p04 tasks are complete (d4fe17878) and its phase review is next.
 
 ## Artifacts
 

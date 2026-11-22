@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-21
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 6     | 6/6       |
-| Phase 4 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 6     | 6/6       |
+| Phase 4 | in_progress | 4     | 4/4       |
 
-**Total:** 17/21 tasks completed
+**Total:** 21/21 tasks completed
 
 ---
 
@@ -584,28 +584,136 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-11-22
 
 ### Task p04-t01: Document the figures in the scaffold contributing pages and app AGENTS guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a8a0049e2
+
+**Outcome:**
+
+- The Fumadocs scaffold contributing page has a Syntax/Rendered example and grammar for every fence, plus the agent-readability, plain-text and no-nesting rules.
+- The MkDocs page says `docs-*` fences render as plain code.
+- The scaffold app `AGENTS.md` says when to use a figure.
+
+**Files changed:**
+
+- `.oat/templates/docs-app-fuma/docs/contributing.md`
+- `.oat/templates/docs-app-mkdocs/docs/contributing.md`
+- `.oat/templates/docs-app-fuma/AGENTS.md`
+- `packages/cli/src/commands/docs/init/integration.test.ts`
+
+**Verification:** the `docs/init` suite and `src/validation` passed (571), and lint and the format check passed.
+
+**Notes / Decisions:**
+
+- **Can-fail control:** breaking the Rendered `docs-check` example failed the new every-fence assertion, naming `docs-check`.
 
 ### Task p04-t02: Update the oat-docs-bootstrap and oat-docs-analyze skills
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 337badb85
+
+**Outcome:**
+
+- The bootstrap walkthrough and verification cover figures.
+- Analyze has a legacy-scaffold check for a missing `withDocsFigures` wrapper or `figures.css` import.
+- Skill versions: `oat-docs-bootstrap` 1.4.5 → 1.4.6, `oat-docs-analyze` 1.9.1 → 1.9.2.
+
+**Files changed:**
+
+- `.agents/skills/oat-docs-bootstrap/SKILL.md`
+- `.agents/skills/oat-docs-analyze/SKILL.md`
+- `.agents/skills/oat-docs-analyze/references/legacy-scaffold-checks.md`
+
+**Verification:** the skill contract tests passed (1272). `oat:validate-skills`, `pnpm lint`, `pnpm format` and `check:skill-bumps` passed.
 
 ### Task p04-t03: Update OAT docs, package instructions, READMEs and NOTICES
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e5f525af6
+
+**Outcome:**
+
+- The OAT Markdown Features page has a figure section with every fence; `documentation.md`, `check.md` and `file-locations.md` are updated.
+- The package `AGENTS.md` files and READMEs are updated, and `NOTICES.md` has the mdxcn MIT entry.
+- The release contract now requires the packed `figures.css` and the mdxcn notice in the vendored `dist` modules.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/contributing/markdown-features.md`
+- `apps/oat-docs/docs/contributing/documentation.md`
+- `apps/oat-docs/docs/docs-tooling/check.md`
+- `apps/oat-docs/docs/reference/file-locations.md`
+- `apps/oat-docs/AGENTS.md`
+- `apps/oat-docs/index.md` (generated)
+- `packages/docs-theme/AGENTS.md`
+- `packages/docs-theme/README.md`
+- `packages/docs-transforms/AGENTS.md`
+- `packages/docs-transforms/README.md`
+- `packages/cli/src/release/public-package-contract.ts`
+- `packages/cli/src/release/public-package-contract.test.ts`
+- `NOTICES.md`
+
+**Verification:**
+
+- Build and the release contract passed (30). `build:docs` ran fresh, and `docs:check` reports 0 errors and 776 warnings (unchanged).
+- **Release-contract negative control** against the real built `graph-frame.js`: the old contract accepted a missing module, a stripped copyright line and a pack without `figures.css`. The new contract rejects all three, and the valid control passes.
+- **Visual check** (implementer, Playwright with system Chrome against the static export): all eight figures were checked in light and dark mode at 1440px and 390px.
+  - Nothing is hidden and the page doesn't overflow. Compare and annotate scroll inside their frames.
+  - The console is clean.
+
+**Notes / Decisions:**
+
+- **Plain-text guidance:** it covers every plain-text surface in the component source: tree rows, check items, decision options, compare cells, tight step bodies, notes and timeline labels. Markdown survives only in loose step and timeline bodies, decision follow-up paragraphs and annotate notes.
+- **NOTICES:** the copyright and upstream commit `884eba5` were checked against the upstream LICENSE.
 
 ### Task p04-t04: Lockstep version bump and full Definition of Done gates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 342ae29a0
+
+**Outcome:**
+
+- All five public packages were bumped 0.3.53 → 0.3.54, and `public-package-versions.json` was regenerated.
+
+**Files changed:**
+
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`
+- `packages/cli/assets/public-package-versions.json`
+
+**Verification:** the Definition of Done gates at the final head `d4fe17878`:
+
+1. `pnpm check`: 0 (cache replay; the identical tree ran fresh just before).
+2. `pnpm type-check`: 0.
+3. `pnpm test`: 0 (cli 450 files; smoke 165, skills 754, scripts 7).
+4. `pnpm build`: 0 (cache replay).
+5. `check:skill-bumps`: 0.
+6. `release:check-versions`: 0, against `origin/main` `a5c28dca2` at 0.3.53.
+7. `release:validate`: 0 (all five 0.3.54 tarballs).
+8. `build:docs`: 0.
+9. Index freshness: 0.
+
+**Notes / Decisions:**
+
+- **Forced `pnpm test:evidence` exited 1** on two timeouts in `configured-gate.integration.test.ts`, at a machine load average of 38–80 from unrelated workloads.
+  - The implementer's isolated rerun passed 3/3.
+  - The root reran `configured-gate.integration.test.ts` and `docs/literals` at `d4fe17878`, at load ~20: 17/17 passed.
+  - The branch touches neither suite.
+- **Node:** the gates ran on Node v26.11.1, while `.nvmrc` pins 22.23.4. CI runs the pinned version.
+- **`.oat/sync/manifest.json`** still records `oatVersion: 0.3.53`. A branch-CLI sync reports no changes and no gate checks the field. It was left to sync tooling.
+
+### Recovery Event mdxcn-p04-rec-001
+
+- **Phase:** p04 (originating task p04-t03); **request:** mdxcn-p04-implementation-20261122; **attempt:** 1 of 10; **authorization:** phase-standing.
+- **Discovered by:** Definition of Done gate 9 (index regeneration, then `git diff --exit-code`).
+- **Defect (composition):** the Markdown Features description contained `docs-*`. The commit hook's `oxfmt` escaped it to `docs-\*`, so every regeneration differed from the committed index.
+- **Original commit:** `e5f525af6b99ffd382cebff91c445a99310a7766` (unchanged).
+- **Recovery commit:** `d4fe17878db97880c7248df0b1f28d4ede32d1f2`. It rewords the description to "figure fences" and regenerates the index.
+- **Disposition:** recovered. Gate 9 passes on the committed head.
+- **Root validation:** the original commit is unchanged, the recovery is in scope (p04-t03 files only), and the committed `completed` marker matches. The marker is cleared here, and `used_attempts: 1` is kept.
 
 ---
 
@@ -621,6 +729,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - run/v1 · request=mdxcn-p02-review-r1-20261121 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p03-implementation-20261121 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p03-review-r1-20261121 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-p04-implementation-20261122 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
