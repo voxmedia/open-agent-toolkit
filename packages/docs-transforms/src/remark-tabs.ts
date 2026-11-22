@@ -3,8 +3,51 @@ import type { Plugin } from 'unified';
 
 import { reparseMarkdown } from './reparse.js';
 
-/** Columns an indented code block strips from each line of tab content. */
+/**
+ * Virtual columns an indented code block strips from each line of tab
+ * content. A tab advances to the next multiple of this width, but it is one
+ * source character, so authored columns come from `prefixLength`.
+ */
 const INDENTED_CODE_WIDTH = 4;
+
+/**
+ * Source characters the indented-code prefix consumed on one line: spaces
+ * and tabs up to `INDENTED_CODE_WIDTH` virtual columns. A line that starts
+ * at column 1 never splits a tab, because tab stops fall on that width.
+ */
+function prefixLength(line: string): number {
+  let columns = 0;
+  let length = 0;
+  while (columns < INDENTED_CODE_WIDTH && length < line.length) {
+    const char = line[length];
+    if (char === ' ') columns += 1;
+    else if (char === '\t')
+      columns += INDENTED_CODE_WIDTH - (columns % INDENTED_CODE_WIDTH);
+    else break;
+    length += 1;
+  }
+  return length;
+}
+
+/**
+ * Authored start column of each line of an indented code block's value,
+ * read from the source the block was parsed from. Nested tabs compose: their
+ * source is the outer tab's value, which the outer origin relocates later.
+ */
+function lineColumnsOf(
+  codeBlock: Code,
+  source: string | undefined,
+): number[] | undefined {
+  const start = codeBlock.position?.start;
+  if (!start || source === undefined) return undefined;
+  const lines = source.split('\n');
+  return codeBlock.value
+    .split('\n')
+    .map(
+      (_, index) =>
+        start.column + prefixLength(lines[start.line - 1 + index] ?? ''),
+    );
+}
 
 const TAB_MARKER_RE = /^===\s+"(.+)"$/;
 
@@ -90,9 +133,10 @@ function transformChildren(
         const codeBlock = tree.children[i] as Code;
         const blockStart = codeBlock.position?.start;
         // Re-parse the code block value as markdown to restore original
-        // structure. The value is deindented by the indented-code width, so
-        // its first column sits four columns in from the block's start;
-        // reparsed tab content then reports authored lines and columns.
+        // structure. Each value line is relocated by the characters its own
+        // indented-code prefix consumed, so tab content reports authored
+        // lines and columns for space, tab and mixed indentation. Without
+        // the source, space indentation is assumed.
         content.push(
           ...reparseMarkdown(
             codeBlock.value,
@@ -100,6 +144,7 @@ function transformChildren(
               ? {
                   line: blockStart.line,
                   column: blockStart.column + INDENTED_CODE_WIDTH,
+                  lineColumns: lineColumnsOf(codeBlock, source),
                 }
               : undefined,
             transformChildren,

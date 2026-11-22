@@ -60,6 +60,33 @@ describe('reparseMarkdown', () => {
     expect(visited).toBeGreaterThan(5);
   });
 
+  it('relocates each value line by its own column when lineColumns is given', () => {
+    const children = reparseMarkdown('alpha\n\nbeta **b**', {
+      line: 3,
+      column: 5,
+      lineColumns: [5, 1, 2],
+    }) as unknown as PositionedNode[];
+
+    expect(children[0]!.position).toEqual({
+      start: { line: 3, column: 5 },
+      end: { line: 3, column: 10 },
+    });
+    expect(children[1]!.position).toEqual({
+      start: { line: 5, column: 2 },
+      end: { line: 5, column: 12 },
+    });
+    // A point on a line past the list falls back to `column`.
+    const tail = reparseMarkdown('a\nb', {
+      line: 1,
+      column: 5,
+      lineColumns: [2],
+    }) as unknown as PositionedNode[];
+    expect(tail[0]!.position).toEqual({
+      start: { line: 1, column: 2 },
+      end: { line: 2, column: 6 },
+    });
+  });
+
   it('leaves positions untouched when no origin is known', () => {
     const children = reparseMarkdown('text', undefined);
     expect(children[0]!.position).toEqual({

@@ -7,6 +7,12 @@ import { unified } from 'unified';
 export interface ReparseOrigin {
   line: number;
   column: number;
+  /**
+   * Authored column of each value line's first character (index 0 is value
+   * line 1), for a value whose lines were deindented by different amounts.
+   * A line without an entry uses `column`.
+   */
+  lineColumns?: readonly number[];
 }
 
 interface PositionedNode {
@@ -17,7 +23,8 @@ interface PositionedNode {
 /**
  * Parse `value` as GFM Markdown and relocate every node position so it
  * reports the authored physical location, given that the value's line 1,
- * column 1 sits at `origin`. `afterParse` runs on the parsed tree before
+ * column 1 sits at `origin` (or, per line, at `origin.lineColumns`).
+ * `afterParse` runs on the parsed tree before
  * relocation, so nodes it produces are relocated too.
  *
  * Internal to docs-transforms; not exported from the package index.
@@ -33,8 +40,10 @@ export function reparseMarkdown(
     const relocate = (node: PositionedNode): void => {
       if (node.position) {
         for (const point of [node.position.start, node.position.end]) {
+          const lineColumn =
+            origin.lineColumns?.[point.line - 1] ?? origin.column;
           point.line += origin.line - 1;
-          point.column += origin.column - 1;
+          point.column += lineColumn - 1;
           // Deindentation changes offsets; line/column remain authoritative.
           delete point.offset;
         }

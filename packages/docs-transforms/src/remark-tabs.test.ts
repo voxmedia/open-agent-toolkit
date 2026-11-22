@@ -21,7 +21,8 @@ interface JsxNode {
 async function transformTabs(markdown: string) {
   const processor = unified().use(remarkParse).use(remarkTabs);
   const tree = processor.parse(markdown);
-  const result = await processor.run(tree);
+  // Pass the source, as fumadocs-mdx does: tab columns are read from it.
+  const result = await processor.run(tree, markdown);
   return result;
 }
 
@@ -263,6 +264,51 @@ describe('remarkTabs', () => {
     ).toEqual({ line: 9, column: 5 });
   });
 
+  it('reports authored columns for tab and mixed indentation', async () => {
+    // A tab advances to the next 4-column stop but is one source character,
+    // so the column comes from the characters each line's prefix consumed.
+    const startOf = async (md: string, type: string) =>
+      (
+        findNodes(await transformTabs(md), type)[0] as unknown as {
+          position: { start: { line: number; column: number } };
+        }
+      ).position.start;
+
+    // `\talpha`: one tab consumes the indent; alpha is authored at column 2.
+    expect(await startOf('=== "T"\n\n\talpha', 'paragraph')).toEqual({
+      line: 3,
+      column: 2,
+    });
+    // `  \talpha`: two spaces and a tab; alpha is authored at column 4.
+    expect(await startOf('=== "T"\n\n  \talpha', 'paragraph')).toEqual({
+      line: 3,
+      column: 4,
+    });
+    // Two tab levels indented with tabs: alpha is authored at column 3.
+    expect(
+      await startOf('=== "Outer"\n\n\t=== "Inner"\n\n\t\talpha', 'text'),
+    ).toEqual({ line: 5, column: 3 });
+  });
+
+  it('relocates each line of one tab body by its own indentation', async () => {
+    const tree = await transformTabs(
+      ['=== "T"', '', '    alpha', '', '\tbeta'].join('\n'),
+    );
+    const starts = findNodes(tree, 'paragraph').map(
+      (n) =>
+        (
+          n as unknown as {
+            position: { start: { line: number; column: number } };
+          }
+        ).position.start,
+    );
+
+    expect(starts).toEqual([
+      { line: 3, column: 5 },
+      { line: 5, column: 2 },
+    ]);
+  });
+
   it('reports the authored column for an unknown docs fence inside a tab', async () => {
     const md = [
       '=== "Outer"',
@@ -277,7 +323,7 @@ describe('remarkTabs', () => {
       .use(remarkParse)
       .use(remarkTabs)
       .use(remarkDocsFences);
-    const error = await processor.run(processor.parse(md)).then(
+    const error = await processor.run(processor.parse(md), md).then(
       () => undefined,
       (reason: unknown) => reason as { line?: number; column?: number },
     );
