@@ -852,7 +852,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ### Task p04-t15: (review) Keep synced brainstorm publication behind an explicit push agreement
 
-**Status:** pending
+**Status:** in_progress
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-1)
 
 Intent: `.agents/skills/oat-brainstorm/SKILL.md:841-853` enters the persistence block when the agreement allows a commit or a push, and the synced branch always runs `oat project push`, so a commit-only agreement publishes `refs/oat/projects/<slug>`. Distinguish permission to commit from permission to publish; with publication deferred, commit locally in the nested worktree and leave the remote ref unchanged. Class: accepted-requirement (plan.md Outcome 6, p02 Intent, Constraint: `shape.md` controls commits and pushes after creation).
@@ -861,16 +861,18 @@ Proof: a published-block test against a scratch origin where a commit-only agree
 
 ### Task p04-t16: (review) Resolve the repository root in the freestyle Create and Resume blocks
 
-**Status:** pending
+**Status:** in_progress
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-2)
 
 Intent: `.agents/skills/oat-project-freestyle/SKILL.md:146` runs `oat project new` in the caller's directory (`project/new/index.ts:161` scaffolds at `context.cwd`), so a subdirectory run creates `<subdir>/.oat/...`; the resume check at `:120` compares two failed `cd` results as equal and continues. Establish the repository root before both Step 1 blocks and require each directory resolution to succeed before comparing. Class: accepted-requirement (plan.md Outcomes 1 and 6, p02 Intent, operator-approved target verification at p04-t10).
 Files: `.agents/skills/oat-project-freestyle/SKILL.md`, its contract test.
 Proof: verbatim-block tests from a real subdirectory with the built CLI for Create and Resume; can-fail per block.
+**Narrowed (2026-11-22, operator):** Resume half only. Require each directory in the Step 1 Resume pointer check (~:120, added in p04-t10) to resolve to a non-empty path before comparing, and stop otherwise; class regression (the check passes on the failure it exists to catch). The Create half (scaffold relative to the current directory) is deferred; see Deferred Findings. Proof: the verbatim Resume block stops when neither path resolves (for example from a subdirectory) and still passes at the repository root; can-fail.
 
 ### Task p04-t17: (review) Resolve the active project from the repository root in brainstorm detection
 
-**Status:** pending
+**Status:** cancelled
+**Cancelled:** 2026-11-22, operator decision after root re-assessment: the detection check at `oat-brainstorm/SKILL.md:238` predates this branch (`417eb2e97`) and fails from a subdirectory in every mode, so it is not a freestyle defect. Moved to Deferred Findings and the follow-up issue.
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-3)
 
 Intent: `.agents/skills/oat-brainstorm/SKILL.md:238` tests the repo-relative `activeProject` against the current directory, so from a subdirectory `ACTIVE_PROJECT_VALID=false` and the freestyle handoff is skipped. Resolve against the repository root and keep the resolved path for writing the reference. Class: accepted-requirement (plan.md Outcome 6, p02 brainstorm detour).
@@ -879,7 +881,7 @@ Proof: the detection block selects the same project from the root and from a sub
 
 ### Task p04-t18: (review) Show the pull instruction for an active unpulled synced project
 
-**Status:** pending
+**Status:** in_progress
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-4)
 
 Intent: `packages/cli/src/commands/project/status.ts:312` returns the generic missing-project error before the unmaterialized synced-record classifier, so default `oat project status` reports `missing` where `--project-path` returns `oat project pull`. Try the classifier when the active path is missing; keep the error for genuinely missing projects. Class: accepted-requirement (plan.md Outcome 1).
@@ -888,7 +890,8 @@ Proof: default and explicit status agree on a fresh clone with a valid record; a
 
 ### Task p04-t19: (review) Read freestyle lifecycle in the dashboard from the parsed state
 
-**Status:** pending
+**Status:** cancelled
+**Cancelled:** 2026-11-22, operator decision after root re-assessment: the LF-only lifecycle reader at `state/generate.ts:242` predates this branch (`11f41ae88`) for every mode, and a CRLF `state.md` is an unobserved failure mode; severity re-rated Low. Moved to Deferred Findings and the follow-up issue.
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-5)
 
 Intent: `packages/cli/src/commands/state/generate.ts:242` reads `oat_lifecycle` (and pause fields) with the LF-only reader while `:259` detects freestyle with the CRLF-aware parser, so a CRLF paused freestyle project loses its lifecycle row and `oat project open` next step. Read them from the same parsed state. Class: accepted-requirement (plan.md Outcome 1; accepted p01 L2 deviation).
@@ -897,7 +900,7 @@ Proof: LF and CRLF paused freestyle render the same lifecycle row and next step;
 
 ### Task p04-t20: (review) Limit the kickoff local-scope rule to project records
 
-**Status:** pending
+**Status:** in_progress
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-6)
 
 Intent: `.agents/skills/oat-project-freestyle/references/kickoff.md:184` says a local project "commits nothing, whatever this section says about code". Say that local-scope project records stay uncommitted and the agreed shape governs code commits. Class: accepted-requirement (plan.md Decisions "Records branch" and "Single writer", Outcome 7).
@@ -987,6 +990,8 @@ Review-cycle count for m01 integrated: 1 of 3. The six `m01-code-review-*` artif
 
 **Outcome:** fixes queued: p04-t15, p04-t16, p04-t17, p04-t18, p04-t19, p04-t20. Late-fix rule: no later phase has a `**Base:**`, so the records land in p04 (status back to `in_progress`, base unchanged). m01 exit carrier marked stale; the exit gate substitute runs again before the next integrated review.
 
+**Re-assessment (2026-11-22, operator-approved):** the first pass classed all six accepted-requirement without checking which commit introduced each defect. Root re-checked with `git blame` against the branch base `a5c28dca2`. Revised classes: I-2 split, Resume half regression (the p04-t10 pointer check passes on two failed `cd`s), Create half new-hardening (pre-existing cross-mode `oat project new` cwd behavior; no contract names subdirectory invocation) · I-3 new-hardening (detection at `oat-brainstorm/SKILL.md:238` predates the branch, `417eb2e97`, every mode) · I-5 new-hardening, re-rated Low (LF-only lifecycle reader predates the branch, `11f41ae88`; CRLF `state.md` unobserved). I-1, I-4 and I-6 unchanged. Revised outcome: fixes p04-t15, p04-t16 (narrowed to the Resume half), p04-t18, p04-t20; p04-t17 and p04-t19 cancelled; I-2 Create half, I-3 and I-5 deferred by the operator.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -994,6 +999,7 @@ Review-cycle count for m01 integrated: 1 of 3. The six `m01-code-review-*` artif
 - p02 review round 1 L5: `oat project status` exits 1 on a corrupt synced record while `list` shows a `restore record from Git` row (`packages/cli/src/commands/project/status.ts:94`). Never a lifecycle recommendation; existing failure posture. Deferred by root (agent authority over phase acceptance); trigger: p04, align status with list's row or document the difference.
 - p02 review round 2 L1-L3 (`.agents/skills/oat-project-freestyle/SKILL.md`): the Resume path bullet does not say a named project wins over an active freestyle project (~:97); the unpulled synced case names no detection command (~:99-101; safe, `oat project new` refuses the duplicate); Success Criteria lists two resume triggers where Step 2 has three (~:199-200). Deferred by root; trigger: p04 skill-prose pass (no extra version bump, the skill is new in this PR).
 - m01 review round 4 R4-3 (`m01-code-review-2026-11-22T055500Z.md`; class new-hardening, Low): in `oat-project-implement` Step 0, an empty or malformed `oat_workflow_mode` on a synced ref reads as the legacy spec-driven default, so arrival continues instead of stopping. Deferred by root to the follow-up issue; the implement skill is unchanged in m01. Trigger: the freestyle follow-up issue.
+- m01 integrated review I-2 Create half, I-3 and I-5 (`reviews/archived/m01-integrated-review-2026-11-22T134403Z.md`; class new-hardening): running OAT skills from a repository subdirectory (`oat project new` scaffolds at the current directory in every mode and only `oat-project-quick-start` resolves the repository root; brainstorm's active-project test at `oat-brainstorm/SKILL.md:238` is cwd-relative in every mode), and the dashboard's LF-only lifecycle reader under a CRLF `state.md` (`state/generate.ts:242`). All three predate the branch and are cross-mode. Deferred by the operator on 2026-11-22. Trigger: the freestyle follow-up issue (subdirectory support across project skills; CRLF frontmatter reading).
 
 ## Deviations from Plan / Design
 
