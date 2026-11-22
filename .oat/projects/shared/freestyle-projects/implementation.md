@@ -1014,13 +1014,30 @@ Proof: executable Step 0 tests per skill (freestyle here, freestyle from the ref
 
 ### Task p04-t23: (review) Give the pull instruction in the dashboard for an unpulled synced project
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** df598d4e2b6aa30099ed7e4012b7e74a26dda52a
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-2 case A)
 
 Intent: `state/generate.ts` (~:445) recommends `oat-project-open` and reports the directory missing for an active synced project not yet pulled, while `oat project status` gives `oat project pull <slug>`. Use the same unpulled-project resolution `status` uses (p04-t18) so the dashboard shows only the storage instruction. Class: accepted-requirement for freestyle (Outcome 1: the dashboard recommends nothing; an unpulled synced project shows only the storage instruction); the resolution is mode-agnostic, as in `status`. Case B (archived from another checkout) is deferred. Operator: fix A in m01 with no further review rounds.
 Files: `packages/cli/src/commands/state/generate.ts`, its tests, docs if they describe the dashboard row.
 Proof: dashboard tests for an unpulled synced project (freestyle and quick), a genuinely missing project unchanged, can-fail.
+
+- **J-2 case A:** `resolveUnpulledSyncedProject` moved out of `status.ts` into `packages/cli/src/commands/project/unpulled-synced.ts`, with optional `env` and `gitRunner`. `status` and the dashboard call the same function.
+  - When the active project's directory is missing and no terminal route applies, `generateStateDashboard` tries it. An active synced project recorded on this branch but not pulled here now shows `checkout absent` and the next step `oat project pull <slug>`, with status's reason, in every mode.
+  - A project with no record keeps `directory missing` and `oat-project-open`.
+  - If the classifier cannot read a record, the dashboard keeps the missing-directory row, so the commands that regenerate the dashboard do not start failing.
+  - Case B, at the terminal-route block, is unchanged. `cli-reference.md` says the dashboard gives the same next step.
+- **Tests (`generate.test.ts`):** a fresh-clone case for freestyle and for quick. A second clone scaffolds and publishes the synced project with the built CLI and pushes its record, and the first clone pulls the branch.
+  - Default `oat project status` returns `oat project pull`; the dashboard's next step is `oat project pull proj` with the same reason and status `checkout absent`; the dashboard has no `oat-project-open` or `directory missing`.
+  - An active synced project with no record and no ref keeps `directory missing` and `oat-project-open`.
+- **Can-fail**, each neutralized, failing on its own test, then restored and byte-compared:
+  - Disabling the dashboard branch fails both fresh-clone cases (`oat-project-open`).
+  - Claiming the pull step without a record fails the no-record case (`oat project pull never-recorded`).
+- Proof before the commit, each exit 0:
+  - The cli build.
+  - vitest over `src/commands/state`, project open, pause, new, cleanup, split, `status.test.ts` and `list.integration.test.ts` (21 files, 352 passed).
+  - cli `tsc --noEmit`, the cli `lint` script, `oxfmt --check`, and markdownlint on `cli-reference.md`.
 
 ### Task p04-t24: (review) Add the synced push step to the freestyle closeout
 
