@@ -10266,6 +10266,45 @@ describe('freestyle mode skill contracts', () => {
     });
   });
 
+  it('the freestyle completion sequence pushes a synced project between complete-state and archive (m01 J-3)', async () => {
+    // Archive refuses a dirty synced project, so the documented sequence
+    // must name the push between the two commands that bracket it.
+    const sites = [
+      {
+        path: '.agents/skills/oat-project-complete/SKILL.md',
+        anchor: 'freestyle project. When `shape.md`',
+      },
+      {
+        path: 'apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md',
+        anchor: 'A freestyle project has no closeout sequence',
+      },
+    ];
+    for (const site of sites) {
+      const content = await readRawRepoFile(site.path);
+      const at = content.indexOf(site.anchor);
+      expect(at, `${site.path} freestyle completion anchor`).toBeGreaterThan(0);
+      const passage = content
+        .slice(at, content.indexOf('\n\n', at))
+        .replace(/\s+/g, ' ');
+      const completeState = passage.indexOf(
+        '`oat project complete-state <project-path>`',
+      );
+      const push = passage.indexOf('`oat project push <project-path>`');
+      const archive = passage.indexOf('`oat project archive <project-path>`');
+      expect(completeState, `${site.path} complete-state`).toBeGreaterThan(-1);
+      expect(push, `${site.path} push after complete-state`).toBeGreaterThan(
+        completeState,
+      );
+      expect(archive, `${site.path} archive after push`).toBeGreaterThan(push);
+      expect(passage, `${site.path} push is synced-only`).toContain(
+        'for a synced project, `oat project push <project-path>`',
+      );
+      expect(passage, `${site.path} push follows shape.md`).toContain(
+        'subject to the publication agreement in `shape.md`',
+      );
+    }
+  });
+
   describe('implement Step 0 reads the mode before the synced pull', () => {
     async function arrivalBlock(): Promise<string> {
       const implement = await readRepoFile(

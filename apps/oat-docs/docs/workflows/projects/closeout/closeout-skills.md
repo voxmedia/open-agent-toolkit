@@ -15,8 +15,11 @@ proposals. Completion finalizes lifecycle state and any selected archive work.
 A freestyle project has no closeout sequence: summary, document, PR, revise
 and complete each stop for it before writing anything. When its `shape.md`
 done criteria are met, `oat project complete-state <project-path>` marks it
-complete (it needs no closeout snapshot or journal) and
-`oat project archive <project-path>` archives it; pull requests open as
+complete (it needs no closeout snapshot or journal); for a synced project,
+`oat project push <project-path>` then publishes the completed state, subject
+to the publication agreement in `shape.md`; and
+`oat project archive <project-path>` archives it. Archive refuses a synced
+project with unpushed changes. Pull requests open as
 `shape.md` agrees.
 
 When no closeout sequence is stored for the project, finish it in this order:

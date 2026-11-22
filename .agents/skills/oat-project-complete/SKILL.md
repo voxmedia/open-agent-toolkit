@@ -261,8 +261,10 @@ gates (final review, summary, documentation sync, PR) belong to the lifecycle
 modes, and a freestyle project has none of them. Tell the user: "This is a
 freestyle project. When `shape.md`'s done criteria are met,
 `oat project complete-state <project-path>` marks it complete (it needs no
-closeout snapshot or journal) and `oat project archive <project-path>` archives
-it."
+closeout snapshot or journal); for a synced project,
+`oat project push <project-path>` then publishes the completed state, subject to
+the publication agreement in `shape.md`; and
+`oat project archive <project-path>` archives it."
 
 ### Step 1.5: Closeout Invariant Gate
 
