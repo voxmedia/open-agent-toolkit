@@ -154,7 +154,7 @@ A `docs-*` fence draws a framed figure from ordinary Markdown in its body. GitHu
 
 - **State in words:** bold and italic set a figure's state (current, next, chosen, rejected), but agents and GitHub readers see only the source. Never let emphasis carry an important state alone; write it in the text too, for example `**brainstorming (current)**`.
 - **Plain-text rows:** figure rows are plain text. Links and inline code lose their formatting in step titles and tight step bodies (`Title — body`), tree rows, timeline labels, check items, decision options, every `— note` and compare cells. Put a link in a loose step body, a loose timeline item's body, a decision's follow-up paragraph, an annotate note, or a paragraph after the figure.
-- **No nesting:** figures may sit inside tabs, but a `docs-*` fence inside a figure body fails the build (`nested-docs-fence`). The docs checker checks fence names at the top level and inside tabs only, so the build is what catches a nested one.
+- **No nesting:** figures may sit inside tabs, but a `docs-*` fence inside a figure body fails the build (`nested-docs-fence`). The docs checker checks fence names everywhere except inside a figure body, so the build is what catches a nested one.
 - **Four backticks:** write `docs-annotate` with a four-backtick outer fence so its inner code fence survives.
 
 ### Steps
