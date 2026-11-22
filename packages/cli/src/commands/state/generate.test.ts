@@ -723,6 +723,52 @@ describe('generateStateDashboard', () => {
     );
   });
 
+  it('reads a quoted or commented freestyle mode from the parsed YAML in the summary and the project list', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/free';
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: '"freestyle"',
+    });
+    await writeStateFile(root, '.oat/projects/shared/other-free', {
+      oat_workflow_mode: "'freestyle' # no lifecycle",
+    });
+    // Control: a quick project whose body shows a freestyle example in a fence
+    // keeps its phase line.
+    const quickPath = join(root, '.oat/projects/shared/quick-fence');
+    await mkdir(quickPath, { recursive: true });
+    await writeFile(
+      join(quickPath, 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_workflow_mode: quick',
+        '---',
+        '',
+        '```yaml',
+        'oat_workflow_mode: freestyle',
+        '```',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('none');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Mode | freestyle |');
+    expect(dashboard).not.toContain('| Phase |');
+    expect(dashboard).toContain('**free** - freestyle');
+    expect(dashboard).toContain('**other-free** - freestyle');
+    expect(dashboard).toContain('**quick-fence** - implement');
+  });
+
   it('still resumes a paused freestyle project through project open', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

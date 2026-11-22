@@ -125,7 +125,10 @@ Notable commands introduced in the current CLI surface:
   `project-log.md` when the project log is enabled), and no document
   templates; the output names `AGENTS.md` and `shape.md` and points to
   `oat-project-freestyle`, which runs this command and shapes the project with
-  you (`--json` adds `projectFiles` and `nextSkill`). See
+  you (`--json` adds `projectFiles` and `nextSkill`). Rerunning `project new`
+  for an existing project in the same scope with a different mode, where one
+  side is `freestyle`, is refused before any write, even with `--force`: there
+  is no promotion to or from freestyle. A same-mode rerun behaves as before. See
   [Lifecycle](../workflows/projects/lifecycle.md) for the per-lane flow. Without
   `--scope`, creation uses
   `projects.defaultScope`, which defaults to `synced`. Project slugs are

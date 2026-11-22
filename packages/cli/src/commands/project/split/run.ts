@@ -6,6 +6,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { readStateWorkflowMode } from '@commands/project/closeout-check/closeout-invariant';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { pushSynced as defaultPushSynced } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
@@ -217,6 +218,17 @@ async function isActiveDetectedParentProject(
   );
 }
 
+/** Whether the project at `projectPath` records `oat_workflow_mode: freestyle`. */
+async function isFreestyleProject(projectPath: string): Promise<boolean> {
+  let content: string;
+  try {
+    content = await readFile(join(projectPath, 'state.md'), 'utf8');
+  } catch {
+    return false;
+  }
+  return readStateWorkflowMode(content) === 'freestyle';
+}
+
 async function runFreshSplit(
   document: SplitPlanDocument,
   repoRoot: string,
@@ -376,6 +388,19 @@ export function createProjectSplitRunCommand(
             } else {
               throw error;
             }
+          }
+
+          if (
+            convertActiveDetectedParent &&
+            (await isFreestyleProject(absoluteParentPath))
+          ) {
+            // Converting rewrites the parent as a quick coordination project
+            // and removes its lifecycle files: a promotion from freestyle,
+            // which OAT does not offer. Refuse before any scaffold or removal.
+            throw new CliError(
+              `Project ${document.plan.parentSlug} is a freestyle project; split cannot convert it into a coordination parent (there is no promotion from freestyle). Name a new parent slug in the split plan instead.`,
+              1,
+            );
           }
 
           if (convertActiveDetectedParent) {

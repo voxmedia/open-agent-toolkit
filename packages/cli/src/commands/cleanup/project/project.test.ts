@@ -172,6 +172,11 @@ describe('stateIsFreestyle', () => {
     expect(stateIsFreestyle('---\noat_workflow_mode: "freestyle\n---')).toBe(
       false,
     );
+    expect(
+      stateIsFreestyle(
+        '---\noat_workflow_mode: quick\n---\n\n```yaml\noat_workflow_mode: freestyle\n```\n',
+      ),
+    ).toBe(false);
   });
 });
 
@@ -292,12 +297,35 @@ describe('cleanup project drift scanning', () => {
       );
     }
 
+    // Regression control: a quick project whose state body shows a freestyle
+    // example in a fence is still a quick project and keeps its repair.
+    const quickDir = join(root, '.oat', 'projects', 'shared', 'quick-fence');
+    await mkdir(quickDir, { recursive: true });
+    await writeFile(join(quickDir, 'plan.md'), plan, 'utf8');
+    await writeFile(
+      join(quickDir, 'state.md'),
+      [
+        '---',
+        'oat_workflow_mode: quick',
+        '---',
+        '',
+        '```yaml',
+        'oat_workflow_mode: freestyle',
+        '```',
+      ].join('\n'),
+      'utf8',
+    );
+
     const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
     const updated = payload.actions
       .filter((action) => action.type === 'update')
-      .map((action) => action.target);
+      .map((action) => action.target)
+      .sort();
 
-    expect(updated).toEqual(['.oat/projects/shared/spec/state.md']);
+    expect(updated).toEqual([
+      '.oat/projects/shared/quick-fence/state.md',
+      '.oat/projects/shared/spec/state.md',
+    ]);
   });
 
   it('apply clears invalid active project pointer', async () => {

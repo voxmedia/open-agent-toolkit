@@ -223,6 +223,38 @@ export function getFrontmatterBlock(content: string): string | null {
   return match?.[1] ?? null;
 }
 
+/**
+ * The `oat_workflow_mode` a `state.md` declares in its parsed YAML frontmatter
+ * (so quotes and trailing comments are handled and body text is never read),
+ * or null when the content has no frontmatter block, the block is not a YAML
+ * map, or the field is absent or not a string.
+ */
+export function parseStateWorkflowMode(content: string): string | null {
+  const block = getFrontmatterBlock(content);
+  if (block === null) return null;
+  try {
+    const value: unknown = YAML.parse(block);
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+      return null;
+    }
+    const mode = (value as Record<string, unknown>)['oat_workflow_mode'];
+    return typeof mode === 'string' ? mode : null;
+  } catch {
+    return null;
+  }
+}
+
+/** {@link parseStateWorkflowMode} for a file; null when it cannot be read. */
+export async function readStateWorkflowModeFile(
+  filePath: string,
+): Promise<string | null> {
+  try {
+    return parseStateWorkflowMode(await readFile(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 export function getFrontmatterField(
   frontmatter: string,
   field: string,

@@ -13,6 +13,7 @@ import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
 import {
   getFrontmatterBlock,
   parseFrontmatterField,
+  readStateWorkflowModeFile,
 } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveScopeRoot } from '@commands/shared/project-scope';
@@ -251,9 +252,14 @@ async function readProjectState(
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
   const { checkpoints: hillCheckpoints, completed: hillCompleted } =
     await readHillLists(stateFile);
+  // A freestyle project is recognized from the parsed YAML, as `status` does,
+  // so a quoted or commented declaration still reads as freestyle. Other
+  // modes keep the line reading they always had.
   const workflowMode =
-    (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
-    'spec-driven';
+    (await readStateWorkflowModeFile(stateFile)) === 'freestyle'
+      ? 'freestyle'
+      : (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
+        'spec-driven';
   const docsUpdatedRaw = await parseFrontmatterField(
     stateFile,
     'oat_docs_updated',
@@ -726,8 +732,7 @@ async function listAvailableProjects(
           'implementation';
         // A freestyle project has no phase; its mode identifies it instead.
         const freestyle =
-          (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ===
-          'freestyle';
+          (await readStateWorkflowModeFile(stateFile)) === 'freestyle';
         const line = `- **${dir.name}** - ${freestyle ? 'freestyle' : phase}`;
         if (isTerminalCoordinationProject(kind, phase, phaseStatus)) {
           decompositions.push(line);

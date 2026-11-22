@@ -17,6 +17,7 @@ import {
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { findProjectLogEntryByIdempotencyKey } from './append';
 import { checkProjectLog, parseProjectLogEntries } from './check';
 import { parseProjectLogStructuralHead } from './grammar';
 import { createProjectLogCommand } from './index';
@@ -299,6 +300,52 @@ describe('project log on a freestyle project, by path', () => {
   });
 });
 
+describe('idempotency identity of stored entries', () => {
+  const log = [
+    '# Project Log',
+    '',
+    '### 2026-07-17 · project · friction · review',
+    '',
+    '**Source:** gate-k1',
+    '',
+    'The gate was slow.',
+    '',
+    '### 2026-07-17 · structural · orchestrator · launched',
+    '',
+    '**Subject:** done-l07',
+    '',
+    'Launched lane 7.',
+    '',
+    '### 2026-07-17 · structural · orchestrator · merged',
+    '',
+    'Merged PR #12; merge-k2',
+    '',
+  ].join('\n');
+
+  it("skips a structural entry's parsed event head but reads its body", () => {
+    expect(
+      findProjectLogEntryByIdempotencyKey(
+        log,
+        'done-l07',
+        'Completed done-l07',
+      ),
+    ).toBeUndefined();
+    expect(
+      findProjectLogEntryByIdempotencyKey(
+        log,
+        'merge-k2',
+        'Merged PR #12; merge-k2',
+      ),
+    ).toBe('### 2026-07-17 · structural · orchestrator · merged');
+  });
+
+  it("keeps reading a judgment entry's head lines, Source included, as before", () => {
+    expect(
+      findProjectLogEntryByIdempotencyKey(log, 'gate-k1', 'Retry gate-k1'),
+    ).toBe('### 2026-07-17 · project · friction · review');
+  });
+});
+
 describe('structural event fields', () => {
   const tempDirs: string[] = [];
   let originalExitCode: number | undefined;
@@ -473,6 +520,63 @@ describe('structural event fields', () => {
     expect(
       parseProjectLogEntries(await readFile(logPath, 'utf8')).entries,
     ).toHaveLength(1);
+  });
+
+  it("does not read a key named in another entry's event head as a prior append", async () => {
+    // The launch entry names `done-l07` only as its subject; the completion
+    // append keyed `done-l07` is a different event and must be written.
+    const { root, projectPath, logPath } = await createProject();
+    const launch = createHarness(root, new Date('2026-07-17T14:00:00.000Z'));
+    await run(launch.command, 'append', [
+      '--project',
+      projectPath,
+      '--structural',
+      '--producer',
+      'orchestrator',
+      '--ref',
+      'launched',
+      '--subject',
+      'done-l07',
+      '--body',
+      'Launched lane 7.',
+    ]);
+    expect(process.exitCode).toBe(0);
+    const completionArgs = [
+      '--project',
+      projectPath,
+      '--structural',
+      '--producer',
+      'orchestrator',
+      '--ref',
+      'completed',
+      '--idempotency-key',
+      'done-l07',
+      '--body',
+      'Completed lane 7: done-l07',
+    ];
+    const completion = createHarness(
+      root,
+      new Date('2026-07-17T15:00:00.000Z'),
+    );
+    await run(completion.command, 'append', completionArgs);
+    expect(process.exitCode).toBe(0);
+    expect(completion.capture.jsonPayloads).toEqual([
+      expect.objectContaining({ status: 'appended' }),
+    ]);
+    // Control: replaying the completion itself is still recognized.
+    const replay = createHarness(root, new Date('2026-07-17T15:05:00.000Z'));
+    await run(replay.command, 'append', completionArgs);
+    expect(replay.capture.jsonPayloads).toEqual([
+      expect.objectContaining({ status: 'already-appended' }),
+    ]);
+    expect(
+      parseProjectLogEntries(await readFile(logPath, 'utf8')).entries.map(
+        (entry) => entry.heading,
+      ),
+    ).toEqual([
+      '### 2026-07-17 · structural · orchestrator · launched',
+      '### 2026-07-17 · structural · orchestrator · completed',
+    ]);
   });
 
   it.each([

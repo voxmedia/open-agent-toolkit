@@ -2340,6 +2340,17 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     ],
   },
 
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Freestyle Projects',
+    match:
+      'with `oat-project-clear-active`, then run `oat-project-quick-start` again',
+    classification: 'non-executing',
+    skills: ['oat-project-clear-active', 'oat-project-quick-start'],
+    reason:
+      'Tells the user how to start a new quick project after the freestyle stop; this skill invokes neither.',
+  },
+
   // --------------------------------------------------------------- import-plan
   {
     file: '.agents/skills/oat-project-import-plan/SKILL.md',

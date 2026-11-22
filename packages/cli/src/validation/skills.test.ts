@@ -2226,7 +2226,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.12',
+        version: '2.3.13',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -2244,7 +2244,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.27',
+        version: '2.3.28',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2920,9 +2920,12 @@ describe('validateOatSkills', () => {
     // `metadata.version` migration, which moves the frontmatter version under a
     // `metadata:` key and so costs every bundled skill exactly one line.
     // Raised again from 246 for root-judgment logging, which joins the
-    // append points the entry lists for the same reason. The structural
-    // assertions below still enforce that step bodies stay out of the entry.
-    expect(entry.split('\n').length).toBeLessThanOrEqual(251);
+    // append points the entry lists for the same reason. Raised again from
+    // 251 for the freestyle stop, which must run in Step 0 before the route
+    // table loads dispatch preflight (a route that can write `state.md`), so
+    // it cannot live in a reference. The structural assertions below still
+    // enforce that step bodies stay out of the entry.
+    expect(entry.split('\n').length).toBeLessThanOrEqual(266);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -3389,7 +3392,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.12'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.17'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.20'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.27'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.28'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -5196,7 +5199,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-review-provide', '1.5.21'],
       ['oat-project-review-receive', '1.6.19'],
-      ['oat-project-review-receive-remote', '1.5.6'],
+      ['oat-project-review-receive-remote', '1.5.7'],
       ['oat-project-implement', '2.3.31'],
       ['oat-project-pr-final', '1.6.20'],
       ['oat-project-pr-progress', '1.3.12'],
@@ -6615,7 +6618,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-plan', '1.4.24'],
-      ['oat-project-quick-start', '2.3.27'],
+      ['oat-project-quick-start', '2.3.28'],
       ['oat-project-import-plan', '1.4.26'],
       ['oat-project-lite', '1.1.16'],
       ['oat-project-review-provide', '1.5.21'],
@@ -7665,7 +7668,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.27');
+    expect(readDeclaredVersion(content)).toBe('2.3.28');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -7718,7 +7721,7 @@ describe('validateOatSkills', () => {
     expect(
       readDeclaredVersion(skillContent),
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toBe('2.3.12');
+    ).toBe('2.3.13');
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -9497,8 +9500,24 @@ describe('freestyle mode skill contracts', () => {
         /- freestyle project: no lifecycle skill continues it/,
       ],
       [
-        '.agents/skills/oat-project-implement/references/plan-and-resume.md',
-        /### Freestyle Projects\s+When `state\.md` records `oat_workflow_mode: freestyle`, stop before Step 1/,
+        '.agents/skills/oat-project-implement/SKILL.md',
+        /\*\*Freestyle projects\.\*\*[^]*?When `WORKFLOW_MODE` is `freestyle`, stop here and write nothing/,
+      ],
+      [
+        '.agents/skills/oat-project-design/SKILL.md',
+        /If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy/,
+      ],
+      [
+        '.agents/skills/oat-project-spec/SKILL.md',
+        /If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy/,
+      ],
+      [
+        '.agents/skills/oat-project-quick-start/SKILL.md',
+        /When `TARGET_MODE` is `freestyle`, stop before any write[^]*?promotion from freestyle is not supported/,
+      ],
+      [
+        '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+        /records `oat_workflow_mode: freestyle`:\*\* stop\s+here, before the validation below, the PR fetch and any write/,
       ],
       [
         '.agents/skills/oat-project-autonomous/SKILL.md',
@@ -9611,6 +9630,56 @@ describe('freestyle mode skill contracts', () => {
           '### Step 3: Normalize Into Canonical OAT plan.md',
         ],
       ],
+      [
+        '.agents/skills/oat-project-quick-start/SKILL.md',
+        'When `TARGET_MODE` is `freestyle`, stop before any write',
+        [
+          '### Step 0 (Preflight): Inherited Git State',
+          'oat project new "{project-name}" --mode quick',
+          '### Step 1: Set Quick Workflow Metadata',
+        ],
+      ],
+      [
+        // Dispatch preflight can write state.md, so the stop sits in Step 0,
+        // before the route table loads its first reference.
+        '.agents/skills/oat-project-implement/SKILL.md',
+        'When `WORKFLOW_MODE` is `freestyle`, stop here and write nothing',
+        [
+          '### Route Loading Contract',
+          '| `references/dispatch-and-dry-run.md`',
+          '### Execution Order',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-design/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy',
+        [
+          '### Step 1: Check Specification Complete',
+          '### Step 2: Requirements Confirmation (folded spec authoring)',
+          'oat template resolve',
+          'oat internal commit-paths --identity',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-spec/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy',
+        [
+          '### Step 1: Check Discovery Complete',
+          'oat template resolve spec --output',
+          'oat internal commit-paths --identity',
+        ],
+      ],
+      [
+        '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+        'records `oat_workflow_mode: freestyle`:** stop',
+        [
+          'Validation:',
+          '### Step 1: Resolve PR Number',
+          'npx agent-reviews --json --unresolved',
+          'reviews/archived/remote-pr-',
+          'oat internal commit-paths --identity',
+        ],
+      ],
     ];
 
     for (const [path, stop, later] of checks) {
@@ -9652,6 +9721,51 @@ describe('freestyle mode skill contracts', () => {
       promptedStop,
       'import-plan: prompted-name stop before the pointer write',
     ).toBeLessThan(pointerWrite);
+
+    // quick-start scaffolds a named project, so that branch checks an
+    // existing project's mode before `oat project new` runs.
+    const quickStart = await readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const quickBranch = quickStart.indexOf(
+      'If no valid active project exists:',
+    );
+    const namedStop = quickStart.indexOf(
+      'If `TARGET_MODE` is `freestyle`, stop here, before the scaffold below',
+      quickBranch,
+    );
+    const scaffold = quickStart.indexOf(
+      'oat project new "{project-name}" --mode quick',
+      quickBranch,
+    );
+    expect(quickBranch, 'quick-start Step 0.5 branch').toBeGreaterThan(0);
+    expect(namedStop, 'quick-start named-project stop').toBeGreaterThan(
+      quickBranch,
+    );
+    expect(
+      namedStop,
+      'quick-start: named-project stop before the scaffold',
+    ).toBeLessThan(scaffold);
+
+    // A project resolved by name in Step 0 is checked before its pointer is
+    // written, in each skill whose stop follows that write in the text.
+    for (const path of [
+      '.agents/skills/oat-project-implement/SKILL.md',
+      '.agents/skills/oat-project-design/SKILL.md',
+      '.agents/skills/oat-project-spec/SKILL.md',
+    ]) {
+      const content = await readRepoFile(path);
+      const guard = content.indexOf(
+        'Run the freestyle check below on it first; a freestyle project stops there,',
+      );
+      const write = content.indexOf(
+        'oat config set activeProject "$PROJECT_PATH"',
+      );
+      expect(guard, `${path} pointer-write guard`).toBeGreaterThan(0);
+      expect(guard, `${path}: guard before the pointer write`).toBeLessThan(
+        write,
+      );
+    }
   });
 
   it('makes reviewer and implementer contracts name freestyle', async () => {

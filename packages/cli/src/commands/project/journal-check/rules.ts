@@ -662,9 +662,17 @@ export function checkFreestyleRecords(
     }
   }
 
-  for (const blocks of groupTasks(context.journal.tasks).values()) {
+  // A record is validated when the section that holds it is: the coverage
+  // report validates and skips sections, so a record's own label never pulls
+  // it into, or out of, validation. Under a validated section a crossed label
+  // is a placement finding.
+  for (const group of groupTasks(context.journal.tasks).values()) {
+    const blocks = group.filter((candidate) => {
+      const sectionPhase = candidate.section?.phase?.declaredPhaseId;
+      return sectionPhase !== undefined && validated.has(sectionPhase);
+    });
     const [block] = blocks;
-    if (block === undefined || !validated.has(block.phaseId)) {
+    if (block === undefined) {
       continue;
     }
     checkDuplicates(context, blocks);

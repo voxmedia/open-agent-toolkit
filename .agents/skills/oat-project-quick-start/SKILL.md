@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.27
+  version: 2.3.28
 ---
 
 # Quick Start Project
@@ -96,6 +96,35 @@ After formatting, run only repository checks relevant to the files changed;
 writing lifecycle artifacts does not imply unrelated full test suites.
 
 ## Process
+
+### Freestyle Projects
+
+Before Step 0, read the mode of the project this run would write into: the
+active project when its `state.md` exists, otherwise the existing project that
+`{project-name}` names (`${PROJECTS_ROOT}/{project-name}`, resolved as in
+Step 0.5) when its `state.md` exists.
+
+```bash
+TARGET_PATH=$(oat config get activeProject 2>/dev/null || true)
+# When TARGET_PATH has no state.md, set it to the {project-name} path instead.
+TARGET_MODE=$(oat project status --project-path "$TARGET_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+When `TARGET_MODE` is `freestyle`, stop before any write, including Step 0's
+sync-manifest commit, Step 0.5's scaffold and Step 1's mode write. OAT has no
+promotion from freestyle, so this skill never starts a quick workflow in a
+freestyle project or changes its mode; Step 0.5 repeats this check for a name
+the user gives when it asks for one. Tell the user: "`{project-name}` is a
+freestyle project, and promotion from freestyle is not supported: this skill
+will not start a quick workflow in it." Then give the next step that fits what
+triggered the stop:
+
+- The active project: "To start a new quick project, clear the active project
+  with `oat-project-clear-active`, then run `oat-project-quick-start` again
+  with a new project name."
+- The name from the arguments, or the name the user gave when Step 0.5 asked:
+  "Pick a new project name for the quick project; an existing freestyle
+  project cannot take it."
 
 ### Step 0 (Preflight): Inherited Git State
 
@@ -190,6 +219,12 @@ If no valid active project exists:
   - If `$ARGUMENTS` contains only a bare `{project-name}` (for example a slug or short title) without a substantive description, ask the user for a short project description before scanning the repo or drafting discovery.
   - Do not infer requirements from the project name alone or go exploring the codebase to guess what the project means.
   - If neither field is available, ask for both the project name and a short project description. One or two sentences is enough for the description.
+- If `${PROJECTS_ROOT}/{project-name}/state.md` exists, read its mode first:
+  ```bash
+  TARGET_MODE=$(oat project status --project-path "${PROJECTS_ROOT}/{project-name}" --field project.workflowMode 2>/dev/null || echo null)
+  ```
+  If `TARGET_MODE` is `freestyle`, stop here, before the scaffold below, with
+  the freestyle stop above and its new-name next step.
 - Create project via the same scaffolding path used by `oat-project-new`, then
   re-resolve `PROJECT_PATH` from the path the scaffold reports:
 

@@ -459,6 +459,78 @@ describe('oat project journal check on a freestyle project', () => {
     expect(result.reasons).toEqual([]);
   });
 
+  describe('selects records by the section that holds them, not their label', () => {
+    const plan = ['# Plan', '', '## Phase p01: First', '', 'Intent.', ''].join(
+      '\n',
+    );
+
+    it('does not validate a record under a skipped section even when its label names a validated phase', () => {
+      // p01 is validated; p01-t02 sits under the skipped native section A-1a
+      // and would fail commit evidence if it were checked.
+      const journal = [
+        '# Journal',
+        '',
+        '## Phase p01: First',
+        '',
+        '### Task p01-t01: Done',
+        '',
+        '**Status:** completed',
+        '**Commit:** abc1234',
+        '',
+        '## Phase A-1a: Native lane',
+        '',
+        '### Task p01-t02: Crossed label',
+        '',
+        '**Status:** completed',
+        '',
+      ].join('\n');
+      const result = evaluateFreestyleJournal({
+        boundary: 'completion',
+        planContent: plan,
+        journalContent: journal,
+        stateContent: FREESTYLE_STATE,
+      });
+      expect(result.status).toBe('ok');
+      expect(result.reasons).toEqual([]);
+      expect(result.coverage?.phases).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 'p01', outcome: 'validated' }),
+          expect.objectContaining({ id: 'A-1a', outcome: 'skipped' }),
+        ]),
+      );
+    });
+
+    it('validates a record under a validated section whatever phase its label names', () => {
+      // p09 has no section, but p09-t01 sits under validated p01 with two
+      // status lines: it is held to the record rules, including placement.
+      const journal = [
+        '# Journal',
+        '',
+        '## Phase p01: First',
+        '',
+        '### Task p09-t01: Crossed label',
+        '',
+        '**Status:** completed',
+        '**Status:** failed',
+        '',
+      ].join('\n');
+      const result = evaluateFreestyleJournal({
+        boundary: 'completion',
+        planContent: plan,
+        journalContent: journal,
+        stateContent: FREESTYLE_STATE,
+      });
+      expect(result.status).toBe('refused');
+      expect(result.reasons.map((reason) => reason.code).sort()).toEqual([
+        'task-misplaced',
+        'task-status-ambiguous',
+      ]);
+      expect(
+        result.reasons.every((reason) => reason.owner === 'shape.md'),
+      ).toBe(true);
+    });
+  });
+
   describe('existing-mode controls on the same command path', () => {
     it('still refuses a spec-driven project without plan.md as a command error', async () => {
       const fixture = await project({

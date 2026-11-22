@@ -209,6 +209,20 @@ describe('freestyle resume and review rules', () => {
     }
   });
 
+  it('gives each reshape decision its own log idempotency identity', () => {
+    const { 'references/reshape.md': reshape } = skillFiles();
+    const id = /RESHAPE_ID="([^"]+)"/.exec(reshape)?.[1];
+    // The identity carries a per-decision time to the second, so two reshapes
+    // of one topic on one UTC date never share a key.
+    expect(id).toBe('reshape-{YYYYMMDDTHHMMSSZ}-{topic-slug}');
+    expect(reshape).toContain('--idempotency-key "$RESHAPE_ID"');
+    const rule = reshape.replace(/\s+/g, ' ');
+    expect(rule).toContain('Mint `RESHAPE_ID` once for this reshape decision');
+    expect(rule).toContain(
+      "reuse that same value only to retry this decision's append",
+    );
+  });
+
   it('tells a resuming session what to do with a pending brainstorm result', () => {
     const { 'SKILL.md': skill, 'references/kickoff.md': kickoff } =
       skillFiles();

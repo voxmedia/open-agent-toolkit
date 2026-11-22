@@ -186,6 +186,8 @@ the remote ref when the current branch does not yet have a record.
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
+- Run the freestyle check below on it first; a freestyle project stops there,
+  before this pointer write.
 - Write it for future phases:
   ```bash
   mkdir -p .oat
@@ -193,6 +195,19 @@ the remote ref when the current branch does not yet have a record.
   ```
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+**Freestyle projects.** Before the Route Loading Contract below loads any
+reference, read the mode:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+When `WORKFLOW_MODE` is `freestyle`, stop here and write nothing: no dispatch
+preflight, policy resolution, `state.md` write or phase dispatch runs, because
+a freestyle project has no lifecycle plan, phases or gates. Tell the user:
+"This is a freestyle project; OAT runs no implementation workflow for it. Its
+orchestrator works as `shape.md` says."
 
 ### Route Loading Contract
 

@@ -1126,7 +1126,7 @@ printf 'artifact-read\\n'`,
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.5.6');
+    expect(readDeclaredVersion(content)).toBe('1.5.7');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);

@@ -16,6 +16,7 @@ import {
   pushSynced,
   rollbackCreatedSyncedProject,
 } from '@commands/project/sync/ref-sync';
+import { readStateWorkflowModeFile } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   canonicalizePath,
@@ -541,6 +542,33 @@ async function commitScaffold(
   }
 }
 
+/**
+ * A rerun of `project new` on an existing project skips the files that exist
+ * and writes the rest, so a different mode would leave freestyle and lifecycle
+ * files side by side. Refuse that before any write when either side is
+ * freestyle: there is no promotion to or from freestyle. A same-mode rerun and
+ * a change between two lifecycle modes behave as before.
+ */
+async function assertNoFreestyleModeChange(
+  absoluteProjectPath: string,
+  projectName: string,
+  mode: WorkflowMode,
+): Promise<void> {
+  const statePath = join(absoluteProjectPath, 'state.md');
+  if (!(await fileExists(statePath))) {
+    return;
+  }
+  const existing =
+    (await readStateWorkflowModeFile(statePath)) ?? 'spec-driven';
+  if (existing === mode || (existing !== 'freestyle' && mode !== 'freestyle')) {
+    return;
+  }
+  throw new CliError(
+    `Project ${projectName} already exists as a ${existing} project; scaffolding it as ${mode} would mix freestyle and lifecycle files, and there is no promotion to or from freestyle. Pick a new project name.`,
+    1,
+  );
+}
+
 async function scaffoldModeTemplates(
   home: string,
   repoRoot: string,
@@ -849,6 +877,11 @@ export async function scaffoldProject(
       dependencies,
     );
   }
+  await assertNoFreestyleModeChange(
+    absoluteProjectPath,
+    options.projectName,
+    mode,
+  );
 
   let gitignoreChanged = false;
   let gitignoreBefore: string | null | undefined;

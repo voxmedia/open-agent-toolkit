@@ -1420,6 +1420,61 @@ describe('scaffoldProject', () => {
     expect(state).toContain('# Project State: bundled-freestyle-floor');
   });
 
+  it('refuses a same-scope rerun that would mix freestyle and lifecycle files, before any write', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    const base = {
+      repoRoot,
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+    };
+    await scaffoldProject({ ...base, projectName: 'free', mode: 'freestyle' });
+    await scaffoldProject({ ...base, projectName: 'quick', mode: 'quick' });
+    const listing = async (name: string): Promise<string[]> =>
+      (
+        await readdir(join(repoRoot, '.oat', 'projects', 'shared', name))
+      ).sort();
+    const freeBefore = await listing('free');
+    const quickBefore = await listing('quick');
+
+    await expect(
+      scaffoldProject({ ...base, projectName: 'free', mode: 'quick' }),
+    ).rejects.toThrow(
+      'Project free already exists as a freestyle project; scaffolding it as quick would mix freestyle and lifecycle files',
+    );
+    await expect(
+      scaffoldProject({ ...base, projectName: 'quick', mode: 'freestyle' }),
+    ).rejects.toThrow(
+      'Project quick already exists as a quick project; scaffolding it as freestyle',
+    );
+    expect(await listing('free')).toEqual(freeBefore);
+    expect(await listing('quick')).toEqual(quickBefore);
+
+    // Same-mode reruns and a change between two lifecycle modes behave as
+    // before: existing files are skipped and missing ones are written.
+    const freeRerun = await scaffoldProject({
+      ...base,
+      projectName: 'free',
+      mode: 'freestyle',
+    });
+    expect(freeRerun.createdFiles).toEqual([]);
+    expect(freeRerun.skippedFiles).toEqual([
+      'state.md',
+      'AGENTS.md',
+      'shape.md',
+    ]);
+    const lifecycleChange = await scaffoldProject({
+      ...base,
+      projectName: 'quick',
+      mode: 'spec-driven',
+    });
+    expect(lifecycleChange.skippedFiles).toContain('state.md');
+    expect(lifecycleChange.createdFiles).toContain('spec.md');
+  });
+
   it('resolves partial template tiers independently for every file', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));

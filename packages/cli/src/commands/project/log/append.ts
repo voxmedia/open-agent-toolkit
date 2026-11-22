@@ -70,8 +70,10 @@ import {
   PROJECT_LOG_SCOPES,
   PROJECT_LOG_TYPES,
   normalizeProjectLogLineEndings,
+  parseProjectLogStructuralHead,
   projectLogTimeOfDay,
   splitProjectLogLines,
+  STRUCTURAL_HEADING_RE,
   type ProjectLogBodyHead,
   type ProjectLogStructuralHead,
   type ProjectLogScope,
@@ -1039,20 +1041,40 @@ export function findProjectLogEntryByIdempotencyKey(
       );
 
   let heading: string | undefined;
+  let entryLines: string[] = [];
+  const match = (): string | undefined => {
+    if (heading === undefined) return undefined;
+    // A structural entry's parsed event head (time, subject, source project)
+    // describes the event, not its identity: only the body below the head is
+    // scanned, so a key named in another entry's `**Subject:**` never reads as
+    // a prior append. A judgment entry is scanned whole, as it always was.
+    const scanned = STRUCTURAL_HEADING_RE.test(heading)
+      ? structuralIdentityLines(entryLines)
+      : entryLines;
+    return scanned.some(carries) ? heading : undefined;
+  };
   for (const line of content.split(/\r?\n/)) {
-    if (isProjectLogEntryMarker(line)) {
-      heading = line.trim();
+    if (isProjectLogEntryMarker(line) || isProjectLogSectionMarker(line)) {
+      const found = match();
+      if (found !== undefined) {
+        return found;
+      }
+      heading = isProjectLogEntryMarker(line) ? line.trim() : undefined;
+      entryLines = [];
       continue;
     }
-    if (isProjectLogSectionMarker(line)) {
-      heading = undefined;
-      continue;
-    }
-    if (heading !== undefined && carries(line)) {
-      return heading;
+    if (heading !== undefined) {
+      entryLines.push(line);
     }
   }
-  return undefined;
+  return match();
+}
+
+/** A structural entry's lines without its parsed event head, if it has one. */
+function structuralIdentityLines(entryLines: readonly string[]): string[] {
+  const body = entryLines.join('\n').replace(/^(?:[ \t]*\n)+/, '');
+  const { head, rest } = parseProjectLogStructuralHead(body);
+  return Object.keys(head).length === 0 ? [...entryLines] : rest.split('\n');
 }
 
 /**
