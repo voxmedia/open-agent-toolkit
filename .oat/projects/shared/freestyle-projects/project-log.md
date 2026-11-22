@@ -111,6 +111,10 @@ m01 exit review (manual GPT 6.2 Astra high, substitute for the project-disabled 
 
 p04 re-accepted after the m01 integrated review round 1 fixes: p04-t15 (I-1), p04-t16 (I-2 Resume half), p04-t18 (I-4), p04-t20 (I-6) through the original handle; p04-t17 and p04-t19 cancelled and I-2 Create half, I-3, I-5 deferred by the operator. Gates passed; pnpm test needed one no-edit rerun after two SIGTERM-timing failures in tools/smoke/runner/cleanup.test.mjs, which the range does not touch. release:check-versions fails: origin/main reached 0.3.54, equal to the branch. Exit and integrated re-reviews pending. freestyle-projects-p04-outcome-m01-integrated-1
 
+### 2026-11-22 · structural · oat-project-implement · p04
+
+Merged origin/main 78b88baba (#427, Zod 4 CLI schemas) as 1cc893ed8 with no conflicts; bumped the five public packages to 0.3.55 in 61f62885d. Gate run at 61f62885d (load 84 at start): check, type-check, build, check:skill-bumps, release:check-versions, release:validate, build:docs, docs-index freshness, lint, format and the isolated skill-prose vitest exit 0. pnpm test exit 1: cli only, 5 timeout or timing cases in gate-hardening.integration, docs/literals and exact-path-commit (the suites named in learning freestyle-projects-learning-p04-01); those three files alone under an isolated HOME at load 18 passed 72/72, and test:smoke, test:skills and test:scripts (skipped by the && chain) exit 0. A forced idle-host run is still owed. freestyle-projects-m01-merge-main-78b88baba
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
