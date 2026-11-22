@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-21
-oat_current_task_id: p04
+oat_last_updated: 2026-11-22
+oat_current_task_id: p05
 oat_generated: false
 oat_template: false
 ---
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: freestyle-projects
 
 **Started:** 2026-11-21
-**Last Updated:** 2026-11-21
+**Last Updated:** 2026-11-22
 
 > This journal records execution of the Project Brief in `plan.md` and is used
 > to resume interrupted sessions.
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | in_progress | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | pending  | 1     | 0/1      |
+| p06   | pending  | 1     | 0/1      |
+| p07   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 3/9 phases accepted
+**Total:** 4/9 phases accepted
 
 ---
 
@@ -399,10 +399,10 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ## Phase p04: m01 docs and release
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
-**Head:** 447cd3e2d09d6ea5da083e98614369d5e7e513a7
+**Head:** 1045632864dd29b948d80a1e3aa85a853381c01f
 
 Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
 
@@ -441,6 +441,8 @@ Late fix p04-t07 (review round 2: M1, L1, L2; L3 no change) at `67c451c35`, reco
 - After the commit, each exit 0: `check:skill-bumps` (25 checks), `release:check-versions` and `release:validate`.
 
 No CLI source changed. The head advanced under the late-fix rule.
+
+Late fix p04-t08 (review round 3: L1, docs wording) at `104563286`, made by root: `oxfmt --check` on the page, the docs app `check` (markdownlint, oxfmt, skill catalog) and docs-index freshness (`generate-index`, then `git diff --exit-code`) each exit 0. The head advanced under the late-fix rule.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
@@ -594,6 +596,21 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
   - Putting the summary pointer write back before the mode read fails "stop before oat config set activeProject".
   - Removing import-plan's Step 0.5 stop sentence fails "import-plan prompted-name stop".
 
+### Task p04-t08: Fix p04 review round 3 finding (L1)
+
+**Status:** completed
+**Commit:** 1045632864dd29b948d80a1e3aa85a853381c01f
+**Executor:** root
+**Source review:** `p04-code-review-2026-11-22T021641Z.md` (request `freestyle-projects-p04-review-3`, round 3): L1
+
+- Intent: one-sentence docs wording fix. `starting-projects.md` said import "stops before writing anything" for a freestyle project; for a name given at Step 0.5's question, Step 0's sync-manifest commit or the user's "Commit now" choice may already have run. It now says import "stops before writing into the project or changing its mode". Root made the fix itself rather than resuming the phase implementer, because it is one sentence in one docs page (see the `Root-inline phase:` line under Orchestration Runs).
+- Files: `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`.
+- Proof: `pnpm exec oxfmt --check` on the page, `apps/oat-docs` `pnpm run check` and docs-index freshness each exit 0. No skill or package version changes: docs pages are already covered by this PR's lockstep bump. Not re-reviewed; the m01 milestone review covers it.
+
+- Review round 1: `freestyle-projects-p04-review-1` (oat-reviewer, claude-opus-5-5 high) on `91ba64a6e..2d50c2888`, ledger head `7a98c9b19`: fixes required, 0 critical, 0 high, 3 medium, 5 low (M1 `journal check` documented without `--at`; M2 `oat-project-import-plan` still converted a freestyle project to import mode; M3 freestyle stops after writing steps in pr-progress, pr-final and document; L1 stops behind artifact checks; L2 `rollup` needs a summary; L3 corrupt synced record wording; L4 m02 lane wording; L5 duplicate recovery block). All fixed through the original handle in fix mode as p04-t06. Artifact `reviews/p04-code-review-2026-11-22T012937Z.md` (local-only).
+- Review round 2: `freestyle-projects-p04-review-2` (fresh reviewer, same target) on `7a98c9b19..3b5f6f262`: fixes required, 0 critical, 0 high, 1 medium, 3 low (M1 import-plan did not check a project named at Step 0.5's question; L1 four skills wrote a named project to `activeProject` before reading its mode; L2 `cli-reference.md` `--at` wording; L3 the L5 removal deleted recorded journal lines inside the reviewed range, no change needed). M1, L1 and L2 fixed through the original handle as p04-t07. Artifact `reviews/p04-code-review-2026-11-22T015923Z.md` (local-only).
+- Review round 3: `freestyle-projects-p04-review-3` (fresh reviewer, same target) on `3b5f6f262..1af188b5c`: pass, 0 critical, 0 high, 0 medium, 1 low (L1 `starting-projects.md` "stops before writing anything" overstated for a name given at the question). Fixed by root as p04-t08. Fix loops: 3 (two implementer fix rounds and one root fix). Artifact `reviews/p04-code-review-2026-11-22T021641Z.md` (local-only).
+
 ---
 
 ## Phase p05: Linked projects
@@ -640,6 +657,10 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - run/v1 · request=freestyle-projects-p03-implementation-1 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p03-review-1 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p04-implementation-1 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p04-review-1 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p04-review-2 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p04-review-3 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p04 (task p04-t08 only, review round 3 L1) · reason: a one-sentence docs wording fix, smaller than a fix-mode resume and its gate run · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
@@ -660,10 +681,11 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 Document any intentional deviations from the brief. Include accepted review findings where the shipped implementation is source of truth and the brief needs alignment.
 
-| Phase / Review       | Source Artifact                                  | Planned / Documented                                    | Actual / Accepted                                                                                                                                                 | Reason                                                                                                                       | Source of Truth | Follow-up                                        |
-| -------------------- | ------------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------ |
-| p01 review L2        | plan.md Decisions (freestyle recommends nothing) | freestyle surfaces recommend `none`                     | a paused active freestyle project keeps the dashboard's mode-independent `oat project open` resume step; the router and every other dashboard route return `none` | resuming a paused active project is mode-independent, and the same dashboard/router split already exists for lifecycle modes | implementation  | none; p04 docs describe it                       |
-| p02 (root direction) | plan.md p04 Intent (docs pages)                  | the docs guide for `oat-project-freestyle` lands in p04 | the minimal `skill-docs.json` entry and guide anchor land in p02                                                                                                  | the docs skill-catalog check fails `pnpm check` for any phase that adds an eligible skill                                    | implementation  | p04 writes the full docs pages around the anchor |
+| Phase / Review        | Source Artifact                                  | Planned / Documented                                          | Actual / Accepted                                                                                                                                                 | Reason                                                                                                                       | Source of Truth | Follow-up                                        |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------ |
+| p01 review L2         | plan.md Decisions (freestyle recommends nothing) | freestyle surfaces recommend `none`                           | a paused active freestyle project keeps the dashboard's mode-independent `oat project open` resume step; the router and every other dashboard route return `none` | resuming a paused active project is mode-independent, and the same dashboard/router split already exists for lifecycle modes | implementation  | none; p04 docs describe it                       |
+| p02 (root direction)  | plan.md p04 Intent (docs pages)                  | the docs guide for `oat-project-freestyle` lands in p04       | the minimal `skill-docs.json` entry and guide anchor land in p02                                                                                                  | the docs skill-catalog check fails `pnpm check` for any phase that adds an eligible skill                                    | implementation  | p04 writes the full docs pages around the anchor |
+| p04 review round 3 L1 | p04-code-review-2026-11-22T021641Z.md            | review fixes go through the original phase implementer handle | root made the one-sentence docs fix (p04-t08) itself                                                                                                              | smaller than a fix-mode resume and its gate run                                                                              | implementation  | the m01 milestone review covers it               |
 
 ## Final Summary (for PR/docs)
 

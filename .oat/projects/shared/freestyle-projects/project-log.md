@@ -72,6 +72,37 @@ p03 accepted: review freestyle-projects-p03-review-1 passed (0 critical, 0 high,
 
 Observation: before rebuilding, p03 captured log check --json over 57 local archived project logs with the base build and diffed it after the grammar change; output was byte-identical. Impact: cheap evidence against real, untracked artifacts that committed fixtures cannot cover. Recommendation: capture the base build's output over the local corpus before changing a parser of project artifacts, then diff after. freestyle-projects-learning-p03-01
 
+### 2026-11-22 · structural · oat-project-implement · p04
+
+p04 accepted: review round 3 freestyle-projects-p04-review-3 passed (0 critical, 0 high, 0 medium, 1 low, fixed by root in p04-t08) after round 1 (0/0/3/5, fixed in p04-t06) and round 2 (0/0/1/3, fixed in p04-t07); fix loops 3; recovery attempts 1/10. Forced test:evidence exited 1 twice on host-load timeouts in suites p04 does not touch; an idle-host forced run is still owed. freestyle-projects-p04-outcome
+
+### 2026-11-22 · project · friction · Forced test:evidence times out under heavy host load
+
+**Category:** environment-limited
+**Source:** freestyle-projects-learning-p04-01
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-22T02:23:16Z
+
+Observation: at load averages of 20 to 69, two forced test:evidence runs at the same commit failed different cli tests (gate-hardening, docs/literals, exact-path-commit), all timeouts or timing assertions, while the same files passed alone under an isolated HOME. Impact: a forced run on a busy host cannot tell a regression from contention, and rerunning until green would hide real failures. Recommendation: when failures move between runs and the phase touches none of the failing suites, run the failing files alone, record both results and the load, and leave the forced run owed to an idle host or CI instead of calling it a pass. Uncertainty: the threshold load was not measured.
+
+### 2026-11-22 · project · friction · A mode stop must precede every write on every project-resolution path
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-p04-02
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-22T02:23:16Z
+
+Observation: p04 needed three review rounds to place the freestyle stops in six lifecycle skills: first after writing steps, then after the activeProject pointer write for a project the user names when asked, and in import-plan for a Step 0.5 name. Impact: each round found a path where a freestyle project could still be written or converted. Recommendation: when adding a mode guard to a skill, list every way the skill resolves a project (active, a flag, a name given when it asks), find the first write on each path including oat config set activeProject, and assert the order in an ordering test before review.
+
+### 2026-11-22 · project · friction · zsh does not word-split a command held in a variable
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-p04-03
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-22T02:23:17Z
+
+Observation: C="node packages/cli/dist/index.js"; $C internal commit-paths ... exits 127 in zsh because zsh does not split unquoted parameter expansions. Impact: scripted bookkeeping commits fail before running. Recommendation: wrap the branch build in a shell function, oatb(){ node packages/cli/dist/index.js "$@"; }, instead of a string variable.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
