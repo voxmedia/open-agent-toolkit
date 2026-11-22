@@ -1041,13 +1041,23 @@ Proof: dashboard tests for an unpulled synced project (freestyle and quick), a g
 
 ### Task p04-t24: (review) Add the synced push step to the freestyle closeout
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 53618bd9b384f8252f6337cc599ff0945d18d945
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-3)
 
 Intent: the freestyle closeout guide (`closeout-skills.md:17`) and `oat-project-complete`'s freestyle stop (~:213) say `complete-state` then `archive`; for a synced project `archive` refuses until `oat project push` publishes the completed state. Add the synced-only push step between them, subject to the publication agreement in `shape.md`. Class: accepted-requirement (Outcome 7).
 Files: the guide, the complete skill, any pinned sentence test.
 Proof: skill-prose vitest; a branch-build scratch run of complete-state, push, archive on a synced freestyle project.
+
+- **J-3:** the freestyle stop in `oat-project-complete` and the freestyle paragraph in `closeout-skills.md` now read: `oat project complete-state <project-path>` marks it complete; for a synced project, `oat project push <project-path>` then publishes the completed state, subject to the publication agreement in `shape.md`; and `oat project archive <project-path>` archives it. The guide adds that archive refuses a synced project with unpushed changes. No other page or skill repeats the freestyle complete-state and archive sequence (grep over `apps/oat-docs/docs` and `.agents/skills`); the `cli-reference.md` entries describe each command on its own.
+- **Test (`skills.test.ts`):** a new case pins, at both sites, that the passage names `complete-state`, then the synced-only `push` with the `shape.md` publication clause, then `archive`.
+- **Can-fail**, each neutralized, failing on its own clause, then restored:
+  - Restoring the pre-fix complete skill fails at `push after complete-state` (push index -1).
+  - Restoring the pre-fix guide fails at the same clause for `closeout-skills.md`.
+  - Swapping push and archive in the skill fails at `archive after push`.
+- **Scratch run** with the branch build (`packages/cli/dist/index.js`) on a synced freestyle project `demo` in a throwaway repository and bare remote: `complete-state` exit 0; `archive` before the push exit 1 ("Synced project demo is dirty; run oat project push demo before archiving."); `push` exit 0; `archive` exit 0, which moved the ref to `refs/oat/completed/demo`.
+- Proof before the commit, each exit 0: skill-prose vitest (`src/commands/init/tools/shared src/validation`, 33 files, 1320 passed, before the new case; the new case passed on its own), `oat:validate-skills` (69 skills), `oxfmt`, markdownlint on the guide, and `oxlint` on the test file.
 
 ### Task p04-t25: (review) Name the freestyle exception in the import checklist line
 
