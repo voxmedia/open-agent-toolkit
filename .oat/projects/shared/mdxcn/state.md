@@ -109,12 +109,50 @@ oat_quick_start_gate:
   config_fingerprint: 'sha256:6507556b5ad9795f94a05a4e02d2874e3962475cecf5ec4b0b2294cc4e020b84'
   reviewed_head: '08d0588d801d7cd59afd08323f645b8a0735021b'
   decided_at: '2026-11-21T16:53:11Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: 'f03b317909cec452cd92ee6d4c0870dadf08ad53'
+  implementation_base_ref: 'origin/main'
+  implementation_fingerprint: 'sha256:effective-delta-v2:f0dd98de83268fcef5b5c434619c4a886d35e3f1f0b075d54228742e3522b311'
+  freshness_head: 'f03b317909cec452cd92ee6d4c0870dadf08ad53'
+  freshness_fingerprint: 'sha256:effective-delta-v2:f0dd98de83268fcef5b5c434619c4a886d35e3f1f0b075d54228742e3522b311'
+  waivers: []
+  launch_state: intent_persisted
+  launch_attempt_id: 'mdxcn-exit-gate-g1-a1-2026-11-22T043803Z'
+  launch_started_at: '2026-11-22T04:38:03Z'
+  launch_result_receipt: '.oat/repo/analysis/mdxcn/gate-exit-2026-11-22T043803Z.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-11-22T04:38:03Z'
+  decided_at: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T04:37:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T04:38:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
