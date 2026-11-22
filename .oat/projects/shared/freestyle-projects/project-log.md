@@ -115,6 +115,10 @@ p04 re-accepted after the m01 integrated review round 1 fixes: p04-t15 (I-1), p0
 
 Merged origin/main 78b88baba (#427, Zod 4 CLI schemas) as 1cc893ed8 with no conflicts; bumped the five public packages to 0.3.55 in 61f62885d. Gate run at 61f62885d (load 84 at start): check, type-check, build, check:skill-bumps, release:check-versions, release:validate, build:docs, docs-index freshness, lint, format and the isolated skill-prose vitest exit 0. pnpm test exit 1: cli only, 5 timeout or timing cases in gate-hardening.integration, docs/literals and exact-path-commit (the suites named in learning freestyle-projects-learning-p04-01); those three files alone under an isolated HOME at load 18 passed 72/72, and test:smoke, test:skills and test:scripts (skipped by the && chain) exit 0. A forced idle-host run is still owed. freestyle-projects-m01-merge-main-78b88baba
 
+### 2026-11-22 · structural · oat-project-implement · m01
+
+m01 exit re-review (manual GPT 6.2 Astra high) after the integrated-review fixes passed in round 8 at eece9b5fc after 1 fix round (p04-t21, R7-1 regression of p04-t15); exit carrier project_disabled refreshed to fresh; m01 implementing -> reviewing; next oat-project-review-provide code m01: p01, p02, p03, p04 (integrated cycle 2 of 3); freestyle-projects-m01-exit-rereview-2
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
