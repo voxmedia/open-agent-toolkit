@@ -1,26 +1,16 @@
-import { basename, dirname, isAbsolute, join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { projectListHint } from '@commands/project/list';
 import {
-  classifyUnmaterializedSyncedRecord,
-  directoryExists,
-  probeAuthoritativeCompletedRef,
-  projectListHint,
-} from '@commands/project/list';
-import { defaultGitRunner } from '@commands/project/sync/git';
-import { readSyncedRecord } from '@commands/project/sync/record';
-import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
+  resolveUnpulledSyncedProject,
+  type UnpulledSyncedProject,
+} from '@commands/project/unpulled-synced';
 import { getProjectStateWithReviewAncestry } from '@commands/review/head-ancestry';
-import { resolveProjectsRoot } from '@commands/shared/oat-paths';
-import {
-  canonicalizePath,
-  resolveScopeRoot,
-  syncedRecordPath,
-} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
@@ -41,11 +31,6 @@ interface ProjectStatusDependencies {
   ) => Promise<UnpulledSyncedProject | null>;
 }
 
-/** A synced project recorded on this branch whose checkout is not here. */
-type UnpulledSyncedProject = Awaited<
-  ReturnType<typeof classifyUnmaterializedSyncedRecord>
->;
-
 interface ProjectStatusOptions {
   field?: string;
   projectPath?: string;
@@ -59,64 +44,6 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   getProjectState: getProjectStateWithReviewAncestry,
   resolveUnpulledSyncedProject,
 };
-
-/**
- * A synced project that has a record on this branch but no checkout in this
- * worktree has no readable state, so no mode is known: status reports the
- * storage instruction `list` gives for it (`oat project pull`), never a
- * lifecycle recommendation. Returns null for every other path, including any
- * project folder that exists. Without a repository root (an absolute
- * `--project-path`), the root is the repository holding the path, never the
- * working directory's.
- */
-async function resolveUnpulledSyncedProject(
-  projectDir: string,
-  knownRepoRoot?: string,
-): Promise<UnpulledSyncedProject | null> {
-  if (await directoryExists(projectDir)) {
-    return null;
-  }
-  const repoRoot = knownRepoRoot ?? (await repositoryHolding(projectDir));
-  if (!repoRoot) {
-    return null;
-  }
-  const projectsRoot = await resolveProjectsRoot(repoRoot, process.env);
-  const scopeRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
-  if (canonicalizePath(dirname(projectDir)) !== canonicalizePath(scopeRoot)) {
-    return null;
-  }
-  let recordPath: string;
-  try {
-    recordPath = syncedRecordPath(scopeRoot, basename(projectDir));
-  } catch {
-    return null;
-  }
-  const record = await readSyncedRecord(recordPath);
-  if (!record) {
-    return null;
-  }
-  return classifyUnmaterializedSyncedRecord(repoRoot, projectsRoot, record, {
-    probeAuthoritativeCompletedRef,
-    probeSyncedTerminalRefs,
-    gitRunner: defaultGitRunner,
-  });
-}
-
-async function repositoryHolding(path: string): Promise<string | null> {
-  let current = dirname(path);
-  while (!(await directoryExists(current))) {
-    const parent = dirname(current);
-    if (parent === current) {
-      return null;
-    }
-    current = parent;
-  }
-  try {
-    return await resolveProjectRoot(current);
-  } catch {
-    return null;
-  }
-}
 
 function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
   return [

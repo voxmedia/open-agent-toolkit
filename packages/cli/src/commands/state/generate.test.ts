@@ -1,9 +1,11 @@
+import { execFileSync } from 'node:child_process';
 import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { GitRunner } from '@commands/project/sync/git';
 import { getProjectState } from '@open-agent-toolkit/control-plane';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -1608,5 +1610,101 @@ describe('generateStateDashboard goal routes', () => {
     // The router owns the reviewing route the dashboard cannot see.
     expect(implementing.recommendation.skill).toBe('oat-project-implement');
     expect(implementing.recommendation.context).toBe('closeout m01: p01, p02');
+  });
+});
+
+describe('generateStateDashboard for an active synced project not pulled here (m01 J-2)', () => {
+  const cli = join(import.meta.dirname, '../../../dist/index.js');
+  const cleanups: Array<() => Promise<void>> = [];
+
+  afterEach(async () => {
+    await Promise.all(cleanups.map((cleanup) => cleanup()));
+    cleanups.length = 0;
+  });
+
+  function oat(cwd: string, home: string, args: string[]): string {
+    return execFileSync('node', [cli, ...args], {
+      cwd,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        HOME: home,
+        OAT_PROJECTS_DEFAULT_SCOPE: '',
+        OAT_PROJECTS_ROOT: '',
+      },
+    });
+  }
+
+  it.each(['freestyle', 'quick'])(
+    'gives the pull instruction status gives for an unpulled synced %s project in a fresh clone',
+    async (mode) => {
+      const fixture = await createSyncedFixture({ secondClone: true });
+      cleanups.push(fixture.cleanup);
+      const publisher = fixture.cloneB as string;
+      const home = join(fixture.rootDir, 'home');
+      // Another clone creates and publishes the project and its record.
+      oat(publisher, home, [
+        'project',
+        'new',
+        'proj',
+        '--mode',
+        mode,
+        '--scope',
+        'synced',
+        '--no-set-active',
+        '--no-dashboard',
+      ]);
+      execFileSync('git', ['push', '-q', 'origin', 'HEAD:main'], {
+        cwd: publisher,
+      });
+      const root = fixture.cloneA;
+      execFileSync('git', ['pull', '-q', 'origin', 'main'], { cwd: root });
+      const projectPath = '.oat/projects/synced/proj';
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeLocalConfig(root, { activeProject: projectPath });
+
+      const status = JSON.parse(
+        oat(root, home, ['--json', 'project', 'status']),
+      ) as {
+        project: { recommendation: { skill: string; reason: string } };
+      };
+      expect(status.project.recommendation.skill).toBe('oat project pull');
+
+      const result = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-11-22',
+        git: mockGit,
+      });
+      expect(result.recommendedStep).toBe('oat project pull proj');
+      expect(result.recommendedReason).toBe(
+        status.project.recommendation.reason,
+      );
+      expect(result.projectStatus).toBe('checkout absent');
+      const dashboard = await readFile(result.dashboardPath, 'utf8');
+      expect(dashboard).toContain('oat project pull proj');
+      expect(dashboard).not.toContain('oat-project-open');
+      expect(dashboard).not.toContain('directory missing');
+    },
+    60_000,
+  );
+
+  it('keeps the missing-directory recommendation for an active synced project with no record and no ref', async () => {
+    const fixture = await createSyncedFixture();
+    cleanups.push(fixture.cleanup);
+    const root = fixture.cloneA;
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/synced/never-recorded',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-22',
+      git: mockGit,
+    });
+    expect(result.projectStatus).toBe('directory missing');
+    expect(result.recommendedStep).toBe('oat-project-open');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('**Warning:** directory missing');
   });
 });

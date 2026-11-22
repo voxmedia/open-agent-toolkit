@@ -5,11 +5,13 @@ import { basename, dirname, join, resolve } from 'node:path';
 import {
   classifyLegacySyncedRecord,
   probeAuthoritativeCompletedRef,
+  projectListHint,
 } from '@commands/project/list';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { listSyncedRecords } from '@commands/project/sync/record';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
+import { resolveUnpulledSyncedProject } from '@commands/project/unpulled-synced';
 import {
   getFrontmatterBlock,
   parseFrontmatterField,
@@ -963,6 +965,25 @@ export async function generateStateDashboard(
     }
   }
 
+  // An active synced project recorded on this branch but not pulled here gets
+  // the storage instruction `oat project status` gives for it, in every mode.
+  // A record the classifier cannot read keeps the missing-directory row.
+  let unpulledNextStep: { step: string; reason: string } | null = null;
+  if (!terminalNextStep && project.status === 'directory missing') {
+    const unpulled = await resolveUnpulledSyncedProject(
+      resolve(repoRoot, project.path),
+      repoRoot,
+      { env, gitRunner },
+    ).catch(() => null);
+    if (unpulled) {
+      project.status = `checkout ${unpulled.checkout}`;
+      unpulledNextStep = {
+        step: projectListHint(unpulled),
+        reason: unpulled.recommendation.reason,
+      };
+    }
+  }
+
   let state: ProjectState | null = null;
   if (project.status === 'active') {
     state = await readProjectState(repoRoot, project.path);
@@ -971,7 +992,9 @@ export async function generateStateDashboard(
   const knowledge = await readKnowledgeStatus(repoRoot);
   const staleness = calculateStaleness(knowledge, git, repoRoot, today);
   const nextStep =
-    terminalNextStep ?? computeNextStep(project, hasProjects, state);
+    terminalNextStep ??
+    unpulledNextStep ??
+    computeNextStep(project, hasProjects, state);
 
   const projectsList = await listAvailableProjects(
     repoRoot,
