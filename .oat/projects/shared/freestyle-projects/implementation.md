@@ -555,6 +555,38 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
   - Moving the pr-progress stop below Step 0.5 fails the ordering test: "stop before ### Step 0.5".
   - Moving the import-plan stop below Step 0 fails it: "stop before ### Step 0 (Preflight)".
 
+### Task p04-t07: Fix p04 review round 2 findings (M1, L1, L2)
+
+**Status:** completed
+**Commit:** 67c451c354ce139fe0f88ede21933e44f57c73cd
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `p04-code-review-2026-11-22T015923Z.md` (request `freestyle-projects-p04-review-2`, round 2): M1, L1, L2, L3
+
+- Intent: close the prompted-name gaps in the import-plan, pr-progress, pr-final, summary and reconcile freestyle stops, and align the cli-reference `--at` wording. M1 is an incomplete fix of an accepted requirement (`plan.md` out-of-scope promotion; round-1 M2). L1 and L2 are wording promised by p04's own docs.
+- M1: `oat-project-import-plan` Step 0.5 now reads the mode of an existing project named by `--project` or given when Step 0.5 asks. A freestyle mode stops before `oat config set activeProject`, so the pointer is not written and Steps 3 and 5 never run.
+  - The `### Freestyle Projects` guard says Step 0.5 repeats the check, and its message now depends on what caused the stop. The active project gets the `oat-project-clear-active` advice; a `--project` or asked-for name gets "Pick a new project name for the import".
+  - `starting-projects.md` now covers the existing project "you name with `--project` or when it asks".
+  - The wording avoids the autonomy prompt-site trigger words (`prompt`, `choose`), so the HEAD prompt-site coverage table needs no new rows.
+- L1: in `oat-project-pr-progress`, `oat-project-pr-final`, `oat-project-summary` and `oat-project-reconcile`, the asked-for name no longer goes to `activeProject` inside the ask bullet. Step 0 reads the named project's mode and stops first, then writes the pointer.
+  - Reconcile's mode read and stop moved from Step 0.5 item 1 into Step 0. Step 0.5 items are renumbered 1 to 3, and `WORKFLOW_MODE` stays set for the brief and goal branches.
+  - The pr-progress and pr-final stops now name the pointer as the first write they precede.
+- L2: `cli-reference.md` (journal check entry) now says `implement-preflight` and `completion` give a freestyle project the same result, while `review` needs a `--scope` of phases those documents name and limits the report to it. This matches the template and README.
+- L3: no_change_needed, as root directed. The duplicate block's removal was committed inside the reviewed range, so the review-boundary check passes. The removed copy's reservation commit is `7c207c4ab`, which is still in Git history.
+- Test: the ordering test `places each freestyle stop before the first step that writes or checks lifecycle artifacts` now covers the pointer write.
+  - The first `oat config set activeProject` is a later marker for pr-progress, pr-final, summary and reconcile.
+  - import-plan's Step 0.5 stop must sit after `If no valid active project exists:` and before `oat config set activeProject "$TARGET_PROJECT_PATH"`.
+- Files: the five skills' `SKILL.md`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`, `packages/cli/src/validation/skills.test.ts`. There are no new skill bumps: each skill was already bumped once in this PR.
+- Proof before the commit, each exit 0:
+  - The isolated `vitest run src/commands/init/tools/shared src/validation` (33 files, 1306 passed).
+  - `oat:validate-skills`, `lint`, `format`, `check` (5 of 11 cached) and `type-check` (5 of 11 cached).
+  - Forced `turbo run build` (0 cached) and forced docs build (0 cached).
+  - `docs:validate` (0 errors, 776 warnings, the baseline), `generate-index` plus `git diff --exit-code`, and `test:skills` (754 passed).
+  - The branch-build `sync --scope project` changed no view and left the manifest unchanged.
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (25 checks), `release:check-versions` and `release:validate`.
+- Can-fail, each restored and byte-compared afterwards:
+  - Putting the summary pointer write back before the mode read fails "stop before oat config set activeProject".
+  - Removing import-plan's Step 0.5 stop sentence fails "import-plan prompted-name stop".
+
 ---
 
 ## Phase p05: Linked projects
