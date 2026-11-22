@@ -1,4 +1,14 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -168,8 +178,8 @@ describe('freestyle resume and review rules', () => {
     const resume = between(skill, '**Resume.**', '**Another mode.**');
     const lines = [
       'PROJECT_PATH="{project-path}"',
-      'oat config set activeProject "$PROJECT_PATH"',
-      'PROJECT_PATH=$(oat config get activeProject)',
+      'oat config set activeProject "$PROJECT_PATH" || {',
+      'ACTIVE_PATH=$(oat config get activeProject 2>/dev/null || true)',
     ];
     const offsets = lines.map((line) => resume.indexOf(line));
     expect(
@@ -187,6 +197,115 @@ describe('freestyle resume and review rules', () => {
       'Record in this section:',
     );
     expect(detour).toContain('`oat config get activeProject`');
+  });
+
+  describe('stops when the active-project pointer does not name the project (m01 H4)', () => {
+    // Runs Step 1's resume and create blocks against a stub `oat`, so a
+    // failed pointer write, a failed scaffold, or a stale pointer is seen to
+    // stop the run instead of shaping against the previous project.
+    function block(start: string, end: string): string {
+      const section = between(skillFiles()['SKILL.md'], start, end);
+      const body = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
+      expect(body, `${start} has a bash block`).toBeDefined();
+      return body as string;
+    }
+
+    function run(
+      script: string,
+      env: Record<string, string>,
+    ): { status: number | null; stdout: string; stderr: string } {
+      const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-pointer-'));
+      try {
+        for (const name of ['new-one', 'old-one']) {
+          mkdirSync(join(root, '.oat/projects/shared', name), {
+            recursive: true,
+          });
+          writeFileSync(
+            join(root, '.oat/projects/shared', name, 'state.md'),
+            '---\noat_workflow_mode: freestyle\n---\n',
+          );
+        }
+        const bin = join(root, 'bin');
+        mkdirSync(bin);
+        writeFileSync(
+          join(bin, 'oat'),
+          [
+            '#!/bin/bash',
+            'case "$1 $2" in',
+            '  "config set") exit "${STUB_SET_EXIT:-0}" ;;',
+            '  "config get") printf \'%s\\n\' "$STUB_GET" ;;',
+            '  "project new") printf \'%s\\n\' "$STUB_NEW_JSON"; exit "${STUB_NEW_EXIT:-0}" ;;',
+            'esac',
+            '',
+          ].join('\n'),
+        );
+        chmodSync(join(bin, 'oat'), 0o755);
+        const result = spawnSync(
+          '/bin/bash',
+          ['-c', `${script}\nprintf 'reached=%s\\n' "$PROJECT_PATH"`],
+          {
+            cwd: root,
+            encoding: 'utf8',
+            env: { ...process.env, ...env, PATH: `${bin}:${process.env.PATH}` },
+          },
+        );
+        return {
+          status: result.status,
+          stdout: result.stdout,
+          stderr: result.stderr,
+        };
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+
+    const NEW = '.oat/projects/shared/new-one';
+    const OLD = '.oat/projects/shared/old-one';
+
+    it('resume stops on a failed pointer write or a pointer naming another project', () => {
+      const resume = block('**Resume.**', '**Another mode.**').replaceAll(
+        '{project-path}',
+        NEW,
+      );
+      // A failed write stops even when the pointer happens to name the
+      // project already, so only the write's own exit code can stop it.
+      const failedWrite = run(resume, { STUB_SET_EXIT: '1', STUB_GET: NEW });
+      expect(failedWrite.stderr).toContain('could not make');
+      expect(failedWrite.status).toBe(1);
+      expect(failedWrite.stdout).not.toContain('reached=');
+      const stale = run(resume, { STUB_GET: OLD });
+      expect(stale.stderr).toContain(`the active project is '${OLD}'`);
+      expect(stale.status).toBe(1);
+      expect(stale.stdout).not.toContain('reached=');
+      const ok = run(resume, { STUB_GET: NEW });
+      expect(ok.status).toBe(0);
+      expect(ok.stdout).toContain(`reached=${NEW}`);
+    });
+
+    it('create stops on a failed scaffold and uses the path the scaffold reports', () => {
+      const create = block('**Create.**', '### Step 2')
+        .replaceAll('{project-name}', 'new-one')
+        .replaceAll('{scope}', 'shared');
+      const reported = `{\n  "status": "ok",\n  "projectPath": "${NEW}"\n}`;
+      // A failed scaffold stops even when its output names a usable path and
+      // the pointer, so only the scaffold's own exit code can stop it.
+      const failed = run(create, {
+        STUB_NEW_EXIT: '1',
+        STUB_NEW_JSON: reported,
+        STUB_GET: NEW,
+      });
+      expect(failed.stderr).toContain('oat project new failed');
+      expect(failed.status).toBe(1);
+      expect(failed.stdout).not.toContain('reached=');
+      // The pointer was not repointed: re-reading it would name old-one.
+      const stale = run(create, { STUB_NEW_JSON: reported, STUB_GET: OLD });
+      expect(stale.stderr).toContain(`the active project is '${OLD}'`);
+      expect(stale.status).toBe(1);
+      expect(stale.stdout).not.toContain('reached=');
+      const ok = run(create, { STUB_NEW_JSON: reported, STUB_GET: NEW });
+      expect(ok.status).toBe(0);
+      expect(ok.stdout).toContain(`reached=${NEW}`);
+    });
   });
 
   it('checks the same reshape triggers on every resume in SKILL.md and reshape.md', () => {

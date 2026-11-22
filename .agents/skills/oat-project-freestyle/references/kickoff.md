@@ -46,8 +46,10 @@ written. The options:
 - **None.** Record `None.` and continue.
 - **Brainstorm with `oat-brainstorm`.** Before handing off:
   1. Confirm that `oat config get activeProject` prints this project's path:
-     `oat-brainstorm` writes to the active project. If it does not, set it as
-     `SKILL.md` Step 1 does.
+     `oat-brainstorm` writes to the active project. If it does not, set it
+     with `SKILL.md` Step 1's guarded block, which stops when the write fails
+     or the pointer still names another project; never hand off while the
+     pointer names another project.
   2. Record in this section:
      `Brainstorm with oat-brainstorm, started <date>; result: pending.`
   3. Add a line directly below `**Last shaped:**`:

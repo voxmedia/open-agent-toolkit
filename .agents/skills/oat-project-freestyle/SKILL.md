@@ -109,10 +109,22 @@ the files it creates, so unrelated changes stay where they are.
 
 ```bash
 PROJECT_PATH="{project-path}"
-oat config set activeProject "$PROJECT_PATH"
-PROJECT_PATH=$(oat config get activeProject)
+oat config set activeProject "$PROJECT_PATH" || {
+  echo "freestyle: could not make $PROJECT_PATH the active project; stopping" >&2
+  exit 1
+}
+# The pointer must now name this project, or brainstorm and the records
+# commands would act on the previous one. Compare canonical directories.
+ACTIVE_PATH=$(oat config get activeProject 2>/dev/null || true)
+if [ -z "$ACTIVE_PATH" ] ||
+  [ "$(cd "$ACTIVE_PATH" 2>/dev/null && pwd -P)" != "$(cd "$PROJECT_PATH" && pwd -P)" ]; then
+  echo "freestyle: the active project is '$ACTIVE_PATH', not $PROJECT_PATH; stopping" >&2
+  exit 1
+fi
 ```
 
+A failed pointer write, or a pointer that still names another project, stops
+the run before Step 2: never read or shape against the previous project.
 Continue at Step 2.
 
 **Another mode.** When the named project, or the active project when none is
@@ -131,9 +143,31 @@ recommending the repository default; scope is chosen here, not shaped:
   `refs/oat/projects/<slug>`; it needs an `origin` remote.
 
 ```bash
-oat project new "{project-name}" --mode freestyle --scope "{scope}"
-PROJECT_PATH=$(oat config get activeProject)
+SCAFFOLD=$(oat project new "{project-name}" --mode freestyle --scope "{scope}" --json) || {
+  printf '%s\n' "$SCAFFOLD"
+  echo "freestyle: oat project new failed; stopping" >&2
+  exit 1
+}
+printf '%s\n' "$SCAFFOLD"
+# Use the path the scaffold reports, never a re-read of the pointer: a pointer
+# that was not repointed still names the previous project.
+PROJECT_PATH=$(printf '%s\n' "$SCAFFOLD" |
+  sed -n 's/.*"projectPath"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+  head -1)
+if [ -z "$PROJECT_PATH" ] || [ ! -f "$PROJECT_PATH/state.md" ]; then
+  echo "freestyle: the scaffold reported no project path with a state.md; stopping" >&2
+  exit 1
+fi
+ACTIVE_PATH=$(oat config get activeProject 2>/dev/null || true)
+if [ -z "$ACTIVE_PATH" ] ||
+  [ "$(cd "$ACTIVE_PATH" 2>/dev/null && pwd -P)" != "$(cd "$PROJECT_PATH" && pwd -P)" ]; then
+  echo "freestyle: the active project is '$ACTIVE_PATH', not $PROJECT_PATH; stopping" >&2
+  exit 1
+fi
 ```
+
+A failed scaffold, a report with no usable project path, or a pointer that
+still names another project stops the run before any shaping write.
 
 Confirm that `"$PROJECT_PATH/state.md"` reports `oat_workflow_mode: freestyle`
 and that `"$PROJECT_PATH/AGENTS.md"` and `"$PROJECT_PATH/shape.md"` exist. A
