@@ -109,6 +109,17 @@ oat_quick_start_gate:
   config_fingerprint: 'sha256:6507556b5ad9795f94a05a4e02d2874e3962475cecf5ec4b0b2294cc4e020b84'
   reviewed_head: '08d0588d801d7cd59afd08323f645b8a0735021b'
   decided_at: '2026-11-21T16:53:11Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p04
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_implement_exit_gate:
   status: allowed
   resolution: configured
@@ -152,8 +163,12 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T04:48:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T13:37:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-11-22T13:37:32Z'
 ---
 
 # Project State: mdxcn

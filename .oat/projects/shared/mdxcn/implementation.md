@@ -963,6 +963,8 @@ The implementer handles continued through the same handle for the p02 recovery a
 - Plan quick-start gate: attempt 1 was blocked with 1 High and 1 Medium, which were resolved in artifacts (`08d0588d8`). Attempt 2 passed with 0 findings at `08d0588d8`. The phase review gate is disabled (operator choice).
 - Final review cap (2026-11-22): three final rounds (4L, 1L, 1L). Complexity review `reviews/archived/complexity-final-2026-11-22T024150Z.md` (local only): deletion-rule compliant, provisional. Operator choice: corrective revision (p04-t10), defer the split-tab container case, then one review narrowed to the delta.
 - **Gate:** oat-project-implement exit gate · **Scope:** final · **Outcome:** ok, then passed (0C/0H/0M/0L, run `09abb358`, codex-6-sol-xhigh) · attempt 1 of 2, no waiver
+- Final verification (Step 12) at `36a6f7789`, forced and uncached (0 cached): `pnpm lint`, `pnpm type-check`, `pnpm build` and `pnpm test` all exit 0. `pnpm test` ran 12 of 12 turbo tasks; the CLI ran 450 test files. Logs are in `.oat/repo/analysis/mdxcn/step12-044931/` (local only).
+- Project recap: skipped by operator choice (`oat_project_recap` skip/interactive, 2026-11-22).
 
 ### Review Received: final
 
