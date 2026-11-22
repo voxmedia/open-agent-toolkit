@@ -402,7 +402,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** completed
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
-**Head:** b560580ccdef3d09433e3c45d43114e5e3ba70b7
+**Head:** 8fa5b4f92b7f02ba265451f827f9673a8e649a73
 
 Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
 
@@ -445,6 +445,8 @@ No CLI source changed. The head advanced under the late-fix rule.
 Late fix p04-t08 (review round 3: L1, docs wording) at `104563286`, made by root: `oxfmt --check` on the page, the docs app `check` (markdownlint, oxfmt, skill catalog) and docs-index freshness (`generate-index`, then `git diff --exit-code`) each exit 0. The head advanced under the late-fix rule.
 
 Late fix p04-t09 (m01 milestone-exit review: H1 to H3, M1 to M7; H4 goes to the operator) at `58a164395`, recorded at `b560580cc`. The checks, each exit 0: the skill-prose contract run (1307 passed), the focused CLI suites (651), `oat:validate-skills`, `lint`, `format`, `check`, `type-check`, `pnpm test` (cli a cache miss, 9841 passed), forced `turbo run build`, `test:skills` (754), `test:smoke` (165), `build:docs` and docs-index freshness. After the commit: `check:skill-bumps` (29), `release:check-versions` and `release:validate`. One forced `pnpm test:evidence` ran with 0 of 12 cached and passed. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
+Late fix p04-t10 (m01 review H4, new-hardening, operator-approved: "operator chose Fix in m01, 2026-11-22") at `6115f4234`, recorded at `8fa5b4f92`. The checks, each exit 0: the skill-prose contract run (1309 passed), `oat:validate-skills`, `lint`, `format`, `check` and `test:skills` (754). After the commit: `check:skill-bumps` (29), `release:check-versions` and `release:validate`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
