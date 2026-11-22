@@ -9488,6 +9488,7 @@ describe('freestyle mode skill contracts', () => {
   it('stops every lifecycle skill that reads the mode for a freestyle project', async () => {
     // Freestyle has no lifecycle workflow, so a skill that would otherwise
     // read it with the spec-driven default names it and stops.
+    // Skills whose stop the ordering test below locates are checked there.
     const checks = [
       [
         '.agents/skills/oat-project-next/SKILL.md',
@@ -9508,14 +9509,6 @@ describe('freestyle mode skill contracts', () => {
       [
         '.agents/skills/oat-project-implement/SKILL.md',
         /\*\*Freestyle projects\.\*\*[^]*?`WORKFLOW_MODE` is `freestyle`, stop there and write nothing: no synced pull/,
-      ],
-      [
-        '.agents/skills/oat-project-design/SKILL.md',
-        /If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy/,
-      ],
-      [
-        '.agents/skills/oat-project-spec/SKILL.md',
-        /If `WORKFLOW_MODE` is `freestyle`, stop here, before any template copy/,
       ],
       [
         '.agents/skills/oat-project-quick-start/SKILL.md',
@@ -9542,28 +9535,8 @@ describe('freestyle mode skill contracts', () => {
         /records `oat_workflow_mode: freestyle`:\*\* stop\s+before any write/,
       ],
       [
-        '.agents/skills/oat-project-pr-final/SKILL.md',
-        /\*\*Freestyle projects \(`WORKFLOW_MODE=freestyle`\)\.\*\* This skill does not apply/,
-      ],
-      [
-        '.agents/skills/oat-project-pr-progress/SKILL.md',
-        /\*\*Freestyle projects \(`WORKFLOW_MODE=freestyle`\)\.\*\* This skill does not apply/,
-      ],
-      [
-        '.agents/skills/oat-project-summary/SKILL.md',
-        /For `oat_workflow_mode: freestyle`, stop before reading or writing anything/,
-      ],
-      [
-        '.agents/skills/oat-project-document/SKILL.md',
-        /For `oat_workflow_mode: freestyle`, stop:/,
-      ],
-      [
         '.agents/skills/oat-project-revise/SKILL.md',
         /If `oat_workflow_mode` is `freestyle`, stop before any write/,
-      ],
-      [
-        '.agents/skills/oat-project-reconcile/SKILL.md',
-        /If `WORKFLOW_MODE` is `freestyle`, stop before any write/,
       ],
       [
         '.agents/skills/oat-project-complete/SKILL.md',
@@ -9588,7 +9561,7 @@ describe('freestyle mode skill contracts', () => {
     > = [
       [
         '.agents/skills/oat-project-pr-progress/SKILL.md',
-        '**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply',
+        'This is a freestyle project; OAT opens no PR for it.',
         [
           'oat config set activeProject',
           '### Step 0.5: Archive Residual Active Review Artifacts',
@@ -9596,7 +9569,7 @@ describe('freestyle mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-pr-final/SKILL.md',
-        '**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply',
+        'This is a freestyle project; OAT opens no PR for it.',
         [
           'oat config set activeProject',
           '### Step 0.5: Archive Residual Active Review Artifacts',
@@ -9959,7 +9932,15 @@ describe('freestyle mode skill contracts', () => {
           ).stdout
             .trim()
             .split('\n');
-        for (const pointer of ['unset', 'stale'] as const) {
+        // Step 0.5 reads only the named path, so it runs once per case; the
+        // stale-pointer fallback of the pre-Step-0 block is exercised once.
+        expect(
+          await runBlock(step05Script),
+          `${testCase.label}: Step 0.5 block`,
+        ).toEqual([scaffolded, 'freestyle']);
+        const pointers =
+          index === 1 ? (['unset', 'stale'] as const) : (['unset'] as const);
+        for (const pointer of pointers) {
           if (pointer === 'stale') {
             await mkdir(join(repo, '.oat/projects/shared/gone'), {
               recursive: true,
@@ -9979,10 +9960,6 @@ describe('freestyle mode skill contracts', () => {
           expect(
             await runBlock(preStep0Script),
             `${testCase.label}, ${pointer} pointer: pre-Step-0 block`,
-          ).toEqual([scaffolded, 'freestyle']);
-          expect(
-            await runBlock(step05Script),
-            `${testCase.label}, ${pointer} pointer: Step 0.5 block`,
           ).toEqual([scaffolded, 'freestyle']);
         }
         // From a subdirectory (m01 R5-1): a valid repo-relative active
@@ -10063,6 +10040,8 @@ describe('freestyle mode skill contracts', () => {
         paragraph: content.slice(at, content.indexOf('```bash', at)),
       };
     }
+
+    const CONTINUES = 'oat-test: arrival continues';
 
     async function run(
       skill: Skill,
@@ -10176,10 +10155,13 @@ describe('freestyle mode skill contracts', () => {
           }
         };
         // The skill stops at the freestyle stop or a failed read; only
-        // otherwise does it run the arrival that follows.
-        const read = await exec(`${prefix}\n${modeRead}`);
-        const stopped =
-          read.status !== 0 || read.stderr.includes('stopping before arrival');
+        // otherwise does it run the arrival that follows. A marker after the
+        // mode read, in the same shell, shows whether the block itself ended
+        // execution: the stop message alone is not a stop.
+        const read = await exec(
+          `${prefix}\n${modeRead}\necho ${CONTINUES} >&2`,
+        );
+        const stopped = !read.stderr.includes(CONTINUES);
         if (stopped) {
           return { pulled: existsSync(mark), stopped, ...read };
         }
@@ -10206,6 +10188,7 @@ describe('freestyle mode skill contracts', () => {
         expect(here.stopped, `${skill}: freestyle checkout here stops`).toBe(
           true,
         );
+        expect(here.status, here.stderr).toBe(0);
         expect(here.pulled, `${skill}: freestyle checkout here: no pull`).toBe(
           false,
         );
@@ -10214,6 +10197,10 @@ describe('freestyle mode skill contracts', () => {
         );
 
         const fromRef = await run(skill, { refMode: 'freestyle' });
+        expect(fromRef.stopped, `${skill}: freestyle from the ref stops`).toBe(
+          true,
+        );
+        expect(fromRef.status, fromRef.stderr).toBe(0);
         expect(
           fromRef.pulled,
           `${skill}: freestyle read from the ref: no pull`,
@@ -10235,6 +10222,9 @@ describe('freestyle mode skill contracts', () => {
         ).toBe(true);
 
         const failedLookup = await run(skill, { lsRemote: 128, record: true });
+        expect(failedLookup.stopped, `${skill}: failed lookup stops`).toBe(
+          true,
+        );
         expect(failedLookup.status).toBe(1);
         expect(failedLookup.stderr).toContain(
           'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',

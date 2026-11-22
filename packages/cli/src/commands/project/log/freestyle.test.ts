@@ -57,8 +57,11 @@ interface Harness {
   command: Command;
 }
 
-function createHarness(cwd: string, now: Date): Harness {
+function createHarness(cwd: string, now: Date | readonly Date[]): Harness {
   const capture = createLoggerCapture();
+  // A list gives each clock read the next reading, repeating the last one.
+  const readings = Array.isArray(now) ? now : [now as Date];
+  let reads = 0;
   return {
     capture,
     command: createProjectLogCommand({
@@ -75,7 +78,7 @@ function createHarness(cwd: string, now: Date): Harness {
       resolveProjectRoot: async () => cwd,
       resolveAssetsRoot: async () => CANONICAL_ASSETS_ROOT,
       readStdin: async () => '',
-      now: () => now,
+      now: () => readings[Math.min(reads++, readings.length - 1)] as Date,
     }),
   };
 }
@@ -440,7 +443,11 @@ describe('structural event fields', () => {
 
   it('takes the heading date and the time of day from one UTC clock reading', async () => {
     const { root, projectPath, logPath } = await createProject();
-    const harness = createHarness(root, new Date('2026-07-17T23:59:59.999Z'));
+    // A second clock read would cross midnight into the next day.
+    const harness = createHarness(root, [
+      new Date('2026-07-17T23:59:59.999Z'),
+      new Date('2026-07-18T00:00:00.000Z'),
+    ]);
     await run(harness.command, 'append', eventArgs(projectPath, ['--time']));
     expect(process.exitCode).toBe(0);
     const [entry] = parseProjectLogEntries(
