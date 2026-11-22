@@ -4254,6 +4254,8 @@ describe('oat project dispatch-ceiling resolve', () => {
   it.each([
     ['gpt-6-sol', 'oat-phase-implementer-gpt-6-sol-max'],
     ['gpt-6.1-sol', 'oat-phase-implementer-gpt-6-1-sol-max'],
+    ['gpt-6.2-sol', 'oat-phase-implementer-gpt-6-2-sol-max'],
+    ['gpt-6.2-astra', 'oat-phase-implementer-gpt-6-2-astra-max'],
   ])(
     'rejects unsupported ultra candidates while accepting %s max as the Frontier ceiling',
     async (model, variant) => {

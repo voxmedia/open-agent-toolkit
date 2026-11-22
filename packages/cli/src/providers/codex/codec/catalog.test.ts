@@ -8,8 +8,16 @@ import {
 } from './catalog';
 
 describe('supported Codex role catalogue', () => {
-  it('contains the exact immutable 37-target product set', () => {
+  it('contains the exact immutable 47-target product set', () => {
     expect(SUPPORTED_CODEX_ROLE_TARGETS).toEqual([
+      ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
+        model: 'gpt-6.2-sol',
+        effort,
+      })),
+      ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
+        model: 'gpt-6.2-astra',
+        effort,
+      })),
       ...['low', 'medium', 'high', 'xhigh', 'max'].map((effort) => ({
         model: 'gpt-6.1-sol',
         effort,
@@ -50,12 +58,12 @@ describe('supported Codex role catalogue', () => {
     ]);
   });
 
-  it('expands deterministically to exactly 74 unique pinned variants', () => {
+  it('expands deterministically to exactly 94 unique pinned variants', () => {
     const catalogue = expandSupportedCodexRoleCatalogue();
     const roleNames = catalogue.map((entry) => entry.roleName);
 
-    expect(catalogue).toHaveLength(74);
-    expect(new Set(roleNames)).toHaveLength(74);
+    expect(catalogue).toHaveLength(94);
+    expect(new Set(roleNames)).toHaveLength(94);
     expect(roleNames).toEqual([...roleNames].sort());
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-astra-low');
     expect(roleNames).toContain('oat-phase-implementer-gpt-6-astra-medium');

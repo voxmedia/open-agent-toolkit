@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-31.1",
+  "version": "2026-11-21.3",
   "providers": {
     "codex": {
       "economy": {
@@ -49,17 +49,17 @@
         "candidates": [
           {
             "harness": "codex",
-            "model": "gpt-6.1-sol",
+            "model": "gpt-6.2-sol",
             "effort": "low"
           },
           {
             "harness": "codex",
-            "model": "gpt-6.1-sol",
+            "model": "gpt-6.2-sol",
             "effort": "medium"
           },
           {
             "harness": "codex",
-            "model": "gpt-6.1-sol",
+            "model": "gpt-6.2-sol",
             "effort": "high"
           }
         ]
@@ -68,17 +68,17 @@
         "candidates": [
           {
             "harness": "codex",
-            "model": "gpt-6.1-sol",
+            "model": "gpt-6.2-sol",
             "effort": "xhigh"
           },
           {
             "harness": "codex",
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "effort": "high"
           },
           {
             "harness": "codex",
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "effort": "xhigh"
           }
         ]
@@ -137,7 +137,7 @@
           },
           {
             "harness": "claude",
-            "model": "claude-fable-5-1",
+            "model": "claude-fable-5-2",
             "effort": "high"
           }
         ]
@@ -148,6 +148,7 @@
         "candidates": [
           "composer-2.5",
           "gpt-5.6-luna-high",
+          "gemini-4-hydrogen-medium",
           "gpt-5.6-luna-xhigh"
         ]
       },
@@ -155,25 +156,23 @@
         "candidates": [
           "cursor-grok-4.6-medium",
           "gpt-5.6-terra-high",
+          "gemini-4-neon-medium",
           "claude-opus-5-5-low"
         ]
       },
       "high": {
         "candidates": [
-          "gpt-5.6-sol-medium",
           "claude-opus-5-5-low",
-          "gpt-5.6-sol-high",
           "claude-opus-5-5-medium",
+          "gemini-4-neon-high",
           "claude-opus-5-5-high"
         ]
       },
       "frontier": {
         "candidates": [
-          "gpt-5.6-sol-xhigh",
-          "gpt-5.6-sol-max",
           "claude-opus-5-5-high",
           "claude-opus-5-5-xhigh",
-          "claude-fable-5-1-thinking-high"
+          "claude-fable-5-2-high"
         ]
       }
     }

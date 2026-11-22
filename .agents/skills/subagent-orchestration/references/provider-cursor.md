@@ -1,13 +1,15 @@
 ---
-guidance_version: 2026-10-31
-last_verified: 2026-10-31
-review_after: 2027-01-30
+guidance_version: 2026-11-21
+last_verified: 2026-11-21
+review_after: 2027-02-19
 catalog_basis:
+  Cursor desktop 3.29.9 editor Agent Chat matched exact IDs for Fable 5.2
+  medium and high, Gemini 4 Neon low through xhigh, Hydrogen medium, and
+  Carbon high.
   Cursor desktop 3.21.18 resolved Grok 4.6 and Fable 5.1 effort selectors in
   native subagent hooks, and Grok 4.7 only as bare flat IDs; Cursor desktop
-  3.20.14 resolved all five Opus 5.5 effort selectors; GPT-6 Sol/Luna and
-  GPT-6.1 Sol/Terra were absent from the observed Cursor catalog, and Cursor
-  does not support GPT models past 5.6; the 2026-10-01 CLI catalog lists
+  3.20.14 resolved all five Opus 5.5 effort selectors. The observed Cursor
+  catalog did not list GPT-6.x selectors. The 2026-10-01 CLI catalog lists
   Sonnet 5.5 flat IDs; Cursor desktop 3.22.12 matched five exact-ID Sonnet
   5.5 pins while every bracket-form Sonnet 5.5 probe fell back
 ---
@@ -54,17 +56,32 @@ Cursor desktop 3.20.14 resolved all five `claude-opus-5-5[effort=...]`
 selectors to corresponding flat IDs in native hooks; on 2026-09-25, Cursor
 desktop 3.21.18 did the same for Grok 4.6 and Fable 5.1. See the
 probe records at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
-GPT-6 Sol/Luna, GPT-6.1 Sol, and GPT-6.1 Terra were absent from the Cursor
-catalogue. Cursor does not support GPT models past 5.6, so Codex availability
-does not authorize those Cursor routes. Keep the GPT-5.6 selectors below.
+The observed Cursor catalogue did not list GPT-6.x selectors. Verify Cursor
+availability and pin evidence independently of Codex.
 
-| Task class               | Default                                                             | Economy                                            | Escalation                                                  | Floor notes                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `mechanical-recon`       | `composer-2.5`                                                      | Same with mechanical verification                  | `gpt-5.6-luna-high`                                         | Fast aliases select service tier, not capability.                                                                |
-| `intelligent-recon`      | `cursor-grok-4.6-medium` or `gpt-5.6-sol-medium`                    | `gpt-5.6-terra-high`                               | `gpt-5.6-sol-high`                                          | Verify silent-miss-prone conclusions.                                                                            |
-| `default-implementation` | `gpt-5.6-sol-medium`                                                | `composer-2.5` for bounded, testable changes       | `gpt-5.6-sol-high`                                          | `cursor-grok-4.6-medium` or `-high` is the Cursor-native alternative by difficulty.                              |
-| `hard-reasoning`         | `gpt-5.6-sol-high`                                                  | `cursor-grok-4.6-high` with corroborating evidence | `gpt-5.6-sol-xhigh`                                         | Opus 5.5 high/xhigh and Fable 5.1 thinking high are verified alternatives; qualify task performance separately.  |
-| `consequential`          | An eligible high-effort author with independent cross-family review | No routine economy route                           | Sol xhigh for a depth bottleneck; max only after evaluation | If independent review cannot be met among approved Cursor mappings, use a separately qualified provider or stop. |
+| Task class               | Default                                                             | Economy                                                  | Escalation                                       | Floor notes                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | `composer-2.5`                                                      | Same with mechanical verification                        | `gpt-5.6-luna-high`                              | Fast aliases select service tier, not capability.                                                                |
+| `intelligent-recon`      | `cursor-grok-4.6-medium` or `gemini-4-hydrogen-medium`              | `gemini-4-hydrogen-medium`                               | `gemini-4-neon-medium`                           | Verify silent-miss-prone conclusions.                                                                            |
+| `default-implementation` | `gemini-4-neon-medium` or `claude-opus-5-5-low`                     | `gemini-4-hydrogen-medium` for bounded, testable changes | `claude-opus-5-5-medium`                         | Use an eligible candidate from the configured ladder.                                                            |
+| `hard-reasoning`         | `claude-opus-5-5-high` or `gemini-4-neon-high`                      | No routine economy route                                 | `claude-opus-5-5-xhigh`                          | Fable 5.2 high is a verified specialist option. Qualify task performance separately.                             |
+| `consequential`          | An eligible high-effort author with independent cross-family review | No routine economy route                                 | Eligible Opus xhigh or Fable high when warranted | If independent review cannot be met among approved Cursor mappings, use a separately qualified provider or stop. |
+
+## Fable 5.2 and Gemini 4 Pin Evidence
+
+The November 21 editor Agent Chat probe verified `claude-fable-5-2-medium`,
+`claude-fable-5-2-high`, Gemini 4 Neon at low, medium, high, and xhigh,
+`gemini-4-hydrogen-medium`, and `gemini-4-carbon-high`. The start, child
+Shell call, and stop hooks agreed for each selector. The unknown-family and
+unsupported-effort controls fell back to `grok-4.7-high-fast`. The retained
+observations are described in
+`packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
+
+Fable 5.2 high replaces Fable 5.1 high in the bundled Frontier tier.
+The bundled ladder adds Hydrogen medium at Economy, Neon medium at Balanced,
+and Neon high at High. Opus 5.5 low and high end Balanced and High,
+respectively. The verified GPT-5.6 Sol pins remain available for explicit
+configurations, alongside Neon low and xhigh and Carbon high.
 
 ## Current Opus 5.5 Pin Evidence
 
@@ -78,7 +95,7 @@ agreed for every rung. The Sonnet 5 high positive control resolved to
 links the adjacent redacted summary and native-event JSONL records containing
 the exact observations. Recheck live availability before launch.
 
-## Current Grok 4.6, Fable 5.1, and Grok 4.7 Pin Evidence
+## Grok 4.6, Fable 5.1, and Grok 4.7 Pin Evidence
 
 Cursor desktop 3.21.18 resolved `grok-4.6[effort=low|medium|high|xhigh,fast=false]`
 to `cursor-grok-4.6-low|medium|high|xhigh` and
@@ -204,9 +221,9 @@ and non-thinking variants.
 - CursorBench caveat: Cursor disclosed that Cursor repository data entered
   Grok 4.5's training mixture. Do not carry that caveat onto Grok 4.6, whose
   CursorBench results are current but still harness-specific evidence.
-- `claude-fable-5-1-thinking-high`: eligible specialist for hard reasoning and
-  the bundled Frontier terminal target; xhigh only for evaluated long-horizon
-  work. Cursor lists Fable as "NO ZDR"; confirm retention eligibility.
+- `claude-fable-5-2-high`: eligible specialist for hard reasoning and the
+  bundled Frontier terminal target. Cursor lists Fable as "NO ZDR".
+  Confirm retention eligibility before launching.
 - `claude-sonnet-5-5-high`: exact-ID provider-diversity option for normal
   implementation and agentic work; qualify task performance separately.
 - `claude-sonnet-5-thinking-high`: supported compatibility option for
@@ -214,7 +231,7 @@ and non-thinking variants.
 - `gpt-5.4-mini-medium`: economical general tool and coding worker.
 - `gpt-5.4-nano-medium`: strict extraction, classification, ranking, and simple
   read-only tool calls. Not a semantic repository worker.
-- Gemini, Kimi, GLM, GPT-5.5/5.4/5.3 Codex/5.2, and older Claude aliases:
+- Kimi, GLM, GPT-5.5/5.4/5.3 Codex/5.2, and older Claude aliases:
   compatibility, availability, or task-specific alternatives. Do not make them
   defaults without current relevant evidence.
 

@@ -80,15 +80,16 @@ publish a provider-independent effort conversion.
 
 ## Current Evidence Summary
 
-- GPT-6 Astra is selectable in the current Codex catalogue at low through max.
-  The bundled Frontier preference uses Astra high and xhigh after Sol xhigh by
-  explicit user direction. No local task evaluation establishes an Astra
-  advantage, and this preference is not acceptance by the separately
-  maintained model-selection policy.
-- GPT-6.1 Sol and GPT-6 Luna are the default new-work selectors in
-  `provider-codex.md`. The Sol migration preserves existing effort choices,
-  including medium for intelligent recon. GPT-6 Sol and GPT-5.6 Sol/Luna/Terra
-  remain supported for explicit configurations. The July independent coding
+- The November 2026 Codex catalog refresh adds GPT-6.2 Sol and Astra at low
+  through max and uses their existing predecessors' slots in the bundled
+  recommendation. Frontier orders Sol 6.2 xhigh, Astra 6.2 high, then Astra
+  6.2 xhigh. This placement carries forward OAT's existing preference and has
+  no new local task evaluation.
+- GPT-6.2 Sol and GPT-6 Luna are the default implementation and input-heavy
+  selectors in `provider-codex.md`. GPT-6.1 Terra low and medium are the
+  starting points for mechanical and scoped intelligent recon. GPT-6.1 Sol,
+  GPT-6 Astra, GPT-6 Sol, and GPT-5.6 Sol/Luna/Terra remain supported for
+  explicit configurations. The July independent coding
   data on GPT-5.6 Luna/Terra supported a mechanical floor of Luna high; this
   is historical evidence, not a measured GPT-6 performance comparison.
 - Opus 5.5 is the current substantive Claude route. Start at medium for
@@ -102,15 +103,22 @@ publish a provider-independent effort conversion.
   approved evidence and registry entry. Sonnet 5 remains
   supported for compatibility and established workflows. Sonnet is a
   conditional route when measured latency, throughput, access,
-  rate limits, or end-to-end workload economics win. Fable 5 is an
-  eligibility-gated specialist; its missing-domain-concept or long-horizon
-  reviewer instantiation remains provisional, and zero-data-retention
-  requirements exclude the current route.
+  rate limits, or end-to-end workload economics win. Claude Code Frontier
+  uses Fable 5.2 high as the eligibility-gated specialist. The placement
+  carries forward the prior reviewer slot without a new workload comparison.
+  Fable 5.2 requires 30-day retention unless Anthropic expressly authorizes
+  zero data retention.
+- Cursor desktop 3.29.9 editor Agent Chat matched eight Fable 5.2 and Gemini 4
+  exact IDs. Fable 5.2 high takes the prior Fable Frontier slot. The bundled
+  ladder offers Hydrogen medium at Economy, Neon medium at Balanced, and
+  Neon high at High. GPT-5.6 Sol remains available for explicit Cursor
+  configurations. Native pin evidence covers model selection and fallback
+  behavior. Workload comparisons remain separate.
 - CursorBench supports Composer 2.5 as an economical bounded coding worker.
   Cursor explicitly documents Composer fast as the same intelligence at a
   higher latency tier price.
-- Mechanical reconnaissance remains harness-specific: GPT-6 Luna high in Codex,
-  Haiku 4.5 in Claude, and Composer 2.5 in Cursor. Direct API mini or nano
+- Mechanical reconnaissance remains harness-specific: GPT-6.1 Terra low in
+  Codex, Haiku 4.5 in Claude, and Composer 2.5 in Cursor. Direct API mini or nano
   routes are limited to strict extraction, classification, or similarly
   mechanically verified work.
 - OpenAI's historical GPT-5.6 long-context evidence cautions against

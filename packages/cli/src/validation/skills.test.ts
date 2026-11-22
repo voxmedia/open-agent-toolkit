@@ -2855,7 +2855,7 @@ describe('validateOatSkills', () => {
     );
     expect(configurationDocs).toMatch(
       new RegExp(
-        `${CURSOR_MODEL_PIN_MAPPINGS.filter((mapping) => mapping.catalogue).length} catalogued`,
+        `${CURSOR_MODEL_PIN_MAPPINGS.filter((mapping) => mapping.catalogue).length} flat IDs`,
       ),
     );
     expect(configurationDocs).toContain('`opus-5-5`');
@@ -3309,7 +3309,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.42');
+    expect(readDeclaredVersion(shared)).toBe('1.2.45');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -3354,7 +3354,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(readDeclaredVersion(shared)).toBe('1.2.42');
+    expect(readDeclaredVersion(shared)).toBe('1.2.45');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -3434,18 +3434,19 @@ describe('validateOatSkills', () => {
     expect(shared).toContain('ladderCompleteness.missingCells');
     expect(shared).toMatch(/unresolvedReason` is `ladder` or `both`/);
     expect(shared).toMatch(
-      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Luna\/max[\s\S]{0,500}Sol\/xhigh[\s\S]{0,120}Astra\/high[\s\S]{0,120}Astra\/xhigh/i,
+      /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Luna\/max[\s\S]{0,500}gpt-6\.2-sol\/xhigh[\s\S]{0,120}gpt-6\.2-astra\/high[\s\S]{0,120}gpt-6\.2-astra\/xhigh/i,
     );
     expect(shared).toMatch(
-      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5-5[\s\S]{0,200}claude-fable-5-1/i,
+      /Claude[\s\S]{0,500}haiku[\s\S]{0,200}claude-sonnet-5[\s\S]{0,200}claude-opus-5-5[\s\S]{0,200}claude-fable-5-2/i,
     );
     for (const cursorTarget of [
       'composer-2.5',
       'gpt-5.6-terra-high',
-      'gpt-5.6-sol-high',
+      'gemini-4-hydrogen-medium',
+      'gemini-4-neon-high',
       'cursor-grok-4.6-medium',
       'claude-opus-5-5-high',
-      'claude-fable-5-1-thinking-high',
+      'claude-fable-5-2-high',
     ]) {
       expect(
         shared,
@@ -3498,7 +3499,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(readDeclaredVersion(shared)).toBe('1.2.42');
+    expect(readDeclaredVersion(shared)).toBe('1.2.45');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -5192,7 +5193,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.42'],
+      ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-review-provide', '1.5.20'],
       ['oat-project-review-receive', '1.6.18'],
       ['oat-project-review-receive-remote', '1.5.6'],
@@ -5959,12 +5960,19 @@ describe('validateOatSkills', () => {
     for (const model of [
       'gpt-5.6-luna-high',
       'gpt-5.6-terra-high',
+      'gemini-4-hydrogen-medium',
+      'gemini-4-neon-high',
+    ]) {
+      expect(planWriting, `artifact contract includes ${model}`).toContain(
+        model,
+      );
+    }
+    for (const model of [
+      'gpt-5.6-luna-high',
+      'gpt-5.6-terra-high',
       'gpt-5.6-sol-high',
       'gpt-5.6-sol-max',
     ]) {
-      expect(planWriting, `artifact contract preserves ${model}`).toContain(
-        model,
-      );
       expect(configuration, `configuration preserves ${model}`).toContain(
         model,
       );
@@ -6543,10 +6551,10 @@ describe('validateOatSkills', () => {
     expect(scope).not.toMatch(/user-scope role generation remains.*deferred/i);
 
     expect(providers).toMatch(
-      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}GPT-6\.1 Sol and GPT-6 Luna, Sol, and Astra[\s\S]{0,350}66 pinned variants/i,
+      /Project sync (?:writes|maintains)[\s\S]{0,120}version-controlled[\s\S]{0,180}94 pinned variants[\s\S]{0,180}GPT-6\.1 Terra/i,
     );
     expect(providers).toMatch(
-      /Codex `max`[\s\S]{0,120}GPT-6\.1 Sol, GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
+      /Codex `max`[\s\S]{0,120}GPT-6\.2 Sol and Astra, GPT-6\.1 Sol, GPT-6 Luna, Sol, and Astra[\s\S]{0,100}GPT-5\.6 Sol/i,
     );
     expect(providers).not.toMatch(
       /26 pinned variants|max.*only for the Sol family/i,
@@ -6605,7 +6613,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.42'],
+      ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-plan', '1.4.23'],
       ['oat-project-quick-start', '2.3.27'],
       ['oat-project-import-plan', '1.4.25'],
@@ -6756,7 +6764,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(readDeclaredVersion(engine)).toBe('1.2.13');
+    expect(readDeclaredVersion(engine)).toBe('1.2.14');
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(readDeclaredVersion(adapter)).toBe('1.1.9');
@@ -6915,7 +6923,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.13'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.14'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.6'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.4'],
     ] as const;
