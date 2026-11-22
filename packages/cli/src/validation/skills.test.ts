@@ -9535,10 +9535,6 @@ describe('freestyle mode skill contracts', () => {
         /records `oat_workflow_mode: freestyle`:\*\* stop\s+before any write/,
       ],
       [
-        '.agents/skills/oat-project-revise/SKILL.md',
-        /If `oat_workflow_mode` is `freestyle`, stop before any write/,
-      ],
-      [
         '.agents/skills/oat-project-complete/SKILL.md',
         /\*\*Freestyle projects\.\*\*[^]*?stop before any write[^]*?### Step 1\.5: Closeout Invariant Gate/,
       ],
@@ -9599,6 +9595,11 @@ describe('freestyle mode skill contracts', () => {
           'test -f "$PROJECT_PATH/plan.md"',
           '### Step 1: Find Checkpoint',
         ],
+      ],
+      [
+        '.agents/skills/oat-project-revise/SKILL.md',
+        'If `WORKFLOW_MODE` is `freestyle`, stop before any write',
+        ['oat config set activeProject', '### Step 1: Validate Project State'],
       ],
       [
         '.agents/skills/oat-project-import-plan/SKILL.md',

@@ -89,22 +89,32 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it for future use:
-  ```bash
-  mkdir -p .oat
-  oat config set activeProject "$PROJECT_PATH"
-  ```
+- Write the active-project pointer only after the freestyle check below.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+Then resolve the workflow mode, before the active-project pointer is written:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
+project has no plan phases to add revision work to. Tell the user: "This is a
+freestyle project; OAT adds no revision phase. Handle the feedback as
+`shape.md` says."
+
+When the project name was asked for above, write the pointer now for future
+use:
+
+```bash
+mkdir -p .oat
+oat config set activeProject "$PROJECT_PATH"
+```
 
 ### Step 1: Validate Project State
 
 Read `"$PROJECT_PATH/state.md"` frontmatter.
-
-If `oat_workflow_mode` is `freestyle`, stop before any write: a freestyle
-project has no plan phases to add revision work to. Tell the user: "This is a
-freestyle project; OAT adds no revision phase. Handle the feedback as
-`shape.md` says."
 
 **Accepted entry states for `oat_phase_status`:**
 
