@@ -986,13 +986,31 @@ Proof: skill-prose vitest over `src/commands/init/tools/shared src/validation`.
 
 ### Task p04-t22: (review) Read the mode before the synced pull in review-provide, complete and autonomous
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** fa8507b2639a96d23917abbdc13cbc1870c468c1
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-1)
 
 Intent: `oat-project-review-provide`, `oat-project-complete` and `oat-project-autonomous` run `oat project pull` in Step 0 before their freestyle stop, so a synced freestyle project with a remote ref and no discovery record gets an `adopt synced project` commit (review-provide) or a materialized checkout (complete, autonomous). Read the mode before the mutating arrival, following `oat-project-implement` Step 0 (checkout first, then the synced ref; a failed lookup stops), and give the `oat project pull <slug>` instruction for an unpulled freestyle project. Other modes keep the arrival pull unchanged. Class: accepted-requirement (plan.md Constraint: no automatic commits after creation; Outcome 1). Operator: fix in m01 with no further review rounds.
 Files: the three skills, their contract tests.
 Proof: executable Step 0 tests per skill (freestyle here, freestyle from the ref, quick control), can-fail per skill.
+
+- **J-1:** each of the three skills now has a `**Freestyle projects.**` paragraph and a read-only mode-read block immediately before its existing synced arrival.
+  - review-provide places it before its Step 0 pull, complete before the Step 1 synced archive entry (the executor that pulls), and autonomous before its Step 0 pull.
+  - The block is the `oat-project-implement` Step 0 mode read, verbatim through its freestyle stop: repository-root `cd`, scope, the checkout's `state.md`, then the synced ref through `git ls-remote --exit-code`, an objects-only `--refmap=` fetch and `git show <sha>:state.md`. A failed lookup or an unreadable ref mode stops.
+  - A freestyle project stops there, before the pull, with each skill's existing stop: review-provide's Step 1.6 routing to `oat-review-provide`, complete's end-of-step `complete-state`/`archive` message, and autonomous's Step 1 product-judgment boundary. With no checkout here, the stop adds "Run `oat project pull <slug>` to bring it here."
+  - Every existing arrival block is byte-identical, so other modes keep their pull and the pinned arrival sentences; each skill diff is additions only. The inventory anchors and line budgets are unchanged and still pass.
+  - `autonomy.md` and `reviews/index.md` now say that the stop comes before any synced pull.
+- **Tests (`skills.test.ts`):** a new describe runs, for each skill, the mode-read block and then, unless it stopped, the unchanged arrival block, against stub `oat`, `git` (honouring `--exit-code`) and, for complete, `node` standing in for the synced archive-entry executor.
+  - Cases: freestyle checkout here stops with no pull; freestyle read from the ref stops with no pull; a quick control with no checkout arrives; a quick checkout here arrives; a failed `ls-remote` (exit 128) stops with no pull.
+  - The paragraph carries the pull instruction, and a byte-identity check confirms each arrival block still holds its original pull or entry line and no mode read.
+  - The freestyle-stop ordering test adds the three skills: each stop comes before its pull or entry and its later steps.
+- **Can-fail**, six mutations, each failing on its own behavioural clause, then restored and byte-compared:
+  - Retargeting the freestyle comparison fails `<skill>: freestyle checkout here stops` in all three skills.
+  - Dropping the synced-ref branch fails `<skill>: freestyle read from the ref: no pull` in all three skills.
+  - A first mutation that deleted the stop lines tripped the block-shape assertion instead. The shape check was relaxed to `WORKFLOW_MODE=null` and the behavioural mutations above were run.
+- **Version:** no new bump; review-provide (1.5.21), complete (1.7.21) and autonomous (1.0.28) are already above main in this PR.
+- Proof before the commit, each exit 0: the skill-prose vitest over `src/commands/init/tools/shared src/validation` (33 files, 1320 passed), `oat:validate-skills`, `oxlint` and `oxfmt --check` on the changed files, and markdownlint on the two docs.
 
 ### Task p04-t23: (review) Give the pull instruction in the dashboard for an unpulled synced project
 
