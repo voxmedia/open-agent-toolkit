@@ -909,12 +909,26 @@ Proof: the detection block selects the same project from the root and from a sub
 
 ### Task p04-t18: (review) Show the pull instruction for an active unpulled synced project
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** b997ca31cf823a72522dbfc5d22d6cf776e5d68c
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-4)
 
 Intent: `packages/cli/src/commands/project/status.ts:312` returns the generic missing-project error before the unmaterialized synced-record classifier, so default `oat project status` reports `missing` where `--project-path` returns `oat project pull`. Try the classifier when the active path is missing; keep the error for genuinely missing projects. Class: accepted-requirement (plan.md Outcome 1).
 Files: `packages/cli/src/commands/project/status.ts`, `status.test.ts`.
 Proof: default and explicit status agree on a fresh clone with a valid record; a missing project without a record still errors; can-fail.
+
+- **I-4:** when default `oat project status` finds the active project `missing` and the pointer has a path, it first tries `resolveUnpulledSyncedProject`, the classifier `--project-path` already uses, resolved against the repository root. A synced project recorded on this branch but not pulled now gets the same `oat project pull` row in JSON and text. A missing project with no record still returns `status: missing` with exit 1. `cli-reference.md` names the default status alongside `--project-path`.
+- **Tests:** two real-repository cases in `status.test.ts`, each with the shared synced fixture's fresh clone and a real `.oat/config.local.json` pointer.
+  - With a valid record, default `--json` status equals the explicit `--project-path` payload (`checkout: absent`, `oat project pull`), exits 0, and the text output carries `Hint: oat project pull synced-absent`.
+  - An active project with no record keeps the `missing` error and exit 1.
+- **Can-fail**, each neutralized, failing on its own test, then restored and byte-compared:
+  - Disabling the classifier branch fails the record test with exit 1.
+  - Letting that branch return without the error fails the no-record test, which gets no payload.
+- Proof before the commit, each exit 0:
+  - vitest over `status.test.ts` and `list.integration.test.ts` (2 files, 37 passed).
+  - cli `tsc --noEmit`, the cli `lint` script, and `oxfmt --check` on the changed files.
+  - markdownlint on `cli-reference.md`.
 
 ### Task p04-t19: (review) Read freestyle lifecycle in the dashboard from the parsed state
 
