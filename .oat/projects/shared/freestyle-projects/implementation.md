@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p05
+oat_current_task_id: p04
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | pending  | 1     | 0/1      |
-| p06   | pending  | 1     | 0/1      |
-| p07   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
-| p09   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | in_progress | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
-**Total:** 4/9 phases accepted
+**Total:** 3/9 phases accepted
 
 ---
 
@@ -399,7 +399,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ## Phase p04: m01 docs and release
 
-**Status:** completed
+**Status:** in_progress
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Head:** 6d97810c30cc24cf9fe96e4f189866b0f80a64b1
@@ -850,6 +850,60 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Proof before the commit, each exit 0: `pnpm build` (0 cached), the skill-prose vitest (33 files, 1314 passed), `oat:validate-skills`, `lint`, `format`, `check` (cli cache miss) and `test:skills` (754).
 - Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
 
+### Task p04-t15: (review) Keep synced brainstorm publication behind an explicit push agreement
+
+**Status:** pending
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-1)
+
+Intent: `.agents/skills/oat-brainstorm/SKILL.md:841-853` enters the persistence block when the agreement allows a commit or a push, and the synced branch always runs `oat project push`, so a commit-only agreement publishes `refs/oat/projects/<slug>`. Distinguish permission to commit from permission to publish; with publication deferred, commit locally in the nested worktree and leave the remote ref unchanged. Class: accepted-requirement (plan.md Outcome 6, p02 Intent, Constraint: `shape.md` controls commits and pushes after creation).
+Files: `.agents/skills/oat-brainstorm/SKILL.md`, its contract test.
+Proof: a published-block test against a scratch origin where a commit-only agreement leaves the remote ref unchanged and a push agreement advances it; can-fail per clause.
+
+### Task p04-t16: (review) Resolve the repository root in the freestyle Create and Resume blocks
+
+**Status:** pending
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-2)
+
+Intent: `.agents/skills/oat-project-freestyle/SKILL.md:146` runs `oat project new` in the caller's directory (`project/new/index.ts:161` scaffolds at `context.cwd`), so a subdirectory run creates `<subdir>/.oat/...`; the resume check at `:120` compares two failed `cd` results as equal and continues. Establish the repository root before both Step 1 blocks and require each directory resolution to succeed before comparing. Class: accepted-requirement (plan.md Outcomes 1 and 6, p02 Intent, operator-approved target verification at p04-t10).
+Files: `.agents/skills/oat-project-freestyle/SKILL.md`, its contract test.
+Proof: verbatim-block tests from a real subdirectory with the built CLI for Create and Resume; can-fail per block.
+
+### Task p04-t17: (review) Resolve the active project from the repository root in brainstorm detection
+
+**Status:** pending
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-3)
+
+Intent: `.agents/skills/oat-brainstorm/SKILL.md:238` tests the repo-relative `activeProject` against the current directory, so from a subdirectory `ACTIVE_PROJECT_VALID=false` and the freestyle handoff is skipped. Resolve against the repository root and keep the resolved path for writing the reference. Class: accepted-requirement (plan.md Outcome 6, p02 brainstorm detour).
+Files: `.agents/skills/oat-brainstorm/SKILL.md`, its contract test.
+Proof: the detection block selects the same project from the root and from a subdirectory; can-fail.
+
+### Task p04-t18: (review) Show the pull instruction for an active unpulled synced project
+
+**Status:** pending
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-4)
+
+Intent: `packages/cli/src/commands/project/status.ts:312` returns the generic missing-project error before the unmaterialized synced-record classifier, so default `oat project status` reports `missing` where `--project-path` returns `oat project pull`. Try the classifier when the active path is missing; keep the error for genuinely missing projects. Class: accepted-requirement (plan.md Outcome 1).
+Files: `packages/cli/src/commands/project/status.ts`, `status.test.ts`.
+Proof: default and explicit status agree on a fresh clone with a valid record; a missing project without a record still errors; can-fail.
+
+### Task p04-t19: (review) Read freestyle lifecycle in the dashboard from the parsed state
+
+**Status:** pending
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-5)
+
+Intent: `packages/cli/src/commands/state/generate.ts:242` reads `oat_lifecycle` (and pause fields) with the LF-only reader while `:259` detects freestyle with the CRLF-aware parser, so a CRLF paused freestyle project loses its lifecycle row and `oat project open` next step. Read them from the same parsed state. Class: accepted-requirement (plan.md Outcome 1; accepted p01 L2 deviation).
+Files: `packages/cli/src/commands/state/generate.ts`, `generate.test.ts`.
+Proof: LF and CRLF paused freestyle render the same lifecycle row and next step; can-fail.
+
+### Task p04-t20: (review) Limit the kickoff local-scope rule to project records
+
+**Status:** pending
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-6)
+
+Intent: `.agents/skills/oat-project-freestyle/references/kickoff.md:184` says a local project "commits nothing, whatever this section says about code". Say that local-scope project records stay uncommitted and the agreed shape governs code commits. Class: accepted-requirement (plan.md Decisions "Records branch" and "Single writer", Outcome 7).
+Files: `.agents/skills/oat-project-freestyle/references/kickoff.md` (and any pinned sentence test).
+Proof: skill-prose vitest over `src/commands/init/tools/shared src/validation`.
+
 ---
 
 ## Phase p05: Linked projects
@@ -909,6 +963,29 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 - 2026-11-21 · brief and m01 amendment review, manual substitute for the project-disabled `oat-project-goal` gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `987d479b798cbc2b2b28df9a3b414d3262cea1df` · 0 blocking; all findings folded into the brief across rounds at `dc3d90918`, `ec7dd284f`, `9b16c94d6`.
 - 2026-11-22 · m01 milestone exit review, manual substitute for the project-disabled `oat-project-implement` exit gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `c14f3517e3d2a925204093b359c6c330b6d1742f` · six rounds: round 1 on `a5c28dca2..7c35a902e` (H1–H4, M1–M7; H4 new-hardening, operator chose fix in m01), round 2 on `..86048bad1` (R2-1..R2-6), round 3 on `..749557100` (R3-1..R3-6; R3-1 and R3-2 operator chose fix in m01), round 4 on `..686d424bc` (R4-1, R4-2 fixed; R4-3 new-hardening Low, deferred), round 5 on `..4a3b2be5c` (R5-1), round 6 on `4a3b2be5c..c14f3517e` pass, 0 findings. Fixes p04-t09..p04-t14. Artifacts `reviews/m01-code-review-2026-11-22T{022415,040026,050000,055500,063000,070000}Z.md` (local-only). Exit carrier `project_disabled`.
+
+### Review Received: m01
+
+**Date:** 2026-11-22
+**Review artifact (local-only):** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md
+
+Integrated milestone review of m01 (p01, p02, p03, p04) on `f6e8b9c92..6d97810c3` (branch-own diff from `a5c28dca2`; integration commit `91ba64a6e`), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only), per the Gates decision. Root verified every cited line at `6d97810c3`.
+
+**Findings:** Critical 0 · High 2 · Medium 3 · Low 1
+**Finding classes:** I-1 accepted-requirement (plan.md Outcome 6, p02 Intent, Constraint on commits after creation) · I-2 accepted-requirement (Outcomes 1 and 6, p02 Intent, p04-t10 operator-approved target verification) · I-3 accepted-requirement (Outcome 6, p02 brainstorm detour) · I-4 accepted-requirement (Outcome 1) · I-5 accepted-requirement (Outcome 1, p01 L2 deviation) · I-6 accepted-requirement (Decisions "Records branch" and "Single writer", Outcome 7)
+
+- I-1 (High): synced brainstorm pushes under a commit-only agreement → fix task p04-t15.
+- I-2 (High): freestyle Create scaffolds under a subdirectory; Resume passes on two failed `cd`s → fix task p04-t16.
+- I-3 (Medium): brainstorm loses the active freestyle project from a subdirectory → fix task p04-t17.
+- I-4 (Medium): default `project status` omits the pull instruction for an active unpulled synced project → fix task p04-t18.
+- I-5 (Medium): CRLF paused freestyle loses the dashboard resume step → fix task p04-t19.
+- I-6 (Low): kickoff local-scope rule reads as covering code commits → fix task p04-t20 (Low default convert; one sentence).
+
+Deferred ledger re-evaluated by the reviewer: p02 L5 and m01 R4-3 still acceptable as recorded; p02 L1–L3 closed in the reviewed skill.
+
+Review-cycle count for m01 integrated: 1 of 3. The six `m01-code-review-*` artifacts are exit-gate rounds (their `oat_review_scope` relabelled `p01-p04`, local-only) and are not counted, although their filenames contain `m01`.
+
+**Outcome:** fixes queued: p04-t15, p04-t16, p04-t17, p04-t18, p04-t19, p04-t20. Late-fix rule: no later phase has a `**Base:**`, so the records land in p04 (status back to `in_progress`, base unchanged). m01 exit carrier marked stale; the exit gate substitute runs again before the next integrated review.
 
 ## Deferred Findings
 
