@@ -110,9 +110,9 @@ oat_quick_start_gate:
   reviewed_head: '08d0588d801d7cd59afd08323f645b8a0735021b'
   decided_at: '2026-11-21T16:53:11Z'
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -135,24 +135,24 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/mdxcn/reviews/final-review-2026-11-22T044315Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/mdxcn/reviews/final-review-2026-11-22T044315Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=09abb358-6c9e-43a6-aec1-8e504c94aab5 handoff=corroborated source=reviews/final-review-2026-11-22T044315Z.md scope=final type=code'
   receive_source_artifact: '.oat/projects/shared/mdxcn/reviews/final-review-2026-11-22T044315Z.md'
   receive_archived_artifact: '.oat/projects/shared/mdxcn/reviews/archived/final-review-2026-11-22T044315Z.md'
   receive_event_identity: 'final|code|final-review-2026-11-22T044315Z.md'
   receive_pre_head: 'f154f726ee1ca6a07d5e0d2ced2d793a592eed97'
-  receive_commit: null
+  receive_commit: '024584f60e41d39f037b0bd29e1d0dc5d314180c'
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-11-22T04:47:41Z'
-  decided_at: null
+  updated_at: '2026-11-22T04:48:48Z'
+  decided_at: '2026-11-22T04:48:48Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T04:47:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T04:48:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -164,7 +164,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete (27/27); final review passed (round 4, narrowed); awaiting the exit gate and the final HiLL approval.
+Implementation - Tasks complete (27/27); final review passed; implementation exit gate passed (codex-6-sol-xhigh, 0 findings); awaiting the final HiLL approval.
 
 ## Artifacts
 
@@ -189,7 +189,8 @@ Implementation - Tasks complete (27/27); final review passed (round 4, narrowed)
 - ✓ Final review round 3 received (0C/0H/0M/1L); cap reached, complexity review run
 - ✓ p04-t10 fixed (`eda765135`)
 - ✓ Final review passed (round 4, narrowed; 2 Lows dispositioned)
-- ⧗ Exit gate and final HiLL approval
+- ✓ Implementation exit gate passed (run `09abb358`, 0 findings)
+- ⧗ Final HiLL approval
 
 ## Blockers
 
