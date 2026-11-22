@@ -942,12 +942,18 @@ Proof: LF and CRLF paused freestyle render the same lifecycle row and next step;
 
 ### Task p04-t20: (review) Limit the kickoff local-scope rule to project records
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 903dfc12e1a8dd50e4d80ef2b4fcc5c91315478c
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** reviews/archived/m01-integrated-review-2026-11-22T134403Z.md (I-6)
 
 Intent: `.agents/skills/oat-project-freestyle/references/kickoff.md:184` says a local project "commits nothing, whatever this section says about code". Say that local-scope project records stay uncommitted and the agreed shape governs code commits. Class: accepted-requirement (plan.md Decisions "Records branch" and "Single writer", Outcome 7).
 Files: `.agents/skills/oat-project-freestyle/references/kickoff.md` (and any pinned sentence test).
 Proof: skill-prose vitest over `src/commands/init/tools/shared src/validation`.
+
+- **I-6:** kickoff topic 6 now says that in a local project the project records stay uncommitted whatever the section says, and that the agreed shape still governs code commits. No test pinned the old sentence, and no doc repeats it.
+- **Version:** no new bump; oat-project-freestyle is new in this PR.
+- Proof before the commit, each exit 0: the skill-prose vitest (33 files, 1316 passed), `oat:validate-skills`, and `oxfmt` on the file.
 
 ---
 
