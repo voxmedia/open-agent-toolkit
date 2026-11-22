@@ -1278,6 +1278,95 @@ Expected: all pass, and the index is unchanged or committed regenerated.
 
 ---
 
+### Task p04-t07: (final review) Name figure fences in the contributing Contents map and the docs-config README
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/contributing/index.md`
+- Modify: `packages/docs-config/README.md`
+
+**Step 1: Understand the issue**
+
+Final review findings L3 and L4 (`reviews/archived/code-final-review-2026-11-22T015824Z.md`):
+
+- **L3:** the contributing `## Contents` entry for Markdown Features omits
+  figure fences, though the page's frontmatter description and the generated
+  index list them.
+- **L4:** the docs-config README does not say that
+  `createSourceConfig().remarkPlugins` now transforms `docs-*` fences. It also
+  doesn't say that rendering them needs `withDocsFigures` and `figures.css`
+  from docs-theme.
+
+Location: `apps/oat-docs/docs/contributing/index.md:14`,
+`packages/docs-config/README.md:28-56`
+
+**Step 2: Implement fix**
+
+- **Contents entry:** change it to "Supported docs syntax for callouts, tabs,
+  Mermaid, code blocks and figure fences."
+- **docs-config README:** after the link-rewriting paragraph, add one
+  sentence. It says the returned `remarkPlugins` also turn `docs-*` figure
+  fences into `Docs*` elements, which need `withDocsFigures` and `figures.css`
+  from `@open-agent-toolkit/docs-theme`. Link it to that README's figure
+  section.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt apps/oat-docs/docs/contributing/index.md packages/docs-config/README.md && pnpm --filter oat-docs check && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && git diff --exit-code -- apps/oat-docs/index.md && pnpm --filter @open-agent-toolkit/docs-config check`
+
+Expected: all pass, and the index is unchanged.
+
+**Step 4: Commit**
+
+`docs(p04-t07): name figure fences in the contributing map and docs-config README`
+
+---
+
+### Task p04-t08: (operator decision) Report authored columns for tab content
+
+**Files:**
+
+- Modify: `packages/docs-transforms/src/remark-tabs.ts`
+- Modify: `packages/docs-transforms/src/remark-tabs.test.ts`
+
+**Step 1: Understand the issue**
+
+Deferred p01-t05 concern, which the operator chose to fix at the final review
+(2026-11-22). Tab content is an indented code block whose value is deindented
+by four columns. `reparseMarkdown` relocates by the code block's start, which
+is column 1 of the indentation. Lines are correct, but columns report the
+deindented position: a list item authored at column 9 under two tab levels
+reports column 1.
+Location: `packages/docs-transforms/src/remark-tabs.ts:91`, and the test that
+pins the old behaviour at `remark-tabs.test.ts:225`.
+
+**Step 2: Implement fix (RED first)**
+
+- **Test first:** change the test to expect authored columns, so it fails.
+  Expected values: list item 7:9, strong 7:16, outer text 9:5.
+- **Fix:** pass the origin as the code block start shifted by the
+  indented-code width, `{ line: start.line, column: start.column + 4 }`.
+  Nested tabs then compose, because the inner code block is relocated by the
+  outer origin first.
+- **Other origins:** keep `remark-docs-fences` and other callers unchanged.
+- **Tests:** confirm that tab-nested figure fences report authored columns in
+  their errors, and add one assertion if none exists.
+- **Can-fail check:** revert the `+ 4` and confirm the column assertions fail.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt packages/docs-transforms/src/remark-tabs.ts packages/docs-transforms/src/remark-tabs.test.ts && pnpm --filter @open-agent-toolkit/docs-transforms build && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-transforms test && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-config test && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-theme test && pnpm --filter @open-agent-toolkit/docs-transforms check`
+
+Expected: all pass. The docs-theme replay fixture is a captured compile, so it
+must not need recapturing, because only positions change. If it does, stop
+and report.
+
+**Step 4: Commit**
+
+`fix(p04-t08): report authored columns for tab content`
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
@@ -1286,7 +1375,7 @@ Expected: all pass, and the index is unchanged or committed regenerated.
 | p02   | code     | fixes_completed | 2026-11-21 | reviews/archived/code-p02-review-2026-11-21T231835Z.md      | 228d3e3ddff659c1b93795b1505ba83121df163f | auto       | -                 |
 | p03   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p03-review-2026-11-22T000358Z.md      | 2c8d3b84bc075c96a4731fd0bd4fedd27990fb5f | auto       | -                 |
 | p04   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p04-review-2026-11-22T013926Z.md      | dcc24fc8ff0387b2dbf44339b5b87fa46964a1f6 | auto       | -                 |
-| final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final | code     | fixes_added     | 2026-11-22 | reviews/archived/code-final-review-2026-11-22T015824Z.md    | 2d992742e6de26415c3caa5ffc2356a3790e50dc | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
 | plan  | artifact | passed          | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T164854Z.md | 08d0588d801d7cd59afd08323f645b8a0735021b | gate       | codex-6-sol-xhigh |
@@ -1320,10 +1409,11 @@ cell, and never truncate a widened row back to five columns.
 - Phase 3: 6 tasks. The contract test and captured compile fixtures, the
   checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption,
   plus two review fixes.
-- Phase 4: 6 tasks. Scaffold and skill guidance, OAT docs and instructions,
-  and the lockstep release, plus two review fixes.
+- Phase 4: 8 tasks. Scaffold and skill guidance, OAT docs and instructions,
+  and the lockstep release, plus two phase-review fixes and two final-review
+  fixes.
 
-**Total: 23 tasks**
+**Total: 25 tasks**
 
 ---
 

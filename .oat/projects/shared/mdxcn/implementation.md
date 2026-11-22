@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: null
+oat_current_task_id: p04-t07
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 6     | 6/6       |
-| Phase 4 | complete | 6     | 6/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 6     | 6/6       |
+| Phase 4 | in_progress | 8     | 6/8       |
 
-**Total:** 23/23 tasks completed
+**Total:** 23/25 tasks completed
 
 ---
 
@@ -38,7 +38,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - `docs-*` fenced code blocks now become figure components at build time. Fence meta becomes props, the body is reparsed as GFM Markdown (raw for `docs-terminal`), and the authored line numbers are kept.
 - An unknown `docs-*` name fails the build, listing the eight known names. A `docs-*` fence nested inside a figure body also fails, so figure frames never nest.
-- The shared docs-config chain runs `remarkTabs → remarkDocsFences → remarkLinks → remarkMermaid`, so figures work inside tabs and links inside figures are normalized.
+- The shared docs-config chain runs `remarkTabs → remarkDocsFences → remarkLinks → remarkAlert → remarkMermaid`, so figures work inside tabs and links inside figures are normalized. docs-transforms' `defaultTransforms` is the same list without `remarkAlert`.
 
 **Key files touched:**
 
@@ -103,7 +103,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 **Outcome:**
 
-- The docs-config chain is `remarkTabs → remarkDocsFences → remarkLinks → remarkMermaid`. A composed figure inside a tab next to an alert renders.
+- The docs-config chain is `remarkTabs → remarkDocsFences → remarkLinks → remarkAlert → remarkMermaid`. A composed figure inside a tab next to an alert renders.
 
 **Files changed:**
 
@@ -584,7 +584,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-11-22
 
 ### Phase Summary
@@ -809,6 +809,35 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 **Outcome:** fixes completed: M1 in `d2b88a404`; L1 and L2 in `b1e2ea5c7`, plus the root follow-up `c15736648`; L3 at receive. These were Medium and Low findings, so there was no re-review. Phase accepted.
 
+### Task p04-t07: (final review) Name figure fences in the contributing Contents map and the docs-config README
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t08: (operator decision) Report authored columns for tab content
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: final
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T015824Z.md` (local only), reviewed head `2d992742e6de26415c3caa5ffc2356a3790e50dc`, invocation `auto`, request `mdxcn-final-review-r1-20261122`
+**Findings:** 0 critical, 0 high, 0 medium, 4 low
+**Finding classes:**
+
+- L1: bookkeeping (the implementation.md Deviations table).
+- L2: bookkeeping (the chain wording in implementation.md summaries).
+- L3: accepted-requirement (discovery: every surface listing docs authoring capabilities is updated).
+- L4: accepted-requirement (root AGENTS.md Definition of Done: the affected package README describes changed behavior).
+
+- **L1 (Low):** the Deviations table lacked the p03-t05 and p04-t05 design deltas. Fixed at receive: two rows added.
+- **L2 (Low):** three ledger summaries listed the docs-config chain without `remarkAlert`. Fixed at receive.
+- **L3 (Low):** the contributing Contents map omitted figure fences. Converted to p04-t07.
+- **L4 (Low):** the docs-config README did not mention the fence transform or its rendering requirements. Converted to p04-t07.
+- **Operator decisions (2026-11-22):** convert all four Lows, and fix the deferred p01-t05 tab-column concern now, as p04-t08.
+
+**Outcome:** fixes pending. The final review re-runs after p04-t07 and p04-t08.
+
 ---
 
 ## Orchestration Runs
@@ -847,19 +876,21 @@ The implementer handles continued through the same handle for the p02 recovery a
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
-- **p01-t05 concern (Low):** awaiting the operator. Tab content reports column 1 instead of the authored column; lines are correct. This behaviour predates the change, and design requires lines only. A fix would add the tab indentation to the origin column in `remark-tabs.ts`.
+- **p01-t05 concern (Low):** resolved by operator decision at the final review (2026-11-22): fix now, converted to p04-t08. It is no longer deferred.
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review                    | Source Artifact         | Planned / Documented                                                                                           | Actual / Accepted                                                                                                                                                                                                                                                                                                             | Reason                                                                                                                                           | Source of Truth | Follow-up                                                                                    |
-| -------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------- |
-| p02-t02, p02-t03 / p02 review M1 | design.md grammar table | Steps "bold title", decision without an open state, compare option columns, and no annotate/terminal fallbacks | Upstream-faithful grammar: bold is the current step and italic the next; plain options are open; the first column of compare holds row labels; annotate titles fall back to `code`; a `✓` terminal line is a pass                                                                                                             | Matches upstream mdxcn and fixes the compare column shift                                                                                        | Implementation  | design.md aligned in p02-t05 (`8c3eeecdd`); p04-t01 takes its grammar from the aligned table |
-| p02-t03                          | plan p02-t01 patch list | Patches listed in the plan                                                                                     | Further patches: steps reads its state from the title only, and every body block is kept; check finds a checkbox inside a loose item; compare keeps a bold or `Total` last row; dimming uses the `opacity-40` class; `a` is added as a host tag; JSX item forms and the `palette`, `corner` and `className` props are dropped | Static server rendering and Markdown-only authoring                                                                                              | Implementation  | Recorded in each vendored file header                                                        |
-| p01-t02                          | plan p01-t02 exports    | `remarkDocsFences`, `DOCS_FENCES`                                                                              | Also exports the `DocsFenceBody` type                                                                                                                                                                                                                                                                                         | Additive type for consumers                                                                                                                      | Implementation  | p04-t03 README export list                                                                   |
-| p03-t01                          | plan p03-t01 files      | `compiled-fixtures.test.ts` under `src/figures/`; the CLI public-package contract test was not listed          | The replay test is at `packages/docs-theme/src/compiled-fixtures.test.ts`; `public-package-contract.test.ts` was updated for p02's `figures.css` export                                                                                                                                                                       | Avoids parent-relative imports (docs-theme has no aliases); the contract test was already failing after p02-t01 and the task requires it to pass | Implementation  | None                                                                                         |
-| p01-t04 / p01 review M1          | design Error Handling   | Unknown fence fails                                                                                            | A nested `docs-*` fence also fails (`nested-docs-fence`)                                                                                                                                                                                                                                                                      | Unknown nested fences passed silently; failing keeps frames from nesting                                                                         | Implementation  | p04 guidance states that fences cannot nest                                                  |
+| Task / Review                    | Source Artifact                      | Planned / Documented                                                                                           | Actual / Accepted                                                                                                                                                                                                                                                                                                             | Reason                                                                                                                                           | Source of Truth | Follow-up                                                                                    |
+| -------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------- |
+| p02-t02, p02-t03 / p02 review M1 | design.md grammar table              | Steps "bold title", decision without an open state, compare option columns, and no annotate/terminal fallbacks | Upstream-faithful grammar: bold is the current step and italic the next; plain options are open; the first column of compare holds row labels; annotate titles fall back to `code`; a `✓` terminal line is a pass                                                                                                             | Matches upstream mdxcn and fixes the compare column shift                                                                                        | Implementation  | design.md aligned in p02-t05 (`8c3eeecdd`); p04-t01 takes its grammar from the aligned table |
+| p02-t03                          | plan p02-t01 patch list              | Patches listed in the plan                                                                                     | Further patches: steps reads its state from the title only, and every body block is kept; check finds a checkbox inside a loose item; compare keeps a bold or `Total` last row; dimming uses the `opacity-40` class; `a` is added as a host tag; JSX item forms and the `palette`, `corner` and `className` props are dropped | Static server rendering and Markdown-only authoring                                                                                              | Implementation  | Recorded in each vendored file header                                                        |
+| p01-t02                          | plan p01-t02 exports                 | `remarkDocsFences`, `DOCS_FENCES`                                                                              | Also exports the `DocsFenceBody` type                                                                                                                                                                                                                                                                                         | Additive type for consumers                                                                                                                      | Implementation  | p04-t03 README export list                                                                   |
+| p03-t01                          | plan p03-t01 files                   | `compiled-fixtures.test.ts` under `src/figures/`; the CLI public-package contract test was not listed          | The replay test is at `packages/docs-theme/src/compiled-fixtures.test.ts`; `public-package-contract.test.ts` was updated for p02's `figures.css` export                                                                                                                                                                       | Avoids parent-relative imports (docs-theme has no aliases); the contract test was already failing after p02-t01 and the task requires it to pass | Implementation  | None                                                                                         |
+| p01-t04 / p01 review M1          | design Error Handling                | Unknown fence fails                                                                                            | A nested `docs-*` fence also fails (`nested-docs-fence`)                                                                                                                                                                                                                                                                      | Unknown nested fences passed silently; failing keeps frames from nesting                                                                         | Implementation  | p04 guidance states that fences cannot nest                                                  |
+| p03-t05 / p03 review L1          | design Checker rule / Error Handling | Unknown fences fail both the build and `docs check`                                                            | The checker covers every fence except those inside a figure body; only the build catches a nested one                                                                                                                                                                                                                         | The checker's parse treats figure bodies as literal code; the build already fails loudly, and discovery defers grammar checking                  | Implementation  | design.md aligned in `4612758bd`; the guidance states the scope                              |
+| p04-t05 / p04 review M1          | design Data Flow / upgrade path      | Apps already `@source` the docs-theme `dist`                                                                   | Scaffolds before 0.3.15 (#350) lack the line; the analyze legacy repair adds it                                                                                                                                                                                                                                               | Older apps would otherwise build with unstyled figures                                                                                           | Implementation  | design.md and `legacy-scaffold-checks.md` aligned in `d2b88a404`                             |
 
 ## Final Summary (for PR/docs)
 
@@ -868,7 +899,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 - **`docs-*` figure fences:** eight fenced code block languages render as static, server-rendered figure components on Fumadocs docs apps. They are `docs-steps`, `docs-tree`, `docs-timeline`, `docs-terminal`, `docs-decision`, `docs-check`, `docs-compare` and `docs-annotate`, adapted from mdxcn under MIT.
   - The `remarkDocsFences` transform (docs-transforms) turns a fence into a component. Fence meta becomes props, the body is reparsed as Markdown (raw for terminal), and authored line positions are kept.
   - An unknown or nested `docs-*` fence fails the build.
-  - The shared docs-config chain runs `remarkTabs → remarkDocsFences → remarkLinks → remarkMermaid`.
+  - The shared docs-config chain runs `remarkTabs → remarkDocsFences → remarkLinks → remarkAlert → remarkMermaid`.
 - **docs-theme:** the eight components, `withDocsFigures(components)` and a `./figures.css` export with scoped `--graph-*` tokens. There is no motion, no React context, and no content hidden in the server HTML. Every vendored module carries the mdxcn MIT notice.
 - **`oat docs check`:** a new `docs-fences` error rule reports unknown fence names on Fumadocs apps, everywhere except inside a figure body (the build catches those).
 - **Scaffold:** new Fumadocs apps are wired for figures with no manual steps. The contributing page documents every fence with Syntax/Rendered examples, grammar, and the agent-readability, plain-text and no-nesting rules. MkDocs apps get a one-line note that the fences render as plain code.
@@ -908,7 +939,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 - Legacy scaffolds may lack the docs-theme `@source` (p04-t05).
 - The replay test lives at `src/compiled-fixtures.test.ts`.
 
-**Open:** the p01-t05 tab-column concern is awaiting the operator (see Deferred Findings).
+**Open:** none. The p01-t05 tab-column concern is fixed in p04-t08 by operator decision.
 
 ## References
 

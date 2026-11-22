@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t07
 oat_last_commit: c15736648
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -114,7 +114,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T01:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T02:02:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review.
+Implementation - Final review returned 4 Low findings; fix tasks p04-t07 and p04-t08 are next, then a final re-review.
 
 ## Artifacts
 
@@ -144,7 +144,8 @@ Implementation - Tasks complete; awaiting final review.
 - ✓ p01 and p02 complete (parallel group, merged)
 - ✓ p03 and p04 complete
 - ✓ Implementation tasks complete
-- ⧗ Awaiting final review
+- ✓ Final review round 1 received (0C/0H/0M/4L)
+- ⧗ Final-review fixes p04-t07 and p04-t08, then re-review
 
 ## Blockers
 
