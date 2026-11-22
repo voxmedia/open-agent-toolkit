@@ -218,6 +218,12 @@ ships only with the CLI. The release contract pins the notice in the CLI's
 On Fumadocs apps, a fenced `docs-*` language that isn't in `DOCS_FENCES` is an
 error. It is reported with its line and the known list.
 
+The checker parses pages with remark-parse, remark-gfm and `remarkTabs`, so it
+validates top-level and tab-nested fence names. A `docs-*` fence inside a figure
+body is opaque text to it and is left to the build, which reparses figure bodies
+and rejects any nested `docs-*` fence (`unknown-docs-fence` or
+`nested-docs-fence`).
+
 ### Guidance and instructions (Markdown only)
 
 - **Scaffold Fumadocs contributing page:** one Syntax/Rendered example per
@@ -241,8 +247,10 @@ error. It is reported with its line and the known list.
 
 ## Error Handling
 
-- An unknown `docs-*` fence fails the build (`file.fail`) and the fast
-  `docs check` pass. Both report the position and the known names.
+- An unknown top-level or tab-nested `docs-*` fence fails both the build
+  (`file.fail`) and the fast `docs check` pass. Both report the position and
+  the known names. A `docs-*` fence nested in a figure body fails the build
+  only.
 - A missing component registration gives MDX's error naming the component.
   Analyze flags it ahead of time.
 - Malformed figure bodies degrade the same way upstream does: the components
