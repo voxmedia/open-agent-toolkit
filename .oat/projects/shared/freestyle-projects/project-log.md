@@ -127,6 +127,10 @@ m01 integrated review cycle 2 received (2 of 3): J-1 High, J-2 Medium, J-3 and J
 
 p04 re-accepted after m01 integrated cycle 2 fixes p04-t22..p04-t25 (J-1, J-2A, J-3, J-4); fix loops 1; exit re-review waived by the operator, root-verified; exit carrier fresh; m01 implementing -> reviewing; freestyle-projects-p04-outcome-m01-integrated-2
 
+### 2026-11-22 · structural · oat-project-review-receive · m01
+
+m01 integrated review cycle 3 (confirm only) received: J-1, J-2A, J-3, J-4 confirmed; K-1 new-hardening Medium deferred by the operator; recorded passed at 32919c56a (3 of 3 cycles); freestyle-projects-m01-integrated-cycle3-receive
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

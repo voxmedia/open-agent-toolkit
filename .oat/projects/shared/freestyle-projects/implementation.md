@@ -1184,6 +1184,24 @@ Review-cycle count for m01 integrated: 2 of 3.
 
 **Outcome:** fixes queued: p04-t22, p04-t23, p04-t24, p04-t25 (late-fix rule, records in p04). **Operator decision (2026-11-22):** fix J-1 and J-2 case A in m01 with no further review rounds; the root verifies the fixes and records the waiver at the exit carrier refresh.
 
+### Review Received: m01 (cycle 3)
+
+**Date:** 2026-11-22
+**Review artifact (local-only):** reviews/archived/m01-integrated-review-2026-11-22T174038Z.md
+
+Integrated milestone review of m01 (p01, p02, p03, p04), cycle 3, confirm only, on `0c0f294f0..32919c56a`, manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only). Scope set by the operator: confirm the cycle-2 fixes by behavior, their can-fail checks, and no regressions in non-freestyle modes. Root verified K-1's cited code at `32919c56a` and its introducing commit.
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 0
+**Finding classes:** K-1 new-hardening. The reviewer called it an incomplete J-2A fix, but the record-only lookup dates from `b9359a6fc` (p02-t06) and `status` output is identical at base and head; J-2A made the dashboard match `status`, as its intent stated. The brief (plan.md Scope: "Before its first pull in a checkout, a synced project is known only by its pointer") names only the pointer-known case; no contract source names an active project with no pointer on the branch.
+
+- K-1 (Medium): with no pointer file on the branch and no checkout, but the remote ref present, `status` and the dashboard report the directory missing (`oat-project-open`) instead of `oat project pull <slug>` → deferred by the operator.
+
+Confirmed by the reviewer: J-1, J-2 case A (with a pointer), J-3, J-4, each with a mutation check; no regression in quick (`status` and the quick dashboard identical base to head).
+
+Review-cycle count for m01 integrated: 3 of 3.
+
+**Outcome:** passed, deferred items only (K-1, operator-approved Medium deferral, 2026-11-22). No fix tasks.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -1193,6 +1211,7 @@ Review-cycle count for m01 integrated: 2 of 3.
 - m01 review round 4 R4-3 (`m01-code-review-2026-11-22T055500Z.md`; class new-hardening, Low): in `oat-project-implement` Step 0, an empty or malformed `oat_workflow_mode` on a synced ref reads as the legacy spec-driven default, so arrival continues instead of stopping. Deferred by root to the follow-up issue; the implement skill is unchanged in m01. Trigger: the freestyle follow-up issue.
 - m01 integrated review I-2 Create half, I-3 and I-5 (`reviews/archived/m01-integrated-review-2026-11-22T134403Z.md`; class new-hardening): running OAT skills from a repository subdirectory (`oat project new` scaffolds at the current directory in every mode and only `oat-project-quick-start` resolves the repository root; brainstorm's active-project test at `oat-brainstorm/SKILL.md:238` is cwd-relative in every mode), and the dashboard's LF-only lifecycle reader under a CRLF `state.md` (`state/generate.ts:242`). All three predate the branch and are cross-mode. Deferred by the operator on 2026-11-22. Trigger: the freestyle follow-up issue (subdirectory support across project skills; CRLF frontmatter reading).
 - m01 integrated review cycle 2 J-2 case B (`reviews/archived/m01-integrated-review-2026-11-22T152500Z.md`; class new-hardening, Medium): after another checkout archives a synced project, the retained checkout's dashboard recommends `oat-project-complete`, whose entry fails pulling the archived ref (`state/generate.ts:959`). Pre-branch (`49aeb5075`), every mode, loud failure, nothing lost. Deferred by the operator on 2026-11-22. Trigger: the freestyle follow-up issue.
+- m01 integrated review cycle 3 K-1 (`reviews/archived/m01-integrated-review-2026-11-22T174038Z.md`; class new-hardening, Medium): an active synced project with no pointer file on the branch and no checkout, whose `refs/oat/projects/<slug>` exists on origin, gets `directory missing` / `oat-project-open` from the dashboard and `missing` (exit 1) from `oat project status` instead of `oat project pull <slug>` (`project/unpulled-synced.ts:60`). In-branch since `b9359a6fc`, every mode; skills' Step 0 already pulls when the ref exists. Deferred by the operator on 2026-11-22. Trigger: the freestyle follow-up issue (probe the active remote ref when the pointer is absent).
 
 ## Deviations from Plan / Design
 
