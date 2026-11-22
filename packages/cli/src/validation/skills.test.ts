@@ -9799,7 +9799,7 @@ describe('freestyle mode skill contracts', () => {
     }
   });
 
-  it('resolves the quick-start named target at the scope `oat project new` uses (m01 R3-5)', async () => {
+  it('runs the published quick-start freestyle blocks against the path `oat project new` scaffolds (m01 R3-5, R4-1, R4-2)', async () => {
     const quickStart = await readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
     );
@@ -9807,113 +9807,159 @@ describe('freestyle mode skill contracts', () => {
       quickStart.indexOf('### Freestyle Projects'),
       quickStart.indexOf('### Step 0 (Preflight): Inherited Git State'),
     );
-    const block = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
-    expect(block, 'freestyle block').toBeDefined();
-    const resolver = (block as string)
-      .split('\n')
-      .filter((line) => !line.startsWith('TARGET_'))
-      .join('\n')
-      .replaceAll('{project-name}', 'proj');
-    expect(resolver).toContain('NAMED_PATH=');
-    // Ordering: the name resolves before Step 0's first commit-capable step,
-    // and the Step 0.5 named check reads the same NAMED_PATH before scaffolding.
+    const preStep0 = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
+    expect(preStep0, 'pre-Step-0 freestyle block').toBeDefined();
+    const branch = quickStart.indexOf('If no valid active project exists:');
+    const namedCheck = quickStart.indexOf(
+      'Read the mode of an existing project at `NAMED_PATH` first',
+      branch,
+    );
+    const scaffoldCall = quickStart.indexOf(
+      'oat project new "{project-name}" --mode quick',
+      branch,
+    );
+    expect(namedCheck, 'Step 0.5 named check').toBeGreaterThan(branch);
+    expect(namedCheck, 'named check before the scaffold').toBeLessThan(
+      scaffoldCall,
+    );
+    const step05 = /```bash\n([\s\S]*?)```/
+      .exec(quickStart.slice(namedCheck, scaffoldCall))?.[1]
+      ?.replace(/^ {2}/gm, '');
+    expect(step05, 'Step 0.5 named block').toBeDefined();
+    // Ordering: the pre-Step-0 block resolves the name before Step 0's first
+    // commit-capable step.
     expect(quickStart.indexOf('NAMED_PATH=')).toBeLessThan(
       quickStart.indexOf('oat internal commit-paths --identity'),
     );
-    const branch = quickStart.indexOf('If no valid active project exists:');
-    const namedCheck = quickStart.indexOf(
-      'oat project status --project-path "$NAMED_PATH"',
-      branch,
-    );
-    expect(namedCheck).toBeGreaterThan(branch);
-    expect(namedCheck).toBeLessThan(
-      quickStart.indexOf(
-        'oat project new "{project-name}" --mode quick',
-        branch,
-      ),
-    );
+    // Run the published blocks verbatim; only the name placeholder is bound.
+    const bind = (block: string) => block.replaceAll('{project-name}', 'proj');
+    const preStep0Script = `${bind(preStep0 as string)}\nprintf '%s\\n' "$TARGET_PATH" "$TARGET_MODE"\n`;
+    const step05Script = `${bind(step05 as string)}\nprintf '%s\\n' "$NAMED_PATH" "$TARGET_MODE"\n`;
 
     const cli = join(process.cwd(), 'dist', 'index.js');
     const root = await mkdtemp(join(tmpdir(), 'oat-quick-named-'));
     try {
       const bin = join(root, 'bin');
-      const repo = join(root, 'repo');
       await mkdir(bin);
-      await mkdir(repo);
       await writeFile(
         join(bin, 'oat'),
         `#!/bin/bash\nexec node "${cli}" "$@"\n`,
         { mode: 0o755 },
       );
-      await execFileAsync('git', ['init', '-q'], { cwd: repo });
-      const env = {
-        ...process.env,
-        HOME: root,
-        PATH: `${bin}:${process.env.PATH}`,
-        OAT_PROJECTS_DEFAULT_SCOPE: '',
-        OAT_PROJECTS_ROOT: '',
-      };
-      const modeAt = async (scope: string | undefined) => {
-        const { stdout } = await execFileAsync(
-          '/bin/bash',
+      const cases: Array<{
+        label: string;
+        scope?: string;
+        projectsRoot?: string;
+        expected: string;
+      }> = [
+        {
+          label: 'shared',
+          scope: 'shared',
+          expected: '.oat/projects/shared/proj',
+        },
+        {
+          label: 'local',
+          scope: 'local',
+          expected: '.oat/projects/local/proj',
+        },
+        // No configured scope: `oat project new` defaults to synced.
+        { label: 'synced (default)', expected: '.oat/projects/synced/proj' },
+        {
+          label: 'local under records/shared/.',
+          scope: 'local',
+          projectsRoot: 'records/shared/.',
+          expected: 'records/local/proj',
+        },
+      ];
+      let index = 0;
+      for (const testCase of cases) {
+        index += 1;
+        const repo = join(root, `repo-${index}`);
+        const origin = join(root, `origin-${index}.git`);
+        await execFileAsync('git', ['init', '-q', '--bare', origin]);
+        await execFileAsync('git', ['init', '-q', repo]);
+        const git = (...args: string[]) =>
+          execFileAsync('git', args, { cwd: repo });
+        await git('remote', 'add', 'origin', origin);
+        await git(
+          '-c',
+          'user.email=test@example.com',
+          '-c',
+          'user.name=Test',
+          'commit',
+          '-q',
+          '--allow-empty',
+          '-m',
+          'init',
+        );
+        const env = {
+          ...process.env,
+          HOME: join(root, 'home'),
+          PATH: `${bin}:${process.env.PATH}`,
+          GIT_AUTHOR_NAME: 'Test',
+          GIT_AUTHOR_EMAIL: 'test@example.com',
+          GIT_COMMITTER_NAME: 'Test',
+          GIT_COMMITTER_EMAIL: 'test@example.com',
+          OAT_PROJECTS_DEFAULT_SCOPE: testCase.scope ?? '',
+          OAT_PROJECTS_ROOT: testCase.projectsRoot ?? '',
+        };
+        const { stdout: scaffoldOut } = await execFileAsync(
+          'node',
           [
-            '-c',
-            `${resolver}\nprintf '%s\\n' "$NAMED_PATH" "$(oat project status --project-path "$NAMED_PATH" --field project.workflowMode 2>/dev/null || echo null)"`,
+            cli,
+            '--json',
+            'project',
+            'new',
+            'proj',
+            '--mode',
+            'freestyle',
+            '--no-set-active',
+            '--no-dashboard',
           ],
-          {
-            cwd: repo,
-            env: scope ? { ...env, OAT_PROJECTS_DEFAULT_SCOPE: scope } : env,
-          },
+          { cwd: repo, env },
         );
-        return stdout.trim().split('\n');
-      };
-      for (const scope of ['local', 'synced']) {
-        await mkdir(join(repo, '.oat/projects', scope, 'proj'), {
-          recursive: true,
-        });
-        await writeFile(
-          join(repo, '.oat/projects', scope, 'proj', 'state.md'),
-          '---\noat_workflow_mode: freestyle\n---\n',
+        const scaffolded = (JSON.parse(scaffoldOut) as { projectPath: string })
+          .projectPath;
+        expect(scaffolded, `${testCase.label}: scaffold path`).toBe(
+          testCase.expected,
         );
+        const runBlock = async (script: string) =>
+          (
+            await execFileAsync('/bin/bash', ['-c', script], { cwd: repo, env })
+          ).stdout
+            .trim()
+            .split('\n');
+        for (const pointer of ['unset', 'stale'] as const) {
+          if (pointer === 'stale') {
+            await mkdir(join(repo, '.oat/projects/shared/gone'), {
+              recursive: true,
+            });
+            await execFileAsync(
+              'node',
+              [
+                cli,
+                'config',
+                'set',
+                'activeProject',
+                '.oat/projects/shared/gone',
+              ],
+              { cwd: repo, env },
+            );
+          }
+          expect(
+            await runBlock(preStep0Script),
+            `${testCase.label}, ${pointer} pointer: pre-Step-0 block`,
+          ).toEqual([scaffolded, 'freestyle']);
+          expect(
+            await runBlock(step05Script),
+            `${testCase.label}, ${pointer} pointer: Step 0.5 block`,
+          ).toEqual([scaffolded, 'freestyle']);
+        }
       }
-      expect(await modeAt('local')).toEqual([
-        '.oat/projects/local/proj',
-        'freestyle',
-      ]);
-      // With no configured scope, `oat project new` defaults to synced.
-      expect(await modeAt(undefined)).toEqual([
-        '.oat/projects/synced/proj',
-        'freestyle',
-      ]);
-      // The real scaffolder writes a new local name exactly where the
-      // resolver points for it.
-      const { stdout } = await execFileAsync(
-        'node',
-        [
-          cli,
-          '--json',
-          'project',
-          'new',
-          'fresh',
-          '--mode',
-          'quick',
-          '--no-commit',
-          '--no-set-active',
-          '--no-dashboard',
-        ],
-        { cwd: repo, env: { ...env, OAT_PROJECTS_DEFAULT_SCOPE: 'local' } },
-      );
-      const scaffolded = JSON.parse(stdout) as { projectPath: string };
-      const [freshPath] = await execFileAsync(
-        '/bin/bash',
-        ['-c', `${resolver.replaceAll('/proj', '/fresh')}\necho "$NAMED_PATH"`],
-        { cwd: repo, env: { ...env, OAT_PROJECTS_DEFAULT_SCOPE: 'local' } },
-      ).then((r) => r.stdout.trim().split('\n'));
-      expect(scaffolded.projectPath).toBe(freshPath);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
-  });
+  }, 120_000);
 
   describe('implement Step 0 reads the mode before the synced pull', () => {
     async function arrivalBlock(): Promise<string> {
