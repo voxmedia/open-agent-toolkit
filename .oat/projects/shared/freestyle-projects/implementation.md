@@ -402,7 +402,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** completed
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
-**Head:** 1d70a44af5080b212e480335667205cdf841607d
+**Head:** fb32240295ed7952a4197028405acf13c27c05eb
 
 Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
 
@@ -464,6 +464,8 @@ Late fixes p04-t15, p04-t16, p04-t18 and p04-t20 (m01 integrated review `m01-int
 - `pnpm test`: `turbo run test` passed, with cli (9863) and control-plane cache misses. Its `test:smoke` step failed twice in `tools/smoke/runner/cleanup.test.mjs`: the SIGTERM-during-provision and SIGTERM-during-drive timing cases. Nothing under `tools/smoke` changed in this range, so one rerun without edits followed: `test:smoke` passed 165 of 165, and the `test:skills` (754) and `test:scripts` (7) steps the `&&` chain had skipped also passed.
 
 No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
+Late fix p04-t21 (m01 exit re-review round 7: R7-1, a regression the p04-t15 I-1 fix introduced) at `ed563906e`, recorded at `fb3224029`. The checks, each exit 0: `pnpm install --frozen-lockfile`, the skill-prose vitest (1316 passed), `oat:validate-skills`, `lint` and `format`. After the commit: `check:skill-bumps` (29), `release:check-versions` and `release:validate`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
