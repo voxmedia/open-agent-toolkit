@@ -115,6 +115,8 @@ before Step 0's first commit-capable step. Step 0.5 then reuses that name and
 description instead of requesting them again.
 
 ```bash
+# Project paths are repo-relative: check them from the repository root.
+cd "$(git rev-parse --show-toplevel)" || { echo "oat: cannot resolve the repository root; stopping before Step 0" >&2; exit 1; }
 PROJECTS_ROOT=$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")
 NEW_SCOPE=$(oat config get projects.defaultScope 2>/dev/null || echo synced)
 NAMED_PATH=$(node -e 'const p=require("path"),fs=require("fs");const [top,root,scope,name]=process.argv.slice(1);const canon=(x)=>{x=p.resolve(x);try{return fs.realpathSync(x)}catch{const d=p.dirname(x);return d===x?x:p.join(canon(d),p.basename(x))}};const base=p.isAbsolute(root)?canon(root):p.resolve(top,root);const dir=canon(p.join(scope==="shared"?base:p.join(p.dirname(base),scope),name));const rel=p.relative(canon(top),dir);console.log(rel===""||rel.startsWith("..")||p.isAbsolute(rel)?dir:rel)' "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" "$PROJECTS_ROOT" "$NEW_SCOPE" "{project-name}")
@@ -237,6 +239,7 @@ If no valid active project exists:
 - Read the mode of an existing project at `NAMED_PATH` first, resolved as in
   `### Freestyle Projects`:
   ```bash
+  cd "$(git rev-parse --show-toplevel)" || { echo "oat: cannot resolve the repository root; stopping before the scaffold" >&2; exit 1; }
   PROJECTS_ROOT=$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")
   NEW_SCOPE=$(oat config get projects.defaultScope 2>/dev/null || echo synced)
   NAMED_PATH=$(node -e 'const p=require("path"),fs=require("fs");const [top,root,scope,name]=process.argv.slice(1);const canon=(x)=>{x=p.resolve(x);try{return fs.realpathSync(x)}catch{const d=p.dirname(x);return d===x?x:p.join(canon(d),p.basename(x))}};const base=p.isAbsolute(root)?canon(root):p.resolve(top,root);const dir=canon(p.join(scope==="shared"?base:p.join(p.dirname(base),scope),name));const rel=p.relative(canon(top),dir);console.log(rel===""||rel.startsWith("..")||p.isAbsolute(rel)?dir:rel)' "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" "$PROJECTS_ROOT" "$NEW_SCOPE" "{project-name}")

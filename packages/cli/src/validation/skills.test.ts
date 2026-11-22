@@ -9799,7 +9799,7 @@ describe('freestyle mode skill contracts', () => {
     }
   });
 
-  it('runs the published quick-start freestyle blocks against the path `oat project new` scaffolds (m01 R3-5, R4-1, R4-2)', async () => {
+  it('runs the published quick-start freestyle blocks against the path `oat project new` scaffolds (m01 R3-5, R4-1, R4-2, R5-1)', async () => {
     const quickStart = await readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
     );
@@ -9832,8 +9832,10 @@ describe('freestyle mode skill contracts', () => {
       quickStart.indexOf('oat internal commit-paths --identity'),
     );
     // Run the published blocks verbatim; only the name placeholder is bound.
-    const bind = (block: string) => block.replaceAll('{project-name}', 'proj');
+    const bind = (block: string, name = 'proj') =>
+      block.replaceAll('{project-name}', name);
     const preStep0Script = `${bind(preStep0 as string)}\nprintf '%s\\n' "$TARGET_PATH" "$TARGET_MODE"\n`;
+    const preStep0UnusedName = `${bind(preStep0 as string, 'unused')}\nprintf '%s\\n' "$TARGET_PATH" "$TARGET_MODE"\n`;
     const step05Script = `${bind(step05 as string)}\nprintf '%s\\n' "$NAMED_PATH" "$TARGET_MODE"\n`;
 
     const cli = join(process.cwd(), 'dist', 'index.js');
@@ -9923,9 +9925,9 @@ describe('freestyle mode skill contracts', () => {
         expect(scaffolded, `${testCase.label}: scaffold path`).toBe(
           testCase.expected,
         );
-        const runBlock = async (script: string) =>
+        const runBlock = async (script: string, cwd = repo) =>
           (
-            await execFileAsync('/bin/bash', ['-c', script], { cwd: repo, env })
+            await execFileAsync('/bin/bash', ['-c', script], { cwd, env })
           ).stdout
             .trim()
             .split('\n');
@@ -9955,6 +9957,24 @@ describe('freestyle mode skill contracts', () => {
             `${testCase.label}, ${pointer} pointer: Step 0.5 block`,
           ).toEqual([scaffolded, 'freestyle']);
         }
+        // From a subdirectory (m01 R5-1): a valid repo-relative active
+        // freestyle pointer wins over an unused name, and Step 0.5 still finds
+        // the named freestyle project.
+        const subdir = join(repo, 'src');
+        await mkdir(subdir, { recursive: true });
+        await execFileAsync(
+          'node',
+          [cli, 'config', 'set', 'activeProject', scaffolded],
+          { cwd: repo, env },
+        );
+        expect(
+          await runBlock(preStep0UnusedName, subdir),
+          `${testCase.label}, subdirectory, active freestyle pointer: pre-Step-0 block`,
+        ).toEqual([scaffolded, 'freestyle']);
+        expect(
+          await runBlock(step05Script, subdir),
+          `${testCase.label}, subdirectory, named freestyle project: Step 0.5 block`,
+        ).toEqual([scaffolded, 'freestyle']);
       }
     } finally {
       await rm(root, { recursive: true, force: true });
