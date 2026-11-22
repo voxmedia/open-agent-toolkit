@@ -52,7 +52,8 @@ rather than the number of available agents, decides the order and which
 phases, if any, may run in parallel in separate worktrees.
 
 **Needs an active OAT project:** yes. If none is set, the skill asks for the
-project name and saves it as the active project.
+project name and saves it as the active project. A freestyle project has no
+plan to run: the skill stops before reading it and dispatches nothing.
 
 **Invocation:**
 

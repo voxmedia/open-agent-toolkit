@@ -14,6 +14,9 @@ In a goal project both skills register deliveries instead: a progress PR is a
 milestone delivery, and pr-final registers terminal deliveries rather than a
 separate final PR.
 
+Neither skill applies to a freestyle project: each stops before writing, and
+pull requests open as the project's `shape.md` agrees.
+
 ## Inputs
 
 Expected artifacts:

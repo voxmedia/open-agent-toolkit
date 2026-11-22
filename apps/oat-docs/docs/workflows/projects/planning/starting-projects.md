@@ -7,19 +7,21 @@ description: 'Choose a project entry skill, import an existing plan, capture com
 
 Choose an entry path based on what you already know and what already exists.
 These skills do not require an existing active project. They create or import
-tracked work, although quick-start, lite, brief, and goal resume an active
-project of their own mode, and import writes into whichever project is active.
+tracked work, although quick-start, lite, brief, goal, and freestyle resume an
+active project of their own mode, and import writes into whichever project is
+active.
 
-| Your situation                                                       | Entry skill               | Result                                                                            |
-| -------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
-| Requirements need discovery and a full technical design.             | `oat-project-new`         | A spec-driven scaffold, ready to begin discovery.                                 |
-| The outcome is bounded, with optional design decisions to resolve.   | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.            |
-| The change fits one implementation sitting.                          | `oat-project-lite`        | One approved plan with requirements and validation criteria.                      |
-| One delivery whose outcome and design you can agree in conversation. | `oat-project-brief`       | One reviewed, approved Project Brief whose phases carry intent and exit evidence. |
-| An outcome that needs several deliveries over time.                  | `oat-project-goal`        | One approved Project Brief with milestones, delivered and re-aligned in turn.     |
-| You already have a Markdown plan.                                    | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                       |
-| Implementation happened without project tracking.                    | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits.    |
-| A confirmed scope contains several coordinated projects.             | `oat-project-split`       | A coordination parent and children that resume at discovery.                      |
+| Your situation                                                             | Entry skill               | Result                                                                                |
+| -------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
+| Requirements need discovery and a full technical design.                   | `oat-project-new`         | A spec-driven scaffold, ready to begin discovery.                                     |
+| The outcome is bounded, with optional design decisions to resolve.         | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.                |
+| The change fits one implementation sitting.                                | `oat-project-lite`        | One approved plan with requirements and validation criteria.                          |
+| One delivery whose outcome and design you can agree in conversation.       | `oat-project-brief`       | One reviewed, approved Project Brief whose phases carry intent and exit evidence.     |
+| An outcome that needs several deliveries over time.                        | `oat-project-goal`        | One approved Project Brief with milestones, delivered and re-aligned in turn.         |
+| An orchestrating agent will run the work its own way, without a lifecycle. | `oat-project-freestyle`   | A project folder with OAT-owned rules (`AGENTS.md`) and a `shape.md` agreed with you. |
+| You already have a Markdown plan.                                          | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                           |
+| Implementation happened without project tracking.                          | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits.        |
+| A confirmed scope contains several coordinated projects.                   | `oat-project-split`       | A coordination parent and children that resume at discovery.                          |
 
 For the broader mode decision, see [Choose a workflow](../../choose-workflow.md).
 For an existing project's discovery, design, or plan, see
@@ -69,7 +71,9 @@ in a fresh repository.
    `.oat/config.json`. The `OAT_PROJECTS_DEFAULT_SCOPE` environment variable
    overrides the setting for one shell.
 
-3. **Only `oat-project-new` takes a scope.** It accepts `--scope shared|local|synced`.
+3. **Only `oat-project-new` and `oat-project-freestyle` take a scope.** Both
+   accept `--scope shared|local|synced`; freestyle asks you to choose one,
+   recommending the default.
    Quick-start, lite, brief, goal, import, capture, and split have no scope argument.
    Quick-start, lite, brief, goal, import, and capture always create projects in the
    default scope. Split uses the active project's scope, or `shared` when no
@@ -78,7 +82,7 @@ in a fresh repository.
 4. **Build the knowledge index before spec-driven discovery.** `oat-project-discover`
    refuses to start until `.oat/repo/knowledge/project-index.md` exists. Run
    `/oat-repo-knowledge-index` once before your first spec-driven project.
-   Quick-start, lite, brief, goal, import, and capture do not check for it.
+   Quick-start, lite, brief, goal, freestyle, import, and capture do not check for it.
 
 5. **Know what happens when a project is already active.** Check with
    `oat config get activeProject` before you start:
@@ -93,6 +97,9 @@ in a fresh repository.
    - `oat-project-brief` resumes an active brief project at the earliest step
      whose output is missing. With any other project active, it creates a new
      brief project.
+   - `oat-project-freestyle` resumes the freestyle project you name, or the
+     active project when it is freestyle, and makes it active. With a project
+     of another mode active and no new project named, it stops.
    - `oat-project-import-plan` writes into any active project, whatever its
      mode. It rewrites that project's `plan.md` and switches it to import mode.
    - `oat-project-split` makes its first child the active project.
@@ -115,10 +122,13 @@ The new, quick-start, lite, brief, goal, and import skills check inherited Git c
 scaffolding. Unrelated changes require an explicit disposition in interactive
 runs. One exception: if the only change is `.oat/sync/manifest.json`, it is
 committed automatically as `chore: run sync`. Capture does not run this check.
+Freestyle shows you a dirty tree but commits none of it, and asks for no
+disposition.
 Do not assume starting a project also authorizes implementation or a PR.
 
 **Dispatch policy.** Before a plan is marked ready, quick-start, lite, brief,
-goal, and import ask you to choose a _dispatch policy_: the highest tier of models and
+goal, and import ask you to choose a _dispatch policy_ (a freestyle project
+does not: OAT dispatches nothing for it): the highest tier of models and
 effort OAT may use when it dispatches implementation and review agents. The
 choices come from `oat project dispatch-ceiling choices`. If your configuration
 has no complete dispatch ladder (the list of models for each tier), the skill
@@ -131,7 +141,8 @@ deliberately. The plan stays not ready until this resolves. See
 a point where a skill stops and waits for your explicit approval before it marks
 a phase complete. Projects created by `oat-project-new` have checkpoints on
 discovery and design by default. Quick, lite, brief, goal, import, and
-captured projects have no workflow-phase checkpoints before implementation.
+captured projects have no workflow-phase checkpoints before implementation,
+and a freestyle project has no checkpoints at all.
 Lite still asks you to approve its plan once, brief asks you to approve its
 reviewed brief once, and goal asks for that approval and then one per later
 milestone. See [HiLL checkpoints](hill-checkpoints.md).

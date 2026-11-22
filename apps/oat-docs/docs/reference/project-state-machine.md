@@ -62,7 +62,9 @@ The solid chain is the spec-driven progression. Lite, brief and goal enter at
 **Plan in progress** and never set `oat_phase` to `discovery`, `spec`, or
 `design`; quick and import projects also skip part of the leading chain. Goal
 adds a milestone state machine inside implementation, described under
-[Goal progression](#goal-progression).
+[Goal progression](#goal-progression). A freestyle project has none of this
+state machine: its `state.md` carries no `oat_phase` or `oat_phase_status`,
+`oat project status` reports no phase, and the router recommends no skill.
 
 ## Phase status values
 

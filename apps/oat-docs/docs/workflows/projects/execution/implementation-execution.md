@@ -20,6 +20,8 @@ and updates project state.
   evidence instead of tasks; execution records are opened in the journal as
   work happens, and the phase's `**Base:**`/`**Head:**` anchors scope its
   review.
+- **Freestyle:** a freestyle project has no plan phases, so
+  `oat-project-implement` stops for it and dispatches no phase implementer.
 - **Prevention boundary:** formatting, declared task verification, and
   applicable cheap checks run before the task commit.
 - **Recovery boundary:** an eligible post-commit defect may produce a separate

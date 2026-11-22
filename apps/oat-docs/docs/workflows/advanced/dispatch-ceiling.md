@@ -24,7 +24,8 @@ constraints:
   _ladder_) is stored.
 - **Who needs it:** anyone starting a quick, spec-driven, lite, brief, goal,
   or imported project, because planning asks you to choose a policy; and team leads who
-  manage model cost.
+  manage model cost. A freestyle project has no planning step and OAT
+  dispatches nothing for it, so it never asks.
 - **Know first:** there is no default policy, and a policy set in any config
   file overrides the one each project chose. A tier is a cap: phase agents may
   run below it, but per-phase and final code reviews run on the last model

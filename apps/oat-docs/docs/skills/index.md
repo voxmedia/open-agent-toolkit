@@ -42,7 +42,7 @@ make only the changes you approve.
 
 ## Key Skills by Use Case
 
-- Start a new tracked project: `oat-project-new`, `oat-project-quick-start`, `oat-project-lite` for a single-sitting change with one batched interview and one approval (quick start accepts a project name plus optional description; if you omit the description it should ask before discovery begins), `oat-project-brief` for one delivery agreed in conversation, or `oat-project-goal` for an outcome delivered in milestones
+- Start a new tracked project: `oat-project-new`, `oat-project-quick-start`, `oat-project-lite` for a single-sitting change with one batched interview and one approval (quick start accepts a project name plus optional description; if you omit the description it should ask before discovery begins), `oat-project-brief` for one delivery agreed in conversation, `oat-project-goal` for an outcome delivered in milestones, or `oat-project-freestyle` for a project with OAT's records and no lifecycle workflow
 - Resume an existing project: `oat-project-open` to select it,
   `oat-project-progress` to see where it stands, then `oat-project-next` to
   continue. See
