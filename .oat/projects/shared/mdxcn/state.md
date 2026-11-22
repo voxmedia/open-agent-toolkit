@@ -114,7 +114,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   approval_source: null
   post_approval: []
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   reviewed_head: 'f03b317909cec452cd92ee6d4c0870dadf08ad53'
   implementation_base_ref: 'origin/main'
   implementation_fingerprint: 'sha256:effective-delta-v2:f0dd98de83268fcef5b5c434619c4a886d35e3f1f0b075d54228742e3522b311'
-  freshness_head: 'f03b317909cec452cd92ee6d4c0870dadf08ad53'
+  freshness_head: '529eff83d9b537cde213ed7428b97392aae02a0a'
   freshness_fingerprint: 'sha256:effective-delta-v2:f0dd98de83268fcef5b5c434619c4a886d35e3f1f0b075d54228742e3522b311'
   waivers: []
   launch_state: result_persisted
@@ -156,14 +156,14 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-11-22T04:48:48Z'
+  updated_at: '2026-11-22T13:40:04Z'
   decided_at: '2026-11-22T04:48:48Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T13:37:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T13:40:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
