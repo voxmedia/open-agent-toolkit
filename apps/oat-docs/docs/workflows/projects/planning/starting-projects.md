@@ -498,10 +498,10 @@ If any project is active, import writes into **that** project, whatever its
 lifecycle mode: it normalizes the plan into its `plan.md` and switches it to
 import mode. That includes a spec-driven project in the middle of design. A
 freestyle project is the exception: there is no promotion from freestyle, so
-import stops before writing anything when the active project, or the existing
-project you name with `--project` or when it asks, is freestyle. `--project` is
-read only when no project is active. To import into a new project, run
-`oat-project-clear-active` first.
+import stops before writing into the project or changing its mode when the
+active project, or the existing project you name with `--project` or when it
+asks, is freestyle. `--project` is read only when no project is active. To
+import into a new project, run `oat-project-clear-active` first.
 
 In the default `synced` scope, the import contract can resolve the wrong
 project directory for a new project: it looks for the new project under
