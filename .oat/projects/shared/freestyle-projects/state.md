@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04
-oat_last_commit: ecb62112fb7de43bea72d5ca528c88a686ae14a3
+oat_last_commit: 92c1cb2f7842f5c523bc7c45d234c4880988d9c8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -31,16 +31,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: freestyle-projects-p04-recovery-1
-        original_request_id: freestyle-projects-p04-implementation-1
-        original_task_id: p04-t01
-        original_commit: 4b0dfd3579c75509c9b3ee7c8ff73f3fb870321a
-        discovered_by: 'p04-t01 to p04-t02 transition check: the oat-project-autonomous route-table freestyle row says Stop without a boundary class'
-        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
-        reservation_head: 73f3496731002e55562df89e5abb324e30e49ec8
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit

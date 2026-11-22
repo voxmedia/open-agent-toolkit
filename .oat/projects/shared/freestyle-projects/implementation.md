@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | pending  | 1     | 0/1      |
-| p05   | pending  | 1     | 0/1      |
-| p06   | pending  | 1     | 0/1      |
-| p07   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
-| p09   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | in_progress | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 3/9 phases accepted
 
@@ -515,6 +515,21 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Files: `apps/oat-docs/docs/workflows/projects/index.md`.
 - Proof: `pnpm --filter oat-docs docs:validate` exit 0 (0 errors, 776 warnings, the baseline), `pnpm --filter oat-docs check` exit 0, `generate-index` leaves `apps/oat-docs/index.md` unchanged.
 
+### Recovery Event freestyle-projects-p04-recovery-1
+
+- Phase/task: p04 / p04-t01
+- Original request: freestyle-projects-p04-implementation-1
+- Original commit: 4b0dfd3579c75509c9b3ee7c8ff73f3fb870321a
+- Defect class: other
+- Discovered by: the p04-t01 to p04-t02 transition check (the `oat-project-autonomous` route-table freestyle row said Stop without a boundary class)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high
+- Recovery commit: 0701b54f7f7fa88a1aa3ef84188e113ab2a8aa55
+- Verification: focused `skills.test.ts` blocks (11) and `src/commands/init/tools/shared src/validation` (1304) passed before the commit and again on committed HEAD
+- Reason: mechanical wording fix in p04-t01's own skill file and its pinned test. Root validated the unchanged original commit and the three-file recovery diff, and cleared the `completed` marker (`used_attempts: 1` kept).
+
 ---
 
 ## Phase p05: Linked projects
@@ -560,6 +575,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - run/v1 · request=freestyle-projects-p02-review-2 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p03-implementation-1 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p03-review-1 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p04-implementation-1 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
