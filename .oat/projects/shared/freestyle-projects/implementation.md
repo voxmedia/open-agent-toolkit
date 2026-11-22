@@ -685,6 +685,49 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
   - The branch-build `sync --scope project` (no changes).
 - Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29 checks), `release:check-versions` and `release:validate`.
 
+### Task p04-t11: Fix m01 review round 2 (R2-1..R2-6)
+
+**Status:** completed
+**Commit:** d86cda9849c6ba7ae122d8b9a941532ebf5e478c
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** m01 Astra re-review round 2 on `7c35a902e..86048bad1`: R2-1 to R2-6, each verified against source by root. Class: regression of an accepted requirement (R2-5 and R2-6 regress the operator-approved H4 and the accepted M5).
+
+- Intent: make every freestyle check read the mode as `oat project status` does, CRLF and padded values included. Read the implement mode before the synced pull. Resolve a missing quick-start name before Step 0's first commit. Decode the scaffold's `projectPath` as JSON. Make each `RESHAPE_ID` unique per decision.
+- Files: `packages/control-plane/src/state/parser.ts` and `index.ts`, and the CLI freestyle checks (shared frontmatter, split, closeout-invariant, complete-state, journal-check, validate-plan) with their tests. Also the implement, quick-start and freestyle skills, `reshape.md`, and `implementation-execution.md`.
+- Proof: regression and executable contract tests, a clause-by-clause can-fail check for each fix, and the scoped gate list.
+- **R2-1 and R2-2:**
+  - control-plane exports `parseStateWorkflowMode` and `isFreestyleState`, the reader `getProjectState` (and so `oat project status`) uses. It reads CRLF-tolerant frontmatter, trims the value and accepts known modes only.
+  - The CLI's `parseStateWorkflowMode`/`readStateWorkflowModeFile` now delegate to it, and every freestyle check uses it: split, `project new`, the dashboard, `cleanup project`, closeout-invariant, complete-state, journal-check (index and evaluator) and validate-plan.
+  - Lifecycle modes keep their existing reading.
+- **R2-1 and R2-2 tests:**
+  - A padded `" freestyle "` refuses the split and keeps `plan.md`.
+  - A CRLF state.md is refused one step earlier by split's existing state validation (`is missing frontmatter`, unchanged for every mode) and is left untouched too.
+  - CRLF tests cover the scaffold (same-mode rerun and mixed-mode refusal), the dashboard (CRLF and padded in the summary and rows, with a CRLF quick control) and `cleanup project` apply (CRLF freestyle state.md byte-identical, no second frontmatter block).
+  - A CRLF state with a padded double-quoted value is not freestyle in either reader, because YAML rejects the quoted scalar before `\r`. Status and the checks agree.
+- **R2-3:** implement Step 0 reads the mode before the synced pull: from the checkout when it is here, otherwise from the synced ref through an objects-only fetch and `git show <sha>:state.md`. A freestyle project stops before the pull, and the no-checkout case adds the `oat project pull <slug>` instruction. Other modes keep the arrival pull and the pinned arrival sentences. The entry line budget moved from 266 to 278, with a rationale comment.
+- **R2-4:** quick-start resolves a missing name and description under Step 0.5's startup-input rules before Step 0, so the freestyle check runs before the manifest-only auto-commit. Step 0.5 reuses that input.
+- **R2-5:** the freestyle create block decodes `projectPath` with `node` and `JSON.parse`, keeping the canonical-directory comparison.
+- **R2-6:** `reshape.md` mints `RESHAPE_ID` in its own block as `reshape-<UTC second>-{topic-slug}-<8 hex from /dev/urandom>`, minted once. A retry re-runs only the append block.
+- **Tests:**
+  - New regression tests for each item.
+  - An executable implement-arrival test runs Step 0's block against stub `oat`/`git`: freestyle with a checkout here, and freestyle read from the ref, both skip the pull, while quick pulls in both cases.
+  - A quoted-path stub-`oat` create case.
+  - A reshape mint test with a pinned `date`.
+- **Can-fail**, each neutralized, failing on its own clause, then restored and byte-compared:
+  - R2-1 and R2-2: the old raw reader behind the shared helper fails the padded split, CRLF scaffold, CRLF/padded dashboard and CRLF cleanup tests.
+  - R2-3, three mutations: moving the in-block stop after the pull fails "the freestyle check precedes the pull"; dropping the ref read fails "freestyle read from the ref: no pull"; moving the prose stop after the block fails "stop before oat project pull".
+  - R2-4: moving the name paragraph after Step 0 fails "name resolved before the first commit-capable step".
+  - R2-5: sed decoding fails the quoted-path case.
+  - R2-6: no suffix fails the identity pattern, and a constant suffix fails "second differs from first".
+- **Version:** no new bump; implement, quick-start and freestyle are already bumped in this PR, and `check:skill-bumps` passed.
+- Proof before the commit, each exit 0:
+  - The isolated vitest run over `src/commands/init/tools/shared src/validation` plus split, new, journal-check, closeout-check, complete-state, validate-plan, status, state and cleanup (64 files, 1905 passed).
+  - control-plane vitest (325 passed).
+  - `type-check` (0 cached), `oat:validate-skills`, `lint`, `format`, `check` (cli and control-plane cache misses) and `test:skills` (754).
+  - `pnpm build`: replayed the hashes that had just executed under `type-check`.
+  - Docs-index freshness, and the branch-build sync (no changes).
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
+
 ---
 
 ## Phase p05: Linked projects
