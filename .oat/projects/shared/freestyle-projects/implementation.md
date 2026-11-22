@@ -661,7 +661,8 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ### Task p04-t10: Fix m01 review H4 (operator-approved hardening)
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 6115f42340c2f1828a2c4524e67966ee404d4663
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Source review:** `m01-code-review-2026-11-22T022415Z.md` (m01 milestone-exit review on `a5c28dca2..7c35a902e`): H4
 **Approval:** operator chose Fix in m01, 2026-11-22. Class new-hardening, operator-approved.
@@ -669,6 +670,18 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Intent: in `oat-project-freestyle` Step 1, stop when the resume pointer write fails or the pointer does not name the intended project, and on creation stop when `oat project new` fails and use the path the scaffold reports instead of re-reading the old pointer.
 - Files: `.agents/skills/oat-project-freestyle/SKILL.md`, `references/kickoff.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
 - Proof: executable contract tests against a stub `oat`, a clause-by-clause can-fail check, and the scoped gate list.
+- **Resume:** Step 1 stops when `oat config set activeProject` fails, and stops unless `oat config get activeProject` then names the intended project. The two are compared as canonical directories, and an empty read counts as a mismatch. Nothing is read or shaped against the previous project.
+- **Create:** Step 1 runs `oat project new ... --json`, stops on a nonzero exit, and takes `PROJECT_PATH` from the reported `projectPath`, never from a re-read of the pointer. It stops when that path has no `state.md`, or when the pointer does not name it.
+- **References:** the `kickoff.md` brainstorm hand-off now defers to Step 1's guarded block and never hands off while the pointer names another project. `reshape.md` writes no pointer and runs no scaffold, so it is unchanged.
+- **Inventory:** `synced-bookkeeping-sites.json` pairs the resume pointer write with the new `ACTIVE_PATH=` check in the same block.
+- **Version:** no bump; `oat-project-freestyle` is new in this PR at 1.0.0.
+- **Test:** `freestyle-contracts.test.ts` runs the extracted resume and create blocks against a stub `oat`. It covers a failed write, a stale pointer and a good resume, then a failed scaffold, a stale pointer after a scaffold and a good creation.
+- **Can-fail:** four clauses were neutralized one at a time, and each failed its own assertion by its stderr message: ignoring the set exit, skipping the resume pointer check, ignoring the scaffold exit, and re-reading the pointer on creation. The file was then restored and byte-compared.
+- Proof before the commit, each exit 0:
+  - The isolated `vitest run src/commands/init/tools/shared src/validation` (33 files, 1309 passed).
+  - `oat:validate-skills` (69 OK), `lint`, `format`, `check` (cli a cache miss) and `test:skills` (754 passed).
+  - The branch-build `sync --scope project` (no changes).
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29 checks), `release:check-versions` and `release:validate`.
 
 ---
 
