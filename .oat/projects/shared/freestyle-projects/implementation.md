@@ -964,6 +964,24 @@ Proof: skill-prose vitest over `src/commands/init/tools/shared src/validation`.
 - **Version:** no new bump; oat-project-freestyle is new in this PR.
 - Proof before the commit, each exit 0: the skill-prose vitest (33 files, 1316 passed), `oat:validate-skills`, and `oxfmt` on the file.
 
+### Task p04-t21: Fix m01 review round 7 (R7-1)
+
+**Status:** completed
+**Commit:** ed563906e00e09d62843a81cebc316108b42e5f2
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `m01-code-review-2026-11-22T150000Z.md`, m01 exit re-review round 7 on `c14f3517e..7e8da0da6`: R7-1 (Medium), verified against the code by root. Class: regression introduced by the p04-t15 (I-1) fix.
+
+- Late fix: p04 is the last phase of m01 and no later phase has a `**Base:**`, so this record lands in p04 and advances its `**Head:**`.
+- **R7-1:** the 9j synced commit-only branch keyed only on `REFERENCE_PUBLISH`, so a `no` left in the shell by a freestyle run made a later synced quick run commit without publishing.
+  - The push branch now runs for every synced project except `ACTIVE_PROJECT_MODE` `freestyle` with `REFERENCE_PUBLISH` `no`. Its push lines are byte-identical; only the condition changed.
+  - The prose now says that only a freestyle project reads `REFERENCE_PUBLISH`, and that every other synced project publishes whatever it holds.
+- **Test:** the 9j contract test in `freestyle-contracts.test.ts` now passes `ACTIVE_PROJECT_MODE` with every run and adds a synced quick project, scaffolded by the built CLI, run with `REFERENCE_PUBLISH=no`. Its origin ref advances to the pushed commit. The freestyle commit-only and push cases still pass.
+- **Can-fail:** dropping the mode condition fails `synced quick with a stale REFERENCE_PUBLISH=no: origin ref advanced`, because the ref did not advance. The skill was then restored and byte-compared.
+- **Version:** no new bump; oat-brainstorm is already bumped in this PR, and `check:skill-bumps` passed.
+- Proof before the commit, each exit 0: `pnpm install --frozen-lockfile`, the isolated skill-prose vitest over `src/commands/init/tools/shared src/validation` (33 files, 1316 passed), `oat:validate-skills`, `lint` and `format`.
+- Commit: the first attempt was rejected by commitlint (`header-max-length`, 102 characters). The retry under the same identity, with a shorter header, landed `ed563906e`.
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
+
 ---
 
 ## Phase p05: Linked projects
