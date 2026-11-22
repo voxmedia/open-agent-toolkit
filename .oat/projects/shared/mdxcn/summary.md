@@ -1,0 +1,144 @@
+---
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-11-22
+oat_generated: true
+oat_summary_last_task: p04-t10
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
+oat_summary_learnings_fingerprint: f6fca32cef765bdb8988117216aa89128ba24bc3e1ed771553d0ca039bdd1322
+---
+
+# Summary: mdxcn
+
+## Overview
+
+OAT docs apps could render Mermaid and tabs from plain Markdown, but had no way
+to show richer figures such as steps, file trees or timelines without hand-written
+MDX. This project adapted the docs-relevant components of mdxcn into Markdown
+fence transforms, so authors write a fenced code block and the build renders a
+static figure, while the source still reads well on GitHub. It also made the
+rule durable that every new docs capability reaches scaffolded apps'
+contributing guidance and the bootstrap skill.
+
+## What Was Implemented
+
+- **`docs-*` figure fences.** Eight fence languages (`docs-steps`,
+  `docs-tree`, `docs-timeline`, `docs-terminal`, `docs-decision`,
+  `docs-check`, `docs-compare`, `docs-annotate`) become components through
+  `remarkDocsFences` in docs-transforms. Fence meta becomes props, and the body
+  is reparsed as GFM Markdown (raw for terminal) with authored line positions
+  kept. An unknown or nested `docs-*` fence fails the build. The shared
+  docs-config chain runs `remarkTabs → remarkDocsFences → remarkLinks →
+remarkAlert → remarkMermaid`, so figures work inside tabs.
+- **Figure components (docs-theme).** Eight static server components, a
+  `withDocsFigures(components)` wrapper and a `./figures.css` export with
+  scoped `--graph-*` tokens. There is no motion, no React context and no hidden
+  server HTML. Every vendored module carries the mdxcn MIT notice, and
+  `NOTICES.md` records the attribution.
+- **Checker.** `oat docs check` gains a `docs-fences` error rule for unknown
+  fence names on Fumadocs apps. Figure bodies are excluded, because the build
+  catches nesting there.
+- **Scaffold and guidance.** New Fumadocs apps are wired for figures with no
+  manual steps. The contributing page documents every fence with Syntax and
+  Rendered examples, its grammar, and the plain-text and no-nesting rules.
+  MkDocs apps get a one-line note. `oat-docs-bootstrap` (1.4.6) covers figures,
+  and `oat-docs-analyze` (1.9.2) repairs legacy scaffolds that lack the
+  wrapper, the CSS import or the docs-theme `@source` line.
+- **OAT docs adoption.** The lifecycle and tool-packs pages use figures. The
+  reference pages for Markdown features, `docs check`, file locations and the
+  CLI are updated.
+- **Tab positions.** Content inside tabs reports authored columns as well as
+  lines, computed from each line's indentation measured from the code block
+  start.
+- **Release.** The five public packages moved to 0.3.54 in lockstep. The
+  release contract pins `figures.css` and the notice.
+
+## Key Decisions
+
+- **Figures as `docs-`-prefixed fenced code blocks:** fences follow the
+  existing Mermaid and tabs pattern, read well on GitHub, and the prefix avoids
+  collisions with real code languages and makes the feature greppable.
+- **GitHub alerts stay on remark-github-blockquote-alert:** `> [!NOTE]` matters
+  because GitHub renders it natively, so mdxcn's alert, quote, terminal and
+  footnote upgrades are not adopted.
+- **Static figures without motion:** OAT's copies drop mdxcn's animation, so
+  figures render fully visible on the server for print, no-JS and agent readers,
+  and downstream apps take no `motion` dependency or hydration mismatch.
+- **Docs-prefixed components through withDocsFigures:** docs-theme exports a
+  wrapper that adds the eight `Docs*` components and marks overridden host tags.
+  The prefix avoids collisions such as Fumadocs `Steps`, and one `DOCS_FENCES`
+  table in docs-transforms drives the components, the transform and the checker.
+- **Invalid docs fences fail the build:** an unknown or nested `docs-*` fence
+  fails the build with a positioned error, so a typo never ships as a plain
+  code block. The checker reports unknown names before the build.
+- **Contributing guidance covers every docs capability:** every capability
+  available to docs authors must appear in scaffolded apps' contributing
+  guidance and the `oat-docs-bootstrap` walkthrough, with legacy repair in
+  `oat-docs-analyze`.
+
+## Design Deltas
+
+- **Upstream-faithful grammar (p02):** steps take bold as the current step and
+  italic as the next; plain decision options are open; compare's first column
+  holds row labels; annotate titles fall back to the code language.
+- **Nested fences fail (p01-t04):** design said only unknown fences fail. A
+  nested `docs-*` fence also fails with `nested-docs-fence`.
+- **Checker scope (p03-t05):** the checker skips fences inside a figure body,
+  which only the build catches.
+- **Legacy `@source` (p04-t05):** scaffolds before 0.3.15 lack the docs-theme
+  `@source` line, so the analyze repair adds it.
+- **Tab columns (p04-t08 to p04-t10):** design required authored lines only.
+  Operator decisions at the final review added authored columns for tab
+  content. design.md keeps the lines-only requirement, and implementation.md
+  records the delta.
+
+## Notable Challenges
+
+- **Tab-column fidelity loop:** the final review ran four rounds, each fixing
+  one tab-column edge case and exposing the next. At the three-round cap, a
+  complexity review recommended one corrective fix and a deferral for container
+  cases, which the operator accepted.
+- **Format hook drift (p04 recovery):** oxfmt escaped `docs-*` in a page
+  description, so the generated docs index drifted. The description was
+  reworded.
+- **Load-induced timeouts:** at load averages of 38–103 from unrelated work,
+  untouched CLI acceptance suites timed out. Isolated reruns passed every time.
+
+## Tradeoffs Made
+
+- **Container tab columns deferred:** matching micromark's container indentation
+  for a column read only by an error `place` was not worth the complexity.
+  Lines stay correct.
+- **Vendored components:** the figures are copied and patched in docs-theme
+  rather than taken as a dependency, which carries the MIT notice obligation
+  and makes upstream changes manual.
+
+## Follow-up Items
+
+- **Container tab columns (deferred Low):** tab content in a list item or
+  blockquote reports the wrong column when a tab character spans the container
+  prefix, or when the prefix width varies by line. Trigger: a page that uses
+  tabs there with tab indentation, an author report of a misleading
+  fence-error column, or a new consumer of tab-content columns.
+
+## Explainer Outcome
+
+- **project-recap:** skipped — operator choice at closeout (interactive)
+
+## Autonomous Execution Learnings
+
+### Cloud-environment improvements
+
+- **Rerun timed-out suites in isolation before treating them as regressions.**
+  Heavy unrelated load makes tsx-spawning CLI acceptance suites time out even
+  when the branch does not touch them. This is environment-limited and
+  unverified as a fix. (`oat-project:mdxcn#2026-11-22-friction-gate-runs-under-heavy-machine-load-1`)
+
+## Workflow Observations
+
+- **2026-11-22 · friction · Gate runs under heavy machine load** (general, environment-limited) `oat-project:mdxcn#2026-11-22-friction-gate-runs-under-heavy-machine-load-1`
+  mdxcn-p04-load-timeouts: at load average 38-80 from unrelated workloads, forced test:evidence timed out in CLI acceptance suites that spawn tsx (configured-gate, literals, exact-path-commit) though the branch touched none of them; isolated reruns at lower load passed 17/17.
+
+Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.
