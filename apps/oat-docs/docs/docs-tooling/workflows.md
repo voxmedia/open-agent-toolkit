@@ -19,7 +19,7 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 - `oat docs migrate` converts MkDocs admonitions to GFM callouts and injects frontmatter
 - `oat docs generate-index` generates a Fumadocs app-root docs index manifest from the Markdown file tree
 - `oat docs nav sync` regenerates MkDocs `mkdocs.yml` nav, or strict Fumadocs `meta.json` files, from `index.md` `## Contents` sections
-- [`oat docs check`](check.md) checks reader pages, navigation, contributor commands and diagrams without building a site
+- [`oat docs check`](check.md) checks reader pages, navigation, contributor commands, diagrams and figure fence names without building a site
 - [`oat docs literals`](commands.md#oat-docs-literals) supplies bounded inline-code occurrence evidence for analyze
 - `oat docs analyze` and `oat docs apply` expose guidance pointers in CLI help; the skills perform analysis and apply
 
