@@ -611,6 +611,52 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 - Review round 2: `freestyle-projects-p04-review-2` (fresh reviewer, same target) on `7a98c9b19..3b5f6f262`: fixes required, 0 critical, 0 high, 1 medium, 3 low (M1 import-plan did not check a project named at Step 0.5's question; L1 four skills wrote a named project to `activeProject` before reading its mode; L2 `cli-reference.md` `--at` wording; L3 the L5 removal deleted recorded journal lines inside the reviewed range, no change needed). M1, L1 and L2 fixed through the original handle as p04-t07. Artifact `reviews/p04-code-review-2026-11-22T015923Z.md` (local-only).
 - Review round 3: `freestyle-projects-p04-review-3` (fresh reviewer, same target) on `3b5f6f262..1af188b5c`: pass, 0 critical, 0 high, 0 medium, 1 low (L1 `starting-projects.md` "stops before writing anything" overstated for a name given at the question). Fixed by root as p04-t08. Fix loops: 3 (two implementer fix rounds and one root fix). Artifact `reviews/p04-code-review-2026-11-22T021641Z.md` (local-only).
 
+### Task p04-t09: Fix m01 milestone review findings (H1–H3, M1–M7)
+
+**Status:** completed
+**Commit:** 58a1643956a5ac72b11915b40be7364afb3c325b
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `m01-code-review-2026-11-22T022415Z.md` (m01 milestone-exit review on `a5c28dca2..7c35a902e`): H1, H2, H3, M1, M2, M3, M4, M5, M6, M7 (H4 is new-hardening and goes to the operator; not fixed here)
+
+- Intent: late fixes in p04 for the m01 milestone review. Each finding is reproduced before it is fixed; freestyle branches are additive and existing modes behave as before.
+- Files: split and new commands, journal-check rules, log append, state generate, cleanup utils, their tests, and the quick-start, implement, design, spec and review-receive-remote skills plus `oat-project-freestyle/references/reshape.md`.
+- Proof: focused suites, skill-prose contract run, the gate list, can-fail checks per fix.
+- **H1:** `oat project split` refuses to convert an active detected freestyle parent before any scaffold or removal (`split/run.ts`, read through the parsed `state.md` mode); brief, goal and quick conversion tests pass unchanged.
+- **H2:** `oat project new` refuses a same-scope rerun whose existing mode differs from the requested one when either side is freestyle, before any write and even with `--force` (`new/scaffold.ts`); same-mode reruns and the quick to spec-driven control are unchanged. quick-start gains a `### Freestyle Projects` stop before Step 0 for the active project or the named one, plus a Step 0.5 check before the scaffold for a name the user gives.
+- **H3:** `oat-project-review-receive-remote` stops for a freestyle project right after Step 0 resolution, before validation, the PR fetch and any write, and points to `oat-review-receive-remote`.
+- **M1:** the implement freestyle stop moved into `SKILL.md` Step 0, before the Route Loading Contract loads dispatch preflight, with a pointer-write guard for a named project; `plan-and-resume.md` keeps a one-line note. The entry line budget moved from 251 to 266 with a rationale comment.
+- **M2:** `oat-project-design` and `oat-project-spec` stop for a freestyle project before Step 1, before any template copy, write or commit, with the same pointer-write guard.
+- **M3:** freestyle journal-check selects records by the section that holds them: a record under a skipped section is not validated, and a record under a validated section is validated whatever phase its label names (`journal-check/rules.ts`).
+- **M4:** the stored-entry idempotency scan skips a structural entry's parsed event head (`**Subject:**` and the other head fields) and reads its body; judgment entries, `**Source:**` included, are scanned whole as before (`log/append.ts`).
+- **M5:** `reshape.md` mints `RESHAPE_ID` once per reshape decision as `reshape-{YYYYMMDDTHHMMSSZ}-{topic-slug}` and reuses it only to retry that decision's append.
+- **M6:** the dashboard reads the parsed YAML mode for freestyle detection in both the active summary and available-project rows, so a quoted or commented `freestyle` value is recognized; lifecycle modes keep the existing reading (`state/generate.ts`, new `parseStateWorkflowMode`/`readStateWorkflowModeFile` in `shared/frontmatter.ts`).
+- **M7:** `stateIsFreestyle` reads the parsed frontmatter only; a quick project with a fenced freestyle example keeps its completion repair (`cleanup/project/project.utils.ts`).
+- **Not fixed:** H4 (new-hardening, routed to the operator).
+- **Version bumps:** `oat-project-review-receive-remote` 1.5.6 to 1.5.7, `oat-project-design` 2.3.12 to 2.3.13, `oat-project-spec` 2.0.6 to 2.0.7, `oat-project-quick-start` 2.3.27 to 2.3.28; `oat-project-implement` (2.3.31) and `oat-project-freestyle` (new, 1.0.0) were already bumped in this PR. Test pins updated.
+- **Docs:** `cli-reference.md` (the `project new` refusal), `planning/splitting.md` (the split refusal) and `execution/implementation-execution.md` (where implement stops) describe the new behavior.
+- **Can-fail:** each CLI fix and each ordering assertion was neutralized, failed on its own clause, and was restored (details in the phase report).
+- Reproduced before fixing:
+  - M3 and M4: the new crossed-ID and event-head tests failed before the fix.
+  - H2: the branch build in a scratch repo refused `project new fs1 --mode quick --force` over a freestyle `fs1` (exit 1, files unchanged), and the quick to spec-driven control still scaffolded.
+  - H1, M1, M2, M5, M6 and M7: confirmed from the cited source lines.
+- Proof before the commit, each exit 0:
+  - The isolated `vitest run src/commands/init/tools/shared src/validation` (33 files, 1307 passed).
+  - Focused split, new, journal-check, log, state and cleanup suites (28 files, 651 passed), rerun after formatting.
+  - `oat:validate-skills`, `lint`, `format` and `check`, the last two rerun after formatting three files (cli `check` a cache miss), plus `type-check`.
+  - `pnpm test` (cli a cache miss: 453 files, 9841 passed; smoke 165 passed).
+  - Forced `turbo run build` (0 cached), `test:skills` (754 passed), `test:smoke` (165 passed) and `build:docs` (docs a cache miss).
+  - `generate-index` plus `git diff --exit-code`.
+  - The branch-build `sync --scope project` changed no view.
+- Proof after the commit, each exit 0:
+  - `git fetch origin main`, `check:skill-bumps` (29 checks), `release:check-versions` and `release:validate`.
+  - One forced `pnpm test:evidence`: 0 of 12 cached, cli 9841 passed, load average 6.2 to 11.3.
+- Can-fail, each restored:
+  - M3: selecting records by label fails both crossed-ID tests.
+  - M4: scanning the whole structural entry fails both event-head tests, while the judgment `**Source:**` control stays green.
+  - M5: the date-only key fails the identity test.
+  - Ordering assertions: moving each new stop after its markers, or dropping the quick-start named check or a pointer guard, fails the named clause. This was checked eight times, covering quick-start, implement, design, spec and review-receive-remote.
+  - H1, H2, M6 and M7 were checked earlier in this record's work.
+
 ---
 
 ## Phase p05: Linked projects
