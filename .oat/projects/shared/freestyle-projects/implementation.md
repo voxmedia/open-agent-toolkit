@@ -402,7 +402,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** in_progress
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
-**Head:** 7d919db66cddcb4c56eb9d5cbf7e78d0b0f74bb9
+**Head:** 447cd3e2d09d6ea5da083e98614369d5e7e513a7
 
 Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
 
@@ -434,6 +434,13 @@ Late fix p04-t06 (review round 1: M1 to M3, L1 to L5) at `c20ef22d5`, recorded a
 - After the commit, each exit 0: `check:skill-bumps` (25 checks), `release:check-versions` and `release:validate`.
 
 The only CLI source change is the `--subject` help text, so `test:evidence` was not rerun, per root. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
+Late fix p04-t07 (review round 2: M1, L1, L2; L3 no change) at `67c451c35`, recorded at `447cd3e2d`:
+
+- Before the commit, each exit 0: the isolated skill-contract and validation suites (33 files, 1306 passed), `oat:validate-skills`, `lint`, `format`, `check`, `type-check`, forced `build` and docs build (0 cached each), `docs:validate`, docs-index freshness and `test:skills` (754 passed).
+- After the commit, each exit 0: `check:skill-bumps` (25 checks), `release:check-versions` and `release:validate`.
+
+No CLI source changed. The head advanced under the late-fix rule.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
