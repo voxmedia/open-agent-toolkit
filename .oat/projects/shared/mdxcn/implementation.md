@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p04-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 5     | 5/5       |
-| Phase 2 | complete    | 6     | 6/6       |
-| Phase 3 | complete    | 6     | 6/6       |
-| Phase 4 | in_progress | 10    | 9/10      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 5     | 5/5       |
+| Phase 2 | complete | 6     | 6/6       |
+| Phase 3 | complete | 6     | 6/6       |
+| Phase 4 | complete | 10    | 10/10     |
 
-**Total:** 26/27 tasks completed
+**Total:** 27/27 tasks completed
 
 ---
 
@@ -584,7 +584,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-11-22
 
 ### Phase Summary
@@ -928,8 +928,33 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ### Task p04-t10: (final review r3) Measure tab-content indentation from the code block start
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** eda765135cd4d95af6728afaed87bac3f72cf129
+
+**Outcome:**
+
+- `lineColumnsOf` measures each line's indented-code prefix from the code block's start column, so blockquoted tab content reports its authored column (3:7, previously 3:3).
+- The `prefixLength` comment states the deferred limitation: a tab character split across a container prefix is not modeled.
+
+**Files changed:**
+
+- `packages/docs-transforms/src/remark-tabs.ts`
+- `packages/docs-transforms/src/remark-tabs.test.ts`
+
+**Verification:**
+
+- RED: the new blockquote assertion failed first (column 3, expected 7).
+- After the fix:
+  - docs-transforms: 72 passed
+  - docs-config: 24 passed
+  - docs-theme: 153 passed
+  - docs-transforms check: clean
+  - CLI `src/commands/docs`: 460 passed on one rerun. The first run hit 4 `literals.test.ts` timeouts at load average ~103 (environment-limited, as in earlier rounds). The rerun made no edits.
+- The root reran `remark-tabs.test.ts`: 12 passed.
+
+**Notes / Decisions:**
+
+- **Can-fail control:** removing `.slice(start.column - 1)` fails only the new assertion (got 3:3, expected 3:7). The restored file is byte-identical. No existing expectation changed.
 
 ### Review Received: final (round 3)
 
@@ -945,7 +970,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - **L1 note:** a tab character split across a list or blockquote prefix gives a wrong column, both before and after the fix. Deferred by the operator (see Deferred Findings).
 - **Review cap:** the final review reached its three-cycle cap. A complexity review ran (`reviews/archived/complexity-final-2026-11-22T024150Z.md`, local only). Its verdict was deletion-rule compliant, provisional, with a recommended corrective revision. The operator chose that revision on 2026-11-22: fix the regression, defer the split-tab case, then one review narrowed to the delta.
 
-**Outcome:** fixes pending. One narrowed final review follows p04-t10.
+**Outcome:** fix completed in `eda765135`. One final review narrowed to that delta follows.
 
 ---
 
@@ -963,6 +988,10 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - run/v1 · request=mdxcn-p03-review-r1-20261121 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p04-implementation-20261122 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-p04-review-r1-20261122 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-final-review-r1-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-final-review-r2-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-final-review-r3-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-final-complexity-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

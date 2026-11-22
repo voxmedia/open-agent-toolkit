@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t10
-oat_last_commit: b668002c2
+oat_current_task: null
+oat_last_commit: eda765135
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -114,7 +114,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T03:47:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T03:57:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final review at its cap; the operator chose a corrective revision (p04-t10), then one narrowed review.
+Implementation - Tasks complete (27/27); the corrective revision p04-t10 is done; awaiting one narrowed final review.
 
 ## Artifacts
 
@@ -149,7 +149,8 @@ Implementation - Final review at its cap; the operator chose a corrective revisi
 - ✓ Final review round 2 received (0C/0H/0M/1L)
 - ✓ Fix p04-t09 complete
 - ✓ Final review round 3 received (0C/0H/0M/1L); cap reached, complexity review run
-- ⧗ Fix p04-t10, then one narrowed final review
+- ✓ p04-t10 fixed (`eda765135`)
+- ⧗ Narrowed final review (round 4)
 
 ## Blockers
 
