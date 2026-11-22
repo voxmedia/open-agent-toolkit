@@ -730,6 +730,67 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
   - Docs-index freshness, and the branch-build sync (no changes).
 - Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
 
+### Task p04-t12: Fix m01 review round 3 (R3-1..R3-6)
+
+**Status:** completed
+**Commit:** 1ee61581c4afda070c67de0e38f5ed2b4ba0b5e8
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** `m01-code-review-2026-11-22T050000Z.md`, m01 Astra re-review round 3 on `86048bad1..749557100`: R3-1 to R3-6, each verified against source by root. Approvals: R3-1 is a pre-existing shared-parser defect that affects every mode, and the operator chose Fix in m01, 2026-11-22. R3-2 is class new-hardening and operator-approved; the operator chose Fix in m01, 2026-11-22.
+
+- Late fix: p04 is the last phase of m01 and no later phase has a `**Base:**`, so this record lands in p04 and advances its `**Head:**`.
+- Intent: read a CRLF state whose last field is quoted, in every mode. Make implement arrival stop before the pull on a failed ref lookup or an unreadable ref mode, keep a configured fetch refspec from moving the local ref, and resolve the active project from the repository root. Resolve the quick-start named target at the scope `oat project new` uses. Keep CRLF freestyle state CRLF and freestyle through complete-state, pause and open.
+- Files: control-plane `frontmatter.ts` and its tests, CLI shared `frontmatter.ts`, complete-state, open and pause with their tests, the scaffold, cleanup and split tests, the implement and quick-start skills, `skills.test.ts`, and `implementation-execution.md`.
+- Proof: regression and executable tests, a can-fail check for each guard, and the scoped gate list plus the full control-plane vitest, `pnpm build:docs` and docs-index freshness.
+- **R3-1:**
+  - control-plane `FRONTMATTER_PATTERN` consumes `\r?\n` before the closing delimiter, so the last field of a CRLF block no longer keeps a `\r`. LF input matches exactly as before.
+  - Tests:
+    - control-plane: a CRLF block with a quoted last field, and an unquoted mode followed by a quoted timestamp.
+    - A lifecycle (quick) CRLF state with a quoted last field.
+    - The scaffold: a quick rerun refuses with `already exists as a freestyle project`, and a same-mode rerun leaves the bytes unchanged.
+    - `cleanup project` apply leaves both variants byte-identical, with no second block.
+- **R3-2:**
+  - Implement Step 0 runs `git ls-remote --exit-code`. Exit 2 means an absent ref, and arrival continues as before.
+  - Any other nonzero exit stops before the pull with `cannot look up refs/oat/projects/<slug> on origin`.
+  - A ref whose mode cannot be read stops with `cannot read the mode of <slug> from origin`.
+- **R3-3:** the ref read fetches with `--no-tags --refmap= --no-write-fetch-head`, so a configured `refs/oat/projects/*` refspec cannot move the local ref.
+- **R3-4:** Step 0 changes to the repository root before any check on the repo-relative `activeProject`.
+- **R3-5:** the quick-start guard and the Step 0.5 named check both read `NAMED_PATH`.
+  - It comes from `oat config get projects.root` and `oat config get projects.defaultScope`, the CLI's effective values, env included, defaulting to synced.
+  - It joins them the way `resolveScopeRoot` does: shared is the root itself, local and synced are its siblings.
+  - `oat project list` reports only existing projects, so it cannot give the path for a new name.
+- **R3-6:**
+  - CLI `freestyleStateLineEndings` gives complete-state, pause and open an LF copy of a CRLF freestyle `state.md` and restores CRLF on write. The pause rollback restores the original bytes.
+  - The result still reads as freestyle and complete. A CRLF lifecycle state still refuses with exit 1, as before.
+  - Audit of the other freestyle-reachable `getFrontmatterBlock` callers, none changed:
+    - promote refuses a CRLF state as unreadable and freestyle as not-lite.
+    - prune and push read only the PR fields.
+    - ref-sync `pullChildren` runs for coordination parents only.
+    - The dashboard skips the HiLL read for freestyle.
+  - The CRLF split case, which passed on base, is removed. Split's existing state validation refuses a CRLF parent for every mode before the freestyle check and before any write, so that validation is out of scope.
+- **Tests:**
+  - The implement arrival test is now a describe block with a stub `git` that honours `--exit-code` and `rev-parse`.
+  - R3-2 injects exit 128 on the first `ls-remote` only, then covers exit 2 with a record, and an unreadable ref mode.
+  - R3-4 runs from `src`.
+  - R3-3 uses real git: a bare remote, a configured `+refs/oat/projects/*:refs/oat/projects/*` refspec, and a local ref one commit ahead.
+  - R3-5 runs the extracted block against the built CLI in a temporary repository for local and the default synced scope, and checks that `oat project new` scaffolds a local name at `NAMED_PATH`.
+  - The entry line budget moved from 278 to 296, with a rationale comment.
+- **Can-fail**, each neutralized, failing on its own clause, then restored and byte-compared:
+  - R3-1: the old pattern fails both control-plane tests and all four CLI CRLF tests.
+  - R3-2: dropping the `LS_STATUS` branch fails on `expected 1`, and dropping `--exit-code` fails the absent-ref continuation.
+  - R3-3: dropping `--refmap=` moves the local ref back to the published commit.
+  - R3-4: dropping the `cd` fails the subdirectory case.
+  - R3-5: a shared-only `NAMED_PATH` resolves `.oat/projects/shared/proj` instead of `local`, and the old Step 0.5 path fails the ordering check.
+  - R3-6: a no-op helper fails all three CRLF freestyle tests.
+- **Version:** no new bump; implement and quick-start are already bumped in this PR, and the lockstep public versions already cover control-plane.
+- Proof before the commit, each exit 0:
+  - `pnpm build` (0 cached).
+  - The isolated vitest run over `src/commands/init/tools/shared src/validation` plus new, cleanup, complete-state, open, pause, split and state (55 files, 1676 passed).
+  - control-plane vitest (14 files, 327 passed).
+  - `type-check` (cli and control-plane cache misses), `oat:validate-skills`, `lint`, `test:skills` (754) and `pnpm build:docs` (docs cache miss).
+  - `format` and `check` (cli cache miss): the first run found one unformatted test file. It was formatted, its tests were rerun (50 passed), and both passed.
+  - Docs-index freshness, and the branch-build sync.
+- Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
+
 ---
 
 ## Phase p05: Linked projects
