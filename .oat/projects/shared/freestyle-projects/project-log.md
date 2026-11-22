@@ -107,6 +107,10 @@ Observation: C="node packages/cli/dist/index.js"; $C internal commit-paths ... e
 
 m01 exit review (manual GPT 6.2 Astra high, substitute for the project-disabled implement exit gate) passed in round 6 at c14f3517e after 5 fix rounds (p04-t09..p04-t14); R4-3 deferred; exit carrier project_disabled, fresh; m01 implementing -> reviewing; next oat-project-review-provide code m01: p01, p02, p03, p04; freestyle-projects-m01-exit-review
 
+### 2026-11-22 · structural · oat-project-implement · p04
+
+p04 re-accepted after the m01 integrated review round 1 fixes: p04-t15 (I-1), p04-t16 (I-2 Resume half), p04-t18 (I-4), p04-t20 (I-6) through the original handle; p04-t17 and p04-t19 cancelled and I-2 Create half, I-3, I-5 deferred by the operator. Gates passed; pnpm test needed one no-edit rerun after two SIGTERM-timing failures in tools/smoke/runner/cleanup.test.mjs, which the range does not touch. release:check-versions fails: origin/main reached 0.3.54, equal to the branch. Exit and integrated re-reviews pending. freestyle-projects-p04-outcome-m01-integrated-1
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

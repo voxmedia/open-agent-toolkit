@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p04
+oat_current_task_id: p05
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | in_progress | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | pending  | 1     | 0/1      |
+| p06   | pending  | 1     | 0/1      |
+| p07   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 3/9 phases accepted
+**Total:** 4/9 phases accepted
 
 ---
 
@@ -399,7 +399,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ## Phase p04: m01 docs and release
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Head:** 1d70a44af5080b212e480335667205cdf841607d
