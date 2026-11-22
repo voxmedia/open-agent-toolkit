@@ -943,6 +943,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - run/v1 · request=mdxcn-final-review-r2-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-final-review-r3-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=mdxcn-final-complexity-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=mdxcn-final-review-r4-20261122 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -1011,12 +1012,28 @@ The implementer handles continued through the same handle for the p02 recovery a
 
 **Outcome:** fix completed in `eda765135`. One final review narrowed to that delta follows.
 
+### Review Received: final (round 4)
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T040047Z.md` (local only), reviewed head `68251269bacedb4f26db192ea2d3f5aba42cbaca`, invocation `auto`, request `mdxcn-final-review-r4-20261122`. Narrowed to the p04-t10 delta by the operator's cap decision.
+**Findings:** 0 critical, 0 high, 0 medium, 2 low
+**Finding classes:**
+
+- L1: bookkeeping (the Final Summary omitted p04-t10 and said "Open: none" despite the deferral).
+- L2: new-hardening (varying-width container prefixes; no contract source requires container columns; not a regression).
+
+- **Round 3:** L1 confirmed resolved. RED and can-fail reproduced. A 21-case position probe shows no regression against `b0bd1399d`, and seven blockquote cases are correct again.
+- **L1 (Low):** fixed at receive: the Final Summary credits p04-t10 and names the deferred limitation.
+- **L2 (Low):** deferred by the operator (2026-11-22) and folded into the round-3 split-tab deferral.
+- **Deferred Mediums:** none exist to resurface.
+
+**Outcome:** passed. The operator dispositioned both Lows (fix L1 at receive, defer L2).
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
 - **p01-t05 concern (Low):** resolved by operator decision at the final review (2026-11-22): fix now, converted to p04-t08. It is no longer deferred.
-- **Final review round 3, L1 note (Low, new-hardening):** a tab character split across a list-item or blockquote prefix gives tab content the wrong column; lines are correct. It predates p04-t08, no tracked page uses it, and only the `file.fail` place reads it. Deferred by the operator at the final-review cap (2026-11-22). **Trigger:** a page with tabs inside a blockquote or list item that uses tab-character indentation; an author report of a misleading fence-error column; or a consumer that starts reading tab-content columns.
+- **Final review round 3, L1 note (Low, new-hardening):** a tab character split across a list-item or blockquote prefix gives tab content the wrong column; lines are correct. It predates p04-t08, no tracked page uses it, and only the `file.fail` place reads it. Deferred by the operator at the final-review cap (2026-11-22). Final review round 4 L2 adds a variant: a container prefix whose width varies by line (` >     beta` under `>`) is also not modeled (5:7 for 5:8; same as `967e15728`). The operator folded it into this deferral (2026-11-22). **Trigger:** a page with tabs inside a blockquote or list item that uses tab-character indentation; an author report of a misleading fence-error column; or a consumer that starts reading tab-content columns.
 
 ## Deviations from Plan / Design
 
@@ -1048,7 +1065,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
   - `oat-docs-bootstrap` (1.4.6) covers figures.
   - `oat-docs-analyze` (1.9.2) repairs legacy scaffolds that miss the wrapper, the `figures.css` import or the docs-theme `@source`.
 - **OAT docs:** the lifecycle page and `tool-packs.md` use figures. Markdown Features, `documentation.md`, `check.md`, `file-locations.md`, `cli-reference.md` and `workflows.md` are updated.
-- **Tab positions:** content inside tabs now reports authored columns as well as lines, computed from each line's actual indentation, including tab characters. These were operator decisions at the final review (p04-t08, p04-t09).
+- **Tab positions:** content inside tabs now reports authored columns as well as lines, computed from each line's actual indentation, including tab characters, measured from the code block start so blockquoted tab content is correct. These were operator decisions at the final review (p04-t08, p04-t09, p04-t10).
 - **Release:** `NOTICES.md` has the mdxcn entry, the release contract pins `figures.css` and the notice, and the five public packages moved to 0.3.54 in lockstep.
 
 **Key files/modules:**
@@ -1081,7 +1098,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 - Legacy scaffolds may lack the docs-theme `@source` (p04-t05).
 - The replay test lives at `src/compiled-fixtures.test.ts`.
 
-**Open:** none. The p01-t05 tab-column concern is fixed in p04-t08 by operator decision.
+**Open:** one deferred limitation (see Deferred Findings). Tab content inside a list item or blockquote can report the wrong column when a tab character spans the container prefix, or when the prefix width varies by line; lines are correct. The p01-t05 tab-column concern is fixed in p04-t08 by operator decision.
 
 ## References
 

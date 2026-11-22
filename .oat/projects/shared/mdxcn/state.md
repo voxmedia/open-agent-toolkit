@@ -114,7 +114,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:16:57.229Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T03:57:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-22T04:37:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -126,7 +126,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete (27/27); the corrective revision p04-t10 is done; awaiting one narrowed final review.
+Implementation - Tasks complete (27/27); final review passed (round 4, narrowed); awaiting the exit gate and the final HiLL approval.
 
 ## Artifacts
 
@@ -150,7 +150,8 @@ Implementation - Tasks complete (27/27); the corrective revision p04-t10 is done
 - ✓ Fix p04-t09 complete
 - ✓ Final review round 3 received (0C/0H/0M/1L); cap reached, complexity review run
 - ✓ p04-t10 fixed (`eda765135`)
-- ⧗ Narrowed final review (round 4)
+- ✓ Final review passed (round 4, narrowed; 2 Lows dispositioned)
+- ⧗ Exit gate and final HiLL approval
 
 ## Blockers
 
