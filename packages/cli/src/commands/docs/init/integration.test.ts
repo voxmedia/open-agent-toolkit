@@ -20,6 +20,7 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { checkDocs } from '@commands/docs/check/checker';
 import { createDocsNavSyncCommand } from '@commands/docs/nav/sync';
 import { resolveAssetsRoot } from '@fs/assets';
+import { DOCS_FENCES } from '@open-agent-toolkit/docs-transforms';
 import { OAT_VERSION } from '@shared/oat-version';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -256,6 +257,20 @@ describe('scaffold integration', () => {
         'utf8',
       );
       expect(contributor).toContain('`../AGENTS.md`');
+      if (framework === 'fumadocs') {
+        // Every figure fence is documented with a rendered example, so a new
+        // fence cannot ship without contributing guidance.
+        for (const fence of Object.keys(DOCS_FENCES)) {
+          expect(contributor).toMatch(
+            new RegExp(`=== "Rendered"\n\n {4}\`{3,4}${fence} `),
+          );
+        }
+        expect(appAgents).toContain('## When you add a figure');
+      } else {
+        expect(contributor).toContain(
+          'MkDocs renders them as plain code blocks',
+        );
+      }
       expect(
         await readFile(join(appRoot, 'docs/getting-started.md'), 'utf8'),
       ).not.toContain('pnpm install');

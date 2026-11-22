@@ -55,7 +55,7 @@ Within `## Contents`, use dash-only links to sibling pages or child indexes, opt
 
 Use the least complex layer that expresses the reader's need: **Markdown → existing transform → MDX**. Ordinary prose stays `.md`. Fumadocs MDX is for actual JSX/component needs; MkDocs does not compile MDX. MDX is excluded from OAT's Markdown manifest and the Fumadocs agent Markdown endpoints.
 
-Tables, task lists, fenced code, callouts, Mermaid and `=== "Title"` tabs are supported by the configured framework pipeline. Tabs may contain links, GFM and nested tabs in Fumadocs. Use a language on every fence and `bash` for shell commands.
+Tables, task lists, fenced code, callouts, Mermaid and `=== "Title"` tabs are supported by the configured framework pipeline. Tabs may contain links, GFM and nested tabs in Fumadocs. Use a language on every fence and `bash` for shell commands. The `docs-*` figure fences of OAT Fumadocs apps (such as `docs-steps` and `docs-tree`) are not configured here: MkDocs renders them as plain code blocks, so use a list, table or Mermaid instead.
 
 === "Syntax"
 
