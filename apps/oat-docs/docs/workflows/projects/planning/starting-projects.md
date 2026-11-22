@@ -100,8 +100,10 @@ in a fresh repository.
    - `oat-project-freestyle` resumes the freestyle project you name, or the
      active project when it is freestyle, and makes it active. With a project
      of another mode active and no new project named, it stops.
-   - `oat-project-import-plan` writes into any active project, whatever its
-     mode. It rewrites that project's `plan.md` and switches it to import mode.
+   - `oat-project-import-plan` writes into any active project except a
+     freestyle one. It rewrites that project's `plan.md` and switches it to
+     import mode. With a freestyle project active, or named with `--project`,
+     it stops before any write, because OAT has no promotion from freestyle.
    - `oat-project-split` makes its first child the active project.
 
    To start fresh work, run `/oat-project-clear-active` (or switch with
