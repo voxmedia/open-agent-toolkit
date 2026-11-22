@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: null
+oat_current_task_id: p04-t09
 oat_generated: false
 ---
 
@@ -16,14 +16,14 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 5     | 5/5       |
-| Phase 2 | complete | 6     | 6/6       |
-| Phase 3 | complete | 6     | 6/6       |
-| Phase 4 | complete | 8     | 8/8       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 5     | 5/5       |
+| Phase 2 | complete    | 6     | 6/6       |
+| Phase 3 | complete    | 6     | 6/6       |
+| Phase 4 | in_progress | 9     | 8/9       |
 
-**Total:** 25/25 tasks completed
+**Total:** 25/26 tasks completed
 
 ---
 
@@ -584,7 +584,7 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 
 ## Phase 4: Guidance, instructions and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-11-22
 
 ### Phase Summary
@@ -877,6 +877,25 @@ cat out/_next/static/chunks/*.css | grep -o -F -e '.graph-frame' -e '.text-graph
 - **Operator decisions (2026-11-22):** convert all four Lows, and fix the deferred p01-t05 tab-column concern now, as p04-t08.
 
 **Outcome:** fixes completed: L1 and L2 at receive; L3 and L4 in `633674405`; tab columns in `e4fc7a2bb`. A final re-review follows.
+
+### Task p04-t09: (final review r2) Compute tab-content columns from the authored indentation
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: final (round 2)
+
+**Review:** `reviews/archived/code-final-review-2026-11-22T021225Z.md` (local only), reviewed head `967e1572886de3468abd42ec338ab9641de189a6`, invocation `auto`, request `mdxcn-final-review-r2-20261122`
+**Findings:** 0 critical, 0 high, 0 medium, 1 low
+**Finding classes:**
+
+- L1: accepted-requirement (the operator's p04-t08 decision: tab content reports authored columns).
+
+- **Round 1:** all four findings were confirmed resolved.
+- **L1 (Low):** tab-character indentation inside tab content still reports too large a column, because p04-t08 adds a fixed 4. It is not a regression (it previously reported column 1), and lines are correct.
+- **Operator decision (2026-11-22):** compute the column from the source. Converted to p04-t09.
+
+**Outcome:** fixes pending. The final review re-runs after p04-t09.
 
 ---
 

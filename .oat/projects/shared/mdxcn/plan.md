@@ -1367,6 +1367,60 @@ and report.
 
 ---
 
+### Task p04-t09: (final review r2) Compute tab-content columns from the authored indentation
+
+**Files:**
+
+- Modify: `packages/docs-transforms/src/remark-tabs.ts`
+- Modify: `packages/docs-transforms/src/reparse.ts` (only if a per-line column offset is needed)
+- Modify: `packages/docs-transforms/src/remark-tabs.test.ts`
+- Modify: `packages/docs-transforms/src/reparse.test.ts` (only if `reparse.ts` changes)
+
+**Step 1: Understand the issue**
+
+Final re-review L1 (`reviews/archived/code-final-review-2026-11-22T021225Z.md`),
+which the operator chose to fix by computing from source:
+
+- p04-t08 adds a fixed `INDENTED_CODE_WIDTH` (4) to the code block's start
+  column.
+- An indented code block strips up to four columns of indentation. A tab
+  advances to the next tab stop, while micromark counts it as one column.
+- Tab-indented tab content therefore reports too large a column: `\talpha`,
+  authored at column 2, reports column 5. Lines are correct.
+
+Location: `remark-tabs.ts:6` (the constant's comment), `remark-tabs.ts:101`
+
+**Step 2: Implement fix (RED first)**
+
+- **RED:** add assertions that fail on the current code:
+  - `\t`-indented tab content reports its authored column;
+  - mixed `  \t` indentation does too;
+  - two tab levels indented with tabs do too.
+- **Fix:** derive each content line's column offset from the source. That
+  offset is the number of characters the indented-code prefix consumed on
+  that line: up to four columns, with a tab advancing to the next stop.
+  - When lines in one block use different indentation, relocate per line. If
+    that needs it, add an optional per-line column offset to the internal
+    `reparseMarkdown`, and keep the `remark-docs-fences` call unchanged.
+  - Nested tabs must still compose: the inner block's offsets come from the
+    outer reparsed value.
+- **Keep:** every space-indented expectation from p04-t08.
+- **Comment:** correct the constant's comment, or remove the constant.
+- **Can-fail check:** revert to the fixed `+ 4` and confirm the new tab
+  assertions fail; then restore.
+
+**Step 3: Verify**
+
+Run: `pnpm exec oxfmt <edited files> && pnpm --filter @open-agent-toolkit/docs-transforms build && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-transforms test && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-config test && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/docs-theme test && bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs && pnpm --filter @open-agent-toolkit/docs-transforms check`
+
+Expected: all pass, and the captured replay needs no recapture.
+
+**Step 4: Commit**
+
+`fix(p04-t09): compute tab-content columns from the authored indentation`
+
+---
+
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
@@ -1376,6 +1430,7 @@ and report.
 | p03   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p03-review-2026-11-22T000358Z.md      | 2c8d3b84bc075c96a4731fd0bd4fedd27990fb5f | auto       | -                 |
 | p04   | code     | fixes_completed | 2026-11-22 | reviews/archived/code-p04-review-2026-11-22T013926Z.md      | dcc24fc8ff0387b2dbf44339b5b87fa46964a1f6 | auto       | -                 |
 | final | code     | fixes_completed | 2026-11-22 | reviews/archived/code-final-review-2026-11-22T015824Z.md    | 2d992742e6de26415c3caa5ffc2356a3790e50dc | auto       | -                 |
+| final | code     | fixes_added     | 2026-11-22 | reviews/archived/code-final-review-2026-11-22T021225Z.md    | 967e1572886de3468abd42ec338ab9641de189a6 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | structured (in-memory)                                      | 87753e28cfdecaa6cc5985354516c8b97a01dd22 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T162334Z.md | 2b41627f184ee2556978b80397489b4d7fc3e063 | gate       | codex-6-sol-xhigh |
 | plan  | artifact | passed          | 2026-11-21 | reviews/archived/artifact-plan-review-2026-11-21T164854Z.md | 08d0588d801d7cd59afd08323f645b8a0735021b | gate       | codex-6-sol-xhigh |
@@ -1409,11 +1464,11 @@ cell, and never truncate a widened row back to five columns.
 - Phase 3: 6 tasks. The contract test and captured compile fixtures, the
   checker rule, scaffold wiring with a fresh-app build, and OAT docs adoption,
   plus two review fixes.
-- Phase 4: 8 tasks. Scaffold and skill guidance, OAT docs and instructions,
-  and the lockstep release, plus two phase-review fixes and two final-review
+- Phase 4: 9 tasks. Scaffold and skill guidance, OAT docs and instructions,
+  and the lockstep release, plus two phase-review fixes and three final-review
   fixes.
 
-**Total: 25 tasks**
+**Total: 26 tasks**
 
 ---
 
