@@ -8,7 +8,7 @@ This file tells agents how to work inside `apps/oat-docs`, the documentation app
 
 ## Information architecture and agent use
 
-Start at `docs/index.md` and follow authored `## Contents` maps to the narrowest topic. Read source Markdown and linked code before changing claims. Prefer `.md`; use the existing transforms for tabs, callouts and Mermaid, and MDX only when actual JSX is necessary. Product reader onboarding and contributor toolchain setup have different entry points.
+Start at `docs/index.md` and follow authored `## Contents` maps to the narrowest topic. Read source Markdown and linked code before changing claims. Prefer `.md`; use the existing transforms for tabs, callouts, Mermaid and `docs-*` figure fences, and MDX only when actual JSX is necessary. Figure grammar, the agent-readability rule and examples are in `docs/contributing/markdown-features.md`. Product reader onboarding and contributor toolchain setup have different entry points.
 
 The authored surfaces are `docs/**/*.md`, app configuration and this file. Committed `docs/**/meta.json` comes from nav sync; app-root `index.md` is a generated machine inventory. `.source/`, `.next/` and `out/` are generated. `documentation.nonReaderPaths` excludes non-reader content from navigation, manifests and the Fumadocs collection; `documentation.excludes` affects only the manifest. Do not hide an unlisted reader page with an exclusion.
 
@@ -78,7 +78,7 @@ The supported-skill catalog is committed source in `docs/skills/index.md` and bu
 ## Reference
 
 - `docs/contributing/code.md` — repository setup for contributors; `docs/contributing/documentation.md` covers docs commands from the repository root.
-- `docs/contributing/` — authoring conventions, Markdown features (code blocks, mermaid, GFM alerts), skill conventions. The `index.md` in this directory is the entry point; its `## Contents` lists the per-topic pages.
+- `docs/contributing/` — authoring conventions, Markdown features (code blocks, mermaid, GFM alerts, figure fences), skill conventions. The `index.md` in this directory is the entry point; its `## Contents` lists the per-topic pages.
 - Root `AGENTS.md` in `open-agent-toolkit` — repo-wide pointer and shared conventions. For scaffolded docs apps, this file typically includes a `## Documentation` section listing docs root, framework, and index file; add one if it's missing.
 - `oat-docs-analyze` — read-only audit command.
 - `oat-docs-apply` — apply approved audit recommendations.

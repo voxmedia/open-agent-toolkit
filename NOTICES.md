@@ -202,3 +202,62 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## mdxcn
+
+**Source:** https://github.com/shadcn-labs/mdxcn
+**License:** MIT
+**Version referenced:** `main` at `884eba5` (committed 2026-11-11, retrieved 2026-11-20)
+
+### Docs figure components
+
+The eight figure components behind the `docs-*` fences were vendored from
+mdxcn registry items into `packages/docs-theme/src/figures/`:
+
+- `steps.tsx`, `tree.tsx`, `timeline.tsx`, `terminal.tsx`, `decision.tsx`,
+  `check.tsx`, `compare.tsx` and `annotate.tsx`, from the `steps`,
+  `graph-tree`, `graph-timeline`, `terminal`, `decision`, `graph-check`,
+  `graph-compare` and `annotate` items;
+- `graph-frame.tsx` and `graph-markdown.ts`, from the `graph-frame` item;
+- `index.ts`, whose `withDocsFigures` adapts the host-tag marking of the `mdx`
+  item's `withMdxcn`;
+- `packages/docs-theme/figures.css`, adapted from the frame and rule utilities
+  in mdxcn's site stylesheet and the graph token names of its registry items.
+
+Local patches: the components are static server components, with the client
+directive, the `motion` animation and upstream's frame context removed (the
+frame style is an explicit `frame` prop). The frame root carries `not-prose`,
+the tree indent fix is applied, and inline code renders as a code chip.
+Generic shadcn tokens are rewritten to Fumadocs `fd-*` and `graph-*` ones, and
+`cn` is a local class joiner with no tailwind-merge. Components take only
+fence props, and none of mdxcn's alert, quote, terminal or footnote upgrades
+are included. Each vendored file records its upstream item and its patches in
+a header that also carries the full notice below, because
+`@open-agent-toolkit/docs-theme` redistributes the code. OAT owns these copies
+and does not track upstream.
+
+### Upstream MIT license
+
+```text
+MIT License
+
+Copyright (c) 2026 Keshav Bagaade
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

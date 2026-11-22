@@ -42,7 +42,7 @@ To add a page, choose its scope from the nearest map, add title/description fron
 
 ## Supported features and diagrams
 
-Use **Markdown → existing transform → MDX** in that order. Tables, task lists, fenced code, callouts, nested tabs and Mermaid are configured. MDX is for actual JSX/component needs and is excluded from the Markdown manifest and agent endpoints. See [Markdown Features](markdown-features.md) for paired Syntax/Rendered examples.
+Use **Markdown → existing transform → MDX** in that order. Tables, task lists, fenced code, callouts, nested tabs, Mermaid and the eight `docs-*` figure fences are configured. MDX is for actual JSX/component needs and is excluded from the Markdown manifest and agent endpoints. See [Markdown Features](markdown-features.md) for paired Syntax/Rendered examples.
 
 Not configured: executable notebooks, API playgrounds, screenshot testing. The portable checker validates Mermaid syntax with the installed parser; a successful build alone does not prove diagram validity or visual correctness. Keep language labels on code fences and use `bash` for shell commands.
 

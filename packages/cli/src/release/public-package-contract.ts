@@ -58,6 +58,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`;
 
+// docs-theme vendors mdxcn's figure components, so the notice ships both in
+// the CLI's NOTICES.md and in the packed docs-theme modules themselves.
+const MDXCN_NOTICE = `Copyright (c) 2026 Keshav Bagaade\n\n${MIT_LICENSE_BODY}`;
+
 const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   {
     workspaceDir: 'packages/cli',
@@ -124,6 +128,9 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
           '**Source:** https://github.com/nicobailon/visual-explainer',
           '**Version referenced:** 0.8.1',
           `Copyright (c) 2025 Nico Bailon\n\n${MIT_LICENSE_BODY}`,
+          '**Source:** https://github.com/shadcn-labs/mdxcn',
+          '**Version referenced:** `main` at `884eba5` (committed 2026-11-11, retrieved 2026-11-20)',
+          MDXCN_NOTICE,
         ],
       },
       {
@@ -180,8 +187,18 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     publicName: '@open-agent-toolkit/docs-theme',
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
-    requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
-    requiredPackedTextFiles: [],
+    requiredPaths: [
+      'dist/index.js',
+      'dist/index.d.ts',
+      'figures.css',
+      'README.md',
+    ],
+    requiredPackedTextFiles: [
+      {
+        path: 'dist/figures/graph-frame.js',
+        requiredContents: [MDXCN_NOTICE],
+      },
+    ],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: ['src/**/*.test.ts', 'src/**/__fixtures__/**'],
