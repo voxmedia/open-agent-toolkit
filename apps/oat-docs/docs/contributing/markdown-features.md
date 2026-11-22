@@ -1,6 +1,6 @@
 ---
 title: Markdown Features
-description: 'Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, code blocks and docs-* figure fences.'
+description: 'Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, code blocks and figure fences.'
 ---
 
 # Markdown Features
