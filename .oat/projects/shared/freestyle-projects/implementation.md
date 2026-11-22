@@ -402,7 +402,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** completed
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
-**Head:** de3874abddc13521c574ba9b9074b47056287405
+**Head:** 3e2e5a10cee5c1f9876b42240b6a9bc7efd64cea
 
 Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
 
@@ -451,6 +451,8 @@ Late fix p04-t10 (m01 review H4, new-hardening, operator-approved: "operator cho
 Late fix p04-t11 (m01 re-review round 2: R2-1 to R2-6, regressions of accepted requirements) at `d86cda984`, recorded at `b3336ccb3`. The checks, each exit 0: the isolated vitest run over shared, validation and the touched CLI dirs (1905 passed), control-plane vitest (325), `type-check`, `oat:validate-skills`, `lint`, `format`, `check`, `test:skills` (754), `pnpm build` and docs-index freshness. After the commit: `check:skill-bumps` (29), `release:check-versions` and `release:validate`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
 Late fix p04-t12 (m01 re-review round 3: R3-1 to R3-6; R3-1 a pre-existing shared-parser defect in every mode and R3-2 new-hardening, both operator-approved: "operator chose Fix in m01, 2026-11-22") at `1ee61581c`, recorded at `de3874abd`. The checks, each exit 0: `pnpm build`, the isolated vitest run over shared, validation and the touched CLI dirs (1676 passed), the full control-plane vitest (327), `type-check`, `oat:validate-skills`, `lint`, `format`, `check`, `test:skills` (754), `pnpm build:docs` and docs-index freshness. After the commit: `check:skill-bumps` (29), `release:check-versions` and `release:validate`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
+Late fix p04-t13 (m01 re-review round 4: R4-1 and R4-2, regressions of the accepted R3-5 fix; R4-3 deferred by root) at `cf699ae38`, recorded at `3e2e5a10c`. The checks, each exit 0: `pnpm build`, the skill-prose vitest (1314 passed), `oat:validate-skills`, `lint`, `format`, `check` and `test:skills` (754). After the commit: `check:skill-bumps` (29), `release:check-versions` and `release:validate`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
