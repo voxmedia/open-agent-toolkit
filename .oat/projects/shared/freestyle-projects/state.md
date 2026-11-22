@@ -48,7 +48,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m01
-oat_milestone_status: implementing
+oat_milestone_status: reviewing
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -65,6 +65,18 @@ oat_milestone_gates:
         scope: [p01, p02, p03, p04]
         ref: 4c6881ac5e2c5a431f6e7d479cf0122ab750e8b7
       decided_at: '2026-11-21T19:50:59Z'
+    exit:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject:
+        kind: code
+        scope: [p01, p02, p03, p04]
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-22T05:56:07Z'
 oat_deliveries: []
 oat_dispatch_policy:
   mode: managed

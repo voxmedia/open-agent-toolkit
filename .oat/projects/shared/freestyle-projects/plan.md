@@ -218,6 +218,8 @@ Default is `[]` (fully sequential, no worktrees).
 
 **Plan artifact review (manual, GPT 6.2 Astra high, per the Gates decision):** brief rounds at `dc3d90918` (0 blocking); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (0 blocking, all findings resolved).
 
+**m01 exit review (manual, GPT 6.2 Astra high, per the Gates decision; substitute for the project-disabled implement exit gate):** code review of m01 (p01, p02, p03, p04) in six rounds: `a5c28dca2..7c35a902e` (4 high, 7 medium), then fix ranges ending `86048bad1`, `749557100`, `686d424bc`, `4a3b2be5c` (fixes required each round), and `4a3b2be5c..c14f3517e` passed with 0 findings. Reviewed head `c14f3517e3d2a925204093b359c6c330b6d1742f`. Recorded here, not as an `m01 | code` table row, because `oat project delivery check` takes the latest `m01` code row as the integrated review (`delivery/check.ts:365`, `delivery/evidence.ts:1697`); the integrated review still comes from `oat-project-review-provide`.
+
 **Finding classes:** final Opus retry at `987d479b7`: L1 accepted-requirement (Shaping guard decision: a deferred section counts as shaped). Earlier amendment rounds: every finding accepted-requirement (brief contract sections 1 and 12.9; Shaping topics, Shaping guard, Reshaping, Records branch and Lane reports decisions; Constraint: no automatic commits) or regression (brief internal consistency after the amendment); none bookkeeping or new-hardening.
 
 Add one `code` row per phase as phases become concrete. For code-review events,

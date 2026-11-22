@@ -103,6 +103,10 @@ Observation: p04 needed three review rounds to place the freestyle stops in six 
 
 Observation: C="node packages/cli/dist/index.js"; $C internal commit-paths ... exits 127 in zsh because zsh does not split unquoted parameter expansions. Impact: scripted bookkeeping commits fail before running. Recommendation: wrap the branch build in a shell function, oatb(){ node packages/cli/dist/index.js "$@"; }, instead of a string variable.
 
+### 2026-11-22 · structural · oat-project-implement · m01
+
+m01 exit review (manual GPT 6.2 Astra high, substitute for the project-disabled implement exit gate) passed in round 6 at c14f3517e after 5 fix rounds (p04-t09..p04-t14); R4-3 deferred; exit carrier project_disabled, fresh; m01 implementing -> reviewing; next oat-project-review-provide code m01: p01, p02, p03, p04; freestyle-projects-m01-exit-review
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
