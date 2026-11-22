@@ -402,6 +402,30 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 **Status:** in_progress
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Head:** 2d50c28883abdf20b10afc9885823a9fdb05af2e
+
+Phase verification at `2d50c2888` on a clean tree (only the untracked `references/` and `reviews/`), in Definition of Done order with each exit code captured. The results:
+
+- `pnpm check`: exit 0 (11 tasks, 0 cached).
+- `pnpm type-check`: exit 0 (11 tasks, 5 cached).
+- `pnpm test`: exit 0 (12 tasks, 5 cached; cli was a cache miss and executed).
+- `pnpm build`: exit 0. The gate run replayed it from cache, so it was re-run with `turbo run build --force`: exit 0 (5 tasks, 0 cached).
+- `pnpm run check:skill-bumps`: exit 0 (24 skills and agent roles), after `git fetch origin main`.
+- `pnpm release:check-versions`: exit 0.
+- `pnpm release:validate`: exit 0 (5 packages at 0.3.54).
+- `pnpm build:docs`: exit 0. It was also replayed from cache and re-run with `--force`: exit 0 (6 tasks, 0 cached).
+- The docs-index `generate-index` followed by `git diff --exit-code`: exit 0.
+- Also exit 0: `pnpm lint`, `pnpm format`, `pnpm test:smoke` (165 passed), `pnpm test:skills` (754 passed), `pnpm test:scripts` (7 passed), `pnpm oat:validate-skills` (69 OK), and the isolated `vitest run src/commands/init/tools/shared src/validation` (33 files passed).
+
+`pnpm test:evidence` executed (12 tasks, 0 cached) and exited 1 twice. Every non-cli package passed (control-plane 325 passed).
+
+- First run: 6 cli failures. 5 were timeouts in `gate-hardening.integration` case 10 and in four `docs/literals` CLI-boundary tests; the sixth was a real-SIGINT timing assertion in `exact-path-commit`. Load average was about 69.
+- No-edit rerun: 2 different timeouts, in `gate-hardening` case 4 and the `exact-path-commit` tilde-hooks test. Load was 20 to 27. cli 9828 of 9830 passed.
+- The same three files run alone under an isolated `HOME` at `2d50c2888`: exit 0 (72 passed).
+
+p04 changes no file those suites exercise; its only `packages/cli/src` edits are validation tests. I judged the failures to be host-load timeouts, not defects, made no edit and opened no recovery. A forced evidence run on an idle host is still owed.
+
+Inventory: rows 28 to 32 and 34 are handled (p04-t01 to p04-t04). The post-merge re-check is p04-t05: it found 16 files with no freestyle mention. 14 are p04-t01 opt-outs, one more is opted out (`contributing/skills.md`), and one was fixed (`workflows/projects/index.md`). All four deferred items are closed (p04-t01 and p04-t02). Recovery: 1/10 used (`freestyle-projects-p04-recovery-1`, recovered). Its committed `completed` marker stays in `state.md` for root.
 
 Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing owner: the phase implementer. Parallelism assessment: rung 3 (one phase implementer). Rung 1 does not apply: `oat_plan_parallel_groups` is `[]`. Rung 2 does not apply: the docs pages, skills, agent contracts and READMEs must describe one consistent freestyle contract, and the provider-view sync, skill bumps and lockstep versions are shared generated output, so no two slices pass the independence test. Rung 4 does not apply: the phase spans dozens of files and a release bump. Main drift: root merged `origin/main` (`23cb59a6a` #425, `a5c28dca2` #426; Cursor pins and ladder, skill edits in `oat-project-plan-writing` and `subagent-orchestration`, lockstep versions) in `91ba64a6e` with no conflict, so the lockstep bump lands above main's versions.
 
