@@ -247,7 +247,7 @@ export const genericDispatchRecordBaseSchema = z
     selected_route: identifier(),
     deadline_seconds: z.number().int().nonnegative(),
     retry_limit: z.number().int().nonnegative(),
-    payload: z.record(z.unknown()),
+    payload: z.record(z.string(), z.unknown()),
     launch_status: z.enum(['planned', 'accepted', 'blocked-before-start']),
     child_outcome: identifier().nullable(),
     configured_invocation_evidence: z.array(z.unknown()),
