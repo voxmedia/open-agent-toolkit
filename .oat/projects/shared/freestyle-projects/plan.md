@@ -214,6 +214,7 @@ Default is `[]` (fully sequential, no worktrees).
 | p04   | code     | passed      | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md                        | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
 | final | code     | pending     | -          | -                                                            | -                                        | -          | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
+| m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 

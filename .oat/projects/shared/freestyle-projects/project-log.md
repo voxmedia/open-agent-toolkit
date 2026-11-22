@@ -119,6 +119,10 @@ Merged origin/main 78b88baba (#427, Zod 4 CLI schemas) as 1cc893ed8 with no conf
 
 m01 exit re-review (manual GPT 6.2 Astra high) after the integrated-review fixes passed in round 8 at eece9b5fc after 1 fix round (p04-t21, R7-1 regression of p04-t15); exit carrier project_disabled refreshed to fresh; m01 implementing -> reviewing; next oat-project-review-provide code m01: p01, p02, p03, p04 (integrated cycle 2 of 3); freestyle-projects-m01-exit-rereview-2
 
+### 2026-11-22 · structural · oat-project-review-receive · m01
+
+m01 integrated review cycle 2 received (2 of 3): J-1 High, J-2 Medium, J-3 and J-4 Low; fixes p04-t22..p04-t25; J-2 case B deferred; operator: fix with no further review rounds; m01 reviewing -> implementing; freestyle-projects-m01-integrated-receive-2
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

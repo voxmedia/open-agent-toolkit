@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p05
+oat_current_task_id: p04
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | pending  | 1     | 0/1      |
-| p06   | pending  | 1     | 0/1      |
-| p07   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
-| p09   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | in_progress | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
-**Total:** 4/9 phases accepted
+**Total:** 3/9 phases accepted
 
 ---
 
@@ -399,7 +399,7 @@ Worktree: the orchestrator checkout on `feat/freestyle-projects`; committing own
 
 ## Phase p04: m01 docs and release
 
-**Status:** completed
+**Status:** in_progress
 **Base:** 91ba64a6e6313d21d30a85352809cdf828e5220f
 **Executor:** phase-implementer:freestyle-projects-p04-implementation-1
 **Head:** fb32240295ed7952a4197028405acf13c27c05eb
@@ -984,6 +984,46 @@ Proof: skill-prose vitest over `src/commands/init/tools/shared src/validation`.
 - Commit: the first attempt was rejected by commitlint (`header-max-length`, 102 characters). The retry under the same identity, with a shorter header, landed `ed563906e`.
 - Proof after the commit, each exit 0: `git fetch origin main`, `check:skill-bumps` (29), `release:check-versions` and `release:validate`.
 
+### Task p04-t22: (review) Read the mode before the synced pull in review-provide, complete and autonomous
+
+**Status:** in_progress
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-1)
+
+Intent: `oat-project-review-provide`, `oat-project-complete` and `oat-project-autonomous` run `oat project pull` in Step 0 before their freestyle stop, so a synced freestyle project with a remote ref and no discovery record gets an `adopt synced project` commit (review-provide) or a materialized checkout (complete, autonomous). Read the mode before the mutating arrival, following `oat-project-implement` Step 0 (checkout first, then the synced ref; a failed lookup stops), and give the `oat project pull <slug>` instruction for an unpulled freestyle project. Other modes keep the arrival pull unchanged. Class: accepted-requirement (plan.md Constraint: no automatic commits after creation; Outcome 1). Operator: fix in m01 with no further review rounds.
+Files: the three skills, their contract tests.
+Proof: executable Step 0 tests per skill (freestyle here, freestyle from the ref, quick control), can-fail per skill.
+
+### Task p04-t23: (review) Give the pull instruction in the dashboard for an unpulled synced project
+
+**Status:** in_progress
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-2 case A)
+
+Intent: `state/generate.ts` (~:445) recommends `oat-project-open` and reports the directory missing for an active synced project not yet pulled, while `oat project status` gives `oat project pull <slug>`. Use the same unpulled-project resolution `status` uses (p04-t18) so the dashboard shows only the storage instruction. Class: accepted-requirement for freestyle (Outcome 1: the dashboard recommends nothing; an unpulled synced project shows only the storage instruction); the resolution is mode-agnostic, as in `status`. Case B (archived from another checkout) is deferred. Operator: fix A in m01 with no further review rounds.
+Files: `packages/cli/src/commands/state/generate.ts`, its tests, docs if they describe the dashboard row.
+Proof: dashboard tests for an unpulled synced project (freestyle and quick), a genuinely missing project unchanged, can-fail.
+
+### Task p04-t24: (review) Add the synced push step to the freestyle closeout
+
+**Status:** in_progress
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-3)
+
+Intent: the freestyle closeout guide (`closeout-skills.md:17`) and `oat-project-complete`'s freestyle stop (~:213) say `complete-state` then `archive`; for a synced project `archive` refuses until `oat project push` publishes the completed state. Add the synced-only push step between them, subject to the publication agreement in `shape.md`. Class: accepted-requirement (Outcome 7).
+Files: the guide, the complete skill, any pinned sentence test.
+Proof: skill-prose vitest; a branch-build scratch run of complete-state, push, archive on a synced freestyle project.
+
+### Task p04-t25: (review) Name the freestyle exception in the import checklist line
+
+**Status:** in_progress
+**Executor:** phase-implementer:freestyle-projects-p04-implementation-1
+**Source review:** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md (J-4)
+
+Intent: `starting-projects.md:103` says `oat-project-import-plan` writes into any active project whatever its mode; since `c20ef22d5` it stops for a freestyle project. Add the exception. Class: regression (the import guard made the line inaccurate).
+Files: `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`.
+Proof: `build:docs`, docs index freshness.
+
 ---
 
 ## Phase p05: Linked projects
@@ -1070,6 +1110,27 @@ Review-cycle count for m01 integrated: 1 of 3. The six `m01-code-review-*` artif
 
 **Re-assessment (2026-11-22, operator-approved):** the first pass classed all six accepted-requirement without checking which commit introduced each defect. Root re-checked with `git blame` against the branch base `a5c28dca2`. Revised classes: I-2 split, Resume half regression (the p04-t10 pointer check passes on two failed `cd`s), Create half new-hardening (pre-existing cross-mode `oat project new` cwd behavior; no contract names subdirectory invocation) · I-3 new-hardening (detection at `oat-brainstorm/SKILL.md:238` predates the branch, `417eb2e97`, every mode) · I-5 new-hardening, re-rated Low (LF-only lifecycle reader predates the branch, `11f41ae88`; CRLF `state.md` unobserved). I-1, I-4 and I-6 unchanged. Revised outcome: fixes p04-t15, p04-t16 (narrowed to the Resume half), p04-t18, p04-t20; p04-t17 and p04-t19 cancelled; I-2 Create half, I-3 and I-5 deferred by the operator.
 
+### Review Received: m01 (cycle 2)
+
+**Date:** 2026-11-22
+**Review artifact (local-only):** reviews/archived/m01-integrated-review-2026-11-22T152500Z.md
+
+Integrated milestone review of m01 (p01, p02, p03, p04), cycle 2, on `f6e8b9c92..9267361de` (integration commits `91ba64a6e`, `1cc893ed8`), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only). Root verified every cited line at `9267361de` and the introducing commits.
+
+**Findings:** Critical 0 · High 1 · Medium 1 · Low 2
+**Finding classes:** J-1 accepted-requirement (Constraint: no automatic commits after creation; Outcome 1) · J-2 split: case A accepted-requirement for freestyle (Outcome 1), case B new-hardening (pre-branch `11f41ae88`, `49aeb5075`; every mode) · J-3 accepted-requirement (Outcome 7) · J-4 regression (`c20ef22d5` made `starting-projects.md:103` inaccurate)
+
+- J-1 (High): review-provide, complete and autonomous pull before reading the mode → fix task p04-t22.
+- J-2 (Medium): dashboard routes for a synced project without a checkout → case A fix task p04-t23; case B deferred by the operator.
+- J-3 (Low): synced freestyle closeout omits the push between complete-state and archive → fix task p04-t24.
+- J-4 (Low): import checklist line omits the freestyle exception → fix task p04-t25.
+
+Cycle-1 disposition confirmed by the reviewer: I-1 (with R7-1), I-2 Resume, I-4, I-6 fixed; deferrals I-2 Create, I-3, I-5, p02 L5, R4-3 still acceptable.
+
+Review-cycle count for m01 integrated: 2 of 3.
+
+**Outcome:** fixes queued: p04-t22, p04-t23, p04-t24, p04-t25 (late-fix rule, records in p04). **Operator decision (2026-11-22):** fix J-1 and J-2 case A in m01 with no further review rounds; the root verifies the fixes and records the waiver at the exit carrier refresh.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
@@ -1078,6 +1139,7 @@ Review-cycle count for m01 integrated: 1 of 3. The six `m01-code-review-*` artif
 - p02 review round 2 L1-L3 (`.agents/skills/oat-project-freestyle/SKILL.md`): the Resume path bullet does not say a named project wins over an active freestyle project (~:97); the unpulled synced case names no detection command (~:99-101; safe, `oat project new` refuses the duplicate); Success Criteria lists two resume triggers where Step 2 has three (~:199-200). Deferred by root; trigger: p04 skill-prose pass (no extra version bump, the skill is new in this PR).
 - m01 review round 4 R4-3 (`m01-code-review-2026-11-22T055500Z.md`; class new-hardening, Low): in `oat-project-implement` Step 0, an empty or malformed `oat_workflow_mode` on a synced ref reads as the legacy spec-driven default, so arrival continues instead of stopping. Deferred by root to the follow-up issue; the implement skill is unchanged in m01. Trigger: the freestyle follow-up issue.
 - m01 integrated review I-2 Create half, I-3 and I-5 (`reviews/archived/m01-integrated-review-2026-11-22T134403Z.md`; class new-hardening): running OAT skills from a repository subdirectory (`oat project new` scaffolds at the current directory in every mode and only `oat-project-quick-start` resolves the repository root; brainstorm's active-project test at `oat-brainstorm/SKILL.md:238` is cwd-relative in every mode), and the dashboard's LF-only lifecycle reader under a CRLF `state.md` (`state/generate.ts:242`). All three predate the branch and are cross-mode. Deferred by the operator on 2026-11-22. Trigger: the freestyle follow-up issue (subdirectory support across project skills; CRLF frontmatter reading).
+- m01 integrated review cycle 2 J-2 case B (`reviews/archived/m01-integrated-review-2026-11-22T152500Z.md`; class new-hardening, Medium): after another checkout archives a synced project, the retained checkout's dashboard recommends `oat-project-complete`, whose entry fails pulling the archived ref (`state/generate.ts:959`). Pre-branch (`49aeb5075`), every mode, loud failure, nothing lost. Deferred by the operator on 2026-11-22. Trigger: the freestyle follow-up issue.
 
 ## Deviations from Plan / Design
 
