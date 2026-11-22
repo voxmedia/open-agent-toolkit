@@ -164,16 +164,17 @@ interface LocatedMessage {
 /** Render a Zod issue path as `a.b[0].c`, or `<root>` when empty. */
 export function formatIssuePath(
   prefix: string | null,
-  path: readonly (string | number)[],
+  path: readonly PropertyKey[],
 ): string {
   let rendered = prefix ?? '';
   for (const segment of path) {
+    const text = String(segment);
     rendered +=
       typeof segment === 'number'
         ? `[${segment}]`
         : rendered === ''
-          ? segment
-          : `.${segment}`;
+          ? text
+          : `.${text}`;
   }
   return rendered === '' ? '<root>' : rendered;
 }

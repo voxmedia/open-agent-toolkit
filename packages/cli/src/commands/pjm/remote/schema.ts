@@ -250,7 +250,7 @@ export const RemoteBindingMetadataSchema = z
   .strict();
 
 const ExtensionPayloadSchema = z
-  .record(z.unknown())
+  .record(z.string(), z.unknown())
   .superRefine((value, context) => {
     const bytes = Buffer.byteLength(JSON.stringify(value), 'utf8');
     if (bytes > MAX_PROVIDER_EXTENSION_BYTES) {
@@ -450,7 +450,10 @@ const CurrentRemoteSnapshotRecordSchema =
 const RemoteSnapshotRecordCompatibilitySchema = z.union([
   CurrentRemoteSnapshotRecordSchema,
   LegacyRemoteSnapshotRecordSchema.transform(migrateLegacyRemoteSnapshot).pipe(
-    CurrentRemoteSnapshotRecordSchema,
+    CurrentRemoteSnapshotRecordSchema as z.ZodType<
+      CurrentRemoteSnapshotRecord,
+      CurrentRemoteSnapshotRecord
+    >,
   ),
 ]);
 
@@ -1041,7 +1044,7 @@ const ApprovalPreviewSchema = z
       })
       .strict(),
     revisionEvidence: ApprovalRevisionEvidenceSchema.optional(),
-    renderedFields: z.record(
+    renderedFields: z.partialRecord(
       z.enum(['title', 'description', 'priority']),
       z.union([
         z

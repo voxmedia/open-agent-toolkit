@@ -17,7 +17,7 @@ export const SyncConfigSchema = z.object({
   version: z.literal(1),
   defaultStrategy: SyncStrategySchema,
   knownStrays: z.array(z.string()).optional(),
-  providers: z.record(ProviderConfigSchema).optional(),
+  providers: z.record(z.string(), ProviderConfigSchema).optional(),
 });
 
 export type ProviderSyncConfig = z.infer<typeof ProviderConfigSchema>;
@@ -40,7 +40,8 @@ export const DEFAULT_SYNC_CONFIG: SyncConfig = {
  * `__proto__` as an own data property.
  *
  * 1. `SyncConfigSchema.providers` is a `z.record`, which drops that key during
- *    parsing, so it never reaches `merged[name]` below.
+ *    parsing, including when its value would not match the record schema, so
+ *    it never reaches `merged[name]` below.
  * 2. `commands/providers/set/index.ts` rejects any provider name outside
  *    `knownProviders`, and the init and sync commands iterate adapter names
  *    and detection results rather than raw user strings.

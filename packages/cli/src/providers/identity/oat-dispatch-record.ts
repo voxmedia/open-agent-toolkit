@@ -4,7 +4,7 @@ import { redactAbsolutePathsDeep } from './absolute-paths';
 import {
   assertBoundedDispatchRecordSize,
   assertNoSensitiveDispatchContent,
-  genericDispatchRecordSchema,
+  genericDispatchRecordBaseSchema,
   normalizeDispatchKey,
   parseGenericDispatchRecord,
   type GenericDispatchRecord,
@@ -452,8 +452,7 @@ const oatRecordSchema = z
   })
   .strict();
 
-export const persistedOatDispatchRecordSchema = genericDispatchRecordSchema
-  .innerType()
+export const persistedOatDispatchRecordSchema = genericDispatchRecordBaseSchema
   .extend({ oat: oatRecordSchema })
   .strict();
 
@@ -510,7 +509,7 @@ export type OatDispatchEvidenceEvent = z.infer<
  */
 export function safeParseOatDispatchEvidenceEvent(
   value: unknown,
-): z.SafeParseReturnType<unknown, OatDispatchEvidenceEvent> {
+): z.ZodSafeParseResult<OatDispatchEvidenceEvent> {
   return oatDispatchEvidenceEventSchema.safeParse(value);
 }
 

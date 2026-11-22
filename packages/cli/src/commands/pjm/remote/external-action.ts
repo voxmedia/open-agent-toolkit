@@ -78,10 +78,14 @@ export const ExternalObservationEnvelopeSchema = z
           .strict()
           .nullable(),
         fields: z.record(
+          z.string(),
           z.union([z.string(), z.number(), z.boolean(), z.null()]),
         ),
         extensions: z
-          .record(z.union([z.string(), z.number(), z.boolean(), z.null()]))
+          .record(
+            z.string(),
+            z.union([z.string(), z.number(), z.boolean(), z.null()]),
+          )
           .optional(),
         revisionDigest: z.string().min(1).max(512).nullable(),
         diagnosticCode: z.string().min(1).max(128).nullable(),
@@ -194,7 +198,7 @@ const ExternalActionBaseSchema = z
     provider: ProviderSchema,
     semanticOperation: SemanticOperationSchema,
     context: RemoteAccountContextSchema,
-    intent: z.record(z.unknown()),
+    intent: z.record(z.string(), z.unknown()),
     expectedObservation: z
       .object({
         fields: z.array(SemanticFieldNameSchema).max(64),

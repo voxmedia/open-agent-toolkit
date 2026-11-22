@@ -13,7 +13,7 @@ import {
   ManifestV2Schema,
 } from './manifest.types';
 
-function formatIssuePath(path: (string | number)[]): string {
+function formatIssuePath(path: readonly PropertyKey[]): string {
   if (path.length === 0) {
     return '(root)';
   }
