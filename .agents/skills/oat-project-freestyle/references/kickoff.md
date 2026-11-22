@@ -181,8 +181,9 @@ Section: `## Commits, PRs and merges`. Agree who commits (records and code)
 and when, when PRs open, and who merges. Until this topic holds an answer,
 nothing is committed or pushed, by this skill or by `oat-brainstorm`. Once it
 does, follow it together with the records rule for the project's scope in
-`AGENTS.md` (`## Where records live`). A local project commits nothing,
-whatever this section says about code.
+`AGENTS.md` (`## Where records live`). In a local project the project records
+stay uncommitted whatever this section says; the agreed shape still governs
+code commits.
 
 ### 7. User involvement
 
