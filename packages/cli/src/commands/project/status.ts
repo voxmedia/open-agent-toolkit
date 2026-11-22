@@ -310,6 +310,18 @@ async function runProjectStatus(
     }
 
     if (activeProject.status === 'missing' || !activeProject.path) {
+      // An active synced project recorded on this branch but not pulled here
+      // gets the same pull instruction as an explicit --project-path.
+      if (activeProject.path) {
+        const unpulled = await dependencies.resolveUnpulledSyncedProject(
+          resolveTargetProjectPath(repoRoot, activeProject.path),
+          repoRoot,
+        );
+        if (unpulled) {
+          writeUnpulledStatusOutput(context, options, unpulled);
+          return;
+        }
+      }
       const message = activeProject.path
         ? `Active project path is missing or invalid: ${activeProject.path}`
         : 'Active project path is missing or invalid.';

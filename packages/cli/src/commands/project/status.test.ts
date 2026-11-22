@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import type { ProjectState } from '@open-agent-toolkit/control-plane';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -995,5 +996,118 @@ oat_generated: false
       );
       expect(json.capture.jsonPayloads[0]).not.toHaveProperty('projectFiles');
     });
+  });
+});
+
+describe('oat project status for an active synced project that is not pulled (m01 I-4)', () => {
+  let originalExitCode: number | undefined;
+  const tempDirs: string[] = [];
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
+  afterEach(async () => {
+    process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  function realStatus(cwd: string): {
+    capture: LoggerCapture;
+    command: Command;
+  } {
+    const capture = createLoggerCapture();
+    const command = createProjectStatusCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: globalOptions.json ?? false,
+        cwd,
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+    });
+    return { capture, command };
+  }
+
+  async function activate(root: string, projectPath: string): Promise<void> {
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
+      'utf8',
+    );
+  }
+
+  it('gives the pull instruction by default, as --project-path does, for a fresh clone with a valid record', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const root = fixture.cloneA;
+    const slug = 'synced-absent';
+    const projectPath = `.oat/projects/synced/${slug}`;
+    await mkdir(join(root, '.oat', 'projects', 'synced'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', `${slug}.json`),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug,
+        scope: 'synced',
+        ref: `refs/oat/projects/${slug}`,
+        remote: 'origin',
+        status: 'active',
+        createdAt: '2026-11-21T00:00:00.000Z',
+        completedAt: null,
+      })}\n`,
+      'utf8',
+    );
+    await activate(root, projectPath);
+
+    const explicit = realStatus(root);
+    await runCommand(
+      explicit.command,
+      ['--project-path', projectPath],
+      ['--json'],
+    );
+    const byDefault = realStatus(root);
+    await runCommand(byDefault.command, [], ['--json']);
+    expect(process.exitCode).toBe(0);
+    expect(byDefault.capture.jsonPayloads[0]).toEqual(
+      explicit.capture.jsonPayloads[0],
+    );
+    expect(byDefault.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      project: {
+        path: projectPath,
+        checkout: 'absent',
+        recommendation: { skill: 'oat project pull' },
+      },
+    });
+
+    const text = realStatus(root);
+    await runCommand(text.command, []);
+    expect(text.capture.info).toContain(`Hint: oat project pull ${slug}`);
+  });
+
+  it('keeps the missing-project error for an active project with no record', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const root = fixture.cloneA;
+    const projectPath = '.oat/projects/synced/never-recorded';
+    await activate(root, projectPath);
+
+    const { capture, command } = realStatus(root);
+    await runCommand(command, [], ['--json']);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'missing',
+      projectPath,
+      message: `Active project path is missing or invalid: ${projectPath}`,
+    });
+    expect(process.exitCode).toBe(1);
   });
 });
