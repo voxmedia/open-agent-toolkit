@@ -131,6 +131,10 @@ p04 re-accepted after m01 integrated cycle 2 fixes p04-t22..p04-t25 (J-1, J-2A, 
 
 m01 integrated review cycle 3 (confirm only) received: J-1, J-2A, J-3, J-4 confirmed; K-1 new-hardening Medium deferred by the operator; recorded passed at 32919c56a (3 of 3 cycles); freestyle-projects-m01-integrated-cycle3-receive
 
+### 2026-11-22 · structural · oat-project-pr-progress · d01
+
+Registered d01 for m01 (p01, p02, p03, p04) at https://github.com/voxmedia/open-agent-toolkit/pull/429; freestyle-projects-register-d01
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
