@@ -1388,7 +1388,9 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
 
-## Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, after the root merged `origin/main` (`6430f47ad`, #428, packages at 0.3.56 on main); committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p08 is the last m02 phase. Root fan-out fails the independence test because the docs pages, skill bumps, lockstep versions and provider views share generated outputs (docs index, sync manifest) and the release gates. So one phase implementer (rung 3). The inline exception does not apply: p08 spans many docs pages and the release gates.
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, after the root merged `origin/main` (`6430f47ad`, #428, packages at 0.3.56 on main); committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p08 is the last m02 phase. Root fan-out fails the independence test because the docs pages, skill bumps, lockstep versions and provider views share generated outputs (docs index, sync manifest) and the release gates. So one phase implementer (rung 3). The inline exception does not apply: p08 spans many docs pages and the release gates.
+
+---
 
 ## Phase p09: Evidence fields
 
