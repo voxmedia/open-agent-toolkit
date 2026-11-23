@@ -1739,6 +1739,20 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Can-fail: removing the required-gate item from `kickoff.md` failed the intake test on that sentence; removing question (b) from `reshape.md`, and separately its 3x test, each failed the reshape test on the removed string; removing the questions from the `shape.md` comment and the checkpoint paragraph from AGENTS.md each failed the template test (`shape.md:` and `AGENTS.md:` labels, plan-acceptance string); all restored byte for byte (`cmp`).
 - Decisions: the intake records the kept/mapped/dropped list under `## Documents` beside the plan, the section where the plan is listed, instead of a new `shape.md` heading (a new heading would change the shaping topics the template and the skill pin). The checkpoint answer is given to the owner, not written into a new record.
 
+### Task p12-t03: Document the lane brief, the adopted-plan intake and the checkpoint questions
+
+**Status:** completed
+**Commit:** 27930e65e28e47d11a9083c155342e89fffac746
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: the freestyle docs pages for p12's intake, checkpoint questions and `lane-brief.md`.
+- Files: `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/index.md` (regenerated).
+- Running a Freestyle Project: Lanes and lane reports describes `lane-brief.md` (its five sections, copying and embedding it first, what each brief adds) before the report shape, and names both templates' override tiers; a new `## Reshape checkpoints` section gives both questions and their tests, the "no" rule and owner agreement; Older projects says the refresh brings in `## Lane brief` with the `--commit` lines; the page description names the lane brief and reshape checkpoints. Starting projects (`oat-project-freestyle`): one paragraph on the adopted-plan intake and the checkpoint questions, linking the new section. CLI reference: `template resolve` names `lane-brief` beside `lane-report`.
+- Inspected, unchanged: `project-artifacts.md`, `oat-directory-structure.md`, `workflows/projects/index.md`, `choose-workflow.md` (they list project files, not templates; `lane-brief.md` is a template, never a project file); `file-locations.md` (template tiers in general).
+- Proof: `oxfmt --write` then `pnpm --filter oat-docs check` exit 0 (markdownlint and format; catalog current at 74 skills); `pnpm --filter oat-docs docs:validate` exit 0 (0 errors; no new warning: the freestyle page keeps its one provenance warning on the lane-notes path, and `starting-projects.md`'s existing page-length warning grows from 712 to 723 lines); `docs nav sync --target-dir apps/oat-docs --check` exit 0; `docs generate-index` regenerated the one changed description.
+- Note: this record was opened after its commit rather than before (no lookahead needed; the content is unchanged).
+
 ---
 
 ## Orchestration Runs
