@@ -1126,6 +1126,18 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Known Unknown settled (how an existing project's AGENTS.md picks up later sections): the `oat-project-freestyle` skill re-renders it, keyed on headings. On every resume, after the claim, it resolves the current `project-agents` template with `oat template resolve` (repository, user, then bundle tier, as the scaffold does); when the project's `AGENTS.md` lacks any `##` heading the template has, it replaces the file whole, rendered as `oat project new` renders it (template frontmatter dropped, `{Project Name}` filled). Whole replacement, not section merging, because the file is OAT-owned and holds no project answers (those live in `shape.md`); no CLI command, because the skill already runs on every resume and the guarded commands' refusal names `oat project orchestrator set` for an orchestrator that has not resumed through the skill. The refreshed file is saved like the other records, by the commit agreement.
 - Decision: the claim comes before any write, the refresh included, so a lane session stops before touching the project. Correction to p05-t02's record note: no units were named at the phase start; that record was written at close.
 
+### Task p05-t04: Keep the parent active when new --link-to creates a child
+
+**Status:** completed
+**Commit:** 351b80abad00e89e284f31d8bee1d85e97160f80
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+
+- Intent: the scratch run (p05-t05) showed `oat project new <child> --link-to <parent>` repointing the parent's checkout at the child (`new` sets the active project by default), so the parent's orchestrator's next default-target command (`oat project log append`, `linked ack`, `orchestrator set`) would act on the child. The Linked projects decision says the parent creates the child but does not run it, and the Single writer decision keeps each project's records to its own orchestrator; with `--link-to`, `new` now leaves the active project unchanged.
+- Files: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/linked/linked.test.ts`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/linked src/commands/project/new` (150 passed); CLI `check` exit 0. The creation test in each parent scope asserts `.oat/config.local.json` still names the parent after `new --link-to`.
+- Can-fail: restoring `setActive: options.setActive` failed the creation test in all three scopes on the pointer (`expected '.oat/projects/shared/child' to be '.oat/projects/shared/parent'`); restored.
+- Classification: recorded as a new execution record inside the open phase, not as a post-commit recovery against p05-t02, because it changes the behavior of the new `--link-to` option (outside the recovery predicate's no-public-behavior-change rule) while staying within the Linked projects decision; no recovery attempt is consumed. The edit was made before this classification was written down.
+
 ---
 
 ## Phase p06: Records-branch warning
