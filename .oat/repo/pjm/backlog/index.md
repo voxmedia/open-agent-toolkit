@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- 2026-11-20: [BL-261120-evaluate-project-links — Evaluate project links for goal and milestone modes](items/BL-261120-evaluate-project-links.md)
+  follows the freestyle mode (#420), which ships project links first. Plan it
+  after freestyle links have been used in a real project.
+
 - 2026-11-01: the `wave-1-correctness` project (lockstep 0.3.39) delivered
   Wave 1 of the [backlog and roadmap review](reviews/backlog-and-roadmap-review.md)
   and archived its seven items:
@@ -544,6 +548,7 @@
 | BL-261002-decide-a-supported-permission  | Decide a supported permission setup for unattended cross-runtime review                              | open   | low      | idea    | M        |
 | BL-261030-decide-whether-a-no-op-sync    | Decide whether a no-op sync should restamp the manifest oatVersion                                   | open   | low      | task    | S        |
 | BL-261108-derive-first-release-versions  | Derive first-release versions in the project summary from tags                                       | open   | low      | task    | S        |
+| BL-261120-evaluate-project-links         | Evaluate project links for goal and milestone modes                                                  | open   | low      | task    | S        |
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                        | open   | low      | task    | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                             | open   | low      | task    | S        |
 | BL-261102-let-pr-skills-fall-back        | Let PR skills fall back to origin/HEAD when git.defaultBranch is unset                               | open   | low      | task    | S        |

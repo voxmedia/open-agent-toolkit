@@ -690,9 +690,11 @@ for (const outcome of [
       );
       const block = (section, index = 0) =>
         [...section.matchAll(/```bash\n([\s\S]*?)```/g)][index][1];
-      const entry = block(
-        skill.split('### Step 1:')[1].split('### Step 1.5:')[0],
-      );
+      const entry = [0, 1]
+        .map((index) =>
+          block(skill.split('### Step 1:')[1].split('### Step 1.5:')[0], index),
+        )
+        .join('\n');
       const resume = block(
         skill.split('### Step 1.75:')[1].split('### Step 2:')[0],
         1,

@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.27
+  version: 1.0.28
 ---
 
 # Autonomous OAT Project
@@ -157,6 +157,53 @@ Resolution order:
 2. A valid `activeProject` in `.oat/config.local.json`.
 3. A new project derived from a substantive goal or ticket reference.
 
+**Freestyle projects.** Before the synced pull below, read the resolved
+project's mode from the repository root: from the checkout when it is here,
+otherwise read-only from the synced ref (an objects-only fetch; no local ref,
+record, checkout or commit). A failed ref lookup, or a ref whose mode cannot be
+read, stops before the arrival. When `WORKFLOW_MODE` is `freestyle`, stop there,
+before the pull and any write, at the product-judgment boundary the Step 1
+freestyle row names. With no checkout here yet, add: "Run
+`oat project pull <slug>` to bring it here."
+
+```bash
+WORKFLOW_MODE=null
+if [ -n "$PROJECT_PATH" ]; then
+  # activeProject is repo-relative: check paths from the repository root.
+  cd "$(git rev-parse --show-toplevel)" || { echo "oat: cannot resolve the repository root; refusing project arrival" >&2; exit 1; }
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing project arrival" >&2; exit 1; }
+  PROJECT_SLUG=$(basename "$PROJECT_PATH")
+  if [ -f "$PROJECT_PATH/state.md" ]; then
+    WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+  elif [ "$PROJECT_SCOPE" = "synced" ]; then
+    # Exit 2 means origin has no such ref: arrival continues as before. Any
+    # other failure, or a ref whose mode cannot be read, stops before the pull.
+    REF_LINE=$(git ls-remote --exit-code origin "refs/oat/projects/$PROJECT_SLUG" 2>/dev/null)
+    LS_STATUS=$?
+    if [ "$LS_STATUS" -eq 0 ]; then
+      REF_STATE=$(mktemp -d)
+      # --refmap= keeps a configured refs/oat/projects/* fetch refspec from
+      # rewriting the local ref: this fetch writes objects only.
+      git fetch --quiet --no-tags --refmap= --no-write-fetch-head origin "refs/oat/projects/$PROJECT_SLUG" 2>/dev/null &&
+        git show "${REF_LINE%%[[:space:]]*}:state.md" > "$REF_STATE/state.md" 2>/dev/null &&
+        WORKFLOW_MODE=$(oat project status --project-path "$REF_STATE" --field project.workflowMode 2>/dev/null)
+      rm -rf "$REF_STATE"
+      if [ -z "$WORKFLOW_MODE" ] || [ "$WORKFLOW_MODE" = "null" ]; then
+        echo "oat: cannot read the mode of $PROJECT_SLUG from origin; stopping before arrival" >&2
+        exit 1
+      fi
+    elif [ "$LS_STATUS" -ne 2 ]; then
+      echo "oat: cannot look up refs/oat/projects/$PROJECT_SLUG on origin (git ls-remote exit $LS_STATUS); stopping before arrival" >&2
+      exit 1
+    fi
+  fi
+  if [ "$WORKFLOW_MODE" = "freestyle" ]; then
+    echo "oat: $PROJECT_SLUG is a freestyle project; stopping before arrival" >&2
+    exit 0
+  fi
+fi
+```
+
 Before reading artifacts for an existing project, resolve its scope and pull a
 synced checkout. Scope resolution fails closed:
 
@@ -222,20 +269,21 @@ skill's documented resume behavior.
 
 Select the earliest incomplete lifecycle owner:
 
-| Persisted state                                           | Route                                                       |
-| --------------------------------------------------------- | ----------------------------------------------------------- |
-| No project yet                                            | Continue to Step 2, then invoke the selected creation skill |
-| Lite plan incomplete                                      | `oat-project-lite`                                          |
-| Brief not yet reviewed and approved                       | `oat-project-brief`                                         |
-| Existing goal project (`oat_workflow_mode: goal`)         | Stop at a product-judgment boundary: goal is not autonomous |
-| Quick-mode discovery, optional design, or plan incomplete | `oat-project-quick-start`                                   |
-| Spec-driven discovery incomplete                          | `oat-project-discover`                                      |
-| Spec-driven design/spec incomplete                        | `oat-project-design`                                        |
-| Design complete, plan incomplete                          | `oat-project-plan`                                          |
-| Imported plan requested                                   | `oat-project-import-plan`                                   |
-| Plan ready for implementation                             | `oat-project-implement`                                     |
-| Implementation closeout snapshot incomplete               | `oat-project-implement`                                     |
-| PR already open                                           | Report the tracked PR; do not create a duplicate            |
+| Persisted state                                             | Route                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| No project yet                                              | Continue to Step 2, then invoke the selected creation skill                                                         |
+| Lite plan incomplete                                        | `oat-project-lite`                                                                                                  |
+| Brief not yet reviewed and approved                         | `oat-project-brief`                                                                                                 |
+| Existing goal project (`oat_workflow_mode: goal`)           | Stop at a product-judgment boundary: goal is not autonomous                                                         |
+| Existing freestyle project (`oat_workflow_mode: freestyle`) | Stop at a product-judgment boundary: freestyle has no lifecycle workflow to run; its `shape.md` decides how it runs |
+| Quick-mode discovery, optional design, or plan incomplete   | `oat-project-quick-start`                                                                                           |
+| Spec-driven discovery incomplete                            | `oat-project-discover`                                                                                              |
+| Spec-driven design/spec incomplete                          | `oat-project-design`                                                                                                |
+| Design complete, plan incomplete                            | `oat-project-plan`                                                                                                  |
+| Imported plan requested                                     | `oat-project-import-plan`                                                                                           |
+| Plan ready for implementation                               | `oat-project-implement`                                                                                             |
+| Implementation closeout snapshot incomplete                 | `oat-project-implement`                                                                                             |
+| PR already open                                             | Report the tracked PR; do not create a duplicate                                                                    |
 
 An approved plan enters at implementation. Never replay completed phases solely
 because this is a new session.

@@ -20,6 +20,7 @@ The package is intentionally pure and read-only. It has no CLI, UI, or server de
 ```ts
 import {
   evaluateQuickPlanReadiness,
+  freestyleRecommendation,
   getProjectState,
   isBriefMode,
   listProjects,
@@ -37,8 +38,14 @@ import {
 ```
 
 `WORKFLOW_MODES` is the ordered runtime list of supported modes:
-`spec-driven`, `quick`, `import`, `lite`, `brief`, and `goal`. The exported
-`WorkflowMode` type is derived from this constant. `isBriefMode(mode)` reports
+`spec-driven`, `quick`, `import`, `lite`, `brief`, `goal`, and `freestyle`. The
+exported `WorkflowMode` type is derived from this constant. `freestyle` has
+OAT's structure and records but no lifecycle workflow: both project readers
+report it with `phase: null`, `phaseStatus: null` and empty progress (the only
+case where `ProjectState.phase` and `ProjectSummary.phase` are `null`), and
+`recommendSkill` returns `skill: 'none'` for it before any lifecycle route;
+`freestyleRecommendation()` returns that same recommendation for other readers
+such as the CLI dashboard. `isBriefMode(mode)` reports
 whether a mode belongs to the brief family (`BRIEF_MODES`: `brief` and
 `goal`), whose plans count progress in phase-units rather than tasks. `goal`
 is the brief-family mode that delivers in milestones.

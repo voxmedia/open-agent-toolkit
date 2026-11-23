@@ -32,4 +32,36 @@ oat_status: [unterminated
 `),
     ).toEqual({});
   });
+
+  it('parses a CRLF block whose last field is a quoted scalar (m01 R3-1)', () => {
+    const crlf = (lines: string[]): string => lines.join('\r\n');
+    expect(
+      parseFrontmatterRecord(
+        crlf([
+          '---',
+          'oat_workflow_mode: "freestyle"',
+          '---',
+          '',
+          '# State',
+          '',
+        ]),
+      ),
+    ).toEqual({ oat_workflow_mode: 'freestyle' });
+    expect(
+      parseFrontmatterRecord(
+        crlf([
+          '---',
+          'oat_workflow_mode: freestyle',
+          'oat_project_state_updated: "2026-11-22T00:00:00Z"',
+          '---',
+          '',
+        ]),
+      ),
+    ).toEqual({
+      oat_workflow_mode: 'freestyle',
+      oat_project_state_updated: '2026-11-22T00:00:00Z',
+    });
+    // The LF block keeps its exact extraction.
+    expect(extractFrontmatter('---\na: "b"\n---\n')).toBe('a: "b"');
+  });
 });

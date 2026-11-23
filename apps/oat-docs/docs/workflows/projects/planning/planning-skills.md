@@ -83,8 +83,10 @@ spec-driven project. The repository knowledge index must exist at
 `oat-repo-knowledge-index` first. The skill checks knowledge staleness and asks
 whether to refresh or continue when the index is stale.
 
-Quick, import, lite, brief, and goal projects use their own next step instead. Mentioning a
-new idea does not authorize automatic discovery invocation.
+Quick, import, lite, brief, and goal projects use their own next step instead,
+and a freestyle project has none: discovery declines it and points to its
+`shape.md`. Mentioning a new idea does not authorize automatic discovery
+invocation.
 
 **Example scenario:** The webhook-delivery project is active, but the team has
 not agreed whether duplicate deliveries are acceptable or how operators detect
@@ -270,7 +272,8 @@ skill asks for a project name and sets it as the active project. The project
 must use spec-driven mode, with `design.md` recording `oat_status: complete` and
 `oat_ready_for: oat-project-plan`.
 
-Quick, import, lite, brief, and goal projects never use this skill to author a plan. On a
+Quick, import, lite, brief, and goal projects never use this skill to author a plan, and on
+a freestyle project it stops, because there is no lifecycle plan. On a
 quick project, it resumes quick-start if the plan is not ready, and **starts
 `oat-project-implement` immediately** if the plan is ready. On an import project
 with a plan, it points you to `oat-project-implement`. On a lite project, it

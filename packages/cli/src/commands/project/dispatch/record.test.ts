@@ -415,8 +415,8 @@ describe('managed Claude single-run violation reporting', () => {
       'recordBase effort_selector: Managed Claude dispatch recordBase must omit derived field effort_selector.',
       'recordBase configured_invocation_evidence: Managed Claude dispatch recordBase must omit derived field configured_invocation_evidence.',
       'recordBase action: Managed Claude resolver role implementer conflicts with record action review.',
-      'recordBase caller: Required',
-      'recordBase deadline_seconds: Required',
+      'recordBase caller: Invalid input: expected string, received undefined',
+      'recordBase deadline_seconds: Invalid input: expected number, received undefined',
       'recordBase scope: A dispatch record must not carry an absolute filesystem path at scope.',
       'event evidence.canonicalPath: expected <loaded|user|project>/agents/<name>.md',
       'event evidence.contentDigest: expected sha256:<64 lowercase hex>',
@@ -501,17 +501,16 @@ describe('managed Claude single-run violation reporting', () => {
     (input.recordBase as Record<string, unknown>).launch_status = SECRET;
     (input.event.evidence as Record<string, unknown>).tier = SECRET;
 
-    // The report scrubs each violation itself; the command boundary remains
-    // the backstop for every other message.
+    // Zod 4 enum messages omit the received value. This checks the command
+    // output does not contain the secret. Scrubbing is covered separately.
     expect(() => parseDispatchRecordInput(input)).toThrow(
-      /launch_status: Invalid enum value/,
+      /launch_status: Invalid option: expected one of/,
     );
     expect(() => parseDispatchRecordInput(input)).not.toThrow(SECRET);
 
     const message = await commandError(input);
     expect(message).toContain('recordBase launch_status:');
     expect(message).toContain('event evidence.tier:');
-    expect(message).toContain('<redacted-secret>');
     expect(message).not.toContain(SECRET);
     expect(message).not.toMatch(/ghp_/);
   });
@@ -573,7 +572,9 @@ describe('managed Claude single-run violation reporting', () => {
     expect(message).toMatch(/^Managed Claude dispatch input has 4 violations:/);
     expect(message).toContain('recordBase caller:');
     expect(message).toContain('event source:');
-    expect(message).toContain('event observation.observedAt: Invalid datetime');
+    expect(message).toContain(
+      'event observation.observedAt: Invalid ISO datetime',
+    );
     expect(message).toContain(
       'event observation.provider: A runtime observation must name the same provider as its dispatch record.',
     );
@@ -592,8 +593,10 @@ describe('managed Claude single-run violation reporting', () => {
 
     const message = await commandError(input);
     expect(message).toContain('recordBase caller:');
-    expect(message).toContain('event metadata.observedAt: Invalid datetime');
-    expect(message).toContain('event <root>: Unrecognized key(s)');
+    expect(message).toContain(
+      'event metadata.observedAt: Invalid ISO datetime',
+    );
+    expect(message).toContain('event <root>: Unrecognized key: "extra"');
     expect(message).not.toContain('event observation');
   });
 

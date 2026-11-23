@@ -8,6 +8,7 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
+  isFreestyleState,
   WORKFLOW_MODES,
   type WorkflowMode,
 } from '@open-agent-toolkit/control-plane';
@@ -26,6 +27,20 @@ function toWorkflowMode(value: unknown): WorkflowMode | null {
     (WORKFLOW_MODES as readonly string[]).includes(value)
     ? (value as WorkflowMode)
     : null;
+}
+
+/**
+ * Whether `state.md` reads as freestyle, through the reader `oat project
+ * status` uses; false when it is unreadable.
+ */
+function stateIsFreestyle(projectPath: string): boolean {
+  try {
+    return isFreestyleState(
+      readFileSync(join(projectPath, 'state.md'), 'utf-8'),
+    );
+  } catch {
+    return false;
+  }
 }
 
 interface ValidatePlanCommandDependencies {
@@ -59,6 +74,21 @@ export function createProjectValidatePlanCommand(
       );
       const projectPath = resolve(context.cwd, options.projectPath);
       const planPath = join(projectPath, 'plan.md');
+
+      // Freestyle is recognized before the plan is read: it has no lifecycle
+      // plan contract, so no plan profile or parallel-group rule applies, and
+      // a freestyle project need not have a plan.md at all.
+      if (stateIsFreestyle(projectPath)) {
+        const message =
+          'Plan validation skipped: a freestyle project has no lifecycle plan contract.';
+        if (context.json) {
+          context.logger.json({ valid: true, skipped: 'freestyle', message });
+        } else {
+          context.logger.success(message);
+        }
+        process.exitCode = 0;
+        return;
+      }
 
       let content: string;
       try {

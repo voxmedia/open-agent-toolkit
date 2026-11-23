@@ -5,6 +5,11 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { projectListHint } from '@commands/project/list';
+import {
+  resolveUnpulledSyncedProject,
+  type UnpulledSyncedProject,
+} from '@commands/project/unpulled-synced';
 import { getProjectStateWithReviewAncestry } from '@commands/review/head-ancestry';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
@@ -20,6 +25,10 @@ interface ProjectStatusDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveActiveProject: (repoRoot: string) => Promise<ActiveProjectResolution>;
   getProjectState: (projectPath: string) => Promise<ProjectState>;
+  resolveUnpulledSyncedProject: (
+    projectDir: string,
+    repoRoot?: string,
+  ) => Promise<UnpulledSyncedProject | null>;
 }
 
 interface ProjectStatusOptions {
@@ -33,7 +42,19 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   resolveProjectRoot,
   resolveActiveProject,
   getProjectState: getProjectStateWithReviewAncestry,
+  resolveUnpulledSyncedProject,
 };
+
+function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
+  return [
+    `Project: ${project.name}`,
+    `Path: ${project.path}`,
+    `Scope: synced (checkout ${project.checkout})`,
+    `Recommendation: ${project.recommendation.skill}`,
+    `Reason: ${project.recommendation.reason}`,
+    `Hint: ${projectListHint(project)}`,
+  ];
+}
 
 function resolveTargetProjectPath(
   repoRoot: string,
@@ -42,13 +63,51 @@ function resolveTargetProjectPath(
   return isAbsolute(projectPath) ? projectPath : join(repoRoot, projectPath);
 }
 
-function formatProjectStatusLines(project: ProjectState): string[] {
+interface FreestyleProjectFiles {
+  agents: string;
+  shape: string;
+}
+
+/**
+ * Freestyle's project `AGENTS.md` and `shape.md` sit in the project folder,
+ * where instruction sync never reaches, so status names both paths. They are
+ * joined to the project directory status read, as the caller named it, rather
+ * than to `project.path`, which is empty for a synced project read from its
+ * nested worktree.
+ */
+function freestyleProjectFiles(
+  project: ProjectState,
+  projectDir: string,
+): FreestyleProjectFiles | null {
+  if (project.workflowMode !== 'freestyle') {
+    return null;
+  }
+  return {
+    agents: join(projectDir, 'AGENTS.md'),
+    shape: join(projectDir, 'shape.md'),
+  };
+}
+
+function formatProjectStatusLines(
+  project: ProjectState,
+  files: FreestyleProjectFiles | null,
+): string[] {
+  // Freestyle has no lifecycle phase, progress or current task to report.
+  const position = files
+    ? [
+        'Mode: freestyle (no lifecycle workflow)',
+        `Rules: ${files.agents}`,
+        `Shape: ${files.shape}`,
+      ]
+    : [
+        `Phase: ${project.phase} (${project.phaseStatus})`,
+        `Progress: ${project.progress.completed}/${project.progress.total}`,
+        `Current task: ${project.progress.currentTaskId ?? 'none'}`,
+      ];
   return [
     `Project: ${project.name}`,
     `Path: ${project.path}`,
-    `Phase: ${project.phase} (${project.phaseStatus})`,
-    `Progress: ${project.progress.completed}/${project.progress.total}`,
-    `Current task: ${project.progress.currentTaskId ?? 'none'}`,
+    ...position,
     ...project.blockers.map((blocker) =>
       typeof blocker === 'string'
         ? `Blocker: ${blocker}`
@@ -121,18 +180,45 @@ async function runProjectStatus(
 ): Promise<void> {
   try {
     if (options.projectPath && isAbsolute(options.projectPath)) {
+      const unpulled = await dependencies.resolveUnpulledSyncedProject(
+        options.projectPath,
+      );
+      if (unpulled) {
+        writeUnpulledStatusOutput(context, options, unpulled);
+        return;
+      }
       const project = await dependencies.getProjectState(options.projectPath);
-      writeProjectStatusOutput(context, options, { status: 'ok', project });
+      writeProjectStatusOutput(
+        context,
+        options,
+        { status: 'ok', project },
+        options.projectPath,
+      );
       return;
     }
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
 
     if (options.projectPath) {
-      const project = await dependencies.getProjectState(
-        resolveTargetProjectPath(repoRoot, options.projectPath),
+      const targetPath = resolveTargetProjectPath(
+        repoRoot,
+        options.projectPath,
       );
-      writeProjectStatusOutput(context, options, { status: 'ok', project });
+      const unpulled = await dependencies.resolveUnpulledSyncedProject(
+        targetPath,
+        repoRoot,
+      );
+      if (unpulled) {
+        writeUnpulledStatusOutput(context, options, unpulled);
+        return;
+      }
+      const project = await dependencies.getProjectState(targetPath);
+      writeProjectStatusOutput(
+        context,
+        options,
+        { status: 'ok', project },
+        options.projectPath,
+      );
       return;
     }
 
@@ -151,6 +237,18 @@ async function runProjectStatus(
     }
 
     if (activeProject.status === 'missing' || !activeProject.path) {
+      // An active synced project recorded on this branch but not pulled here
+      // gets the same pull instruction as an explicit --project-path.
+      if (activeProject.path) {
+        const unpulled = await dependencies.resolveUnpulledSyncedProject(
+          resolveTargetProjectPath(repoRoot, activeProject.path),
+          repoRoot,
+        );
+        if (unpulled) {
+          writeUnpulledStatusOutput(context, options, unpulled);
+          return;
+        }
+      }
       const message = activeProject.path
         ? `Active project path is missing or invalid: ${activeProject.path}`
         : 'Active project path is missing or invalid.';
@@ -171,7 +269,12 @@ async function runProjectStatus(
     const project = await dependencies.getProjectState(
       join(repoRoot, activeProject.path),
     );
-    writeProjectStatusOutput(context, options, { status: 'ok', project });
+    writeProjectStatusOutput(
+      context,
+      options,
+      { status: 'ok', project },
+      activeProject.path,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
@@ -183,10 +286,34 @@ async function runProjectStatus(
   }
 }
 
+function writeUnpulledStatusOutput(
+  context: CommandContext,
+  options: ProjectStatusOptions,
+  project: UnpulledSyncedProject,
+): void {
+  writeStatusPayload(context, options, { status: 'ok', project }, () =>
+    formatUnpulledStatusLines(project),
+  );
+}
+
 function writeProjectStatusOutput(
   context: CommandContext,
   options: ProjectStatusOptions,
-  payload: { status: 'ok'; project: ProjectState },
+  status: { status: 'ok'; project: ProjectState },
+  projectDir: string,
+): void {
+  const files = freestyleProjectFiles(status.project, projectDir);
+  const payload = files ? { ...status, projectFiles: files } : status;
+  writeStatusPayload(context, options, payload, () =>
+    formatProjectStatusLines(payload.project, files),
+  );
+}
+
+function writeStatusPayload(
+  context: CommandContext,
+  options: ProjectStatusOptions,
+  payload: unknown,
+  textLines: () => string[],
 ): void {
   if (options.field && options.shell?.length) {
     context.logger.error(
@@ -225,7 +352,7 @@ function writeProjectStatusOutput(
   if (context.json) {
     context.logger.json(payload);
   } else {
-    for (const line of formatProjectStatusLines(payload.project)) {
+    for (const line of textLines()) {
       context.logger.info(line);
     }
   }

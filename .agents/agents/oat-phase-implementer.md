@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.1.10
+version: 1.1.11
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -29,7 +29,9 @@ The root supplies:
 - `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
-- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, `brief`, or `goal`;
+- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, `brief`, or `goal`
+  (`freestyle` is never dispatched here: `oat-project-implement` stops for a
+  freestyle project, so a scope naming it is an unrecognized mode);
 - `commit_convention`: exact task/fix commit convention;
 - `phase_base_head`: root-recorded HEAD before phase dispatch;
 - `worktree`: assigned phase worktree or orchestration checkout;

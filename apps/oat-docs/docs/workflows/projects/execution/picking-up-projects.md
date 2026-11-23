@@ -67,6 +67,16 @@ its parent is reported and skipped rather than adopted.
 After adoption, set or open the project through the normal lifecycle command
 you are using. Arrival-aware project skills pull before reading its artifacts.
 
+Before its first pull in a checkout, a synced project recorded on the branch is
+known only by its record, so no mode is known yet. `oat project list` shows it
+with no phase and the hint `oat project pull <project>`, and
+`oat project status --project-path <path>` on its folder shows only the same
+storage instruction (`Scope: synced (checkout absent)`, recommendation
+`oat project pull`), never a lifecycle step. If the record itself cannot be
+parsed, `list` shows a `restore record from Git` row and keeps listing, while
+`status` for that project exits 1 with the parse error and the instruction to
+restore the record from a trusted Git revision.
+
 An adopted quick-workflow project whose `plan.md` is not implementation-ready
 resumes through `oat-project-quick-start`, which continues it in place without
 re-scaffolding, rather than through `oat-project-implement`. `oat-project-plan`,
@@ -99,6 +109,20 @@ scope), routes the integrated review as `code mNN: …` to
 `oat-project-pr-progress`. In the implement phase the dashboard prints a goal
 note that `oat project status` and `oat-project-next` are the authority for
 goal milestone routing.
+
+A freestyle project has no lifecycle route. `oat project status` prints
+`Mode: freestyle (no lifecycle workflow)` with the paths of the project's
+`AGENTS.md` and `shape.md`, and recommends `none`; `oat project list` shows
+`freestyle` in its PHASE column. `oat-project-next` invokes no skill and
+reports those two files, and `oat-project-progress` shows `Next: none`. The
+repository dashboard that `oat state refresh` writes shows the project's mode (and its lifecycle when
+it is not active), lists it as `freestyle`, and gives no next skill, with one
+exception: when a paused
+freestyle project is still the active project, the dashboard keeps its
+mode-independent resume step, `oat project open <project>`. To resume
+shaping, or to change how the project runs, use
+[oat-project-freestyle](../planning/starting-projects.md#oat-project-freestyle);
+otherwise the project's own `AGENTS.md` and `shape.md` say what happens next.
 
 ## What travels
 

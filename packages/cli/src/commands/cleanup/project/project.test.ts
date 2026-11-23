@@ -12,7 +12,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCleanupProjectCommand, runCleanupProject } from './project';
-import { projectPlanMarksComplete } from './project.utils';
+import { projectPlanMarksComplete, stateIsFreestyle } from './project.utils';
 
 async function createRepoRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-cleanup-project-'));
@@ -154,6 +154,32 @@ describe('projectPlanMarksComplete', () => {
   });
 });
 
+describe('stateIsFreestyle', () => {
+  it('reads plain, quoted and commented freestyle declarations only', () => {
+    expect(stateIsFreestyle('---\noat_workflow_mode: freestyle\n---')).toBe(
+      true,
+    );
+    expect(stateIsFreestyle('---\noat_workflow_mode: "freestyle"\n---')).toBe(
+      true,
+    );
+    expect(
+      stateIsFreestyle('---\noat_workflow_mode: freestyle # note\n---'),
+    ).toBe(true);
+    expect(stateIsFreestyle('---\noat_workflow_mode: quick\n---')).toBe(false);
+    expect(stateIsFreestyle('---\noat_workflow_mode: freestyle-ish\n---')).toBe(
+      false,
+    );
+    expect(stateIsFreestyle('---\noat_workflow_mode: "freestyle\n---')).toBe(
+      false,
+    );
+    expect(
+      stateIsFreestyle(
+        '---\noat_workflow_mode: quick\n---\n\n```yaml\noat_workflow_mode: freestyle\n```\n',
+      ),
+    ).toBe(false);
+  });
+});
+
 describe('cleanup project drift scanning', () => {
   const tempDirs: string[] = [];
   let originalExitCode: number | undefined;
@@ -246,6 +272,144 @@ describe('cleanup project drift scanning', () => {
       ]),
     );
   });
+
+  it('never infers completion for a freestyle project from a passed final review row', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    const plan = [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '|-------|------|--------|------|----------|',
+      '| final | code | passed | 2026-11-21 | reviews/final.md |',
+    ].join('\n');
+    for (const [name, mode] of [
+      ['free', "'freestyle' # no lifecycle"],
+      ['spec', 'spec-driven'],
+    ]) {
+      const projectDir = join(root, '.oat', 'projects', 'shared', name!);
+      await mkdir(projectDir, { recursive: true });
+      await writeFile(join(projectDir, 'plan.md'), plan, 'utf8');
+      await writeFile(
+        join(projectDir, 'state.md'),
+        ['---', `oat_workflow_mode: ${mode}`, '---'].join('\n'),
+        'utf8',
+      );
+    }
+
+    // Regression control: a quick project whose state body shows a freestyle
+    // example in a fence is still a quick project and keeps its repair.
+    const quickDir = join(root, '.oat', 'projects', 'shared', 'quick-fence');
+    await mkdir(quickDir, { recursive: true });
+    await writeFile(join(quickDir, 'plan.md'), plan, 'utf8');
+    await writeFile(
+      join(quickDir, 'state.md'),
+      [
+        '---',
+        'oat_workflow_mode: quick',
+        '---',
+        '',
+        '```yaml',
+        'oat_workflow_mode: freestyle',
+        '```',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const payload = await runCleanupProject({ repoRoot: root, dryRun: true });
+    const updated = payload.actions
+      .filter((action) => action.type === 'update')
+      .map((action) => action.target)
+      .sort();
+
+    expect(updated).toEqual([
+      '.oat/projects/shared/quick-fence/state.md',
+      '.oat/projects/shared/spec/state.md',
+    ]);
+  });
+
+  it('leaves a CRLF freestyle state.md byte-identical on apply, with no second frontmatter block', async () => {
+    const root = await createRepoRoot();
+    tempDirs.push(root);
+    const plan = [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '|-------|------|--------|------|----------|',
+      '| final | code | passed | 2026-11-21 | reviews/final.md |',
+    ].join('\n');
+    const projectDir = join(root, '.oat', 'projects', 'shared', 'crlf-free');
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(projectDir, 'plan.md'), plan, 'utf8');
+    const crlfState = [
+      '---',
+      'oat_workflow_mode: freestyle',
+      '---',
+      '',
+      '# Project State: crlf-free',
+      '',
+    ].join('\r\n');
+    await writeFile(join(projectDir, 'state.md'), crlfState, 'utf8');
+
+    const payload = await runCleanupProject(
+      { repoRoot: root, dryRun: false },
+      { refreshDashboard: async () => {} },
+    );
+
+    expect(
+      payload.actions.filter(
+        (action) =>
+          action.type === 'update' &&
+          action.target === '.oat/projects/shared/crlf-free/state.md',
+      ),
+    ).toEqual([]);
+    await expect(readFile(join(projectDir, 'state.md'), 'utf8')).resolves.toBe(
+      crlfState,
+    );
+  });
+
+  it.each([
+    ['a quoted mode', ['oat_workflow_mode: "freestyle"']],
+    [
+      'a quoted timestamp after the mode',
+      [
+        'oat_workflow_mode: freestyle',
+        'oat_project_state_updated: "2026-11-22T00:00:00Z"',
+      ],
+    ],
+  ])(
+    'leaves a CRLF freestyle state.md whose last field is %s byte-identical on apply (m01 R3-1)',
+    async (_label, fields) => {
+      const root = await createRepoRoot();
+      tempDirs.push(root);
+      const projectDir = join(root, '.oat', 'projects', 'shared', 'crlf-q');
+      await mkdir(projectDir, { recursive: true });
+      await writeFile(
+        join(projectDir, 'plan.md'),
+        [
+          '## Reviews',
+          '',
+          '| Scope | Type | Status | Date | Artifact |',
+          '|-------|------|--------|------|----------|',
+          '| final | code | passed | 2026-11-22 | reviews/final.md |',
+        ].join('\n'),
+        'utf8',
+      );
+      const crlfState = ['---', ...fields, '---', '', '# State', ''].join(
+        '\r\n',
+      );
+      await writeFile(join(projectDir, 'state.md'), crlfState, 'utf8');
+
+      await runCleanupProject(
+        { repoRoot: root, dryRun: false },
+        { refreshDashboard: async () => {} },
+      );
+
+      await expect(
+        readFile(join(projectDir, 'state.md'), 'utf8'),
+      ).resolves.toBe(crlfState);
+    },
+  );
 
   it('apply clears invalid active project pointer', async () => {
     const root = await createRepoRoot();

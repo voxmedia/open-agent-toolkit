@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.19
+  version: 1.6.20
 ---
 
 # Project PR (Final)
@@ -121,11 +121,28 @@ If missing/invalid:
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it:
-  ```bash
-  mkdir -p .oat
-  oat config set activeProject "$PROJECT_PATH"
-  ```
+- Write the active-project pointer only after the freestyle check below.
+
+Then read the resolved project's mode, before any write, including the
+active-project pointer:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+**Freestyle projects (`WORKFLOW_MODE=freestyle`).** This skill does not apply: a
+freestyle project has no lifecycle workflow, and when PRs open is agreed in its
+`shape.md`. Stop here, before the active-project pointer is written, before
+Step 0.5 archives review files and before any other write, and tell the user:
+"This is a freestyle project; OAT opens no PR for it. Open PRs as `shape.md`
+agrees."
+
+When the project name was asked for above, write the pointer now:
+
+```bash
+mkdir -p .oat
+oat config set activeProject "$PROJECT_PATH"
+```
 
 ### Step 0.5: Archive Residual Active Review Artifacts
 

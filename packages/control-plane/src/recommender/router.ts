@@ -8,6 +8,7 @@ import {
   isBriefMode,
   type Phase,
   type PhaseProgress,
+  type PhaseStatus,
   type ProjectState,
   type QuickPlanReadiness,
   type QuickPlanReadinessFailure,
@@ -141,9 +142,49 @@ const GOAL_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
   'implement:in_progress:any': 'oat-project-implement',
 };
 
+/**
+ * Project state on a lifecycle route: every mode except freestyle. The
+ * project readers always supply a phase and a phase status for these modes.
+ */
+type LifecycleProjectState = Omit<ProjectState, 'recommendation'> & {
+  phase: Phase;
+  phaseStatus: PhaseStatus;
+};
+
+/**
+ * Freestyle has no lifecycle workflow, so OAT recommends no skill for it in
+ * any phase, lifecycle or review state. The project's own shape decides what
+ * runs next.
+ */
+const FREESTYLE_RECOMMENDATION: SkillRecommendation = {
+  skill: 'none',
+  reason:
+    'Freestyle project: no lifecycle workflow, so OAT recommends no skill; the project decides its own next step',
+};
+
+/**
+ * The recommendation for every freestyle project. The CLI dashboard reports
+ * the same value, so the router and the dashboard cannot disagree.
+ */
+export function freestyleRecommendation(): SkillRecommendation {
+  return { ...FREESTYLE_RECOMMENDATION };
+}
+
 export function recommendSkill(
-  state: Omit<ProjectState, 'recommendation'>,
+  input: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
+  // Freestyle is recognized before every lifecycle branch, including the
+  // decomposition, HiLL and goal routes.
+  if (input.workflowMode === 'freestyle') {
+    return freestyleRecommendation();
+  }
+  // Lifecycle modes read the same defaults the project readers apply.
+  const state: LifecycleProjectState = {
+    ...input,
+    phase: input.phase ?? 'discovery',
+    phaseStatus: input.phaseStatus ?? 'in_progress',
+  };
+
   if (state.phase === 'decomposition') {
     return getDecompositionRecommendation(state);
   }
@@ -222,7 +263,7 @@ export function recommendSkill(
  * ready.
  */
 function getQuickPlanGate(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
   currentArtifact: ArtifactStatus | undefined,
 ): SkillRecommendation | null {
   if (state.workflowMode !== 'quick' || state.phase !== 'plan') {
@@ -273,7 +314,7 @@ function describeQuickPlanFailure(
 }
 
 function getDecompositionRecommendation(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
 ): SkillRecommendation {
   if (state.phaseStatus === 'complete') {
     return {
@@ -290,7 +331,7 @@ function getDecompositionRecommendation(
 }
 
 function getHillOverride(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
 ): SkillRecommendation | null {
   if (state.phase === 'implement' || state.phase === 'decomposition') {
     return null;
@@ -319,7 +360,7 @@ function getHillOverride(
  * brief (`null`).
  */
 function getBriefUnitGuard(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
 ): SkillRecommendation | null {
   if (
     state.phase === 'implement' &&
@@ -346,7 +387,7 @@ function hasIncompletePhaseUnit(units: readonly PhaseProgress[]): boolean {
   );
 }
 
-type RouterState = Omit<ProjectState, 'recommendation'>;
+type RouterState = LifecycleProjectState;
 
 /**
  * The goal priority block (design "Goal transition contract"). It reads only
@@ -934,7 +975,7 @@ function scopeLabel(
 }
 
 function getPostImplementationRecommendation(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
 ): SkillRecommendation {
   // Terminal guard. `state.lifecycle === 'complete'` is the only terminal
   // signal, and it applies in every workflow mode. Neither a null current task
@@ -1014,9 +1055,7 @@ function getPostImplementationRecommendation(
   };
 }
 
-function hasIncompleteRevisionPhase(
-  state: Omit<ProjectState, 'recommendation'>,
-): boolean {
+function hasIncompleteRevisionPhase(state: LifecycleProjectState): boolean {
   return state.progress.phases.some(
     (phase) => phase.isRevision && phase.completed < phase.total,
   );
@@ -1028,9 +1067,7 @@ function hasIncompleteRevisionPhase(
  * same Scope, Type and Invocation class at the same or a descendant head) is
  * ignored, so a stranded round never routes to receive.
  */
-function hasActionableReviewArtifacts(
-  state: Omit<ProjectState, 'recommendation'>,
-): boolean {
+function hasActionableReviewArtifacts(state: LifecycleProjectState): boolean {
   return state.activeReviewArtifacts.some(
     (reviewArtifact) =>
       reviewArtifact.actionable &&
@@ -1045,7 +1082,7 @@ function hasActionableReviewArtifacts(
 }
 
 function getCurrentArtifact(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
 ): ArtifactStatus | undefined {
   if (state.phase === 'decomposition') {
     return undefined;
@@ -1058,7 +1095,7 @@ function getCurrentArtifact(
 }
 
 function getEarlyPhaseRoute(
-  state: Omit<ProjectState, 'recommendation'>,
+  state: LifecycleProjectState,
   boundaryTier: BoundaryTier,
 ): string {
   if (state.phase === 'implement' && state.phaseStatus === 'in_progress') {
@@ -1106,7 +1143,7 @@ function getWorkflowRoutes(
 
 function normalizeImplementationSkill(
   skill: string,
-  _state: Omit<ProjectState, 'recommendation'>,
+  _state: LifecycleProjectState,
 ): string {
   return skill;
 }

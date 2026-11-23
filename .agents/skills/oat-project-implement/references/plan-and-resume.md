@@ -5,6 +5,11 @@ This reference preserves the route-specific implementation contract. Load it onl
 Step 0 of the entry skill has already pulled and materialized any discoverable
 synced project before this route validates or reads its artifacts.
 
+### Freestyle Projects
+
+This route never runs for a freestyle project: Step 0 of the entry skill
+stops for one before any reference loads.
+
 ### Brief-Family Projects
 
 When `state.md` records `oat_workflow_mode: brief`, `plan.md` is a Project

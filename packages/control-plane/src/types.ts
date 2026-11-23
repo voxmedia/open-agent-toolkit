@@ -15,6 +15,9 @@ export const WORKFLOW_MODES = [
   'lite',
   'brief',
   'goal',
+  // OAT structure and records with no lifecycle workflow: no phase, no
+  // routing, and no lifecycle validation or closeout rules.
+  'freestyle',
 ] as const;
 export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 
@@ -453,8 +456,13 @@ export interface GoalDelivery {
 export interface ProjectState {
   name: string;
   path: string;
-  phase: Phase;
-  phaseStatus: PhaseStatus;
+  /**
+   * The lifecycle phase (`oat_phase`, defaulting to `discovery`). `null` only
+   * for a `freestyle` project, which has no lifecycle phase.
+   */
+  phase: Phase | null;
+  /** `oat_phase_status`, defaulting to `in_progress`; `null` only for `freestyle`. */
+  phaseStatus: PhaseStatus | null;
   workflowMode: WorkflowMode;
   executionMode: ExecutionMode;
   lifecycle: Lifecycle;
@@ -507,8 +515,9 @@ export interface ProjectSummary {
   name: string;
   path: string;
   scope?: ProjectScope;
-  phase: Phase;
-  phaseStatus: PhaseStatus;
+  /** `null` only for a `freestyle` project (see `ProjectState.phase`). */
+  phase: Phase | null;
+  phaseStatus: PhaseStatus | null;
   workflowMode: WorkflowMode;
   lifecycle: Lifecycle;
   progress: {

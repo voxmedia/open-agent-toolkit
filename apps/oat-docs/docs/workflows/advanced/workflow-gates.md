@@ -137,7 +137,7 @@ string, and the lifecycle executes it unchanged; OAT does not inject, reorder,
 or rewrite its shell arguments.
 
 `oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`,
-`oat-project-lite`, `oat-project-brief`, `oat-project-goal`, and `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
+`oat-project-lite`, `oat-project-brief`, `oat-project-goal`, and `oat-project-import-plan` are currently gate-aware. `oat-project-freestyle` is not, and a freestyle project runs no gate. Gate awareness is declared
 in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.

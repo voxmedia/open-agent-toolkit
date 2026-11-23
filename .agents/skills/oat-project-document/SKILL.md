@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat project check-state:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
-  version: 1.8.16
+  version: 1.8.17
 ---
 
 # Project Documentation Sync
@@ -130,6 +130,15 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 **Validation:**
 
 - Verify `$PROJECT_PATH/state.md` exists
+- Read the mode before any other check or write:
+  ```bash
+  WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+  ```
+  For `oat_workflow_mode: freestyle`, stop: a freestyle project has no
+  lifecycle artifact set to document from, so stop here, before the artifact
+  checks below and before Step 1 can invoke a PJM writer. Tell the user: "This
+  is a freestyle project; this skill reads lifecycle artifacts it does not
+  have. Update documentation as `shape.md` agrees."
 - Verify at least one of `plan.md` or `implementation.md` exists (need to know what was built)
 - If validation fails, report the error and STOP
 

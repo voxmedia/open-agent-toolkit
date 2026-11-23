@@ -366,6 +366,12 @@ gates or creating another implementation coordinator.
 > `onFailure: prompt`, or that cannot run or return a valid result, also stops
 > the run.
 
+A freestyle project is not an autonomous route either: when the resolved
+project is freestyle, the run stops at a product-judgment boundary, because a
+freestyle project has no lifecycle workflow to run. It reads the mode before
+pulling a synced project, so the stop leaves the checkout as it was; with no
+checkout here, it names `oat project pull <slug>`.
+
 **Invocation:** Provide a substantive goal for new work, or an existing project
 slug or path to resume. These are agent requests, not terminal commands.
 Providers with `$` syntax use `$oat-project-autonomous`.

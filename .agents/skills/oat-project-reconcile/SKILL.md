@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat project check-state:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.8
+  version: 1.0.9
 ---
 
 # Reconcile Manual Implementation
@@ -89,13 +89,29 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 - Ask the user for `{project-name}`
 - Set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}`
-- Write it for future phases:
-  ```bash
-  mkdir -p .oat
-  oat config set activeProject "$PROJECT_PATH"
-  ```
+- Write the active-project pointer only after the freestyle check below.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+Then resolve the workflow mode, before the active-project pointer is written
+and before the Step 0.5 lifecycle checks:
+
+```bash
+WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+If `WORKFLOW_MODE` is `freestyle`, stop before any write: a freestyle
+project has no plan tasks or lifecycle journal to map commits onto. Tell the
+user: "This is a freestyle project; reconcile its records against the forge
+as its `AGENTS.md` and `shape.md` say."
+
+When the project name was asked for above, write the pointer now for future
+phases:
+
+```bash
+mkdir -p .oat
+oat config set activeProject "$PROJECT_PATH"
+```
 
 ### Step 0.5: Prerequisite Check
 
@@ -125,12 +141,6 @@ Verify the project is ready for reconciliation:
 3. **Check for untracked commits:**
    - Read `implementation.md` if it exists — find the last recorded commit SHA
    - If all recent commits are already tracked, inform user: "No untracked commits found. Nothing to reconcile."
-
-4. **Resolve the workflow mode:**
-
-   ```bash
-   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
-   ```
 
 **Brief-mode branch (`WORKFLOW_MODE=brief`).** A brief has no planned tasks:
 the task source is the journal, and

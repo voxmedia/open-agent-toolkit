@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
 metadata:
-  version: 1.4.9
+  version: 1.4.10
 ---
 
 # Progress Router
@@ -164,6 +164,7 @@ Start a new project:
   oat-project-lite - Start a lite workflow (interview -> plan -> implement)
   oat-project-brief - Start a brief workflow (interview -> brief -> implement)
   oat-project-goal - Start a goal workflow (interview -> brief and milestones -> deliver each milestone)
+  oat-project-freestyle - Start a freestyle project (OAT records, no lifecycle workflow; shaped in shape.md)
   oat-project-import-plan - Import an external markdown plan into OAT
 ```
 
@@ -175,7 +176,7 @@ Read `{project}/state.md` frontmatter:
 
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
-- `oat_workflow_mode` - spec-driven | quick | import | lite | brief | goal
+- `oat_workflow_mode` - spec-driven | quick | import | lite | brief | goal | freestyle
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
@@ -259,6 +260,8 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `lite`
 - `brief`
 - `goal`
+- `freestyle` (no next skill; see Freestyle mode below, which skips the HiLL
+  override and drift checks)
 
 **HiLL override (apply before phase routing):**
 
@@ -391,6 +394,15 @@ phase set from `oat project status --json` (`milestoneMembership`), plus the
 whole-brief total. A pending recovery reports its own scope beside the active
 milestone; it never replaces it.
 
+**Freestyle mode (`oat_workflow_mode: freestyle`):** there is no next skill.
+The project has no lifecycle phase, and `oat project status` reports
+`Mode: freestyle (no lifecycle workflow)` and `Recommendation: none`; the
+project runs as its `shape.md` says. Display `Mode: freestyle`, omit the
+phase, HiLL, gate and goal lines, add the `AGENTS.md` and `shape.md` paths
+that `oat project status --project-path "{project}"` names, and show
+`Next: none (the project's shape.md decides)`. Mention `oat-project-freestyle`
+only for shaping or reshaping.
+
 **If blockers exist:**
 
 ```
@@ -416,6 +428,7 @@ Workflow:
   oat-project-lite              - Start a lite workflow (interview -> plan -> implement)
   oat-project-brief             - Start a brief workflow (interview -> brief -> implement)
   oat-project-goal              - Start a goal workflow (interview -> brief and milestones -> deliver each milestone)
+  oat-project-freestyle         - Start, shape or reshape a freestyle project (no lifecycle workflow)
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
   oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite, brief, and goal promote via quick)

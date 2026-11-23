@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.18
+  version: 1.6.19
 ---
 
 # Receive Review
@@ -127,6 +127,12 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - If the user explicitly names a project, set `PROJECT_PATH` to `${PROJECTS_ROOT}/{project-name}` and validate it before Step 1.
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+**If `"$PROJECT_PATH/state.md"` records `oat_workflow_mode: freestyle`:** stop
+before any write. A freestyle project has no plan tasks, review table or
+journal bookkeeping for this skill to update. Tell the user: "This is a
+freestyle project; receive the review with `oat-review-receive` and record its
+outcome as `shape.md` says."
 
 ### Step 1: Locate Latest Review Artifact
 

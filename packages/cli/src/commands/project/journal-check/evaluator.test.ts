@@ -89,6 +89,58 @@ describe('valid baseline', () => {
   });
 });
 
+describe('freestyle', () => {
+  const FREESTYLE_STATE = '---\noat_workflow_mode: freestyle\n---\n';
+
+  it('applies no lifecycle journal rule to a freestyle project at any boundary', () => {
+    // A plan task with no journal block refuses under the task-mode default.
+    expect(codes('# Implementation\n')).toContain('task-block-missing');
+    for (const boundary of [
+      'implement-preflight',
+      'review',
+      'completion',
+    ] as const) {
+      expect(
+        check('# Implementation\n', {
+          boundary,
+          scope: boundary === 'review' ? ['p01'] : undefined,
+          state: FREESTYLE_STATE,
+        }),
+      ).toEqual({
+        status: 'ok',
+        boundary,
+        workflowMode: 'freestyle',
+        scope: boundary === 'review' ? ['p01'] : null,
+        reasons: [],
+        warnings: [],
+        overrides: [],
+        // The plan's two phases have no journal section, so the coverage
+        // report validates nothing and says so (p03 replaced p01's bare
+        // opt-out with this report).
+        coverage: {
+          missing: [],
+          recognized: 2,
+          validated: 0,
+          skipped: 2,
+          phases: [
+            expect.objectContaining({
+              id: 'p01',
+              outcome: 'skipped',
+              reason: 'no-journal-section',
+            }),
+            expect.objectContaining({
+              id: 'p02',
+              outcome: 'skipped',
+              reason:
+                boundary === 'review' ? 'out-of-scope' : 'no-journal-section',
+            }),
+          ],
+        },
+      });
+    }
+  });
+});
+
 describe('negative controls at completion (baseline accepted, refused for the named reason)', () => {
   it('fenced fake task heading', async () => {
     const fake = replaceOnce(

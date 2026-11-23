@@ -20,6 +20,7 @@ import {
   projectNeedsLifecycleComplete,
   projectNeedsStateFile,
   renderProjectStateTemplate,
+  stateIsFreestyle,
   upsertLifecycleCompleteFrontmatter,
 } from './project.utils';
 
@@ -155,7 +156,12 @@ async function planProjectDirectoryCleanup(
     readFile(join(projectDirectory, 'state.md'), 'utf8'),
   ]);
 
-  if (projectNeedsLifecycleComplete(planContent, stateContent)) {
+  // A freestyle project completes only by explicit command: a passed final
+  // review row in its own documents is not a lifecycle completion signal.
+  if (
+    !stateIsFreestyle(stateContent) &&
+    projectNeedsLifecycleComplete(planContent, stateContent)
+  ) {
     actions.push({
       type: 'update',
       target: toRepoRelativePath(repoRoot, join(projectDirectory, 'state.md')),

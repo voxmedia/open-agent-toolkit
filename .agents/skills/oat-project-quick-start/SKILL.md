@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.27
+  version: 2.3.28
 ---
 
 # Quick Start Project
@@ -96,6 +96,50 @@ After formatting, run only repository checks relevant to the files changed;
 writing lifecycle artifacts does not imply unrelated full test suites.
 
 ## Process
+
+### Freestyle Projects
+
+Before Step 0, read the mode of the project this run would write into: the
+active project when its `state.md` exists, otherwise the existing project that
+`{project-name}` names when its `state.md` exists. `NAMED_PATH` is the path
+`oat project new` scaffolds that name at: the CLI's effective
+`projects.defaultScope` and `projects.root`, where `shared` is the root itself
+and `local` or `synced` is the sibling directory of that name. The root is
+normalized against the repository root before its parent is taken, as the CLI
+does.
+
+Resolve the name first when it is missing. With no active project `state.md`
+and no `{project-name}` in the arguments, get the name and short description
+from the user now, under Step 0.5's startup-input rules, so this check runs
+before Step 0's first commit-capable step. Step 0.5 then reuses that name and
+description instead of requesting them again.
+
+```bash
+# Project paths are repo-relative: check them from the repository root.
+cd "$(git rev-parse --show-toplevel)" || { echo "oat: cannot resolve the repository root; stopping before Step 0" >&2; exit 1; }
+PROJECTS_ROOT=$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")
+NEW_SCOPE=$(oat config get projects.defaultScope 2>/dev/null || echo synced)
+NAMED_PATH=$(node -e 'const p=require("path"),fs=require("fs");const [top,root,scope,name]=process.argv.slice(1);const canon=(x)=>{x=p.resolve(x);try{return fs.realpathSync(x)}catch{const d=p.dirname(x);return d===x?x:p.join(canon(d),p.basename(x))}};const base=p.isAbsolute(root)?canon(root):p.resolve(top,root);const dir=canon(p.join(scope==="shared"?base:p.join(p.dirname(base),scope),name));const rel=p.relative(canon(top),dir);console.log(rel===""||rel.startsWith("..")||p.isAbsolute(rel)?dir:rel)' "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" "$PROJECTS_ROOT" "$NEW_SCOPE" "{project-name}")
+TARGET_PATH=$(oat config get activeProject 2>/dev/null || true)
+if [ -z "$TARGET_PATH" ] || [ ! -f "$TARGET_PATH/state.md" ]; then TARGET_PATH="$NAMED_PATH"; fi
+TARGET_MODE=$(oat project status --project-path "$TARGET_PATH" --field project.workflowMode 2>/dev/null || echo null)
+```
+
+When `TARGET_MODE` is `freestyle`, stop before any write, including Step 0's
+sync-manifest commit, Step 0.5's scaffold and Step 1's mode write. OAT has no
+promotion from freestyle, so this skill never starts a quick workflow in a
+freestyle project or changes its mode; Step 0.5 repeats this check for a name
+the user gives when it asks for one. Tell the user: "`{project-name}` is a
+freestyle project, and promotion from freestyle is not supported: this skill
+will not start a quick workflow in it." Then give the next step that fits what
+triggered the stop:
+
+- The active project: "To start a new quick project, clear the active project
+  with `oat-project-clear-active`, then run `oat-project-quick-start` again
+  with a new project name."
+- The name from the arguments, or the name the user gave when Step 0.5 asked:
+  "Pick a new project name for the quick project; an existing freestyle
+  project cannot take it."
 
 ### Step 0 (Preflight): Inherited Git State
 
@@ -187,9 +231,23 @@ If no valid active project exists:
 
 - Resolve startup input from `$ARGUMENTS` before doing any discovery work:
   - Accept `{project-name}` plus an optional `{project-description}`.
+  - Reuse a name and description gathered before Step 0 by
+    `### Freestyle Projects`; they are already the startup input.
   - If `$ARGUMENTS` contains only a bare `{project-name}` (for example a slug or short title) without a substantive description, ask the user for a short project description before scanning the repo or drafting discovery.
   - Do not infer requirements from the project name alone or go exploring the codebase to guess what the project means.
   - If neither field is available, ask for both the project name and a short project description. One or two sentences is enough for the description.
+- Read the mode of an existing project at `NAMED_PATH` first, resolved as in
+  `### Freestyle Projects`:
+  ```bash
+  cd "$(git rev-parse --show-toplevel)" || { echo "oat: cannot resolve the repository root; stopping before the scaffold" >&2; exit 1; }
+  PROJECTS_ROOT=$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")
+  NEW_SCOPE=$(oat config get projects.defaultScope 2>/dev/null || echo synced)
+  NAMED_PATH=$(node -e 'const p=require("path"),fs=require("fs");const [top,root,scope,name]=process.argv.slice(1);const canon=(x)=>{x=p.resolve(x);try{return fs.realpathSync(x)}catch{const d=p.dirname(x);return d===x?x:p.join(canon(d),p.basename(x))}};const base=p.isAbsolute(root)?canon(root):p.resolve(top,root);const dir=canon(p.join(scope==="shared"?base:p.join(p.dirname(base),scope),name));const rel=p.relative(canon(top),dir);console.log(rel===""||rel.startsWith("..")||p.isAbsolute(rel)?dir:rel)' "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" "$PROJECTS_ROOT" "$NEW_SCOPE" "{project-name}")
+  TARGET_MODE=null
+  if [ -f "$NAMED_PATH/state.md" ]; then TARGET_MODE=$(oat project status --project-path "$NAMED_PATH" --field project.workflowMode 2>/dev/null || echo null); fi
+  ```
+  If `TARGET_MODE` is `freestyle`, stop here, before the scaffold below, with
+  the freestyle stop above and its new-name next step.
 - Create project via the same scaffolding path used by `oat-project-new`, then
   re-resolve `PROJECT_PATH` from the path the scaffold reports:
 

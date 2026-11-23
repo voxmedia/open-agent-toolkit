@@ -45,6 +45,9 @@ import {
 const REPO_ROOT = join(process.cwd(), '..', '..');
 const PROJECT_TEMPLATE_NAMES = [
   'state.md',
+  'state-freestyle.md',
+  'project-agents.md',
+  'shape.md',
   'discovery.md',
   'spec.md',
   'design.md',
@@ -1389,6 +1392,177 @@ describe('scaffoldProject', () => {
     expect(implementation).toContain('<!-- orchestration-runs-start -->');
   });
 
+  it('uses the bundled freestyle state template when neither installed tier exists', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await rm(join(repoRoot, '.oat', 'templates'), {
+      recursive: true,
+      force: true,
+    });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'bundled-freestyle-floor',
+      mode: 'freestyle',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+    });
+
+    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    const state = await readFile(
+      join(repoRoot, result.projectPath, 'state.md'),
+      'utf8',
+    );
+    expect(parseFrontmatter(state).oat_workflow_mode).toBe('freestyle');
+    expect(state).toContain('# Project State: bundled-freestyle-floor');
+  });
+
+  it('refuses a same-scope rerun that would mix freestyle and lifecycle files, before any write', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    const base = {
+      repoRoot,
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+    };
+    await scaffoldProject({ ...base, projectName: 'free', mode: 'freestyle' });
+    await scaffoldProject({ ...base, projectName: 'quick', mode: 'quick' });
+    const listing = async (name: string): Promise<string[]> =>
+      (
+        await readdir(join(repoRoot, '.oat', 'projects', 'shared', name))
+      ).sort();
+    const freeBefore = await listing('free');
+    const quickBefore = await listing('quick');
+
+    await expect(
+      scaffoldProject({ ...base, projectName: 'free', mode: 'quick' }),
+    ).rejects.toThrow(
+      'Project free already exists as a freestyle project; scaffolding it as quick would mix freestyle and lifecycle files',
+    );
+    await expect(
+      scaffoldProject({ ...base, projectName: 'quick', mode: 'freestyle' }),
+    ).rejects.toThrow(
+      'Project quick already exists as a quick project; scaffolding it as freestyle',
+    );
+    expect(await listing('free')).toEqual(freeBefore);
+    expect(await listing('quick')).toEqual(quickBefore);
+
+    // Same-mode reruns and a change between two lifecycle modes behave as
+    // before: existing files are skipped and missing ones are written.
+    const freeRerun = await scaffoldProject({
+      ...base,
+      projectName: 'free',
+      mode: 'freestyle',
+    });
+    expect(freeRerun.createdFiles).toEqual([]);
+    expect(freeRerun.skippedFiles).toEqual([
+      'state.md',
+      'AGENTS.md',
+      'shape.md',
+    ]);
+    const lifecycleChange = await scaffoldProject({
+      ...base,
+      projectName: 'quick',
+      mode: 'spec-driven',
+    });
+    expect(lifecycleChange.skippedFiles).toContain('state.md');
+    expect(lifecycleChange.createdFiles).toContain('spec.md');
+  });
+
+  it('reads a CRLF freestyle state.md as freestyle for the same-mode rerun and the mixed-mode refusal', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    const base = {
+      repoRoot,
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+    };
+    await scaffoldProject({ ...base, projectName: 'crlf', mode: 'freestyle' });
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'crlf');
+    const statePath = join(projectDir, 'state.md');
+    const crlfState = (await readFile(statePath, 'utf8'))
+      .replaceAll('\r\n', '\n')
+      .replaceAll('\n', '\r\n');
+    await writeFile(statePath, crlfState, 'utf8');
+    const before = (await readdir(projectDir)).sort();
+
+    await expect(
+      scaffoldProject({ ...base, projectName: 'crlf', mode: 'quick' }),
+    ).rejects.toThrow(
+      'Project crlf already exists as a freestyle project; scaffolding it as quick',
+    );
+    expect((await readdir(projectDir)).sort()).toEqual(before);
+
+    const rerun = await scaffoldProject({
+      ...base,
+      projectName: 'crlf',
+      mode: 'freestyle',
+    });
+    expect(rerun.createdFiles).toEqual([]);
+    expect(await readFile(statePath, 'utf8')).toBe(crlfState);
+  });
+
+  // m01 R3-1: a CRLF block whose last field is quoted used to fail YAML
+  // parsing (a trailing `\r` stuck to the closing quote) and read as
+  // spec-driven, so `project new --mode quick` added lifecycle files.
+  it.each([
+    ['a quoted mode', ['oat_workflow_mode: "freestyle"']],
+    [
+      'a quoted timestamp after the mode',
+      [
+        'oat_workflow_mode: freestyle',
+        'oat_project_state_updated: "2026-11-22T00:00:00Z"',
+      ],
+    ],
+  ])(
+    'reads a CRLF freestyle state.md whose last field is %s',
+    async (_label, fields) => {
+      const repoRoot = await createRepoRoot();
+      const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+      tempDirs.push(repoRoot, home);
+      const base = {
+        repoRoot,
+        home,
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-11-22',
+      };
+      await scaffoldProject({
+        ...base,
+        projectName: 'crlf',
+        mode: 'freestyle',
+      });
+      const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'crlf');
+      const statePath = join(projectDir, 'state.md');
+      const crlfState = ['---', ...fields, '---', '', '# State', ''].join(
+        '\r\n',
+      );
+      await writeFile(statePath, crlfState, 'utf8');
+      const before = (await readdir(projectDir)).sort();
+
+      await expect(
+        scaffoldProject({ ...base, projectName: 'crlf', mode: 'quick' }),
+      ).rejects.toThrow('already exists as a freestyle project');
+      expect((await readdir(projectDir)).sort()).toEqual(before);
+      const rerun = await scaffoldProject({
+        ...base,
+        projectName: 'crlf',
+        mode: 'freestyle',
+      });
+      expect(rerun.createdFiles).toEqual([]);
+      expect(await readFile(statePath, 'utf8')).toBe(crlfState);
+    },
+  );
+
   it('resolves partial template tiers independently for every file', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
@@ -2302,6 +2476,77 @@ describe('scaffoldProject', () => {
     );
   });
 
+  it('creates a freestyle scaffold: a minimal state.md with no lifecycle fields, AGENTS.md, shape.md and no documents', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'freestyle-mode',
+      mode: 'freestyle',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-11-21',
+      nowUtc: '2026-11-21T12:00:00.000Z',
+    });
+
+    expect(result.mode).toBe('freestyle');
+    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    const projectRoot = join(repoRoot, result.projectPath);
+    for (const file of [
+      'discovery.md',
+      'spec.md',
+      'design.md',
+      'plan.md',
+      'implementation.md',
+    ]) {
+      await expect(readFile(join(projectRoot, file), 'utf8')).rejects.toThrow();
+    }
+    await expect(stat(join(projectRoot, 'references'))).rejects.toThrow();
+
+    const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    expect(parseFrontmatter(state)).toEqual({
+      oat_workflow_mode: 'freestyle',
+      oat_project_created: '2026-11-21T12:00:00.000Z',
+      oat_project_state_updated: '2026-11-21T12:00:00.000Z',
+      oat_generated: false,
+    });
+    expect(state).toContain('# Project State: freestyle-mode');
+    expect(state).toContain('**Started:** 2026-11-21');
+    expect(state).not.toMatch(/\{\s*OAT_[A-Z0-9_]+\s*\}/);
+
+    const projectState = await getProjectState(projectRoot);
+    expect(projectState).toMatchObject({
+      workflowMode: 'freestyle',
+      phase: null,
+      phaseStatus: null,
+      recommendation: { skill: 'none' },
+    });
+  });
+
+  it('refuses to render the lifecycle state template for freestyle', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+    // A repository override that is the lifecycle state template, not a
+    // freestyle one, leaves lifecycle placeholders unresolved.
+    await copyFile(
+      join(repoRoot, '.oat', 'templates', 'state.md'),
+      join(repoRoot, '.oat', 'templates', 'state-freestyle.md'),
+    );
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: 'freestyle-lifecycle-template',
+        mode: 'freestyle',
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(
+      /unresolved OAT placeholder\(s\): \{ OAT_HILL_CHECKPOINTS \}/,
+    );
+  });
+
   it('creates goal mode artifacts with the goal plan source and the canonical Milestones header', async () => {
     const repoRoot = await createRepoRootWithRealTemplates();
     tempDirs.push(repoRoot);
@@ -2842,5 +3087,222 @@ describe('scaffoldProject', () => {
       { cwd: repoRoot, encoding: 'utf8' },
     );
     expect(headPlan).not.toContain('manual unrelated edit to plan');
+  });
+});
+
+/** The shaping topics, in order: one `shape.md` section each. */
+const FREESTYLE_SHAPING_TOPICS = [
+  'Goal',
+  'Brainstorm or discovery',
+  'Documents',
+  'Execution',
+  'Reviews',
+  'Commits, PRs and merges',
+  'User involvement',
+  'Reshape checkpoints',
+] as const;
+
+function markdownSection(content: string, heading: string): string {
+  const start = content.indexOf(`\n## ${heading}\n`);
+  expect(start, `section ## ${heading}`).toBeGreaterThanOrEqual(0);
+  const bodyStart = start + heading.length + 5;
+  const next = content.indexOf('\n## ', bodyStart);
+  return content.slice(bodyStart, next === -1 ? undefined : next);
+}
+
+/**
+ * The freestyle guidance a scaffold must carry in every scope: the OAT-owned
+ * AGENTS.md records rule for every scope, resolved with `oat project scope`,
+ * and a shape.md whose every topic is not yet shaped.
+ */
+function expectFreestyleGuidance(
+  agents: string,
+  shape: string,
+  projectName: string,
+): void {
+  expect(agents.split('\n')[0]).toBe(
+    'Read `shape.md` in this folder before acting: it holds how this project runs.',
+  );
+  expect(agents).toContain(`# Freestyle project: ${projectName}`);
+  expect(agents).not.toMatch(/^---$/m);
+  expect(agents).not.toContain('oat_template');
+  expect(agents).not.toContain('CLAUDE.md');
+  const records = markdownSection(agents, 'Where records live');
+  expect(records).toContain('oat project scope <project-path> --format value');
+  for (const scope of ['shared', 'synced', 'local']) {
+    expect(records, `records rule for ${scope}`).toMatch(
+      new RegExp(`^- \`${scope}\`: `, 'm'),
+    );
+  }
+  expect(records).toContain('`oat project push`');
+  expect(records).toContain('`oat internal commit-paths`');
+  expect(markdownSection(agents, 'Shaping and reshaping')).toContain(
+    "the `oat-project-freestyle` skill's own `references/reshape.md`",
+  );
+
+  expect(shape).toContain(`# Shape: ${projectName}`);
+  expect(shape).not.toMatch(/^---$/m);
+  expect(shape).not.toContain('oat_template');
+  expect(shape).toMatch(/^\*\*Last shaped:\*\* not yet shaped$/m);
+  const headings = [...shape.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
+  expect(headings).toEqual([
+    ...FREESTYLE_SHAPING_TOPICS,
+    'Project log',
+    'Undecided',
+  ]);
+  for (const topic of FREESTYLE_SHAPING_TOPICS) {
+    expect(markdownSection(shape, topic).trim(), topic).toMatch(
+      /_Not yet shaped\._$/,
+    );
+  }
+  expect(markdownSection(shape, 'Project log')).toContain(
+    '`oat project log append`',
+  );
+  expect(markdownSection(shape, 'Project log')).not.toContain(
+    '_Not yet shaped._',
+  );
+  expect(markdownSection(shape, 'Undecided').trim()).toMatch(/_None yet\._$/);
+}
+
+describe('freestyle guidance files at the bundle tier', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function bundleOnlyRepo(): Promise<{ repoRoot: string; home: string }> {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-scaffold-freestyle-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-freestyle-home-'));
+    tempDirs.push(repoRoot, home);
+    return { repoRoot, home };
+  }
+
+  it('commits AGENTS.md and shape.md with the shared scaffold', async () => {
+    const { repoRoot, home } = await bundleOnlyRepo();
+    initGitRepo(repoRoot);
+    await writeFile(join(repoRoot, 'README.md'), '# fixture\n', 'utf8');
+    execFileSync('git', ['add', 'README.md'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'initial'], { cwd: repoRoot });
+
+    const result = await scaffoldProjectImpl(
+      {
+        repoRoot,
+        projectName: 'freestyle-shared',
+        mode: 'freestyle',
+        scope: 'shared',
+        home,
+        commit: true,
+        refreshDashboard: false,
+        setActive: false,
+      },
+      { resolveDefaultScope: async () => 'shared' },
+    );
+
+    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.commitStatus).toBe('committed');
+    const projectRoot = join(repoRoot, result.projectPath);
+    expectFreestyleGuidance(
+      await readFile(join(projectRoot, 'AGENTS.md'), 'utf8'),
+      await readFile(join(projectRoot, 'shape.md'), 'utf8'),
+      'freestyle-shared',
+    );
+    expect(
+      execFileSync(
+        'git',
+        ['show', '--name-only', '--format=', 'HEAD', '--', result.projectPath],
+        { cwd: repoRoot, encoding: 'utf8' },
+      )
+        .trim()
+        .split('\n')
+        .sort(),
+    ).toEqual(
+      ['AGENTS.md', 'shape.md', 'state.md'].map(
+        (file) => `${result.projectPath}/${file}`,
+      ),
+    );
+  });
+
+  it('writes AGENTS.md and shape.md uncommitted for a local project', async () => {
+    const { repoRoot, home } = await bundleOnlyRepo();
+    initGitRepo(repoRoot);
+    await writeFile(join(repoRoot, 'README.md'), '# fixture\n', 'utf8');
+    execFileSync('git', ['add', 'README.md'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'initial'], { cwd: repoRoot });
+
+    const result = await scaffoldProjectImpl({
+      repoRoot,
+      projectName: 'freestyle-local',
+      mode: 'freestyle',
+      scope: 'local',
+      home,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.commitStatus).toBe('skipped_local_scope');
+    const projectRoot = join(repoRoot, result.projectPath);
+    expectFreestyleGuidance(
+      await readFile(join(projectRoot, 'AGENTS.md'), 'utf8'),
+      await readFile(join(projectRoot, 'shape.md'), 'utf8'),
+      'freestyle-local',
+    );
+  });
+
+  it('publishes AGENTS.md and shape.md in the synced project ref', async () => {
+    const fixture = await createSyncedFixture();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-freestyle-home-'));
+    tempDirs.push(fixture.rootDir, home);
+
+    const result = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'freestyle-synced',
+      mode: 'freestyle',
+      scope: 'synced',
+      home,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    const published = (file: string): string =>
+      execFileSync(
+        'git',
+        ['show', `refs/oat/projects/freestyle-synced:${file}`],
+        { cwd: fixture.originDir, encoding: 'utf8' },
+      );
+    expect(published('state.md')).toContain('oat_workflow_mode: freestyle');
+    expectFreestyleGuidance(
+      published('AGENTS.md'),
+      published('shape.md'),
+      'freestyle-synced',
+    );
+  });
+
+  it('keeps a spec-driven scaffold free of AGENTS.md and shape.md', async () => {
+    const { repoRoot, home } = await bundleOnlyRepo();
+
+    const result = await scaffoldProjectImpl(
+      {
+        repoRoot,
+        projectName: 'spec-driven-control',
+        home,
+        refreshDashboard: false,
+        setActive: false,
+      },
+      { resolveDefaultScope: async () => 'shared' },
+    );
+
+    expect(result.createdFiles).not.toContain('AGENTS.md');
+    expect(result.createdFiles).not.toContain('shape.md');
+    const projectRoot = join(repoRoot, result.projectPath);
+    expect(existsSync(join(projectRoot, 'AGENTS.md'))).toBe(false);
+    expect(existsSync(join(projectRoot, 'shape.md'))).toBe(false);
   });
 });

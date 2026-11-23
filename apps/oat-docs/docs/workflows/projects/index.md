@@ -12,10 +12,15 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 ## One record per project
 
 Every tracked project keeps one folder of artifacts, and each lifecycle stage
-adds to it. Solid boxes are files and folders every project has (split
-coordination parents excepted); dashed boxes
+adds to it. Solid boxes are files and folders every lifecycle project has
+(split coordination parents excepted); dashed boxes
 depend on the workflow mode or on a choice such as running a retrospective.
 [Lifecycle](lifecycle.md) shows the stage order and each mode's lane.
+
+A freestyle project runs none of these stages. Its folder holds `state.md`,
+the OAT-owned `AGENTS.md`, `shape.md`, empty `reviews/` and `pr/` folders, and
+the documents `shape.md` lists; see
+[Project Artifacts](../../reference/project-artifacts.md).
 
 === "Diagram"
 

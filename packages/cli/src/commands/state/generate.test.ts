@@ -1,9 +1,11 @@
+import { execFileSync } from 'node:child_process';
 import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { GitRunner } from '@commands/project/sync/git';
 import { getProjectState } from '@open-agent-toolkit/control-plane';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -671,6 +673,177 @@ describe('generateStateDashboard', () => {
     const dashboard = await readFile(result.dashboardPath, 'utf8');
     expect(dashboard).toContain('**proj-a** - discovery');
     expect(dashboard).toContain('**proj-b** - implement');
+  });
+
+  it('shows an active freestyle project by mode only and recommends nothing, matching the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/free';
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: 'freestyle',
+      oat_project_created: '"2026-11-21T00:00:00Z"',
+    });
+    // A lifecycle sibling keeps its phase line in Available Projects.
+    await writeStateFile(root, '.oat/projects/shared/proj-b', {
+      oat_phase: 'implement',
+    });
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    const { recommendation } = await getProjectState(join(root, projectPath));
+    expect(recommendation.skill).toBe('none');
+    expect({
+      skill: result.recommendedStep,
+      reason: result.recommendedReason,
+    }).toEqual(recommendation);
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    const summary = dashboard.slice(
+      dashboard.indexOf('## Active Project Summary'),
+      dashboard.indexOf('## Knowledge Status'),
+    );
+    expect(summary).toContain('| Mode | freestyle |');
+    for (const row of [
+      '| Phase |',
+      '| Status |',
+      '| HiLL Gate |',
+      '| Current Task |',
+      '| Docs Updated |',
+    ]) {
+      expect(summary).not.toContain(row);
+    }
+    expect(dashboard).toContain(`**none** - ${recommendation.reason}`);
+    expect(dashboard).toContain('**free** - freestyle');
+    expect(dashboard).toContain('**proj-b** - implement');
+    expect(dashboard).toContain(
+      '- `oat-project-freestyle` - Create or shape a freestyle project',
+    );
+  });
+
+  it('reads a quoted or commented freestyle mode from the parsed YAML in the summary and the project list', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/free';
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: '"freestyle"',
+    });
+    await writeStateFile(root, '.oat/projects/shared/other-free', {
+      oat_workflow_mode: "'freestyle' # no lifecycle",
+    });
+    // Control: a quick project whose body shows a freestyle example in a fence
+    // keeps its phase line.
+    const quickPath = join(root, '.oat/projects/shared/quick-fence');
+    await mkdir(quickPath, { recursive: true });
+    await writeFile(
+      join(quickPath, 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_workflow_mode: quick',
+        '---',
+        '',
+        '```yaml',
+        'oat_workflow_mode: freestyle',
+        '```',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('none');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Mode | freestyle |');
+    expect(dashboard).not.toContain('| Phase |');
+    expect(dashboard).toContain('**free** - freestyle');
+    expect(dashboard).toContain('**other-free** - freestyle');
+    expect(dashboard).toContain('**quick-fence** - implement');
+  });
+
+  it('reads a CRLF or padded freestyle mode as status does, in the summary and the project list', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const write = async (name: string, lines: string[], eol: string) => {
+      const dir = join(root, '.oat/projects/shared', name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'state.md'), lines.join(eol), 'utf8');
+    };
+    await write(
+      'crlf-free',
+      [
+        '---',
+        'oat_phase: discovery',
+        'oat_workflow_mode: freestyle',
+        '---',
+        '',
+      ],
+      '\r\n',
+    );
+    await write(
+      'padded-free',
+      [
+        '---',
+        'oat_phase: discovery',
+        'oat_workflow_mode: " freestyle "',
+        '---',
+        '',
+      ],
+      '\n',
+    );
+    await write(
+      'crlf-quick',
+      ['---', 'oat_phase: implement', 'oat_workflow_mode: quick', '---', ''],
+      '\r\n',
+    );
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/crlf-free',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('none');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Mode | freestyle |');
+    expect(dashboard).not.toContain('| Phase |');
+    expect(dashboard).toContain('**crlf-free** - freestyle');
+    expect(dashboard).toContain('**padded-free** - freestyle');
+    expect(dashboard).not.toContain('**crlf-quick** - freestyle');
+  });
+
+  it('still resumes a paused freestyle project through project open', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/free';
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: 'freestyle',
+      oat_lifecycle: 'paused',
+    });
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-21',
+      git: mockGit,
+    });
+
+    expect(result.recommendedStep).toBe('oat project open free');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('| Lifecycle | paused |');
   });
 
   it('renders legacy terminal cleanup without a continuation recommendation', async () => {
@@ -1414,6 +1587,10 @@ describe('generateStateDashboard goal routes', () => {
     expect(planning.markdown).toContain(
       '- `oat-project-goal` - Create a goal workflow project',
     );
+    // Quick Commands is mode-independent: a goal dashboard lists it too.
+    expect(planning.markdown).toContain(
+      '- `oat-project-freestyle` - Create or shape a freestyle project',
+    );
     expect(planning.markdown).not.toContain('Goal projects route');
 
     const implementing = await goalFixture(
@@ -1433,5 +1610,101 @@ describe('generateStateDashboard goal routes', () => {
     // The router owns the reviewing route the dashboard cannot see.
     expect(implementing.recommendation.skill).toBe('oat-project-implement');
     expect(implementing.recommendation.context).toBe('closeout m01: p01, p02');
+  });
+});
+
+describe('generateStateDashboard for an active synced project not pulled here (m01 J-2)', () => {
+  const cli = join(import.meta.dirname, '../../../dist/index.js');
+  const cleanups: Array<() => Promise<void>> = [];
+
+  afterEach(async () => {
+    await Promise.all(cleanups.map((cleanup) => cleanup()));
+    cleanups.length = 0;
+  });
+
+  function oat(cwd: string, home: string, args: string[]): string {
+    return execFileSync('node', [cli, ...args], {
+      cwd,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        HOME: home,
+        OAT_PROJECTS_DEFAULT_SCOPE: '',
+        OAT_PROJECTS_ROOT: '',
+      },
+    });
+  }
+
+  it.each(['freestyle', 'quick'])(
+    'gives the pull instruction status gives for an unpulled synced %s project in a fresh clone',
+    async (mode) => {
+      const fixture = await createSyncedFixture({ secondClone: true });
+      cleanups.push(fixture.cleanup);
+      const publisher = fixture.cloneB as string;
+      const home = join(fixture.rootDir, 'home');
+      // Another clone creates and publishes the project and its record.
+      oat(publisher, home, [
+        'project',
+        'new',
+        'proj',
+        '--mode',
+        mode,
+        '--scope',
+        'synced',
+        '--no-set-active',
+        '--no-dashboard',
+      ]);
+      execFileSync('git', ['push', '-q', 'origin', 'HEAD:main'], {
+        cwd: publisher,
+      });
+      const root = fixture.cloneA;
+      execFileSync('git', ['pull', '-q', 'origin', 'main'], { cwd: root });
+      const projectPath = '.oat/projects/synced/proj';
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeLocalConfig(root, { activeProject: projectPath });
+
+      const status = JSON.parse(
+        oat(root, home, ['--json', 'project', 'status']),
+      ) as {
+        project: { recommendation: { skill: string; reason: string } };
+      };
+      expect(status.project.recommendation.skill).toBe('oat project pull');
+
+      const result = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-11-22',
+        git: mockGit,
+      });
+      expect(result.recommendedStep).toBe('oat project pull proj');
+      expect(result.recommendedReason).toBe(
+        status.project.recommendation.reason,
+      );
+      expect(result.projectStatus).toBe('checkout absent');
+      const dashboard = await readFile(result.dashboardPath, 'utf8');
+      expect(dashboard).toContain('oat project pull proj');
+      expect(dashboard).not.toContain('oat-project-open');
+      expect(dashboard).not.toContain('directory missing');
+    },
+    60_000,
+  );
+
+  it('keeps the missing-directory recommendation for an active synced project with no record and no ref', async () => {
+    const fixture = await createSyncedFixture();
+    cleanups.push(fixture.cleanup);
+    const root = fixture.cloneA;
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/synced/never-recorded',
+    });
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-11-22',
+      git: mockGit,
+    });
+    expect(result.projectStatus).toBe('directory missing');
+    expect(result.recommendedStep).toBe('oat-project-open');
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain('**Warning:** directory missing');
   });
 });

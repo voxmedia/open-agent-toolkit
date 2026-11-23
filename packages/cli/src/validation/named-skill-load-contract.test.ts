@@ -836,6 +836,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'Names a reference file to read before execution, rather than invoking the owning skill.',
   },
   {
+    file: '.agents/skills/oat-project-freestyle/references/kickoff.md',
+    anchor: 'Adapting a Copied Template',
+    match:
+      'a line that names an `oat-project-*` skill as the way to execute, review or continue the document',
+    classification: 'non-executing',
+    skills: ['oat-project-implement', 'oat-project-plan'],
+    reason:
+      'Quotes lifecycle instructions in copied templates as text to remove; nothing here invokes the named skills.',
+  },
+  {
     file: '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
     anchor: 'Kickoff disclosure',
     match:
@@ -1124,6 +1134,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-lite',
       'oat-project-quick-start',
@@ -1139,6 +1150,24 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-implement'],
     reason:
       'Brief routing rule inside the router table; Step 6 owns the invocation boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 1: Read Project State',
+    match: '`oat-project-freestyle` shapes or reshapes it when the user asks',
+    classification: 'non-executing',
+    skills: ['oat-project-freestyle'],
+    reason:
+      'Freestyle stop: the router invokes nothing and names the shaping skill for the user.',
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Prerequisites',
+    match: 'shape or reshape it with `oat-project-freestyle`',
+    classification: 'non-executing',
+    skills: ['oat-project-freestyle'],
+    reason:
+      'Terminal handoff: this skill stops for a freestyle project and names the shaping skill for the user.',
   },
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
@@ -1763,6 +1792,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-lite',
       'oat-project-new',
@@ -2001,6 +2031,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-import-plan',
       'oat-project-lite',
@@ -2309,7 +2340,27 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     ],
   },
 
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Freestyle Projects',
+    match:
+      'with `oat-project-clear-active`, then run `oat-project-quick-start` again',
+    classification: 'non-executing',
+    skills: ['oat-project-clear-active', 'oat-project-quick-start'],
+    reason:
+      'Tells the user how to start a new quick project after the freestyle stop; this skill invokes neither.',
+  },
+
   // --------------------------------------------------------------- import-plan
+  {
+    file: '.agents/skills/oat-project-import-plan/SKILL.md',
+    anchor: 'Freestyle Projects',
+    match: 'clear the active project with `oat-project-clear-active`, then run',
+    classification: 'non-executing',
+    skills: ['oat-project-clear-active', 'oat-project-import-plan'],
+    reason:
+      'Tells the user how to import into a new project after the freestyle stop; this skill invokes neither.',
+  },
   {
     file: '.agents/skills/oat-project-import-plan/SKILL.md',
     anchor: 'Step 3: Normalize Into Canonical OAT plan.md',
@@ -2398,6 +2449,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-freestyle',
       'oat-project-goal',
       'oat-project-import-plan',
       'oat-project-lite',
