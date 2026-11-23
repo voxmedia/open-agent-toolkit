@@ -39,18 +39,18 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | complete | 1     | 1/1      |
-| p07   | complete | 1     | 1/1      |
-| p10   | complete | 1     | 1/1      |
-| p08   | complete | 1     | 1/1      |
-| p11   | complete | 1     | 1/1      |
-| p12   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | complete    | 1     | 1/1      |
+| p05   | complete    | 1     | 1/1      |
+| p07   | complete    | 1     | 1/1      |
+| p10   | complete    | 1     | 1/1      |
+| p08   | complete    | 1     | 1/1      |
+| p11   | complete    | 1     | 1/1      |
+| p12   | in_progress | 1     | 0/1      |
 
 **Total:** 9/10 phases accepted
 
@@ -1823,6 +1823,7 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - run/v1 · request=freestyle-projects-p11-implementation-1 · scope=p11 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p11-review-1 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p11 (task p11-t05 only, review round 1 L1) · reason: one test, smaller than a fix-mode resume · root model: claude-opus-5-5
+- run/v1 · request=freestyle-projects-p12-implementation-1 · scope=p12 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
