@@ -5,8 +5,9 @@ nothing after it. Every turn end gets one, partial turns and blockers included.
 The orchestrator files it verbatim and never edits it, so write it for a
 reader who has only the project records. Replace each placeholder; write
 "None." under a section with nothing to report. You are a lane: do not write
-project records (the ledger, the project log, `shape.md` or the project's
-documents); this report is how your work reaches them.
+project records (the ledger, the project log, `shape.md`, `decisions.md`,
+`memories.md` or the project's documents); this report is how your work
+reaches them.
 
 While you work, write each decision you make and each gotcha you hit to the
 lane notes file your brief names, as it happens, so they survive your own

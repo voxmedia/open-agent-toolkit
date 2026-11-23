@@ -1097,6 +1097,9 @@ describe('freestyle decisions and memories (p10)', () => {
     expect(report).toContain(
       'A read-only lane keeps no notes file and writes its decisions and learnings straight into this report.',
     );
+    expect(report).toContain(
+      "do not write project records (the ledger, the project log, `shape.md`, `decisions.md`, `memories.md` or the project's documents)",
+    );
   });
 });
 
