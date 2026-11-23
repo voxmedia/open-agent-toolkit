@@ -194,6 +194,17 @@ p07 accepted: review passed (0 critical, 0 high, 1 medium, 3 low); M1 and L1 fix
 
 p10 accepted: review passed (0 critical, 0 high, 0 medium, 2 low); L1 and L2 fixed root-inline in p10-t06; 0 fix loops, no re-review. freestyle-projects-p10-outcome
 
+### 2026-11-23 · project · friction · Scripted commit-paths calls must check the exit code
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m02-01
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-23T04:26:37Z
+
+Observation: at the p10 review fix the root ran commit-paths piped to tail inside a multi-step script; commitlint refused the 104-character header, the script recorded HEAD (the previous bookkeeping commit) as the fix commit, and the next steps committed a record and the phase bookkeeping on that wrong SHA. freestyle-projects-learning-m02-01
+Impact: two journal lines named the wrong commit and needed an appended correction and a head re-advance (f9edb6c1b, f4be7d8a9).
+Recommendation: run each commit-paths call on its own or under set -e without a trailing pipe, and keep commit headers under 100 characters (commitlint header-max-length).
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
