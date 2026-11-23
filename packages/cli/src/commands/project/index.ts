@@ -9,6 +9,7 @@ import { createProjectDeliveryCommand } from './delivery';
 import { createProjectDispatchCommand } from './dispatch';
 import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
 import { createProjectJournalCommand } from './journal-check/index';
+import { createProjectLaneCommand } from './lane/index';
 import { createProjectLinkedCommand } from './linked/index';
 import { createProjectLinksCommand } from './links';
 import { createProjectListCommand } from './list';
@@ -40,6 +41,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectDispatchCommand())
     .addCommand(createProjectDispatchCeilingCommand())
     .addCommand(createProjectJournalCommand())
+    .addCommand(createProjectLaneCommand())
     .addCommand(createProjectListCommand())
     .addCommand(createProjectLinkedCommand())
     .addCommand(createProjectLinksCommand())

@@ -1277,6 +1277,7 @@ describe('help output snapshots', () => {
         dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         journal                                      Validate the implementation journal (read-only)
+        lane                                         Manage a freestyle project's lane ledger (lanes.md)
         list [options]                               List tracked OAT projects
         linked                                       Manage a freestyle project's linked projects (not reviewer links; see \`oat project links\`)
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
