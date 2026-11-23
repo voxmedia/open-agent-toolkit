@@ -1550,12 +1550,16 @@ Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm 
 
 ### Task p08-t11: (review) Resume the adoption question before declaring the shape complete
 
-**Status:** pending
+**Status:** completed
+**Commit:** a29c7a576c30995f3b713853fc1f5910109859cf
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
 **Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-7)
 
 Intent: `SKILL.md:275`: when the child's goal is written and the session stops before the adoption question, every topic reads shaped. Resume then takes the complete-and-stop branch, although `shape.md` still says `adopted sections not yet confirmed`. Route that marker to `references/kickoff.md`'s confirmation question before the complete-and-stop branch.
 Files: `.agents/skills/oat-project-freestyle/SKILL.md` and its contract test.
 Proof: a contract test asserting the routing names the marker ahead of the complete-and-stop branch.
+Confirmed before the fix: SKILL.md Step 2 routed a resume with every topic shaped and no trigger to "Otherwise report that the shape is complete … and stop", and nothing in the routing read the `**Adopted from:**` marker, so an adopted child whose goal was written before the confirmation question stopped with `adopted sections not yet confirmed` in `shape.md`. Fix: a routing branch ahead of the reshape and complete-and-stop branches: "Every topic is shaped, and the `**Adopted from:**` line still says `adopted sections not yet confirmed` → read `references/kickoff.md`, ask its Before Shaping step 2 question whether any adopted section should differ, and continue at Step 3." (A topic still unshaped already reaches kickoff, whose step 2 asks that question next.) Files changed: `.agents/skills/oat-project-freestyle/SKILL.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (new test: the routing names the marker and the kickoff question, and does so before `Otherwise report that the shape is complete`). No skill bump: already 1.1.0 in this PR.
+Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation bundle-consistency` exit 0 (33 files, 1349 passed); `pnpm oat:validate-skills` exit 0; `oxfmt --check` and `oxlint` on the changed files exit 0. Can-fail: against the committed SKILL.md (before this task) the new test exits 1 (`routes the unconfirmed marker: expected -1 to be greater than -1`), and with the new branch moved after the complete-and-stop branch it exits 1 (`expected 476 to be less than 373`); restored.
 
 ### Task p08-t12: (review) Key accepted lane-report log entries by the flag each entry type takes
 
