@@ -188,7 +188,24 @@ Two optional flags let an interrupted append be replayed safely:
   glued to varying text such as a timestamp never matches its earlier self.
   Deduplication does not require `--commit`.
 - `--commit` — stage and commit the log after appending, retrying a bounded
-  three attempts when the failure is a transient `.git/index.lock`.
+  three attempts when the failure is a transient `.git/index.lock`. Only the
+  log is committed; when the code checkout does not track it (a synced
+  project's nested worktree, or a local project) the result is
+  `nothing-to-commit`. Nothing is pushed.
+
+In a freestyle project `--idempotency-key` is optional. Without one, the
+append derives a key, `log-` and 12 hex digits, from every entry field the
+caller passes (whether it is structural, type, scope, area or ref, producer, category, source, origin,
+whether `--time` was given, subject, source project, version note and body),
+never from the heading date, the time of day or `**Recorded:**`. Running the
+same command again therefore reports `already-appended`, while changing any
+field, such as the body, the ref or `--source-project`, writes a new entry.
+A key matches only as a whole word, bare or as `key:<key>`, so `release-12`
+never matches `release-123`. A derived or given key the body lacks is added as
+`key:<key>`, at the end of a one-line body or as its own paragraph after a
+multiline one, and `--json` reports the key as `idempotencyKey`. In every other
+mode the key stays optional with no derived default, and a key missing from
+the body is refused.
 
 Together they are the recovery entry point for a gate whose project-log
 finalization could not commit. See

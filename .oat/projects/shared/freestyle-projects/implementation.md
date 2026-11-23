@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-23
-oat_current_task_id: p09
+oat_current_task_id: p12
 oat_generated: false
 oat_template: false
 ---
@@ -49,9 +49,10 @@ oat_template: false
 | p07   | complete | 1     | 1/1      |
 | p10   | complete | 1     | 1/1      |
 | p08   | complete | 1     | 1/1      |
-| p09   | pending  | 1     | 0/1      |
+| p11   | complete | 1     | 1/1      |
+| p12   | complete | 1     | 1/1      |
 
-**Total:** 8/9 phases accepted
+**Total:** 10/10 phases accepted
 
 ---
 
@@ -1608,6 +1609,204 @@ Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head a
 
 **Status:** pending
 
+Retired at the m03 re-alignment (2026-11-23): the first real run showed the lane report's Tested SHA already catches the mismatches evidence fields targeted, and no incident needs more fields (plan.md Decisions: m03 re-alignment). m03 is p11 and p12. The ID is not reused; this stub stays because the journal is append-only.
+
+---
+
+## Phase p11: Record upkeep commands
+
+**Status:** completed
+**Base:** 929c2ea3db083727022af454c65c180c0ef67925
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Head:** 156e7bb668212b63b8bdaa64ed36ed042d557165
+
+Phase verification at `071b3fb61` (the last code commit; the head adds only the p11-t04 journal record, which no gate reads), clean tree but the gitignored `references/`, isolated `HOME` for tests: `pnpm check` exit 0 (every package `check` and `oat-docs:check` cache miss, executed; builds replayed from the `pnpm build` run at the same tree); `pnpm type-check` exit 0 (5 of 11 tasks replayed builds, every `type-check` executed); `bash scripts/with-isolated-home.sh pnpm test` exit 0 (every `test` task cache miss, executed: cli 458 files, 10014 tests; control-plane 14 files; docs-config 5, docs-theme 10, docs-transforms 5 files; oat-docs; then `test:smoke` 165, `test:skills` 754 and `test:scripts` 7); docs index regenerated with no diff. Not run, owned by p12 (m03 release): `check:skill-bumps`, `release:*`, `build:docs`; `pnpm lint` not run (no change under `tools/smoke` or `.agents/skills`). Two host restarts interrupted the run before any commit; the work resumed from the uncommitted tree, and the first lane test run (exit 137) was killed by the second restart, not by a failure.
+
+Added by the m03 amendment (2026-11-23), from the first real freestyle run (plan.md Decisions: m03 re-alignment; Outcome 9).
+
+Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group (p12 edits the same project `AGENTS.md` template and docs, so the two phases are not independent). Root fan-out fails the independence test: `lane set --commit`, the derived log key and the head-ahead rule share the CLI build, the freestyle contract tests and the AGENTS.md Records commands section. One phase implementer.
+
+### Task p11-t01: lane set --commit commits lanes.md and the filed report by exact path
+
+**Status:** completed
+**Commit:** 658c9ccd69022ee6a880bb3979b3549f695570c3
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: Outcome 9, first clause. `oat project lane set --commit` commits `lanes.md` and the report it filed by exact path through the shared exact-path commit helper, following each scope's record route as `log append --commit` does; no push.
+- Files: `packages/cli/src/commands/project/lane/{commit.ts,index.ts,lane.test.ts}`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane` exit 0 (2 files, 39 tests); CLI `check` and `type-check` exit 0. Tests: in a shared project with a modified tracked `README.md` and an untracked `scratch.txt`, `lane set l01 --commit` makes one commit (`chore(oat): record lane l01 u001`) holding only `lanes.md`, and `--report <file> --head <sha> --commit` one holding only `lanes.md` and `lane-reports/l01-d01.md`; both unrelated files stay modified and untracked with their content. A synced project reports `nothing-to-commit` with the code branch's and the nested worktree's heads unchanged and `lanes.md` left untracked in the nested worktree; a local project reports `nothing-to-commit` with HEAD unchanged.
+- Decisions: the scope route mirrors `log append --commit`, observed with the branch build before writing the code (scratch repository, isolated `HOME`): that command checks `git status --porcelain -- <log>` in the code checkout and reports `nothing-to-commit` for a synced project (the nested worktree is ignored by the code branch; `oat project push` then committed and published the log) and for a local one (ignored). `lane set --commit` makes the same check over its exact paths and otherwise calls the shared `commitExactPaths` helper, so no scope-specific branch exists. The text output says what was committed and that nothing was pushed, or that the scope keeps the records off this branch; a failed commit leaves the written ledger, prints the error and exits 1, and `--json` carries `commit` (`outcome`, `paths`, `commit`). The operation identity is `lane-set:<lanes.md path>:<update ID>`, unique per update.
+
+### Task p11-t02: Optional, content-derived log key in a freestyle project
+
+**Status:** completed
+**Commit:** 451772bea20b78e89376245018e73f53f7292636
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: Outcome 9, second clause. In a freestyle project `oat project log append` takes `--idempotency-key` as optional, derives a key from every caller-supplied entry field when none is given, and writes a derived or given key into the body when the body lacks it; other modes are unchanged.
+- Files: `packages/cli/src/commands/project/log/{append.ts,freestyle.test.ts}`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log` exit 0 (8 files, 323 tests); the wider `src/commands/project src/commands/commands.integration.test.ts src/commands/gate src/commands/init/tools/shared` run exit 0 (109 files, 3526 tests); CLI `check` and `type-check` exit 0. New tests on a freestyle fixture, each run on a later clock reading: the same keyless structural entry (with `--time`) twice appends once, reports `already-appended` with the same `log-<12 hex>` key, and the stored body ends `key:<key>`; a keyless judgment entry with `--category`/`--source` dedupes although its `**Recorded:**` differs; changing only the body, only `--ref`, or only `--source-project` appends a second entry with a different key, and replaying that changed command appends nothing; a given `--idempotency-key` overrides the derived one (a different body under it is `already-appended`) and is written into a body that lacks it; a body already carrying the given key gets no `key:` suffix. Existing-mode control (quick): the keyless append twice writes two entries with unchanged bodies and no `idempotencyKey`, and a key missing from the body is still refused with the existing message. Four existing freestyle tests that pinned keyless bodies byte for byte now expect the ` key:<key>` suffix the JSON reports, and the p03-t04 head-only-key refusal test runs on a quick fixture (its freestyle behavior is now the insertion).
+- Can-fail: adding `randomUUID()` to the derived key's hash input (a random key) failed the five dedupe tests (`expected 'appended' to be 'already-appended'`) while the override, keyed-body and existing-mode tests still passed; restored.
+- Decisions: the key hashes every caller-supplied field, including `--origin` and `--version-note` (also caller-supplied) and whether `--structural` and `--time` were passed, never the heading date, the `--time` value or `**Recorded:**`; values are trimmed. The key goes at the end of the caller's body as one word, `key:<key>`, so the existing whole-word scan finds it and a structural event head never carries it; for a judgment entry a `--source` equal to the key already satisfies the scan, as before. `--json` reports `idempotencyKey` only for a freestyle project, and `--commit` uses it as the commit identity when no key was given. Freestyle is read from the target project's `state.md`, so `oat project linked ack`, which appends a structural entry to a freestyle parent's log, now also gets a derived key and a retried ack appends once.
+
+### Task p11-t03: Keep the head-ahead check quiet while the lane's dispatch is open
+
+**Status:** completed
+**Commit:** 95d2fd76636c88e190df8999d1062274dc20284b
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: Outcome 9, third clause. `lane set` and `status` do not flag a lane whose `dispatch:` line is `open` (work in flight) and keep flagging once it is `reported` or `no-report`.
+- Files: `packages/cli/src/commands/project/lane/{head.ts,lane.test.ts}`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane src/commands/project/status.test.ts` exit 0 (3 files, 77 tests); CLI `check` and `type-check` exit 0. New test: a lane in its own worktree two commits past its d01 report: `--dispatch` (d02 open) reports `headCheck: null`, and a later `lane set` and `status` print no warning; `--no-report` closes d02 and both print `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>`; `--dispatch` (d03 open) is quiet again in `status`; `--report <file> --head <old head>` closes d03 as `reported` and both flag it. The existing `unknown` test (a branch this clone lacks) now closes its dispatch with `--no-report` before reading `headCheck`, since an open dispatch is no longer checked.
+- Can-fail: replacing the `laneDispatch(block).status !== 'open'` clause with `(laneDispatch(block), true)` failed the new test on the open dispatch (`expected { lane: 'l01', … } to be null`); the other four head-ahead tests passed; restored.
+- Decisions: the rule is one clause in `headCheckApplies`, shared by `lane set` and `status`, so an open dispatch is not compared at all (no git calls, `headCheck` null in `--json`) rather than compared and hidden. The ledger parser already refuses a block without a valid `dispatch:` line, so `laneDispatch` cannot throw here.
+
+### Task p11-t04: Name --commit and the optional key in the project AGENTS.md and the docs
+
+**Status:** completed
+**Commit:** 071b3fb61a7784fe69bb755941235c174ad50eef
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: the documentation half of p11's Intent: the project `AGENTS.md` template's `## Records commands` names `--commit` on `lane set` and `log append` beside the push step, and the optional key; the CLI docs pages that document those commands describe `--commit`, the derived key and the open-dispatch rule.
+- Files: `.oat/templates/project-agents.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/execution/{freestyle-projects.md,project-log.md}`.
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template` exit 0 (36 files, 1498 tests, the bundle-tier scaffold tests against the rebuilt bundle included); docs index regenerated with no diff. New contract tests (`freestyle record upkeep commands (p11)`): the `## Records commands` bullet naming `--commit` on `oat project lane set` and `oat project log append` precedes the `oat project push` bullet and says exact path with other changes uncommitted, nothing to commit in synced or local, neither pushes, and `git push` (shared) or `oat project push` (synced); both commands have `--commit`; the log bullet's optional-key sentence verbatim; the heading list is unchanged.
+- Decisions: no new `##` heading (p12 adds `## Lane brief`, whose missing-heading refresh carries these lines into an m02-era `AGENTS.md`). The push guidance defers to `shape.md`, as `## Where records live` already does. Docs: the freestyle page's opening paragraph names `--commit` on both commands and each scope's result, the lane field list points to it, and the head-ahead paragraph names the open-dispatch rule (`headCheck` null); the project-log page describes `--commit` per scope and the freestyle derived key (fields, format, `key:<key>`, the unchanged rule in other modes); the CLI reference `lane set` and `log` bullets carry the same. No skill prose changed, so no skill bump or skill test applies; package and skill bumps for m03 are p12's.
+
+### Task p11-t05: Cover a keyless log append --commit in a freestyle project
+
+**Status:** completed
+**Commit:** 156e7bb668212b63b8bdaa64ed36ed042d557165
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p11 review `freestyle-projects-p11-review-1` L1: no test covered `log append --commit` without a key in a freestyle project, a path p11-t02 changed (the commit identity now carries the derived key).
+- Files: `packages/cli/src/commands/project/log/freestyle.test.ts` (one test in the p11 derived-key block: a keyless structural entry with `--commit` commits only the project log; the replay reports `already-appended` with the same key, appends nothing and moves no HEAD).
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/freestyle.test.ts` exit 0 (46 tests); CLI oxlint exit 0; oxfmt check clean after the commit hook.
+- Can-fail: deriving the key from `normalized + randomUUID()` failed the new test on the replay (`expected { status: 'appended', … } to match object { status: 'already-appended', … }`); restored. Dropping the derived key from the commit identity alone did not fail it, because that identity only finalizes a gate receipt; the test pins the commit and the replay, not the identity.
+
+Late fix p11-t05 (p11 review round 1: L1) at `156e7bb66`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `5e7732ccf`.
+
+### Review Received: p11
+
+- Review `freestyle-projects-p11-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `929c2ea3d..5e7732ccf`, artifact `reviews/archived/p11-code-review-2026-11-23T174803Z.md` (local-only): 0 critical, 0 high, 0 medium, 1 low; reconnaissance not attempted. The reviewer re-ran the lane and freestyle log suites (85 passed) and probed the branch build: `lane set --commit` committed only `lanes.md` with an unrelated staged and an unrelated modified file left alone; a keyless freestyle append with `--commit` committed only the log and its replay appended nothing; a quick-mode control still appends a keyless entry twice and refuses a key missing from the body.
+- L1 (Low, test coverage): no test for a keyless `log append --commit` in a freestyle project. Fixed in p11-t05.
+- **Finding classes:** L1 accepted-requirement (Outcome 9: a retried command appends once, with `--commit` named in the same outcome).
+- Outcome: passed (0 critical, 0 high). The fix was not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p11-t05 record.
+
+---
+
+## Phase p12: Adopted plans, proportionality checkpoints and lane brief
+
+**Status:** completed
+**Base:** db8eb5033c3ecb557635e8ca57590e483e203de3
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Head:** 22212dabbee17dba426eaf4794c4d4e7c5d81566
+
+Phase verification at the head on a clean tree (only the untracked `references/`), `origin/main` `4dc1b8687` (the merge base, unchanged), in Definition of Done order with each exit code captured (logs `references/analysis/p12-gate-*.log`, local-only): `pnpm check` exit 0 (every package `check` and `oat-docs:check` a cache miss; dependency builds replayed); `pnpm type-check` exit 0 (every `type-check` a cache miss); `bash scripts/with-isolated-home.sh pnpm test` exit 0, every `test` task a cache miss (cli 458 files, 10022 tests; control-plane 14 files; docs-config 5, docs-theme 10, docs-transforms 5 files; oat-docs 93; `test:smoke` 165, `test:skills` 754, `test:scripts` 7); `pnpm build` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter='!oat-docs' --force` exit 0 (5 tasks, 0 cached); `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked); `git fetch origin main` then `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.58); `pnpm build:docs` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter=oat-docs... --force` exit 0 (6 tasks, 0 cached); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Also exit 0: `pnpm lint` and `pnpm format` (every package task a cache miss), the skill-prose `vitest run src/commands/init/tools/shared src/validation` under the isolated `HOME` (33 files, 1360 tests), `pnpm test:skills` (754), `pnpm oat:validate-skills` (69 OK).
+
+m02-era resume (exit evidence), transcript `references/analysis/p12-m02-resume-transcript.txt` (local-only): in a scratch repository with an isolated `HOME` and `oat` pointing at the branch build (0.3.58 at this head), `oat project new demo --mode freestyle --scope shared`, then `AGENTS.md` re-rendered from the m02 template (`4dc1b8687`, 11 headings, no `--commit` line) and committed. The skill's missing-heading refresh block, extracted verbatim from `SKILL.md`, reported `it lacked: ## Lane brief` and replaced the file: 12 headings with `## Lane brief` after `## Dispatch`, the `--commit` bullet in `## Records commands`, byte-identical to the `AGENTS.md` the branch build scaffolds; only `AGENTS.md` changed. A second run left it untouched, and `oat template resolve lane-brief` resolved from the bundle tier with the five lane brief headings.
+
+Recovery: 0/10 used, none pending. No nested dispatch.
+
+Added by the m03 amendment (2026-11-23), from the first real freestyle run (plan.md Decisions: m03 re-alignment; Outcome 10). Also the m03 release phase: skill bump and lockstep package versions.
+
+Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p12 is the last m03 phase. Root fan-out fails the independence test: the intake and checkpoint text, the `shape.md` template, `lane-brief.md`, the project `AGENTS.md` `## Lane brief` section, their contract tests, the docs and the version bump share the bundle, the freestyle contract test file and the release checks. One phase implementer.
+
+### Task p12-t01: Add the bundled lane-brief.md and the project AGENTS.md Lane brief section
+
+**Status:** completed
+**Commit:** ade9e3a5f0bde0c97d0185d0bac8da2fa0780a00
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: Outcome 10, last clause. A bundled `lane-brief.md` holds the standing lane boundaries; a new `## Lane brief` section in the project `AGENTS.md`, linked from Dispatch, names how to copy it and that each dispatch brief extends it.
+- Files: `.oat/templates/{lane-brief.md,project-agents.md}`, `packages/cli/scripts/bundle-inputs.mjs`, `packages/cli/src/commands/tools/shared/pack-manifest.ts`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- `lane-brief.md` (no frontmatter, embedded whole like `lane-report.md`): `## Your dispatch` (what the dispatch brief adds: IDs, the `AGENTS.md` and `shape.md` paths, worktree and branch or `paths:`, notes path, task, report shape), `## Project records` (writes no records, each named; the final message is the report; a PR holds code only), `## Lane notes`, `## Paths and commits` (exact-path commits in the orchestrator's checkout; every commit listed), `## Report` (final message, every turn end, Tested SHA equals the delivered head, steering recorded). Each rule restates what the project `AGENTS.md` Dispatch, Lane reports and Lane placement sections and `lane-report.md` already say. Added to the bundle and the workflows pack beside `lane-report.md`, as p07 did.
+- Project `AGENTS.md`: a new `## Lane brief` section after `## Dispatch` names the boundaries, `oat template resolve lane-brief --output <path>`, embedding it whole in every dispatch brief that extends it with the dispatch's facts and task and the report shape, and the repository and user override tiers. Dispatch now says each brief extends the standing lane brief (see Lane brief) and adds the task; the "writes no project records" item moved into the lane brief. Records commands names `lane-brief` and `lane-report` for a dispatch brief.
+- Proof: `pnpm build` exit 0 (the bundle carries `assets/templates/lane-brief.md`); `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template` exit 0 (36 files, 1501 tests); `pnpm --filter @open-agent-toolkit/cli check` exit 0. New `freestyle lane brief (p12)` tests: the lane brief's headings and boundaries with no frontmatter; the AGENTS.md `## Lane brief` section and the Dispatch and Records commands links; a dispatch brief built under an isolated `HOME` with no repository tier from the bundled `lane-brief` and `lane-report` (both `tier: 'bundle'`, `path: null`), whose headings are the lane brief's, the dispatch's own section, then the report's, with the single-writer rule stated once. `AGENTS_HEADINGS` gains `Lane brief`; the p11 "no new heading" test is removed (the heading list test covers it); the p07 and p10 Dispatch pins follow the reworded sentence; the p07 flag scan also reads the Lane brief section.
+- Can-fail: un-heading `## Lane notes` in `lane-brief.md` failed the headings test (`expected [ 'Your dispatch', …(3) ] to deeply equal [ 'Your dispatch', …(4) ]`); dropping the `oat template resolve lane-brief --output <path>` sentence from the AGENTS.md section, and dropping `(see Lane brief)` from Dispatch, each failed the Lane brief section test on that string; restored.
+
+### Task p12-t02: Adopted-plan intake and the two checkpoint questions
+
+**Status:** completed
+**Commit:** de881a76e0934127f6f4c1d56be4498f6ca4079b
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: Outcome 10, first two clauses, plus `--commit` in the skill text and the `oat-project-freestyle` bump.
+- Files: `.agents/skills/oat-project-freestyle/{SKILL.md,references/kickoff.md,references/reshape.md}`, `.oat/templates/{project-agents.md,shape.md}`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- Intake: `kickoff.md` topic 3 (Documents) gains `#### Adopting an Existing Plan`: keep the plan's changes, order and acceptance as written; record each process item (bookkeeping, gates, branches, review cadence, PR size) beside the plan under `## Documents` as kept, mapped to a freestyle record, or dropped, carrying kept and mapped items into their topics; a required gate is kept or mapped to an equivalent check, only discretionary process dropped; the reshape reference's proportionality tests help decide what to drop.
+- Checkpoint questions: `reshape.md` gains `## Checkpoint Questions` (both questions, the three tests, the 3x prompt-not-rule, "a bare no change answers neither", a "no" to the owner as a recommendation even unattended; the change follows the Procedure once the owner agrees) and Procedure step 1 asks them first at a checkpoint. The `shape.md` template's `## Reshape checkpoints` comment carries both questions and tests, so a scaffolded project keeps them; the project `AGENTS.md` `## Shaping and reshaping` names them for the orchestrator at a checkpoint and at plan acceptance (no new heading); kickoff topic 8 points to them.
+- `--commit`: `SKILL.md` Step 5 (the handoff to the orchestrator's record upkeep) and `reshape.md` step 7 (the reshape's log append) name it; neither pushes.
+- Skill bump: `oat-project-freestyle` `metadata.version` 1.1.0 to 1.2.0 (the only skill p12 changes).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template` exit 0 (36 files, 1505 tests); `pnpm oat:validate-skills` exit 0 (69 OK); `bash scripts/with-isolated-home.sh pnpm test:skills` exit 0 (754); `pnpm exec oxlint tools/smoke .agents/skills` exit 0; `pnpm --filter @open-agent-toolkit/cli check` exit 0; `oxfmt --check` on the changed Markdown exit 0. New tests in `freestyle adopted plans and checkpoint questions (p12)`: the intake as the last Documents subsection with its keep, record and required-gate sentences; both questions and tests in `reshape.md` and the Procedure pointer; both in the `shape.md` template and the AGENTS.md section, with the plan-acceptance moment and the "no" rule; `--commit` in `SKILL.md` and `reshape.md`.
+- Can-fail: removing the required-gate item from `kickoff.md` failed the intake test on that sentence; removing question (b) from `reshape.md`, and separately its 3x test, each failed the reshape test on the removed string; removing the questions from the `shape.md` comment and the checkpoint paragraph from AGENTS.md each failed the template test (`shape.md:` and `AGENTS.md:` labels, plan-acceptance string); all restored byte for byte (`cmp`).
+- Decisions: the intake records the kept/mapped/dropped list under `## Documents` beside the plan, the section where the plan is listed, instead of a new `shape.md` heading (a new heading would change the shaping topics the template and the skill pin). The checkpoint answer is given to the owner, not written into a new record.
+
+### Task p12-t03: Document the lane brief, the adopted-plan intake and the checkpoint questions
+
+**Status:** completed
+**Commit:** 27930e65e28e47d11a9083c155342e89fffac746
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: the freestyle docs pages for p12's intake, checkpoint questions and `lane-brief.md`.
+- Files: `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/index.md` (regenerated).
+- Running a Freestyle Project: Lanes and lane reports describes `lane-brief.md` (its five sections, copying and embedding it first, what each brief adds) before the report shape, and names both templates' override tiers; a new `## Reshape checkpoints` section gives both questions and their tests, the "no" rule and owner agreement; Older projects says the refresh brings in `## Lane brief` with the `--commit` lines; the page description names the lane brief and reshape checkpoints. Starting projects (`oat-project-freestyle`): one paragraph on the adopted-plan intake and the checkpoint questions, linking the new section. CLI reference: `template resolve` names `lane-brief` beside `lane-report`.
+- Inspected, unchanged: `project-artifacts.md`, `oat-directory-structure.md`, `workflows/projects/index.md`, `choose-workflow.md` (they list project files, not templates; `lane-brief.md` is a template, never a project file); `file-locations.md` (template tiers in general).
+- Proof: `oxfmt --write` then `pnpm --filter oat-docs check` exit 0 (markdownlint and format; catalog current at 74 skills); `pnpm --filter oat-docs docs:validate` exit 0 (0 errors; no new warning: the freestyle page keeps its one provenance warning on the lane-notes path, and `starting-projects.md`'s existing page-length warning grows from 712 to 723 lines); `docs nav sync --target-dir apps/oat-docs --check` exit 0; `docs generate-index` regenerated the one changed description.
+- Note: this record was opened after its commit rather than before (no lookahead needed; the content is unchanged).
+
+### Task p12-t04: Release: lockstep package versions and provider views
+
+**Status:** completed
+**Commit:** 0ad3535e0f18a5369e6fb087e9ce47f1faab1099
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: the m03 lockstep bump of the five public packages above `origin/main`, and provider views refreshed with the branch build.
+- Inventory (`origin/main` `4dc1b8687`, the merge base, at 0.3.57; main changed none of p12's paths since): m03 changes one canonical skill, `oat-project-freestyle` (bumped once to 1.2.0 in p12-t02), no agent role, no `.agents/docs/` file, the bundled templates and CLI source, which put the CLI release surface in the lockstep policy.
+- Lockstep: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` 0.3.57 to 0.3.58; `packages/cli/assets/public-package-versions.json` followed from `pnpm build` (5 tasks, 0 cached), and `.oat/sync/manifest.json` `oatVersion` from `node packages/cli/dist/index.js sync --scope project` exit 0 ("Manifest version refreshed; no content changes required": `.claude/skills/oat-project-freestyle` links the canonical skill, so no view changed).
+- Files: the five `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` exit 0 (41 files, 1544 tests); `oxfmt --check` on the changed files exit 0. After the commit and `git fetch origin main`: `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked) and `pnpm release:check-versions` exit 0.
+
+### Task p12-t05: Fix p12 review findings (M1, L1)
+
+**Status:** completed
+**Commit:** e94901bbd7ee4082b1f11ea0059dcee6cd2b106f
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p12 review `freestyle-projects-p12-review-1` M1 (complexity: a dispatch brief embeds `lane-brief.md` and `lane-report.md` whole, and the report's preamble repeated the lane brief's standing rules, against the incident of long briefs and the AGENTS.md promise that briefs never repeat them) and L1 (the project-log docs listed the derived-key fields without `structural`, which `deriveProjectLogKey` hashes).
+- Files: `.oat/templates/lane-report.md` (preamble keeps only the report's own rules, builds Decisions and Learnings from the lane notes file, and names the lane brief for the standing rules), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (the p10 lane-notes test now pins that pointer, that the report no longer carries the no-records and never-commit rules, and that the lane brief does), `apps/oat-docs/docs/workflows/projects/execution/project-log.md` (adds "whether it is structural").
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/commands/project/lane src/commands/template src/validation` exit 0 (36 files, 1415 tests); `pnpm check` exit 0 (11 cache misses executed); `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli test` exit 0 (458 files, 10022 tests); `pnpm test:skills` exit 0; docs index regenerated with no diff.
+- Can-fail: re-adding "You are a lane: do not write project records." to the report preamble failed the updated test (`expected '# Lane report: … not to contain 'do not write project records'`); restored.
+
+Late fix p12-t05 (p12 review round 1: M1 and L1) at `e94901bbd`. p12 is the last m03 phase, so the head advanced under the late-fix rule; the reviewed head stays `6d5e523ac`. The full Definition of Done list in the p12 head summary ran at `e901a23b0`; p12-t05 changes one bundled template, one contract test and one docs line, and the checks above cover them; `release:*` and `build:docs` inputs other than that docs line are unchanged.
+
+### Task p12-t06: Fix m03 integrated review findings (I-1 to I-6)
+
+**Status:** completed
+**Commit:** 22212dabbee17dba426eaf4794c4d4e7c5d81566
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: m03 integrated review cycle 1 (`reviews/archived/m03-integrated-review-2026-11-23T185019Z.md`, local-only). I-1 freestyle log keys match exactly (bare or `key:<key>`) for the body check, replay and commit verification; other modes keep their matcher. I-3 `lane set --commit` finds an untracked `lanes.md` when `status.showUntrackedFiles=no`. I-4 an inserted key after a multiline body is its own paragraph. I-2 freestyle adds no review gate, but a review an adopted plan requires must still pass. I-5 the head-ahead check is for closed dispatches. I-6 the reshape example body no longer repeats `$RESHAPE_ID`.
+- Files: `packages/cli/src/commands/project/log/append.ts` (`isExactKeyWord`; `exact` on `findProjectLogEntryByIdempotencyKey`, the commit identity and `freestyleKey`; paragraph separator; help text), `packages/cli/src/commands/project/lane/commit.ts`, tests in `log/freestyle.test.ts` (two) and `lane/lane.test.ts` (one), `.agents/skills/oat-project-freestyle/references/{kickoff,reshape}.md`, `.oat/templates/{shape,project-agents}.md`, docs `reference/cli-reference.md`, `workflows/projects/execution/project-log.md`, `workflows/projects/reviews/index.md`.
+- Proof: `pnpm check`, `pnpm type-check`, `pnpm build`, `pnpm lint` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli test` exit 0 (458 files, 10025 tests); `pnpm test:skills` exit 0; `pnpm build:docs` exit 0 and the docs index regenerated with no diff; after the commit, `git fetch origin main`, `pnpm run check:skill-bumps`, `pnpm release:check-versions` and `pnpm release:validate` exit 0 (`oat-project-freestyle` 1.2.0 and lockstep 0.3.58 already bumped on this branch).
+- Can-fail: replay with `exact` forced off fails the exact-key test twice over (`expected 'appended' to be 'already-appended'` for the bare `dispatch-47` retry; after removing a trailing period from the fixture, `expected 'already-appended' to be 'appended'` for `release-12`); a single-space separator fails the code-fence test; dropping `--untracked-files=all` fails the new lane test (`expected 'nothing-to-commit' to be 'committed'`). Each restored.
+
+Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last m03 phase, so the head advanced under the late-fix rule; the p12 phase review's reviewed head stays `6d5e523ac`.
+
+### Review Received: p12
+
+- Review `freestyle-projects-p12-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `db8eb5033..6d5e523ac`, artifact `reviews/archived/p12-code-review-2026-11-23T181920Z.md` (local-only), also the phase's fresh-context docs review against the code (p12's docs and p11's `071b3fb61`): 0 critical, 0 high, 1 medium, 1 low; reconnaissance not attempted. Every Outcome 10 clause implemented and pinned; the intake keeps or maps required gates; `lane-brief.md` restates existing rules only; the m02-era refresh carries `## Lane brief` and the `--commit` lines; skill and lockstep bumps complete; contract tests re-run (67 passed).
+- M1 (Medium, complexity): the report preamble duplicated the lane brief's standing rules. Fixed in p12-t05.
+- L1 (Low, docs): derived-key field list missing `structural`. Fixed in p12-t05.
+- **Finding classes:** M1 accepted-requirement (Outcome 10: a lane brief each dispatch brief extends instead of repeating; the incident of about 150-line briefs) · L1 regression (docs overstated nothing but omitted a hashed field, against `append.ts` `deriveProjectLogKey`).
+- Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p12-t05 record.
+
 ---
 
 ## Orchestration Runs
@@ -1655,6 +1854,14 @@ Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head a
 - Root-inline phase: p08 (task p08-t13 only, an N-1-class claim hint the fix implementer reported) · reason: one format function, one refusal string and three test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 - Root-inline phase: p08 (task p08-t14 only, m02 confirm-round P-1 to P-3) · reason: a four-line quoting helper, one marker-file check and their test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 
+- run/v1 · request=freestyle-projects-p11-implementation-1 · scope=p11 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p11-review-1 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p11 (task p11-t05 only, review round 1 L1) · reason: one test, smaller than a fix-mode resume · root model: claude-opus-5-5
+- run/v1 · request=freestyle-projects-p12-implementation-1 · scope=p12 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p12-review-1 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p12 (task p12-t05 only, review round 1 M1 and L1) · reason: one template preamble, one pin and one docs line, smaller than a fix-mode resume · root model: claude-opus-5-5
+- Root-inline phase: p12 (task p12-t06 only, m03 integrated review I-1 to I-6) · reason: a matcher flag, one git flag, prose lines and three tests, smaller than a fix-mode resume · root model: claude-opus-5-5
+
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
@@ -1670,6 +1877,8 @@ Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head a
 - 2026-11-22 · PR #429 self-review (pr-self-review), testing and complexity lenses, GPT 6.2 Astra high via T3 `delegate_task` (read-only), on `origin/main...3e8c8c19c`: T-1 (blocking) the J-1 stop test treated the stop message as a stop; T-2 the midnight test used one clock reading for every read; T-3 duplicate presence and ordering rows for seven skills; T-4 the quick-start path test ran Step 0.5 under both pointers in every case (24.4 s). All four fixed test-only at `ffaefa31b` by the root (operator: fix if straightforward, no re-review). Can-fail: replacing each of the three skills' `exit 0` after the freestyle stop with `true` fails `freestyle checkout here stops`; passing a second clock read to `validateEntry` fails the midnight test; T-4 now 18.4 s. Gates: `vitest run src/validation src/commands/init/tools/shared src/commands/project/log/freestyle.test.ts` exit 0 (34 files, 1358 passed), cli `type-check`, oxlint and oxfmt on the two files exit 0. X-1 (mode probe copied into four skills) and X-2 (quick-start path resolver written twice): dropped by the operator (now or never: never); the copies stay pinned by the byte-identity contract test.
 - 2026-11-22 · PR #429 Cursor Bugbot (at `3e8c8c19c`, Medium): `oat-project-revise` wrote a named project's active pointer before its freestyle stop. Fixed at `ca5f8c338` by the root (operator: fix if straightforward): the mode is read in Step 0 and the pointer written after the stop, as `oat-project-reconcile` does; the stop moved into the ordering contract test. Can-fail: writing the pointer before the stop fails `stop before oat config set activeProject`. `vitest run src/validation src/commands/init/tools/shared` exit 0 (1321 passed), `oat:validate-skills`, `check:skill-bumps` (29) exit 0; provider views synced.
 - 2026-11-22 · PR #429 CI (`ci`, every head since `54a54f469`): five `oat-project-complete` merged-later resume tests failed with `No synced project named probe`. The test took Step 1's first bash block as the synced archive entry; p04 put the freestyle mode read ahead of it, so the test ran the mode read alone. Fixed at `16f859911` (test only): the test runs both Step 1 blocks in order, so it now also covers the mode read on that resume path. `pnpm test:skills` exit 0 (754 passed). The 120 s skill-contract timeout seen on `3e8c8c19c` was fixed by T-4.
+- 2026-11-23 · m03 milestone exit gate (p11, p12) · `oat-project-implement` gate `configured_disabled_by_project` (resolution `project_disabled`) · exit carrier `allowed`, fresh, subject [p11, p12]; m03 implementing -> reviewing. Per the Gates decision and the m02 precedent, the manual review substitute is the m03 integrated review on GPT 6.2 Astra high.
+- 2026-11-23 · m03 delivered as d03: PR #431 (https://github.com/voxmedia/open-agent-toolkit/pull/431), scope p11, p12, reviewed head `22212dabb`, registered at `69c5266d7`.
 
 ### Review Received: m01
 
@@ -1794,6 +2003,46 @@ Confirmed by the reviewer: P-1, P-2 and P-3 by behaviour with the branch build (
 Review-cycle count for m02 integrated: 3.
 
 **Outcome:** passed at `9ffa307eb`. p08 accepted (fix loops 3: p08-t04, p08-t05 to p08-t13, p08-t14); m02 exit carrier refreshed to fresh; m02 reviewing -> delivering.
+
+### Review Received: m03
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m03-integrated-review-2026-11-23T185019Z.md
+
+Integrated milestone review of m03 (p11, p12) on `4dc1b8687..2a747dc33` (origin/main to the m03 head), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only), complexity lens. Root checked every cited line at `2a747dc33`; each defect is in code or text m03 introduced.
+
+**Findings:** Critical 0 · High 1 · Medium 3 · Low 2
+**Finding classes:** I-1 accepted-requirement (Outcome 9: a retried keyed append appends once; a distinct entry is never dropped) · I-2 accepted-requirement (Outcome 10, p12 Intent: the adopted-plan intake keeps required gates) · I-3 accepted-requirement (Outcome 9: `lane set --commit` commits the ledger by exact path) · I-4 regression (p11 `freestyleKey`: an inserted key after a closing fence turns later log entries into code) · I-5 accepted-requirement (Outcome 9: head-ahead quiet while the dispatch is open; the instructions must say so) · I-6 accepted-requirement (Outcome 10: briefs and examples do not repeat what a field already carries)
+
+- I-1 (High): substring key match drops a distinct entry or duplicates a retry → p12-t06.
+- I-2 (Medium): "Reviews never block" against adopted required reviews → p12-t06.
+- I-3 (Medium): untracked `lanes.md` hidden from status → p12-t06.
+- I-4 (Medium): key appended to a closing code fence → p12-t06.
+- I-5 (Low): head-ahead paragraph omits the open-dispatch condition → p12-t06.
+- I-6 (Low): redundant `$RESHAPE_ID` in the reshape body → p12-t06.
+
+Confirmed by the reviewer: both version gates, `release:validate`, `build:docs` and docs-index freshness exit 0; exact-path commits, scope handling, open and closed dispatches, the m02 refresh and lane brief assembly behave as documented; all six non-freestyle modes unchanged.
+
+Review-cycle count for m03 integrated: 1.
+
+**Outcome:** fixes applied as p12-t06 (`22212dabb`, late-fix rule, records in p12), root-verified with can-fail checks. `oat project delivery check` needs a passed integrated review covering the head, so, as in m02 cycle 3, a confirm-only round on `2a747dc33..22212dabb` runs before delivery.
+
+### Review Received: m03 (cycle 2)
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m03-integrated-review-2026-11-23T185647Z.md
+
+Integrated milestone review of m03 (p11, p12), cycle 2, confirm only, on `2a747dc33..22212dabb` (p12-t06), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only).
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Confirmed by the reviewer: I-1 to I-6 by behaviour with the branch build; quick mode still refuses a missing explicit key; gate recovery still matches `run=<id>` exactly (208 tests in the touched suites pass).
+
+Reported outside the delta (pre-existing on `2a747dc33` too, not an m03 finding): with `status.showUntrackedFiles=no`, gate recovery of a new untracked project log clears its receipt as `nothing-to-commit` (`append.ts:862`). Raised with the operator.
+
+Review-cycle count for m03 integrated: 2.
+
+**Outcome:** passed at `22212dabb`. p12 accepted (fix loops 2: p12-t05, p12-t06); m03 exit carrier refreshed to fresh; m03 reviewing -> delivering.
 
 ## Deferred Findings
 

@@ -14,7 +14,11 @@ import { parseLaneLedger } from './ledger';
 
 type Scope = 'shared' | 'synced';
 
-function projectDir(root: string, scope: Scope, name = 'demo'): string {
+function projectDir(
+  root: string,
+  scope: Scope | 'local',
+  name = 'demo',
+): string {
   return join(root, '.oat', 'projects', scope, name);
 }
 
@@ -262,6 +266,121 @@ describe('oat project lane set', () => {
     ]);
   });
 
+  describe('--commit', () => {
+    function committedPaths(root: string): string[] {
+      return git(root, ['show', '--name-only', '--format=', 'HEAD'])
+        .split('\n')
+        .filter(Boolean)
+        .sort();
+    }
+
+    it('commits lanes.md and the filed report by exact path and leaves other changes uncommitted (shared)', async () => {
+      const root = await sharedRepo();
+      await newProject(root);
+      // Unrelated work in the checkout: a modified tracked file and a new one.
+      await writeFile(join(root, 'README.md'), '# edited\n', 'utf8');
+      await writeFile(join(root, 'scratch.txt'), 'wip\n', 'utf8');
+      const before = git(root, ['rev-parse', 'HEAD']);
+
+      const created = await laneSet(
+        root,
+        ['l01', '--branch', 'lane/l01', '--commit'],
+        true,
+      );
+      expect(created.exitCode, created.stderr).toBe(0);
+      const createdJson = JSON.parse(created.stdout);
+      expect(createdJson.commit).toMatchObject({
+        outcome: 'committed',
+        paths: ['.oat/projects/shared/demo/lanes.md'],
+        commit: git(root, ['rev-parse', 'HEAD']),
+      });
+      expect(git(root, ['rev-parse', 'HEAD~1'])).toBe(before);
+      expect(git(root, ['log', '-1', '--format=%s'])).toBe(
+        'chore(oat): record lane l01 u001',
+      );
+      expect(committedPaths(root)).toEqual([
+        '.oat/projects/shared/demo/lanes.md',
+      ]);
+
+      const saved = join(root, '..', `report-commit-${Date.now()}.md`);
+      tempDirs.push(saved);
+      await writeFile(saved, '# Lane report: l01-d01\n', 'utf8');
+      const filed = await laneSet(root, [
+        'l01',
+        '--report',
+        saved,
+        '--head',
+        'abc123',
+        '--commit',
+      ]);
+      expect(filed.exitCode, filed.stderr).toBe(0);
+      expect(filed.stdout).toContain(
+        'Committed .oat/projects/shared/demo/lanes.md, .oat/projects/shared/demo/lane-reports/l01-d01.md (',
+      );
+      expect(filed.stdout).toContain('Nothing was pushed.');
+      expect(committedPaths(root)).toEqual([
+        '.oat/projects/shared/demo/lane-reports/l01-d01.md',
+        '.oat/projects/shared/demo/lanes.md',
+      ]);
+      // `git` trims its output, so the first status line loses its leading space.
+      expect(
+        git(root, ['status', '--porcelain', '--', 'README.md', 'scratch.txt']),
+      ).toBe('M README.md\n?? scratch.txt');
+      expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+        '# edited\n',
+      );
+    });
+
+    it('commits a new lanes.md when git hides untracked files from status', async () => {
+      const root = await sharedRepo();
+      await newProject(root);
+      git(root, ['config', 'status.showUntrackedFiles', 'no']);
+      const created = await laneSet(root, ['l01', '--commit'], true);
+      expect(created.exitCode, created.stderr).toBe(0);
+      expect(JSON.parse(created.stdout).commit.outcome).toBe('committed');
+      expect(committedPaths(root)).toEqual([
+        '.oat/projects/shared/demo/lanes.md',
+      ]);
+    });
+
+    it('commits nothing on the code branch for a synced project, whose records live in its nested worktree', async () => {
+      const root = await syncedRepo();
+      await newProject(root, 'synced');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const nested = projectDir(root, 'synced');
+      const nestedHead = git(nested, ['rev-parse', 'HEAD']);
+
+      const result = await laneSet(root, ['l01', '--commit'], true);
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect(JSON.parse(result.stdout).commit).toEqual({
+        outcome: 'nothing-to-commit',
+        paths: ['.oat/projects/synced/demo/lanes.md'],
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(git(nested, ['rev-parse', 'HEAD'])).toBe(nestedHead);
+      expect(git(nested, ['status', '--porcelain'])).toBe('?? lanes.md');
+
+      const text = await laneSet(root, ['l01', '--next', 'wait', '--commit']);
+      expect(text.exitCode, text.stderr).toBe(0);
+      expect(text.stdout).toContain(
+        "Nothing to commit on this checkout's branch: the project's scope keeps its records off it.",
+      );
+    });
+
+    it('commits nothing for a local project, whose records stay uncommitted', async () => {
+      const root = await sharedRepo();
+      await newProject(root, 'local');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const result = await laneSet(root, ['l01', '--commit'], true);
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect(JSON.parse(result.stdout).commit).toEqual({
+        outcome: 'nothing-to-commit',
+        paths: ['.oat/projects/local/demo/lanes.md'],
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+    });
+  });
+
   describe.each<Scope>(['shared', 'synced'])(
     'the orchestrator-branch guard (%s project)',
     (scope) => {
@@ -432,6 +551,45 @@ describe('oat project lane set', () => {
       expect(await statusOf(root)).not.toContain('Lane head ahead');
     });
 
+    it('stays quiet while the dispatch is open and flags once it is reported or closed with no report', async () => {
+      const { root, worktree, reported } = await laneWithReport();
+      for (const n of [2, 3]) {
+        await writeFile(join(worktree, 'work.txt'), `${n}\n`, 'utf8');
+        git(worktree, ['commit', '-q', '-am', `in flight ${n}`]);
+      }
+      const flag = `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head ${reported}`;
+
+      // d02 open: the lane is working past its last report.
+      const opened = await laneSet(root, ['l01', '--dispatch'], true);
+      expect(opened.exitCode, opened.stderr).toBe(0);
+      expect(JSON.parse(opened.stdout).headCheck).toBeNull();
+      const running = await laneSet(root, ['l01', '--state', 'running']);
+      expect(running.stderr).not.toContain('Lane head ahead');
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+
+      // d02 closed with no report: flagged.
+      const stopped = await laneSet(root, ['l01', '--no-report']);
+      expect(stopped.exitCode, stopped.stderr).toBe(0);
+      expect(stopped.stderr).toContain(`Warning: ${flag}`);
+      expect(await statusOf(root)).toContain(flag);
+
+      // d03 open again: quiet; reported at the old head: flagged.
+      expect((await laneSet(root, ['l01', '--dispatch'])).exitCode).toBe(0);
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+      const saved = join(worktree, '..', 'l01-d03.txt');
+      await writeFile(saved, '# Lane report: l01-d03\n', 'utf8');
+      const filed = await laneSet(root, [
+        'l01',
+        '--report',
+        saved,
+        '--head',
+        reported,
+      ]);
+      expect(filed.exitCode, filed.stderr).toBe(0);
+      expect(filed.stderr).toContain(`Warning: ${flag}`);
+      expect(await statusOf(root)).toContain(flag);
+    });
+
     it('flags a branch that no longer contains the reported head', async () => {
       const { root, worktree, reported } = await laneWithReport();
       git(worktree, ['reset', '-q', '--hard', 'HEAD~1']);
@@ -459,11 +617,19 @@ describe('oat project lane set', () => {
       expect(JSON.parse(shared.stdout).headCheck).toBeNull();
       expect(await statusOf(root)).not.toContain('Lane head ahead');
 
-      const remote = await laneSet(
-        root,
-        ['l03', '--branch', 'delegate/l03', '--head', head],
-        true,
-      );
+      expect(
+        (
+          await laneSet(root, [
+            'l03',
+            '--branch',
+            'delegate/l03',
+            '--head',
+            head,
+          ])
+        ).exitCode,
+      ).toBe(0);
+      // Closed with no report, so the check applies (p11-t03).
+      const remote = await laneSet(root, ['l03', '--no-report'], true);
       expect(JSON.parse(remote.stdout).headCheck).toMatchObject({
         status: 'unknown',
         reason: 'branch delegate/l03 is not in this clone',

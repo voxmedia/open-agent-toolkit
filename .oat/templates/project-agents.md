@@ -193,10 +193,11 @@ happens:
 - The ledger holds no reasoning beyond a one-line next action or blocker; an
   empty value (`--blocker ""`) clears a field.
 
-Each dispatch brief names the lane and dispatch IDs; the paths of this file
-and `shape.md`; the lane's worktree and branch, or the `paths:` it may change in
-the orchestrator's checkout; that the lane writes no project records; its lane
-notes path; and the report shape. Copy the shape with
+Each dispatch brief extends the standing lane brief (see Lane brief) instead
+of repeating its rules, and names the lane and dispatch IDs; the paths of this
+file and `shape.md`; the lane's worktree and branch, or the `paths:` it may
+change in the orchestrator's checkout; its lane notes path; the task; and the
+report shape. Copy the shape with
 `oat template resolve lane-report --output <path>` and embed it whole, with the
 instruction to return it filled in as the lane's final message.
 
@@ -215,6 +216,19 @@ On resume, read `lanes.md` before acting. For each active lane with an open
 dispatch, check its task or thread handle and the forge (its PR, its branch
 head) and record what you find with `lane set` before any redispatch: a lane
 that is still running is waited on or steered, not dispatched again.
+
+## Lane brief
+
+The standing rules every lane follows ship as the bundled `lane-brief.md`:
+the lane writes no project records and its final message is its report; it
+keeps its decisions and gotchas in its lane notes file; it changes only its own
+worktree and branch, or the `paths:` it was given in your checkout, where it
+commits by exact path; and its report's Tested SHA equals the delivered head.
+Copy it with `oat template resolve lane-brief --output <path>` and embed it
+whole in every dispatch brief, which extends it with the dispatch's facts and
+task (see Dispatch) and the report shape, never repeating its rules. A
+`lane-brief.md` in the repository's `.oat/templates/` or the user's
+`~/.oat/templates/` replaces the bundled one.
 
 ## Lane reports
 
@@ -242,8 +256,9 @@ structural log entry (see Records commands) whose `--ref` is the update ID that
 no log entry.
 
 The ledger's `head` is the head the lane's last report delivered. For a lane
-in its own worktree, `oat project lane set` and `oat project status` flag a
-branch head that has moved past it. Do not merge unreported commits
+in its own worktree whose dispatch is closed, `oat project lane set` and
+`oat project status` flag a branch head that has moved past it; while the
+dispatch is `open` the lane is still working, so neither flags it. Do not merge unreported commits
 unreviewed: dispatch the lane to report them, or review them yourself first.
 
 ## Lane placement
@@ -254,7 +269,8 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
 `own-worktree`.
 
 - **Own worktree.** The lane has its own worktree, branch and PR. Record
-  `--worktree`, `--branch` and `--base`; the head-ahead check applies, and its
+  `--worktree`, `--branch` and `--base`; the head-ahead check above applies
+  once its dispatch closes, and its
   work reaches the orchestrator's branch by the merge rules in `shape.md`.
 - **Your checkout.** A subagent works in your worktree, on your branch,
   limited to the `--paths` its entry gives it. Its commits use exact paths
@@ -284,7 +300,9 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
   (`--structural --producer <name> --ref <ref>`) can record an event such as
   `merged`: `--time` adds the UTC time of the append, `--subject <id>` the
   phase or other id it is about, and `--source-project <name>` the
-  project it came from.
+  project it came from. `--idempotency-key` is optional here: without one the
+  command derives a key from the entry, so running the same append again
+  writes nothing; a key the body lacks is added to its end.
 - `oat project journal check --at completion --project <project-path>`: a
   coverage report of the phases it recognized, validated and skipped (with
   reasons) in `plan.md` and `implementation.md`, when the project keeps them.
@@ -292,8 +310,14 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
   and `implement-preflight` give the same report, and `review` also needs a
   `--scope` of phases those documents name.
 - `oat template resolve <name> --output <path>`: copy an OAT template as the
-  starting point for a project document, `lane-report` for a dispatch brief,
-  or `decisions` and `memories` when the file is absent.
+  starting point for a project document, `lane-brief` and `lane-report` for a
+  dispatch brief, or `decisions` and `memories` when the file is absent.
+- `--commit` on `oat project lane set` and `oat project log append`: commit
+  `lanes.md` and the report the update filed, or the project log, by exact
+  path, leaving every other change uncommitted. In a synced or local project
+  the code branch holds no records, so there is nothing to commit. Neither
+  pushes: when `shape.md` says records are pushed, run `git push` (shared) or
+  `oat project push` (synced) after it.
 - `oat project push` and `oat project pull`: publish and fetch the records of
   a synced project.
 
@@ -305,6 +329,13 @@ runs, follow the `oat-project-freestyle` skill's own `references/reshape.md`
 (in the installed skill's folder, not this project's `references/`): edit only
 the affected `shape.md` sections, update `Last shaped:`, state when the change
 takes effect, and attempt a `decision` entry in the project log.
+
+At each reshape checkpoint, and when a plan written after shaping is accepted,
+ask the two checkpoint questions in that reference: does the shape still fit,
+and is the plan and its process proportionate to its value (process time
+against code time, the risk each safeguard covers, the lightest process that
+keeps the real gates)? A "no" goes to the owner as a recommendation, even in
+an unattended run.
 
 When a review recorded in `shape.md` comes due, re-check its mechanism before
 using it. If it is unavailable, keep the review's intent, tell the user, log

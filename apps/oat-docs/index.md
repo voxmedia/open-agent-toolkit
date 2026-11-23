@@ -42,7 +42,7 @@
       - [Project Log](docs/workflows/projects/execution/project-log.md) — Capture append-only project observations and roll them into durable summary and ledger surfaces.
       - [Implementation Execution](docs/workflows/projects/execution/implementation-execution.md) — How OAT executes plans with root-owned phase agents, independent phase review, bounded fixes, and worktree fan-out.
       - [Picking Up Projects](docs/workflows/projects/execution/picking-up-projects.md) — Continue a synced OAT project on another machine or from another user through its dedicated Git ref.
-      - [Running a Freestyle Project](docs/workflows/projects/execution/freestyle-projects.md) — The orchestrator branch, lane ledger and reports, decisions and memories, and linked projects of a freestyle project.
+      - [Running a Freestyle Project](docs/workflows/projects/execution/freestyle-projects.md) — The orchestrator branch, lane ledger, lane brief and reports, decisions and memories, reshape checkpoints, and linked projects of a freestyle project.
     - Closeout
       - [Closeout](docs/workflows/projects/closeout/index.md) — Project retrospectives and progress or final PR flow.
       - [Project closeout skills](docs/workflows/projects/closeout/closeout-skills.md) — Prepare progress or final PRs, record outcomes, update documentation, handle feedback, and complete a tracked project.

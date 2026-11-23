@@ -219,6 +219,68 @@ p08 accepted after the m02 integrated review: cycle 1 (N-1 to N-8) fixed in p08-
 
 Registered d02 for m02 (p05, p07, p10, p08) at https://github.com/voxmedia/open-agent-toolkit/pull/430; freestyle-projects-register-d02
 
+### 2026-11-23 · structural · oat-project-goal · m02
+
+Re-alignment after m02 delivered (d02, PR #430 merged at 4dc1b8687); freestyle-projects-realign-m02
+
+### 2026-11-23 · project · friction · Pre-merge refresh writes uncommittable bookkeeping
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m02-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-23T07:27:57Z
+
+Observation: the delivery refresh required immediately before merge rewrote observed_head and reflowed state.md flow sequences; committing it would have moved the PR head after the final green sweep.
+Impact: the pre-merge refresh output had to be discarded and redone on main after the merge.
+Recommendation: before merging, run refresh and check, discard the state.md change, merge at the verified head, then refresh again on the next branch and commit there.
+Uncertainty: whether refresh should skip writing when only observed_head on an open member changed.
+
+### 2026-11-23 · project · worked-well · Complexity-lens review briefs
+
+**Category:** efficiency
+**Source:** freestyle-projects-learning-m02-03
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-23T07:27:57Z
+
+Observation: with reviewers briefed to apply a complexity lens and skip unlikely edge cases, and with small findings fixed in the round they were raised, m02 needed three integrated cycles and no exit rounds, against eight exit rounds and three cycles for m01, and left no deferred findings.
+Impact: less review churn and no backlog growth.
+Recommendation: keep the complexity-lens brief and the fix-now-or-drop rule for later goal milestones.
+
+### 2026-11-23 · project · feedback · Review table rows are events
+
+**Category:** decision
+**Source:** freestyle-projects-learning-m02-realign-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-23T07:28:13Z
+
+Observation: an amendment-fix commit rewrote the manual 987d479b plan artifact row in ## Reviews instead of appending; Bugbot caught it on PR #430 and the row was restored after delivery registration.
+Impact: one extra fix commit on an open delivery, and a near miss on a learned Bugbot rule.
+Recommendation: when a fix touches plan.md ## Reviews, append a new row and never edit or replace an existing one; diff the table against the base before committing.
+
+### 2026-11-23 · structural · oat-project-goal · m03
+
+Activated m03 (p11, p12); freestyle-projects-activate-m03
+
+### 2026-11-23 · structural · oat-project-implement · p11
+
+**Subject:** p11
+
+p11 accepted: review passed (0 critical, 0 high, 0 medium, 1 low); L1 fixed root-inline in p11-t05; 0 fix loops, no re-review. freestyle-projects-p11-outcome
+
+### 2026-11-23 · structural · oat-project-implement · p12
+
+**Subject:** p12
+
+p12 accepted: review passed (0 critical, 0 high, 1 medium, 1 low); M1 and L1 fixed root-inline in p12-t05; 0 fix loops, no re-review. freestyle-projects-p12-outcome
+
+### 2026-11-23 · structural · oat-project-implement · p12
+
+p12 accepted after the m03 integrated review: cycle 1 (I-1 to I-6) fixed by root in p12-t06, cycle 2 confirm passed at 22212dabb with 0 findings; fix loops 2; exit carrier project_disabled refreshed to fresh; m03 -> delivering; next oat-project-pr-progress deliver m03; freestyle-projects-p12-outcome-m03-integrated
+
+### 2026-11-23 · structural · oat-project-pr-progress · d03
+
+Registered d03 for m03 (p11, p12) at https://github.com/voxmedia/open-agent-toolkit/pull/431; freestyle-projects-register-d03
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

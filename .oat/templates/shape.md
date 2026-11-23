@@ -43,7 +43,7 @@ _Not yet shaped._
 
 ## Reviews
 
-<!-- When reviews happen, then who and how. Record each as intent (when, required independence, effort) and mechanism (tool or skill, host, source, date verified). When a review comes due, re-check its mechanism first; if it is unavailable, keep the intent, tell the user and log it. Reviews never block. -->
+<!-- When reviews happen, then who and how. Record each as intent (when, required independence, effort) and mechanism (tool or skill, host, source, date verified). When a review comes due, re-check its mechanism first; if it is unavailable, keep the intent, tell the user and log it. Freestyle adds no review gate; a review an adopted plan requires must still pass (its agreed mechanism or an equivalent check) before the work it guards moves on. -->
 
 _Not yet shaped._
 
@@ -61,7 +61,7 @@ _Not yet shaped._
 
 ## Reshape checkpoints
 
-<!-- The moments to revisit this shape, for example after the first PR merges or when a lane is added. -->
+<!-- The moments to revisit this shape, for example after the first PR merges or when a lane is added. At each one, and when a plan written after shaping is accepted, ask two questions. Does the shape still fit? Is the plan and its process proportionate to its value? Test the second by process time against code time (above about 3x needs a stated reason), by what risk each safeguard covers and whether that risk exists now, and by the lightest process that keeps the real gates (the reviews and approvals the owner or the repository requires). A "no" goes to the owner as a recommendation, even in an unattended run. -->
 
 _Not yet shaped._
 

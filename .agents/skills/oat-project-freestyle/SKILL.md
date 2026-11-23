@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # Freestyle Project
@@ -306,7 +306,10 @@ items deferred with when each is due, and the paths of `AGENTS.md` and
 State plainly whether `shape.md` and any new documents are committed, and why:
 they are committed only as the `## Commits, PRs and merges` section agrees,
 following the records rule in `AGENTS.md` for the project's scope. Then stop;
-the orchestrator runs the project from here.
+the orchestrator runs the project from here and keeps its records as
+`AGENTS.md` says: when the commit agreement commits records, `--commit` on
+`oat project lane set` and `oat project log append` commits each update by
+exact path in the same command, and neither pushes.
 
 ## Success Criteria
 
