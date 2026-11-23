@@ -500,7 +500,7 @@ describe('freestyle linked projects', () => {
         for (const [name, result] of Object.entries({ create, add, ack })) {
           expect(result.exitCode, name).toBe(1);
           expect(result.stderr, name).toContain(
-            'project parent is unclaimed (oat_orchestrator_branch is empty or absent). The session designated as its orchestrator runs `oat project orchestrator set` first.',
+            'project parent is unclaimed (oat_orchestrator_branch is empty or absent). The session designated as its orchestrator runs `oat project orchestrator set --project parent` first.',
           );
         }
         expect(existsSync(projectDir(root, 'shared', 'guarded-child'))).toBe(

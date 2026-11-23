@@ -1053,8 +1053,10 @@ oat_generated: false
 
       it('reports an empty or absent value as unclaimed and names the claim command', async () => {
         const { lines, payload } = await statusLines('main', null);
-        expect(lines).toContain(
-          'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set`)',
+        expect(lines).toContainEqual(
+          expect.stringMatching(
+            /^Orchestrator branch: unclaimed \(the orchestrator claims it with `oat project orchestrator set --project \S+`\)$/,
+          ),
         );
         expect(lines).toContain('Current branch: main');
         expect(payload).toMatchObject({

@@ -172,6 +172,7 @@ function formatProjectStatusLines(
               ...formatOrchestratorLines(
                 coordination.orchestrator,
                 coordination.lanes.current,
+                projectDir,
               ),
               ...formatLaneLines(coordination.lanes),
               ...formatOpenLinkLines(coordination.linkedProjects, projectDir),

@@ -95,12 +95,14 @@ export function describeOrchestratorCheckout(
  */
 export function formatOrchestratorLines(
   checkout: OrchestratorCheckout,
-  lanes: readonly string[] = [],
+  lanes: readonly string[],
+  project: string,
 ): string[] {
   const current = checkout.currentBranch ?? 'detached HEAD';
   if (!checkout.claimed) {
+    // Name the inspected project: a bare claim would name the active one.
     return [
-      `Orchestrator branch: unclaimed (the orchestrator claims it with \`${ORCHESTRATOR_SET_COMMAND}\`)`,
+      `Orchestrator branch: unclaimed (the orchestrator claims it with \`${ORCHESTRATOR_SET_COMMAND} --project ${project}\`)`,
       `Current branch: ${current}`,
     ];
   }
@@ -132,7 +134,7 @@ export async function assertOrchestratorCheckout(options: {
   );
   if (!checkout.claimed) {
     throw new CliError(
-      `Cannot ${options.action}: project ${options.projectName} is unclaimed (${ORCHESTRATOR_BRANCH_FIELD} is empty or absent). The session designated as its orchestrator runs \`${ORCHESTRATOR_SET_COMMAND}\` first.`,
+      `Cannot ${options.action}: project ${options.projectName} is unclaimed (${ORCHESTRATOR_BRANCH_FIELD} is empty or absent). The session designated as its orchestrator runs \`${ORCHESTRATOR_SET_COMMAND} --project ${options.projectName}\` first.`,
       1,
     );
   }

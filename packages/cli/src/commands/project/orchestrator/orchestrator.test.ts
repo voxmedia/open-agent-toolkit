@@ -227,7 +227,7 @@ describe('freestyle orchestrator branch', () => {
         '.oat/projects/shared/legacy',
       ]);
       expect(status.stdout).toContain(
-        'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set`)',
+        'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set --project .oat/projects/shared/legacy`)',
       );
 
       const result = await setOrchestratorBranch({
