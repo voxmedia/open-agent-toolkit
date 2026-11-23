@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-23
-oat_current_task_id: p11
+oat_current_task_id: p12
 oat_generated: false
 oat_template: false
 ---
@@ -39,20 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | complete    | 1     | 1/1      |
-| p08   | complete    | 1     | 1/1      |
-| p11   | in_progress | 1     | 0/1      |
-| p12   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
+| p11   | complete | 1     | 1/1      |
+| p12   | pending  | 1     | 0/1      |
 
-**Total:** 8/10 phases accepted
+**Total:** 9/10 phases accepted
 
 ---
 
@@ -1615,10 +1615,10 @@ Retired at the m03 re-alignment (2026-11-23): the first real run showed the lane
 
 ## Phase p11: Record upkeep commands
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 929c2ea3db083727022af454c65c180c0ef67925
 **Executor:** phase-implementer:freestyle-projects-p11-implementation-1
-**Head:** fcd3c69a47c82773d9816fe1371171880ef7b0b8
+**Head:** 156e7bb668212b63b8bdaa64ed36ed042d557165
 
 Phase verification at `071b3fb61` (the last code commit; the head adds only the p11-t04 journal record, which no gate reads), clean tree but the gitignored `references/`, isolated `HOME` for tests: `pnpm check` exit 0 (every package `check` and `oat-docs:check` cache miss, executed; builds replayed from the `pnpm build` run at the same tree); `pnpm type-check` exit 0 (5 of 11 tasks replayed builds, every `type-check` executed); `bash scripts/with-isolated-home.sh pnpm test` exit 0 (every `test` task cache miss, executed: cli 458 files, 10014 tests; control-plane 14 files; docs-config 5, docs-theme 10, docs-transforms 5 files; oat-docs; then `test:smoke` 165, `test:skills` 754 and `test:scripts` 7); docs index regenerated with no diff. Not run, owned by p12 (m03 release): `check:skill-bumps`, `release:*`, `build:docs`; `pnpm lint` not run (no change under `tools/smoke` or `.agents/skills`). Two host restarts interrupted the run before any commit; the work resumed from the uncommitted tree, and the first lane test run (exit 137) was killed by the second restart, not by a failure.
 
@@ -1676,6 +1676,26 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template` exit 0 (36 files, 1498 tests, the bundle-tier scaffold tests against the rebuilt bundle included); docs index regenerated with no diff. New contract tests (`freestyle record upkeep commands (p11)`): the `## Records commands` bullet naming `--commit` on `oat project lane set` and `oat project log append` precedes the `oat project push` bullet and says exact path with other changes uncommitted, nothing to commit in synced or local, neither pushes, and `git push` (shared) or `oat project push` (synced); both commands have `--commit`; the log bullet's optional-key sentence verbatim; the heading list is unchanged.
 - Decisions: no new `##` heading (p12 adds `## Lane brief`, whose missing-heading refresh carries these lines into an m02-era `AGENTS.md`). The push guidance defers to `shape.md`, as `## Where records live` already does. Docs: the freestyle page's opening paragraph names `--commit` on both commands and each scope's result, the lane field list points to it, and the head-ahead paragraph names the open-dispatch rule (`headCheck` null); the project-log page describes `--commit` per scope and the freestyle derived key (fields, format, `key:<key>`, the unchanged rule in other modes); the CLI reference `lane set` and `log` bullets carry the same. No skill prose changed, so no skill bump or skill test applies; package and skill bumps for m03 are p12's.
 
+### Task p11-t05: Cover a keyless log append --commit in a freestyle project
+
+**Status:** completed
+**Commit:** 156e7bb668212b63b8bdaa64ed36ed042d557165
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p11 review `freestyle-projects-p11-review-1` L1: no test covered `log append --commit` without a key in a freestyle project, a path p11-t02 changed (the commit identity now carries the derived key).
+- Files: `packages/cli/src/commands/project/log/freestyle.test.ts` (one test in the p11 derived-key block: a keyless structural entry with `--commit` commits only the project log; the replay reports `already-appended` with the same key, appends nothing and moves no HEAD).
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/freestyle.test.ts` exit 0 (46 tests); CLI oxlint exit 0; oxfmt check clean after the commit hook.
+- Can-fail: deriving the key from `normalized + randomUUID()` failed the new test on the replay (`expected { status: 'appended', … } to match object { status: 'already-appended', … }`); restored. Dropping the derived key from the commit identity alone did not fail it, because that identity only finalizes a gate receipt; the test pins the commit and the replay, not the identity.
+
+Late fix p11-t05 (p11 review round 1: L1) at `156e7bb66`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `5e7732ccf`.
+
+### Review Received: p11
+
+- Review `freestyle-projects-p11-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `929c2ea3d..5e7732ccf`, artifact `reviews/archived/p11-code-review-2026-11-23T174803Z.md` (local-only): 0 critical, 0 high, 0 medium, 1 low; reconnaissance not attempted. The reviewer re-ran the lane and freestyle log suites (85 passed) and probed the branch build: `lane set --commit` committed only `lanes.md` with an unrelated staged and an unrelated modified file left alone; a keyless freestyle append with `--commit` committed only the log and its replay appended nothing; a quick-mode control still appends a keyless entry twice and refuses a key missing from the body.
+- L1 (Low, test coverage): no test for a keyless `log append --commit` in a freestyle project. Fixed in p11-t05.
+- **Finding classes:** L1 accepted-requirement (Outcome 9: a retried command appends once, with `--commit` named in the same outcome).
+- Outcome: passed (0 critical, 0 high). The fix was not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p11-t05 record.
+
 ---
 
 ## Phase p12: Adopted plans, proportionality checkpoints and lane brief
@@ -1730,6 +1750,8 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Root-inline phase: p08 (task p08-t14 only, m02 confirm-round P-1 to P-3) · reason: a four-line quoting helper, one marker-file check and their test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 - run/v1 · request=freestyle-projects-p11-implementation-1 · scope=p11 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p11-review-1 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p11 (task p11-t05 only, review round 1 L1) · reason: one test, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
