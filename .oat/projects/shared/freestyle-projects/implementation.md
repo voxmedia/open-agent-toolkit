@@ -1708,6 +1708,20 @@ Added by the m03 amendment (2026-11-23), from the first real freestyle run (plan
 
 Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p12 is the last m03 phase. Root fan-out fails the independence test: the intake and checkpoint text, the `shape.md` template, `lane-brief.md`, the project `AGENTS.md` `## Lane brief` section, their contract tests, the docs and the version bump share the bundle, the freestyle contract test file and the release checks. One phase implementer.
 
+### Task p12-t01: Add the bundled lane-brief.md and the project AGENTS.md Lane brief section
+
+**Status:** completed
+**Commit:** ade9e3a5f0bde0c97d0185d0bac8da2fa0780a00
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: Outcome 10, last clause. A bundled `lane-brief.md` holds the standing lane boundaries; a new `## Lane brief` section in the project `AGENTS.md`, linked from Dispatch, names how to copy it and that each dispatch brief extends it.
+- Files: `.oat/templates/{lane-brief.md,project-agents.md}`, `packages/cli/scripts/bundle-inputs.mjs`, `packages/cli/src/commands/tools/shared/pack-manifest.ts`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- `lane-brief.md` (no frontmatter, embedded whole like `lane-report.md`): `## Your dispatch` (what the dispatch brief adds: IDs, the `AGENTS.md` and `shape.md` paths, worktree and branch or `paths:`, notes path, task, report shape), `## Project records` (writes no records, each named; the final message is the report; a PR holds code only), `## Lane notes`, `## Paths and commits` (exact-path commits in the orchestrator's checkout; every commit listed), `## Report` (final message, every turn end, Tested SHA equals the delivered head, steering recorded). Each rule restates what the project `AGENTS.md` Dispatch, Lane reports and Lane placement sections and `lane-report.md` already say. Added to the bundle and the workflows pack beside `lane-report.md`, as p07 did.
+- Project `AGENTS.md`: a new `## Lane brief` section after `## Dispatch` names the boundaries, `oat template resolve lane-brief --output <path>`, embedding it whole in every dispatch brief that extends it with the dispatch's facts and task and the report shape, and the repository and user override tiers. Dispatch now says each brief extends the standing lane brief (see Lane brief) and adds the task; the "writes no project records" item moved into the lane brief. Records commands names `lane-brief` and `lane-report` for a dispatch brief.
+- Proof: `pnpm build` exit 0 (the bundle carries `assets/templates/lane-brief.md`); `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template` exit 0 (36 files, 1501 tests); `pnpm --filter @open-agent-toolkit/cli check` exit 0. New `freestyle lane brief (p12)` tests: the lane brief's headings and boundaries with no frontmatter; the AGENTS.md `## Lane brief` section and the Dispatch and Records commands links; a dispatch brief built under an isolated `HOME` with no repository tier from the bundled `lane-brief` and `lane-report` (both `tier: 'bundle'`, `path: null`), whose headings are the lane brief's, the dispatch's own section, then the report's, with the single-writer rule stated once. `AGENTS_HEADINGS` gains `Lane brief`; the p11 "no new heading" test is removed (the heading list test covers it); the p07 and p10 Dispatch pins follow the reworded sentence; the p07 flag scan also reads the Lane brief section.
+- Can-fail: un-heading `## Lane notes` in `lane-brief.md` failed the headings test (`expected [ 'Your dispatch', …(3) ] to deeply equal [ 'Your dispatch', …(4) ]`); dropping the `oat template resolve lane-brief --output <path>` sentence from the AGENTS.md section, and dropping `(see Lane brief)` from Dispatch, each failed the Lane brief section test on that string; restored.
+
 ---
 
 ## Orchestration Runs
