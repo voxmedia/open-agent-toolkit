@@ -826,7 +826,7 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
 });
 
 /**
- * Runs a first-use block (`for NAME in decisions memories ...`) against a stub
+ * Runs the skill's first-use block (`for NAME in decisions memories ...`) against a stub
  * `oat template resolve` that copies the repository template raw, as the real
  * resolver does.
  */
@@ -930,7 +930,9 @@ describe('freestyle decisions and memories (p10)', () => {
     expect(section).toContain(
       'add the new entry under `## Live` with `Supersedes: drNN`, then move the replaced entry intact to `## Superseded` and add `Superseded by drNN, <date>` to it',
     );
-    expect(section).toContain('Create each one only when it is absent');
+    expect(section).toContain(
+      'Create each missing one with `oat template resolve <decisions|memories> --output <project-path>/<name>.md`, and only when it is absent',
+    );
     expect(section).toContain(
       'A linked project starts with its own empty files',
     );
@@ -943,32 +945,6 @@ describe('freestyle decisions and memories (p10)', () => {
     );
     expect(log).toContain('a `decision` entry may cite one by its `drNN`');
     expect(log).toContain('what is still true goes in `memories.md`');
-  });
-
-  it('creates each missing file with the AGENTS.md first-use block and never touches an existing one', () => {
-    const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-first-use-'));
-    roots.push(root);
-    const project = join(root, 'project');
-    mkdirSync(project);
-    const block = /```bash\n([\s\S]*?)```/
-      .exec(h2Section(agents, 'Decisions and memories'))?.[1]
-      ?.replace(/^ {2}/gm, '')
-      .replaceAll('<project-path>', project);
-    expect(block, 'the first-use step has a bash block').toBeDefined();
-
-    // An older project with a memories.md already written by hand.
-    writeFileSync(join(project, 'memories.md'), '# Memories\n\n- kept\n');
-    const first = runFirstUse(root, block as string, {});
-    expect(first.stderr).toBe('');
-    expect(first.status).toBe(0);
-    expect(read(join(project, 'decisions.md'))).toBe(decisions);
-    expect(read(join(project, 'memories.md'))).toBe('# Memories\n\n- kept\n');
-
-    // Both present: a resolver that would fail is never called.
-    writeFileSync(join(project, 'decisions.md'), '# Decisions\n\n- kept\n');
-    const again = runFirstUse(root, block as string, {}, 3);
-    expect(again.status).toBe(0);
-    expect(read(join(project, 'decisions.md'))).toBe('# Decisions\n\n- kept\n');
   });
 
   describe("creates a missing file in the skill's resume step (SKILL.md Step 2)", () => {

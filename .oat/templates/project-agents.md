@@ -103,18 +103,11 @@ when.
   new entry. `## Live` then holds only current decisions: on resume, read all
   of it, and never act on a superseded entry.
 - **First use.** A project created before these files existed has neither.
-  Create each one only when it is absent, because the copy replaces an
-  existing file:
-
-  ```bash
-  for NAME in decisions memories; do
-    [ -e "<project-path>/$NAME.md" ] ||
-      oat template resolve "$NAME" --output "<project-path>/$NAME.md"
-  done
-  ```
-
-- **Linked projects.** A linked project starts with its own empty files and
-  never copies another project's decisions or memories.
+  Create each missing one with
+  `oat template resolve <decisions|memories> --output <project-path>/<name>.md`,
+  and only when it is absent, because the copy replaces an existing file. The
+  `oat-project-freestyle` skill does this on resume.
+- **Linked projects.** A linked project starts with its own empty files.
 
 ## Orchestrator branch
 
