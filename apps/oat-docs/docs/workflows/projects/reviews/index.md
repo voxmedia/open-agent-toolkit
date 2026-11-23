@@ -303,7 +303,7 @@ latest stamp as the producer for the whole scope.
 
 This is separate from Tier 1 phase gate reviews. Tier 1 implementation always runs `oat-reviewer` after each phase; `workflow.autoReviewAtHillCheckpoints` only controls the additional lifecycle review when a HiLL checkpoint is reached. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 
-Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` converts findings to fix tasks by default, without user prompts. It rejects with the reason a Low that is clearly out of scope or not worth its cost, and any finding it has a concrete reason to disagree with; it creates no deferral.
+Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` converts findings to fix tasks by default, without user prompts. It rejects with the reason a Low that is clearly out of scope or not worth its cost, and any finding it has a concrete reason to disagree with; it creates no deferral. A finding that [routing](#finding-classes-at-receive) sends to the operator still goes to the operator first.
 
 This preference is unset by default: interactive implementation asks with
 "no" suggested. Autonomous non-lite implementation forces it on; lite bypasses

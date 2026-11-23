@@ -899,7 +899,9 @@ re-review.
     `implementation.md` and `oat_current_task` in `state.md` to the target
     phase ID (the reviewed phase, or the new `p-revN`), and update that phase's
     Progress Overview row status. The phase-unit totals change only when a
-    revision phase was appended.
+    revision phase was appended. When no finding converts (Step 3), write only
+    the note, in the reviewed phase's section, and leave `oat_phase_status`,
+    both task pointers and the row status as they are.
 
 After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
 On nonzero, stop; repair and recheck before committing or continuing.
