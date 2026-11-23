@@ -1485,12 +1485,16 @@ Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-
 
 ### Task p08-t06: (review) Round-trip literal backslashes in the lane ledger
 
-**Status:** pending
+**Status:** completed
+**Commit:** 6401dfba76bd27ed87d3f6b63c4e2cdf33c38d0f
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
 **Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-2)
 
 Intent: `lane/ledger.ts:177` unescapes Markdown backslash escapes on read, but the writer writes values raw. A value such as `rg 'api\.v1'` loses its backslash, and the next update rewrites both the field and its earlier history line. Escape backslashes on write so a read returns what `lane set` wrote; keep reading a formatter's `\*` as `*`.
 Files: `lane/ledger.ts` and its test.
 Proof: a test that sets a field containing `\.`, makes a second update to another field and reads both the field and the first history line back unchanged; plus a formatter-escaped `\*` still reads as `*`; can-fail with the writer escape removed.
+Confirmed before the fix: the new test, run against the unchanged writer, failed (exit 1) with `expected 'verify with rg \'api.v1\'' to be 'verify with rg \'api\.v1\''`; `renderLaneLedger` wrote values raw and `unescapeMarkdown` dropped the backslash on read. Fix: `renderLaneLedger` escapes each backslash as `\\` in field values and Closed and History lines; the reader is unchanged, so `\\` reads back as `\` and a formatter's `\*` still reads as `*`. Files changed: `packages/cli/src/commands/project/lane/ledger.ts`, `packages/cli/src/commands/project/lane/ledger.test.ts` (new test: `next: verify with rg 'api\.v1'`, then an owner-only update; the field, the first history line and the rendered `\\.` are checked). The existing formatter test (captured oxfmt output with `src/\*.ts`) covers `\*` reading as `*`. `pnpm exec oxfmt --write` on a rendered ledger keeps `api\\.v1` and escapes only `src/*.ts` to `src/\*.ts`, so a hook-formatted ledger still round-trips.
+Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane src/commands/project/status.test.ts src/commands/project/orchestrator` exit 0 (4 files, 86 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on both files exit 0. Can-fail: with `escapeBackslashes` reduced to `return value`, `vitest run src/commands/project/lane/ledger.test.ts` exits 1 with only the new test failing on the same `api.v1` assertion (19 others passed, the `\*` formatter test among them); restored.
 
 ### Task p08-t07: (review) Keep filed lane reports byte-for-byte through a formatting commit hook
 
