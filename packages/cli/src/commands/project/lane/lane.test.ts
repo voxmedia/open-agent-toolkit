@@ -328,6 +328,186 @@ describe('oat project lane set', () => {
     },
   );
 
+  describe('the head-ahead check', () => {
+    async function laneWithReport(): Promise<{
+      root: string;
+      worktree: string;
+      reported: string;
+    }> {
+      const root = await sharedRepo();
+      await newProject(root);
+      const worktree = await addLinkedWorktree(root, 'lane/l01');
+      await writeFile(join(worktree, 'work.txt'), 'one\n', 'utf8');
+      git(worktree, ['add', 'work.txt']);
+      git(worktree, ['commit', '-q', '-m', 'lane work']);
+      const reported = git(worktree, ['rev-parse', 'HEAD']);
+      const saved = join(worktree, '..', 'l01-d01.txt');
+      await writeFile(saved, '# Lane report: l01-d01\n', 'utf8');
+      const created = await laneSet(root, [
+        'l01',
+        '--worktree',
+        worktree,
+        '--branch',
+        'lane/l01',
+      ]);
+      expect(created.exitCode, created.stderr).toBe(0);
+      const filed = await laneSet(root, [
+        'l01',
+        '--report',
+        saved,
+        '--head',
+        reported,
+      ]);
+      expect(filed.exitCode, filed.stderr).toBe(0);
+      expect(filed.stderr).not.toContain('Lane head ahead');
+      return { root, worktree, reported };
+    }
+
+    async function statusOf(cwd: string) {
+      const text = await runOat(cwd, [
+        'project',
+        'status',
+        '--project-path',
+        projectDir(cwd, 'shared'),
+      ]);
+      expect(text.exitCode, text.stderr).toBe(0);
+      return text.stdout;
+    }
+
+    it('says nothing while the branch head is the reported head', async () => {
+      const { root } = await laneWithReport();
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+      const json = await laneSet(root, ['l01'], true);
+      expect(JSON.parse(json.stdout).headCheck).toMatchObject({
+        status: 'current',
+        commits: 0,
+      });
+    });
+
+    it('flags a branch head past the last report in lane set and status', async () => {
+      const { root, worktree, reported } = await laneWithReport();
+      for (const n of [2, 3]) {
+        await writeFile(join(worktree, 'work.txt'), `${n}\n`, 'utf8');
+        git(worktree, ['commit', '-q', '-am', `unreported ${n}`]);
+      }
+      const expected = `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head ${reported}; do not merge unreported commits unreviewed.`;
+
+      const set = await laneSet(root, ['l01', '--state', 'work-settled']);
+      expect(set.exitCode, set.stderr).toBe(0);
+      expect(set.stderr).toContain(`Warning: ${expected}`);
+      expect(await statusOf(root)).toContain(expected);
+
+      const json = await runOat(
+        root,
+        ['project', 'status', '--project-path', projectDir(root, 'shared')],
+        ['--json'],
+      );
+      expect(JSON.parse(json.stdout)).toMatchObject({
+        lanes: {
+          headAhead: [
+            {
+              lane: 'l01',
+              branch: 'lane/l01',
+              reportedHead: reported,
+              status: 'ahead',
+              branchHead: git(worktree, ['rev-parse', 'HEAD']),
+              commits: 2,
+            },
+          ],
+        },
+      });
+
+      // Filing the next report at the new head clears the flag.
+      expect((await laneSet(root, ['l01', '--dispatch'])).exitCode).toBe(0);
+      const saved = join(worktree, '..', 'l01-d02.txt');
+      await writeFile(saved, '# Lane report: l01-d02\n', 'utf8');
+      const filed = await laneSet(root, [
+        'l01',
+        '--report',
+        saved,
+        '--head',
+        git(worktree, ['rev-parse', 'HEAD']),
+      ]);
+      expect(filed.stderr).not.toContain('Lane head ahead');
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+    });
+
+    it('flags a branch that no longer contains the reported head', async () => {
+      const { root, worktree, reported } = await laneWithReport();
+      git(worktree, ['reset', '-q', '--hard', 'HEAD~1']);
+      await writeFile(join(worktree, 'other.txt'), 'x\n', 'utf8');
+      git(worktree, ['add', 'other.txt']);
+      git(worktree, ['commit', '-q', '-m', 'rewritten']);
+      expect(await statusOf(root)).toContain(
+        `Lane head ahead of its report: l01 (branch lane/l01) has moved off the last report's head ${reported} (1 commit not in it); do not merge unreported commits unreviewed.`,
+      );
+    });
+
+    it('does not apply to a lane in the orchestrator checkout, and cannot compare a branch this clone lacks', async () => {
+      const root = await sharedRepo();
+      await newProject(root);
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const shared = await laneSet(
+        root,
+        ['l02', '--worktree', '.', '--branch', 'main', '--head', head],
+        true,
+      );
+      // The orchestrator keeps committing on its branch; that is not unreported lane work.
+      await writeFile(join(root, 'orchestrator.txt'), 'x\n', 'utf8');
+      git(root, ['add', 'orchestrator.txt']);
+      git(root, ['commit', '-q', '-m', 'orchestrator work']);
+      expect(JSON.parse(shared.stdout).headCheck).toBeNull();
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+
+      const remote = await laneSet(
+        root,
+        ['l03', '--branch', 'delegate/l03', '--head', head],
+        true,
+      );
+      expect(JSON.parse(remote.stdout).headCheck).toMatchObject({
+        status: 'unknown',
+        reason: 'branch delegate/l03 is not in this clone',
+      });
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+    });
+  });
+
+  it('names the lane in status run from a branch lanes.md lists', async () => {
+    const root = await sharedRepo();
+    await newProject(root);
+    const worktree = await addLinkedWorktree(root, 'lane/l04');
+    expect(
+      (
+        await laneSet(root, [
+          'l04',
+          '--worktree',
+          worktree,
+          '--branch',
+          'lane/l04',
+        ])
+      ).exitCode,
+    ).toBe(0);
+    const fromLane = await runOat(worktree, [
+      'project',
+      'status',
+      '--project-path',
+      projectDir(root, 'shared'),
+    ]);
+    expect(fromLane.exitCode, fromLane.stderr).toBe(0);
+    expect(fromLane.stdout).toContain(
+      'Current branch: lane/l04 (not the orchestrator branch: this checkout is lane l04 in lanes.md)',
+    );
+    const fromOrchestrator = await runOat(root, [
+      'project',
+      'status',
+      '--project-path',
+      projectDir(root, 'shared'),
+    ]);
+    expect(fromOrchestrator.stdout).toContain(
+      'Current branch: main (this checkout is the orchestrator)',
+    );
+  });
+
   it('refuses a project that is not freestyle (existing-mode control)', async () => {
     const root = await sharedRepo();
     await newProject(root, 'shared', 'quick');

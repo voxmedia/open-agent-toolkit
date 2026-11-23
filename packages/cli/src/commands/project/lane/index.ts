@@ -9,6 +9,7 @@ import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { formatHeadAhead, isHeadFlagged } from './head';
 import { LANE_STATES, WAITING_ON_KINDS, type LaneState } from './ledger';
 import { setLane, validateOneLine, type SetLaneResult } from './set';
 import type { SettableLaneField } from './update';
@@ -229,10 +230,16 @@ function createSetCommand(dependencies: LaneDependencies): Command {
             fields: result.block.fields,
             changes: result.changes,
             reportPath: result.reportPath ?? null,
+            headCheck: result.headCheck,
           });
         } else {
           context.logger.info(describe(result));
           context.logger.info(`Wrote ${result.ledgerPath}. ${SAVE_HINT}`);
+          if (result.headCheck && isHeadFlagged(result.headCheck)) {
+            context.logger.warn(
+              `Warning: ${formatHeadAhead(result.headCheck)}`,
+            );
+          }
         }
         process.exitCode = 0;
       } catch (error) {

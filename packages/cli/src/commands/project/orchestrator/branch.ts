@@ -88,9 +88,14 @@ export function describeOrchestratorCheckout(
   };
 }
 
-/** The two `status` lines: the recorded branch, then this checkout's. */
+/**
+ * The two `status` lines: the recorded branch, then this checkout's. A
+ * checkout that is not the orchestrator is named as the lane `lanes.md` lists
+ * on its branch, when it lists one.
+ */
 export function formatOrchestratorLines(
   checkout: OrchestratorCheckout,
+  lanes: readonly string[] = [],
 ): string[] {
   const current = checkout.currentBranch ?? 'detached HEAD';
   if (!checkout.claimed) {
@@ -103,7 +108,9 @@ export function formatOrchestratorLines(
     `Orchestrator branch: ${checkout.branch}`,
     checkout.isOrchestrator
       ? `Current branch: ${current} (this checkout is the orchestrator)`
-      : `Current branch: ${current} (not the orchestrator branch: this checkout is a lane)`,
+      : `Current branch: ${current} (not the orchestrator branch: this checkout is ${
+          lanes.length === 0 ? 'a lane' : `lane ${lanes.join(', ')} in lanes.md`
+        })`,
   ];
 }
 

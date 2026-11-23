@@ -11,6 +11,7 @@ import { isFreestyleState } from '@commands/shared/frontmatter';
 import { canonicalizePath } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
 
+import { checkLaneHead, type LaneHeadCheck } from './head';
 import {
   LANES_FILENAME,
   readLaneLedger,
@@ -40,6 +41,8 @@ export interface SetLaneResult extends LaneUpdateResult {
   project: NamedProject;
   /** `lanes.md` beside the project's own path, as output names it. */
   ledgerPath: string;
+  /** The head-ahead check for the lane; null when it does not apply. */
+  headCheck: LaneHeadCheck | null;
 }
 
 /** Text a ledger line can hold: one line. */
@@ -94,8 +97,8 @@ async function fileReport(
  * `oat project lane set`: one update to a freestyle project's lane ledger,
  * refused unless this checkout is the project's orchestrator. A report is
  * filed first, then the ledger is written atomically with its pointer, so a
- * failed write never leaves a pointer to a missing report. Nothing is
- * committed or pushed.
+ * failed write never leaves a pointer to a missing report. The lane's
+ * head-ahead check runs on the result. Nothing is committed or pushed.
  */
 export async function setLane(options: SetLaneOptions): Promise<SetLaneResult> {
   const project = await resolveProjectOrActive(
@@ -147,5 +150,6 @@ export async function setLane(options: SetLaneOptions): Promise<SetLaneResult> {
     ...result,
     project,
     ledgerPath: `${project.projectPath}/${LANES_FILENAME}`,
+    headCheck: await checkLaneHead(result.block, options.repoRoot, options.git),
   };
 }

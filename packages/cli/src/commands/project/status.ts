@@ -6,6 +6,11 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  formatHeadAhead,
+  readLaneStatus,
+  type LaneStatus,
+} from '@commands/project/lane/head';
+import {
   readOpenLinkedProjects,
   type OpenLinkedProjects,
 } from '@commands/project/linked/ledger';
@@ -46,6 +51,12 @@ interface ProjectStatusDependencies {
   readOrchestratorBranch: (projectDir: string) => Promise<string | null>;
   /** A freestyle parent's open rows in its `linked-projects.md`. */
   readOpenLinkedProjects: (projectDir: string) => Promise<OpenLinkedProjects>;
+  /** This checkout's lane and the head-ahead flags from `lanes.md`. */
+  readLaneStatus: (
+    projectDir: string,
+    cwd: string,
+    checkout: OrchestratorCheckout,
+  ) => Promise<LaneStatus>;
 }
 
 interface ProjectStatusOptions {
@@ -63,6 +74,8 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   readCurrentBranch: (cwd) => readCurrentBranch(cwd),
   readOrchestratorBranch,
   readOpenLinkedProjects,
+  readLaneStatus: (projectDir, cwd, checkout) =>
+    readLaneStatus(projectDir, cwd, checkout),
 };
 
 function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
@@ -111,7 +124,16 @@ function freestyleProjectFiles(
 /** What status reports about a freestyle project beyond its files. */
 interface FreestyleCoordination {
   orchestrator: OrchestratorCheckout;
+  lanes: LaneStatus;
   linkedProjects: OpenLinkedProjects;
+}
+
+/** Lanes whose branch is past their last report, and an unreadable ledger. */
+function formatLaneLines(lanes: LaneStatus): string[] {
+  if (lanes.error) {
+    return [`Lanes: unreadable (${lanes.error})`];
+  }
+  return lanes.headAhead.map(formatHeadAhead);
 }
 
 /**
@@ -141,7 +163,11 @@ function formatProjectStatusLines(
         `Shape: ${files.shape}`,
         ...(coordination
           ? [
-              ...formatOrchestratorLines(coordination.orchestrator),
+              ...formatOrchestratorLines(
+                coordination.orchestrator,
+                coordination.lanes.current,
+              ),
+              ...formatLaneLines(coordination.lanes),
               ...formatOpenLinkLines(coordination.linkedProjects),
             ]
           : []),
@@ -361,15 +387,22 @@ async function writeProjectStatusOutput(
   absoluteDir: string,
 ): Promise<void> {
   const files = freestyleProjectFiles(status.project, projectDir);
-  const coordination = files
-    ? {
-        orchestrator: describeOrchestratorCheckout(
-          await dependencies.readOrchestratorBranch(absoluteDir),
-          await dependencies.readCurrentBranch(context.cwd),
-        ),
-        linkedProjects: await dependencies.readOpenLinkedProjects(absoluteDir),
-      }
-    : null;
+  let coordination: FreestyleCoordination | null = null;
+  if (files) {
+    const orchestrator = describeOrchestratorCheckout(
+      await dependencies.readOrchestratorBranch(absoluteDir),
+      await dependencies.readCurrentBranch(context.cwd),
+    );
+    coordination = {
+      orchestrator,
+      lanes: await dependencies.readLaneStatus(
+        absoluteDir,
+        context.cwd,
+        orchestrator,
+      ),
+      linkedProjects: await dependencies.readOpenLinkedProjects(absoluteDir),
+    };
+  }
   const payload = files
     ? { ...status, projectFiles: files, ...coordination }
     : status;
