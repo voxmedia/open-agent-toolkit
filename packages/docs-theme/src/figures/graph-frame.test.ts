@@ -83,8 +83,27 @@ describe('GraphFrame', () => {
 
     expect(html).toContain('data-frame="none"');
     expect(html).not.toMatch(/class="[^"]*\bgraph-frame\b/);
-    expect(html).toContain('p-0 sm:p-0');
+    expect(html).toContain('p-0');
   });
+
+  // `cn` has no tailwind-merge, so a padding reset placed beside the boxed
+  // padding loses on stylesheet order (Tailwind emits `p-0`/`px-0` before
+  // `px-5`/`py-7`). Each frame must carry exactly one padding set.
+  it.each([
+    ['box', ['px-5', 'py-7', 'sm:px-8', 'sm:py-8'], ['p-0', 'px-0']],
+    ['corners', ['px-5', 'py-7', 'sm:px-8', 'sm:py-8'], ['p-0', 'px-0']],
+    ['rule', ['px-0', 'py-7', 'sm:py-8'], ['px-5', 'sm:px-8', 'p-0']],
+    ['none', ['p-0'], ['px-5', 'py-7', 'sm:px-8', 'sm:py-8', 'px-0']],
+  ] as const)(
+    'gives the %s frame body one non-conflicting padding set',
+    (frame, present, absent) => {
+      const html = renderToStaticMarkup(h(GraphBody, { frame }, 'body'));
+      const classes = /class="([^"]*)"/.exec(html)?.[1].split(/\s+/) ?? [];
+
+      for (const name of present) expect(classes).toContain(name);
+      for (const name of absent) expect(classes).not.toContain(name);
+    },
+  );
 
   it('styles inline code as a code chip and uses only prefixed tokens', () => {
     const html = renderToStaticMarkup(

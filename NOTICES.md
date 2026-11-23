@@ -229,7 +229,8 @@ directive, the `motion` animation and upstream's frame context removed (the
 frame style is an explicit `frame` prop). The frame root carries `not-prose`,
 the tree indent fix is applied, and inline code renders as a code chip.
 Generic shadcn tokens are rewritten to Fumadocs `fd-*` and `graph-*` ones, and
-`cn` is a local class joiner with no tailwind-merge. Components take only
+`cn` is a local class joiner with no tailwind-merge, so `GraphBody` takes
+one padding set per frame. Components take only
 fence props, and none of mdxcn's alert, quote, terminal or footnote upgrades
 are included. Each vendored file records its upstream item and its patches in
 a header that also carries the full notice below, because

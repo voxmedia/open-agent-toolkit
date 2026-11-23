@@ -20,6 +20,8 @@ OAT patches:
   becomes `text-fd-foreground` and `var(--background)` becomes
   `var(--color-fd-background)`.
 - `cn` is a local class joiner (`./cn.ts`), with no tailwind-merge.
+  `GraphBody` therefore takes exactly one padding set per frame instead of
+  appending a reset that tailwind-merge would have resolved.
 - The table item helpers (`Head`, `Row`, `Foot`, `Cell`, `cellsOf`,
   `alignsOf`) and the graph-markdown re-exports are dropped; figures import
   `./graph-markdown.js` directly.
@@ -139,11 +141,13 @@ export function GraphTitle({
   );
 }
 
-const bodyPadding: Record<GraphFrameStyle, string | undefined> = {
-  box: undefined,
-  corners: undefined,
-  rule: 'px-0 sm:px-0',
-  none: 'p-0 sm:p-0',
+// One padding set per frame: `cn` has no tailwind-merge, so a reset placed
+// beside the boxed padding would lose on Tailwind's stylesheet order.
+const bodyPadding: Record<GraphFrameStyle, string> = {
+  box: 'px-5 py-7 sm:px-8 sm:py-8',
+  corners: 'px-5 py-7 sm:px-8 sm:py-8',
+  rule: 'px-0 py-7 sm:py-8',
+  none: 'p-0',
 };
 
 export function GraphBody({
@@ -155,14 +159,7 @@ export function GraphBody({
   frame?: GraphFrameStyle;
 }) {
   return (
-    <div
-      className={cn(
-        'min-w-0 px-5 py-7 sm:px-8 sm:py-8',
-        className,
-        bodyPadding[frame],
-      )}
-      {...props}
-    />
+    <div className={cn('min-w-0', bodyPadding[frame], className)} {...props} />
   );
 }
 
