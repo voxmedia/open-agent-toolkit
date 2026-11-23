@@ -1378,6 +1378,8 @@ Late fix p10-t06 (p10 review round 1: L1 and L2) at `dfe4e2a38`, recorded at `40
 - **Finding classes:** L1 accepted-requirement (Decisions and memories: first use with `oat template resolve`, only when absent; the complexity lens the operator set for m02) · L2 regression (the bullet overstated plan.md Decisions and memories: "A linked child starts with empty files").
 - Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p10-t06 record.
 
+Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a38` (the p10 Step 7a bookkeeping commit) as the fix commit. The first implementation commit attempt was refused by commitlint (header over 100 characters) and the root's script recorded `HEAD` without checking the result. The p10-t06 implementation commit is `fd0366c3f00c6361e8203d7c0367f78692a8a78a`, made after the p10 bookkeeping commit `b373b426c`; its content and verification are the ones the record describes.
+
 ---
 
 ## Phase p08: m02 docs and release
