@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -1014,6 +1015,50 @@ describe('a derived key in a freestyle project (p11)', () => {
     expect(
       parseProjectLogStructuralHead((written[0] as { body: string }).body).rest,
     ).toBe(`Merged PR #12. key:${key}`);
+  });
+
+  it('commits a keyless entry with --commit once, and a replay commits nothing', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    await writeFile(logPath, '# Project Log: demo\n\n## Entries\n', 'utf8');
+    const git = (args: string[]): string =>
+      execFileSync('git', args, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).trim();
+    git(['init', '-q', '--initial-branch=main']);
+    git(['config', 'user.email', 'log@example.test']);
+    git(['config', 'user.name', 'Log Test']);
+    git(['config', 'commit.gpgsign', 'false']);
+    git(['add', '-A']);
+    git(['commit', '-q', '-m', 'baseline']);
+    const baseline = git(['rev-parse', 'HEAD']);
+
+    const first = (await append(root, [...event(projectPath), '--commit'])) as {
+      status: string;
+      idempotencyKey?: string;
+      commit?: unknown;
+    };
+    expect(first).toMatchObject({
+      status: 'appended',
+      commit: { outcome: 'committed', committed: true },
+    });
+    const committed = git(['rev-parse', 'HEAD']);
+    expect(committed).not.toBe(baseline);
+    expect(git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      '.oat/projects/shared/demo/project-log.md',
+    );
+
+    const replay = (await append(root, [
+      ...event(projectPath),
+      '--commit',
+    ])) as { status: string; idempotencyKey?: string; commit?: unknown };
+    expect(replay).toMatchObject({
+      status: 'already-appended',
+      idempotencyKey: first.idempotencyKey,
+    });
+    expect(git(['rev-parse', 'HEAD'])).toBe(committed);
+    expect(await entries(logPath)).toHaveLength(1);
   });
 
   it('dedupes a keyless judgment entry whose **Recorded:** time differs', async () => {
