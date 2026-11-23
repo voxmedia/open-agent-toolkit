@@ -193,10 +193,11 @@ happens:
 - The ledger holds no reasoning beyond a one-line next action or blocker; an
   empty value (`--blocker ""`) clears a field.
 
-Each dispatch brief names the lane and dispatch IDs; the paths of this file
-and `shape.md`; the lane's worktree and branch, or the `paths:` it may change in
-the orchestrator's checkout; that the lane writes no project records; its lane
-notes path; and the report shape. Copy the shape with
+Each dispatch brief extends the standing lane brief (see Lane brief) instead
+of repeating its rules, and names the lane and dispatch IDs; the paths of this
+file and `shape.md`; the lane's worktree and branch, or the `paths:` it may
+change in the orchestrator's checkout; its lane notes path; the task; and the
+report shape. Copy the shape with
 `oat template resolve lane-report --output <path>` and embed it whole, with the
 instruction to return it filled in as the lane's final message.
 
@@ -215,6 +216,19 @@ On resume, read `lanes.md` before acting. For each active lane with an open
 dispatch, check its task or thread handle and the forge (its PR, its branch
 head) and record what you find with `lane set` before any redispatch: a lane
 that is still running is waited on or steered, not dispatched again.
+
+## Lane brief
+
+The standing rules every lane follows ship as the bundled `lane-brief.md`:
+the lane writes no project records and its final message is its report; it
+keeps its decisions and gotchas in its lane notes file; it changes only its own
+worktree and branch, or the `paths:` it was given in your checkout, where it
+commits by exact path; and its report's Tested SHA equals the delivered head.
+Copy it with `oat template resolve lane-brief --output <path>` and embed it
+whole in every dispatch brief, which extends it with the dispatch's facts and
+task (see Dispatch) and the report shape, never repeating its rules. A
+`lane-brief.md` in the repository's `.oat/templates/` or the user's
+`~/.oat/templates/` replaces the bundled one.
 
 ## Lane reports
 
@@ -294,8 +308,8 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
   and `implement-preflight` give the same report, and `review` also needs a
   `--scope` of phases those documents name.
 - `oat template resolve <name> --output <path>`: copy an OAT template as the
-  starting point for a project document, `lane-report` for a dispatch brief,
-  or `decisions` and `memories` when the file is absent.
+  starting point for a project document, `lane-brief` and `lane-report` for a
+  dispatch brief, or `decisions` and `memories` when the file is absent.
 - `--commit` on `oat project lane set` and `oat project log append`: commit
   `lanes.md` and the report the update filed, or the project log, by exact
   path, leaving every other change uncommitted. In a synced or local project

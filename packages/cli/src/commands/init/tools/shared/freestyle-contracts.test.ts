@@ -41,6 +41,7 @@ const AGENTS_HEADINGS = [
   'Orchestrator branch',
   'Linked projects',
   'Dispatch',
+  'Lane brief',
   'Lane reports',
   'Lane placement',
   'Records commands',
@@ -773,6 +774,7 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
   const dispatch = oneLine(h2Section(agents, 'Dispatch'));
   const reports = oneLine(h2Section(agents, 'Lane reports'));
   const placement = oneLine(h2Section(agents, 'Lane placement'));
+  const laneBrief = oneLine(h2Section(agents, 'Lane brief'));
 
   it('names every lane state and waiting-on kind lane set accepts', () => {
     for (const state of LANE_STATES) {
@@ -792,7 +794,7 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     command: string;
     entryTypes: ('judgment' | 'structural')[];
   }[] {
-    const text = [dispatch, reports, placement].join(' ');
+    const text = [dispatch, laneBrief, reports, placement].join(' ');
     const pattern =
       /`(?:oat )?(?:project )?(lane set|log append|template resolve)\b|(--[a-z][a-z-]+)/g;
     const found = [];
@@ -920,7 +922,12 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     expect(dispatch).toContain(
       '`oat template resolve lane-report --output <path>` and embed it whole',
     );
-    expect(dispatch).toContain('that the lane writes no project records');
+    expect(dispatch).toContain(
+      'Each dispatch brief extends the standing lane brief (see Lane brief) instead of repeating its rules',
+    );
+    expect(oneLine(h2Section(agents, 'Lane brief'))).toContain(
+      'the lane writes no project records',
+    );
     expect(dispatch).toContain(
       'record what you find with `lane set` before any redispatch',
     );
@@ -1180,7 +1187,9 @@ describe('freestyle decisions and memories (p10)', () => {
 
   it('names the lane notes path as authorized scratch in the dispatch section, and promotion after filing', () => {
     const dispatch = oneLine(h2Section(agents, 'Dispatch'));
-    expect(dispatch).toContain('its lane notes path; and the report shape');
+    expect(dispatch).toContain(
+      'its lane notes path; the task; and the report shape',
+    );
     expect(dispatch).toContain(
       'to an uncommitted notes file in its own checkout, `.oat/analysis/lane-notes/<lane>-<dispatch>.md`',
     );
@@ -1273,10 +1282,6 @@ describe('freestyle record upkeep commands (p11)', () => {
       '`--idempotency-key` is optional here: without one the command derives a key from the entry, so running the same append again writes nothing; a key the body lacks is added to its end.',
     );
   });
-
-  it('adds no new section heading (p12 adds ## Lane brief)', () => {
-    expect(h2Headings(agents)).toEqual([...AGENTS_HEADINGS]);
-  });
 });
 
 describe('freestyle lane report shape (p07)', () => {
@@ -1366,6 +1371,130 @@ describe('freestyle lane report shape (p07)', () => {
     });
     expect(result).toMatchObject({ found: true, tier: 'user' });
     expect(read(output)).toBe('# Our report\n');
+  });
+});
+
+/** The standing lane brief's sections (p12, Outcome 10). */
+const LANE_BRIEF_SECTIONS = [
+  'Your dispatch',
+  'Project records',
+  'Lane notes',
+  'Paths and commits',
+  'Report',
+] as const;
+
+describe('freestyle lane brief (p12)', () => {
+  const template = read(join(TEMPLATES_DIR, 'lane-brief.md'));
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('pins the lane brief sections and the standing boundaries, with no template frontmatter', () => {
+    expect(h2Headings(template)).toEqual([...LANE_BRIEF_SECTIONS]);
+    // Embedded whole in a dispatch brief, so it carries no frontmatter.
+    expect(template.startsWith('# Lane brief\n')).toBe(true);
+    const text = oneLine(template);
+    expect(text).toContain(
+      "Your dispatch brief extends them with this dispatch's facts and task and does not repeat them.",
+    );
+    const records = oneLine(h2Section(template, 'Project records'));
+    expect(records).toContain('You write no project records');
+    for (const file of [
+      '`lanes.md`',
+      '`lane-reports/`',
+      '`shape.md`',
+      '`decisions.md`',
+      '`memories.md`',
+      '`linked-projects.md`',
+    ]) {
+      expect(records, file).toContain(file);
+    }
+    expect(records).toContain(
+      'Your final message for the dispatch is your report',
+    );
+    expect(oneLine(h2Section(template, 'Lane notes'))).toContain(
+      'It is authorized scratch, outside any `paths:` you were given; never commit it.',
+    );
+    expect(oneLine(h2Section(template, 'Paths and commits'))).toContain(
+      'commit with exact paths (`oat internal commit-paths`), never a broad `git add`',
+    );
+    expect(oneLine(h2Section(template, 'Report'))).toContain(
+      'Its Tested SHA must equal the delivered head',
+    );
+  });
+
+  it('adds a Lane brief section to the project AGENTS.md that Dispatch links to', () => {
+    const laneBrief = oneLine(h2Section(agents, 'Lane brief'));
+    expect(laneBrief).toContain(
+      '`oat template resolve lane-brief --output <path>` and embed it whole in every dispatch brief, which extends it',
+    );
+    expect(laneBrief).toContain('never repeating its rules');
+    expect(laneBrief).toContain(
+      "report's Tested SHA equals the delivered head",
+    );
+    expect(oneLine(h2Section(agents, 'Dispatch'))).toContain(
+      'extends the standing lane brief (see Lane brief)',
+    );
+    expect(oneLine(h2Section(agents, 'Records commands'))).toContain(
+      '`lane-brief` and `lane-report` for a dispatch brief',
+    );
+  });
+
+  it('builds a dispatch brief from the bundled lane brief and report shape alone (isolated HOME, no repository tier)', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'oat-lane-brief-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-lane-brief-home-'));
+    tempDirs.push(cwd, home);
+
+    const resolved: Record<string, string> = {};
+    for (const name of ['lane-brief', 'lane-report']) {
+      const output = join(cwd, `${name}.md`);
+      const result = await runTemplateResolve({
+        name,
+        cwd,
+        home,
+        output,
+        resolveProjectRoot: async () => {
+          throw new CliError('not a repository', 1);
+        },
+        resolveAssetsRoot,
+      });
+      expect(result).toMatchObject({
+        found: true,
+        tier: 'bundle',
+        path: null,
+        output,
+      });
+      resolved[name] = read(output);
+    }
+    expect(resolved['lane-brief']).toBe(template);
+
+    // The standing brief, then only the dispatch's own facts, then the shape.
+    const brief = [
+      resolved['lane-brief'],
+      '## This dispatch',
+      '',
+      '- Lane l01, dispatch d02 of project demo.',
+      '- Rules: .oat/projects/shared/demo/AGENTS.md; shape: .oat/projects/shared/demo/shape.md',
+      '- Worktree: ../demo-l01 on branch lane/l01',
+      '- Lane notes: .oat/analysis/lane-notes/l01-d02.md',
+      '- Task: add the export command.',
+      '',
+      'Return this report as your final message:',
+      '',
+      resolved['lane-report'],
+    ].join('\n');
+    expect(h2Headings(brief)).toEqual([
+      ...LANE_BRIEF_SECTIONS,
+      'This dispatch',
+      ...LANE_REPORT_SECTIONS,
+    ]);
+    expect(brief.match(/You write no project records/g)).toHaveLength(1);
   });
 });
 
