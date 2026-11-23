@@ -1700,7 +1700,13 @@ Late fix p11-t05 (p11 review round 1: L1) at `156e7bb66`. No later phase has a `
 
 ## Phase p12: Adopted plans, proportionality checkpoints and lane brief
 
-**Status:** pending
+**Status:** in_progress
+**Base:** db8eb5033c3ecb557635e8ca57590e483e203de3
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+
+Added by the m03 amendment (2026-11-23), from the first real freestyle run (plan.md Decisions: m03 re-alignment; Outcome 10). Also the m03 release phase: skill bump and lockstep package versions.
+
+Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p12 is the last m03 phase. Root fan-out fails the independence test: the intake and checkpoint text, the `shape.md` template, `lane-brief.md`, the project `AGENTS.md` `## Lane brief` section, their contract tests, the docs and the version bump share the bundle, the freestyle contract test file and the release checks. One phase implementer.
 
 ---
 
