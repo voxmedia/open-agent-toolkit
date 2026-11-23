@@ -240,6 +240,7 @@ Default is `[]` (fully sequential, no worktrees).
 | m02   | code     | fixes_added | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T060440Z.md | 020ebb7409183ac2b162e8df24d2b9ec64b48b59 | manual     | -           |
 | m02   | code     | passed      | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T063938Z.md | 9ffa307eb6bbb42f5661c90bf529f2a56b231dba | manual     | -           |
 | m03   | code     | fixes_added | 2026-11-23 | reviews/archived/m03-integrated-review-2026-11-23T185019Z.md | 2a747dc33f305724b52a31cba429a31f824c692f | manual     | -           |
+| m03   | code     | passed      | 2026-11-23 | reviews/archived/m03-integrated-review-2026-11-23T185647Z.md | 22212dabbee17dba426eaf4794c4d4e7c5d81566 | manual     | -           |
 | final | code     | pending     | -          | -                                                            | -                                        | -          | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |

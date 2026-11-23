@@ -2026,6 +2026,23 @@ Review-cycle count for m03 integrated: 1.
 
 **Outcome:** fixes applied as p12-t06 (`22212dabb`, late-fix rule, records in p12), root-verified with can-fail checks. `oat project delivery check` needs a passed integrated review covering the head, so, as in m02 cycle 3, a confirm-only round on `2a747dc33..22212dabb` runs before delivery.
 
+### Review Received: m03 (cycle 2)
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m03-integrated-review-2026-11-23T185647Z.md
+
+Integrated milestone review of m03 (p11, p12), cycle 2, confirm only, on `2a747dc33..22212dabb` (p12-t06), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only).
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Confirmed by the reviewer: I-1 to I-6 by behaviour with the branch build; quick mode still refuses a missing explicit key; gate recovery still matches `run=<id>` exactly (208 tests in the touched suites pass).
+
+Reported outside the delta (pre-existing on `2a747dc33` too, not an m03 finding): with `status.showUntrackedFiles=no`, gate recovery of a new untracked project log clears its receipt as `nothing-to-commit` (`append.ts:862`). Raised with the operator.
+
+Review-cycle count for m03 integrated: 2.
+
+**Outcome:** passed at `22212dabb`. p12 accepted (fix loops 2: p12-t05, p12-t06); m03 exit carrier refreshed to fresh; m03 reviewing -> delivering.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

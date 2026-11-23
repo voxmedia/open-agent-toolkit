@@ -273,6 +273,10 @@ p11 accepted: review passed (0 critical, 0 high, 0 medium, 1 low); L1 fixed root
 
 p12 accepted: review passed (0 critical, 0 high, 1 medium, 1 low); M1 and L1 fixed root-inline in p12-t05; 0 fix loops, no re-review. freestyle-projects-p12-outcome
 
+### 2026-11-23 · structural · oat-project-implement · p12
+
+p12 accepted after the m03 integrated review: cycle 1 (I-1 to I-6) fixed by root in p12-t06, cycle 2 confirm passed at 22212dabb with 0 findings; fix loops 2; exit carrier project_disabled refreshed to fresh; m03 -> delivering; next oat-project-pr-progress deliver m03; freestyle-projects-p12-outcome-m03-integrated
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

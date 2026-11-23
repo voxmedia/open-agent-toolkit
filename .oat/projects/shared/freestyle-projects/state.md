@@ -48,7 +48,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m03
-oat_milestone_status: reviewing
+oat_milestone_status: delivering
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -124,7 +124,7 @@ oat_milestone_gates:
         scope: [p11, p12]
       freshness: fresh
       freshness_reason: null
-      decided_at: '2026-11-23T18:28:30Z'
+      decided_at: '2026-11-23T18:56:47Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
@@ -304,7 +304,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/430 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-23T06:57:00Z'
+oat_project_state_updated: '2026-11-23T18:56:47Z'
 oat_generated: false
 ---
 
