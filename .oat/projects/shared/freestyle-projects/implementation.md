@@ -1648,6 +1648,19 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Can-fail: adding `randomUUID()` to the derived key's hash input (a random key) failed the five dedupe tests (`expected 'appended' to be 'already-appended'`) while the override, keyed-body and existing-mode tests still passed; restored.
 - Decisions: the key hashes every caller-supplied field, including `--origin` and `--version-note` (also caller-supplied) and whether `--structural` and `--time` were passed, never the heading date, the `--time` value or `**Recorded:**`; values are trimmed. The key goes at the end of the caller's body as one word, `key:<key>`, so the existing whole-word scan finds it and a structural event head never carries it; for a judgment entry a `--source` equal to the key already satisfies the scan, as before. `--json` reports `idempotencyKey` only for a freestyle project, and `--commit` uses it as the commit identity when no key was given. Freestyle is read from the target project's `state.md`, so `oat project linked ack`, which appends a structural entry to a freestyle parent's log, now also gets a derived key and a retried ack appends once.
 
+### Task p11-t03: Keep the head-ahead check quiet while the lane's dispatch is open
+
+**Status:** completed
+**Commit:** 95d2fd76636c88e190df8999d1062274dc20284b
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: Outcome 9, third clause. `lane set` and `status` do not flag a lane whose `dispatch:` line is `open` (work in flight) and keep flagging once it is `reported` or `no-report`.
+- Files: `packages/cli/src/commands/project/lane/{head.ts,lane.test.ts}`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane src/commands/project/status.test.ts` exit 0 (3 files, 77 tests); CLI `check` and `type-check` exit 0. New test: a lane in its own worktree two commits past its d01 report: `--dispatch` (d02 open) reports `headCheck: null`, and a later `lane set` and `status` print no warning; `--no-report` closes d02 and both print `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>`; `--dispatch` (d03 open) is quiet again in `status`; `--report <file> --head <old head>` closes d03 as `reported` and both flag it. The existing `unknown` test (a branch this clone lacks) now closes its dispatch with `--no-report` before reading `headCheck`, since an open dispatch is no longer checked.
+- Can-fail: replacing the `laneDispatch(block).status !== 'open'` clause with `(laneDispatch(block), true)` failed the new test on the open dispatch (`expected { lane: 'l01', … } to be null`); the other four head-ahead tests passed; restored.
+- Decisions: the rule is one clause in `headCheckApplies`, shared by `lane set` and `status`, so an open dispatch is not compared at all (no git calls, `headCheck` null in `--json`) rather than compared and hidden. The ledger parser already refuses a block without a valid `dispatch:` line, so `laneDispatch` cannot throw here.
+
 ---
 
 ## Phase p12: Adopted plans, proportionality checkpoints and lane brief
