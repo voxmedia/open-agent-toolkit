@@ -205,6 +205,25 @@ describe('DocsSteps', () => {
     expect(text(tight)).toContain('01Copyrun the CLI');
   });
 
+  it('reads a tight step state from its title, not its — body', () => {
+    const tight = render(
+      DocsSteps,
+      'Tight',
+      h(
+        'ul',
+        null,
+        h('li', { key: 1 }, 'Copy — run the ', h('strong', null, 'CLI')),
+        h('li', { key: 2 }, 'Wire — then ', h('em', null, 'export')),
+        h('li', { key: 3 }, h('strong', null, 'Register'), ' — export it'),
+        h('li', { key: 4 }, h('em', null, 'Write'), ' — use it'),
+      ),
+    );
+    expect(tight).toMatch(/class="[^"]*text-fd-foreground[^"]*">Copy</);
+    expect(tight).toMatch(/class="[^"]*text-fd-foreground[^"]*">Wire</);
+    expect(tight).toMatch(/class="[^"]*text-graph-accent[^"]*">Register</);
+    expect(tight).toMatch(/class="[^"]*text-graph-muted[^"]*">Write</);
+  });
+
   it('renders no hidden content', () => {
     expectNoHiddenContent(html);
   });
@@ -232,6 +251,18 @@ describe('DocsTree', () => {
       /grid-cols-\[minmax\(0,1fr\)_auto\][^>]*>.*?scratchpad\.md<\/span><\/span><span class="[^"]*text-graph-muted[^"]*">quick-capture pad for idea seeds<\/span>/,
     );
     expect(text(html)).not.toContain('scratchpad.md —');
+  });
+
+  it('keeps every dash segment of a note after the name', () => {
+    const noted = render(
+      DocsTree,
+      'Notes',
+      h('ul', null, h('li', { key: 1 }, 'api — server – v2 only')),
+    );
+    expect(noted).toMatch(/>api</);
+    expect(noted).toMatch(
+      /class="[^"]*text-graph-muted[^"]*">server — v2 only</,
+    );
   });
 
   it('accents bold nodes and dims the rest without hiding them', () => {

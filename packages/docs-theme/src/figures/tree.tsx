@@ -18,6 +18,7 @@ OAT patches:
   the indent under a last-child folder.
 - Non-accent rows recede with the `opacity-40` class instead of an inline
   opacity style.
+- A `name — note` note keeps every dash segment after the name (`splitDash`).
 
 Copyright (c) 2026 Keshav Bagaade
 
@@ -50,6 +51,7 @@ import {
   itemText,
   listItems,
   nestedList,
+  splitDash,
 } from './graph-markdown.js';
 
 type TreeNode = {
@@ -72,10 +74,10 @@ function nodesFromList(items: ReactElement[]): TreeNode[] {
   return items.map((item) => {
     const kids = nodesFromList(nestedList(item));
     const text = itemText(item);
-    const [name, extra] = text.split(/\s+[—–]\s+/);
+    const { label, rest } = splitDash(text);
     return {
-      label: name || text,
-      meta: extra,
+      label: label || text,
+      meta: rest || undefined,
       accent: hasHost(childrenOf(item), ['strong', 'b']),
       children: kids.length > 0 ? kids : undefined,
     };

@@ -15,7 +15,7 @@ OAT patches:
   props, `palette` and `className` are dropped.
 - `text-foreground` is rewritten to `text-fd-foreground`.
 - Bold or italic marks the step state only when it is in the step title, not
-  in the body.
+  in the body; in a tight `Title — body` item, only nodes before the dash count.
 - A loose step keeps every block after its title (lists and code included),
   not only paragraphs; a tight step keeps its nested lists.
 
@@ -83,6 +83,20 @@ function stateOf(head: ReactNode): StepState {
   return hasHost(head, ['em', 'i']) ? 'next' : 'done';
 }
 
+/** The tight-item nodes that start before the first ` — ` separator. */
+function beforeDash(nodes: ReactNode[]): ReactNode[] {
+  const cut = textOf(nodes).search(/\s+[—–]\s+/);
+  if (cut === -1) {
+    return nodes;
+  }
+  let offset = 0;
+  return nodes.filter((node) => {
+    const start = offset;
+    offset += textOf(node).length;
+    return start < cut;
+  });
+}
+
 /**
  * A loose item (blank lines between) takes its first paragraph as the title
  * and every block after it as the body. A tight item reads `Title — body`.
@@ -104,7 +118,7 @@ function stepsOf(children: ReactNode): Step[] {
       return {
         title: label,
         body: body.length > 0 ? body : undefined,
-        state: stateOf(head),
+        state: stateOf(beforeDash(head)),
       };
     }
 
