@@ -1254,6 +1254,16 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Fresh session: request `freestyle-projects-p07-t05-fresh-session-1`, one fresh-context read-only `general-purpose` subagent (Agent model `sonnet`, provider-default effort; bounded intelligent recon at the economy route, the root's suggested class), accepted and completed. Its brief held only the project folder path, the forge path and the question (which lane has the unfinished dispatch; its handle, owner and next action; what it would do before any redispatch), read-only. It answered l02 d01, handle `subagent-a1b2`, owner `orchestrator`, next action "wait for the docs subagent to finish its turn, then file its report", and before any redispatch: check whether the handle is alive, read the `docs/guide.md` diff against the task and the steer, record the finding with `lane set` (`--no-report` if interrupted), redispatch only if incomplete; it also flagged l01's unreported forge commit. Answer verbatim in the transcript; `lanes.md` (sha256 `2ec1b57e…`), the `orch` HEAD and working tree, and the forge refs were unchanged afterwards. It read the orchestrator checkout's `git status` beyond the project folder to see the uncommitted edit.
 - Known Unknown settled (whether existing `oat project dispatch record` IDs can serve as dispatch IDs): no. `oat project dispatch record` validates a launcher's complete dispatch record and OAT event (provider envelope, role, model and effort selectors, launch status) and writes nothing; its `request_id` is a free-form, project-wide string chosen by a lifecycle launcher (for example `freestyle-projects-p07-implementation-1`), not allocated per lane, and a freestyle orchestrator's launches (a native subagent, a T3 delegate, a remote run) need not pass through it. The ledger therefore allocates its own dispatch IDs, numbered per lane (`d01`, `d02`) by `lane set` and naming the report files (`lane-reports/l07-d02.md`), as the IDs decision says; when an orchestrator does validate a launch with `dispatch record`, it records that request ID as the lane's `--task` handle (this run used free-form handles such as `run-7f3a`).
 
+### Task p07-t06: Fix p07 review findings (M1, L1)
+
+**Status:** completed
+**Commit:** 3a3103ba76e8436e6d51c1080c1a9690f3a6122e
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p07 review `freestyle-projects-p07-review-1` M1 (accepted-requirement, Ledger vs project log decision: story events in the project log point to a ledger update ID) and L1 (accepted-requirement, Lane reports decision: the tested SHA must equal the delivered head).
+- Files: `.oat/templates/project-agents.md` (Lane reports: structural entries for merges and other story events take the `lane set` update ID as `--ref`; other ledger updates get no log entry), `.oat/templates/lane-report.md` (drops ", or say why not"), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (pins both).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project` exit 0 (104 files, 3382 tests); `pnpm check` exit 0; `pnpm lint` exit 0.
+
 ---
 
 ## Phase p10: Decisions and memories
