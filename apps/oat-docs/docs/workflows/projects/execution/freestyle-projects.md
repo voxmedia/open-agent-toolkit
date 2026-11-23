@@ -1,6 +1,6 @@
 ---
 title: Running a Freestyle Project
-description: 'The orchestrator branch, lane ledger and reports, decisions and memories, and linked projects of a freestyle project.'
+description: 'The orchestrator branch, lane ledger, lane brief and reports, decisions and memories, reshape checkpoints, and linked projects of a freestyle project.'
 ---
 
 # Running a Freestyle Project
@@ -112,12 +112,25 @@ turn. `--worktree` sets the placement: this checkout is `shared-worktree`, any
 other path `own-worktree`. Run `oat project lane set --help` for every field;
 `--commit` commits what the update wrote (see the start of this page).
 
-Each dispatch brief embeds the report shape, copied with
+Every lane follows the same standing rules, so they ship as a template
+instead of being repeated in each brief. Copy them with
+`oat template resolve lane-brief --output <path>` and embed them whole at the
+start of every dispatch brief. The bundled `lane-brief.md` has five sections:
+Your dispatch (what the brief adds), Project records (the lane writes none, and
+its final message is its report), Lane notes, Paths and commits (exact-path
+commits in the orchestrator's checkout, every commit listed in the report) and
+Report (every turn end gets one, and its Tested SHA equals the delivered head).
+The brief then adds only what is particular to the dispatch: the lane and
+dispatch IDs, the paths of `AGENTS.md` and `shape.md`, the worktree and branch
+or the `paths:` the lane may change, its lane notes path and the task.
+
+Each dispatch brief also embeds the report shape, copied with
 `oat template resolve lane-report --output <path>`. The bundled
 `lane-report.md` asks for Summary (this round and the lane so far), Delivered,
 Verification, Decisions, Deviations, Steering received, Review findings,
-Learnings, Open items and Proposed log entries. A `lane-report.md` at the
-repository or user template tier overrides it (see
+Learnings, Open items and Proposed log entries. A `lane-brief.md` or
+`lane-report.md` at the repository or user template tier overrides the bundled
+one (see
 [File Locations](../../../reference/file-locations.md)).
 
 When the lane returns its report, the orchestrator saves the text to a file
@@ -189,6 +202,26 @@ created before OAT scaffolded them gets each file on its next resume through
 is absent, because the copy replaces its target. A linked child starts with
 its own empty files.
 
+## Reshape checkpoints
+
+`shape.md` lists the moments to revisit how the project runs. At each one, and
+when a plan written after shaping is accepted, the orchestrator asks two
+questions, which the `shape.md` template, the project's `AGENTS.md` and the
+skill's reshape reference all carry:
+
+1. **Does the shape still fit?**
+2. **Is the plan and its process proportionate to its value?** It is tested by
+   process time against code time (above about 3x needs a stated reason, a
+   prompt to explain rather than a hard rule), by what risk each safeguard
+   covers and whether that risk exists now, and by the lightest process that
+   keeps the real gates: the reviews and approvals that you or the repository
+   require.
+
+Each answer carries its reason; a bare "no change" answers neither. A "no"
+reaches you as a recommendation with the lighter alternative, even in an
+unattended run, and the shape changes only once you agree, through
+[oat-project-freestyle](../planning/starting-projects.md#oat-project-freestyle).
+
 ## Linked projects
 
 A linked project is a whole freestyle project related to another, usually as
@@ -243,7 +276,8 @@ A project created by an earlier OAT has an `AGENTS.md` without the newer
 sections. On every resume, after the claim, `oat-project-freestyle` compares
 the file's `##` headings with OAT's current `project-agents` template. When
 one is missing, it replaces the file whole, because the file holds no project
-answers. It then creates a missing `decisions.md` or `memories.md`. A project
+answers. A project created before the `## Lane brief` section existed gets it
+this way, together with the `--commit` lines in `## Records commands`. It then creates a missing `decisions.md` or `memories.md`. A project
 with no `oat_orchestrator_branch` reads as unclaimed until its orchestrator
 runs `oat project orchestrator set`.
 
