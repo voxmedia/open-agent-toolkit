@@ -181,10 +181,12 @@ function reportSuccess(
     context.logger.info(
       `Project shape: ${freestyle.projectFiles.shape} (not yet shaped)`,
     );
+    // The parent stays the active project, so a bare claim would name it.
+    const claimCommand = `${ORCHESTRATOR_SET_COMMAND} --project ${projectName}`;
     if (freestyle.orchestratorBranch !== undefined) {
       context.logger.info(
         freestyle.orchestratorBranch === null
-          ? `Orchestrator branch: unclaimed (the orchestrator claims it with \`${ORCHESTRATOR_SET_COMMAND}\`)`
+          ? `Orchestrator branch: unclaimed (the orchestrator claims it with \`${claimCommand}\`)`
           : `Orchestrator branch: ${freestyle.orchestratorBranch}`,
       );
     }
@@ -193,7 +195,7 @@ function reportSuccess(
         `Linked to ${link.parent.name}: open row in ${link.ledgerPath} (not committed or pushed; the parent's orchestrator saves it as the parent's shape.md agrees)`,
       );
       context.logger.info(
-        `Next: hand ${projectName} to its own orchestrator session, which claims it with \`${ORCHESTRATOR_SET_COMMAND}\` and then shapes it through the ${FREESTYLE_SKILL} skill.`,
+        `Next: hand ${projectName} to its own orchestrator session, which claims it with \`${claimCommand}\` and then shapes it through the ${FREESTYLE_SKILL} skill.`,
       );
     } else {
       context.logger.info(

@@ -201,9 +201,10 @@ split project (`oat_parent`, `oat_children`).
   its own worktree, first running `oat project pull <child>` for a synced
   child. A local child exists only in the checkout that created it, so its
   orchestrator runs there. It then claims the child with
-  `oat project orchestrator set` and shapes it with `oat-project-freestyle`,
-  whose first question for a linked child is whether to adopt the parent's
-  shape. Adopting copies the parent's `shape.md` as a
+  `oat project orchestrator set --project <child>` (the parent stays the
+  active project where the child was created) and shapes it with
+  `oat-project-freestyle`, whose first question for a linked child is whether
+  to adopt the parent's shape. Adopting copies the parent's `shape.md` as a
   snapshot, with `## Goal` reset and an `**Adopted from:**` line naming the
   parent and its `Last shaped:` date. The child never writes the parent's
   records.

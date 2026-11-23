@@ -219,7 +219,7 @@ describe('freestyle orchestrator branch and linked projects guidance (p05)', () 
     expect(section).toContain('`oat project linked ack <child>`');
     expect(section).toContain("The child never writes the parent's records.");
     expect(section).toContain(
-      'claims the child with `oat project orchestrator set`',
+      'claims the child with `oat project orchestrator set --project <child>` on its own branch',
     );
     const writer = oneLine(h2Section(agents, 'Single writer'));
     expect(writer).toContain('`linked-projects.md`');

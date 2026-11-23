@@ -148,13 +148,13 @@ lanes and PRs. A lane never contains a linked project; a lane can wait on one.
   pushes the row: save it by the records rule for the parent's scope.
 - **Running one.** A separate orchestrator session runs the child, opened by
   the user or by the parent's orchestrator. It first claims the child with
-  `oat project orchestrator set` on its own branch, then shapes it with the
-  `oat-project-freestyle` skill. A shared child's scaffold, and a synced
-  child's pointer, are committed on the parent's branch, so the child's
-  orchestrator starts its own branch from there in its own worktree (and runs
-  `oat project pull <child>` for a synced child) before claiming. A local child
-  exists only in the checkout that created it. The child never writes the
-  parent's records.
+  `oat project orchestrator set --project <child>` on its own branch, then
+  shapes it with the `oat-project-freestyle` skill. A shared child's scaffold,
+  and a synced child's pointer, are committed on the parent's branch, so the
+  child's orchestrator starts its own branch from there in its own worktree
+  (and runs `oat project pull <child>` for a synced child) before claiming. A
+  local child exists only in the checkout that created it. The child never
+  writes the parent's records.
 - **Acknowledging one.** After every merge and on resume, check
   `oat project status` for `Open linked project:` lines. For each, read the
   child's records (pull a synced child first), update this project's

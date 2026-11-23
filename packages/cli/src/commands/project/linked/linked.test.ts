@@ -650,6 +650,47 @@ describe('freestyle linked projects', () => {
     expect(await readFile(statePath, 'utf8')).toBe(stateBefore);
   });
 
+  it('hands off a linked child with a claim command that names the child, which claims it from the parent checkout', async () => {
+    const { root } = await repo();
+    const parentDir = await newParent(root, 'shared');
+    const parentState = await readFile(join(parentDir, 'state.md'), 'utf8');
+    const created = await runOat(root, [
+      'project',
+      'new',
+      'child',
+      '--mode',
+      'freestyle',
+      '--scope',
+      'local',
+      '--no-dashboard',
+      '--link-to',
+      'parent',
+      '--purpose',
+      'Build the importer',
+    ]);
+    expect(created.exitCode, created.stderr).toBe(0);
+    const handoff = /claims it with `oat (project orchestrator set[^`]*)`/.exec(
+      created.stdout.split('\n').find((line) => line.startsWith('Next:')) ?? '',
+    );
+    expect(handoff?.[1]).toBe('project orchestrator set --project child');
+
+    // The parent stays the active project in this checkout, so only the
+    // named child is claimed.
+    const claimed = await runOat(root, handoff?.[1]?.split(' ') ?? []);
+    expect(claimed.exitCode, claimed.stderr).toBe(0);
+    expect(
+      frontmatter(
+        await readFile(
+          join(projectDir(root, 'local', 'child'), 'state.md'),
+          'utf8',
+        ),
+      ).oat_orchestrator_branch,
+    ).toBe(git(root, ['branch', '--show-current']));
+    expect(await readFile(join(parentDir, 'state.md'), 'utf8')).toBe(
+      parentState,
+    );
+  });
+
   it('prints an ack command that closes the inspected parent row, not the active parent row', async () => {
     const { root } = await repo();
     expect((await newProject(root, 'child', 'shared')).exitCode).toBe(0);

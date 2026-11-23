@@ -146,7 +146,7 @@ describe('freestyle orchestrator branch', () => {
         '--no-dashboard',
       ]);
       expect(result.stdout).toContain(
-        'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set`)',
+        'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set --project detached`)',
       );
       expect(
         frontmatter(await readState(join(root, '.oat/projects/local/detached')))
