@@ -539,6 +539,45 @@ describe('oat project lane set', () => {
       expect(await statusOf(root)).not.toContain('Lane head ahead');
     });
 
+    it('stays quiet while the dispatch is open and flags once it is reported or closed with no report', async () => {
+      const { root, worktree, reported } = await laneWithReport();
+      for (const n of [2, 3]) {
+        await writeFile(join(worktree, 'work.txt'), `${n}\n`, 'utf8');
+        git(worktree, ['commit', '-q', '-am', `in flight ${n}`]);
+      }
+      const flag = `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head ${reported}`;
+
+      // d02 open: the lane is working past its last report.
+      const opened = await laneSet(root, ['l01', '--dispatch'], true);
+      expect(opened.exitCode, opened.stderr).toBe(0);
+      expect(JSON.parse(opened.stdout).headCheck).toBeNull();
+      const running = await laneSet(root, ['l01', '--state', 'running']);
+      expect(running.stderr).not.toContain('Lane head ahead');
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+
+      // d02 closed with no report: flagged.
+      const stopped = await laneSet(root, ['l01', '--no-report']);
+      expect(stopped.exitCode, stopped.stderr).toBe(0);
+      expect(stopped.stderr).toContain(`Warning: ${flag}`);
+      expect(await statusOf(root)).toContain(flag);
+
+      // d03 open again: quiet; reported at the old head: flagged.
+      expect((await laneSet(root, ['l01', '--dispatch'])).exitCode).toBe(0);
+      expect(await statusOf(root)).not.toContain('Lane head ahead');
+      const saved = join(worktree, '..', 'l01-d03.txt');
+      await writeFile(saved, '# Lane report: l01-d03\n', 'utf8');
+      const filed = await laneSet(root, [
+        'l01',
+        '--report',
+        saved,
+        '--head',
+        reported,
+      ]);
+      expect(filed.exitCode, filed.stderr).toBe(0);
+      expect(filed.stderr).toContain(`Warning: ${flag}`);
+      expect(await statusOf(root)).toContain(flag);
+    });
+
     it('flags a branch that no longer contains the reported head', async () => {
       const { root, worktree, reported } = await laneWithReport();
       git(worktree, ['reset', '-q', '--hard', 'HEAD~1']);
@@ -566,11 +605,19 @@ describe('oat project lane set', () => {
       expect(JSON.parse(shared.stdout).headCheck).toBeNull();
       expect(await statusOf(root)).not.toContain('Lane head ahead');
 
-      const remote = await laneSet(
-        root,
-        ['l03', '--branch', 'delegate/l03', '--head', head],
-        true,
-      );
+      expect(
+        (
+          await laneSet(root, [
+            'l03',
+            '--branch',
+            'delegate/l03',
+            '--head',
+            head,
+          ])
+        ).exitCode,
+      ).toBe(0);
+      // Closed with no report, so the check applies (p11-t03).
+      const remote = await laneSet(root, ['l03', '--no-report'], true);
       expect(JSON.parse(remote.stdout).headCheck).toMatchObject({
         status: 'unknown',
         reason: 'branch delegate/l03 is not in this clone',
