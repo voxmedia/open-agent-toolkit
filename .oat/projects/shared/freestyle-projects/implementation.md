@@ -47,10 +47,11 @@ oat_template: false
 | p04   | complete | 1     | 1/1      |
 | p05   | pending  | 1     | 0/1      |
 | p07   | pending  | 1     | 0/1      |
+| p10   | pending  | 1     | 0/1      |
 | p08   | pending  | 1     | 0/1      |
 | p09   | pending  | 1     | 0/1      |
 
-**Total:** 4/8 phases accepted
+**Total:** 4/9 phases accepted
 
 ---
 
@@ -1096,6 +1097,14 @@ Retired at the m02 re-alignment (2026-11-22): the ancestry warning was dropped a
 ## Phase p07: Lane ledger and reports
 
 **Status:** pending
+
+---
+
+## Phase p10: Decisions and memories
+
+**Status:** pending
+
+Added by the second m02 amendment (2026-11-22): `decisions.md` and `memories.md` scaffolded beside `shape.md`, lane notes, and promotion from lane reports (plan.md Decisions: Decisions and memories).
 
 ---
 

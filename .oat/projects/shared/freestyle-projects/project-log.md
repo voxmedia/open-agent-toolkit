@@ -172,6 +172,10 @@ Observation: m01 accumulated about ten deferred review findings (edge cases acro
 Impact: review rounds and backlog growth with little user value.
 Recommendation: in m02, fix a small finding in the round it is raised or drop it; brief reviewers to apply a complexity lens and not to raise unlikely edge cases; file follow-ups only for work that is worthwhile on its own.
 
+### 2026-11-23 · structural · oat-project-goal · m02
+
+Activated m02 (p05, p07, p10, p08); freestyle-projects-activate-m02
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
