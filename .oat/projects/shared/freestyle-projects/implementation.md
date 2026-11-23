@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | pending  | 1     | 0/1      |
-| p07   | pending  | 1     | 0/1      |
-| p10   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
-| p09   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | complete    | 1     | 1/1      |
+| p05   | in_progress | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p10   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 4/9 phases accepted
 
@@ -1080,9 +1080,13 @@ Proof: `build:docs`, docs index freshness.
 
 ## Phase p05: Linked projects
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 517d5e56699ad1dcba90239ecc8e3787fda3311d
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
 
 Renamed in plan.md at the m02 re-alignment: Orchestrator branch and linked projects.
+
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`); root fan-out fails the independence test because the orchestrator-branch and linked-project slices share the freestyle state template, the project `AGENTS.md` template, `oat project status` and the kickoff reference; so one phase implementer (rung 3). The inline exception does not apply: p05 adds new commands and state fields.
 
 ---
 
