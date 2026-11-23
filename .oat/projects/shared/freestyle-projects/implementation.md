@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-22
-oat_current_task_id: p08-t05
+oat_last_updated: 2026-11-23
+oat_current_task_id: p08-t14
 oat_generated: false
 oat_template: false
 ---
@@ -1387,7 +1387,7 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 **Status:** in_progress
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
-**Head:** 299537c8ffd353475016fd1d3cbed0d06fc8e1aa
+**Head:** 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
 
 Phase verification at the head on a clean tree (only the untracked `references/`), in Definition of Done order with each exit code captured:
 
@@ -1589,6 +1589,19 @@ Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm 
 
 Late fix p08-t13 at `299537c8f`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
+### Task p08-t14: (review) Quote and scope printed project commands; let a notes-only folder take a child
+
+**Status:** completed
+**Commit:** 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T060440Z.md (P-1, P-2, P-3)
+
+- Intent: P-1, the ack and claim hints `status` prints fail on a project path with a space; P-2, the child handoff and the guard refusal print the project name, which is ambiguous when the name exists in two scopes; P-3, p08-t08's existing-project check refused any folder, so a folder of preparatory notes blocked `new --link-to`.
+- Files: new `commands/shared/shell-quote.ts` (bare for a plain path, single-quoted otherwise) with its test; `status.ts` and `orchestrator/branch.ts` quote the printed path; `assertOrchestratorCheckout` takes `projectPath` (callers `lane/set.ts`, `linked/link.ts`) and prints it; `new/index.ts` prints the scaffolded path in the handoff, quotes the `linked add` hint, and treats a folder as a project only when it has `state.md`; pins updated in `linked.test.ts` and `orchestrator.test.ts`, plus a notes-folder test and a spaced-path formatter test.
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run` over shell-quote, status, orchestrator, linked, lane, new, log and the freestyle contracts exit 0 (17 files, 621 tests); `tsc --noEmit` exit 0; `pnpm check` exit 0; CLI `lint` exit 0. Can-fail: with the folder check restored, the notes-folder test exits 1; with the name restored in the handoff, the handoff test exits 1 (its printed path is the assertion); with `shellQuote` made the identity, the round-trip and spaced-path formatter tests exit 1; each restored.
+
+Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
 ---
 
 ## Phase p09: Evidence fields
@@ -1640,6 +1653,7 @@ Late fix p08-t13 at `299537c8f`. No later phase has a `**Base:**`, so the head a
 
 - run/v1 · request=freestyle-projects-p08-implementation-2 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p08 (task p08-t13 only, an N-1-class claim hint the fix implementer reported) · reason: one format function, one refusal string and three test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
+- Root-inline phase: p08 (task p08-t14 only, m02 confirm-round P-1 to P-3) · reason: a four-line quoting helper, one marker-file check and their test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
@@ -1745,6 +1759,26 @@ Confirmed by the reviewer: base and head behave identically for spec-driven, qui
 Review-cycle count for m02 integrated: 1 (the plan allows at most one confirm round after this one).
 
 **Outcome:** fixes queued: p08-t05 to p08-t12 (late-fix rule: no later phase has a `**Base:**`, so the records land in p08, status back to `in_progress`, base unchanged). m02 exit carrier marked stale; m02 back to `implementing`.
+
+### Review Received: m02 (cycle 2)
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m02-integrated-review-2026-11-23T060440Z.md
+
+Integrated milestone review of m02 (p05, p07, p10, p08), cycle 2, confirm only, on `52589cbea..020ebb740` (the cycle-1 fixes p08-t05 to p08-t13), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only). Root checked each cited line at `020ebb740`.
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 1
+**Finding classes:** P-1 accepted-requirement (Outcomes 3 and 4: the printed commands are the documented way to act on a link and claim a child) · P-2 accepted-requirement (Outcome 4) · P-3 regression (p08-t08, `506de503f`: the existing-project check refused a notes-only folder the base accepted)
+
+- P-1 (Medium): unquoted path in the ack and claim hints → p08-t14.
+- P-2 (Low): the handoff and guard print an ambiguous name → p08-t14.
+- P-3 (Medium): a notes-only folder blocks `new --link-to` → p08-t14.
+
+Confirmed by the reviewer: N-1 to N-8 and p08-t13 by behaviour; no regression in spec-driven, quick, lite, brief, goal or import; focused suites pass (617 tests).
+
+Review-cycle count for m02 integrated: 2 (the plan's one confirm round is used).
+
+**Outcome:** fixes applied as p08-t14 (`9ffa307eb`, late-fix rule, records in p08), root-verified with can-fail checks. Under the operator's now-or-never rule no further round was planned, but `oat project delivery check` needs a passed integrated review row, so the operator decides whether a review of `020ebb740..9ffa307eb` runs before delivery.
 
 ## Deferred Findings
 

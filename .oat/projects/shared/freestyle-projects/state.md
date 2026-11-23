@@ -1,6 +1,6 @@
 ---
-oat_current_task: p08-t05
-oat_last_commit: 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
+oat_current_task: p08-t14
+oat_last_commit: 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -99,7 +99,7 @@ oat_milestone_gates:
         kind: code
         scope: [p05, p07, p10, p08]
       freshness: stale
-      freshness_reason: 'fixes queued from reviews/archived/m02-integrated-review-2026-11-23T051139Z.md'
+      freshness_reason: 'fixes applied from reviews/archived/m02-integrated-review-2026-11-23T060440Z.md'
       decided_at: '2026-11-23T05:02:12Z'
 oat_deliveries:
   - delivery_id: d01

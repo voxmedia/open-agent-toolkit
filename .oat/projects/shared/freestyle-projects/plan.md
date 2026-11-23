@@ -223,6 +223,7 @@ Default is `[]` (fully sequential, no worktrees).
 | p10   | code     | passed      | 2026-11-22 | p10-code-review-2026-11-23T041712Z.md                        | 07e828dab203ff41d286565f0bb0be5a3c703849 | auto       | -           |
 | p08   | code     | passed      | 2026-11-22 | p08-code-review-2026-11-23T045600Z.md                        | bb87932965ebb7de2f952aac788747cb2d90226e | auto       | -           |
 | m02   | code     | fixes_added | 2026-11-22 | reviews/archived/m02-integrated-review-2026-11-23T051139Z.md | 52589cbea2a707b82fbb43c3dd8861d2c6dac4e0 | manual     | -           |
+| m02   | code     | fixes_added | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T060440Z.md | 020ebb7409183ac2b162e8df24d2b9ec64b48b59 | manual     | -           |
 | final | code     | pending     | -          | -                                                            | -                                        | -          | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |
