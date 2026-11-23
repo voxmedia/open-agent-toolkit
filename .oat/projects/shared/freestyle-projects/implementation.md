@@ -1623,6 +1623,18 @@ Added by the m03 amendment (2026-11-23), from the first real freestyle run (plan
 
 Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group (p12 edits the same project `AGENTS.md` template and docs, so the two phases are not independent). Root fan-out fails the independence test: `lane set --commit`, the derived log key and the head-ahead rule share the CLI build, the freestyle contract tests and the AGENTS.md Records commands section. One phase implementer.
 
+### Task p11-t01: lane set --commit commits lanes.md and the filed report by exact path
+
+**Status:** completed
+**Commit:** 658c9ccd69022ee6a880bb3979b3549f695570c3
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: Outcome 9, first clause. `oat project lane set --commit` commits `lanes.md` and the report it filed by exact path through the shared exact-path commit helper, following each scope's record route as `log append --commit` does; no push.
+- Files: `packages/cli/src/commands/project/lane/{commit.ts,index.ts,lane.test.ts}`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane` exit 0 (2 files, 39 tests); CLI `check` and `type-check` exit 0. Tests: in a shared project with a modified tracked `README.md` and an untracked `scratch.txt`, `lane set l01 --commit` makes one commit (`chore(oat): record lane l01 u001`) holding only `lanes.md`, and `--report <file> --head <sha> --commit` one holding only `lanes.md` and `lane-reports/l01-d01.md`; both unrelated files stay modified and untracked with their content. A synced project reports `nothing-to-commit` with the code branch's and the nested worktree's heads unchanged and `lanes.md` left untracked in the nested worktree; a local project reports `nothing-to-commit` with HEAD unchanged.
+- Decisions: the scope route mirrors `log append --commit`, observed with the branch build before writing the code (scratch repository, isolated `HOME`): that command checks `git status --porcelain -- <log>` in the code checkout and reports `nothing-to-commit` for a synced project (the nested worktree is ignored by the code branch; `oat project push` then committed and published the log) and for a local one (ignored). `lane set --commit` makes the same check over its exact paths and otherwise calls the shared `commitExactPaths` helper, so no scope-specific branch exists. The text output says what was committed and that nothing was pushed, or that the scope keeps the records off this branch; a failed commit leaves the written ledger, prints the error and exits 1, and `--json` carries `commit` (`outcome`, `paths`, `commit`). The operation identity is `lane-set:<lanes.md path>:<update ID>`, unique per update.
+
 ---
 
 ## Phase p12: Adopted plans, proportionality checkpoints and lane brief
