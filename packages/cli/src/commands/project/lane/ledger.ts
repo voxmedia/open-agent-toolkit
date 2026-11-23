@@ -178,6 +178,14 @@ function unescapeMarkdown(value: string): string {
   return value.replace(/\\([!-/:-@[-`{-~])/g, '$1');
 }
 
+/**
+ * Escape a value's backslashes as it is written, so `unescapeMarkdown` reads
+ * back a literal `\` (as in `rg 'api\.v1'`) instead of dropping it.
+ */
+function escapeBackslashes(value: string): string {
+  return value.replaceAll('\\', '\\\\');
+}
+
 function isBlankOrPlaceholder(line: string): boolean {
   const trimmed = line.trim();
   return trimmed === '' || trimmed === EMPTY_SECTION;
@@ -289,7 +297,7 @@ export function renderLaneLedger(ledger: LaneLedger): string {
       const value = block.fields[field];
       return value === undefined || value === ''
         ? []
-        : [`- ${field}: ${value}`];
+        : [`- ${field}: ${escapeBackslashes(value)}`];
     }),
     '',
   ]);
@@ -297,7 +305,10 @@ export function renderLaneLedger(ledger: LaneLedger): string {
     entries.length === 0
       ? [EMPTY_SECTION, '']
       : [
-          ...entries.map((entry) => `- ${entry.id}${SEPARATOR}${entry.text}`),
+          ...entries.map(
+            (entry) =>
+              `- ${entry.id}${SEPARATOR}${escapeBackslashes(entry.text)}`,
+          ),
           '',
         ];
   return [

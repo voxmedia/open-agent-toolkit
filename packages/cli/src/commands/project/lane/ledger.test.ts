@@ -358,6 +358,19 @@ describe('lane ledger', () => {
     expect(ledger.history[0]?.text).toContain('paths: docs/a.md, src/*.ts');
   });
 
+  it('round-trips a literal backslash through later updates, keeping the field and its history line', () => {
+    const next = "verify with rg 'api\\.v1'";
+    const ledger = run(
+      { lane: 'l01', fields: { next, owner: 'lane' } },
+      { lane: 'l01', fields: { owner: 'orchestrator' } },
+    );
+    expect(ledger.active[0]?.fields.next).toBe(next);
+    expect(ledger.history[0]?.text).toContain(`next: ${next};`);
+    expect(renderLaneLedger(ledger)).toContain(
+      "- next: verify with rg 'api\\\\.v1'\n",
+    );
+  });
+
   it('refuses a lane ID that is not lowercase and zero-padded', () => {
     for (const lane of ['L1', 'l1', 'lane-1']) {
       expect(() => applyLaneUpdate(empty(), { lane, fields: {} }, T0)).toThrow(
