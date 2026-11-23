@@ -1387,7 +1387,7 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 **Status:** in_progress
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
-**Head:** 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
+**Head:** dba09273410ce91b03b5c5aedda1a7b332cc62a1
 
 Phase verification at the head on a clean tree (only the untracked `references/`), in Definition of Done order with each exit code captured:
 
@@ -1403,6 +1403,8 @@ Phase verification at the head on a clean tree (only the untracked `references/`
 - Also exit 0: `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills` (69 OK, within `pnpm check` and separately), and the isolated `vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` (41 files, 1532 passed, at p08-t03).
 
 `pnpm test:evidence` was not run: the uncached `pnpm test` above executed every package suite. Recovery: 0/10 used, none pending. No nested dispatch.
+
+Late fixes p08-t05 to p08-t12 (m02 integrated review N-1 to N-8), run `freestyle-projects-p08-implementation-2`: phase verification at `dba09273410ce91b03b5c5aedda1a7b332cc62a1` (the p08-t12 record) on a clean tree (only the untracked `references/`), `origin/main` `699f8ee43` (the merge base, unchanged), each exit code captured: `pnpm check` exit 0 (11 tasks; every `check` a cache miss, only dependency builds cached); `pnpm type-check` exit 0 (every `type-check` a cache miss); `pnpm test` under `scripts/with-isolated-home.sh` exit 0, every package `test` a cache miss (cli 457 files, 9995 tests; control-plane 327; docs-config 24; docs-theme 159; docs-transforms 72; oat-docs 93; `test:smoke` 165, `test:skills` 754, `test:scripts` 7); `pnpm build` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter='!oat-docs' --force` exit 0 (5 tasks, 0 cached); `git fetch origin main` then `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked); `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.57); `pnpm build:docs` exit 0 replayed from cache, re-run as `turbo run build --filter=oat-docs... --force` exit 0 (6 tasks, 0 cached); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `pnpm lint` exit 0 and `pnpm format` exit 0. No later phase has a `**Base:**`, so the head advanced under the late-fix rule. Recovery: 0/10 used, none pending. No nested dispatch.
 
 Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, after the root merged `origin/main` (`6430f47ad`, #428, packages at 0.3.56 on main); committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p08 is the last m02 phase. Root fan-out fails the independence test because the docs pages, skill bumps, lockstep versions and provider views share generated outputs (docs index, sync manifest) and the release gates. So one phase implementer (rung 3). The inline exception does not apply: p08 spans many docs pages and the release gates.
 
