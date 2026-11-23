@@ -220,6 +220,7 @@ Default is `[]` (fully sequential, no worktrees).
 | p04   | code     | passed      | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md                        | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
 | p05   | code     | passed      | 2026-11-22 | p05-code-review-2026-11-23T024113Z.md                        | 352186e87a0aa1f8485484e31febafd2a995696b | auto       | -           |
 | p07   | code     | passed      | 2026-11-22 | p07-code-review-2026-11-23T032928Z.md                        | c4fafff2ae655554e9dc130418ed969253a119a7 | auto       | -           |
+| p10   | code     | passed      | 2026-11-22 | p10-code-review-2026-11-23T041712Z.md                        | 07e828dab203ff41d286565f0bb0be5a3c703849 | auto       | -           |
 | final | code     | pending     | -          | -                                                            | -                                        | -          | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |

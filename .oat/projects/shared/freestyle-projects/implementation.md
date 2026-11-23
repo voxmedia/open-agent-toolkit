@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p10
+oat_current_task_id: p08
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | in_progress | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 6/9 phases accepted
+**Total:** 7/9 phases accepted
 
 ---
 
@@ -1280,10 +1280,10 @@ Late fix p07-t06 (p07 review round 1: M1 and L1, accepted requirements) at `3a31
 
 ## Phase p10: Decisions and memories
 
-**Status:** in_progress
+**Status:** completed
 **Base:** d4af984a5beadc33d0c115d6fc52094b34affbf0
 **Executor:** phase-implementer:freestyle-projects-p10-implementation-1
-**Head:** 07e828dab203ff41d286565f0bb0be5a3c703849
+**Head:** 40cc018977d227f0a71ebf450064332150309418
 
 Phase verification at the head (clean tree but the gitignored `references/`, isolated `HOME`): `pnpm check` exit 0 (cli `check` and `build` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 457 files, 9984 tests; control-plane 327 replayed, no control-plane input changed; the root script's `test:smoke` 165, `test:skills` 754 and `test:scripts` 7 ran); `pnpm build` exit 0 (cache hit replaying the `ac25269` build `pnpm check` executed at this head, inputs unchanged); `pnpm lint` exit 0; `pnpm test:skills` exit 0 (754). Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`. An earlier `pnpm test` run at `a9907936` was stopped before it finished, to add p10-t05; no result from it is claimed.
 
@@ -1368,6 +1368,16 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Files: `.oat/templates/project-agents.md` (First use is one sentence naming `oat template resolve <decisions|memories> --output …`, only when absent, done by the skill on resume; Linked projects keeps only the brief's wording), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (drops the AGENTS.md block-run test, keeps the SKILL.md Step 2 block tests, pins the new sentence).
 - Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project` exit 0 (104 files, 3398 tests); `pnpm check`, `pnpm lint` and `pnpm type-check` exit 0.
 
+Late fix p10-t06 (p10 review round 1: L1 and L2) at `dfe4e2a38`, recorded at `40cc01897`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `07e828dab`.
+
+### Review Received: p10
+
+- Review `freestyle-projects-p10-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `d4af984a5..07e828dab`, artifact `reviews/archived/p10-code-review-2026-11-23T041712Z.md` (local-only): 0 critical, 0 high, 0 medium, 2 low; reconnaissance not attempted. The reviewer re-ran the freestyle contract, scaffold and linked suites (192 passed) and probed the first-use step with the branch build's real `oat template resolve` (absent file created byte-identical; existing file left alone; the `[ -e ]` check is what protects it). It found the authority, supersession and first-use rules stated consistently across the templates, AGENTS.md, `lane-report.md`, `shape.md`, kickoff and the skill, p05's refresh and p07's lane sections intact, and accepted the implementer's five choices where the brief was silent.
+- L1 (Low, complexity): the AGENTS.md First use bullet repeated the skill's creation block with its own test. Fixed in p10-t06 (one sentence; the skill's block and its tests remain).
+- L2 (Low): "never copies another project's decisions or memories" went beyond the brief. Fixed in p10-t06 (the brief's wording only).
+- **Finding classes:** L1 accepted-requirement (Decisions and memories: first use with `oat template resolve`, only when absent; the complexity lens the operator set for m02) · L2 regression (the bullet overstated plan.md Decisions and memories: "A linked child starts with empty files").
+- Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p10-t06 record.
+
 ---
 
 ## Phase p08: m02 docs and release
@@ -1414,6 +1424,9 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - run/v1 · request=freestyle-projects-p10-implementation-1 · scope=p10 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Nested (phase-implementer-owned, p10-t04 exit evidence): request=freestyle-projects-p10-t04-lane-l01-d01-1 · general-purpose scratch lane l01 on Sonnet at provider-default effort, writes confined to the scratch repo · launch=accepted · outcome=completed · no structured dispatch record (the phase report names it; transcript in the gitignored p10 scratch transcript)
 - Nested (phase-implementer-owned, p10-t04 exit evidence): request=freestyle-projects-p10-t04-fresh-session-1 · read-only general-purpose fresh-context check on Sonnet at provider-default effort · launch=accepted · outcome=completed · no structured dispatch record (answer kept verbatim in the gitignored p10 scratch transcript)
+
+- run/v1 · request=freestyle-projects-p10-review-1 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p10 (task p10-t06 only, review round 1 L1 and L2) · reason: one template bullet rewritten and its contract pin, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
