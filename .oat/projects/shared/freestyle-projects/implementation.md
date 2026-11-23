@@ -1498,12 +1498,16 @@ Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-
 
 ### Task p08-t07: (review) Keep filed lane reports byte-for-byte through a formatting commit hook
 
-**Status:** pending
+**Status:** completed
+**Commit:** 3cf22df79acce99e6da1fcff211070ad8c0cabe6
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
 **Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-3)
 
 Intent: This repository's lint-staged oxfmt hook rewrites `lane-reports/*.md` on commit (`*` list markers become `-`), so a filed report is edited. Add `.oat/projects/**/lane-reports/**` to the `.oxfmtrc.jsonc` ignore list, next to the explainer precedent and with a comment. In `.oat/templates/project-agents.md` Lane reports and the docs page, add one sentence: in a repository whose commit hooks format Markdown, exclude `lane-reports/` from them so the committed report stays verbatim.
 Files: `.oxfmtrc.jsonc`, `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, and any contract pin.
 Proof: `oxfmt --check` on a report fixture using `*` markers reports nothing to change under the repo config (and does with the ignore removed); the template sentence is pinned.
+Confirmed before the fix: a scratch report `.oat/projects/shared/p08-fmt-probe/lane-reports/l01-d01.md` with `*` list markers gave `pnpm exec oxfmt --check --no-error-on-unmatched-pattern <report>` exit 1 (format issues found) under the repository config, the lint-staged Markdown command's flags. Fix: `.oxfmtrc.jsonc` ignores `.oat/projects/**/lane-reports/**`, next to the explainer precedent and with a comment; `.oat/templates/project-agents.md` Lane reports step 2 and the docs page's filing paragraph add the sentence "In a repository whose commit hooks format Markdown, exclude `lane-reports/` from them so the committed report stays verbatim."; `freestyle-contracts.test.ts` pins it. Files changed: `.oxfmtrc.jsonc`, `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`. The scratch report was removed.
+Proof (this run): with the ignore, the same `oxfmt --check` exits 0 ("No files found matching the given patterns") and `oxfmt --write --no-error-on-unmatched-pattern` leaves the report byte-identical (`cmp`); `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new/scaffold.test.ts bundle-consistency` exit 0 (34 files, 1458 passed); `pnpm --filter oat-docs docs:check` exit 0 (0 errors, 778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `oxfmt --check` on the four files exit 0. Can-fail: the ignore removed, `oxfmt --check` exits 1 on the report (the reproduction above); the template sentence removed, `freestyle-contracts.test.ts` exits 1 on the new pin (`expected '## Lane reports A lane\'s final messa…' to contain 'In a repository whose commit hooks fo…'`); restored.
 
 ### Task p08-t08: (review) Refuse new --link-to for a name that is already a project
 
