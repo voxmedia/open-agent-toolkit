@@ -971,6 +971,98 @@ describe('freestyle decisions and memories (p10)', () => {
     expect(read(join(project, 'decisions.md'))).toBe('# Decisions\n\n- kept\n');
   });
 
+  describe("creates a missing file in the skill's resume step (SKILL.md Step 2)", () => {
+    function step2(): string {
+      return between(skillFiles()['SKILL.md'], '### Step 2', '### Step 3');
+    }
+
+    function block(): string {
+      const body = /```bash\n([\s\S]*?)```/.exec(
+        between(
+          step2(),
+          '**Create a missing `decisions.md` or `memories.md`.**',
+          'Then determine:',
+        ),
+      )?.[1];
+      expect(body, 'the first-use step has a bash block').toBeDefined();
+      return body as string;
+    }
+
+    function project(): { root: string; project: string } {
+      const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-resume-'));
+      roots.push(root);
+      const path = join(root, 'project');
+      mkdirSync(path);
+      return { root, project: path };
+    }
+
+    it('runs after the claim and the AGENTS.md refresh, then reads Live and memories', () => {
+      const text = step2();
+      const claim = text.indexOf('**Claim first.**');
+      const refresh = text.indexOf('**Refresh an older `AGENTS.md`.**');
+      const create = text.indexOf(
+        '**Create a missing `decisions.md` or `memories.md`.**',
+      );
+      expect(claim).toBeGreaterThan(-1);
+      expect(claim).toBeLessThan(refresh);
+      expect(refresh).toBeLessThan(create);
+      expect(create).toBeLessThan(text.indexOf('Then determine:'));
+      expect(oneLine(text)).toContain(
+        'Then read all of the `## Live` section of `decisions.md`, and `memories.md`',
+      );
+      expect(oneLine(text)).toContain(
+        'An entry under `## Superseded` is history; never act on it.',
+      );
+    });
+
+    it('creates each absent file from the template and leaves an existing one byte-identical', () => {
+      const { root, project: path } = project();
+      writeFileSync(join(path, 'decisions.md'), '# Decisions\n\n- kept\n');
+      const result = runFirstUse(root, block(), { PROJECT_PATH: path });
+      expect(result.stderr).toBe('');
+      expect(result.status).toBe(0);
+      expect(result.stdout).toBe(
+        `freestyle: created ${join(path, 'memories.md')}\n`,
+      );
+      expect(read(join(path, 'memories.md'))).toBe(memories);
+      expect(read(join(path, 'decisions.md'))).toBe('# Decisions\n\n- kept\n');
+
+      const again = runFirstUse(root, block(), { PROJECT_PATH: path }, 3);
+      expect(again.status).toBe(0);
+      expect(again.stdout).toBe('');
+    });
+
+    it('stops when the template does not resolve', () => {
+      const { root, project: path } = project();
+      const result = runFirstUse(root, block(), { PROJECT_PATH: path }, 3);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        'could not create decisions.md from the decisions template; stopping',
+      );
+      expect(existsSync(join(path, 'memories.md'))).toBe(false);
+    });
+  });
+
+  it("keeps the parent's decisions and memories out of an adopted shape, and points a document's decisions at decisions.md", () => {
+    const kickoff = skillFiles()['references/kickoff.md'];
+    const before = oneLine(between(kickoff, '## Before Shaping', '## Topics'));
+    expect(before).toContain(
+      'Copy only `shape.md`: this project keeps its own empty `decisions.md` and `memories.md`.',
+    );
+    const adapting = oneLine(
+      between(kickoff, '#### Adapting a Copied Template', '### 4. Execution'),
+    );
+    expect(adapting).toContain(
+      'Point a decisions section at `decisions.md`: decisions about the work live only there.',
+    );
+    expect(adapting).toContain(
+      'replace the body of its `## Decisions` section with a line such as',
+    );
+    expect(h2Headings(read(join(TEMPLATES_DIR, 'plan-brief.md')))).toContain(
+      'Decisions',
+    );
+  });
+
   it('names the lane notes path as authorized scratch in the dispatch section, and promotion after filing', () => {
     const dispatch = oneLine(h2Section(agents, 'Dispatch'));
     expect(dispatch).toContain('its lane notes path; and the report shape');

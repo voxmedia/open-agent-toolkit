@@ -50,6 +50,7 @@ shape survives a detour, a restart or context compaction.
 
 - Creating the project with `oat project new --mode freestyle`.
 - Writing `shape.md`, and the project documents the user agrees to.
+- Creating a missing `decisions.md` or `memories.md` from OAT's template.
 - Copying an OAT template as a document's starting point.
 - A brainstorm or discovery detour, and later reshapes.
 
@@ -235,6 +236,26 @@ After a refresh, read `AGENTS.md` again and tell the user which sections it
 gained. The refreshed file is saved with the other records, as the
 `## Commits, PRs and merges` section agrees.
 
+**Create a missing `decisions.md` or `memories.md`.** A project created before
+OAT scaffolded them has neither. Create each one that is absent from OAT's
+template, and never one that exists: the copy replaces its target.
+
+```bash
+for NAME in decisions memories; do
+  [ -e "$PROJECT_PATH/$NAME.md" ] && continue
+  oat template resolve "$NAME" --output "$PROJECT_PATH/$NAME.md" >/dev/null || {
+    echo "freestyle: could not create $NAME.md from the $NAME template; stopping" >&2
+    exit 1
+  }
+  printf 'freestyle: created %s\n' "$PROJECT_PATH/$NAME.md"
+done
+```
+
+Tell the user which files were created; they are saved with the other records,
+as the commit agreement says. Then read all of the `## Live` section of
+`decisions.md`, and `memories.md`: the decisions in force and what to keep in
+mind. An entry under `## Superseded` is history; never act on it.
+
 Then determine:
 
 1. the first topic section, in order, that still reads `_Not yet shaped._`,
@@ -298,5 +319,7 @@ the orchestrator runs the project from here.
   commit agreement is not yet shaped or is deferred.
 - ✅ The project `AGENTS.md` is never edited by hand; an older one is only
   replaced whole with OAT's current template.
+- ✅ A missing `decisions.md` or `memories.md` is created from OAT's template;
+  an existing one is never replaced.
 - ✅ No shaping or reshaping write happens before the project is claimed, or
   from a session that is not on the recorded orchestrator branch.

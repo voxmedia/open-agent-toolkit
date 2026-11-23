@@ -54,7 +54,9 @@ apply.
    - **Adopt.** Find the parent's folder with `oat project list`; for a synced
      parent not pulled here, run `oat project pull <parent>` first. Copy the
      parent's `shape.md` over this project's: a snapshot, not a live link, so
-     a later reshape of the parent never changes this project silently. In the
+     a later reshape of the parent never changes this project silently. Copy
+     only `shape.md`: this project keeps its own empty `decisions.md` and
+     `memories.md`. In the
      copy, reset `## Goal` to `_Not yet shaped._`, rewrite `## Documents` to
      name kinds of documents (for example "a brief and a phase journal"),
      never the parent's files, set `**Last shaped:**` to today, and add this
@@ -113,7 +115,8 @@ is, a template adapted, or the project's own pattern. Lean toward the brief
 style (a brief plus a phase journal) for most projects, and toward goal-style
 milestones (a brief with a Milestones table) for a run of several deliveries.
 Whatever the pattern, keep the core elements: the outcome, what done means,
-the decisions with their reasons, and the open questions.
+the decisions with their reasons, and the open questions. Decisions about the
+work are kept in `decisions.md`, not in a document.
 
 #### Document Starting Points
 
@@ -161,7 +164,12 @@ instructions written for OAT's lifecycle skills. Before the document is used:
      `plan-brief.md` and `plan.md` (commits follow `shape.md` instead), and
      `plan-brief.md`'s `**Phase block grammar (strict):**` paragraph with its
      example block, which only OAT's lifecycle parsers need.
-4. Check the result. This prints nothing when the copy is clean; keep a line
+4. Point a decisions section at `decisions.md`: decisions about the work live
+   only there. For a brief-style document (`plan-brief.md` or `plan-lite.md`),
+   replace the body of its `## Decisions` section with a line such as
+   `Decisions about the work are in decisions.md.`, and write any decision it
+   held into `decisions.md` as an entry instead.
+5. Check the result. This prints nothing when the copy is clean; keep a line
    only when the project deliberately uses it:
 
    ```bash
