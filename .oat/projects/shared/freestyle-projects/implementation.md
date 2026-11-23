@@ -1344,6 +1344,17 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Supersession: the user's SQLite decision became `dr03` under `## Live` with `Supersedes: dr01`; `dr01` moved intact to `## Superseded` with `Superseded by dr03, 2026-11-22`; the records were committed with exact paths.
 - Fresh session: request `freestyle-projects-p10-t04-fresh-session-1`, one fresh-context read-only `general-purpose` subagent (Agent model `sonnet`, provider-default effort; accepted, completed); its brief held only the project path, a read-only instruction and the question. It listed dr02 and dr03 as in force, named dr01 only as no longer in force (under `## Superseded`, superseded by dr03), and named the gotcha with its source `l01-d01` and the lane report; answer verbatim in the transcript. The project tree hash (`84e2d263…`), HEAD and the clean working tree were unchanged afterwards, and `oat project check-state` passed. It also noted that the lane's ledger `next` was stale after the report was filed (the run did not update it).
 
+### Task p10-t05: Name decisions.md and memories.md among the records a lane report says a lane never writes
+
+**Status:** completed
+**Commit:** 8949649d42c94cc5009688418785f9aa4d8274a3
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Handle:** freestyle-projects-p10-implementation-1 (this session)
+
+- Intent: phase self-review. `lane-report.md` lists the project records a lane must not write (the ledger, the project log, `shape.md`, the project's documents) but not the two new files, while the Single writer and Decisions and memories decisions keep both orchestrator-only; a lane reading only its brief could take them as writable.
+- Files: `.oat/templates/lane-report.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/template` exit 0 (34 files, 1364 passed, including the p07 bundle-tier dispatch-brief test against the rebuilt bundle). The p10 lane-notes contract test now also pins the lane-report record list with `decisions.md` and `memories.md`. Found at the phase self-review after p10-t04; the scratch lane's brief already named both files as records it must not write, so the run's evidence stands.
+
 ---
 
 ## Phase p08: m02 docs and release
