@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.2
+  version: 1.4.3
 ---
 
 # Review Receive (Ad-hoc Local)
@@ -183,13 +183,14 @@ Default suggestions:
 
 - Critical -> `convert`
 - High -> `convert`
-- Medium -> `convert` (propose `defer` only with concrete rationale)
-- Low -> `convert` (propose `defer` only with concrete rationale)
+- Medium -> `convert`
+- Low -> `convert`, or `dismiss` when it is not worth its cost
 
 Rules:
 
-- Require explicit rationale for `defer` or `dismiss` at any severity, including Low. Small findings are cheap to fix inline, so deferring a Low into a backlog item must be justified just like any other deferral.
-- Do not recommend `defer` for a Low finding solely because it does not impact current functionality — fixing inline is usually cheaper than tracking it. Reserve `defer` for the genuine cases (low-probability cleanup, blocked dependency, duplicated elsewhere, explicitly out of scope, or disproportionate churn now).
+- Require explicit rationale for `defer` or `dismiss` at any severity, including Low.
+- `dismiss` covers a false positive, a duplicate, and a finding that is true but not worth its cost (an unlikely edge case, or a test for one).
+- Propose `defer` only for work worth its own backlog item: a credible consequence, too large to do here, and a concrete reason to wait. Anything smaller is fixed now or dismissed. There is no cheaper time to fix a small finding than now, so being small, or unlikely to matter, is never a reason to defer.
 - Do not silently skip findings.
 
 ### Step 5: Generate Task List Output

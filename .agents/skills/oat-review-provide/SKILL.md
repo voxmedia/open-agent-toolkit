@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.6
+  version: 1.2.7
 ---
 
 # Ad-Hoc Review
@@ -191,6 +191,7 @@ Set `oat_generated_at` in the artifact frontmatter to the matching full UTC time
 Use the same severity model and checklist as project reviews:
 
 - Critical / High / Medium / Low findings
+- the same bar for a finding: raise what the change broke, made materially worse, or promised and did not deliver; leave out edge cases that are not likely, and flag machinery or tests added for them; describe a pre-existing defect the change did not worsen in the summary, and only when it is likely to bite or plainly cheapest to fix now
 - file:line references
 - actionable fix guidance
 - verification commands

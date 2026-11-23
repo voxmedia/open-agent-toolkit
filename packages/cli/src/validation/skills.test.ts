@@ -1727,7 +1727,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(readDeclaredVersion(content)).toBe('1.2.15');
+    expect(readDeclaredVersion(content)).toBe('1.2.16');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -2244,7 +2244,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.28',
+        version: '2.3.29',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2253,7 +2253,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.16',
+        version: '1.1.17',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -2261,7 +2261,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.31',
+        version: '2.3.32',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2762,7 +2762,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.31');
+    expect(readDeclaredVersion(content)).toBe('2.3.32');
   });
 
   it('allows model invocation of oat-project-implement only when the user asked', async () => {
@@ -3114,7 +3114,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.31');
+    expect(readDeclaredVersion(content)).toBe('2.3.32');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3212,7 +3212,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.31');
+    expect(readDeclaredVersion(content)).toBe('2.3.32');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3231,7 +3231,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.5.21');
+    expect(readDeclaredVersion(content)).toBe('1.5.22');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -3392,13 +3392,13 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.11'],
-      ['.agents/agents/oat-reviewer.md', '1.2.15'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.21'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.19'],
+      ['.agents/agents/oat-reviewer.md', '1.2.16'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.22'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.20'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.12'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.17'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.20'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.28'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.18'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.21'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.29'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3715,7 +3715,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.31');
+    expect(readDeclaredVersion(implement)).toBe('2.3.32');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -5203,11 +5203,11 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.45'],
-      ['oat-project-review-provide', '1.5.21'],
-      ['oat-project-review-receive', '1.6.19'],
-      ['oat-project-review-receive-remote', '1.5.7'],
-      ['oat-project-implement', '2.3.31'],
-      ['oat-project-pr-final', '1.6.20'],
+      ['oat-project-review-provide', '1.5.22'],
+      ['oat-project-review-receive', '1.6.20'],
+      ['oat-project-review-receive-remote', '1.5.8'],
+      ['oat-project-implement', '2.3.32'],
+      ['oat-project-pr-final', '1.6.21'],
       ['oat-project-pr-progress', '1.3.12'],
       ['oat-project-complete', '1.7.21'],
       ['oat-project-next', '1.1.10'],
@@ -5285,7 +5285,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(readDeclaredVersion(receive)).toBe('1.6.19');
+    expect(readDeclaredVersion(receive)).toBe('1.6.20');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -6624,10 +6624,10 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-plan', '1.4.24'],
-      ['oat-project-quick-start', '2.3.28'],
+      ['oat-project-quick-start', '2.3.29'],
       ['oat-project-import-plan', '1.4.26'],
-      ['oat-project-lite', '1.1.16'],
-      ['oat-project-review-provide', '1.5.21'],
+      ['oat-project-lite', '1.1.17'],
+      ['oat-project-review-provide', '1.5.22'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6696,9 +6696,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.31'],
-      ['oat-project-review-provide', '1.5.21'],
-      ['oat-project-review-provide-remote', '1.1.11'],
+      ['oat-project-implement', '2.3.32'],
+      ['oat-project-review-provide', '1.5.22'],
+      ['oat-project-review-provide-remote', '1.1.12'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6844,7 +6844,7 @@ describe('validateOatSkills', () => {
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.11'],
-      ['.agents/agents/oat-reviewer.md', '1.2.15'],
+      ['.agents/agents/oat-reviewer.md', '1.2.16'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.2'],
     ] as const;
 
@@ -7674,7 +7674,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.28');
+    expect(readDeclaredVersion(content)).toBe('2.3.29');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -8655,7 +8655,7 @@ describe('lite mode skill contracts', () => {
       '`Assumptions`',
     );
     expect(readDeclaredVersion(summary)).toBe('1.5.12');
-    expect(readDeclaredVersion(document)).toBe('1.8.17');
+    expect(readDeclaredVersion(document)).toBe('1.8.18');
   });
 
   it('routes lite projects through progress and next', async () => {
@@ -8871,7 +8871,7 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.31');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.32');
     expect(readDeclaredVersion(implementer)).toBe('1.1.11');
   });
 

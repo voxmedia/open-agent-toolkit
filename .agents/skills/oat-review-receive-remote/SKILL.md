@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.3
+  version: 1.3.4
 ---
 
 # Remote Review Receive (Ad-hoc GitHub PR)
@@ -156,8 +156,9 @@ Disposition options per finding:
 
 Rules:
 
-- Require concrete rationale for `defer`/`dismiss` at any severity, including low. Small findings are usually cheaper to fix inline than to track as backlog items, so a low `defer` must be justified just like any other deferral.
-- For any deferral (low included), require a concrete reason (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
+- Require concrete rationale for `defer`/`dismiss` at any severity, including low.
+- `dismiss` covers a false positive, a duplicate, and a finding that is true but not worth its cost (an unlikely edge case, or a test for one).
+- Propose `defer` only for work worth its own backlog item: a credible consequence, too large to do here, and a concrete reason to wait. Anything smaller is fixed now or dismissed.
 
 ### Step 5: Generate Standalone Task List
 

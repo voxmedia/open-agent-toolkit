@@ -179,10 +179,12 @@ still proves that it works, not the one with the fewest lines.
 
    Separate requirements from implementation choices treated as requirements.
    Verify mechanically enforced constraints in source, validators, tests, or
-   tool behavior rather than in descriptive prose. When the originating request
-   is missing or ambiguous, label the contract inferred, cite each inference,
-   and mark the verdict provisional. When sources conflict, report the
-   conflict instead of picking the one that justifies the machinery.
+   tool behavior rather than in descriptive prose; explicit instructions,
+   policies, and accepted decisions count even when nothing enforces them.
+   When the originating request is missing or materially ambiguous, label the
+   contract inferred, cite each inference, and mark the verdict provisional.
+   When sources conflict, report the conflict instead of picking the one that
+   justifies the machinery.
 
 2. **Establish the simplest viable baseline:** the least complex version that
    satisfies the contract and its minimum proof. It is the reference point every
@@ -196,19 +198,42 @@ still proves that it works, not the one with the fewest lines.
    configuration, persistence, and caching; duplicated documentation; and
    process ceremony (planning documents, review passes, phase gates). Report
    only material items, and judge the system as a whole: ten individually
-   defensible additions can still be indefensible together.
+   defensible additions can still be indefensible together. Volume is a signal
+   to investigate, never a finding by itself. An item with negligible cost
+   that serves a repository convention or a stated preference is Keep and gets
+   no row, unless many such items add up. A file or field that a validator or
+   tool requires is Keep; what is written inside it is reviewed like anything
+   else. Leave archived work alone unless it still surfaces in active
+   discovery, duplicates current guidance, misleads readers, or costs someone
+   time to maintain.
 
 4. **Apply the deletion test** to each item: what outcome does it support, what
-   concrete failure occurs without it, is that failure observed or merely
-   imaginable, can a smaller mechanism address it, how would we know it helped,
-   what does it cost to own, and what would adding it later cost? Grade the
-   evidence as **hard requirement**, **observed**, **strongly inferred**,
-   **speculative**, or **unsupported**, and recommend **Keep**, **Simplify**,
-   **Defer** (with an observable reintroduction trigger), or **Delete**. If an
-   item can be deleted, deferred, or substantially simplified while the
-   contract and its proof stay intact, it should be. A hard requirement, a
-   credible threat model, an irreversible interface, or a low-frequency
-   high-impact risk can justify a mechanism before any failure.
+   concrete failure occurs without it, is that failure observed, likely, or
+   merely imaginable, can a smaller mechanism address it, how would we know it
+   helped, what does it cost to own, and what would adding it later cost?
+
+   Grade the evidence for the mechanism as **hard requirement**, **observed**,
+   **strongly inferred**, **speculative**, or **unsupported**. Evidence that a
+   problem exists is not evidence that this solution is proportionate. A
+   defensive branch or a test justified only by an imaginable failure is
+   speculative. A test earns its place when it guards a regression that
+   occurred or would be costly, or asserts a stable contract, not because the
+   code exists. A hard requirement, a credible threat model, an irreversible
+   interface, or a low-frequency high-impact risk can justify a mechanism
+   before any failure.
+
+   Recommend one of:
+   - **Keep:** the contract requires it, or observed or strongly inferred
+     evidence shows it materially improves the outcome at a cost proportionate
+     to simpler alternatives.
+   - **Simplify:** valuable, but built at a higher level of complexity than the
+     failure needs.
+   - **Defer:** speculative or unsupported today, with a credible, observable
+     reintroduction trigger. Name the trigger.
+   - **Delete:** no concrete need and no plausible trigger.
+
+   If an item can be deleted, deferred, or substantially simplified while the
+   contract and its proof stay intact, it should be.
 
 5. **Build the ledger before the verdict:**
 
@@ -217,18 +242,24 @@ still proves that it works, not the one with the fewest lines.
    | {file or component} | …             | {evidence grade, with citation} | …              | Keep / Simplify / Defer / Delete |
 
    Cite a file and line, a section, a commit, a run, or a short quote from the
-   request. "Best practice" and "consistency with siblings" belong in Claimed
-   value, never in Evidence.
+   request. Support a claim of need with the contract, real consumers, or
+   observed behavior, not with the mechanism's own plan or comments, and check
+   history when claimed reuse or recurrence drives the decision. "Best
+   practice" and "consistency with siblings" belong in Claimed value, never in
+   Evidence.
 
 6. **Assign the verdict:** `Deletion-rule compliant` when every item is Keep or
-   a trivial wording-only Simplify; `Partially compliant` when the central
-   approach is right and the overshoot is peripheral; `Not compliant` when the
-   central approach itself fails the deletion test. Append `, provisional`
-   whenever the contract was inferred.
+   a trivial Simplify (wording or duplication, with no change in behavior);
+   `Partially compliant` when the central approach is right and the overshoot
+   is peripheral; `Not compliant` when the central approach itself fails the
+   deletion test. The central approach is the mechanism as built, not the goal
+   it serves. Append `, provisional` whenever the contract was inferred.
 
 Report sections: Verdict, Contract, Simplest viable solution, and Complexity
 ledger always; Proposed changes, Risks of simplifying, Reintroduction triggers,
-and Out of lane only when they have content.
+and Out of lane only when they have content. Simplest viable solution
+describes one coherent solution and how its proof is obtained, not a list of
+deleted pieces.
 
 **Stance: skeptical, not reflexively minimalist.** Do not remove complexity
 that satisfies a hard requirement, do not trade clear code for a clever

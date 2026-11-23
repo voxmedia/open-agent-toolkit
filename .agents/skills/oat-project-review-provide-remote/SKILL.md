@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.11
+  version: 1.1.12
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)
@@ -209,7 +209,7 @@ Resolve the workflow mode and the scope token:
   has no phases or lifecycle artifacts to scope a project review. Tell the
   user: "This is a freestyle project; review the PR with
   `oat-review-provide-remote`, using the review mechanism `shape.md` records."
-- Parse the scope token from `$ARGUMENTS` (`code <scope>` / `artifact <scope>`), or infer it from PR state (default `code` with the current phase; `final` when the implementation is complete). For `final` scope, also gather the deferred-findings ledger from `implementation.md`.
+- Parse the scope token from `$ARGUMENTS` (`code <scope>` / `artifact <scope>`), or infer it from PR state (default `code` with the current phase; `final` when the implementation is complete).
 
 NEVER mutate, commit, or push any project artifact. This is a read-only project context on machine B.
 
