@@ -219,6 +219,33 @@ p08 accepted after the m02 integrated review: cycle 1 (N-1 to N-8) fixed in p08-
 
 Registered d02 for m02 (p05, p07, p10, p08) at https://github.com/voxmedia/open-agent-toolkit/pull/430; freestyle-projects-register-d02
 
+### 2026-11-23 · structural · oat-project-goal · m02
+
+Re-alignment after m02 delivered (d02, PR #430 merged at 4dc1b8687); freestyle-projects-realign-m02
+
+### 2026-11-23 · project · friction · Pre-merge refresh writes uncommittable bookkeeping
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m02-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-23T07:27:57Z
+
+Observation: the delivery refresh required immediately before merge rewrote observed_head and reflowed state.md flow sequences; committing it would have moved the PR head after the final green sweep.
+Impact: the pre-merge refresh output had to be discarded and redone on main after the merge.
+Recommendation: before merging, run refresh and check, discard the state.md change, merge at the verified head, then refresh again on the next branch and commit there.
+Uncertainty: whether refresh should skip writing when only observed_head on an open member changed.
+
+### 2026-11-23 · project · worked-well · Complexity-lens review briefs
+
+**Category:** efficiency
+**Source:** freestyle-projects-learning-m02-03
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-23T07:27:57Z
+
+Observation: with reviewers briefed to apply a complexity lens and skip unlikely edge cases, and with small findings fixed in the round they were raised, m02 needed three integrated cycles and no exit rounds, against eight exit rounds and three cycles for m01, and left no deferred findings.
+Impact: less review churn and no backlog growth.
+Recommendation: keep the complexity-lens brief and the fix-now-or-drop rule for later goal milestones.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
