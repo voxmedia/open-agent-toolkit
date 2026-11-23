@@ -1608,6 +1608,8 @@ Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head a
 
 **Status:** pending
 
+Retired at the m03 re-alignment (2026-11-23): the first real run showed the lane report's Tested SHA already catches the mismatches evidence fields targeted, and no incident needs more fields (plan.md Decisions: m03 re-alignment). m03 is p11 and p12. The ID is not reused; this stub stays because the journal is append-only.
+
 ---
 
 ## Orchestration Runs
