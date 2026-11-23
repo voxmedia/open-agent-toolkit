@@ -13,6 +13,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createProjectLaneCommand } from '@commands/project/lane/index';
+import { LANE_STATES, WAITING_ON_KINDS } from '@commands/project/lane/ledger';
 import { scaffoldProject } from '@commands/project/new/scaffold';
 import { runTemplateResolve } from '@commands/template/resolve';
 import { CliError } from '@errors/cli-error';
@@ -33,6 +35,9 @@ const AGENTS_HEADINGS = [
   'Where records live',
   'Orchestrator branch',
   'Linked projects',
+  'Dispatch',
+  'Lane reports',
+  'Lane placement',
   'Records commands',
   'Shaping and reshaping',
 ] as const;
@@ -719,6 +724,91 @@ describe('freestyle kickoff document starting points', () => {
       expect(result).toMatchObject({ found: true, tier: 'bundle' });
     },
   );
+});
+
+describe('freestyle dispatch, lane reports and lane placement guidance (p07)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const dispatch = oneLine(h2Section(agents, 'Dispatch'));
+  const reports = oneLine(h2Section(agents, 'Lane reports'));
+  const placement = oneLine(h2Section(agents, 'Lane placement'));
+
+  it('names every lane state and waiting-on kind lane set accepts', () => {
+    for (const state of LANE_STATES) {
+      expect(dispatch, state).toContain(`\`${state}\``);
+    }
+    expect(dispatch).toContain(`--waiting-on ${WAITING_ON_KINDS.join('|')}`);
+  });
+
+  it('names only lane set options the command has', () => {
+    const set = createProjectLaneCommand().commands.find(
+      (command) => command.name() === 'set',
+    );
+    const flags = new Set(set?.options.map((option) => option.long));
+    const named = new Set(
+      [dispatch, reports, placement]
+        .join(' ')
+        .match(/--[a-z][a-z-]+/g)
+        ?.filter(
+          (flag) =>
+            flag !== '--project-path' &&
+            flag !== '--output' &&
+            flag !== '--ref',
+        ),
+    );
+    expect(named.size).toBeGreaterThan(10);
+    for (const flag of named) {
+      expect(flags.has(flag), flag).toBe(true);
+    }
+  });
+
+  it('defines a dispatch, the steer and no-report cases, the brief contents and the resume reconcile', () => {
+    expect(dispatch).toContain(
+      'A dispatch is one request to a lane that ends in one report',
+    );
+    expect(dispatch).toContain('`--steer "<one line>"`');
+    expect(dispatch).toContain('Wakes are notifications, not dispatches.');
+    expect(dispatch).toContain(
+      'An interrupted turn closes its dispatch with `--no-report`.',
+    );
+    expect(dispatch).toContain(
+      '`oat template resolve lane-report --output <path>` and embed it whole',
+    );
+    expect(dispatch).toContain('that the lane writes no project records');
+    expect(dispatch).toContain(
+      'record what you find with `lane set` before any redispatch',
+    );
+  });
+
+  it('files a report verbatim before acting, never edits it, and keys log entries by dispatch ID', () => {
+    expect(reports).toContain('File it before acting on it');
+    expect(reports).toContain(
+      '`oat project lane set <lane> --report <file> --head <delivered head>`',
+    );
+    expect(reports).toContain('A filed report is never edited.');
+    expect(reports).toContain('keyed by the dispatch ID');
+    expect(reports).toContain('Do not merge unreported commits unreviewed');
+  });
+
+  it('supports both placements and prescribes neither', () => {
+    expect(placement).toContain('OAT supports both and prescribes neither');
+    expect(placement).toContain('`shared-worktree`');
+    expect(placement).toContain('`own-worktree`');
+    expect(placement).toContain('the head-ahead check does not apply');
+    expect(placement).toContain('(`oat internal commit-paths`)');
+  });
+
+  it('lists the ledger and reports as orchestrator-only records and lane set as guarded', () => {
+    const writer = oneLine(h2Section(agents, 'Single writer'));
+    expect(writer).toContain('`lanes.md`');
+    expect(writer).toContain('`lane-reports/`');
+    expect(writer).toContain("a lane's final message is its report");
+    expect(oneLine(h2Section(agents, 'Orchestrator branch'))).toContain(
+      '`oat project lane set`) refuse to run off the recorded branch',
+    );
+    const files = oneLine(h2Section(agents, 'Project files'));
+    expect(files).toContain('`lanes.md`');
+    expect(files).toContain('`lane-reports/`');
+  });
 });
 
 /** The lane report's sections, from the brief's Lane reports decision. */

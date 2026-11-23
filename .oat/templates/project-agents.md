@@ -26,16 +26,21 @@ it. Agreements made with the user belong in `shape.md`, never here.
 - The project's documents, listed in `shape.md` under `## Documents`.
 - `linked-projects.md`, once a project is linked to this one: one row per
   linked project, open until this project acknowledges it.
+- `lanes.md`, once a lane is recorded: the lane ledger, one block per open
+  lane, one line per closed lane and one history line per update.
+- `lane-reports/`: each lane's filed reports, one per dispatch
+  (`<lane>-<dispatch>.md`), never edited.
 - `project-log.md`, when the project log is enabled.
 
 ## Single writer
 
 Only the orchestrator, the agent running this project with the user, writes
-the project records: `shape.md`, the project's documents, `linked-projects.md`
-and `project-log.md`, and it alone claims the project with
-`oat project orchestrator set`. Delegates (subagents, lanes, other sessions)
-return their results to the orchestrator and never edit these files; a
-delegate's PR holds code only. Each project writes only its own records: a
+the project records: `shape.md`, the project's documents, `lanes.md`,
+`lane-reports/`, `linked-projects.md` and `project-log.md`, and it alone claims
+the project with `oat project orchestrator set`. Delegates (subagents, lanes,
+other sessions) return their results to the orchestrator and never edit these
+files, the lane ledger included: a lane's final message is its report, which
+the orchestrator files. A delegate's PR holds code only. Each project writes only its own records: a
 linked project never writes another project's. On resume, reconcile the
 records against the forge (open and merged PRs, branch heads) before acting on
 them.
@@ -81,8 +86,9 @@ project records.
   `--branch <name>`; changing a recorded branch needs `--replace`. It writes
   `state.md` only: save it as the other records are saved.
 - The record-writing commands (`oat project new --link-to` on the parent,
-  `oat project linked add` and `oat project linked ack`) refuse to run off the
-  recorded branch, on a detached HEAD, or while the project is unclaimed.
+  `oat project linked add`, `oat project linked ack` and
+  `oat project lane set`) refuse to run off the recorded branch, on a detached
+  HEAD, or while the project is unclaimed.
 - The check compares branches, so a lane on the orchestrator's own branch (a
   subagent in the orchestrator's checkout, or another clone on that branch)
   passes it; its brief and the single-writer rule are its guard.
@@ -116,16 +122,99 @@ lanes and PRs. A lane never contains a linked project; a lane can wait on one.
   attempts a `project-log.md` entry naming the child as source project, so it
   works with the project log disabled.
 
+## Dispatch
+
+A lane is one delegated line of work inside this project: a delegate in its
+own worktree and branch with its own PR, or a subagent in the orchestrator's
+checkout limited to the `paths:` its ledger entry gives it. A lane has no
+records or orchestrator of its own. A dispatch is one request to a lane that
+ends in one report: the first launch, then each follow-up after the lane's turn
+ends. Lanes are numbered `l01`, `l02`, ...; dispatches are numbered per lane,
+`d01`, `d02`, ...; ledger updates are `u001`, `u002`, ...
+
+`lanes.md` is written only by `oat project lane set`, so a lane's state
+survives compaction. Record each launch, change and observation as it
+happens:
+
+- `oat project lane set l01 --task <handle> --thread <handle> --worktree <path> --branch <branch> --base <sha> --next "<one line>" --owner <who>`
+  creates the lane with dispatch `d01` open. Add `--provider`, `--model`,
+  `--effort` and `--observed-model` when they are known, and `--wake` for what
+  wakes you for this lane.
+- `--state` is one of `dispatched`, `running`, `turn-finished`,
+  `work-settled`, `review-accepted`, `merged`, `blocked` (with
+  `--waiting-on owner|lane|linked-project|external` and `--blocker "<one line>"`)
+  or `superseded` (with `--replaced-by <lane>`). Merged and superseded lanes
+  move to the closed list and are not reopened.
+- `--dispatch` opens the lane's next dispatch once its last one has closed.
+- A message to a lane while it runs (a steer) amends the open dispatch: record
+  it with `--steer "<one line>"`. Wakes are notifications, not dispatches.
+- Every turn end, partial ones included, gets a report (see Lane reports). An
+  interrupted turn closes its dispatch with `--no-report`.
+- The ledger holds no reasoning beyond a one-line next action or blocker; an
+  empty value (`--blocker ""`) clears a field.
+
+Each dispatch brief names the lane and dispatch IDs; the paths of this file
+and `shape.md`; the lane's worktree and branch, or the `paths:` it may change in
+the orchestrator's checkout; that the lane writes no project records; and the
+report shape. Copy the shape with
+`oat template resolve lane-report --output <path>` and embed it whole, with the
+instruction to return it filled in as the lane's final message.
+
+On resume, read `lanes.md` before acting. For each active lane with an open
+dispatch, check its task or thread handle and the forge (its PR, its branch
+head) and record what you find with `lane set` before any redispatch: a lane
+that is still running is waited on or steered, not dispatched again.
+
+## Lane reports
+
+A lane's final message for a dispatch is its report. File it before acting on
+it:
+
+1. Save the returned text verbatim to a file outside the project records, for
+   example under `$TMPDIR`.
+2. Run `oat project lane set <lane> --report <file> --head <delivered head>`:
+   it copies the file into `lane-reports/<lane>-<dispatch>.md`, sets the lane's
+   report pointer and head and closes the dispatch in one write. A filed report
+   is never edited.
+3. Append the accepted proposed log entries with `oat project log append`,
+   keyed by the dispatch ID (for example `--ref l01-d02`).
+
+The ledger's `head` is the head the lane's last report delivered. For a lane
+in its own worktree, `oat project lane set` and `oat project status` flag a
+branch head that has moved past it. Do not merge unreported commits
+unreviewed: dispatch the lane to report them, or review them yourself first.
+
+## Lane placement
+
+You decide per lane whether it works in its own worktree or as a subagent in
+your checkout; OAT supports both and prescribes neither. `lane set` derives the
+placement from `--worktree`: this checkout is `shared-worktree`, any other is
+`own-worktree`.
+
+- **Own worktree.** The lane has its own worktree, branch and PR. Record
+  `--worktree`, `--branch` and `--base`; the head-ahead check applies, and its
+  work reaches the orchestrator's branch by the merge rules in `shape.md`.
+- **Your checkout.** A subagent works in your worktree, on your branch,
+  limited to the `--paths` its entry gives it. Its commits use exact paths
+  (`oat internal commit-paths`), never a broad `git add`; attribution comes
+  from the commit list in its report; you verify the combined head after its
+  turn, and the head-ahead check does not apply.
+
 ## Records commands
 
 - `oat project status --project-path <project-path>`: the mode, the paths of
   this file and `shape.md`, the orchestrator branch beside this checkout's
-  branch, and the open linked projects.
+  branch (naming the lane `lanes.md` lists on it), the lanes whose branch head
+  is past their last report, and the open linked projects. Run in a lane's
+  worktree, point `--project-path` at the orchestrator checkout's copy of the
+  project to read the current ledger.
 - `oat project orchestrator set [--branch <name>] [--replace]`: claim the
   project or change its orchestrator branch.
 - `oat project linked add <child> --purpose <text>` and
   `oat project linked ack <child>`: open and close rows in
   `linked-projects.md`.
+- `oat project lane set <lane> [...]`: create or update a lane in `lanes.md`
+  and file its reports (see `--help`).
 - `oat project scope <project-path> --format value`: the current scope.
 - `oat project log append --project <project-path> ...`: append a project-log
   entry (see `--help`). A `skipped` result means the project log is disabled;
@@ -141,7 +230,8 @@ lanes and PRs. A lane never contains a linked project; a lane can wait on one.
   and `implement-preflight` give the same report, and `review` also needs a
   `--scope` of phases those documents name.
 - `oat template resolve <name> --output <path>`: copy an OAT template as the
-  starting point for a project document.
+  starting point for a project document, or `lane-report` for a dispatch
+  brief.
 - `oat project push` and `oat project pull`: publish and fetch the records of
   a synced project.
 
