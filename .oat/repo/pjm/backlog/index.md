@@ -505,7 +505,6 @@
 | BL-261003-diagnose-review-finding        | Diagnose review finding overcounts and revalidate format-only repairs without relaunch               | open   | medium   | bug     | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                           | open   | medium   | feature | M        |
 | BL-261003-enforce-reconnaissance         | Enforce reconnaissance evidence and reconcile original-run review receipts                           | open   | medium   | bug     | M        |
-| BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                           | open   | medium   | feature | M        |
 | BL-261002-fix-oat-config-describe-gaps   | Fix oat config describe gaps and make config unset reach the layer that holds the key                | open   | medium   | task    | S        |
 | BL-261002-provide-a-complete-oat         | Fix oat tools remove --all at project scope and drop stale requiredBy entries                        | open   | medium   | feature | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan       | open   | medium   | task    | M        |
@@ -539,7 +538,6 @@
 | BL-261011-validate-skill-bumps-against   | Validate skill bumps against a stacked PR's base branch, not only origin/main                        | open   | medium   | task    | S        |
 | BL-261002-verify-local-scope-lifecycle   | Verify local-scope lifecycle commits and empty HiLL phase defaults                                   | open   | medium   | task    | S        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                           | open   | medium   | feature | L        |
-| BL-261002-wire-the-complexity-review     | Wire the complexity review into the sibling gate-capable skills                                      | open   | medium   | task    | M        |
 | BL-261012-oat-wave-execute-writes-into   | oat-wave-execute writes into the roll-up-owned Workflow Observations section                         | open   | medium   | task    | S        |
 | BL-261102-align-oat-project-complete     | Align oat-project-complete recap skip guidance with the terminal-outcome guard                       | open   | low      | task    | XS       |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                           | open   | low      | task    | XS       |

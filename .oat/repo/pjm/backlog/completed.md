@@ -8,6 +8,8 @@
 
 ## Completed Items
 
+- 2026-11-23 — BL-261002-wire-the-complexity-review — Wire the complexity review into the sibling gate-capable skills — Declined: no observed budget exhaustion in plan, import-plan, design, discover or lite justifies adding the complexity review to them.
+- 2026-11-23 — BL-260902-file-deferred-repository — File deferred repository follow-ups from a passing receive — Declined: a passing receive now fixes or rejects small findings, and defers only work that meets the deferral bar; automating follow-up filing would add the backlog volume the review-guidance change removes.
 - 2026-11-08 — BL-261104-goal-mode-exit-gate-resolve — Goal-mode exit gate: resolve state-selected final to the active milestone's phases — Delivered by review-gate-integrity m03 (PR #407, p15): a state-selected final resolves to the active goal milestone's phases.
 - 2026-11-08 — BL-261013-classify-review-findings — Classify review findings against the contract at every receive — Delivered by review-gate-integrity m03 (PR #407): every review and gate receive records one class per finding; new-hardening reaches the operator first.
 - 2026-11-08 — BL-260927-mark-gate-findings-as-new-or — Mark gate findings as new or carried over between attempts — Delivered by review-gate-integrity m03 (PR #407): repeated gate runs mark findings new or carried over and report per-run counts.

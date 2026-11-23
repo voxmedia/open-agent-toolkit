@@ -1,7 +1,7 @@
 ---
 id: BL-260902-file-deferred-repository
 title: File deferred repository follow-ups from a passing receive
-status: open
+status: wont_do
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - review-gate-integrity
 assignee: null
 created: 2026-09-02T23:48:47.067Z
-updated: 2026-09-02T23:49:54Z
+updated: '2026-11-23T19:11:42Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/214
