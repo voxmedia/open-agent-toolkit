@@ -1753,6 +1753,19 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Proof: `oxfmt --write` then `pnpm --filter oat-docs check` exit 0 (markdownlint and format; catalog current at 74 skills); `pnpm --filter oat-docs docs:validate` exit 0 (0 errors; no new warning: the freestyle page keeps its one provenance warning on the lane-notes path, and `starting-projects.md`'s existing page-length warning grows from 712 to 723 lines); `docs nav sync --target-dir apps/oat-docs --check` exit 0; `docs generate-index` regenerated the one changed description.
 - Note: this record was opened after its commit rather than before (no lookahead needed; the content is unchanged).
 
+### Task p12-t04: Release: lockstep package versions and provider views
+
+**Status:** completed
+**Commit:** 0ad3535e0f18a5369e6fb087e9ce47f1faab1099
+**Executor:** phase-implementer:freestyle-projects-p12-implementation-1
+**Handle:** freestyle-projects-p12-implementation-1 (this session)
+
+- Intent: the m03 lockstep bump of the five public packages above `origin/main`, and provider views refreshed with the branch build.
+- Inventory (`origin/main` `4dc1b8687`, the merge base, at 0.3.57; main changed none of p12's paths since): m03 changes one canonical skill, `oat-project-freestyle` (bumped once to 1.2.0 in p12-t02), no agent role, no `.agents/docs/` file, the bundled templates and CLI source, which put the CLI release surface in the lockstep policy.
+- Lockstep: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` 0.3.57 to 0.3.58; `packages/cli/assets/public-package-versions.json` followed from `pnpm build` (5 tasks, 0 cached), and `.oat/sync/manifest.json` `oatVersion` from `node packages/cli/dist/index.js sync --scope project` exit 0 ("Manifest version refreshed; no content changes required": `.claude/skills/oat-project-freestyle` links the canonical skill, so no view changed).
+- Files: the five `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` exit 0 (41 files, 1544 tests); `oxfmt --check` on the changed files exit 0. After the commit and `git fetch origin main`: `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked) and `pnpm release:check-versions` exit 0.
+
 ---
 
 ## Orchestration Runs
