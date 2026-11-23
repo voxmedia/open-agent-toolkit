@@ -226,7 +226,8 @@ it:
 2. Run `oat project lane set <lane> --report <file> --head <delivered head>`:
    it copies the file into `lane-reports/<lane>-<dispatch>.md`, sets the lane's
    report pointer and head and closes the dispatch in one write. A filed report
-   is never edited.
+   is never edited. In a repository whose commit hooks format Markdown, exclude
+   `lane-reports/` from them so the committed report stays verbatim.
 3. Append the accepted proposed log entries with `oat project log append`,
    keyed by the dispatch ID (for example `--ref l01-d02`).
 4. Promote what you accept from its Decisions and Learnings: a decision as a
