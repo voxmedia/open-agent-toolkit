@@ -257,6 +257,10 @@ Observation: an amendment-fix commit rewrote the manual 987d479b plan artifact r
 Impact: one extra fix commit on an open delivery, and a near miss on a learned Bugbot rule.
 Recommendation: when a fix touches plan.md ## Reviews, append a new row and never edit or replace an existing one; diff the table against the base before committing.
 
+### 2026-11-23 · structural · oat-project-goal · m03
+
+Activated m03 (p11, p12); freestyle-projects-activate-m03
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
