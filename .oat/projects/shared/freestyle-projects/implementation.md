@@ -1299,6 +1299,9 @@ Added by the second m02 amendment (2026-11-22): `decisions.md` and `memories.md`
 
 - run/v1 · request=freestyle-projects-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
+- run/v1 · request=freestyle-projects-p07-implementation-1 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Nested (phase-implementer-owned, p07-t05 exit evidence): request=freestyle-projects-p07-t05-fresh-session-1 · read-only general-purpose fresh-context check on Sonnet at provider-default effort · launch=accepted · outcome=completed · no structured dispatch record (the phase report names it; answer kept verbatim in the gitignored p07 scratch transcript)
+
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
