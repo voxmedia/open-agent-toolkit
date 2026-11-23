@@ -15,10 +15,14 @@ import { join } from 'node:path';
 
 import { createProjectLaneCommand } from '@commands/project/lane/index';
 import { LANE_STATES, WAITING_ON_KINDS } from '@commands/project/lane/ledger';
+import { createProjectLogAppendCommand } from '@commands/project/log/append';
 import { scaffoldProject } from '@commands/project/new/scaffold';
+import { createTemplateCommand } from '@commands/template/index';
 import { runTemplateResolve } from '@commands/template/resolve';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
+import { initMainRepo, runOat } from '@test-support/run-oat';
+import type { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = join(import.meta.dirname, '../../../../../../..');
@@ -758,6 +762,13 @@ describe('freestyle kickoff document starting points', () => {
 });
 
 describe('freestyle dispatch, lane reports and lane placement guidance (p07)', () => {
+  const tempDirs: string[] = [];
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
   const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
   const dispatch = oneLine(h2Section(agents, 'Dispatch'));
   const reports = oneLine(h2Section(agents, 'Lane reports'));
@@ -770,25 +781,130 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     expect(dispatch).toContain(`--waiting-on ${WAITING_ON_KINDS.join('|')}`);
   });
 
-  it('names only lane set options the command has', () => {
-    const set = createProjectLaneCommand().commands.find(
-      (command) => command.name() === 'set',
+  /**
+   * Each flag the sections name, with the command it belongs to: the command
+   * named most recently before it (`oat project lane set` or `lane set`,
+   * `oat project log append`, `oat template resolve`), and for a log flag the
+   * entry types its sentence gives it (both when it names neither).
+   */
+  function namedFlags(): {
+    flag: string;
+    command: string;
+    entryTypes: ('judgment' | 'structural')[];
+  }[] {
+    const text = [dispatch, reports, placement].join(' ');
+    const pattern =
+      /`(?:oat )?(?:project )?(lane set|log append|template resolve)\b|(--[a-z][a-z-]+)/g;
+    const found = [];
+    let command = '';
+    for (const match of text.matchAll(pattern)) {
+      if (match[1]) {
+        command = match[1];
+        continue;
+      }
+      const flag = match[2] as string;
+      const index = match.index;
+      const sentence = text.slice(
+        text.lastIndexOf('. ', index) + 1,
+        text.indexOf('. ', index) === -1
+          ? undefined
+          : text.indexOf('. ', index),
+      );
+      const typed = new RegExp(
+        `\`${flag} <[^>]+>\` for a (judgment|structural) entry`,
+      ).exec(sentence)?.[1] as 'judgment' | 'structural' | undefined;
+      const entryTypes = typed
+        ? [typed]
+        : /structural/.test(sentence) && !/judgment/.test(sentence)
+          ? (['structural'] as const)
+          : (['judgment', 'structural'] as const);
+      found.push({ flag, command, entryTypes: [...entryTypes] });
+    }
+    return found;
+  }
+
+  it('names only options the command each flag belongs to has', () => {
+    const options = (command: { options: readonly { long?: string }[] }) =>
+      new Set(command.options.map((option) => option.long));
+    const accepted: Record<string, Set<string | undefined>> = {
+      'lane set': options(
+        createProjectLaneCommand().commands.find(
+          (command) => command.name() === 'set',
+        ) as Command,
+      ),
+      'log append': options(createProjectLogAppendCommand()),
+      'template resolve': options(
+        createTemplateCommand().commands.find(
+          (command) => command.name() === 'resolve',
+        ) as Command,
+      ),
+    };
+    const named = namedFlags();
+    expect(
+      named.filter((entry) => entry.command === 'lane set').length,
+    ).toBeGreaterThan(10);
+    for (const { flag, command } of named) {
+      expect(accepted[command]?.has(flag), `${command} ${flag}`).toBe(true);
+    }
+  });
+
+  it('keys each log entry by a flag its own entry type accepts', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-freestyle-log-flags-'));
+    tempDirs.push(root);
+    await initMainRepo(root);
+    const created = await runOat(root, [
+      'project',
+      'new',
+      'demo',
+      '--mode',
+      'freestyle',
+      '--scope',
+      'shared',
+      '--with-project-log',
+      '--no-dashboard',
+      '--no-commit',
+    ]);
+    expect(created.exitCode, created.stderr).toBe(0);
+    const base = {
+      judgment: {
+        '--type': 'worked-well',
+        '--scope': 'project',
+        '--area': 'lanes',
+      },
+      structural: {
+        '--structural': undefined,
+        '--producer': 'oat-project-freestyle',
+        '--ref': 'u001',
+      },
+    } as const;
+    const logFlags = namedFlags().filter(
+      (entry) => entry.command === 'log append',
     );
-    const flags = new Set(set?.options.map((option) => option.long));
-    const named = new Set(
-      [dispatch, reports, placement]
-        .join(' ')
-        .match(/--[a-z][a-z-]+/g)
-        ?.filter(
-          (flag) =>
-            flag !== '--project-path' &&
-            flag !== '--output' &&
-            flag !== '--ref',
-        ),
-    );
-    expect(named.size).toBeGreaterThan(10);
-    for (const flag of named) {
-      expect(flags.has(flag), flag).toBe(true);
+    expect(logFlags.map((entry) => entry.flag)).toContain('--source');
+    for (const { flag, entryTypes } of logFlags) {
+      for (const entryType of entryTypes) {
+        const fields: Record<string, string | undefined> = {
+          ...base[entryType],
+          [flag]: 'l01-d02',
+          '--body': 'Accepted from lane report l01-d02.',
+        };
+        const args = Object.entries(fields).flatMap(([name, value]) =>
+          value === undefined ? [name] : [name, value],
+        );
+        const result = await runOat(root, [
+          'project',
+          'log',
+          'append',
+          '--project',
+          '.oat/projects/shared/demo',
+          '--dry-run',
+          ...args,
+        ]);
+        expect(
+          result.exitCode,
+          `${entryType} entry with ${flag}: ${result.stderr}`,
+        ).toBe(0);
+      }
     }
   });
 

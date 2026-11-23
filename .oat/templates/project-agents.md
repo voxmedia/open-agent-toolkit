@@ -229,7 +229,8 @@ it:
    is never edited. In a repository whose commit hooks format Markdown, exclude
    `lane-reports/` from them so the committed report stays verbatim.
 3. Append the accepted proposed log entries with `oat project log append`,
-   keyed by the dispatch ID (for example `--ref l01-d02`).
+   keyed by the dispatch ID (for example `l01-d02`): `--source <dispatch ID>`
+   for a judgment entry and `--ref <dispatch ID>` for a structural entry.
 4. Promote what you accept from its Decisions and Learnings: a decision as a
    `decisions.md` entry, and a gotcha, user preference or still-true context
    as a `memories.md` bullet, each citing the dispatch ID (for example

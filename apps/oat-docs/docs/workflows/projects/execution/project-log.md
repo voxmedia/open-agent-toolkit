@@ -223,7 +223,8 @@ Merged PR #12 into the integration branch.
 `oat project linked ack <child>` writes one such entry on a freestyle parent:
 producer `oat-project-linked`, the child as `ref` and source project, and the
 time. A freestyle orchestrator keys the entries it appends from a lane report
-by the dispatch ID (`--ref l01-d02`), and a structural entry for a lane event
+by the dispatch ID (`--source l01-d02` for a judgment entry, `--ref l01-d02`
+for a structural one), and a structural entry for a lane event
 such as a merge by the `lane set` update ID (see
 [Running a Freestyle Project](freestyle-projects.md)).
 

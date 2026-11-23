@@ -119,8 +119,9 @@ sets the report pointer and head, and closes the dispatch. A different file
 already at that path is refused, because a filed report is never edited. In a
 repository whose commit hooks format Markdown, exclude `lane-reports/` from
 them so the committed report stays verbatim. The orchestrator then appends
-the log entries it accepts, keyed by the dispatch ID (`--ref l01-d02`), and
-promotes accepted decisions and gotchas (see
+the log entries it accepts, keyed by the dispatch ID (`--source l01-d02` for a
+judgment entry, `--ref l01-d02` for a structural one), and promotes accepted
+decisions and gotchas (see
 [Decisions and memories](#decisions-and-memories)).
 
 **Head-ahead check.** For a lane in its own worktree with a recorded branch
