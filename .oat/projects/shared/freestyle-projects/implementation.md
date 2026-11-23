@@ -39,20 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | complete    | 1     | 1/1      |
-| p08   | complete    | 1     | 1/1      |
-| p11   | complete    | 1     | 1/1      |
-| p12   | in_progress | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
+| p11   | complete | 1     | 1/1      |
+| p12   | complete | 1     | 1/1      |
 
-**Total:** 9/10 phases accepted
+**Total:** 10/10 phases accepted
 
 ---
 
@@ -1700,10 +1700,10 @@ Late fix p11-t05 (p11 review round 1: L1) at `156e7bb66`. No later phase has a `
 
 ## Phase p12: Adopted plans, proportionality checkpoints and lane brief
 
-**Status:** in_progress
+**Status:** completed
 **Base:** db8eb5033c3ecb557635e8ca57590e483e203de3
 **Executor:** phase-implementer:freestyle-projects-p12-implementation-1
-**Head:** e901a23b0f8061c5dd3e192de2b3511fa3ef98e2
+**Head:** e94901bbd7ee4082b1f11ea0059dcee6cd2b106f
 
 Phase verification at the head on a clean tree (only the untracked `references/`), `origin/main` `4dc1b8687` (the merge base, unchanged), in Definition of Done order with each exit code captured (logs `references/analysis/p12-gate-*.log`, local-only): `pnpm check` exit 0 (every package `check` and `oat-docs:check` a cache miss; dependency builds replayed); `pnpm type-check` exit 0 (every `type-check` a cache miss); `bash scripts/with-isolated-home.sh pnpm test` exit 0, every `test` task a cache miss (cli 458 files, 10022 tests; control-plane 14 files; docs-config 5, docs-theme 10, docs-transforms 5 files; oat-docs 93; `test:smoke` 165, `test:skills` 754, `test:scripts` 7); `pnpm build` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter='!oat-docs' --force` exit 0 (5 tasks, 0 cached); `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked); `git fetch origin main` then `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.58); `pnpm build:docs` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter=oat-docs... --force` exit 0 (6 tasks, 0 cached); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Also exit 0: `pnpm lint` and `pnpm format` (every package task a cache miss), the skill-prose `vitest run src/commands/init/tools/shared src/validation` under the isolated `HOME` (33 files, 1360 tests), `pnpm test:skills` (754), `pnpm oat:validate-skills` (69 OK).
 
@@ -1773,6 +1773,27 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Files: the five `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`.
 - Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` exit 0 (41 files, 1544 tests); `oxfmt --check` on the changed files exit 0. After the commit and `git fetch origin main`: `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked) and `pnpm release:check-versions` exit 0.
 
+### Task p12-t05: Fix p12 review findings (M1, L1)
+
+**Status:** completed
+**Commit:** e94901bbd7ee4082b1f11ea0059dcee6cd2b106f
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p12 review `freestyle-projects-p12-review-1` M1 (complexity: a dispatch brief embeds `lane-brief.md` and `lane-report.md` whole, and the report's preamble repeated the lane brief's standing rules, against the incident of long briefs and the AGENTS.md promise that briefs never repeat them) and L1 (the project-log docs listed the derived-key fields without `structural`, which `deriveProjectLogKey` hashes).
+- Files: `.oat/templates/lane-report.md` (preamble keeps only the report's own rules, builds Decisions and Learnings from the lane notes file, and names the lane brief for the standing rules), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (the p10 lane-notes test now pins that pointer, that the report no longer carries the no-records and never-commit rules, and that the lane brief does), `apps/oat-docs/docs/workflows/projects/execution/project-log.md` (adds "whether it is structural").
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/commands/project/lane src/commands/template src/validation` exit 0 (36 files, 1415 tests); `pnpm check` exit 0 (11 cache misses executed); `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli test` exit 0 (458 files, 10022 tests); `pnpm test:skills` exit 0; docs index regenerated with no diff.
+- Can-fail: re-adding "You are a lane: do not write project records." to the report preamble failed the updated test (`expected '# Lane report: … not to contain 'do not write project records'`); restored.
+
+Late fix p12-t05 (p12 review round 1: M1 and L1) at `e94901bbd`. p12 is the last m03 phase, so the head advanced under the late-fix rule; the reviewed head stays `6d5e523ac`. The full Definition of Done list in the p12 head summary ran at `e901a23b0`; p12-t05 changes one bundled template, one contract test and one docs line, and the checks above cover them; `release:*` and `build:docs` inputs other than that docs line are unchanged.
+
+### Review Received: p12
+
+- Review `freestyle-projects-p12-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `db8eb5033..6d5e523ac`, artifact `reviews/archived/p12-code-review-2026-11-23T181920Z.md` (local-only), also the phase's fresh-context docs review against the code (p12's docs and p11's `071b3fb61`): 0 critical, 0 high, 1 medium, 1 low; reconnaissance not attempted. Every Outcome 10 clause implemented and pinned; the intake keeps or maps required gates; `lane-brief.md` restates existing rules only; the m02-era refresh carries `## Lane brief` and the `--commit` lines; skill and lockstep bumps complete; contract tests re-run (67 passed).
+- M1 (Medium, complexity): the report preamble duplicated the lane brief's standing rules. Fixed in p12-t05.
+- L1 (Low, docs): derived-key field list missing `structural`. Fixed in p12-t05.
+- **Finding classes:** M1 accepted-requirement (Outcome 10: a lane brief each dispatch brief extends instead of repeating; the incident of about 150-line briefs) · L1 regression (docs overstated nothing but omitted a hashed field, against `append.ts` `deriveProjectLogKey`).
+- Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p12-t05 record.
+
 ---
 
 ## Orchestration Runs
@@ -1824,6 +1845,8 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - run/v1 · request=freestyle-projects-p11-review-1 · scope=p11 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p11 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p11 (task p11-t05 only, review round 1 L1) · reason: one test, smaller than a fix-mode resume · root model: claude-opus-5-5
 - run/v1 · request=freestyle-projects-p12-implementation-1 · scope=p12 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p12-review-1 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p12 (task p12-t05 only, review round 1 M1 and L1) · reason: one template preamble, one pin and one docs line, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 

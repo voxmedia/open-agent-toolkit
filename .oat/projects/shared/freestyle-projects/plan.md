@@ -235,6 +235,7 @@ Default is `[]` (fully sequential, no worktrees).
 | p10   | code     | passed      | 2026-11-22 | p10-code-review-2026-11-23T041712Z.md                        | 07e828dab203ff41d286565f0bb0be5a3c703849 | auto       | -           |
 | p08   | code     | passed      | 2026-11-22 | p08-code-review-2026-11-23T045600Z.md                        | bb87932965ebb7de2f952aac788747cb2d90226e | auto       | -           |
 | p11   | code     | passed      | 2026-11-23 | p11-code-review-2026-11-23T174803Z.md                        | 5e7732ccf5a681b963d346d80716096ab0910094 | auto       | -           |
+| p12   | code     | passed      | 2026-11-23 | p12-code-review-2026-11-23T181920Z.md                        | 6d5e523ac31ec325efd85ad38b29b2c3886cc1bf | auto       | -           |
 | m02   | code     | fixes_added | 2026-11-22 | reviews/archived/m02-integrated-review-2026-11-23T051139Z.md | 52589cbea2a707b82fbb43c3dd8861d2c6dac4e0 | manual     | -           |
 | m02   | code     | fixes_added | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T060440Z.md | 020ebb7409183ac2b162e8df24d2b9ec64b48b59 | manual     | -           |
 | m02   | code     | passed      | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T063938Z.md | 9ffa307eb6bbb42f5661c90bf529f2a56b231dba | manual     | -           |
