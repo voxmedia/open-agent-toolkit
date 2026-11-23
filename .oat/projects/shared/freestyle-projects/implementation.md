@@ -1703,7 +1703,7 @@ Late fix p11-t05 (p11 review round 1: L1) at `156e7bb66`. No later phase has a `
 **Status:** completed
 **Base:** db8eb5033c3ecb557635e8ca57590e483e203de3
 **Executor:** phase-implementer:freestyle-projects-p12-implementation-1
-**Head:** e94901bbd7ee4082b1f11ea0059dcee6cd2b106f
+**Head:** 22212dabbee17dba426eaf4794c4d4e7c5d81566
 
 Phase verification at the head on a clean tree (only the untracked `references/`), `origin/main` `4dc1b8687` (the merge base, unchanged), in Definition of Done order with each exit code captured (logs `references/analysis/p12-gate-*.log`, local-only): `pnpm check` exit 0 (every package `check` and `oat-docs:check` a cache miss; dependency builds replayed); `pnpm type-check` exit 0 (every `type-check` a cache miss); `bash scripts/with-isolated-home.sh pnpm test` exit 0, every `test` task a cache miss (cli 458 files, 10022 tests; control-plane 14 files; docs-config 5, docs-theme 10, docs-transforms 5 files; oat-docs 93; `test:smoke` 165, `test:skills` 754, `test:scripts` 7); `pnpm build` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter='!oat-docs' --force` exit 0 (5 tasks, 0 cached); `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked); `git fetch origin main` then `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.58); `pnpm build:docs` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter=oat-docs... --force` exit 0 (6 tasks, 0 cached); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Also exit 0: `pnpm lint` and `pnpm format` (every package task a cache miss), the skill-prose `vitest run src/commands/init/tools/shared src/validation` under the isolated `HOME` (33 files, 1360 tests), `pnpm test:skills` (754), `pnpm oat:validate-skills` (69 OK).
 
@@ -1786,6 +1786,19 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 
 Late fix p12-t05 (p12 review round 1: M1 and L1) at `e94901bbd`. p12 is the last m03 phase, so the head advanced under the late-fix rule; the reviewed head stays `6d5e523ac`. The full Definition of Done list in the p12 head summary ran at `e901a23b0`; p12-t05 changes one bundled template, one contract test and one docs line, and the checks above cover them; `release:*` and `build:docs` inputs other than that docs line are unchanged.
 
+### Task p12-t06: Fix m03 integrated review findings (I-1 to I-6)
+
+**Status:** completed
+**Commit:** 22212dabbee17dba426eaf4794c4d4e7c5d81566
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: m03 integrated review cycle 1 (`reviews/archived/m03-integrated-review-2026-11-23T185019Z.md`, local-only). I-1 freestyle log keys match exactly (bare or `key:<key>`) for the body check, replay and commit verification; other modes keep their matcher. I-3 `lane set --commit` finds an untracked `lanes.md` when `status.showUntrackedFiles=no`. I-4 an inserted key after a multiline body is its own paragraph. I-2 freestyle adds no review gate, but a review an adopted plan requires must still pass. I-5 the head-ahead check is for closed dispatches. I-6 the reshape example body no longer repeats `$RESHAPE_ID`.
+- Files: `packages/cli/src/commands/project/log/append.ts` (`isExactKeyWord`; `exact` on `findProjectLogEntryByIdempotencyKey`, the commit identity and `freestyleKey`; paragraph separator; help text), `packages/cli/src/commands/project/lane/commit.ts`, tests in `log/freestyle.test.ts` (two) and `lane/lane.test.ts` (one), `.agents/skills/oat-project-freestyle/references/{kickoff,reshape}.md`, `.oat/templates/{shape,project-agents}.md`, docs `reference/cli-reference.md`, `workflows/projects/execution/project-log.md`, `workflows/projects/reviews/index.md`.
+- Proof: `pnpm check`, `pnpm type-check`, `pnpm build`, `pnpm lint` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli test` exit 0 (458 files, 10025 tests); `pnpm test:skills` exit 0; `pnpm build:docs` exit 0 and the docs index regenerated with no diff; after the commit, `git fetch origin main`, `pnpm run check:skill-bumps`, `pnpm release:check-versions` and `pnpm release:validate` exit 0 (`oat-project-freestyle` 1.2.0 and lockstep 0.3.58 already bumped on this branch).
+- Can-fail: replay with `exact` forced off fails the exact-key test twice over (`expected 'appended' to be 'already-appended'` for the bare `dispatch-47` retry; after removing a trailing period from the fixture, `expected 'already-appended' to be 'appended'` for `release-12`); a single-space separator fails the code-fence test; dropping `--untracked-files=all` fails the new lane test (`expected 'nothing-to-commit' to be 'committed'`). Each restored.
+
+Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last m03 phase, so the head advanced under the late-fix rule; the p12 phase review's reviewed head stays `6d5e523ac`.
+
 ### Review Received: p12
 
 - Review `freestyle-projects-p12-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `db8eb5033..6d5e523ac`, artifact `reviews/archived/p12-code-review-2026-11-23T181920Z.md` (local-only), also the phase's fresh-context docs review against the code (p12's docs and p11's `071b3fb61`): 0 critical, 0 high, 1 medium, 1 low; reconnaissance not attempted. Every Outcome 10 clause implemented and pinned; the intake keeps or maps required gates; `lane-brief.md` restates existing rules only; the m02-era refresh carries `## Lane brief` and the `--commit` lines; skill and lockstep bumps complete; contract tests re-run (67 passed).
@@ -1847,6 +1860,7 @@ Late fix p12-t05 (p12 review round 1: M1 and L1) at `e94901bbd`. p12 is the last
 - run/v1 · request=freestyle-projects-p12-implementation-1 · scope=p12 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p12-review-1 · scope=p12 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p12 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p12 (task p12-t05 only, review round 1 M1 and L1) · reason: one template preamble, one pin and one docs line, smaller than a fix-mode resume · root model: claude-opus-5-5
+- Root-inline phase: p12 (task p12-t06 only, m03 integrated review I-1 to I-6) · reason: a matcher flag, one git flag, prose lines and three tests, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
@@ -1988,6 +2002,29 @@ Confirmed by the reviewer: P-1, P-2 and P-3 by behaviour with the branch build (
 Review-cycle count for m02 integrated: 3.
 
 **Outcome:** passed at `9ffa307eb`. p08 accepted (fix loops 3: p08-t04, p08-t05 to p08-t13, p08-t14); m02 exit carrier refreshed to fresh; m02 reviewing -> delivering.
+
+### Review Received: m03
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m03-integrated-review-2026-11-23T185019Z.md
+
+Integrated milestone review of m03 (p11, p12) on `4dc1b8687..2a747dc33` (origin/main to the m03 head), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only), complexity lens. Root checked every cited line at `2a747dc33`; each defect is in code or text m03 introduced.
+
+**Findings:** Critical 0 · High 1 · Medium 3 · Low 2
+**Finding classes:** I-1 accepted-requirement (Outcome 9: a retried keyed append appends once; a distinct entry is never dropped) · I-2 accepted-requirement (Outcome 10, p12 Intent: the adopted-plan intake keeps required gates) · I-3 accepted-requirement (Outcome 9: `lane set --commit` commits the ledger by exact path) · I-4 regression (p11 `freestyleKey`: an inserted key after a closing fence turns later log entries into code) · I-5 accepted-requirement (Outcome 9: head-ahead quiet while the dispatch is open; the instructions must say so) · I-6 accepted-requirement (Outcome 10: briefs and examples do not repeat what a field already carries)
+
+- I-1 (High): substring key match drops a distinct entry or duplicates a retry → p12-t06.
+- I-2 (Medium): "Reviews never block" against adopted required reviews → p12-t06.
+- I-3 (Medium): untracked `lanes.md` hidden from status → p12-t06.
+- I-4 (Medium): key appended to a closing code fence → p12-t06.
+- I-5 (Low): head-ahead paragraph omits the open-dispatch condition → p12-t06.
+- I-6 (Low): redundant `$RESHAPE_ID` in the reshape body → p12-t06.
+
+Confirmed by the reviewer: both version gates, `release:validate`, `build:docs` and docs-index freshness exit 0; exact-path commits, scope handling, open and closed dispatches, the m02 refresh and lane brief assembly behave as documented; all six non-freestyle modes unchanged.
+
+Review-cycle count for m03 integrated: 1.
+
+**Outcome:** fixes applied as p12-t06 (`22212dabb`, late-fix rule, records in p12), root-verified with can-fail checks. `oat project delivery check` needs a passed integrated review covering the head, so, as in m02 cycle 3, a confirm-only round on `2a747dc33..22212dabb` runs before delivery.
 
 ## Deferred Findings
 
