@@ -164,6 +164,42 @@ oat_deliveries:
         members:
           - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
             waived_head: e711fdade8db9045cf486d9f24a48a250e853386
+  - delivery_id: d02
+    milestone: m02
+    scope: [p05, p07, p10, p08]
+    endpoint: merged
+    kind: pr
+    status: registering
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: feat/freestyle-projects-m02
+      head_sha_at_registration: '337d3e069dd5bc60e3ed3a0db67572851f774b45'
+    members: []
+    integrated_review:
+      artifact: reviews/archived/m02-integrated-review-2026-11-23T063938Z.md
+      scope: [p05, p07, p10, p08]
+      bound_revisions:
+        [
+          {
+            member: 0,
+            base: '699f8ee43e4e1e8ba7f315e9d2d2cc451e097222',
+            head: '9ffa307eb6bbb42f5661c90bf529f2a56b231dba',
+          },
+        ]
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [p05, p07, p10, p08] }
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-23T06:39:38Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -231,7 +267,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/429 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-23T06:39:38Z'
+oat_project_state_updated: '2026-11-23T06:55:30Z'
 oat_generated: false
 ---
 
