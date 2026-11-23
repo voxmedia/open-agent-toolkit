@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { ORCHESTRATOR_SET_COMMAND } from '@commands/project/orchestrator/branch';
 import {
   PROJECT_SCOPES,
   type ProjectScope,
@@ -86,6 +87,9 @@ function reportSuccess(
       ? {
           projectFiles: freestyleProjectFiles(result.projectPath),
           nextSkill: FREESTYLE_SKILL,
+          ...(result.orchestratorBranch !== undefined
+            ? { orchestratorBranch: result.orchestratorBranch }
+            : {}),
         }
       : undefined;
   if (context.json) {
@@ -144,6 +148,13 @@ function reportSuccess(
     context.logger.info(
       `Project shape: ${freestyle.projectFiles.shape} (not yet shaped)`,
     );
+    if (freestyle.orchestratorBranch !== undefined) {
+      context.logger.info(
+        freestyle.orchestratorBranch === null
+          ? `Orchestrator branch: unclaimed (the orchestrator claims it with \`${ORCHESTRATOR_SET_COMMAND}\`)`
+          : `Orchestrator branch: ${freestyle.orchestratorBranch}`,
+      );
+    }
     context.logger.info(
       `Next: shape the project with the user through the ${FREESTYLE_SKILL} skill.`,
     );

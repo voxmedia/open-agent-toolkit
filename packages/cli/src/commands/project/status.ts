@@ -7,6 +7,13 @@ import {
 } from '@app/command-context';
 import { projectListHint } from '@commands/project/list';
 import {
+  describeOrchestratorCheckout,
+  formatOrchestratorLines,
+  readCurrentBranch,
+  readOrchestratorBranch,
+  type OrchestratorCheckout,
+} from '@commands/project/orchestrator/branch';
+import {
   resolveUnpulledSyncedProject,
   type UnpulledSyncedProject,
 } from '@commands/project/unpulled-synced';
@@ -29,6 +36,10 @@ interface ProjectStatusDependencies {
     projectDir: string,
     repoRoot?: string,
   ) => Promise<UnpulledSyncedProject | null>;
+  /** This checkout's branch; null on a detached HEAD or outside git. */
+  readCurrentBranch: (cwd: string) => Promise<string | null>;
+  /** A freestyle project's recorded orchestrator branch; null if unclaimed. */
+  readOrchestratorBranch: (projectDir: string) => Promise<string | null>;
 }
 
 interface ProjectStatusOptions {
@@ -43,6 +54,8 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   resolveActiveProject,
   getProjectState: getProjectStateWithReviewAncestry,
   resolveUnpulledSyncedProject,
+  readCurrentBranch: (cwd) => readCurrentBranch(cwd),
+  readOrchestratorBranch,
 };
 
 function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
@@ -88,9 +101,15 @@ function freestyleProjectFiles(
   };
 }
 
+/** What status reports about a freestyle project beyond its files. */
+interface FreestyleCoordination {
+  orchestrator: OrchestratorCheckout;
+}
+
 function formatProjectStatusLines(
   project: ProjectState,
   files: FreestyleProjectFiles | null,
+  coordination: FreestyleCoordination | null,
 ): string[] {
   // Freestyle has no lifecycle phase, progress or current task to report.
   const position = files
@@ -98,6 +117,9 @@ function formatProjectStatusLines(
         'Mode: freestyle (no lifecycle workflow)',
         `Rules: ${files.agents}`,
         `Shape: ${files.shape}`,
+        ...(coordination
+          ? formatOrchestratorLines(coordination.orchestrator)
+          : []),
       ]
     : [
         `Phase: ${project.phase} (${project.phaseStatus})`,
@@ -188,10 +210,12 @@ async function runProjectStatus(
         return;
       }
       const project = await dependencies.getProjectState(options.projectPath);
-      writeProjectStatusOutput(
+      await writeProjectStatusOutput(
         context,
+        dependencies,
         options,
         { status: 'ok', project },
+        options.projectPath,
         options.projectPath,
       );
       return;
@@ -213,11 +237,13 @@ async function runProjectStatus(
         return;
       }
       const project = await dependencies.getProjectState(targetPath);
-      writeProjectStatusOutput(
+      await writeProjectStatusOutput(
         context,
+        dependencies,
         options,
         { status: 'ok', project },
         options.projectPath,
+        targetPath,
       );
       return;
     }
@@ -266,14 +292,15 @@ async function runProjectStatus(
       return;
     }
 
-    const project = await dependencies.getProjectState(
-      join(repoRoot, activeProject.path),
-    );
-    writeProjectStatusOutput(
+    const activeDir = join(repoRoot, activeProject.path);
+    const project = await dependencies.getProjectState(activeDir);
+    await writeProjectStatusOutput(
       context,
+      dependencies,
       options,
       { status: 'ok', project },
       activeProject.path,
+      activeDir,
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -296,16 +323,32 @@ function writeUnpulledStatusOutput(
   );
 }
 
-function writeProjectStatusOutput(
+/**
+ * `projectDir` is the project folder as the caller named it, used in the
+ * printed paths; `absoluteDir` is the same folder resolved, used for reads.
+ */
+async function writeProjectStatusOutput(
   context: CommandContext,
+  dependencies: ProjectStatusDependencies,
   options: ProjectStatusOptions,
   status: { status: 'ok'; project: ProjectState },
   projectDir: string,
-): void {
+  absoluteDir: string,
+): Promise<void> {
   const files = freestyleProjectFiles(status.project, projectDir);
-  const payload = files ? { ...status, projectFiles: files } : status;
+  const coordination = files
+    ? {
+        orchestrator: describeOrchestratorCheckout(
+          await dependencies.readOrchestratorBranch(absoluteDir),
+          await dependencies.readCurrentBranch(context.cwd),
+        ),
+      }
+    : null;
+  const payload = files
+    ? { ...status, projectFiles: files, ...coordination }
+    : status;
   writeStatusPayload(context, options, payload, () =>
-    formatProjectStatusLines(payload.project, files),
+    formatProjectStatusLines(payload.project, files, coordination),
   );
 }
 

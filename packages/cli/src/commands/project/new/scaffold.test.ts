@@ -2505,8 +2505,11 @@ describe('scaffoldProject', () => {
     await expect(stat(join(projectRoot, 'references'))).rejects.toThrow();
 
     const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    // Not a git work tree, so there is no current branch: the project starts
+    // unclaimed.
     expect(parseFrontmatter(state)).toEqual({
       oat_workflow_mode: 'freestyle',
+      oat_orchestrator_branch: '',
       oat_project_created: '2026-11-21T12:00:00.000Z',
       oat_project_state_updated: '2026-11-21T12:00:00.000Z',
       oat_generated: false,

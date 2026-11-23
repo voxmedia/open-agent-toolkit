@@ -15,6 +15,7 @@ import { createProjectLogCommand } from './log/index';
 import { createProjectMigrateCommand } from './migrate';
 import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
+import { createProjectOrchestratorCommand } from './orchestrator/index';
 import { createProjectPauseCommand } from './pause';
 import { createProjectPromoteCommand } from './promote';
 import { createProjectPruneCommand } from './prune';
@@ -44,6 +45,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectMigrateCommand())
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
+    .addCommand(createProjectOrchestratorCommand())
     .addCommand(createProjectPauseCommand())
     .addCommand(createProjectPromoteCommand())
     .addCommand(createProjectPruneCommand())

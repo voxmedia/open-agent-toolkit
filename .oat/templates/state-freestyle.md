@@ -1,5 +1,6 @@
 ---
 oat_workflow_mode: freestyle # OAT structure and records only: no lifecycle phase, gates, checkpoints or routing
+oat_orchestrator_branch: '' # the orchestrator's branch: set by oat project new; empty (unclaimed) until claimed with oat project orchestrator set
 oat_project_created: null # ISO 8601 UTC timestamp — set once at project creation
 oat_project_state_updated: null # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false

@@ -1283,6 +1283,7 @@ describe('help output snapshots', () => {
         migrate [options] <project-path>             Migrate a shared OAT project to synced scope
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
+        orchestrator                                 Manage a freestyle project's orchestrator branch
         pause [options] [name]                       Pause an OAT project
         promote [options] <project-path>             Promote an authored lite, brief or settled goal project to the quick workflow
         prune [options] [project-path|slug]          Permanently remove a synced project and its ref
