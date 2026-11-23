@@ -86,9 +86,9 @@ oat_milestone_gates:
       reviewed_head: null
       subject:
         kind: plan
-        scope: [p05, p07, p08]
-        ref: c393692f367a5e1a96649d29ac9966584653b2e8
-      decided_at: '2026-11-23T00:15:07Z'
+        scope: [p05, p07, p10, p08]
+        ref: 1874426187e7ef1e9e6a4613ff10ff72bf4426da
+      decided_at: '2026-11-23T00:54:44Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01

@@ -127,7 +127,7 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 - **Endpoint:** merged — a milestone is delivered when its PR is merged into `main`.
 - **Authority:** the operator approves the brief, each milestone's re-alignment and each delivery's merge. The agent decides alone on phase-internal implementation choices and on dispatching review and fix rounds. Anything that adds scope or a new guarantee goes to the operator first (AGENTS.md Feature Planning Triage; bookkeeping-findings `new-hardening`).
 - **Brief approved:** 2026-11-21 by user at 4c6881ac5e2c5a431f6e7d479cf0122ab750e8b7
-- **Milestone m02 approved:** 2026-11-22 by user at c393692f367a5e1a96649d29ac9966584653b2e8 (re-review of the six review fixes waived by the operator)
+- **Milestone m02 approved:** 2026-11-22 by user at 1874426187e7ef1e9e6a4613ff10ff72bf4426da (second amendment adding p10, decisions and memories; re-review of its three review fixes waived by the operator; first approved at c393692f367a5e1a96649d29ac9966584653b2e8)
 
 ## Milestones
 
@@ -213,6 +213,7 @@ Default is `[]` (fully sequential, no worktrees).
 | ----- | -------- | ----------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ---------- | ----------- |
 | plan  | artifact | passed      | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
 | plan  | artifact | passed      | 2026-11-22 | -                                                            | ac2798528b1222acb010c8cb163e17bbdc77714a | manual     | -           |
+| plan  | artifact | passed      | 2026-11-22 | -                                                            | 3c183933bec68d2f54cd41d3abc8bb3db102fcef | manual     | -           |
 | p01   | code     | passed      | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md                        | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
 | p02   | code     | passed      | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md                        | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
 | p03   | code     | passed      | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md                        | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
