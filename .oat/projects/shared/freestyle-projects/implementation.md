@@ -46,12 +46,11 @@ oat_template: false
 | p03   | complete | 1     | 1/1      |
 | p04   | complete | 1     | 1/1      |
 | p05   | pending  | 1     | 0/1      |
-| p06   | pending  | 1     | 0/1      |
 | p07   | pending  | 1     | 0/1      |
 | p08   | pending  | 1     | 0/1      |
 | p09   | pending  | 1     | 0/1      |
 
-**Total:** 4/9 phases accepted
+**Total:** 4/8 phases accepted
 
 ---
 
@@ -1082,11 +1081,15 @@ Proof: `build:docs`, docs index freshness.
 
 **Status:** pending
 
+Renamed in plan.md at the m02 re-alignment: Orchestrator branch and linked projects.
+
 ---
 
 ## Phase p06: Records-branch warning
 
 **Status:** pending
+
+Retired at the m02 re-alignment (2026-11-22): the ancestry warning was dropped and the orchestrator branch moved into p05 (plan.md Decisions: Records branch, Orchestrator branch, m02 re-alignment). The ID is not reused; this stub stays because the journal is append-only.
 
 ---
 

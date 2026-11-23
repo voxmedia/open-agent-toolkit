@@ -125,6 +125,7 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 - **Endpoint:** merged — a milestone is delivered when its PR is merged into `main`.
 - **Authority:** the operator approves the brief, each milestone's re-alignment and each delivery's merge. The agent decides alone on phase-internal implementation choices and on dispatching review and fix rounds. Anything that adds scope or a new guarantee goes to the operator first (AGENTS.md Feature Planning Triage; bookkeeping-findings `new-hardening`).
 - **Brief approved:** 2026-11-21 by user at 4c6881ac5e2c5a431f6e7d479cf0122ab750e8b7
+- **Milestone m02 approved:** 2026-11-22 by user at c393692f367a5e1a96649d29ac9966584653b2e8 (re-review of the six review fixes waived by the operator)
 
 ## Milestones
 
@@ -200,22 +201,22 @@ Default is `[]` (fully sequential, no worktrees).
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                                     | Reviewed Head                            | Invocation | Gate Target |
-| ----- | -------- | --------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ---------- | ----------- |
-| plan  | artifact | passed          | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
-| plan  | artifact | fixes_completed | 2026-11-22 | -                                                            | ac2798528b1222acb010c8cb163e17bbdc77714a | manual     | -           |
-| p01   | code     | passed          | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md                        | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
-| p02   | code     | passed          | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md                        | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
-| p03   | code     | passed          | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md                        | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
-| p04   | code     | passed          | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md                        | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
-| final | code     | pending         | -          | -                                                            | -                                        | -          | -           |
-| m01   | code     | fixes_added     | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
-| m01   | code     | fixes_added     | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |
-| m01   | code     | passed          | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T174038Z.md | 32919c56a87403c526f8d7251b791d8210f192c7 | manual     | -           |
+| Scope | Type     | Status      | Date       | Artifact                                                     | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | ----------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ---------- | ----------- |
+| plan  | artifact | passed      | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
+| plan  | artifact | passed      | 2026-11-22 | -                                                            | ac2798528b1222acb010c8cb163e17bbdc77714a | manual     | -           |
+| p01   | code     | passed      | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md                        | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
+| p02   | code     | passed      | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md                        | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
+| p03   | code     | passed      | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md                        | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
+| p04   | code     | passed      | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md                        | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
+| final | code     | pending     | -          | -                                                            | -                                        | -          | -           |
+| m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
+| m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |
+| m01   | code     | passed      | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T174038Z.md | 32919c56a87403c526f8d7251b791d8210f192c7 | manual     | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 
-**Plan artifact review (manual, GPT 6.2 Astra high, per the Gates decision):** brief rounds at `dc3d90918` (0 blocking); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (0 blocking, all findings resolved). m02 amendment at `ac2798528`: fixes required (1 high, 4 medium, 1 low), all six applied at receive in the following commit (F1 unclaimed orchestrator branch and claim-before-shaping; F2 parent row saved by its orchestrator, no automatic commit; F3 p05 guard and disabled-log evidence, `lane set` proof left to p07; F4 p07 report-filing and lane-name evidence; F5 PR-body check moved to milestone delivery; F6 branch-identity wording).
+**Plan artifact review (manual, GPT 6.2 Astra high, per the Gates decision):** brief rounds at `dc3d90918` (0 blocking); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (0 blocking, all findings resolved). m02 amendment at `ac2798528`: fixes required (1 high, 4 medium, 1 low), all six applied at receive in the following commit (`c393692f3`); the operator approved the amendment and waived a re-review of the fixes (F1 unclaimed orchestrator branch and claim-before-shaping; F2 parent row saved by its orchestrator, no automatic commit; F3 p05 guard and disabled-log evidence, `lane set` proof left to p07; F4 p07 report-filing and lane-name evidence; F5 PR-body check moved to milestone delivery; F6 branch-identity wording).
 
 **m01 exit review (manual, GPT 6.2 Astra high, per the Gates decision; substitute for the project-disabled implement exit gate):** code review of m01 (p01, p02, p03, p04) in six rounds: `a5c28dca2..7c35a902e` (4 high, 7 medium), then fix ranges ending `86048bad1`, `749557100`, `686d424bc`, `4a3b2be5c` (fixes required each round), and `4a3b2be5c..c14f3517e` passed with 0 findings. Reviewed head `c14f3517e3d2a925204093b359c6c330b6d1742f`. Recorded here, not as an `m01 | code` table row, because `oat project delivery check` takes the latest `m01` code row as the integrated review (`delivery/check.ts:365`, `delivery/evidence.ts:1697`); the integrated review still comes from `oat-project-review-provide`.
 
