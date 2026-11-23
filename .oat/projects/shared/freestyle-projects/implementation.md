@@ -1416,6 +1416,21 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, aft
 - Files: `packages/cli/README.md`.
 - Proof: `oxfmt --check packages/cli/README.md` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts src/commands/help-snapshots.test.ts` exit 0 (2 files, 101 passed).
 
+### Task p08-t03: Release: the oat-project-freestyle bump, lockstep versions and provider views
+
+**Status:** completed
+**Commit:** dd8b401f8919c33335fea15e1c39c88e65e1314a
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Handle:** freestyle-projects-p08-implementation-1 (this session)
+
+- Intent: one `metadata.version` bump per canonical skill the m02 diff changed, the lockstep bump of the five public packages above `origin/main`, and provider views regenerated with the branch build.
+- Inventory: `git diff --stat origin/main...HEAD` (`origin/main` `699f8ee43`, the merge base) changes one canonical skill, `oat-project-freestyle` (`SKILL.md`, `references/kickoff.md`), no agent role under `.agents/agents/`, and the bundled templates `decisions.md`, `memories.md`, `lane-report.md`, `project-agents.md`, `shape.md` and `state-freestyle.md` plus CLI source, which put the CLI release surface in the lockstep policy. No `.agents/docs/` file changed.
+- Skill bump: `oat-project-freestyle` `metadata.version` 1.0.0 to 1.1.0 (minor: m02 adds the claim, the AGENTS.md refresh, first-use creation and linked-child adoption, as `oat-brainstorm` took 1.4.0 for its freestyle route). No test pins the version.
+- Lockstep: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` 0.3.56 to 0.3.57 (`origin/main` is 0.3.56 after #428); `packages/cli/assets/public-package-versions.json` followed from `pnpm build`, and `.oat/sync/manifest.json` `oatVersion` (0.3.55 to 0.3.57) from the sync.
+- Provider views: `pnpm build` (5 tasks, 0 cached) then `node packages/cli/dist/index.js sync --scope project` exit 0: "Manifest version refreshed; no content changes required". `.claude/skills/oat-project-freestyle` is a symlink to the canonical skill, so the bump needs no view change, and no agent role changed.
+- Files: `.agents/skills/oat-project-freestyle/SKILL.md`, the five `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` exit 0 (41 files, 1532 passed); `bash scripts/with-isolated-home.sh pnpm test:skills` exit 0 (754 passed); `pnpm oat:validate-skills` exit 0 (69 OK); `oxfmt --check` on the changed files exit 0. After the commit and `git fetch origin main`: `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked) and `pnpm release:check-versions` exit 0.
+
 ---
 
 ## Phase p09: Evidence fields
