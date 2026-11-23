@@ -1387,6 +1387,22 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 **Status:** in_progress
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Head:** bb87932965ebb7de2f952aac788747cb2d90226e
+
+Phase verification at the head on a clean tree (only the untracked `references/`), in Definition of Done order with each exit code captured:
+
+- `pnpm check`: exit 0 (11 tasks, 4 cached; every package `check` a cache miss).
+- `pnpm type-check`: exit 0 (11 tasks, 5 cached).
+- `pnpm test` under `scripts/with-isolated-home.sh`: exit 0. Every package `test` was a cache miss and executed: cli 457 files, 9989 tests; control-plane 327; docs-config 24, docs-theme 159, docs-transforms 72, oat-docs 93. The chained `test:smoke` (165), `test:skills` (754) and `test:scripts` (7) passed.
+- `pnpm build`: exit 0. It replayed from cache (FULL TURBO), so it was re-run with `turbo run build --filter='!oat-docs' --force`: exit 0 (5 tasks, 0 cached).
+- `pnpm run check:skill-bumps`: exit 0 (1 changed canonical skill and agent role checked), after `git fetch origin main` (`699f8ee43`).
+- `pnpm release:check-versions`: exit 0.
+- `pnpm release:validate`: exit 0 (5 packages at 0.3.57).
+- `pnpm build:docs`: exit 0. It also replayed from cache and was re-run with `turbo run build --filter=oat-docs... --force`: exit 0 (6 tasks, 0 cached).
+- Docs-index `generate-index`, then `git diff --exit-code -- apps/oat-docs/index.md`: exit 0.
+- Also exit 0: `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills` (69 OK, within `pnpm check` and separately), and the isolated `vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` (41 files, 1532 passed, at p08-t03).
+
+`pnpm test:evidence` was not run: the uncached `pnpm test` above executed every package suite. Recovery: 0/10 used, none pending. No nested dispatch.
 
 Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, after the root merged `origin/main` (`6430f47ad`, #428, packages at 0.3.56 on main); committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p08 is the last m02 phase. Root fan-out fails the independence test because the docs pages, skill bumps, lockstep versions and provider views share generated outputs (docs index, sync manifest) and the release gates. So one phase implementer (rung 3). The inline exception does not apply: p08 spans many docs pages and the release gates.
 
