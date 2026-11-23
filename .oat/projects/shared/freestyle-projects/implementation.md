@@ -1661,6 +1661,18 @@ Worktree: the project branch `feat/freestyle-projects-m03` in this checkout; com
 - Can-fail: replacing the `laneDispatch(block).status !== 'open'` clause with `(laneDispatch(block), true)` failed the new test on the open dispatch (`expected { lane: 'l01', … } to be null`); the other four head-ahead tests passed; restored.
 - Decisions: the rule is one clause in `headCheckApplies`, shared by `lane set` and `status`, so an open dispatch is not compared at all (no git calls, `headCheck` null in `--json`) rather than compared and hidden. The ledger parser already refuses a block without a valid `dispatch:` line, so `laneDispatch` cannot throw here.
 
+### Task p11-t04: Name --commit and the optional key in the project AGENTS.md and the docs
+
+**Status:** completed
+**Commit:** 071b3fb61a7784fe69bb755941235c174ad50eef
+**Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Handle:** freestyle-projects-p11-implementation-1 (this session)
+
+- Intent: the documentation half of p11's Intent: the project `AGENTS.md` template's `## Records commands` names `--commit` on `lane set` and `log append` beside the push step, and the optional key; the CLI docs pages that document those commands describe `--commit`, the derived key and the open-dispatch rule.
+- Files: `.oat/templates/project-agents.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`, `apps/oat-docs/docs/workflows/projects/execution/{freestyle-projects.md,project-log.md}`.
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template` exit 0 (36 files, 1498 tests, the bundle-tier scaffold tests against the rebuilt bundle included); docs index regenerated with no diff. New contract tests (`freestyle record upkeep commands (p11)`): the `## Records commands` bullet naming `--commit` on `oat project lane set` and `oat project log append` precedes the `oat project push` bullet and says exact path with other changes uncommitted, nothing to commit in synced or local, neither pushes, and `git push` (shared) or `oat project push` (synced); both commands have `--commit`; the log bullet's optional-key sentence verbatim; the heading list is unchanged.
+- Decisions: no new `##` heading (p12 adds `## Lane brief`, whose missing-heading refresh carries these lines into an m02-era `AGENTS.md`). The push guidance defers to `shape.md`, as `## Where records live` already does. Docs: the freestyle page's opening paragraph names `--commit` on both commands and each scope's result, the lane field list points to it, and the head-ahead paragraph names the open-dispatch rule (`headCheck` null); the project-log page describes `--commit` per scope and the freestyle derived key (fields, format, `key:<key>`, the unchanged rule in other modes); the CLI reference `lane set` and `log` bullets carry the same. No skill prose changed, so no skill bump or skill test applies; package and skill bumps for m03 are p12's.
+
 ---
 
 ## Phase p12: Adopted plans, proportionality checkpoints and lane brief
