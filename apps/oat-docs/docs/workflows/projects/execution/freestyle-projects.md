@@ -12,10 +12,12 @@ records that a long, multi-lane run would otherwise hold only in the
 conversation, where compaction loses them. This page covers those records and
 the commands that write them.
 
-None of these commands commits or pushes anything. The orchestrator saves the
-records by the rule the project's `AGENTS.md` gives for its scope: an
-exact-path commit on the orchestrator's branch for a shared project,
-`oat project push` for a synced project, and nothing for a local one. Run
+None of these commands commits or pushes the records it writes, except that
+`oat project new --link-to` saves the new child's scaffold as its scope does
+(see [Linked projects](#linked-projects)). The orchestrator saves the records
+by the rule the project's `AGENTS.md` gives for its scope: an exact-path commit
+on the orchestrator's branch for a shared project, `oat project push` for a
+synced project, and nothing for a local one. Run
 `oat project scope <project-path> --format value` to see the current scope.
 
 ## Project files
@@ -121,10 +123,13 @@ orchestrator then appends the log entries it accepts, keyed by the dispatch ID
 
 **Head-ahead check.** For a lane in its own worktree with a recorded branch
 and head, `lane set` and `status` warn when the branch head in this clone has
-moved past the last report's head:
+moved past the last report's head, or no longer contains it after a rebase or
+reset:
 `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>; do not merge unreported commits unreviewed.`
-A lane in the orchestrator's checkout is not checked, and a branch that is
-not in this clone is reported as unknown, never flagged.
+A branch that no longer contains the reported head gets the same warning,
+saying it has moved off that head. A lane in the orchestrator's checkout is not
+checked, and a branch that is not in this clone is not flagged
+(`lane set --json` reports its `headCheck` as `unknown`).
 
 **Lane notes.** A lane writes each decision and gotcha, as it happens, to an
 uncommitted notes file in its own checkout,
@@ -135,7 +140,8 @@ scratch. Where the repository does not ignore that path (ignoring it is an
 read-only delegate keeps no notes and returns its decisions and learnings in
 its final message.
 
-**On resume**, the orchestrator reads `lanes.md` first. For each open
+**On resume**, after `shape.md`, the `## Live` section of `decisions.md` and
+`memories.md`, the orchestrator reads `lanes.md` before acting. For each open
 dispatch, it checks the lane's handle and the forge, and records what it finds
 with `lane set` before dispatching again. In a lane's worktree of a shared
 project, `status` reads the copy of `lanes.md` committed on that branch. To
@@ -188,12 +194,14 @@ split project (`oat_parent`, `oat_children`).
 - **Link an existing one.** `oat project linked add <child> --purpose "<one line>"`
   writes only the parent's row. Both projects must be freestyle, and a second
   open row for the same child is refused.
-- **Run the child.** A separate orchestrator session runs the child. It
-  starts its own branch from the parent's branch in its own worktree, first
-  running `oat project pull <child>` for a synced child. It then claims the
-  child with `oat project orchestrator set` and shapes it with
-  `oat-project-freestyle`, whose first question for a linked child is whether
-  to adopt the parent's shape. Adopting copies the parent's `shape.md` as a
+- **Run the child.** A separate orchestrator session runs the child. For a
+  shared or synced child, it starts its own branch from the parent's branch in
+  its own worktree, first running `oat project pull <child>` for a synced
+  child. A local child exists only in the checkout that created it, so its
+  orchestrator runs there. It then claims the child with
+  `oat project orchestrator set` and shapes it with `oat-project-freestyle`,
+  whose first question for a linked child is whether to adopt the parent's
+  shape. Adopting copies the parent's `shape.md` as a
   snapshot, with `## Goal` reset and an `**Adopted from:**` line naming the
   parent and its `Last shaped:` date. The child never writes the parent's
   records.
@@ -209,9 +217,10 @@ split project (`oat_parent`, `oat_children`).
 
 `--link-to`, `linked add`, `linked ack` and `--project` take a project name or
 a path. A name is looked up in the shared, local and synced projects of this
-checkout. A name found in more than one scope is refused as ambiguous. A
-synced project that is not pulled here is refused with the
-`oat project pull <name>` instruction.
+checkout, except that `linked ack` matches its child argument, or the last part
+of a path, against the parent's open rows. A name found in more than one scope
+is refused as ambiguous. A synced project that is not pulled here is refused
+with the `oat project pull <name>` instruction.
 
 ## Older projects
 
