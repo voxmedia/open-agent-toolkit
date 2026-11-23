@@ -1182,6 +1182,9 @@ Retired at the m02 re-alignment (2026-11-22): the ancestry warning was dropped a
 **Status:** in_progress
 **Base:** df8268ad2bd2493a5230694bd7910b98dbe03bb0
 **Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+**Head:** c4fafff2ae655554e9dc130418ed969253a119a7
+
+Phase verification at the head (clean tree but the gitignored `references/`, isolated `HOME`): `pnpm check` exit 0 (cli `check` and `build` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 457 files, 9967 tests; control-plane 327, docs packages 85); `pnpm build` exit 0 (cache hit replaying the `d58dc67` build `pnpm check` executed at this head, inputs unchanged); `pnpm lint` exit 0. No `.agents/skills` file changed, so `pnpm test:skills` was not required. Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`. Correction to p07-t05: the final scratch run's transcript shows sha256 `4f2b0576…` for both the filed report and the returned file; `91756e3d…` was an earlier run of the same script, whose report embedded different SHAs.
 
 Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group; p07 cannot run beside p10 because both edit the project `AGENTS.md` template and `lane-report.md`. Root fan-out fails the independence test because the ledger command, report filing, head-ahead check and `status` lane line share `lanes.md` handling, `oat project status` and the `AGENTS.md` template. So one phase implementer (rung 3). The inline exception does not apply: p07 adds a new command, a new template and new status output.
 
