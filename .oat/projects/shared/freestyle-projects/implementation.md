@@ -1618,6 +1618,9 @@ Retired at the m03 re-alignment (2026-11-23): the first real run showed the lane
 **Status:** in_progress
 **Base:** 929c2ea3db083727022af454c65c180c0ef67925
 **Executor:** phase-implementer:freestyle-projects-p11-implementation-1
+**Head:** fcd3c69a47c82773d9816fe1371171880ef7b0b8
+
+Phase verification at `071b3fb61` (the last code commit; the head adds only the p11-t04 journal record, which no gate reads), clean tree but the gitignored `references/`, isolated `HOME` for tests: `pnpm check` exit 0 (every package `check` and `oat-docs:check` cache miss, executed; builds replayed from the `pnpm build` run at the same tree); `pnpm type-check` exit 0 (5 of 11 tasks replayed builds, every `type-check` executed); `bash scripts/with-isolated-home.sh pnpm test` exit 0 (every `test` task cache miss, executed: cli 458 files, 10014 tests; control-plane 14 files; docs-config 5, docs-theme 10, docs-transforms 5 files; oat-docs; then `test:smoke` 165, `test:skills` 754 and `test:scripts` 7); docs index regenerated with no diff. Not run, owned by p12 (m03 release): `check:skill-bumps`, `release:*`, `build:docs`; `pnpm lint` not run (no change under `tools/smoke` or `.agents/skills`). Two host restarts interrupted the run before any commit; the work resumed from the uncommitted tree, and the first lane test run (exit 137) was killed by the second restart, not by a failure.
 
 Added by the m03 amendment (2026-11-23), from the first real freestyle run (plan.md Decisions: m03 re-alignment; Outcome 9).
 
