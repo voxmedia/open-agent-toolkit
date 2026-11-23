@@ -43,7 +43,7 @@ _Not yet shaped._
 
 ## Reviews
 
-<!-- When reviews happen, then who and how. Record each as intent (when, required independence, effort) and mechanism (tool or skill, host, source, date verified). When a review comes due, re-check its mechanism first; if it is unavailable, keep the intent, tell the user and log it. Reviews never block. -->
+<!-- When reviews happen, then who and how. Record each as intent (when, required independence, effort) and mechanism (tool or skill, host, source, date verified). When a review comes due, re-check its mechanism first; if it is unavailable, keep the intent, tell the user and log it. Freestyle adds no review gate; a review an adopted plan requires must still pass (its agreed mechanism or an equivalent check) before the work it guards moves on. -->
 
 _Not yet shaped._
 

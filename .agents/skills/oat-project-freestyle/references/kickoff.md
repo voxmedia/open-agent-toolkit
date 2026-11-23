@@ -240,8 +240,11 @@ Record each review as two parts:
   it was last verified (or "unverified").
 
 When a review comes due, re-check its mechanism. If it is unavailable, keep
-the intent, tell the user, and log it. Reviews never block: a freestyle
-project has no required reviews.
+the intent, tell the user, and log it. Freestyle adds no review gate of its
+own, so an optional review never blocks. A review an adopted plan requires
+(see the adopted-plan intake above) still must pass, through its agreed
+mechanism or an equivalent check, before the work it guards moves on; when
+neither is available, stop and ask the user.
 
 ### 6. Commits, PRs and merges
 

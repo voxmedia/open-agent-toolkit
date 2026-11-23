@@ -520,7 +520,7 @@ export interface CommitProjectLogInput {
    * log whose content still carries this entry is a log whose HEAD content
    * carries it too.
    */
-  identity?: { key: string; body: string };
+  identity?: { key: string; body: string; exact?: boolean };
 }
 
 export interface CommitProjectLogDependencies {
@@ -683,6 +683,7 @@ function logCarriesIdentity(input: CommitProjectLogInput): boolean {
         readFileSync(input.logPath, 'utf8'),
         input.identity.key,
         input.identity.body,
+        input.identity.exact,
       ) !== undefined
     );
   } catch {
@@ -735,12 +736,14 @@ function committedIdentityState(
   logPath: string,
   key: string,
   body?: string,
+  exact?: boolean,
 ): CommittedLogIdentityState {
   const committed = readCommittedProjectLog(run, logPath);
   if (committed === undefined) {
     return 'unknown';
   }
-  return findProjectLogEntryByIdempotencyKey(committed, key, body) !== undefined
+  return findProjectLogEntryByIdempotencyKey(committed, key, body, exact) !==
+    undefined
     ? 'present'
     : 'absent';
 }
@@ -783,6 +786,7 @@ function committedInputIdentityState(
     input.logPath,
     input.identity.key,
     input.identity.body,
+    input.identity.exact,
   );
 }
 
@@ -1016,13 +1020,22 @@ function idempotencyToken(key: string, body?: string): string | undefined {
 }
 
 /**
+ * A freestyle key matches whole: the bare key or the `key:<key>` word the CLI
+ * adds, never a longer word that contains it.
+ */
+function isExactKeyWord(word: string, key: string): boolean {
+  return word === key || word === `key:${key}`;
+}
+
+/**
  * Returns the heading of the first existing entry whose body already carries
  * this idempotency identity, or undefined when the log has no such entry.
  *
  * With `body` supplied the match is the exact whole-word token derived from it;
  * without one — the advisory staleness check, which has only a run id — any
  * word containing `key` counts. Callers that must not duplicate an entry always
- * pass the body.
+ * pass the body. With `exact` (freestyle logs) a word matches only as the
+ * bare key or `key:<key>`, and `body` is not consulted.
  *
  * The scan lives here, in the log module, because log reads and mutations are
  * CLI-owned (DR-260718); callers such as the gate never open `project-log.md`
@@ -1032,13 +1045,18 @@ export function findProjectLogEntryByIdempotencyKey(
   content: string,
   key: string,
   body?: string,
+  exact = false,
 ): string | undefined {
   const token = idempotencyToken(key, body);
   const carries = (line: string): boolean =>
     line
       .split(/\s+/)
       .some((word) =>
-        token === undefined ? word.includes(key) : word === token,
+        exact
+          ? isExactKeyWord(word, key)
+          : token === undefined
+            ? word.includes(key)
+            : word === token,
       );
 
   let heading: string | undefined;
@@ -1655,9 +1673,10 @@ async function isFreestyleLog(logPath: string): Promise<boolean> {
 
 /**
  * A freestyle project's key: the given one, or one derived from the entry.
- * A key the body lacks is added to the body's end as `key:<key>`, so the
- * whole-word replay check finds it on a retry; every other mode still refuses
- * a key missing from the body.
+ * A key the body lacks as a whole word is added as `key:<key>`, at the end
+ * of a one-line body or as its own paragraph after a multiline one (so it
+ * never lands on a closing code fence). Replay matches the key exactly; every
+ * other mode still refuses a key missing from the body.
  */
 function freestyleKey(
   input: AppendProjectLogInput,
@@ -1668,15 +1687,21 @@ function freestyleKey(
     input.idempotencyKey === undefined
       ? deriveProjectLogKey(input)
       : validateKeyWord(input.idempotencyKey);
-  if (idempotencyToken(idempotencyKey, entry.keyBody) !== undefined) {
+  if (
+    entry.keyBody
+      .split(/\s+/)
+      .some((word) => isExactKeyWord(word, idempotencyKey))
+  ) {
     return { idempotencyKey, entry };
   }
+  const body = (input.body ?? '').trimEnd();
+  const separator = body.includes('\n') ? '\n\n' : ' ';
   return {
     idempotencyKey,
     entry: validateEntry(
       {
         ...input,
-        body: `${(input.body ?? '').trimEnd()} key:${idempotencyKey}`,
+        body: `${body}${separator}key:${idempotencyKey}`,
       },
       now,
     ),
@@ -2023,6 +2048,7 @@ async function prepareProjectLogAppend(
           content,
           idempotencyKey,
           keyBody,
+          keyed !== undefined,
         );
         if (existing !== undefined) {
           // Append-only order is preserved (DR-260714): a replay observes the
@@ -2374,6 +2400,7 @@ async function runAppendCommand(
               identity: {
                 key,
                 body: identityBody(options, body),
+                exact: result.idempotencyKey !== undefined,
               },
             }
           : {}),
@@ -2511,7 +2538,7 @@ Entry contract:
   Add --version-note for tool-related observations.
   Learnings: --category, --source, and --origin write a body head (**Category:**, **Source:**, **Origin:**, **Recorded:**) above a judgment body; --category requires --source, and the category must be one of the six.
   Pass --idempotency-key so a replay reports already-appended instead of duplicating the entry; the key must appear in --body as its own word. Adding --commit also finalizes a gate partial-finalization receipt.
-  In a freestyle project --idempotency-key is optional: without one the append derives a key (log-<12 hex>) from every entry field you pass, never the date or the --time value, so running the same command again appends nothing. A derived or given key missing from the body is added to its end as key:<key>; --json reports it as idempotencyKey.
+  In a freestyle project --idempotency-key is optional: without one the append derives a key (log-<12 hex>) from every entry field you pass, never the date or the --time value, so running the same command again appends nothing. A key matches only as a whole word, bare or as key:<key>. A derived or given key missing from the body is added as key:<key> (its own paragraph after a multiline body); --json reports it as idempotencyKey.
   The completion seal (--structural --producer oat-project-complete --ref seal) dedupes on its own, and every append carrying new content onto a sealed log is refused.
   A replay recognized by its own --idempotency-key still reports already-appended on a sealed log and writes nothing.
   Never record secret values (tokens, keys, signed URLs, or credentials); reference secrets by name or source.

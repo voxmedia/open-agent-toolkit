@@ -77,7 +77,7 @@ agrees.
      --type feedback --scope project --area "Reshape: {topic}" \
      --category decision --source "$RESHAPE_ID" \
      --idempotency-key "$RESHAPE_ID" \
-     --body "$RESHAPE_ID {what changed and why; when it takes effect}"
+     --body "{what changed and why; when it takes effect}"
    ```
 
    A `skipped` result means the project log is disabled; accept it and say so.

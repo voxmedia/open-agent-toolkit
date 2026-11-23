@@ -1137,6 +1137,48 @@ describe('a derived key in a freestyle project (p11)', () => {
     expect((await readFile(logPath, 'utf8')).includes('key:')).toBe(false);
   });
 
+  it('matches a given key exactly: a longer word is not a prior append, the bare key is', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const keyed = (body: string, key: string) => [
+      ...event(projectPath, { body }),
+      '--idempotency-key',
+      key,
+    ];
+    await append(root, keyed('Merged change release-123', 'release-123'));
+    // release-12 is a different key, though release-123 contains it.
+    expect(
+      (await append(root, keyed('Reverted release-123', 'release-12'))).status,
+    ).toBe('appended');
+    // dispatch-47 was written as key:dispatch-47; a retry naming it bare
+    // in the body is the same entry.
+    await append(root, keyed('Dispatched l07.', 'dispatch-47'));
+    expect(
+      (await append(root, keyed('Dispatched l07 dispatch-47', 'dispatch-47')))
+        .status,
+    ).toBe('already-appended');
+    expect(await entries(logPath)).toHaveLength(3);
+  });
+
+  it('puts the key in its own paragraph after a multiline body ending in a code fence', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const body = 'Observation: the hook ran.\n\n```bash\npnpm check\n```';
+    const first = await append(root, [
+      '--project',
+      projectPath,
+      '--type',
+      'friction',
+      '--scope',
+      'project',
+      '--area',
+      'hooks',
+      '--body',
+      body,
+    ]);
+    expect(await readFile(logPath, 'utf8')).toContain(
+      `pnpm check\n\`\`\`\n\nkey:${first.idempotencyKey as string}\n`,
+    );
+  });
+
   it('keeps an existing mode unchanged: a keyless append is not deduped and a missing key is refused', async () => {
     const { root, projectPath, logPath } = await createProject(QUICK_STATE);
     const args = [

@@ -331,6 +331,18 @@ describe('oat project lane set', () => {
       );
     });
 
+    it('commits a new lanes.md when git hides untracked files from status', async () => {
+      const root = await sharedRepo();
+      await newProject(root);
+      git(root, ['config', 'status.showUntrackedFiles', 'no']);
+      const created = await laneSet(root, ['l01', '--commit'], true);
+      expect(created.exitCode, created.stderr).toBe(0);
+      expect(JSON.parse(created.stdout).commit.outcome).toBe('committed');
+      expect(committedPaths(root)).toEqual([
+        '.oat/projects/shared/demo/lanes.md',
+      ]);
+    });
+
     it('commits nothing on the code branch for a synced project, whose records live in its nested worktree', async () => {
       const root = await syncedRepo();
       await newProject(root, 'synced');

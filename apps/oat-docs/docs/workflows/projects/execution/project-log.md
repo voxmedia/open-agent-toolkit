@@ -199,9 +199,11 @@ caller passes (whether it is structural, type, scope, area or ref, producer, cat
 whether `--time` was given, subject, source project, version note and body),
 never from the heading date, the time of day or `**Recorded:**`. Running the
 same command again therefore reports `already-appended`, while changing any
-field, such as the body, the ref or `--source-project`, writes a new entry. A
-derived or given key the body lacks is added to the body's end as
-`key:<key>`, and `--json` reports the key as `idempotencyKey`. In every other
+field, such as the body, the ref or `--source-project`, writes a new entry.
+A key matches only as a whole word, bare or as `key:<key>`, so `release-12`
+never matches `release-123`. A derived or given key the body lacks is added as
+`key:<key>`, at the end of a one-line body or as its own paragraph after a
+multiline one, and `--json` reports the key as `idempotencyKey`. In every other
 mode the key stays optional with no derived default, and a key missing from
 the body is refused.
 

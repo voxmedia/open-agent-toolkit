@@ -256,8 +256,9 @@ structural log entry (see Records commands) whose `--ref` is the update ID that
 no log entry.
 
 The ledger's `head` is the head the lane's last report delivered. For a lane
-in its own worktree, `oat project lane set` and `oat project status` flag a
-branch head that has moved past it. Do not merge unreported commits
+in its own worktree whose dispatch is closed, `oat project lane set` and
+`oat project status` flag a branch head that has moved past it; while the
+dispatch is `open` the lane is still working, so neither flags it. Do not merge unreported commits
 unreviewed: dispatch the lane to report them, or review them yourself first.
 
 ## Lane placement
@@ -268,7 +269,8 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
 `own-worktree`.
 
 - **Own worktree.** The lane has its own worktree, branch and PR. Record
-  `--worktree`, `--branch` and `--base`; the head-ahead check applies, and its
+  `--worktree`, `--branch` and `--base`; the head-ahead check above applies
+  once its dispatch closes, and its
   work reaches the orchestrator's branch by the merge rules in `shape.md`.
 - **Your checkout.** A subagent works in your worktree, on your branch,
   limited to the `--paths` its entry gives it. Its commits use exact paths

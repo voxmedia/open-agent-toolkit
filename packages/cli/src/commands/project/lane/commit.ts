@@ -40,10 +40,13 @@ export async function commitLaneRecords(
   const paths = input.files.map((file) =>
     relative(root, join(projectDir, file)),
   );
-  const status = await git.run(['status', '--porcelain', '--', ...paths], {
-    cwd: root,
-    allowFailure: true,
-  });
+  const status = await git.run(
+    ['status', '--porcelain', '--untracked-files=all', '--', ...paths],
+    {
+      cwd: root,
+      allowFailure: true,
+    },
+  );
   if (status.code !== 0) {
     return { outcome: 'failed', paths, error: status.stderr.trim() };
   }
