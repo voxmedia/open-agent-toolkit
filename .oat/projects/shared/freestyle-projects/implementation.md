@@ -1283,7 +1283,7 @@ Late fix p07-t06 (p07 review round 1: M1 and L1, accepted requirements) at `3a31
 **Status:** completed
 **Base:** d4af984a5beadc33d0c115d6fc52094b34affbf0
 **Executor:** phase-implementer:freestyle-projects-p10-implementation-1
-**Head:** 40cc018977d227f0a71ebf450064332150309418
+**Head:** f9edb6c1b515f0e7e94e92dde58c5b04f04b1cd3
 
 Phase verification at the head (clean tree but the gitignored `references/`, isolated `HOME`): `pnpm check` exit 0 (cli `check` and `build` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 457 files, 9984 tests; control-plane 327 replayed, no control-plane input changed; the root script's `test:smoke` 165, `test:skills` 754 and `test:scripts` 7 ran); `pnpm build` exit 0 (cache hit replaying the `ac25269` build `pnpm check` executed at this head, inputs unchanged); `pnpm lint` exit 0; `pnpm test:skills` exit 0 (754). Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`. An earlier `pnpm test` run at `a9907936` was stopped before it finished, to add p10-t05; no result from it is claimed.
 
