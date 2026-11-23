@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-23
-oat_current_task_id: p09
+oat_current_task_id: p11
 oat_generated: false
 oat_template: false
 ---
@@ -49,9 +49,10 @@ oat_template: false
 | p07   | complete | 1     | 1/1      |
 | p10   | complete | 1     | 1/1      |
 | p08   | complete | 1     | 1/1      |
-| p09   | pending  | 1     | 0/1      |
+| p11   | pending  | 1     | 0/1      |
+| p12   | pending  | 1     | 0/1      |
 
-**Total:** 8/9 phases accepted
+**Total:** 8/10 phases accepted
 
 ---
 
@@ -1609,6 +1610,18 @@ Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head a
 **Status:** pending
 
 Retired at the m03 re-alignment (2026-11-23): the first real run showed the lane report's Tested SHA already catches the mismatches evidence fields targeted, and no incident needs more fields (plan.md Decisions: m03 re-alignment). m03 is p11 and p12. The ID is not reused; this stub stays because the journal is append-only.
+
+---
+
+## Phase p11: Record upkeep commands
+
+**Status:** pending
+
+---
+
+## Phase p12: Adopted plans, proportionality checkpoints and lane brief
+
+**Status:** pending
 
 ---
 

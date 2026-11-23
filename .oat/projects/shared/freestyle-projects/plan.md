@@ -131,6 +131,7 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 - **Authority:** the operator approves the brief, each milestone's re-alignment and each delivery's merge. The agent decides alone on phase-internal implementation choices and on dispatching review and fix rounds. Anything that adds scope or a new guarantee goes to the operator first (AGENTS.md Feature Planning Triage; bookkeeping-findings `new-hardening`).
 - **Brief approved:** 2026-11-21 by user at 4c6881ac5e2c5a431f6e7d479cf0122ab750e8b7
 - **Milestone m02 approved:** 2026-11-22 by user at 1874426187e7ef1e9e6a4613ff10ff72bf4426da (second amendment adding p10, decisions and memories; re-review of its three review fixes waived by the operator; first approved at c393692f367a5e1a96649d29ac9966584653b2e8)
+- **Milestone m03 approved:** 2026-11-23 by user at 74f6ac43ca7471de628de9a4f2f200c397f006a9 (m03 amendment: p11 and p12, p09 retired; re-review of its four review fixes waived by the operator)
 
 ## Milestones
 

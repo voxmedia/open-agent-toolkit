@@ -1,5 +1,5 @@
 ---
-oat_current_task: p09
+oat_current_task: p11
 oat_last_commit: 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -47,8 +47,8 @@ oat_phase_recovery_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
-oat_milestone: m02
-oat_milestone_status: delivered
+oat_milestone: m03
+oat_milestone_status: aligning
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -101,6 +101,18 @@ oat_milestone_gates:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-23T06:39:38Z'
+  m03:
+    plan:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject:
+        kind: plan
+        scope: [p11, p12]
+        ref: 74f6ac43ca7471de628de9a4f2f200c397f006a9
+      decided_at: '2026-11-23T17:18:30Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
