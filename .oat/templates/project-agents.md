@@ -284,7 +284,9 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
   (`--structural --producer <name> --ref <ref>`) can record an event such as
   `merged`: `--time` adds the UTC time of the append, `--subject <id>` the
   phase or other id it is about, and `--source-project <name>` the
-  project it came from.
+  project it came from. `--idempotency-key` is optional here: without one the
+  command derives a key from the entry, so running the same append again
+  writes nothing; a key the body lacks is added to its end.
 - `oat project journal check --at completion --project <project-path>`: a
   coverage report of the phases it recognized, validated and skipped (with
   reasons) in `plan.md` and `implementation.md`, when the project keeps them.
@@ -294,6 +296,12 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
 - `oat template resolve <name> --output <path>`: copy an OAT template as the
   starting point for a project document, `lane-report` for a dispatch brief,
   or `decisions` and `memories` when the file is absent.
+- `--commit` on `oat project lane set` and `oat project log append`: commit
+  `lanes.md` and the report the update filed, or the project log, by exact
+  path, leaving every other change uncommitted. In a synced or local project
+  the code branch holds no records, so there is nothing to commit. Neither
+  pushes: when `shape.md` says records are pushed, run `git push` (shared) or
+  `oat project push` (synced) after it.
 - `oat project push` and `oat project pull`: publish and fetch the records of
   a synced project.
 

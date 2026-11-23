@@ -1238,6 +1238,47 @@ function h3Headings(content: string): string[] {
   );
 }
 
+describe('freestyle record upkeep commands (p11)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const records = oneLine(h2Section(agents, 'Records commands'));
+
+  it('names --commit on lane set and log append beside the push step, with each scope', () => {
+    const commit = records.indexOf(
+      '`--commit` on `oat project lane set` and `oat project log append`',
+    );
+    const push = records.indexOf('`oat project push` and `oat project pull`');
+    expect(commit).toBeGreaterThan(0);
+    expect(push).toBeGreaterThan(commit);
+    const bullet = records.slice(commit, push);
+    expect(bullet).toContain(
+      'by exact path, leaving every other change uncommitted',
+    );
+    expect(bullet).toContain('In a synced or local project');
+    expect(bullet).toContain('Neither pushes');
+    expect(bullet).toContain(
+      '`git push` (shared) or `oat project push` (synced)',
+    );
+    const laneSet = createProjectLaneCommand().commands.find(
+      (command) => command.name() === 'set',
+    ) as Command;
+    for (const command of [laneSet, createProjectLogAppendCommand()]) {
+      expect(command.options.map((option) => option.long)).toContain(
+        '--commit',
+      );
+    }
+  });
+
+  it('says the log key is optional and is added to a body that lacks it', () => {
+    expect(records).toContain(
+      '`--idempotency-key` is optional here: without one the command derives a key from the entry, so running the same append again writes nothing; a key the body lacks is added to its end.',
+    );
+  });
+
+  it('adds no new section heading (p12 adds ## Lane brief)', () => {
+    expect(h2Headings(agents)).toEqual([...AGENTS_HEADINGS]);
+  });
+});
+
 describe('freestyle lane report shape (p07)', () => {
   const template = read(join(TEMPLATES_DIR, 'lane-report.md'));
   const tempDirs: string[] = [];

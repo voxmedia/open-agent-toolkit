@@ -12,13 +12,21 @@ records that a long, multi-lane run would otherwise hold only in the
 conversation, where compaction loses them. This page covers those records and
 the commands that write them.
 
-None of these commands commits or pushes the records it writes, except that
-`oat project new --link-to` saves the new child's scaffold as its scope does
-(see [Linked projects](#linked-projects)). The orchestrator saves the records
-by the rule the project's `AGENTS.md` gives for its scope: an exact-path commit
-on the orchestrator's branch for a shared project, `oat project push` for a
-synced project, and nothing for a local one. Run
+None of these commands commits or pushes the records it writes unless asked,
+except that `oat project new --link-to` saves the new child's scaffold as its
+scope does (see [Linked projects](#linked-projects)). The orchestrator saves
+the records by the rule the project's `AGENTS.md` gives for its scope: an
+exact-path commit on the orchestrator's branch for a shared project,
+`oat project push` for a synced project, and nothing for a local one. Run
 `oat project scope <project-path> --format value` to see the current scope.
+
+`oat project lane set --commit` and `oat project log append --commit` make the
+shared project's exact-path commit in the same command: `lane set` commits
+`lanes.md` and the report the update filed, `log append` the project log, and
+any other change in the checkout stays uncommitted. In a synced or local
+project the code branch holds no records, so they report `nothing-to-commit`.
+Neither pushes; pushing (`git push`, or `oat project push` for a synced
+project) stays its own step.
 
 ## Project files
 
@@ -101,7 +109,8 @@ lane moves to `## Closed` and cannot be updated again. A blocked lane takes
 next dispatch once the last one has closed, `--steer "<text>"` records a
 message sent while the lane runs, and `--no-report` closes an interrupted
 turn. `--worktree` sets the placement: this checkout is `shared-worktree`, any
-other path `own-worktree`. Run `oat project lane set --help` for every field.
+other path `own-worktree`. Run `oat project lane set --help` for every field;
+`--commit` commits what the update wrote (see the start of this page).
 
 Each dispatch brief embeds the report shape, copied with
 `oat template resolve lane-report --output <path>`. The bundled
@@ -125,14 +134,16 @@ decisions and gotchas (see
 [Decisions and memories](#decisions-and-memories)).
 
 **Head-ahead check.** For a lane in its own worktree with a recorded branch
-and head, `lane set` and `status` warn when the branch head in this clone has
-moved past the last report's head, or no longer contains it after a rebase or
-reset:
+and head whose dispatch has closed (`reported` or `no-report`), `lane set` and
+`status` warn when the branch head in this clone has moved past the last
+report's head, or no longer contains it after a rebase or reset:
 `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>; do not merge unreported commits unreviewed.`
 A branch that no longer contains the reported head gets the same warning,
-saying it has moved off that head. A lane in the orchestrator's checkout is not
-checked, and a branch that is not in this clone is not flagged
-(`lane set --json` reports its `headCheck` as `unknown`).
+saying it has moved off that head. While the lane's dispatch is `open` its work
+is in flight, so the lane is not checked (`lane set --json` reports `headCheck`
+as `null`). A lane in the orchestrator's checkout is not checked either, and a
+branch that is not in this clone is not flagged (`lane set --json` reports its
+`headCheck` as `unknown`).
 
 **Lane notes.** A lane writes each decision and gotcha, as it happens, to an
 uncommitted notes file in its own checkout,
