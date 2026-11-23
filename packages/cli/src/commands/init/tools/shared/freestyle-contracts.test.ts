@@ -573,6 +573,23 @@ describe('freestyle resume and review rules', () => {
     });
   });
 
+  it('asks the adopted-sections question before declaring an adopted shape complete', () => {
+    const routing = oneLine(
+      between(
+        skillFiles()['SKILL.md'],
+        'Then choose what to load:',
+        'Report what you found before asking anything',
+      ),
+    );
+    const marker = routing.indexOf(
+      'the `**Adopted from:**` line still says `adopted sections not yet confirmed` → read `references/kickoff.md`, ask its Before Shaping step 2 question whether any adopted section should differ',
+    );
+    expect(marker, 'routes the unconfirmed marker').toBeGreaterThan(-1);
+    expect(marker).toBeLessThan(
+      routing.indexOf('Otherwise report that the shape is complete'),
+    );
+  });
+
   it('checks the same reshape triggers on every resume in SKILL.md and reshape.md', () => {
     const { 'SKILL.md': skill, 'references/reshape.md': reshape } =
       skillFiles();

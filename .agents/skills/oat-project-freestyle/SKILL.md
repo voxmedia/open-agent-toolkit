@@ -275,6 +275,10 @@ Then choose what to load:
 - A topic is not yet shaped → read `references/kickoff.md`, run its Before
   Shaping step 2 (a linked child is asked whether to adopt the parent's
   shape), and continue at Step 3.
+- Every topic is shaped, and the `**Adopted from:**` line still says
+  `adopted sections not yet confirmed` → read `references/kickoff.md`, ask its
+  Before Shaping step 2 question whether any adopted section should differ,
+  and continue at Step 3.
 - Every topic is shaped, and a resume trigger from item 2 holds or the user
   wants to change how the project runs → read `references/reshape.md` and
   continue at Step 4.
