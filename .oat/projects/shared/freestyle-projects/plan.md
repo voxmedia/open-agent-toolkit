@@ -212,6 +212,7 @@ Default is `[]` (fully sequential, no worktrees).
 | Scope | Type     | Status      | Date       | Artifact                                                     | Reviewed Head                            | Invocation | Gate Target |
 | ----- | -------- | ----------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ---------- | ----------- |
 | plan  | artifact | passed      | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
+| plan  | artifact | passed      | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
 | plan  | artifact | passed      | 2026-11-22 | -                                                            | ac2798528b1222acb010c8cb163e17bbdc77714a | manual     | -           |
 | plan  | artifact | passed      | 2026-11-22 | -                                                            | 3c183933bec68d2f54cd41d3abc8bb3db102fcef | manual     | -           |
 | p01   | code     | passed      | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md                        | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
