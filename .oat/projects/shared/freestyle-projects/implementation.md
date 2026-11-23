@@ -1472,12 +1472,16 @@ Late fix p08-t04 (p08 review round 1: M1 and L1 to L4) at `29e87c4ba`. No later 
 
 ### Task p08-t05: (review) Name the inspected parent in the printed linked ack command
 
-**Status:** pending
+**Status:** completed
+**Commit:** 6abb794a00a3c5719d7d8ced8a8713f7a5a5f0a3
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
 **Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-1)
 
 Intent: `packages/cli/src/commands/project/status.ts:149` prints `oat project linked ack <child>` with no parent, so for a project other than the active one it acknowledges the active parent's row. Print `--project <inspected parent path>` in the command.
 Files: `status.ts`, its test, and the docs that quote the line (`reference/cli-reference.md`, `execution/freestyle-projects.md`, `execution/picking-up-projects.md` where they quote it).
 Proof: a `status --project-path <A>` test with B active whose printed command closes A's row; can-fail with the old line.
+Confirmed before the fix: `formatOpenLinkLines` printed `oat project linked ack <child>` with no parent, and `linked ack` defaults to the active project (`resolveProjectOrActive`). Fix: the line now ends `` `oat project linked ack <child> --project <parent>` ``, where the parent is the project folder as status names it (the `--project-path` argument, or the active project's path), which `--project` resolves as a path. Files changed: `packages/cli/src/commands/project/status.ts`, `packages/cli/src/commands/project/linked/linked.test.ts` (the existing line assertion, and a new test: `child`, `alpha` and `beta` with `beta` active, both parents linked to `child`, `status --project-path .oat/projects/shared/alpha`, the printed command run as printed). Docs inspected, unchanged: `cli-reference.md`, `freestyle-projects.md` and `picking-up-projects.md` name the `Open linked project:` line but quote none of its command text.
+Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/linked src/commands/project/status.test.ts` exit 0 (2 files, 63 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on both files exit 0. Can-fail: with the `--project` part removed from `status.ts` the new test fails (exit 1) on the printed command (`expected 'project linked ack child' to be 'project linked ack child --project .oat/projects/shared/alpha'`), and with that assertion also removed it fails because alpha's row stays open (`expected [ { name: 'child', … } ] to deeply equal []`), the reviewer's reproduction; restored.
 
 ### Task p08-t06: (review) Round-trip literal backslashes in the lane ledger
 
