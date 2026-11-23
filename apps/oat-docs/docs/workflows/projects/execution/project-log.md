@@ -195,7 +195,7 @@ Two optional flags let an interrupted append be replayed safely:
 
 In a freestyle project `--idempotency-key` is optional. Without one, the
 append derives a key, `log-` and 12 hex digits, from every entry field the
-caller passes (type, scope, area or ref, producer, category, source, origin,
+caller passes (whether it is structural, type, scope, area or ref, producer, category, source, origin,
 whether `--time` was given, subject, source project, version note and body),
 never from the heading date, the time of day or `**Recorded:**`. Running the
 same command again therefore reports `already-appended`, while changing any

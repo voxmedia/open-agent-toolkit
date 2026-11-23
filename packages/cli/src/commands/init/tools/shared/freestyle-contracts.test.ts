@@ -1213,16 +1213,21 @@ describe('freestyle decisions and memories (p10)', () => {
     );
   });
 
-  it('tells the lane to keep its notes file and build its Decisions and Learnings from it', () => {
+  it('builds Decisions and Learnings from the lane notes and leaves the standing rules to the lane brief', () => {
     const report = oneLine(read(join(TEMPLATES_DIR, 'lane-report.md')));
     expect(report).toContain(
-      'While you work, write each decision you make and each gotcha you hit to the lane notes file your brief names, as it happens, so they survive your own compaction; never commit it. Build the Decisions and Learnings sections below from it.',
+      'Build the Decisions and Learnings sections below from your lane notes file.',
     );
     expect(report).toContain(
-      'A read-only lane keeps no notes file and writes its decisions and learnings straight into this report.',
+      'The standing lane rules (no project records, the notes file, a report at every turn end) are in the lane brief.',
     );
-    expect(report).toContain(
-      "do not write project records (the ledger, the project log, `shape.md`, `decisions.md`, `memories.md` or the project's documents)",
+    // The lane brief carries them once; the report does not repeat them.
+    expect(report).not.toContain('do not write project records');
+    expect(report).not.toContain('never commit it');
+    const brief = oneLine(read(join(TEMPLATES_DIR, 'lane-brief.md')));
+    expect(brief).toContain('You write no project records');
+    expect(brief).toContain(
+      'A read-only lane keeps no notes file and writes its decisions and learnings straight into its report.',
     );
   });
 });
