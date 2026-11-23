@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-23
-oat_current_task_id: p08-t14
+oat_current_task_id: p09
 oat_generated: false
 oat_template: false
 ---
@@ -51,7 +51,7 @@ oat_template: false
 | p08   | complete | 1     | 1/1      |
 | p09   | pending  | 1     | 0/1      |
 
-**Total:** 7/9 phases accepted
+**Total:** 8/9 phases accepted
 
 ---
 
@@ -1384,7 +1384,7 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 
 ## Phase p08: m02 docs and release
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
 **Head:** 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
@@ -1779,6 +1779,21 @@ Confirmed by the reviewer: N-1 to N-8 and p08-t13 by behaviour; no regression in
 Review-cycle count for m02 integrated: 2 (the plan's one confirm round is used).
 
 **Outcome:** fixes applied as p08-t14 (`9ffa307eb`, late-fix rule, records in p08), root-verified with can-fail checks. Under the operator's now-or-never rule no further round was planned, but `oat project delivery check` needs a passed integrated review row, so the operator decides whether a review of `020ebb740..9ffa307eb` runs before delivery.
+
+### Review Received: m02 (cycle 3)
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m02-integrated-review-2026-11-23T063938Z.md
+
+Integrated milestone review of m02 (p05, p07, p10, p08), cycle 3, confirm only, on `020ebb740..9ffa307eb` (p08-t14), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only). **Operator decision (2026-11-23):** run this one extra round so delivery has a passed integrated review covering the cycle-2 fix.
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Confirmed by the reviewer: P-1, P-2 and P-3 by behaviour with the branch build (45 tests in the touched suites pass).
+
+Review-cycle count for m02 integrated: 3.
+
+**Outcome:** passed at `9ffa307eb`. p08 accepted (fix loops 3: p08-t04, p08-t05 to p08-t13, p08-t14); m02 exit carrier refreshed to fresh; m02 reviewing -> delivering.
 
 ## Deferred Findings
 

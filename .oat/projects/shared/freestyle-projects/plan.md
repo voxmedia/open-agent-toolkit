@@ -224,6 +224,7 @@ Default is `[]` (fully sequential, no worktrees).
 | p08   | code     | passed      | 2026-11-22 | p08-code-review-2026-11-23T045600Z.md                        | bb87932965ebb7de2f952aac788747cb2d90226e | auto       | -           |
 | m02   | code     | fixes_added | 2026-11-22 | reviews/archived/m02-integrated-review-2026-11-23T051139Z.md | 52589cbea2a707b82fbb43c3dd8861d2c6dac4e0 | manual     | -           |
 | m02   | code     | fixes_added | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T060440Z.md | 020ebb7409183ac2b162e8df24d2b9ec64b48b59 | manual     | -           |
+| m02   | code     | passed      | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T063938Z.md | 9ffa307eb6bbb42f5661c90bf529f2a56b231dba | manual     | -           |
 | final | code     | pending     | -          | -                                                            | -                                        | -          | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
 | m01   | code     | fixes_added | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |

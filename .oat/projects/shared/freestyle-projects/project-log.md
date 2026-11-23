@@ -211,6 +211,10 @@ Recommendation: run each commit-paths call on its own or under set -e without a 
 
 p08 accepted: review freestyle-projects-p08-review-1 passed (0 critical, 0 high, 1 medium, 4 low; all five fixed root-inline in p08-t04, not re-reviewed per operator direction); fix loops: 1. m02 phases all accepted; m02 exit carrier project_disabled and fresh; m02 moved to reviewing. freestyle-projects-p08-outcome
 
+### 2026-11-23 · structural · oat-project-implement · p08
+
+p08 accepted after the m02 integrated review: cycle 1 (N-1 to N-8) fixed in p08-t05..p08-t13, cycle 2 confirm (P-1 to P-3) fixed by root in p08-t14, cycle 3 (operator-approved extra confirm) passed at 9ffa307eb with 0 findings; fix loops 3; exit carrier project_disabled refreshed to fresh; m02 -> delivering; next oat-project-pr-progress deliver m02; freestyle-projects-p08-outcome-m02-integrated
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
