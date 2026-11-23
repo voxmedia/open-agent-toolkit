@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p09
+oat_current_task_id: p08-t05
 oat_generated: false
 oat_template: false
 ---
@@ -51,7 +51,7 @@ oat_template: false
 | p08   | complete | 1     | 1/1      |
 | p09   | pending  | 1     | 0/1      |
 
-**Total:** 8/9 phases accepted
+**Total:** 7/9 phases accepted
 
 ---
 
@@ -1384,7 +1384,7 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 
 ## Phase p08: m02 docs and release
 
-**Status:** completed
+**Status:** in_progress
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
 **Head:** 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
@@ -1469,6 +1469,78 @@ Late fix p08-t04 (p08 review round 1: M1 and L1 to L4) at `29e87c4ba`. No later 
 - L4 (Low): the head-ahead text left out the moved-off case and said a missing branch is reported as unknown. Fixed in p08-t04.
 - **Finding classes:** M1 regression (the page contradicted the resume order in `.oat/templates/project-agents.md` and `picking-up-projects.md`) · L1 regression (overstated `linked/link.ts`) · L2 regression (contradicted the page's own Linked projects section) · L3 regression (dropped the template's local-child sentence) · L4 regression (understated `lane/head.ts` and misdescribed `status`).
 - Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p08-t04 record.
+
+### Task p08-t05: (review) Name the inspected parent in the printed linked ack command
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-1)
+
+Intent: `packages/cli/src/commands/project/status.ts:149` prints `oat project linked ack <child>` with no parent, so for a project other than the active one it acknowledges the active parent's row. Print `--project <inspected parent path>` in the command.
+Files: `status.ts`, its test, and the docs that quote the line (`reference/cli-reference.md`, `execution/freestyle-projects.md`, `execution/picking-up-projects.md` where they quote it).
+Proof: a `status --project-path <A>` test with B active whose printed command closes A's row; can-fail with the old line.
+
+### Task p08-t06: (review) Round-trip literal backslashes in the lane ledger
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-2)
+
+Intent: `lane/ledger.ts:177` unescapes Markdown backslash escapes on read, but the writer writes values raw. A value such as `rg 'api\.v1'` loses its backslash, and the next update rewrites both the field and its earlier history line. Escape backslashes on write so a read returns what `lane set` wrote; keep reading a formatter's `\*` as `*`.
+Files: `lane/ledger.ts` and its test.
+Proof: a test that sets a field containing `\.`, makes a second update to another field and reads both the field and the first history line back unchanged; plus a formatter-escaped `\*` still reads as `*`; can-fail with the writer escape removed.
+
+### Task p08-t07: (review) Keep filed lane reports byte-for-byte through a formatting commit hook
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-3)
+
+Intent: This repository's lint-staged oxfmt hook rewrites `lane-reports/*.md` on commit (`*` list markers become `-`), so a filed report is edited. Add `.oat/projects/**/lane-reports/**` to the `.oxfmtrc.jsonc` ignore list, next to the explainer precedent and with a comment. In `.oat/templates/project-agents.md` Lane reports and the docs page, add one sentence: in a repository whose commit hooks format Markdown, exclude `lane-reports/` from them so the committed report stays verbatim.
+Files: `.oxfmtrc.jsonc`, `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, and any contract pin.
+Proof: `oxfmt --check` on a report fixture using `*` markers reports nothing to change under the repo config (and does with the ignore removed); the template sentence is pinned.
+
+### Task p08-t08: (review) Refuse new --link-to for a name that is already a project
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-4)
+
+Intent: `project/new/index.ts:260`: `new <name> --link-to <parent>` on an existing standalone project exits 0, scaffolds nothing, opens the parent's row and leaves the child without `oat_linked_from`. In `prepareLinkedCreation`, before any write, refuse when the child's project folder already exists in the scope being created, naming `oat project linked add <name>` as the way to link an existing project. Ordinary `new` without `--link-to` is unchanged.
+Files: `project/new/index.ts` and its test.
+Proof: a test with an existing project: exit 1, the refusal names `linked add`, and the parent's `linked-projects.md` is unchanged; can-fail with the check removed.
+
+### Task p08-t09: (review) Name the child in the linked-child claim handoff
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-5)
+
+Intent: `project/new/index.ts:190` hands off `oat project orchestrator set` with no project. The parent stays the active project, so in a local child's checkout that command reports the parent as already claimed. Print `oat project orchestrator set --project <child>`, and use the same form where `.oat/templates/project-agents.md`, `references/kickoff.md` and the docs describe the child's claim.
+Files: `project/new/index.ts`, its test, `.oat/templates/project-agents.md`, `.agents/skills/oat-project-freestyle/references/kickoff.md` (if it gives the claim command), and the docs pages that quote it.
+Proof: a `new --link-to` output test asserting `--project <child>`; a scratch local child claimed by running the printed command.
+
+### Task p08-t10: (review) Say how a child adopts a shape its checkout cannot see
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-6)
+
+Intent: `references/kickoff.md:54` finds the parent's folder with `oat project list`, which does not list a local parent from another worktree. Add one sentence: when the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape. No new command.
+Files: `.agents/skills/oat-project-freestyle/references/kickoff.md` and any contract pin.
+Proof: the sentence is pinned in the freestyle contract test.
+
+### Task p08-t11: (review) Resume the adoption question before declaring the shape complete
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-7)
+
+Intent: `SKILL.md:275`: when the child's goal is written and the session stops before the adoption question, every topic reads shaped. Resume then takes the complete-and-stop branch, although `shape.md` still says `adopted sections not yet confirmed`. Route that marker to `references/kickoff.md`'s confirmation question before the complete-and-stop branch.
+Files: `.agents/skills/oat-project-freestyle/SKILL.md` and its contract test.
+Proof: a contract test asserting the routing names the marker ahead of the complete-and-stop branch.
+
+### Task p08-t12: (review) Key accepted lane-report log entries by the flag each entry type takes
+
+**Status:** pending
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-8)
+
+Intent: `.oat/templates/project-agents.md:230` and the docs say accepted proposed entries are keyed with `--ref l01-d02`. `oat project log append` refuses `--ref` on judgment entries; they take `--source`. State `--source <dispatch ID>` for a judgment entry and `--ref <dispatch ID>` for a structural one. Replace the contract test's exclusion of log flags from the lane-option scan (`freestyle-contracts.test.ts:753`) with a check that each example uses a flag its own command accepts.
+Files: `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md` (and `project-log.md` if it repeats the example), `freestyle-contracts.test.ts`.
+Proof: the contract test fails on the old `--ref` judgment example and passes on the new text; a scratch `log append` with each documented form exits 0.
 
 ---
 
@@ -1598,6 +1670,31 @@ Confirmed by the reviewer: J-1, J-2 case A (with a pointer), J-3, J-4, each with
 Review-cycle count for m01 integrated: 3 of 3.
 
 **Outcome:** passed, deferred items only (K-1, operator-approved Medium deferral, 2026-11-22). No fix tasks.
+
+### Review Received: m02
+
+**Date:** 2026-11-22
+**Review artifact (local-only):** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md
+
+Integrated milestone review of m02 (p05, p07, p10, p08) on `699f8ee43..52589cbea` (origin/main to the m02 head), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only), complexity lens, per the m02 review plan. Root checked every cited line at `52589cbea`; each defect is in code or text m02 introduced.
+
+**Findings:** Critical 0 · High 1 · Medium 5 · Low 2
+**Finding classes:** N-1 accepted-requirement (Outcome 3, p05 Intent: `linked ack` on the parent whose records were read) · N-2 accepted-requirement (Outcome 5, Lane ledger decision: append-only history) · N-3 accepted-requirement (p07, Lane reports decision: filed verbatim, never edited) · N-4 accepted-requirement (Outcome 3: `--link-to` creates a child, `linked add` links an existing project) · N-5 accepted-requirement (Outcome 4, p05: the child's own session claims it) · N-6 accepted-requirement (Shape adoption decision) · N-7 accepted-requirement (Shape adoption decision: ask once whether adopted sections differ) · N-8 accepted-requirement (Lane reports and Ledger vs project log decisions: entries keyed by dispatch ID)
+
+- N-1 (High): `status` prints an unscoped `linked ack` that can close the active parent's row → p08-t05.
+- N-2 (Medium): the ledger reader strips literal backslashes and the next write rewrites history → p08-t06.
+- N-3 (Medium): the repository's formatting hook rewrites filed lane reports on commit → p08-t07.
+- N-4 (Medium): `new --link-to` on an existing project reports success and opens a row → p08-t08.
+- N-5 (Medium): the child claim handoff omits `--project <child>` → p08-t09.
+- N-6 (Medium): a local parent's shape is not findable from a child worktree → p08-t10 (one kickoff sentence; no new command, per the complexity lens).
+- N-7 (Low): resume can skip the adoption confirmation → p08-t11.
+- N-8 (Low): the `--ref` example fails for judgment log entries → p08-t12.
+
+Confirmed by the reviewer: base and head behave identically for spec-driven, quick, lite, brief, goal and import (scaffold, `new --json`, `status` text and JSON); focused suites pass (296 tests); lockstep 0.3.57 and `oat-project-freestyle` 1.1.0.
+
+Review-cycle count for m02 integrated: 1 (the plan allows at most one confirm round after this one).
+
+**Outcome:** fixes queued: p08-t05 to p08-t12 (late-fix rule: no later phase has a `**Base:**`, so the records land in p08, status back to `in_progress`, base unchanged). m02 exit carrier marked stale; m02 back to `implementing`.
 
 ## Deferred Findings
 
