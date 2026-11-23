@@ -236,7 +236,7 @@ describe('freestyle linked projects', () => {
           parentPath,
         ]);
         expect(flagged.stdout).toContain(
-          'Open linked project: child (shared, .oat/projects/shared/child): Build the importer; after reading its records, acknowledge with `oat project linked ack child`',
+          `Open linked project: child (shared, .oat/projects/shared/child): Build the importer; after reading its records, acknowledge with \`oat project linked ack child --project ${parentPath}\``,
         );
 
         const acked = await runOat(
@@ -610,6 +610,47 @@ describe('freestyle linked projects', () => {
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('--purpose is only used with --link-to.');
     });
+  });
+
+  it('prints an ack command that closes the inspected parent row, not the active parent row', async () => {
+    const { root } = await repo();
+    expect((await newProject(root, 'child', 'shared')).exitCode).toBe(0);
+    expect((await newProject(root, 'alpha', 'shared')).exitCode).toBe(0);
+    // Created last, so beta is the active project.
+    expect((await newProject(root, 'beta', 'shared')).exitCode).toBe(0);
+    for (const parent of ['alpha', 'beta']) {
+      const added = await runOat(root, [
+        'project',
+        'linked',
+        'add',
+        'child',
+        '--project',
+        parent,
+        '--purpose',
+        `Linked from ${parent}`,
+      ]);
+      expect(added.exitCode, added.stderr).toBe(0);
+    }
+
+    const status = await runOat(root, [
+      'project',
+      'status',
+      '--project-path',
+      '.oat/projects/shared/alpha',
+    ]);
+    const printed = /acknowledge with `oat (project linked ack [^`]+)`/.exec(
+      status.stdout,
+    );
+    expect(printed?.[1]).toBe(
+      'project linked ack child --project .oat/projects/shared/alpha',
+    );
+
+    const acked = await runOat(root, printed?.[1]?.split(' ') ?? []);
+    expect(acked.exitCode, acked.stderr).toBe(0);
+    expect((await ledgerOf(root, 'shared', 'alpha')).open).toEqual([]);
+    expect(
+      (await ledgerOf(root, 'shared', 'beta')).open.map((row) => row.name),
+    ).toEqual(['child']);
   });
 
   it('says when the ledger cannot be read instead of showing no open links', async () => {

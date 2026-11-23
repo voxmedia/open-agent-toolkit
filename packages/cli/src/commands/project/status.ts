@@ -139,19 +139,25 @@ function formatLaneLines(lanes: LaneStatus): string[] {
 /**
  * One line per open link, so a parent cannot miss a linked project whose
  * records it has not acknowledged; an unreadable ledger is said, not hidden.
+ * The printed command names the inspected parent, which need not be the
+ * active project that `linked ack` would otherwise close a row in.
  */
-function formatOpenLinkLines(linked: OpenLinkedProjects): string[] {
+function formatOpenLinkLines(
+  linked: OpenLinkedProjects,
+  parentDir: string,
+): string[] {
   if (linked.error) {
     return [`Linked projects: unreadable (${linked.error})`];
   }
   return linked.open.map(
     (row) =>
-      `Open linked project: ${row.name} (${row.scope}, ${row.path}): ${row.purpose}; after reading its records, acknowledge with \`oat project linked ack ${row.name}\``,
+      `Open linked project: ${row.name} (${row.scope}, ${row.path}): ${row.purpose}; after reading its records, acknowledge with \`oat project linked ack ${row.name} --project ${parentDir}\``,
   );
 }
 
 function formatProjectStatusLines(
   project: ProjectState,
+  projectDir: string,
   files: FreestyleProjectFiles | null,
   coordination: FreestyleCoordination | null,
 ): string[] {
@@ -168,7 +174,7 @@ function formatProjectStatusLines(
                 coordination.lanes.current,
               ),
               ...formatLaneLines(coordination.lanes),
-              ...formatOpenLinkLines(coordination.linkedProjects),
+              ...formatOpenLinkLines(coordination.linkedProjects, projectDir),
             ]
           : []),
       ]
@@ -407,7 +413,7 @@ async function writeProjectStatusOutput(
     ? { ...status, projectFiles: files, ...coordination }
     : status;
   writeStatusPayload(context, options, payload, () =>
-    formatProjectStatusLines(payload.project, files, coordination),
+    formatProjectStatusLines(payload.project, projectDir, files, coordination),
   );
 }
 
