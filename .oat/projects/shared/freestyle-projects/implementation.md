@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p05
+oat_current_task_id: p07
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | in_progress | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p10   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | pending  | 1     | 0/1      |
+| p10   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 4/9 phases accepted
+**Total:** 5/9 phases accepted
 
 ---
 
@@ -1080,7 +1080,7 @@ Proof: `build:docs`, docs index freshness.
 
 ## Phase p05: Linked projects
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 517d5e56699ad1dcba90239ecc8e3787fda3311d
 **Executor:** phase-implementer:freestyle-projects-p05-implementation-1
 **Head:** 352186e87a0aa1f8485484e31febafd2a995696b
@@ -1160,6 +1160,13 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 
 Known Unknown settled (how a shared child scaffolded on the parent's orchestrator branch reaches its own orchestrator's branch, and what `status` says on a detached HEAD; correcting line added at the p05 review receive, L1): a shared child's scaffold, and a synced child's pointer, are committed on the parent's orchestrator branch, so the child's orchestrator starts its own branch from there in its own worktree (pulling first for a synced child) and then claims it with `oat project orchestrator set` (`.oat/templates/project-agents.md` "Running one" bullet; p05-t05 scratch run section 3, `git worktree add -b child-orch ../child-wt main`). On a detached HEAD, `new` leaves the project unclaimed, `status` prints `Current branch: detached HEAD` and says the checkout is not the orchestrator, and `orchestrator set` needs `--branch` (p05-t01).
 
+### Review Received: p05
+
+- Review `freestyle-projects-p05-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `517d5e566..352186e87`, artifact `reviews/archived/p05-code-review-2026-11-23T024113Z.md` (local-only): 0 critical, 0 high, 0 medium, 1 low; reconnaissance not attempted; the reviewer re-ran the focused p05 suites (236 passed) and a branch-build check of `new --link-to`, `linked ack` on and off branch and the open-link flag.
+- L1 (Low): the Known Unknown on how a shared child reaches its own orchestrator's branch was answered in the shipped `project-agents.md` "Running one" bullet and the p05-t05 scratch run but not recorded as settled. Disposition: fixed at receive with an appended journal line (`15a4e1035`; its setext-heading formatting slip repaired at `37cebd3d0`, no recorded line rewritten).
+- **Finding classes:** L1 bookkeeping (provenance wording: records existing evidence in the journal).
+- Outcome: passed, bookkeeping-only fixes applied at receive; no fix round, no re-review. Root check after the phase report: `pnpm test:skills` exit 0 (the phase edited the `oat-project-freestyle` SKILL.md Step 2 block; m01 learning `freestyle-projects-learning-m01-02`).
+
 ---
 
 ## Phase p06: Records-branch warning
@@ -1216,6 +1223,8 @@ Added by the second m02 amendment (2026-11-22): `decisions.md` and `memories.md`
 - Root-inline phase: p04 (task p04-t08 only, review round 3 L1) · reason: a one-sentence docs wording fix, smaller than a fix-mode resume and its gate run · root model: claude-opus-5-5
 
 - run/v1 · request=freestyle-projects-p05-implementation-1 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=freestyle-projects-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

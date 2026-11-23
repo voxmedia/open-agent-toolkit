@@ -176,6 +176,12 @@ Recommendation: in m02, fix a small finding in the round it is raised or drop it
 
 Activated m02 (p05, p07, p10, p08); freestyle-projects-activate-m02
 
+### 2026-11-23 · structural · oat-project-implement · p05
+
+**Subject:** p05
+
+p05 accepted: review passed (0 critical, 0 high, 0 medium, 1 low bookkeeping, fixed at receive); 0 fix loops. The p05-t05 scratch pair caught new --link-to switching the parent checkout's active project, fixed as p05-t04. freestyle-projects-p05-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
