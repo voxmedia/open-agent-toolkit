@@ -328,6 +328,13 @@ runs, follow the `oat-project-freestyle` skill's own `references/reshape.md`
 the affected `shape.md` sections, update `Last shaped:`, state when the change
 takes effect, and attempt a `decision` entry in the project log.
 
+At each reshape checkpoint, and when a plan written after shaping is accepted,
+ask the two checkpoint questions in that reference: does the shape still fit,
+and is the plan and its process proportionate to its value (process time
+against code time, the risk each safeguard covers, the lightest process that
+keeps the real gates)? A "no" goes to the owner as a recommendation, even in
+an unattended run.
+
 When a review recorded in `shape.md` comes due, re-check its mechanism before
 using it. If it is unavailable, keep the review's intent, tell the user, log
 it, and reshape: an agreement that stopped working is a reshape trigger.

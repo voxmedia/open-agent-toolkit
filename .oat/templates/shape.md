@@ -61,7 +61,7 @@ _Not yet shaped._
 
 ## Reshape checkpoints
 
-<!-- The moments to revisit this shape, for example after the first PR merges or when a lane is added. -->
+<!-- The moments to revisit this shape, for example after the first PR merges or when a lane is added. At each one, and when a plan written after shaping is accepted, ask two questions. Does the shape still fit? Is the plan and its process proportionate to its value? Test the second by process time against code time (above about 3x needs a stated reason), by what risk each safeguard covers and whether that risk exists now, and by the lightest process that keeps the real gates (the reviews and approvals the owner or the repository requires). A "no" goes to the owner as a recommendation, even in an unattended run. -->
 
 _Not yet shaped._
 

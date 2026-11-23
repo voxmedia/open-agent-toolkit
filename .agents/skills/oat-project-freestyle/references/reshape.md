@@ -18,10 +18,31 @@ The reshape triggers to check on every resume, before acting on the shape:
 reached checkpoints, Undecided items that are due, and agreements that stopped
 working. `SKILL.md` Step 2 runs the same check.
 
+## Checkpoint Questions
+
+At every reshape checkpoint, and when a plan written after shaping is
+accepted, ask two questions:
+
+1. **Does the shape still fit?** Read each topic section against how the
+   project runs now.
+2. **Is the plan and its process proportionate to its value?** Test it by:
+   - **process time against code time:** estimate both; process above about
+     3x the code time needs a stated reason. This is a prompt to explain, not
+     a hard rule;
+   - **each safeguard:** what risk it covers, and whether that risk exists
+     now;
+   - **the lightest process that keeps the real gates:** the reviews and
+     owner approvals the owner or the repository requires.
+
+Answer both, each with its reason; a bare "no change" answers neither. A "no"
+goes to the owner as a recommendation, with the lighter alternative, even in
+an unattended run. The change itself follows the Procedure once the owner
+agrees.
+
 ## Procedure
 
 1. Name the trigger and the topic sections it affects. Read those sections and
-   `## Undecided`.
+   `## Undecided`. At a checkpoint, ask the Checkpoint Questions first.
 2. Agree the change with the user, one affected topic at a time, with a
    recommendation and its tradeoff. Leave every unaffected section untouched.
 3. Edit only the affected sections:
@@ -66,7 +87,9 @@ working. `SKILL.md` Step 2 runs the same check.
 
 7. Commit the edited `shape.md` only as `## Commits, PRs and merges` agrees,
    following the records rule for the project's scope in `AGENTS.md`. With
-   that topic not yet shaped or deferred, commit and push nothing.
+   that topic not yet shaped or deferred, commit and push nothing. Where it
+   agrees to commit records now, `--commit` on the step 6 append commits the
+   project log by exact path in the same command; it pushes nothing.
 
 ## Report
 

@@ -1498,6 +1498,110 @@ describe('freestyle lane brief (p12)', () => {
   });
 });
 
+/** The two checkpoint questions, from Outcome 10. */
+const CHECKPOINT_QUESTIONS = [
+  'Does the shape still fit?',
+  'Is the plan and its process proportionate to its value?',
+] as const;
+
+describe('freestyle adopted plans and checkpoint questions (p12)', () => {
+  const {
+    'SKILL.md': skill,
+    'references/kickoff.md': kickoff,
+    'references/reshape.md': reshape,
+  } = skillFiles();
+  const shape = read(join(TEMPLATES_DIR, 'shape.md'));
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+
+  it('keeps an adopted plan as written and records each process item as kept, mapped or dropped', () => {
+    const documents = between(kickoff, '### 3. Documents', '### 4. Execution');
+    // The intake is the last subsection of the Documents topic.
+    const start = documents.indexOf('#### Adopting an Existing Plan');
+    expect(start, 'Documents has an Adopting an Existing Plan step').toBe(
+      documents.lastIndexOf('\n#### ') + 1,
+    );
+    const intake = oneLine(documents.slice(start));
+    expect(intake).toContain('keep its _what_ and decide its _how_');
+    expect(intake).toContain(
+      'Keep what the plan delivers as written: its changes, their order and its acceptance criteria.',
+    );
+    expect(intake).toContain(
+      '(its bookkeeping, gates, branches, review cadence and PR size) in this section beside the plan, one line each, as **kept**, **mapped** to a freestyle record',
+    );
+    expect(intake).toContain('or **dropped**');
+    expect(intake).toContain(
+      'A required gate, a review or an owner approval that the owner or the repository requires, is kept or mapped to an equivalent check, never dropped. Only discretionary process is dropped.',
+    );
+  });
+
+  it('asks both checkpoint questions with their tests in reshape.md', () => {
+    const questions = oneLine(h2Section(reshape, 'Checkpoint Questions'));
+    expect(questions).toContain(
+      'At every reshape checkpoint, and when a plan written after shaping is accepted, ask two questions',
+    );
+    for (const question of CHECKPOINT_QUESTIONS) {
+      expect(questions, question).toContain(question);
+    }
+    expect(questions).toContain(
+      'process above about 3x the code time needs a stated reason. This is a prompt to explain, not a hard rule',
+    );
+    expect(questions).toContain(
+      'what risk it covers, and whether that risk exists now',
+    );
+    expect(questions).toContain(
+      '**the lightest process that keeps the real gates:**',
+    );
+    expect(questions).toContain(
+      'A "no" goes to the owner as a recommendation, with the lighter alternative, even in an unattended run.',
+    );
+    expect(oneLine(h2Section(reshape, 'Procedure'))).toContain(
+      'At a checkpoint, ask the Checkpoint Questions first.',
+    );
+  });
+
+  it('carries both checkpoint questions and their tests in the shape.md template and the project AGENTS.md', () => {
+    const checkpoints = oneLine(h2Section(shape, 'Reshape checkpoints'));
+    const rules = oneLine(h2Section(agents, 'Shaping and reshaping'));
+    for (const [name, text] of [
+      ['shape.md', checkpoints],
+      ['AGENTS.md', rules],
+    ] as const) {
+      expect(text, name).toContain(
+        'when a plan written after shaping is accepted',
+      );
+      expect(text, name).toContain('process time against code time');
+      expect(text, name).toContain('safeguard');
+      expect(text, name).toContain(
+        'the lightest process that keeps the real gates',
+      );
+      expect(text, name).toContain(
+        'A "no" goes to the owner as a recommendation, even in an unattended run.',
+      );
+    }
+    for (const question of CHECKPOINT_QUESTIONS) {
+      expect(checkpoints, question).toContain(question);
+    }
+    expect(checkpoints).toContain('(above about 3x needs a stated reason)');
+    expect(rules).toContain(
+      'does the shape still fit, and is the plan and its process proportionate to its value',
+    );
+    expect(
+      oneLine(between(kickoff, '### 8. Reshape checkpoints', '## Finishing')),
+    ).toContain(
+      'and when a plan written after shaping is accepted, the two checkpoint questions in `references/reshape.md` are asked',
+    );
+  });
+
+  it('names --commit on lane set and log append where the skill hands record upkeep over', () => {
+    expect(oneLine(skill)).toContain(
+      '`--commit` on `oat project lane set` and `oat project log append` commits each update by exact path in the same command, and neither pushes',
+    );
+    expect(oneLine(reshape)).toContain(
+      '`--commit` on the step 6 append commits the project log by exact path in the same command; it pushes nothing.',
+    );
+  });
+});
+
 describe('oat-brainstorm freestyle route', () => {
   const brainstorm = read(
     join(REPO_ROOT, '.agents', 'skills', 'oat-brainstorm', 'SKILL.md'),
