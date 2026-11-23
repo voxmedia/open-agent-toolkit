@@ -33,7 +33,7 @@ documents); this report is how your work reaches them.
 
 ## Verification
 
-- **Tested SHA:** {full SHA; it must equal the delivered head, or say why not}
+- **Tested SHA:** {full SHA; it must equal the delivered head}
 - {Each command run, with its exit code, and whether it ran or replayed a cache}
 - {Any check skipped or unavailable, and why}
 

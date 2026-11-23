@@ -786,6 +786,9 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     );
     expect(reports).toContain('A filed report is never edited.');
     expect(reports).toContain('keyed by the dispatch ID');
+    expect(reports).toContain(
+      'whose `--ref` is the update ID that `lane set` printed for the update recording the event; other ledger updates get no log entry',
+    );
     expect(reports).toContain('Do not merge unreported commits unreviewed');
   });
 
@@ -846,7 +849,7 @@ describe('freestyle lane report shape (p07)', () => {
     expect(h2Headings(template)).toEqual([...LANE_REPORT_SECTIONS]);
     expect(h3Headings(template)).toEqual(['This round', 'Lane so far']);
     expect(oneLine(template)).toContain(
-      '**Tested SHA:** {full SHA; it must equal the delivered head, or say why not}',
+      '**Tested SHA:** {full SHA; it must equal the delivered head}',
     );
     expect(oneLine(template)).toContain(
       'as your final message for this dispatch, with nothing after it',

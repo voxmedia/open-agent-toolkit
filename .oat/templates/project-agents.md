@@ -179,6 +179,11 @@ it:
 3. Append the accepted proposed log entries with `oat project log append`,
    keyed by the dispatch ID (for example `--ref l01-d02`).
 
+When a lane merges, or another event matters to the project's story, append a
+structural log entry (see Records commands) whose `--ref` is the update ID that
+`lane set` printed for the update recording the event; other ledger updates get
+no log entry.
+
 The ledger's `head` is the head the lane's last report delivered. For a lane
 in its own worktree, `oat project lane set` and `oat project status` flag a
 branch head that has moved past it. Do not merge unreported commits
