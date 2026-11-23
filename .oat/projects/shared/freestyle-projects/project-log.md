@@ -182,6 +182,12 @@ Activated m02 (p05, p07, p10, p08); freestyle-projects-activate-m02
 
 p05 accepted: review passed (0 critical, 0 high, 0 medium, 1 low bookkeeping, fixed at receive); 0 fix loops. The p05-t05 scratch pair caught new --link-to switching the parent checkout's active project, fixed as p05-t04. freestyle-projects-p05-outcome
 
+### 2026-11-23 · structural · oat-project-implement · p07
+
+**Subject:** p07
+
+p07 accepted: review passed (0 critical, 0 high, 1 medium, 3 low); M1 and L1 fixed root-inline in p07-t06, L2 dismissed as new-hardening, L3 already corrected; 0 fix loops, no re-review. freestyle-projects-p07-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

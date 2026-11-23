@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p07
+oat_current_task_id: p10
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | in_progress | 1     | 0/1      |
-| p10   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | pending  | 1     | 0/1      |
+| p08   | pending  | 1     | 0/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 5/9 phases accepted
+**Total:** 6/9 phases accepted
 
 ---
 
@@ -1179,10 +1179,10 @@ Retired at the m02 re-alignment (2026-11-22): the ancestry warning was dropped a
 
 ## Phase p07: Lane ledger and reports
 
-**Status:** in_progress
+**Status:** completed
 **Base:** df8268ad2bd2493a5230694bd7910b98dbe03bb0
 **Executor:** phase-implementer:freestyle-projects-p07-implementation-1
-**Head:** c4fafff2ae655554e9dc130418ed969253a119a7
+**Head:** b65ebd8e3f12437e07b627a098b8e1c07c47a1d8
 
 Phase verification at the head (clean tree but the gitignored `references/`, isolated `HOME`): `pnpm check` exit 0 (cli `check` and `build` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 457 files, 9967 tests; control-plane 327, docs packages 85); `pnpm build` exit 0 (cache hit replaying the `d58dc67` build `pnpm check` executed at this head, inputs unchanged); `pnpm lint` exit 0. No `.agents/skills` file changed, so `pnpm test:skills` was not required. Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`. Correction to p07-t05: the final scratch run's transcript shows sha256 `4f2b0576…` for both the filed report and the returned file; `91756e3d…` was an earlier run of the same script, whose report embedded different SHAs.
 
@@ -1264,6 +1264,18 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Files: `.oat/templates/project-agents.md` (Lane reports: structural entries for merges and other story events take the `lane set` update ID as `--ref`; other ledger updates get no log entry), `.oat/templates/lane-report.md` (drops ", or say why not"), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (pins both).
 - Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project` exit 0 (104 files, 3382 tests); `pnpm check` exit 0; `pnpm lint` exit 0.
 
+Late fix p07-t06 (p07 review round 1: M1 and L1, accepted requirements) at `3a3103ba7`, recorded at `b65ebd8e3`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `c4fafff2a`.
+
+### Review Received: p07
+
+- Review `freestyle-projects-p07-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `df8268ad2..c4fafff2a`, artifact `reviews/archived/p07-code-review-2026-11-23T032928Z.md` (local-only): 0 critical, 0 high, 1 medium, 3 low; reconnaissance not attempted. The reviewer re-ran the focused p07 suites (119 passed) and a branch-build check of the off-branch refusal, verbatim filing, the head-ahead flag, the status lane line and the formatter round trip. It accepted the two items the implementer flagged (the Markdown unescape on read; the lane worktree reading the ledger as of the branch cut, documented).
+- M1 (Medium): the project `AGENTS.md` never said that story events in the project log point to a ledger update ID. Fixed in p07-t06.
+- L1 (Low): `lane-report.md` softened "tested SHA must equal the delivered head" with ", or say why not". Fixed in p07-t06.
+- L2 (Low): filing an own-worktree lane's first report without `--head` turns the head-ahead check off for it. Dismissed: no contract source requires a refusal or warning, the AGENTS.md filing step always passes `--head`, and the operator's standing direction for m02 is to drop small unrequired hardening rather than defer it.
+- L3 (Low): the p07-t05 record cites an earlier run's report checksum. Already addressed: the phase `**Head:**` paragraph carries the appended correction (`4f2b0576…`); committed record lines are not rewritten.
+- **Finding classes:** M1 accepted-requirement (plan.md Decisions: Ledger vs project log) · L1 accepted-requirement (Decisions: Lane reports) · L2 new-hardening (no contract source) · L3 bookkeeping (provenance wording).
+- Outcome: passed (0 critical, 0 high). The two fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p07-t06 record.
+
 ---
 
 ## Phase p10: Decisions and memories
@@ -1311,6 +1323,9 @@ Added by the second m02 amendment (2026-11-22): `decisions.md` and `memories.md`
 
 - run/v1 · request=freestyle-projects-p07-implementation-1 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Nested (phase-implementer-owned, p07-t05 exit evidence): request=freestyle-projects-p07-t05-fresh-session-1 · read-only general-purpose fresh-context check on Sonnet at provider-default effort · launch=accepted · outcome=completed · no structured dispatch record (the phase report names it; answer kept verbatim in the gitignored p07 scratch transcript)
+
+- run/v1 · request=freestyle-projects-p07-review-1 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p07 (task p07-t06 only, review round 1 M1 and L1) · reason: two template sentences and their contract pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
