@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   access,
   copyFile,
@@ -48,6 +48,8 @@ const PROJECT_TEMPLATE_NAMES = [
   'state-freestyle.md',
   'project-agents.md',
   'shape.md',
+  'decisions.md',
+  'memories.md',
   'discovery.md',
   'spec.md',
   'design.md',
@@ -58,6 +60,14 @@ const PROJECT_TEMPLATE_NAMES = [
   'implementation-brief.md',
   'project-log.md',
 ] as const;
+/** What a freestyle scaffold writes, in order. */
+const FREESTYLE_SCAFFOLD_FILES = [
+  'state.md',
+  'AGENTS.md',
+  'shape.md',
+  'decisions.md',
+  'memories.md',
+];
 const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
 
 function scaffoldProject(
@@ -1411,7 +1421,7 @@ describe('scaffoldProject', () => {
       today: '2026-11-21',
     });
 
-    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.createdFiles).toEqual(FREESTYLE_SCAFFOLD_FILES);
     const state = await readFile(
       join(repoRoot, result.projectPath, 'state.md'),
       'utf8',
@@ -1461,11 +1471,7 @@ describe('scaffoldProject', () => {
       mode: 'freestyle',
     });
     expect(freeRerun.createdFiles).toEqual([]);
-    expect(freeRerun.skippedFiles).toEqual([
-      'state.md',
-      'AGENTS.md',
-      'shape.md',
-    ]);
+    expect(freeRerun.skippedFiles).toEqual(FREESTYLE_SCAFFOLD_FILES);
     const lifecycleChange = await scaffoldProject({
       ...base,
       projectName: 'quick',
@@ -2491,7 +2497,7 @@ describe('scaffoldProject', () => {
     });
 
     expect(result.mode).toBe('freestyle');
-    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.createdFiles).toEqual(FREESTYLE_SCAFFOLD_FILES);
     const projectRoot = join(repoRoot, result.projectPath);
     for (const file of [
       'discovery.md',
@@ -3167,6 +3173,48 @@ function expectFreestyleGuidance(
   expect(markdownSection(shape, 'Undecided').trim()).toMatch(/_None yet\._$/);
 }
 
+/**
+ * The decisions and memories files a freestyle scaffold carries in every scope:
+ * empty sections, no template frontmatter, and the bundled template byte for
+ * byte, so `oat template resolve <name> --output <path>` creates the same file
+ * in a project scaffolded before they existed.
+ */
+function expectFreestyleDecisionsAndMemories(
+  decisions: string,
+  memories: string,
+): void {
+  const sections = (content: string): string[] =>
+    [...content.matchAll(/^## (.+)$/gm)].map((match) => match[1] as string);
+  expect(sections(decisions)).toEqual(['Live', 'Superseded']);
+  expect(sections(memories)).toEqual([
+    'User preferences',
+    'Gotchas',
+    'Context',
+  ]);
+  for (const [content, headings] of [
+    [decisions, ['Live', 'Superseded']],
+    [memories, ['User preferences', 'Gotchas', 'Context']],
+  ] as const) {
+    for (const heading of headings) {
+      expect(markdownSection(content, heading).trim(), heading).toMatch(
+        /_None yet\._$/,
+      );
+    }
+  }
+  expect(decisions).toContain('`### drNN · <decision statement>`');
+  expect(decisions).toContain('`Supersedes: drNN`');
+  expect(decisions).toContain('`Superseded by drNN, <date>`');
+  for (const [content, name] of [
+    [decisions, 'decisions.md'],
+    [memories, 'memories.md'],
+  ] as const) {
+    expect(content).not.toMatch(/^---$/m);
+    expect(content).toBe(
+      readFileSync(join(REPO_ROOT, '.oat', 'templates', name), 'utf8'),
+    );
+  }
+}
+
 describe('freestyle guidance files at the bundle tier', () => {
   const tempDirs: string[] = [];
 
@@ -3205,13 +3253,17 @@ describe('freestyle guidance files at the bundle tier', () => {
       { resolveDefaultScope: async () => 'shared' },
     );
 
-    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.createdFiles).toEqual(FREESTYLE_SCAFFOLD_FILES);
     expect(result.commitStatus).toBe('committed');
     const projectRoot = join(repoRoot, result.projectPath);
     expectFreestyleGuidance(
       await readFile(join(projectRoot, 'AGENTS.md'), 'utf8'),
       await readFile(join(projectRoot, 'shape.md'), 'utf8'),
       'freestyle-shared',
+    );
+    expectFreestyleDecisionsAndMemories(
+      await readFile(join(projectRoot, 'decisions.md'), 'utf8'),
+      await readFile(join(projectRoot, 'memories.md'), 'utf8'),
     );
     expect(
       execFileSync(
@@ -3223,9 +3275,9 @@ describe('freestyle guidance files at the bundle tier', () => {
         .split('\n')
         .sort(),
     ).toEqual(
-      ['AGENTS.md', 'shape.md', 'state.md'].map(
-        (file) => `${result.projectPath}/${file}`,
-      ),
+      [...FREESTYLE_SCAFFOLD_FILES]
+        .sort()
+        .map((file) => `${result.projectPath}/${file}`),
     );
   });
 
@@ -3247,13 +3299,17 @@ describe('freestyle guidance files at the bundle tier', () => {
       setActive: false,
     });
 
-    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.createdFiles).toEqual(FREESTYLE_SCAFFOLD_FILES);
     expect(result.commitStatus).toBe('skipped_local_scope');
     const projectRoot = join(repoRoot, result.projectPath);
     expectFreestyleGuidance(
       await readFile(join(projectRoot, 'AGENTS.md'), 'utf8'),
       await readFile(join(projectRoot, 'shape.md'), 'utf8'),
       'freestyle-local',
+    );
+    expectFreestyleDecisionsAndMemories(
+      await readFile(join(projectRoot, 'decisions.md'), 'utf8'),
+      await readFile(join(projectRoot, 'memories.md'), 'utf8'),
     );
   });
 
@@ -3273,7 +3329,7 @@ describe('freestyle guidance files at the bundle tier', () => {
       setActive: false,
     });
 
-    expect(result.createdFiles).toEqual(['state.md', 'AGENTS.md', 'shape.md']);
+    expect(result.createdFiles).toEqual(FREESTYLE_SCAFFOLD_FILES);
     const published = (file: string): string =>
       execFileSync(
         'git',
@@ -3286,26 +3342,40 @@ describe('freestyle guidance files at the bundle tier', () => {
       published('shape.md'),
       'freestyle-synced',
     );
-  });
-
-  it('keeps a spec-driven scaffold free of AGENTS.md and shape.md', async () => {
-    const { repoRoot, home } = await bundleOnlyRepo();
-
-    const result = await scaffoldProjectImpl(
-      {
-        repoRoot,
-        projectName: 'spec-driven-control',
-        home,
-        refreshDashboard: false,
-        setActive: false,
-      },
-      { resolveDefaultScope: async () => 'shared' },
+    expectFreestyleDecisionsAndMemories(
+      published('decisions.md'),
+      published('memories.md'),
     );
-
-    expect(result.createdFiles).not.toContain('AGENTS.md');
-    expect(result.createdFiles).not.toContain('shape.md');
-    const projectRoot = join(repoRoot, result.projectPath);
-    expect(existsSync(join(projectRoot, 'AGENTS.md'))).toBe(false);
-    expect(existsSync(join(projectRoot, 'shape.md'))).toBe(false);
   });
+
+  it.each(['spec-driven', 'quick', 'import', 'lite', 'brief', 'goal'] as const)(
+    'keeps a %s scaffold free of the freestyle files',
+    async (mode) => {
+      const { repoRoot, home } = await bundleOnlyRepo();
+
+      const result = await scaffoldProjectImpl(
+        {
+          repoRoot,
+          projectName: `${mode}-control`,
+          mode,
+          home,
+          refreshDashboard: false,
+          setActive: false,
+        },
+        { resolveDefaultScope: async () => 'shared' },
+      );
+
+      const projectRoot = join(repoRoot, result.projectPath);
+      expect(result.createdFiles).toContain('state.md');
+      for (const file of [
+        'AGENTS.md',
+        'shape.md',
+        'decisions.md',
+        'memories.md',
+      ]) {
+        expect(result.createdFiles, file).not.toContain(file);
+        expect(existsSync(join(projectRoot, file)), file).toBe(false);
+      }
+    },
+  );
 });

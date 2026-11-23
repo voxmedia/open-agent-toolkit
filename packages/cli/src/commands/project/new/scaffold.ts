@@ -175,12 +175,15 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     { source: 'implementation-brief.md', target: 'implementation.md' },
   ],
   // Freestyle scaffolds its minimal, lifecycle-free state, the OAT-owned
-  // project AGENTS.md and the not-yet-shaped shape.md. Documents are chosen
-  // while the project is shaped, never scaffolded.
+  // project AGENTS.md, the not-yet-shaped shape.md, and the empty
+  // decisions.md and memories.md the orchestrator writes by hand. Documents
+  // are chosen while the project is shaped, never scaffolded.
   freestyle: [
     { source: 'state-freestyle.md', target: 'state.md' },
     { source: 'project-agents.md', target: 'AGENTS.md' },
     { source: 'shape.md', target: 'shape.md' },
+    'decisions.md',
+    'memories.md',
   ],
 };
 

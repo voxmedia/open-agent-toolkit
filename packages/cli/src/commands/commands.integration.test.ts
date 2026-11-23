@@ -1364,7 +1364,13 @@ describe('CLI command integration', () => {
       expect(JSON.parse(json.stdout)).toMatchObject({
         status: 'ok',
         mode: 'freestyle',
-        createdFiles: ['state.md', 'AGENTS.md', 'shape.md'],
+        createdFiles: [
+          'state.md',
+          'AGENTS.md',
+          'shape.md',
+          'decisions.md',
+          'memories.md',
+        ],
         projectFiles: {
           agents: '.oat/projects/shared/freestyle-json/AGENTS.md',
           shape: '.oat/projects/shared/freestyle-json/shape.md',

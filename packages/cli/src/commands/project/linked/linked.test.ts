@@ -107,6 +107,16 @@ describe('freestyle linked projects', () => {
         const { root, originDir } = await repo();
         await newParent(root, parentScope);
         const parentPath = `.oat/projects/${parentScope}/parent`;
+        // The parent has decided something; its child still starts empty.
+        const parentDecisions = join(
+          projectDir(root, parentScope, 'parent'),
+          'decisions.md',
+        );
+        const parentDecided = (await readFile(parentDecisions, 'utf8')).replace(
+          '## Live\n\n_None yet._',
+          '## Live\n\n### dr01 · Import CSV before JSON\n\n- Date: 2026-11-22\n- Source: the user',
+        );
+        await writeFile(parentDecisions, parentDecided, 'utf8');
         const headBefore = git(root, ['rev-parse', 'HEAD']);
         const publishedBefore =
           parentScope === 'synced'
@@ -161,6 +171,23 @@ describe('freestyle linked projects', () => {
           oat_linked_from: 'parent',
         });
 
+        // The child's decisions and memories start as the empty templates.
+        for (const file of ['decisions.md', 'memories.md']) {
+          expect(
+            await readFile(
+              join(projectDir(root, 'shared', 'child'), file),
+              'utf8',
+            ),
+            file,
+          ).toBe(
+            await readFile(
+              join(process.cwd(), '..', '..', '.oat', 'templates', file),
+              'utf8',
+            ),
+          );
+        }
+        expect(await readFile(parentDecisions, 'utf8')).toBe(parentDecided);
+
         const ledger = await ledgerOf(root, parentScope, 'parent');
         expect(ledger.open).toEqual([
           {
@@ -180,9 +207,13 @@ describe('freestyle linked projects', () => {
             .split('\n')
             .sort(),
         ).toEqual(
-          ['AGENTS.md', 'shape.md', 'state.md'].map(
-            (file) => `.oat/projects/shared/child/${file}`,
-          ),
+          [
+            'AGENTS.md',
+            'decisions.md',
+            'memories.md',
+            'shape.md',
+            'state.md',
+          ].map((file) => `.oat/projects/shared/child/${file}`),
         );
         expect(git(root, ['rev-list', '--count', `${headBefore}..HEAD`])).toBe(
           '1',
