@@ -1138,6 +1138,23 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Can-fail: restoring `setActive: options.setActive` failed the creation test in all three scopes on the pointer (`expected '.oat/projects/shared/child' to be '.oat/projects/shared/parent'`); restored.
 - Classification: recorded as a new execution record inside the open phase, not as a post-commit recovery against p05-t02, because it changes the behavior of the new `--link-to` option (outside the recovery predicate's no-public-behavior-change rule) while staying within the Linked projects decision; no recovery attempt is consumed. The edit was made before this classification was written down.
 
+### Task p05-t05: Parent/child scratch pair with the branch build
+
+**Status:** no-change
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+**Handle:** freestyle-projects-p05-implementation-1 (this session)
+
+- Intent: the scratch-pair exit evidence: a parent and a linked child in a throwaway repository under `$TMPDIR`, the child claimed by its own orchestrator session in a linked worktree on its own branch, its shaping opening with adopt-or-new and adopting the parent's shape, that worktree's guarded commands refusing for the parent, and the parent's `status` flagging the row until `linked ack`; plus the AGENTS.md refresh and claim on a project carrying m01-rendered files.
+- Files: none in the repository; transcript in `references/analysis/p05-scratch-transcript.md` (gitignored).
+- Proof: the transcript, branch build `node packages/cli/dist/index.js` built from `351b80abad00e89e284f31d8bee1d85e97160f80`.
+- Setup: a throwaway repository under `$TMPDIR/oat-p05-scratch` with an isolated `HOME` and global Git config, `oat` on `PATH` as a wrapper for the branch build. Sessions were played by the implementer from the skill and template text, not by a fresh-context agent; user answers were scripted.
+- Parent: `parent` created on `main` with the project log, shaped and committed; `oat_orchestrator_branch: "main"`.
+- Creation: `oat project new child --mode freestyle --scope shared --link-to parent --purpose "Migrate the CSV importer"` wrote `oat_linked_from: "parent"` and `oat_orchestrator_branch: ""`, kept `parent` active (p05-t04), committed only the child's three scaffold files, and left the parent's `linked-projects.md` uncommitted; `status` showed `Open linked project: child (shared, .oat/projects/shared/child): ...`.
+- Child session: in a linked worktree on `child-orch` branched from `main`, the SKILL.md Resume block made `child` active; `status` showed it unclaimed; the scripted user confirmed and `oat project orchestrator set` claimed `child-orch` (`this checkout is the orchestrator`); the refresh block was silent and left the current AGENTS.md byte-identical. Kickoff Before Shaping step 2 asked adopt or new; on adopt the parent's `shape.md` was copied, Goal reset, Documents rewritten as kinds, Last shaped set, and the `**Adopted from:** parent, last shaped 2026-11-20; adopted sections not yet confirmed.` line added; shaping resumed at Goal, then one confirmation changed only the Reviews effort and ended the line `adopted sections confirmed 2026-11-23.` (diff in the transcript).
+- Guard in the child's worktree: `linked ack child --project parent`, `linked add child --project parent` and `new grandchild --link-to parent` each exit 1 (`this checkout is on branch child-orch, but project parent's orchestrator branch is main`); the parent's ledger hash is unchanged and no grandchild folder exists; the parent's `status` there says `this checkout is a lane` and still lists the open row.
+- Acknowledge: the child's records committed on `child-orch` and merged into `main`; the parent's `status` on `main` still flagged the row; after reading the child's records, `oat project linked ack child` (active project) closed the row (`Acknowledged 2026-11-23`), appended `### 2026-11-23 · structural · oat-project-linked · child` with `**Source project:** child`, and `status` listed no open link; a second ack exits 1 (`has no open link`).
+- Existing project: `legacy` with the m01 AGENTS.md (commit `1e0b473c6`) and no branch field read as unclaimed, and `linked add --project legacy` exit 1 as unclaimed with no ledger written; after `orchestrator set` claimed it, the SKILL.md refresh block printed the two missing headings and replaced AGENTS.md byte-identical to a fresh scaffold; a second run was silent; `oat project check-state` exit 0.
+
 ---
 
 ## Phase p06: Records-branch warning
