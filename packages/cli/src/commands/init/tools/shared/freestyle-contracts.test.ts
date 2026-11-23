@@ -33,6 +33,7 @@ const AGENTS_HEADINGS = [
   'Project files',
   'Single writer',
   'Where records live',
+  'Decisions and memories',
   'Orchestrator branch',
   'Linked projects',
   'Dispatch',
@@ -58,6 +59,14 @@ const SHAPING_TOPICS = [
   'Reshape checkpoints',
 ] as const;
 const SHAPE_HEADINGS = [...SHAPING_TOPICS, 'Project log', 'Undecided'];
+
+/** The sections of the scaffolded decisions.md and memories.md, in order. */
+const DECISIONS_HEADINGS = ['Live', 'Superseded'] as const;
+const MEMORIES_HEADINGS = ['User preferences', 'Gotchas', 'Context'] as const;
+
+/** The project AGENTS.md first line: the resume order. */
+const AGENTS_FIRST_LINE =
+  'Read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` in this folder before acting: they hold how this project runs, what it has decided and what to keep in mind.';
 
 /** The templates the kickoff reference offers as document starting points. */
 const KICKOFF_TEMPLATES = [
@@ -106,12 +115,10 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
   const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
   const shape = read(join(TEMPLATES_DIR, 'shape.md'));
 
-  it('pins the project AGENTS.md headings and its read-shape.md first line', () => {
+  it('pins the project AGENTS.md headings and its resume-order first line', () => {
     expect(h2Headings(agents)).toEqual([...AGENTS_HEADINGS]);
     const body = agents.replace(/^---\n[\s\S]*?\n---\n+/, '');
-    expect(body.split('\n')[0]).toBe(
-      'Read `shape.md` in this folder before acting: it holds how this project runs.',
-    );
+    expect(body.split('\n')[0]).toBe(AGENTS_FIRST_LINE);
     expect(body).toMatch(/^# Freestyle project: \{Project Name\}$/m);
   });
 
@@ -134,6 +141,8 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
     const known = new Set([
       ...h2Headings(agents),
       ...h2Headings(shape),
+      ...DECISIONS_HEADINGS,
+      ...MEMORIES_HEADINGS,
       ...KICKOFF_TEMPLATES.flatMap((name) =>
         h2Headings(read(join(TEMPLATES_DIR, `${name}.md`))),
       ),
@@ -265,6 +274,8 @@ describe('freestyle orchestrator branch and linked projects guidance (p05)', () 
         'state-freestyle.md',
         'project-agents.md',
         'shape.md',
+        'decisions.md',
+        'memories.md',
       ]) {
         writeFileSync(
           join(root, '.oat', 'templates', name),
@@ -811,6 +822,189 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     const files = oneLine(h2Section(agents, 'Project files'));
     expect(files).toContain('`lanes.md`');
     expect(files).toContain('`lane-reports/`');
+  });
+});
+
+/**
+ * Runs a first-use block (`for NAME in decisions memories ...`) against a stub
+ * `oat template resolve` that copies the repository template raw, as the real
+ * resolver does.
+ */
+function runFirstUse(
+  root: string,
+  block: string,
+  env: Record<string, string>,
+  resolveExit = 0,
+): { status: number | null; stdout: string; stderr: string } {
+  const bin = join(root, 'bin');
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(
+    join(bin, 'oat'),
+    [
+      '#!/bin/bash',
+      `[ "$1 $2" = "template resolve" ] || exit 9`,
+      `[ "$4" = "--output" ] || exit 8`,
+      `[ "${resolveExit}" = 0 ] || exit ${resolveExit}`,
+      `cp "${TEMPLATES_DIR}/$3.md" "$5"`,
+      '',
+    ].join('\n'),
+  );
+  chmodSync(join(bin, 'oat'), 0o755);
+  const result = spawnSync('/bin/bash', ['-c', block], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, ...env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  return {
+    status: result.status,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
+}
+
+describe('freestyle decisions and memories (p10)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const decisions = read(join(TEMPLATES_DIR, 'decisions.md'));
+  const memories = read(join(TEMPLATES_DIR, 'memories.md'));
+  const section = oneLine(h2Section(agents, 'Decisions and memories'));
+  const roots: string[] = [];
+
+  afterEach(() => {
+    for (const root of roots) rmSync(root, { recursive: true, force: true });
+    roots.length = 0;
+  });
+
+  it('pins the decisions.md and memories.md sections, with no template frontmatter', () => {
+    expect(h2Headings(decisions)).toEqual([...DECISIONS_HEADINGS]);
+    expect(h2Headings(memories)).toEqual([...MEMORIES_HEADINGS]);
+    // `oat template resolve --output` copies raw, so first use writes exactly
+    // what the scaffold writes only when there is nothing to render.
+    for (const content of [decisions, memories]) {
+      expect(content).not.toMatch(/^---$/m);
+      expect(content).not.toMatch(/\{[A-Za-z ]+\}|YYYY-MM-DD/);
+    }
+    expect(decisions.startsWith('# Decisions\n')).toBe(true);
+    expect(memories.startsWith('# Memories\n')).toBe(true);
+    const form = oneLine(decisions);
+    expect(form).toContain('a `### drNN · <decision statement>` heading');
+    expect(form).toContain('`Supersedes: drNN`');
+    expect(form).toContain('`Superseded by drNN, <date>`');
+  });
+
+  it('names both files in the AGENTS.md project files, single-writer list and resume line', () => {
+    const files = oneLine(h2Section(agents, 'Project files'));
+    expect(files).toContain('- `decisions.md`:');
+    expect(files).toContain('- `memories.md`:');
+    const writer = oneLine(h2Section(agents, 'Single writer'));
+    expect(writer).toContain(
+      "the project records: `shape.md`, `decisions.md`, `memories.md`, the project's documents,",
+    );
+    const first = agents.replace(/^---\n[\s\S]*?\n---\n+/, '').split('\n')[0];
+    expect(first).toBe(AGENTS_FIRST_LINE);
+    const order = [
+      '`shape.md`',
+      '`## Live`',
+      '`decisions.md`',
+      '`memories.md`',
+    ];
+    const offsets = order.map((name) => first?.indexOf(name) ?? -1);
+    expect(offsets.every((offset) => offset >= 0)).toBe(true);
+    expect([...offsets].sort((x, y) => x - y)).toEqual(offsets);
+  });
+
+  it('states the authority rule, the supersession steps and first-use creation', () => {
+    expect(section).toContain(
+      '`shape.md` how this project works, `decisions.md` what it chose about the work and why, `memories.md` what a returning agent should keep in mind, and `project-log.md` what happened and when',
+    );
+    expect(section).toContain(
+      'A change to how the project works is a reshape: it stays in `shape.md`, with its `decision` entry in the project log.',
+    );
+    expect(section).toContain(
+      'A decision about the work lives only in `decisions.md`',
+    );
+    expect(section).toContain(
+      'points to `decisions.md` instead of repeating it',
+    );
+    expect(section).toContain('What is still true goes in `memories.md`');
+    expect(section).toContain('by hand, with no command');
+    expect(section).toContain(
+      'add the new entry under `## Live` with `Supersedes: drNN`, then move the replaced entry intact to `## Superseded` and add `Superseded by drNN, <date>` to it',
+    );
+    expect(section).toContain('Create each one only when it is absent');
+    expect(section).toContain(
+      'A linked project starts with its own empty files',
+    );
+    // The shape.md Project log paragraph defers to decisions.md.
+    const log = oneLine(
+      h2Section(read(join(TEMPLATES_DIR, 'shape.md')), 'Project log'),
+    );
+    expect(log).toContain(
+      'Decisions about the work live only in `decisions.md`',
+    );
+    expect(log).toContain('a `decision` entry may cite one by its `drNN`');
+    expect(log).toContain('what is still true goes in `memories.md`');
+  });
+
+  it('creates each missing file with the AGENTS.md first-use block and never touches an existing one', () => {
+    const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-first-use-'));
+    roots.push(root);
+    const project = join(root, 'project');
+    mkdirSync(project);
+    const block = /```bash\n([\s\S]*?)```/
+      .exec(h2Section(agents, 'Decisions and memories'))?.[1]
+      ?.replace(/^ {2}/gm, '')
+      .replaceAll('<project-path>', project);
+    expect(block, 'the first-use step has a bash block').toBeDefined();
+
+    // An older project with a memories.md already written by hand.
+    writeFileSync(join(project, 'memories.md'), '# Memories\n\n- kept\n');
+    const first = runFirstUse(root, block as string, {});
+    expect(first.stderr).toBe('');
+    expect(first.status).toBe(0);
+    expect(read(join(project, 'decisions.md'))).toBe(decisions);
+    expect(read(join(project, 'memories.md'))).toBe('# Memories\n\n- kept\n');
+
+    // Both present: a resolver that would fail is never called.
+    writeFileSync(join(project, 'decisions.md'), '# Decisions\n\n- kept\n');
+    const again = runFirstUse(root, block as string, {}, 3);
+    expect(again.status).toBe(0);
+    expect(read(join(project, 'decisions.md'))).toBe('# Decisions\n\n- kept\n');
+  });
+
+  it('names the lane notes path as authorized scratch in the dispatch section, and promotion after filing', () => {
+    const dispatch = oneLine(h2Section(agents, 'Dispatch'));
+    expect(dispatch).toContain('its lane notes path; and the report shape');
+    expect(dispatch).toContain(
+      'to an uncommitted notes file in its own checkout, `.oat/analysis/lane-notes/<lane>-<dispatch>.md`',
+    );
+    expect(dispatch).toContain(
+      "builds its report's Decisions and Learnings from it",
+    );
+    expect(dispatch).toContain(
+      "names that path as authorized scratch, outside a same-checkout lane's `paths:`",
+    );
+    expect(dispatch).toContain('`.oat/**/analysis`');
+    expect(dispatch).toContain('the brief names a path outside the checkout');
+    expect(dispatch).toContain(
+      'A read-only delegate keeps no notes: its brief tells it to return its decisions and learnings in its final message.',
+    );
+    const reports = oneLine(h2Section(agents, 'Lane reports'));
+    expect(reports).toContain(
+      '4. Promote what you accept from its Decisions and Learnings: a decision as a `decisions.md` entry, and a gotcha, user preference or still-true context as a `memories.md` bullet, each citing the dispatch ID',
+    );
+    expect(reports.indexOf('3. Append')).toBeLessThan(
+      reports.indexOf('4. Promote'),
+    );
+  });
+
+  it('tells the lane to keep its notes file and build its Decisions and Learnings from it', () => {
+    const report = oneLine(read(join(TEMPLATES_DIR, 'lane-report.md')));
+    expect(report).toContain(
+      'While you work, write each decision you make and each gotcha you hit to the lane notes file your brief names, as it happens, so they survive your own compaction; never commit it. Build the Decisions and Learnings sections below from it.',
+    );
+    expect(report).toContain(
+      'A read-only lane keeps no notes file and writes its decisions and learnings straight into this report.',
+    );
   });
 });
 

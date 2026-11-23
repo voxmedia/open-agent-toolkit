@@ -3,7 +3,7 @@ oat_template: true
 oat_template_name: project-agents
 ---
 
-Read `shape.md` in this folder before acting: it holds how this project runs.
+Read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` in this folder before acting: they hold how this project runs, what it has decided and what to keep in mind.
 
 # Freestyle project: {Project Name}
 
@@ -20,6 +20,11 @@ it. Agreements made with the user belong in `shape.md`, never here.
   the orchestrator and the user. Its sections are the shaping topics; a section
   reading `_Not yet shaped._` still needs the shaping conversation, and
   `## Undecided` lists deferred items with the moment each becomes due.
+- `decisions.md`: what the project chose about its work and why, one
+  `### drNN` entry per decision; `## Live` holds the current decisions and
+  `## Superseded` the replaced ones.
+- `memories.md`: what a returning agent should keep in mind, as dated and
+  sourced bullets under `## User preferences`, `## Gotchas` and `## Context`.
 - `state.md`: the project's identity (`oat_workflow_mode: freestyle`), the
   orchestrator's branch (`oat_orchestrator_branch`) and, for a linked project,
   its parent (`oat_linked_from`); it has no lifecycle fields.
@@ -35,9 +40,10 @@ it. Agreements made with the user belong in `shape.md`, never here.
 ## Single writer
 
 Only the orchestrator, the agent running this project with the user, writes
-the project records: `shape.md`, the project's documents, `lanes.md`,
-`lane-reports/`, `linked-projects.md` and `project-log.md`, and it alone claims
-the project with `oat project orchestrator set`. Delegates (subagents, lanes,
+the project records: `shape.md`, `decisions.md`, `memories.md`, the
+project's documents, `lanes.md`, `lane-reports/`, `linked-projects.md` and
+`project-log.md`, and it alone claims the project with
+`oat project orchestrator set`. Delegates (subagents, lanes,
 other sessions) return their results to the orchestrator and never edit these
 files, the lane ledger included: a lane's final message is its report, which
 the orchestrator files. A delegate's PR holds code only. Each project writes only its own records: a
@@ -68,6 +74,47 @@ oat project scope <project-path> --format value
 When records are committed, pushed or opened as PRs is agreed in `shape.md`
 under `## Commits, PRs and merges`. OAT does none of it after creation; while
 that section is not yet shaped or is deferred, commit and push nothing.
+
+## Decisions and memories
+
+Each file answers one question: `shape.md` how this project works,
+`decisions.md` what it chose about the work and why, `memories.md` what a
+returning agent should keep in mind, and `project-log.md` what happened and
+when.
+
+- **Authority.** A change to how the project works is a reshape: it stays in
+  `shape.md`, with its `decision` entry in the project log. A decision about
+  the work lives only in `decisions.md`: a project document with its own
+  decisions section, such as a brief's `## Decisions`, points to
+  `decisions.md` instead of repeating it, and a `decision` log entry may cite
+  a `drNN`. What is still true goes in `memories.md`; what happened goes in
+  the log.
+- **Writing.** The orchestrator writes both files by hand, with no command, as
+  it writes `shape.md`, and saves them by the records rule above. A decision
+  is a `### drNN · <decision statement>` entry under `## Live`, numbered after
+  the highest `drNN` in the file, with its date, two to four lines of why and
+  its source: a dispatch ID such as `l07-d02`, a document, or the user. A
+  memory is one bullet under `## User preferences`, `## Gotchas` or
+  `## Context` with its date and source; correct or prune it in place when it
+  stops being true.
+- **Superseding.** When a decision replaces an earlier one, add the new entry
+  under `## Live` with `Supersedes: drNN`, then move the replaced entry intact
+  to `## Superseded` and add `Superseded by drNN, <date>` to it, naming the
+  new entry. `## Live` then holds only current decisions: on resume, read all
+  of it, and never act on a superseded entry.
+- **First use.** A project created before these files existed has neither.
+  Create each one only when it is absent, because the copy replaces an
+  existing file:
+
+  ```bash
+  for NAME in decisions memories; do
+    [ -e "<project-path>/$NAME.md" ] ||
+      oat template resolve "$NAME" --output "<project-path>/$NAME.md"
+  done
+  ```
+
+- **Linked projects.** A linked project starts with its own empty files and
+  never copies another project's decisions or memories.
 
 ## Orchestrator branch
 
@@ -155,10 +202,21 @@ happens:
 
 Each dispatch brief names the lane and dispatch IDs; the paths of this file
 and `shape.md`; the lane's worktree and branch, or the `paths:` it may change in
-the orchestrator's checkout; that the lane writes no project records; and the
-report shape. Copy the shape with
+the orchestrator's checkout; that the lane writes no project records; its lane
+notes path; and the report shape. Copy the shape with
 `oat template resolve lane-report --output <path>` and embed it whole, with the
 instruction to return it filled in as the lane's final message.
+
+A lane writes each decision it makes and each gotcha it hits, as it happens,
+to an uncommitted notes file in its own checkout,
+`.oat/analysis/lane-notes/<lane>-<dispatch>.md`, so they survive its own
+compaction, and builds its report's Decisions and Learnings from it. The brief
+names that path as authorized scratch, outside a same-checkout lane's
+`paths:`. It relies on the repository ignoring `.oat/**/analysis` (an
+`oat init` choice; `git check-ignore` tells you): where it is not ignored, the
+brief names a path outside the checkout instead, for example under `$TMPDIR`.
+A read-only delegate keeps no notes: its brief tells it to return its
+decisions and learnings in its final message.
 
 On resume, read `lanes.md` before acting. For each active lane with an open
 dispatch, check its task or thread handle and the forge (its PR, its branch
@@ -178,6 +236,10 @@ it:
    is never edited.
 3. Append the accepted proposed log entries with `oat project log append`,
    keyed by the dispatch ID (for example `--ref l01-d02`).
+4. Promote what you accept from its Decisions and Learnings: a decision as a
+   `decisions.md` entry, and a gotcha, user preference or still-true context
+   as a `memories.md` bullet, each citing the dispatch ID (for example
+   `l01-d02`) as its source.
 
 When a lane merges, or another event matters to the project's story, append a
 structural log entry (see Records commands) whose `--ref` is the update ID that
@@ -235,8 +297,8 @@ placement from `--worktree`: this checkout is `shared-worktree`, any other is
   and `implement-preflight` give the same report, and `review` also needs a
   `--scope` of phases those documents name.
 - `oat template resolve <name> --output <path>`: copy an OAT template as the
-  starting point for a project document, or `lane-report` for a dispatch
-  brief.
+  starting point for a project document, `lane-report` for a dispatch brief,
+  or `decisions` and `memories` when the file is absent.
 - `oat project push` and `oat project pull`: publish and fetch the records of
   a synced project.
 

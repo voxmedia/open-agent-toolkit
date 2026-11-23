@@ -3130,7 +3130,7 @@ function expectFreestyleGuidance(
   projectName: string,
 ): void {
   expect(agents.split('\n')[0]).toBe(
-    'Read `shape.md` in this folder before acting: it holds how this project runs.',
+    'Read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` in this folder before acting: they hold how this project runs, what it has decided and what to keep in mind.',
   );
   expect(agents).toContain(`# Freestyle project: ${projectName}`);
   expect(agents).not.toMatch(/^---$/m);

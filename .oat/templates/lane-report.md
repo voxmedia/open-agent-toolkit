@@ -8,6 +8,12 @@ reader who has only the project records. Replace each placeholder; write
 project records (the ledger, the project log, `shape.md` or the project's
 documents); this report is how your work reaches them.
 
+While you work, write each decision you make and each gotcha you hit to the
+lane notes file your brief names, as it happens, so they survive your own
+compaction; never commit it. Build the Decisions and Learnings sections below
+from it. A read-only lane keeps no notes file and writes its decisions and
+learnings straight into this report.
+
 **Lane:** {lane ID, such as l07}
 **Dispatch:** {dispatch ID, such as d02}
 **Turn:** {complete | partial | blocked}
