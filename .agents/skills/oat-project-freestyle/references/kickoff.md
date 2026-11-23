@@ -52,7 +52,10 @@ apply.
    shape or define a new one. Recommend adopting when the child will run the
    way the parent does.
    - **Adopt.** Find the parent's folder with `oat project list`; for a synced
-     parent not pulled here, run `oat project pull <parent>` first. Copy the
+     parent not pulled here, run `oat project pull <parent>` first. When the
+     parent is not listed in this checkout (a local parent lives only in its
+     own checkout), ask the user for the path to the parent's `shape.md`, or
+     define a new shape. Copy the
      parent's `shape.md` over this project's: a snapshot, not a live link, so
      a later reshape of the parent never changes this project silently. Copy
      only `shape.md`: this project keeps its own empty `decisions.md` and

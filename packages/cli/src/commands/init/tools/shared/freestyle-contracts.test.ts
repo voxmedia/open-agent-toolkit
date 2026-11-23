@@ -238,6 +238,9 @@ describe('freestyle orchestrator branch and linked projects guidance (p05)', () 
       "the first question is whether to adopt the parent's shape or define a new one",
     );
     expect(before).toContain('run `oat project pull <parent>` first');
+    expect(before).toContain(
+      "When the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape.",
+    );
     expect(before).toContain('reset `## Goal` to `_Not yet shaped._`');
     expect(before).toContain("never the parent's files");
     expect(before).toContain(
