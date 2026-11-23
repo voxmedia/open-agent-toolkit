@@ -1358,6 +1358,16 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; com
 - Files: `.oat/templates/lane-report.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
 - Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/template` exit 0 (34 files, 1364 passed, including the p07 bundle-tier dispatch-brief test against the rebuilt bundle). The p10 lane-notes contract test now also pins the lane-report record list with `decisions.md` and `memories.md`. Found at the phase self-review after p10-t04; the scratch lane's brief already named both files as records it must not write, so the run's evidence stands.
 
+### Task p10-t06: Fix p10 review findings (L1, L2)
+
+**Status:** completed
+**Commit:** dfe4e2a38c87f6a729d79cd6bfa5255149d72c91
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p10 review `freestyle-projects-p10-review-1` L1 (complexity: the AGENTS.md First use bullet repeated the skill's creation block with its own test) and L2 (the Linked projects bullet went beyond the brief's "starts with its own empty files").
+- Files: `.oat/templates/project-agents.md` (First use is one sentence naming `oat template resolve <decisions|memories> --output …`, only when absent, done by the skill on resume; Linked projects keeps only the brief's wording), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (drops the AGENTS.md block-run test, keeps the SKILL.md Step 2 block tests, pins the new sentence).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project` exit 0 (104 files, 3398 tests); `pnpm check`, `pnpm lint` and `pnpm type-check` exit 0.
+
 ---
 
 ## Phase p08: m02 docs and release
