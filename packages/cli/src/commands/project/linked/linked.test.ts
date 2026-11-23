@@ -142,6 +142,13 @@ describe('freestyle linked projects', () => {
           },
         });
 
+        // The parent's checkout keeps the parent as its active project.
+        expect(
+          JSON.parse(
+            await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+          ).activeProject,
+        ).toBe(parentPath);
+
         const childState = frontmatter(
           await readFile(
             join(projectDir(root, 'shared', 'child'), 'state.md'),

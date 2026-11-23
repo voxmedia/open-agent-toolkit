@@ -242,7 +242,9 @@ async function runProjectNew(
       projectName,
       mode: options.mode,
       force: options.force,
-      setActive: options.setActive,
+      // The parent's orchestrator creates a linked child but does not run it,
+      // so its active project stays the parent.
+      setActive: link ? false : options.setActive,
       refreshDashboard: options.dashboard,
       commit: options.commit,
       projectLog:
