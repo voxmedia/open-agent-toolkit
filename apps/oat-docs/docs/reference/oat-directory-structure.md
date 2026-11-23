@@ -375,7 +375,7 @@ Not all workflow modes require every artifact:
 - `lite`: single-phase plan + implementation (summary/documentation optional at closeout)
 - `brief`: Project Brief in `plan.md` + per-phase journal in `implementation.md` (`references/research/` scaffolded; no discovery, spec, or design)
 - `goal`: the brief artifact set, with a `## Milestones` table in `plan.md` and the milestone state, gate carriers, delivery registry and outcome audit in `state.md`
-- `freestyle`: `state.md` with no lifecycle fields, the OAT-owned project `AGENTS.md` (fixed rules; agents do not edit it) and `shape.md` (how the project runs, agreed with the user); no plan, journal or other document is required, and the project keeps the documents `shape.md` lists
+- `freestyle`: `state.md` with no lifecycle fields, the OAT-owned project `AGENTS.md` (fixed rules; agents do not edit it), `shape.md` (how the project runs, agreed with the user), `decisions.md` (decisions about the work) and `memories.md` (what a returning agent keeps in mind); no plan, journal or other document is required, and the project keeps the documents `shape.md` lists. On first use it also gains `linked-projects.md` (its linked projects), `lanes.md` (the lane ledger) and `lane-reports/` (filed lane reports); see [Running a Freestyle Project](../workflows/projects/execution/freestyle-projects.md)
 
 ## `.oat/repo/` structure
 

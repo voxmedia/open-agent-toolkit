@@ -457,6 +457,16 @@ scope.
 freestyle project, the skill resumes it. With a project of another mode active
 and no new project named, it stops: there is no promotion to or from freestyle.
 
+On every resume the skill first checks the orchestrator branch. An unclaimed
+project, such as a linked child or one created before OAT recorded the branch,
+is claimed with `oat project orchestrator set` once you confirm this session is
+its orchestrator; a session on another branch is a lane and stops. It then replaces an `AGENTS.md` that lacks a section of OAT's
+current template, creates a missing `decisions.md` or `memories.md` from OAT's
+template, and continues at the first topic not yet shaped. For a linked child,
+the first question is whether to adopt the parent's shape: adopting copies the
+parent's `shape.md` as a snapshot, with the goal reset, then asks once whether
+any adopted section should differ.
+
 **Example scenario:** You want to try page layouts without a plan or review
 gates. Freestyle creates the project, asks for the goal and its size first, then
 walks the remaining topics in order (brainstorm or discovery, documents,
@@ -464,20 +474,28 @@ execution, reviews, commits and merges, your involvement, reshape checkpoints),
 writing each answer into `shape.md` as you give it. Any topic can be deferred to
 a named moment, such as "before the first PR".
 
-**Expected output:** A project folder with `state.md`, an OAT-owned `AGENTS.md`
-that tells agents to read `shape.md` first, and a `shape.md` in which every
-topic holds an answer or a deferral. `oat project status` names both files.
+**Expected output:** A project folder with `state.md` (recording the
+orchestrator's branch), an OAT-owned `AGENTS.md` that tells agents to read
+`shape.md`, then the `## Live` section of `decisions.md`, then `memories.md`,
+the empty `decisions.md` and `memories.md` the orchestrator writes by hand,
+and a `shape.md` in which every topic holds an answer or a deferral.
+`oat project status` names `AGENTS.md` and `shape.md`.
 
 **What it does without asking:** It creates the project through
-`oat project new --mode freestyle`. In shared scope that commits the three
+`oat project new --mode freestyle`. In shared scope that commits the
 scaffolded files, in synced scope it publishes them to the project ref, and in
-local scope nothing is committed. After creation it commits and pushes nothing
+local scope nothing is committed. A claim, a refreshed `AGENTS.md` and newly
+created `decisions.md` and `memories.md` are saved with the other records, as
+`shape.md` agrees. After creation it commits and pushes nothing
 unless the commits topic in `shape.md` says so. It asks you to choose the scope,
 recommending the repository default, and each shaping decision.
 
 **Next step:** No lifecycle skill follows: agents work the project as `shape.md`
-says. To change how the project runs, run `oat-project-freestyle` again; it
-edits only the affected topics and records the change.
+says, using the orchestrator branch, lane ledger, decisions and memories and
+linked projects described in
+[Running a Freestyle Project](../execution/freestyle-projects.md). To change
+how the project runs, run `oat-project-freestyle` again; it edits only the
+affected topics and records the change.
 
 ## oat-project-import-plan
 

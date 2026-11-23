@@ -112,7 +112,9 @@ goal milestone routing.
 
 A freestyle project has no lifecycle route. `oat project status` prints
 `Mode: freestyle (no lifecycle workflow)` with the paths of the project's
-`AGENTS.md` and `shape.md`, and recommends `none`; `oat project list` shows
+`AGENTS.md` and `shape.md`, the orchestrator branch beside this checkout's
+branch, any lane whose branch head is past its last report, and any open
+linked project, and recommends `none`; `oat project list` shows
 `freestyle` in its PHASE column. `oat-project-next` invokes no skill and
 reports those two files, and `oat-project-progress` shows `Next: none`. The
 repository dashboard that `oat state refresh` writes shows the project's mode (and its lifecycle when
@@ -123,6 +125,9 @@ mode-independent resume step, `oat project open <project>`. To resume
 shaping, or to change how the project runs, use
 [oat-project-freestyle](../planning/starting-projects.md#oat-project-freestyle);
 otherwise the project's own `AGENTS.md` and `shape.md` say what happens next.
+A resuming orchestrator reads `shape.md`, then the `## Live` section of
+`decisions.md`, then `memories.md`, then `lanes.md` before acting; see
+[Running a Freestyle Project](freestyle-projects.md).
 
 ## What travels
 

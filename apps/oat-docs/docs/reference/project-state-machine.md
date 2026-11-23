@@ -64,7 +64,10 @@ The solid chain is the spec-driven progression. Lite, brief and goal enter at
 adds a milestone state machine inside implementation, described under
 [Goal progression](#goal-progression). A freestyle project has none of this
 state machine: its `state.md` carries no `oat_phase` or `oat_phase_status`,
-`oat project status` reports no phase, and the router recommends no skill.
+`oat project status` reports no phase, and the router recommends no skill. It
+does carry `oat_orchestrator_branch` and, for a linked project,
+`oat_linked_from`; see
+[Running a Freestyle Project](../workflows/projects/execution/freestyle-projects.md).
 
 ## Phase status values
 

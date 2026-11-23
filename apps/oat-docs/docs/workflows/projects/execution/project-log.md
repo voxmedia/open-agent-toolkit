@@ -220,6 +220,13 @@ this order, so the heading keeps its grammar:
 Merged PR #12 into the integration branch.
 ```
 
+`oat project linked ack <child>` writes one such entry on a freestyle parent:
+producer `oat-project-linked`, the child as `ref` and source project, and the
+time. A freestyle orchestrator keys the entries it appends from a lane report
+by the dispatch ID (`--ref l01-d02`), and a structural entry for a lane event
+such as a merge by the `lane set` update ID (see
+[Running a Freestyle Project](freestyle-projects.md)).
+
 `--time` takes no value; put an event's own time on another system, such as a
 forge merge time, in the body. With `--idempotency-key`, the key must appear in
 the `--body` text of a structural entry, not only in the event fields.

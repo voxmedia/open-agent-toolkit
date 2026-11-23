@@ -67,15 +67,15 @@ Mode-sensitive notes:
 - `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`, `brief`, `goal`, `freestyle`) for routing; a freestyle project routes to no skill.
 - `plan.md` remains the canonical execution artifact across all lifecycle modes. A freestyle project needs no `plan.md`.
 
-| Mode          | Core authored artifacts                                                                                                                | Optional artifacts                               |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `spec-driven` | `discovery.md`, `spec.md`, `design.md`, `plan.md`                                                                                      | -                                                |
-| `quick`       | `discovery.md`, `plan.md`                                                                                                              | Lightweight `design.md`, `spec.md`               |
-| `import`      | `references/imported-plan.md`, `plan.md`                                                                                               | `spec.md`, `design.md`                           |
-| `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and an explicit adaptive content shape | `summary.md` and documentation at closeout       |
-| `brief`       | `plan.md` as a Project Brief (phases with Intent and Exit evidence) and `implementation.md` as the per-phase journal                   | `references/research/`, `project-log.md`         |
-| `goal`        | The brief artifacts, with a `## Milestones` table in `plan.md` and the goal fields in `state.md`                                       | `references/research/`, `project-log.md`         |
-| `freestyle`   | `state.md` (no lifecycle fields), the OAT-owned project `AGENTS.md`, and `shape.md`                                                    | The documents `shape.md` lists, `project-log.md` |
+| Mode          | Core authored artifacts                                                                                                                | Optional artifacts                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `spec-driven` | `discovery.md`, `spec.md`, `design.md`, `plan.md`                                                                                      | -                                                                                                   |
+| `quick`       | `discovery.md`, `plan.md`                                                                                                              | Lightweight `design.md`, `spec.md`                                                                  |
+| `import`      | `references/imported-plan.md`, `plan.md`                                                                                               | `spec.md`, `design.md`                                                                              |
+| `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and an explicit adaptive content shape | `summary.md` and documentation at closeout                                                          |
+| `brief`       | `plan.md` as a Project Brief (phases with Intent and Exit evidence) and `implementation.md` as the per-phase journal                   | `references/research/`, `project-log.md`                                                            |
+| `goal`        | The brief artifacts, with a `## Milestones` table in `plan.md` and the goal fields in `state.md`                                       | `references/research/`, `project-log.md`                                                            |
+| `freestyle`   | `state.md` (no lifecycle fields), the OAT-owned project `AGENTS.md`, `shape.md`, `decisions.md` and `memories.md`                      | The documents `shape.md` lists, `linked-projects.md`, `lanes.md`, `lane-reports/`, `project-log.md` |
 
 Every Lite plan keeps Summary, Decisions, Assumptions, Out of Scope, and
 Validation Criteria. User-visible changes add numbered, testable Product
