@@ -1,0 +1,151 @@
+/*!
+Figure tokens and utilities for @open-agent-toolkit/docs-theme figures.
+
+Import this file from the app's Tailwind v4 stylesheet, after Fumadocs' CSS:
+  @import '@open-agent-toolkit/docs-theme/figures.css';
+
+Adapted from mdxcn (https://github.com/shadcn-labs/mdxcn), MIT licensed: the
+`graph-frame`, `graph-rule`, `graph-rule-y`, `scrollbar-graph` and
+`graph-scroll-x` utilities from its site stylesheet `app/globals.css`, and
+the graph token names from its registry items, as of 2026-11-20 (upstream main
+884eba5, committed 2026-11-11).
+
+OAT patches:
+- Only --graph-* and --color-graph-* custom properties are defined, so an
+  app's own shadcn tokens are never overridden.
+- The accent and muted tokens map onto Fumadocs theme colors (--color-fd-*);
+  the other tokens use the values from the approved spike, with .dark
+  overrides.
+
+Copyright (c) 2026 Keshav Bagaade
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+@theme inline {
+  --color-graph-accent: var(--graph-accent);
+  --color-graph-accent-2: var(--graph-accent-2);
+  --color-graph-accent-3: var(--graph-accent-3);
+  --color-graph-frame: var(--graph-frame);
+  --color-graph-muted: var(--graph-muted);
+  --color-graph-faint: var(--graph-faint);
+}
+
+:root {
+  --graph-accent: var(--color-fd-primary);
+  --graph-accent-2: oklch(0.48 0.18 259);
+  --graph-accent-3: oklch(0.5 0.14 248);
+  --graph-frame: oklch(0.74 0.01 250);
+  --graph-muted: var(--color-fd-muted-foreground);
+  --graph-faint: oklch(0.82 0 0);
+}
+
+.dark {
+  --graph-accent-2: oklch(0.68 0.18 259);
+  --graph-accent-3: oklch(0.72 0.15 248);
+  --graph-frame: oklch(0.46 0.012 260);
+  --graph-faint: oklch(0.28 0 0);
+}
+
+@utility graph-frame {
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--graph-frame) 0 2px,
+      transparent 2px 7px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--graph-frame) 0 2px,
+      transparent 2px 7px
+    ),
+    repeating-linear-gradient(
+      to right,
+      var(--graph-frame) 0 2px,
+      transparent 2px 7px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--graph-frame) 0 2px,
+      transparent 2px 7px
+    );
+  background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+  background-position:
+    0 0,
+    100% 0,
+    0 100%,
+    0 0;
+  background-size:
+    100% 1px,
+    1px 100%,
+    100% 1px,
+    1px 100%;
+}
+
+@utility graph-rule {
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--graph-frame) 0 2px,
+    transparent 2px 7px
+  );
+}
+
+@utility graph-rule-y {
+  width: 1px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--graph-frame) 0 2px,
+    transparent 2px 7px
+  );
+}
+
+@utility scrollbar-graph {
+  scrollbar-width: thin;
+  scrollbar-color: var(--graph-frame) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--graph-frame);
+    border-radius: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: var(--graph-muted);
+    }
+  }
+}
+
+@utility graph-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

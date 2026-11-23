@@ -100,7 +100,7 @@
   - [Contributing](docs/contributing/index.md) — Contributor-facing guide for working on OAT code, docs, markdown patterns, and skill authoring.
   - [Contributing Code](docs/contributing/code.md) — Contributor setup, repo structure, quality gates, and pull request expectations for OAT changes.
   - [Contributing to OAT Docs](docs/contributing/documentation.md) — Docs authoring contract for OAT: navigation, local workflow, and contributor guidance.
-  - [Markdown Features](docs/contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, and code blocks.
+  - [Markdown Features](docs/contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, code blocks and figure fences.
   - [Writing Skills](docs/contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.
   - [CLI Design Principles](docs/contributing/design-principles.md) — Cross-cutting design rules for CLI commands, UX, logging, safety, and verification.
   - [Commit Conventions](docs/contributing/commit-conventions.md) — Commit message patterns and traceability rules for cross-artifact linkage.

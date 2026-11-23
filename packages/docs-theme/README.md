@@ -42,6 +42,40 @@ export function Page({ toc, chart }) {
 }
 ```
 
+### Figure fences
+
+The `docs-*` figure fences from `@open-agent-toolkit/docs-transforms` (`docs-steps`, `docs-tree`, `docs-timeline`, `docs-terminal`, `docs-decision`, `docs-check`, `docs-compare` and `docs-annotate`) render through this package's static figure components. Wrap your MDX component map in `withDocsFigures`, and import `figures.css` from your Tailwind stylesheet after the Fumadocs CSS:
+
+```tsx
+import {
+  Mermaid,
+  Tab,
+  Tabs,
+  withDocsFigures,
+  ZoomImage,
+} from '@open-agent-toolkit/docs-theme';
+import defaultComponents from 'fumadocs-ui/mdx';
+
+const mdxComponents = withDocsFigures({
+  ...defaultComponents,
+  Mermaid,
+  Tab,
+  Tabs,
+  img: ZoomImage,
+});
+```
+
+```css
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/black.css';
+@import 'fumadocs-ui/css/preset.css';
+@import '@open-agent-toolkit/docs-theme/figures.css';
+
+@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';
+```
+
+`withDocsFigures` adds the eight `Docs*` components and marks any host tag the map overrides (`p`, `li`, `pre`, `table`, `a`, …), so figures still read their Markdown children; a `Docs*` entry already in the map is kept. Without it, the first page that uses a figure fails with MDX's "Expected component `DocsTree` to be defined" error. `figures.css` defines only `--graph-*` and `--color-graph-*` tokens, mapping the accent and muted tokens onto `--color-fd-*`, plus the frame utilities, so an app's own tokens are never overridden. The `@source` line generates the components' Tailwind classes. The figures are server components with no animation, so they render fully visible without JavaScript.
+
 ## Exports
 
 - `DocsLayout`
@@ -49,6 +83,13 @@ export function Page({ toc, chart }) {
 - `Mermaid`
 - `Tab`
 - `Tabs`
+- `withDocsFigures`: adds the figure components to an MDX component map.
+- `DocsSteps`, `DocsTree`, `DocsTimeline`, `DocsTerminal`, `DocsDecision`,
+  `DocsCheck`, `DocsCompare` and `DocsAnnotate`: the figure components, with
+  their `Docs*Props` types, and `DOCS_FIGURE_COMPONENTS`, their names.
+- `figures.css` (`@open-agent-toolkit/docs-theme/figures.css`): figure tokens
+  and utilities. The figure components are vendored from
+  [mdxcn](https://mdxcn.dev) (MIT); each module carries the full notice.
 - `ZoomImage`: Markdown image renderer. Map it as `img` in your MDX
   components.
   - SVG images open in a full-screen view that renders them at least 900px

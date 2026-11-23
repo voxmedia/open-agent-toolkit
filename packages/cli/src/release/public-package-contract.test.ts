@@ -57,6 +57,10 @@ const cliTsconfigPath = fileURLToPath(
 const bundleAssetsScriptPath = fileURLToPath(
   new URL('../../scripts/bundle-assets.sh', import.meta.url),
 );
+// tsc keeps this `/*!` header verbatim in `dist/figures/graph-frame.js`.
+const docsThemeGraphFrameSourcePath = fileURLToPath(
+  new URL('../../../docs-theme/src/figures/graph-frame.tsx', import.meta.url),
+);
 const execFileAsync = promisify(execFile);
 
 async function readJson(path: string): Promise<Record<string, unknown>> {
@@ -131,6 +135,9 @@ describe('getPublicPackageContracts', () => {
               '**Source:** https://github.com/nicobailon/visual-explainer',
               '**Version referenced:** 0.8.1',
               expect.stringContaining('Copyright (c) 2025 Nico Bailon'),
+              '**Source:** https://github.com/shadcn-labs/mdxcn',
+              '**Version referenced:** `main` at `884eba5` (committed 2026-11-11, retrieved 2026-11-20)',
+              expect.stringContaining('Copyright (c) 2026 Keshav Bagaade'),
             ]),
           }),
           {
@@ -181,8 +188,17 @@ describe('getPublicPackageContracts', () => {
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
           'dist/index.d.ts',
+          'figures.css',
           'README.md',
         ]),
+        requiredPackedTextFiles: [
+          {
+            path: 'dist/figures/graph-frame.js',
+            requiredContents: [
+              expect.stringContaining('Copyright (c) 2026 Keshav Bagaade'),
+            ],
+          },
+        ],
       }),
       expect.objectContaining({
         publicName: '@open-agent-toolkit/docs-transforms',
@@ -377,7 +393,37 @@ describe('getPublicPackageContracts', () => {
         },
         cliContract,
       ),
-    ).toHaveLength(10);
+    ).toHaveLength(13);
+  });
+
+  it('requires the full mdxcn notice in the packed docs-theme figure module', async () => {
+    const docsThemeContract = getPublicPackageContracts().find(
+      (contract) => contract.publicName === '@open-agent-toolkit/docs-theme',
+    )!;
+    const vendored = await readFile(docsThemeGraphFrameSourcePath, 'utf8');
+
+    expect(
+      findMissingPackedTextContents(
+        { 'dist/figures/graph-frame.js': vendored },
+        docsThemeContract,
+      ),
+    ).toEqual([]);
+    // A header that keeps the license text but drops the copyright line, or a
+    // pack without the module, is rejected.
+    expect(
+      findMissingPackedTextContents(
+        {
+          'dist/figures/graph-frame.js': vendored.replace(
+            'Copyright (c) 2026 Keshav Bagaade',
+            '',
+          ),
+        },
+        docsThemeContract,
+      ),
+    ).toHaveLength(1);
+    expect(findMissingPackedTextContents({}, docsThemeContract)).toHaveLength(
+      1,
+    );
   });
 
   it('reports workspace protocol dependency specs from packed package metadata', () => {
@@ -522,6 +568,7 @@ describe('getPublicPackageContracts', () => {
     const packageDir = await mkdtemp(join(tmpdir(), 'oat-release-validate-'));
     await mkdir(join(packageDir, 'dist'), { recursive: true });
     await writeFile(join(packageDir, 'dist', 'index.js'), '', 'utf8');
+    await writeFile(join(packageDir, 'figures.css'), '', 'utf8');
     await writeFile(join(packageDir, 'README.md'), '', 'utf8');
 
     await expect(
@@ -677,7 +724,13 @@ describe('getPublicPackageContracts', () => {
       expect(packageJson.bugs).toEqual({
         url: 'https://github.com/voxmedia/open-agent-toolkit/issues',
       });
-      expect(packageJson.files).toEqual(['dist', 'README.md']);
+      const isDocsTheme =
+        contract.publicName === '@open-agent-toolkit/docs-theme';
+      expect(packageJson.files).toEqual(
+        isDocsTheme
+          ? ['dist', 'figures.css', 'README.md']
+          : ['dist', 'README.md'],
+      );
       expect(packageJson.publishConfig).toEqual({ access: 'public' });
       expect(packageJson.main).toBe('dist/index.js');
       expect(packageJson.types).toBe('dist/index.d.ts');
@@ -694,6 +747,7 @@ describe('getPublicPackageContracts', () => {
               },
             }
           : {}),
+        ...(isDocsTheme ? { './figures.css': './figures.css' } : {}),
       });
     }
 

@@ -21,6 +21,7 @@ export const DOCS_CHECK_RULES = [
   'diagram-pairs',
   'diagram-freshness',
   'image-alt',
+  'docs-fences',
   'provenance',
 ] as const;
 export type DocsCheckRule = (typeof DOCS_CHECK_RULES)[number];

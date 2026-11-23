@@ -163,3 +163,11 @@ gdf-p01-flipped-controls: widening a path allowlist in delivery/evidence.ts flip
 **Recorded:** 2026-11-09T04:04:30Z
 
 gdf-p02-weak-fixture: disabling each refusal clause one at a time exposed a fixture that refused for a different reason than the one it was named for. When proving a refusal can fail, check which refusal the fixture actually trips, not only that it refuses.
+
+### 2026-11-22 · general · friction · Gate runs under heavy machine load
+
+**Category:** environment-limited
+**Source:** mdxcn-p04-load-timeouts
+**Recorded:** 2026-11-22T01:49:12Z
+
+mdxcn-p04-load-timeouts: at load average 38-80 from unrelated workloads, forced test:evidence timed out in CLI acceptance suites that spawn tsx (configured-gate, literals, exact-path-commit) though the branch touched none of them; isolated reruns at lower load passed 17/17. Rerun timed-out suites in isolation before treating them as regressions.

@@ -2,6 +2,7 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 
+import { remarkDocsFences } from './remark-docs-fences.js';
 import { remarkTabs } from './remark-tabs.js';
 
 interface MdxJsxAttribute {
@@ -20,7 +21,8 @@ interface JsxNode {
 async function transformTabs(markdown: string) {
   const processor = unified().use(remarkParse).use(remarkTabs);
   const tree = processor.parse(markdown);
-  const result = await processor.run(tree);
+  // Pass the source, as fumadocs-mdx does: tab columns are read from it.
+  const result = await processor.run(tree, markdown);
   return result;
 }
 
@@ -220,5 +222,127 @@ describe('remarkTabs', () => {
     );
 
     expect(tabsNodes).toHaveLength(0);
+  });
+
+  it('reports authored positions for content under one and two tab levels', async () => {
+    const md = [
+      '# Page',
+      '',
+      '=== "Outer"',
+      '',
+      '    === "Inner"',
+      '',
+      '        - item **bold**',
+      '',
+      '    Outer text',
+    ].join('\n');
+
+    const tree = await transformTabs(md);
+    const position = (type: string) =>
+      (
+        findNodes(tree, type)[0] as unknown as {
+          position: {
+            start: { line: number; column: number; offset?: number };
+          };
+        }
+      ).position.start;
+
+    // Lines and columns are the authored ones under both one and two tab
+    // levels: each tab body starts four columns in from its code block, and
+    // nested tabs compose because the inner block is relocated first.
+    // Two levels of tab indentation: authored at line 7, column 9.
+    expect(position('listItem')).toEqual({ line: 7, column: 9 });
+    expect(position('strong')).toEqual({ line: 7, column: 16 });
+    // One level: authored at line 9, column 5.
+    expect(
+      findNodes(tree, 'paragraph')
+        .map(
+          (n) =>
+            (n as unknown as { position: { start: unknown } }).position.start,
+        )
+        .at(-1),
+    ).toEqual({ line: 9, column: 5 });
+  });
+
+  it('reports authored columns for tab and mixed indentation', async () => {
+    // A tab advances to the next 4-column stop but is one source character,
+    // so the column comes from the characters each line's prefix consumed.
+    const startOf = async (md: string, type: string) =>
+      (
+        findNodes(await transformTabs(md), type)[0] as unknown as {
+          position: { start: { line: number; column: number } };
+        }
+      ).position.start;
+
+    // `\talpha`: one tab consumes the indent; alpha is authored at column 2.
+    expect(await startOf('=== "T"\n\n\talpha', 'paragraph')).toEqual({
+      line: 3,
+      column: 2,
+    });
+    // `  \talpha`: two spaces and a tab; alpha is authored at column 4.
+    expect(await startOf('=== "T"\n\n  \talpha', 'paragraph')).toEqual({
+      line: 3,
+      column: 4,
+    });
+    // Two tab levels indented with tabs: alpha is authored at column 3.
+    expect(
+      await startOf('=== "Outer"\n\n\t=== "Inner"\n\n\t\talpha', 'text'),
+    ).toEqual({ line: 5, column: 3 });
+  });
+
+  it('measures tab-content indentation from the code block start in a blockquote', async () => {
+    // `>     alpha`: the blockquote prefix `> ` ends at column 2, the code
+    // block starts at column 3 and its four-space indent puts alpha at 7.
+    const md = ['> === "T"', '>', '>     alpha'].join('\n');
+    const tree = await transformTabs(md);
+    const paragraph = findNodes(tree, 'paragraph').find(
+      (n) =>
+        (n as unknown as { children: { value?: string }[] }).children[0]
+          ?.value === 'alpha',
+    ) as unknown as { position: { start: { line: number; column: number } } };
+
+    expect(paragraph.position.start).toEqual({ line: 3, column: 7 });
+  });
+
+  it('relocates each line of one tab body by its own indentation', async () => {
+    const tree = await transformTabs(
+      ['=== "T"', '', '    alpha', '', '\tbeta'].join('\n'),
+    );
+    const starts = findNodes(tree, 'paragraph').map(
+      (n) =>
+        (
+          n as unknown as {
+            position: { start: { line: number; column: number } };
+          }
+        ).position.start,
+    );
+
+    expect(starts).toEqual([
+      { line: 3, column: 5 },
+      { line: 5, column: 2 },
+    ]);
+  });
+
+  it('reports the authored column for an unknown docs fence inside a tab', async () => {
+    const md = [
+      '=== "Outer"',
+      '',
+      '    === "Inner"',
+      '',
+      '        ```docs-nope',
+      '        - x',
+      '        ```',
+    ].join('\n');
+    const processor = unified()
+      .use(remarkParse)
+      .use(remarkTabs)
+      .use(remarkDocsFences);
+    const error = await processor.run(processor.parse(md), md).then(
+      () => undefined,
+      (reason: unknown) => reason as { line?: number; column?: number },
+    );
+
+    // The fence is authored at line 5, column 9, two tab levels deep.
+    expect(error).toMatchObject({ line: 5, column: 9 });
   });
 });

@@ -33,6 +33,7 @@
     "packages/cli/src/commands/project/log/__tests__/fixtures/**",
     "packages/cli/src/commands/review/__tests__/fixtures/**",
     "packages/cli/src/commands/gate/__fixtures__/convergence/**",
+    "packages/docs-theme/src/figures/__fixtures__/**",
     // Explainer-kit run packages are immutable, hash-attested artifacts; a
     // formatter rewrite on commit breaks their durability attestation.
     ".oat/**/explainers/**",

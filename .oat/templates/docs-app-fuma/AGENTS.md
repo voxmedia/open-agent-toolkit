@@ -22,6 +22,10 @@ Edit `docs/**/*.md` and their Contents, not generated app-root `index.md`, `.sou
 
 Mermaid is source. Important/mobile diagrams get matching light/dark SVG pairs, updated with the Mermaid in the same commit. Require meaningful alt text (about155 characters maximum), `role="img"`, `<title>`, `<desc>` and `aria-labelledby`, readable labels and useful viewBox. Inspect rendered diagrams in both themes; transforms do not validate diagram correctness. See the contributor contract for framework-specific asset paths and image behavior.
 
+## When you add a figure
+
+A `docs-*` figure fence fits content with a shape a reader should see at a glance: ordered steps with a current position (`docs-steps`), a file or ownership tree (`docs-tree`), states over time (`docs-timeline`), a shell session (`docs-terminal`), a decision with its options (`docs-decision`), a checklist (`docs-check`), a few options side by side (`docs-compare`) or code with numbered notes (`docs-annotate`). Keep a plain list when order and state do not matter, a table when readers look values up across many rows or columns, and Mermaid when the content has edges, branches or cycles. Write every important state in words as well as bold or italic, because agents read the fence source. Figure rows are plain text, so put links in a loose step body or a following paragraph. Never nest a `docs-*` fence inside a figure. Run the app’s docs:check script, which rejects unknown `docs-*` names. Grammar and examples are in the contributor contract.
+
 ## Install-root compatibility
 
 Before installing, follow the toolchain guide's exact `mdast-util-to-markdown: 2.1.2` policy. A new independent app gets app-root `pnpm-workspace.yaml`; a workspace member must use the existing root policy with explicit approval. Preserve settings/conflicts and never create a member-local workspace boundary. `--no-root-patch` changes only root-script handling. Verify actual resolution and keep the policy/lockfile; do not remove bold/italic content to avoid the Fumadocs handler defect.
