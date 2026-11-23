@@ -185,6 +185,7 @@ For each comment:
 - classify severity using 4-tier model.
 - use review state (e.g., `CHANGES_REQUESTED`) as a hint, not a hard override.
 - assign stable IDs by severity bucket (`C`, `H`, `M`, `L`).
+- a review body that only describes a pre-existing defect the change did not cause is not a finding: relay it with the overview and a fix-now-or-leave recommendation, and give it no ID, severity, count or disposition.
 
 ### Step 4: Present Findings Overview and Triage
 

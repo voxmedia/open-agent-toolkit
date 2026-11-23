@@ -280,7 +280,7 @@ It never changes the ledger and blocks no lifecycle step.
 ## Current policy
 
 - What a code review raises: what the change broke, made materially worse, or promised and did not deliver, with its credible consequence. An edge case that is not likely to occur is not a finding, unless its consequence is a security hole, data loss or a broken assurance contract. Reviewers also flag machinery, defensive code and tests the change added with neither a requirement nor a credible failure behind them, and recommend the smallest fix.
-- Pre-existing defects: a defect the change did not cause or worsen is a finding only when it stops the change from delivering what it promised, or is a security hole, data loss or a broken assurance contract. Otherwise the reviewer may describe it in the review summary, when it is likely to bite or plainly cheapest to fix now. The local receive skills (`oat-project-review-receive` and `oat-review-receive`) relay that note with a fix-now-or-leave recommendation; it has no severity and never blocks.
+- Pre-existing defects: a defect the change did not cause or worsen is a finding only when it stops the change from delivering what it promised, or is a security hole, data loss or a broken assurance contract. Otherwise the reviewer may describe it in the review summary, when it is likely to bite or plainly cheapest to fix now. Receive relays that note with a fix-now-or-leave recommendation; it has no severity and never blocks.
 - Critical/High: address before pass.
 - Medium: address by default; defer only with explicit approval and recorded rationale/disposition.
 - Low: **default to `convert`** (fix inline), or reject it when it is not worth its cost (an unlikely edge case, or a test for one).

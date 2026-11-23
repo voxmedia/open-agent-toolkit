@@ -133,6 +133,7 @@ For each item in JSON:
 - Use comment body + context to assign severity (`critical`, `high`, `medium`, `low`).
 - Treat `CHANGES_REQUESTED` review state as a strong hint toward `high+`, not an automatic override.
 - Normalize into the shared findings model.
+- A review body that only describes a pre-existing defect the change did not cause is not a finding: relay it with the overview and a fix-now-or-leave recommendation, and give it no ID, severity, count or disposition.
 
 ID assignment per severity bucket:
 
