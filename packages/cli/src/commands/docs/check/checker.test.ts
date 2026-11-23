@@ -1995,3 +1995,69 @@ describe('explicit targets that differ from the configured documentation root', 
     expect(notices).toEqual([]);
   });
 });
+
+describe('docs-* figure fence names', () => {
+  const known =
+    'docs-steps, docs-tree, docs-timeline, docs-terminal, docs-decision, docs-check, docs-compare, docs-annotate';
+  const fences = (lang: string) =>
+    page(
+      `# Guide\n\nA useful reader page with a clear explanation of its intended purpose.\n\n\`\`\`docs-tree\n- src/\n\`\`\`\n\n=== "Steps"\n\n    \`\`\`${lang}\n    1. Install\n    \`\`\`\n`,
+    );
+
+  it('reports an unknown docs-* fence in a Fumadocs app with its line and the known names', async () => {
+    const f = await fixture('fumadocs');
+    await f.write('guide.md', fences('docs-nope'));
+    expect(await f.run('docs-fences')).toEqual([
+      {
+        ruleId: 'docs-fences',
+        severity: 'error',
+        path: 'guide.md',
+        // The authored line of the fence inside the tab (frontmatter included).
+        line: 16,
+        message: `Unknown docs fence \`docs-nope\`. Known docs fences: ${known}.`,
+      },
+    ]);
+    expect(
+      (await f.run()).filter((finding) => finding.ruleId === 'docs-fences'),
+    ).toHaveLength(1);
+  });
+
+  it('accepts every known docs-* fence', async () => {
+    const f = await fixture('fumadocs');
+    await f.write(
+      'guide.md',
+      page(
+        `# Guide\n\nA useful reader page with a clear explanation of its intended purpose.\n\n${known
+          .split(', ')
+          .map((name) => `\`\`\`${name}\n- item\n\`\`\``)
+          .join('\n\n')}\n`,
+      ),
+    );
+    expect(await f.run('docs-fences')).toEqual([]);
+  });
+
+  it.each(['mkdocs', 'markdown'] as const)(
+    'leaves docs-* fences unchecked in a %s app, where they are plain code',
+    async (framework) => {
+      const f = await fixture(framework);
+      await f.write('guide.md', fences('docs-nope'));
+      expect(await f.run('docs-fences')).toEqual([]);
+      expect(
+        (await f.run()).filter((finding) => finding.ruleId === 'docs-fences'),
+      ).toEqual([]);
+    },
+  );
+
+  it('runs only when selected by --rules', async () => {
+    const f = await fixture('fumadocs');
+    await f.write('guide.md', fences('docs-nope'));
+    expect(
+      (await f.run('docs-fences')).map((finding) => finding.ruleId),
+    ).toEqual(['docs-fences']);
+    expect(
+      (await f.run('mermaid', 'links')).filter(
+        (finding) => finding.ruleId === 'docs-fences',
+      ),
+    ).toEqual([]);
+  });
+});

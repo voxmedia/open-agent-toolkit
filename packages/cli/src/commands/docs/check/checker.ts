@@ -10,6 +10,7 @@ import {
 import type { DocsCheckResult, DocsFinding, Report } from './check.types';
 import { checkCommands } from './commands';
 import { checkDiagrams } from './diagrams';
+import { checkDocsFences } from './docs-fences';
 import { readPage, readerFiles, resolveCheckTarget } from './files';
 import type { ParsedPage } from './markdown';
 import { checkNavigation } from './navigation';
@@ -103,6 +104,8 @@ export async function checkDocs(options: {
     )
   )
     await checkDiagrams(target, pages, report);
+  if (!options.rules?.length || options.rules.includes('docs-fences'))
+    checkDocsFences(target, pages, report);
   findings.sort((a, b) =>
     a.path < b.path
       ? -1

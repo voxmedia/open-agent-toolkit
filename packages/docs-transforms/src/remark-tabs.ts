@@ -1,8 +1,57 @@
 import type { Code, Paragraph, Root, RootContent } from 'mdast';
-import remarkGfm from 'remark-gfm';
-import remarkParse from 'remark-parse';
 import type { Plugin } from 'unified';
-import { unified } from 'unified';
+
+import { reparseMarkdown } from './reparse.js';
+
+/**
+ * Virtual columns an indented code block strips from each line of tab
+ * content. A tab advances to the next multiple of this width, but it is one
+ * source character, so authored columns come from `prefixLength`.
+ */
+const INDENTED_CODE_WIDTH = 4;
+
+/**
+ * Source characters the indented-code prefix consumed on one line: spaces
+ * and tabs up to `INDENTED_CODE_WIDTH` virtual columns, measured from the
+ * code block's start column. Known limitation: a tab character split across
+ * a container prefix (list item or blockquote) is not modeled.
+ */
+function prefixLength(line: string): number {
+  let columns = 0;
+  let length = 0;
+  while (columns < INDENTED_CODE_WIDTH && length < line.length) {
+    const char = line[length];
+    if (char === ' ') columns += 1;
+    else if (char === '\t')
+      columns += INDENTED_CODE_WIDTH - (columns % INDENTED_CODE_WIDTH);
+    else break;
+    length += 1;
+  }
+  return length;
+}
+
+/**
+ * Authored start column of each line of an indented code block's value,
+ * read from the source the block was parsed from. Nested tabs compose: their
+ * source is the outer tab's value, which the outer origin relocates later.
+ */
+function lineColumnsOf(
+  codeBlock: Code,
+  source: string | undefined,
+): number[] | undefined {
+  const start = codeBlock.position?.start;
+  if (!start || source === undefined) return undefined;
+  const lines = source.split('\n');
+  return codeBlock.value
+    .split('\n')
+    .map(
+      (_, index) =>
+        start.column +
+        prefixLength(
+          (lines[start.line - 1 + index] ?? '').slice(start.column - 1),
+        ),
+    );
+}
 
 const TAB_MARKER_RE = /^===\s+"(.+)"$/;
 
@@ -18,28 +67,6 @@ function extractTabTitle(node: RootContent): string | null {
   if (!firstChild || firstChild.type !== 'text') return null;
   const match = TAB_MARKER_RE.exec(firstChild.value);
   return match?.[1] ?? null;
-}
-
-function reparseContent(value: string, block?: Code): RootContent[] {
-  const tree = unified().use(remarkParse).use(remarkGfm).parse(value);
-  transformChildren(tree, value);
-  // Reparsed tab content still reports authored physical source locations.
-  const relocate = (node: {
-    position?: Code['position'];
-    children?: unknown[];
-  }): void => {
-    if (node.position && block?.position) {
-      for (const point of [node.position.start, node.position.end]) {
-        point.line += block.position.start.line - 1;
-        point.column += block.position.start.column - 1;
-        // Deindentation changes offsets; line/column remain authoritative.
-        delete point.offset;
-      }
-    }
-    node.children?.forEach((child) => relocate(child as typeof node));
-  };
-  tree.children.forEach(relocate);
-  return tree.children;
 }
 
 function createTabsElement(
@@ -108,8 +135,25 @@ function transformChildren(
         )
       ) {
         const codeBlock = tree.children[i] as Code;
-        // Re-parse the code block value as markdown to restore original structure
-        content.push(...reparseContent(codeBlock.value, codeBlock));
+        const blockStart = codeBlock.position?.start;
+        // Re-parse the code block value as markdown to restore original
+        // structure. Each value line is relocated by the characters its own
+        // indented-code prefix consumed, so tab content reports authored
+        // lines and columns for space, tab and mixed indentation. Without
+        // the source, space indentation is assumed.
+        content.push(
+          ...reparseMarkdown(
+            codeBlock.value,
+            blockStart
+              ? {
+                  line: blockStart.line,
+                  column: blockStart.column + INDENTED_CODE_WIDTH,
+                  lineColumns: lineColumnsOf(codeBlock, source),
+                }
+              : undefined,
+            transformChildren,
+          ),
+        );
         i++;
       }
 

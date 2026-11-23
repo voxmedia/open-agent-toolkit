@@ -192,8 +192,8 @@ OAT. They matter only if you are working on OAT itself.
 ## Docs shared packages
 
 - `packages/docs-config/` — config factories for Fumadocs (`createDocsConfig`, `createSourceConfig`, `createSearchConfig`)
-- `packages/docs-theme/` — shared React components for Fumadocs apps (`DocsLayout`, `DocsPage`, `Mermaid`)
-- `packages/docs-transforms/` — remark plugins for docs processing (`remarkTabs`, `remarkMermaid`)
+- `packages/docs-theme/` — shared React components for Fumadocs apps (`DocsLayout`, `DocsPage`, `Mermaid`, the `docs-*` figure components with `withDocsFigures`, and `figures.css`)
+- `packages/docs-transforms/` — remark plugins for docs processing (`remarkTabs`, `remarkDocsFences`, `remarkLinks`, `remarkMermaid`)
 
 ## Docs scaffold templates
 

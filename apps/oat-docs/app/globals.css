@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/black.css';
 @import 'fumadocs-ui/css/preset.css';
+@import '@open-agent-toolkit/docs-theme/figures.css';
 
 @source '../node_modules/fumadocs-ui/dist/**/*.js';
 @source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';

@@ -3,6 +3,7 @@ import {
   Mermaid,
   Tab,
   Tabs,
+  withDocsFigures,
   ZoomImage,
 } from '@open-agent-toolkit/docs-theme';
 import defaultComponents from 'fumadocs-ui/mdx';
@@ -11,13 +12,15 @@ import { notFound } from 'next/navigation';
 
 import { source } from '@/lib/source';
 
-const mdxComponents = {
+// withDocsFigures adds the docs-* figure components and keeps figures
+// reading their Markdown children through the overridden host tags.
+const mdxComponents = withDocsFigures({
   ...defaultComponents,
   Mermaid,
   Tab,
   Tabs,
   img: ZoomImage,
-};
+});
 
 type PageProps = {
   params: Promise<{ slug?: string[] }>;

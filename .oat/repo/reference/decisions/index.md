@@ -10,6 +10,12 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261122-contributing-guidance-covers   | 2026-11-22 | accepted   | Contributing guidance covers every docs capability                                                     | -       |
+| DR-261122-docs-prefixed-figure           | 2026-11-22 | accepted   | Docs-prefixed figure components via withDocsFigures                                                    | -       |
+| DR-261122-figures-as-docs-prefixed       | 2026-11-22 | accepted   | Figures as docs-prefixed fenced code blocks                                                            | -       |
+| DR-261122-github-alerts-stay-on-remark   | 2026-11-22 | accepted   | GitHub alerts stay on remark-github-blockquote-alert                                                   | -       |
+| DR-261122-invalid-docs-fences-fail       | 2026-11-22 | accepted   | Invalid docs fences fail the build                                                                     | -       |
+| DR-261122-static-docs-figures-without    | 2026-11-22 | accepted   | Static docs figures without motion                                                                     | -       |
 | DR-261111-check-manual-lifecycle-state   | 2026-11-11 | accepted   | Check manual lifecycle state parsing                                                                   | -       |
 | DR-261111-reuse-authority-for-merged     | 2026-11-11 | accepted   | Reuse authority for merged completion                                                                  | -       |
 | DR-261108-finding-classes-recorded-at    | 2026-11-08 | accepted   | Finding classes recorded at receive                                                                    | -       |

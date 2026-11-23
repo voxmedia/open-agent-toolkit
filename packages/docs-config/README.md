@@ -53,6 +53,8 @@ The `docs` and `meta` options apply shared `documentation.nonReaderPaths` only w
 
 Link rewriting uses the explicit app root's `docs` directory (or `./docs` from the working directory when omitted) and discovers readers with the same collection patterns and tinyglobby engine. Both source and target index collisions follow filtered reader membership, including `.mdx` readers. The inventory refreshes lazily for each transformed document, so adding or removing a reader does not require rebuilding the source configuration. OAT adds no error fallback; traversal follows the emitter's tinyglobby semantics, including skipped unreadable directories.
 
+The returned `remarkPlugins` also turn `docs-*` figure fences into `Docs*` elements, which render only when the app wraps its MDX components in `withDocsFigures` and imports `figures.css` from `@open-agent-toolkit/docs-theme` (see its [figure fences](../docs-theme/README.md#figure-fences) section).
+
 The metadata schema preserves Fumadocs fields and accepts boolean roots and nonempty trimmed string inputs. String inputs normalize to `true` for the pinned generated collection types; authored metadata files remain unchanged. Booleans, including `false`, retain their values. Use both source options so collection validation and rendering agree with navigation. The scaffold pins MkDocs 1.4.2 separately; that version has no configurable rendering exclusion, so its non-readers leave nav/manifest but still render as routes.
 
 ## Agent Markdown endpoints

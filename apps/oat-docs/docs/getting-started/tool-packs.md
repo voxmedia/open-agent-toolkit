@@ -672,7 +672,7 @@ An unknown name keeps the existing `Tool '<name>' not found.` wording and prints
 no provider-view section, so a skill that exists but was never distributed is
 never confused with a name the repository does not have.
 
-```text
+```docs-terminal title="oat tools info"
 $ oat tools info probe-skill --scope project
 probe-skill
   Type:        skill
