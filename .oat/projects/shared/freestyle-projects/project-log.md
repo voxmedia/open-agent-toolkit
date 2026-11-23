@@ -205,6 +205,12 @@ Observation: at the p10 review fix the root ran commit-paths piped to tail insid
 Impact: two journal lines named the wrong commit and needed an appended correction and a head re-advance (f9edb6c1b, f4be7d8a9).
 Recommendation: run each commit-paths call on its own or under set -e without a trailing pipe, and keep commit headers under 100 characters (commitlint header-max-length).
 
+### 2026-11-23 · structural · oat-project-implement · p08
+
+**Subject:** p08
+
+p08 accepted: review freestyle-projects-p08-review-1 passed (0 critical, 0 high, 1 medium, 4 low; all five fixed root-inline in p08-t04, not re-reviewed per operator direction); fix loops: 1. m02 phases all accepted; m02 exit carrier project_disabled and fresh; m02 moved to reviewing. freestyle-projects-p08-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

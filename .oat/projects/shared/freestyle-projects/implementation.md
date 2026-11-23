@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-22
-oat_current_task_id: p08
+oat_current_task_id: p09
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,19 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | complete    | 1     | 1/1      |
-| p08   | in_progress | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
+| p09   | pending  | 1     | 0/1      |
 
-**Total:** 7/9 phases accepted
+**Total:** 8/9 phases accepted
 
 ---
 
@@ -1384,10 +1384,10 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 
 ## Phase p08: m02 docs and release
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
-**Head:** bb87932965ebb7de2f952aac788747cb2d90226e
+**Head:** 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
 
 Phase verification at the head on a clean tree (only the untracked `references/`), in Definition of Done order with each exit code captured:
 
@@ -1447,6 +1447,29 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, aft
 - Files: `.agents/skills/oat-project-freestyle/SKILL.md`, the five `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`.
 - Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` exit 0 (41 files, 1532 passed); `bash scripts/with-isolated-home.sh pnpm test:skills` exit 0 (754 passed); `pnpm oat:validate-skills` exit 0 (69 OK); `oxfmt --check` on the changed files exit 0. After the commit and `git fetch origin main`: `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked) and `pnpm release:check-versions` exit 0.
 
+### Task p08-t04: Fix p08 review findings (M1, L1-L4)
+
+**Status:** completed
+**Commit:** 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p08 review `freestyle-projects-p08-review-1` M1 (resume order) and L1 to L4 (`linked ack` lookup, the no-commit opening line, the local-child run step, the head-ahead wording), each checked against the code before the edit.
+- Files: `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`. On resume the orchestrator reads `lanes.md` before acting, after `shape.md`, `decisions.md` `## Live` and `memories.md` (`.oat/templates/project-agents.md`). `linked ack` matches its child argument, or the last part of a path, against the parent's open rows (`linked/link.ts` `ackLinkedProject`). The opening line names the one exception, `new --link-to` saving the child's scaffold. A local child exists only in the checkout that created it (the template's sentence). The head check also flags a branch that moved off the reported head (`lane/head.ts` `moved`); a branch not in this clone is not flagged, and `lane set --json` reports its `headCheck` as `unknown`.
+- Proof: `pnpm --filter oat-docs docs:check` exit 0 (0 errors, 778 warnings; the only one on this page is the accepted lane-notes provenance warning); `pnpm docs:validate` exit 0; `generate-index` exit 0 with no change to `apps/oat-docs/index.md`; `pnpm check` exit 0.
+
+Late fix p08-t04 (p08 review round 1: M1 and L1 to L4) at `29e87c4ba`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `bb8793296`.
+
+### Review Received: p08
+
+- Review `freestyle-projects-p08-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `6430f47ad..bb8793296`, the fresh-context docs review against the code that p08's exit evidence names; artifact `reviews/archived/p08-code-review-2026-11-23T045600Z.md` (local-only): 0 critical, 0 high, 1 medium, 4 low; reconnaissance not attempted. The reviewer found the commands, flags, help text, status lines and JSON fields, ledger grammar, IDs, states, guard, link rows and log entry documented as the code ships them, and the release work correct: `oat-project-freestyle` the only changed canonical skill, bumped once to 1.1.0, no agent role changed, the five public packages at 0.3.57 above main's 0.3.56, and the versions asset and sync manifest in agreement. It accepted the new page, the lane-notes provenance warning and the longer `starting-projects.md`.
+- M1 (Medium): the new page said the orchestrator reads `lanes.md` first on resume. Fixed in p08-t04.
+- L1 (Low): the name-resolution paragraph overstated what `linked ack <child>` looks up. Fixed in p08-t04.
+- L2 (Low): the opening said no command commits, while `new --link-to` saves the child's scaffold. Fixed in p08-t04.
+- L3 (Low): the run-the-child step assumed another worktree, which a local child cannot have. Fixed in p08-t04.
+- L4 (Low): the head-ahead text left out the moved-off case and said a missing branch is reported as unknown. Fixed in p08-t04.
+- **Finding classes:** M1 regression (the page contradicted the resume order in `.oat/templates/project-agents.md` and `picking-up-projects.md`) · L1 regression (overstated `linked/link.ts`) · L2 regression (contradicted the page's own Linked projects section) · L3 regression (dropped the template's local-child sentence) · L4 regression (understated `lane/head.ts` and misdescribed `status`).
+- Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p08-t04 record.
+
 ---
 
 ## Phase p09: Evidence fields
@@ -1492,6 +1515,9 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, aft
 - Root-inline phase: p10 (task p10-t06 only, review round 1 L1 and L2) · reason: one template bullet rewritten and its contract pin, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 - run/v1 · request=freestyle-projects-p08-implementation-1 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=freestyle-projects-p08-review-1 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p08 (task p08-t04 only, review round 1 M1 and L1 to L4) · reason: five sentence-level docs corrections on one page, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 

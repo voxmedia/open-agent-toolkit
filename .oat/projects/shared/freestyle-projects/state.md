@@ -1,6 +1,6 @@
 ---
-oat_current_task: p08
-oat_last_commit: 16e60cf77177df17a8ec39abc121d155129a0ce5
+oat_current_task: p09
+oat_last_commit: 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -48,7 +48,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m02
-oat_milestone_status: implementing
+oat_milestone_status: reviewing
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -89,6 +89,18 @@ oat_milestone_gates:
         scope: [p05, p07, p10, p08]
         ref: 1874426187e7ef1e9e6a4613ff10ff72bf4426da
       decided_at: '2026-11-23T00:54:44Z'
+    exit:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject:
+        kind: code
+        scope: [p05, p07, p10, p08]
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-23T05:02:12Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
@@ -219,7 +231,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/429 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-23T04:51:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-23T05:02:22Z'
 oat_generated: false
 ---
 
