@@ -39,7 +39,8 @@ shape survives a detour, a restart or context compaction.
 - No commit, push or PR after creation unless `shape.md`'s
   `## Commits, PRs and merges` section agrees to it, and none at all while that
   section is not yet shaped or is deferred.
-- No edits to the project `AGENTS.md`; it is OAT-owned.
+- No hand edits to the project `AGENTS.md`; it is OAT-owned. Only Step 2's
+  refresh changes it, by replacing it whole with OAT's current template.
 - No lifecycle machinery: no `oat_phase` or other lifecycle fields in
   `state.md`, no gates, HiLL checkpoints or required reviews.
 - No fixed scripted interview: ask in proportion to the project's size.
@@ -187,7 +188,54 @@ confirms the goal.
 ### Step 2: Read the Project
 
 Read `"$PROJECT_PATH/AGENTS.md"` first, then `"$PROJECT_PATH/shape.md"`.
-Determine:
+
+**Claim first.** Before any write, including the refresh below, read
+`references/kickoff.md` and follow its Before Shaping step 1: an unclaimed
+project (`oat_orchestrator_branch` empty or absent in `state.md`) is claimed
+with `oat project orchestrator set`, and a session whose branch is not the
+recorded one is a lane and stops.
+
+**Refresh an older `AGENTS.md`.** A project created by an earlier OAT has an
+`AGENTS.md` without the sections OAT added since, such as
+`## Orchestrator branch` and `## Linked projects`. The file is OAT-owned and
+holds no project answers, so when it lacks a `##` heading that OAT's current
+`project-agents` template has, replace it whole with the template, rendered as
+`oat project new` renders it (template frontmatter dropped, the project name
+filled in). An `AGENTS.md` that already has every heading is left untouched:
+
+```bash
+TEMPLATE=$(mktemp) || exit 1
+oat template resolve project-agents --output "$TEMPLATE" >/dev/null || {
+  rm -f "$TEMPLATE"
+  echo "freestyle: could not resolve the project-agents template; stopping" >&2
+  exit 1
+}
+MISSING=$(grep '^## ' "$TEMPLATE" | while IFS= read -r HEADING; do
+  grep -qxF "$HEADING" "$PROJECT_PATH/AGENTS.md" || printf '%s\n' "$HEADING"
+done)
+if [ -n "$MISSING" ]; then
+  printf 'freestyle: refreshing AGENTS.md from the current template; it lacked:\n%s\n' "$MISSING"
+  node -e '
+const fs = require("node:fs");
+const [template, name, target] = process.argv.slice(1);
+let text = fs.readFileSync(template, "utf8");
+const end = text.startsWith("---\n") ? text.indexOf("\n---", 4) : -1;
+if (end !== -1) text = text.slice(end + 4).replace(/^\r?\n+/, "");
+fs.writeFileSync(target, text.replaceAll("{Project Name}", name));
+' "$TEMPLATE" "$(basename "$PROJECT_PATH")" "$PROJECT_PATH/AGENTS.md" || {
+    rm -f "$TEMPLATE"
+    echo "freestyle: could not refresh AGENTS.md; stopping" >&2
+    exit 1
+  }
+fi
+rm -f "$TEMPLATE"
+```
+
+After a refresh, read `AGENTS.md` again and tell the user which sections it
+gained. The refreshed file is saved with the other records, as the
+`## Commits, PRs and merges` section agrees.
+
+Then determine:
 
 1. the first topic section, in order, that still reads `_Not yet shaped._`,
    and any `**Shaping resumes at:**` line left by a detour. When
@@ -203,8 +251,9 @@ Determine:
 
 Then choose what to load:
 
-- A topic is not yet shaped → read `references/kickoff.md` and continue at
-  Step 3.
+- A topic is not yet shaped → read `references/kickoff.md`, run its Before
+  Shaping step 2 (a linked child is asked whether to adopt the parent's
+  shape), and continue at Step 3.
 - Every topic is shaped, and a resume trigger from item 2 holds or the user
   wants to change how the project runs → read `references/reshape.md` and
   continue at Step 4.
@@ -247,4 +296,7 @@ the orchestrator runs the project from here.
   that stopped working.
 - ✅ No commit, push or PR is made except as `shape.md` agrees; none while the
   commit agreement is not yet shaped or is deferred.
-- ✅ The project `AGENTS.md` is never edited.
+- ✅ The project `AGENTS.md` is never edited by hand; an older one is only
+  replaced whole with OAT's current template.
+- ✅ No shaping or reshaping write happens before the project is claimed, or
+  from a session that is not on the recorded orchestrator branch.

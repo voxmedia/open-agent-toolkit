@@ -13,6 +13,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { scaffoldProject } from '@commands/project/new/scaffold';
 import { runTemplateResolve } from '@commands/template/resolve';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -30,9 +31,15 @@ const AGENTS_HEADINGS = [
   'Project files',
   'Single writer',
   'Where records live',
+  'Orchestrator branch',
+  'Linked projects',
   'Records commands',
   'Shaping and reshaping',
 ] as const;
+
+/** The lane self-test, verbatim from the brief's Orchestrator branch decision. */
+const LANE_SELF_TEST =
+  "You are a lane if your brief says so, wherever you run. If `oat_orchestrator_branch` is empty or absent, the project is unclaimed: the session designated as its orchestrator runs `oat project orchestrator set` before shaping or writing records. Once it is claimed, if your branch isn't `oat_orchestrator_branch`, you are a lane even with no brief. Lanes don't write project records.";
 
 /** The shaping topics, in order, then the two fixed `shape.md` sections. */
 const SHAPING_TOPICS = [
@@ -157,6 +164,210 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
       expect(skill).toContain(`\`${reference}\``);
       expect(existsSync(join(SKILL_DIR, reference)), reference).toBe(true);
     }
+  });
+});
+
+function oneLine(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function h2Section(content: string, heading: string): string {
+  const start = content.indexOf(`\n## ${heading}\n`);
+  expect(start, `section ## ${heading}`).toBeGreaterThanOrEqual(0);
+  const next = content.indexOf('\n## ', start + heading.length + 4);
+  return content.slice(start, next === -1 ? undefined : next);
+}
+
+describe('freestyle orchestrator branch and linked projects guidance (p05)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+
+  it('carries the lane self-test verbatim in the Orchestrator branch section', () => {
+    const section = oneLine(h2Section(agents, 'Orchestrator branch'));
+    expect(section).toContain(LANE_SELF_TEST);
+    for (const command of [
+      '`oat project orchestrator set`',
+      '`--replace`',
+      '`oat project new --link-to`',
+      '`oat project linked add`',
+      '`oat project linked ack`',
+    ]) {
+      expect(section, command).toContain(command);
+    }
+  });
+
+  it('tells the parent to create, save and acknowledge links, and the child never to write the parent', () => {
+    const section = oneLine(h2Section(agents, 'Linked projects'));
+    expect(section).toContain(
+      '`oat project new <child> --mode freestyle --link-to <parent> --purpose "<one line>"`',
+    );
+    expect(section).toContain('`oat project linked add <child>');
+    expect(section).toContain('After every merge and on resume');
+    expect(section).toContain('`oat project linked ack <child>`');
+    expect(section).toContain("The child never writes the parent's records.");
+    expect(section).toContain(
+      'claims the child with `oat project orchestrator set`',
+    );
+    const writer = oneLine(h2Section(agents, 'Single writer'));
+    expect(writer).toContain('`linked-projects.md`');
+    expect(writer).toContain("a linked project never writes another project's");
+  });
+
+  it('claims before shaping and opens a linked child with adopt-or-new in the kickoff reference', () => {
+    const { 'SKILL.md': skill, 'references/kickoff.md': kickoff } =
+      skillFiles();
+    const before = oneLine(between(kickoff, '## Before Shaping', '## Topics'));
+    expect(before).toContain(
+      '`oat project orchestrator set --project "{project-path}"`',
+    );
+    expect(before).toContain('this session is a lane. Stop');
+    expect(before).toContain(
+      "the first question is whether to adopt the parent's shape or define a new one",
+    );
+    expect(before).toContain('run `oat project pull <parent>` first');
+    expect(before).toContain('reset `## Goal` to `_Not yet shaped._`');
+    expect(before).toContain("never the parent's files");
+    expect(before).toContain(
+      "`**Adopted from:** <parent>, last shaped <the parent's Last shaped: date>; adopted sections not yet confirmed.`",
+    );
+    expect(before).toContain(
+      'ask once whether any adopted section should differ',
+    );
+    // The claim precedes every write in SKILL.md Step 2, the refresh included.
+    const step2 = between(skill, '### Step 2', '### Step 3');
+    expect(step2.indexOf('**Claim first.**')).toBeGreaterThan(-1);
+    expect(step2.indexOf('**Claim first.**')).toBeLessThan(
+      step2.indexOf('**Refresh an older `AGENTS.md`.**'),
+    );
+  });
+
+  describe("refreshes an older project's AGENTS.md from the current template", () => {
+    function refreshBlock(): string {
+      const section = between(
+        skillFiles()['SKILL.md'],
+        '**Refresh an older `AGENTS.md`.**',
+        'Then determine:',
+      );
+      const body = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
+      expect(body, 'the refresh step has a bash block').toBeDefined();
+      return body as string;
+    }
+
+    async function scaffolded(root: string): Promise<string> {
+      // The real consumer: what `oat project new` writes from the repository
+      // template tier.
+      mkdirSync(join(root, '.oat', 'templates'), { recursive: true });
+      for (const name of [
+        'state-freestyle.md',
+        'project-agents.md',
+        'shape.md',
+      ]) {
+        writeFileSync(
+          join(root, '.oat', 'templates', name),
+          read(join(TEMPLATES_DIR, name)),
+        );
+      }
+      const result = await scaffoldProject(
+        {
+          repoRoot: root,
+          projectName: 'older',
+          mode: 'freestyle',
+          scope: 'shared',
+          home: join(root, 'home'),
+          refreshDashboard: false,
+          setActive: false,
+        },
+        { resolveDefaultScope: async () => 'shared' },
+      );
+      return join(root, result.projectPath);
+    }
+
+    function run(
+      root: string,
+      projectPath: string,
+      resolveExit = 0,
+    ): { status: number | null; stdout: string; stderr: string } {
+      const bin = join(root, 'bin');
+      mkdirSync(bin, { recursive: true });
+      // `oat template resolve <name> --output <path>` copies the template raw.
+      writeFileSync(
+        join(bin, 'oat'),
+        [
+          '#!/bin/bash',
+          `[ "$1 $2" = "template resolve" ] || exit 9`,
+          `[ "${resolveExit}" = 0 ] || exit ${resolveExit}`,
+          `cp "${join(TEMPLATES_DIR, 'project-agents.md')}" "$5"`,
+          '',
+        ].join('\n'),
+      );
+      chmodSync(join(bin, 'oat'), 0o755);
+      const result = spawnSync(
+        '/bin/bash',
+        ['-c', `PROJECT_PATH="${projectPath}"\n${refreshBlock()}`],
+        {
+          cwd: root,
+          encoding: 'utf8',
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+        },
+      );
+      return {
+        status: result.status,
+        stdout: result.stdout,
+        stderr: result.stderr,
+      };
+    }
+
+    const roots: string[] = [];
+    afterEach(() => {
+      for (const root of roots) rmSync(root, { recursive: true, force: true });
+      roots.length = 0;
+    });
+
+    function tempRoot(): string {
+      const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-refresh-'));
+      roots.push(root);
+      return root;
+    }
+
+    it('replaces an AGENTS.md that lacks the m02 sections with exactly what the scaffold writes', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      const current = readFileSync(join(project, 'AGENTS.md'), 'utf8');
+      // An m01-era file: the same OAT text without the two m02 sections.
+      const older =
+        current.slice(0, current.indexOf('\n## Orchestrator branch\n')) +
+        current.slice(current.indexOf('\n## Records commands\n'));
+      expect(older).not.toContain('## Linked projects');
+      writeFileSync(join(project, 'AGENTS.md'), older);
+
+      const result = run(root, project);
+      expect(result.stderr).toBe('');
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain('## Orchestrator branch');
+      expect(result.stdout).toContain('## Linked projects');
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe(current);
+    });
+
+    it('leaves a current AGENTS.md untouched and silent', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      const current = readFileSync(join(project, 'AGENTS.md'), 'utf8');
+      const result = run(root, project);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toBe('');
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe(current);
+    });
+
+    it('stops and leaves the file when the template does not resolve', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      writeFileSync(join(project, 'AGENTS.md'), 'older\n');
+      const result = run(root, project, 3);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        'could not resolve the project-agents template',
+      );
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe('older\n');
+    });
   });
 });
 

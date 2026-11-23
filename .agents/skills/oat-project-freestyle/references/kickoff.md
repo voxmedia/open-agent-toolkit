@@ -29,6 +29,43 @@ compaction.
   `brainstorming/` folder and, with the user, record it (replacing `pending`
   with its path and a one-line summary) or resume the brainstorm first.
 
+## Before Shaping
+
+Step 1 runs on every resume, before any write (`SKILL.md` Step 2 sends you
+here); step 2 runs before the first topic. Each is skipped when it does not
+apply.
+
+1. **Claim the project.** `oat project status --project-path "{project-path}"`
+   prints the recorded orchestrator branch beside this checkout's branch.
+   - Unclaimed (`oat_orchestrator_branch` empty or absent, as for a linked
+     child or a project created before the field existed): confirm with the
+     user that this session is the project's orchestrator and that this
+     checkout is on the branch it will work on, then run
+     `oat project orchestrator set --project "{project-path}"`. The claim
+     writes `state.md` only; save it with `shape.md` as the commit agreement
+     says.
+   - Claimed by another branch: this session is a lane. Stop and tell the
+     user; a lane never shapes the project or writes its records.
+2. **A linked child adopts or defines its shape.** When `state.md` has
+   `oat_linked_from: <parent>` and every topic still reads
+   `_Not yet shaped._`, the first question is whether to adopt the parent's
+   shape or define a new one. Recommend adopting when the child will run the
+   way the parent does.
+   - **Adopt.** Find the parent's folder with `oat project list`; for a synced
+     parent not pulled here, run `oat project pull <parent>` first. Copy the
+     parent's `shape.md` over this project's: a snapshot, not a live link, so
+     a later reshape of the parent never changes this project silently. In the
+     copy, reset `## Goal` to `_Not yet shaped._`, rewrite `## Documents` to
+     name kinds of documents (for example "a brief and a phase journal"),
+     never the parent's files, set `**Last shaped:**` to today, and add this
+     line directly below it:
+     `**Adopted from:** <parent>, last shaped <the parent's Last shaped: date>; adopted sections not yet confirmed.`
+     Shaping then continues at `## Goal`. Once the goal is written, ask once
+     whether any adopted section should differ, change only those, and end the
+     line with `adopted sections confirmed <date>.` instead. A resumed session
+     that finds `not yet confirmed` after the goal asks that question next.
+   - **New.** Shape every topic below as for any project.
+
 ## Topics
 
 ### 1. Goal

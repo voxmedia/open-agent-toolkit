@@ -20,19 +20,25 @@ it. Agreements made with the user belong in `shape.md`, never here.
   the orchestrator and the user. Its sections are the shaping topics; a section
   reading `_Not yet shaped._` still needs the shaping conversation, and
   `## Undecided` lists deferred items with the moment each becomes due.
-- `state.md`: the project's identity (`oat_workflow_mode: freestyle`); it has no
-  lifecycle fields.
+- `state.md`: the project's identity (`oat_workflow_mode: freestyle`), the
+  orchestrator's branch (`oat_orchestrator_branch`) and, for a linked project,
+  its parent (`oat_linked_from`); it has no lifecycle fields.
 - The project's documents, listed in `shape.md` under `## Documents`.
+- `linked-projects.md`, once a project is linked to this one: one row per
+  linked project, open until this project acknowledges it.
 - `project-log.md`, when the project log is enabled.
 
 ## Single writer
 
 Only the orchestrator, the agent running this project with the user, writes
-the project records: `shape.md`, the project's documents and `project-log.md`.
-Delegates (subagents, lanes, other sessions) return their results to the
-orchestrator and never edit these files; a delegate's PR holds code only. On
-resume, reconcile the records against the forge (open and merged PRs, branch
-heads) before acting on them.
+the project records: `shape.md`, the project's documents, `linked-projects.md`
+and `project-log.md`, and it alone claims the project with
+`oat project orchestrator set`. Delegates (subagents, lanes, other sessions)
+return their results to the orchestrator and never edit these files; a
+delegate's PR holds code only. Each project writes only its own records: a
+linked project never writes another project's. On resume, reconcile the
+records against the forge (open and merged PRs, branch heads) before acting on
+them.
 
 ## Where records live
 
@@ -58,10 +64,68 @@ When records are committed, pushed or opened as PRs is agreed in `shape.md`
 under `## Commits, PRs and merges`. OAT does none of it after creation; while
 that section is not yet shaped or is deferred, commit and push nothing.
 
+## Orchestrator branch
+
+`state.md` records `oat_orchestrator_branch`, the branch the orchestrator
+works on. `oat project status` prints it beside this checkout's branch and
+says when this checkout is not the orchestrator.
+
+You are a lane if your brief says so, wherever you run. If
+`oat_orchestrator_branch` is empty or absent, the project is unclaimed: the
+session designated as its orchestrator runs `oat project orchestrator set`
+before shaping or writing records. Once it is claimed, if your branch isn't
+`oat_orchestrator_branch`, you are a lane even with no brief. Lanes don't write
+project records.
+
+- `oat project orchestrator set` records this checkout's branch, or
+  `--branch <name>`; changing a recorded branch needs `--replace`. It writes
+  `state.md` only: save it as the other records are saved.
+- The record-writing commands (`oat project new --link-to` on the parent,
+  `oat project linked add` and `oat project linked ack`) refuse to run off the
+  recorded branch, on a detached HEAD, or while the project is unclaimed.
+- The check compares branches, so a lane on the orchestrator's own branch (a
+  subagent in the orchestrator's checkout, or another clone on that branch)
+  passes it; its brief and the single-writer rule are its guard.
+
+## Linked projects
+
+A linked project is a whole project related to this one, usually a part of a
+larger one (as a story is to an epic), with its own `shape.md`, orchestrator,
+lanes and PRs. A lane never contains a linked project; a lane can wait on one.
+
+- **Creating one.** The parent's orchestrator runs
+  `oat project new <child> --mode freestyle --link-to <parent> --purpose "<one line>"`:
+  the child records `oat_linked_from: <parent>` and starts unclaimed, and the
+  parent gets an open row in its own `linked-projects.md`.
+  `oat project linked add <child> --purpose "<one line>"` links an existing
+  freestyle project by writing only the parent's row. Neither commits or
+  pushes the row: save it by the records rule for the parent's scope.
+- **Running one.** A separate orchestrator session runs the child, opened by
+  the user or by the parent's orchestrator. It first claims the child with
+  `oat project orchestrator set` on its own branch, then shapes it with the
+  `oat-project-freestyle` skill. A shared child's scaffold, and a synced
+  child's pointer, are committed on the parent's branch, so the child's
+  orchestrator starts its own branch from there in its own worktree (and runs
+  `oat project pull <child>` for a synced child) before claiming. A local child
+  exists only in the checkout that created it. The child never writes the
+  parent's records.
+- **Acknowledging one.** After every merge and on resume, check
+  `oat project status` for `Open linked project:` lines. For each, read the
+  child's records (pull a synced child first), update this project's
+  documents, then run `oat project linked ack <child>`: it closes the row and
+  attempts a `project-log.md` entry naming the child as source project, so it
+  works with the project log disabled.
+
 ## Records commands
 
-- `oat project status --project-path <project-path>`: the mode and the paths
-  of this file and `shape.md`.
+- `oat project status --project-path <project-path>`: the mode, the paths of
+  this file and `shape.md`, the orchestrator branch beside this checkout's
+  branch, and the open linked projects.
+- `oat project orchestrator set [--branch <name>] [--replace]`: claim the
+  project or change its orchestrator branch.
+- `oat project linked add <child> --purpose <text>` and
+  `oat project linked ack <child>`: open and close rows in
+  `linked-projects.md`.
 - `oat project scope <project-path> --format value`: the current scope.
 - `oat project log append --project <project-path> ...`: append a project-log
   entry (see `--help`). A `skipped` result means the project log is disabled;
