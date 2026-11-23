@@ -474,7 +474,7 @@ unmet, so the existing cycle cap and exhaustion stop apply.
     - Critical/High/Medium: convert to fix tasks (same as manual mode)
     - Low: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code) or not worth its cost (an unlikely edge case, or a test for one); reject those with the reason. Manual mode now also defaults lows to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
     - **No user prompts for disposition decisions.** The auto/gate review path runs fully autonomously.
-    - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are rejected with the reason, or deferred when they meet the Step 9 deferral bar, rather than pausing for interactive resolution.
+    - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are rejected with the concrete reason rather than pausing for interactive resolution. This mode creates no new deferral: only an interactive receive can defer a finding (Step 9).
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
 - If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
   - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
@@ -719,8 +719,8 @@ guard instead of the branch commit template above.
 - Prefix with `(review)` to indicate review-generated task
 - Use active verb: "Fix...", "Add...", "Update..."
 
-**Brief modes:** record each Critical, High, and Medium finding (and each Low
-the disposition converts) as an execution record under the target phase in
+**Brief modes:** record each finding the disposition converts as an execution
+record under the target phase in
 `implementation.md`, after that phase's existing records, instead of a plan
 task:
 

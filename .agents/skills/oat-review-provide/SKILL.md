@@ -191,7 +191,9 @@ Set `oat_generated_at` in the artifact frontmatter to the matching full UTC time
 Use the same severity model and checklist as project reviews:
 
 - Critical / High / Medium / Low findings
-- the same bar for a finding: raise what the change broke, made materially worse, or promised and did not deliver; leave out edge cases that are not likely, and flag machinery or tests added for them; describe a pre-existing defect the change did not worsen in the summary, and only when it is likely to bite or plainly cheapest to fix now
+- the same bar for a finding: raise what the change broke, made materially worse, or promised and did not deliver. Leave out an edge case that is not likely, unless its consequence is a security hole, data loss or a broken assurance contract
+- pre-existing defects: one the change did not worsen is a finding only when it stops the change from delivering what it promised, or has one of those three consequences; otherwise describe it in the summary, outside the severity sections, and only when it is likely to bite or plainly cheapest to fix now
+- proportion: flag machinery, defensive code and tests the change added with neither a requirement nor a credible failure behind them, and recommend the smallest fix
 - file:line references
 - actionable fix guidance
 - verification commands

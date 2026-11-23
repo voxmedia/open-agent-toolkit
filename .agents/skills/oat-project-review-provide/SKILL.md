@@ -1483,7 +1483,7 @@ If running inline (Tier 3), execute the review and write artifact.
 
 1. Verify scope (don't review out-of-scope changes)
 2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite; the brief's Outcomes, Constraints and Out of Scope, Decisions, and the in-scope phases' Intent and Exit evidence for brief and goal)
-3. If code review: verify code quality (correctness, tests, security, maintainability, proportion) under the reviewer's Step 6 bar: raise what the change broke, made materially worse, or promised and did not deliver; leave out unlikely edge cases; describe a pre-existing defect in the summary unless that step makes it a finding
+3. If code review: verify code quality (correctness, tests, security, maintainability, proportion), applying the `oat-reviewer` Step 6 rules for what to raise, pre-existing defects and proportion
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/High/Medium/Low)
 6. Write artifact with file:line references and fix guidance

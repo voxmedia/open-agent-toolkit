@@ -169,6 +169,8 @@ Medium: 1
 Low: 3
 ```
 
+If the review summary describes a pre-existing defect outside the severity sections, relay it after the overview with a fix-now-or-leave recommendation. It is not a finding: it gets no ID, count or disposition.
+
 If there are zero findings across all severities, output a clean result and stop.
 
 ### Step 4: Interactive Triage
