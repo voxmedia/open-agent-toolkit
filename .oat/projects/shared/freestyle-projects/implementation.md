@@ -1403,6 +1403,19 @@ Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, aft
 - Proof: `pnpm --filter oat-docs docs:validate` exit 0 (0 errors, 778 warnings; the same validator on the committed docs at `ea2f6c0ff` gives 777, and the one new warning is the provenance rule on the new page's lane-notes path `.oat/analysis/lane-notes/<lane>-<dispatch>.md`, kept because the path is the contract; two other new provenance hits were reworded away; the existing `starting-projects.md` page-length warning grew from 694 to 713 lines); `docs nav sync --check` exit 0; `pnpm --filter oat-docs check` exit 0 (catalog current at 74 skills); `pnpm --filter oat-docs test` exit 0; `generate-index` regenerated two entries.
 - Inspected, unchanged: `approvals-and-automation.md` ("after creation OAT commits, pushes, dispatches and opens nothing" stays true: the m02 commands write files and commit nothing), `starting-projects.md` situation-table row (a summary), `lifecycle.md`, `skills/index.md` (generated catalog row; the skill description is unchanged), and the other freestyle mentions from p04 (mode lists and stops that m02 does not change).
 
+### Task p08-t02: Name the m02 status fields in the CLI README and check the m02 help text
+
+**Status:** completed
+**Commit:** e25357c86d7277446499ee6c9700d6feeafa53bd
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Handle:** freestyle-projects-p08-implementation-1 (this session)
+
+- Intent: the CLI and package READMEs and the help text the m02 commands touch.
+- `packages/cli/README.md`: the `status --json` entry names the top-level `orchestrator`, `lanes` and `linkedProjects` objects a freestyle payload carries (`status.ts` `writeProjectStatusOutput`).
+- Inspected, unchanged: root `README.md` (the freestyle sentence names files and records generally and stays true); `packages/control-plane/README.md` (m02 changes no control-plane code); root `AGENTS.md` (the Freestyle workflow option stays true); CLI help (`oat project --help` lists `lane`, `linked` and `orchestrator` with their descriptions, each subcommand's options match the docs, `oat project new --help` describes `--link-to` and `--purpose`; `oat template resolve` and `status` help name no template or field list). The freestyle `new` output line `Project rules: <path> (OAT-owned; read shape.md first)` stays true (`shape.md` is still read first) and is left as shipped.
+- Files: `packages/cli/README.md`.
+- Proof: `oxfmt --check packages/cli/README.md` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts src/commands/help-snapshots.test.ts` exit 0 (2 files, 101 passed).
+
 ---
 
 ## Phase p09: Evidence fields
