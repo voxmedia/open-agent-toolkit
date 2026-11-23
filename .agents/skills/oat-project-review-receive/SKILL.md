@@ -474,7 +474,7 @@ unmet, so the existing cycle cap and exhaustion stop apply.
     - Critical/High/Medium: convert to fix tasks (same as manual mode)
     - Low: auto-convert to fix tasks unless clearly out of scope (e.g., cosmetic polish unrelated to changed code) or not worth its cost (an unlikely edge case, or a test for one); reject those with the reason. Manual mode now also defaults lows to `convert` (see Step 9); auto/gate mode keeps the same intent — fix everything while context is fresh — but without any user prompts.
     - **No user prompts for disposition decisions.** The auto/gate review path runs fully autonomously.
-    - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are rejected with the concrete reason rather than pausing for interactive resolution. This mode creates no new deferral: only an interactive receive can defer a finding (Step 9).
+    - Genuinely ambiguous findings (e.g., a medium the agent disagrees with) are rejected with the concrete reason rather than pausing for interactive resolution. This mode creates no new deferral.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
 - If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
   - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
@@ -503,7 +503,9 @@ Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, th
 **Brief modes (`oat_workflow_mode: brief`).** The brief never carries planned
 tasks, so fix work becomes execution records in the journal and
 `oat-project-brief/references/brief-contract.md` (sections 3, 7, and 10) wins
-where this skill differs. Resolve the target phase and apply the late-fix rule:
+where this skill differs. When at least one finding converts to fix work,
+resolve the target phase and apply the late-fix rule; when none does, leave
+every phase and resume pointer as it is:
 
 1. **Reviewed phase.** For `pNN` or `p-revN`, the reviewed phase is that
    phase. For `pNN-pMM`, `final`, or an explicit SHA range, it is the last
