@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | complete | 1     | 1/1      |
-| p07   | complete | 1     | 1/1      |
-| p10   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
-| p09   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | complete    | 1     | 1/1      |
+| p05   | complete    | 1     | 1/1      |
+| p07   | complete    | 1     | 1/1      |
+| p10   | in_progress | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 6/9 phases accepted
 
@@ -1280,9 +1280,13 @@ Late fix p07-t06 (p07 review round 1: M1 and L1, accepted requirements) at `3a31
 
 ## Phase p10: Decisions and memories
 
-**Status:** pending
+**Status:** in_progress
+**Base:** d4af984a5beadc33d0c115d6fc52094b34affbf0
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
 
 Added by the second m02 amendment (2026-11-22): `decisions.md` and `memories.md` scaffolded beside `shape.md`, lane notes, and promotion from lane reports (plan.md Decisions: Decisions and memories).
+
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group; p10 cannot run beside p08, which documents it. Root fan-out fails the independence test because the templates, scaffold, project `AGENTS.md` template, `lane-report.md` and the skill's kickoff and resume steps all change together and share the contract tests. So one phase implementer (rung 3). The inline exception does not apply: p10 adds new scaffolded files and a scratch run.
 
 ---
 
