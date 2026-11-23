@@ -246,6 +246,17 @@ Observation: with reviewers briefed to apply a complexity lens and skip unlikely
 Impact: less review churn and no backlog growth.
 Recommendation: keep the complexity-lens brief and the fix-now-or-drop rule for later goal milestones.
 
+### 2026-11-23 · project · feedback · Review table rows are events
+
+**Category:** decision
+**Source:** freestyle-projects-learning-m02-realign-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-23T07:28:13Z
+
+Observation: an amendment-fix commit rewrote the manual 987d479b plan artifact row in ## Reviews instead of appending; Bugbot caught it on PR #430 and the row was restored after delivery registration.
+Impact: one extra fix commit on an open delivery, and a near miss on a learned Bugbot rule.
+Recommendation: when a fix touches plan.md ## Reviews, append a new row and never edit or replace an existing one; diff the table against the base before committing.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
