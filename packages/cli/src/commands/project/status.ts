@@ -5,6 +5,10 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import {
+  readOpenLinkedProjects,
+  type OpenLinkedProjects,
+} from '@commands/project/linked/ledger';
 import { projectListHint } from '@commands/project/list';
 import {
   describeOrchestratorCheckout,
@@ -40,6 +44,8 @@ interface ProjectStatusDependencies {
   readCurrentBranch: (cwd: string) => Promise<string | null>;
   /** A freestyle project's recorded orchestrator branch; null if unclaimed. */
   readOrchestratorBranch: (projectDir: string) => Promise<string | null>;
+  /** A freestyle parent's open rows in its `linked-projects.md`. */
+  readOpenLinkedProjects: (projectDir: string) => Promise<OpenLinkedProjects>;
 }
 
 interface ProjectStatusOptions {
@@ -56,6 +62,7 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   resolveUnpulledSyncedProject,
   readCurrentBranch: (cwd) => readCurrentBranch(cwd),
   readOrchestratorBranch,
+  readOpenLinkedProjects,
 };
 
 function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
@@ -104,6 +111,21 @@ function freestyleProjectFiles(
 /** What status reports about a freestyle project beyond its files. */
 interface FreestyleCoordination {
   orchestrator: OrchestratorCheckout;
+  linkedProjects: OpenLinkedProjects;
+}
+
+/**
+ * One line per open link, so a parent cannot miss a linked project whose
+ * records it has not acknowledged; an unreadable ledger is said, not hidden.
+ */
+function formatOpenLinkLines(linked: OpenLinkedProjects): string[] {
+  if (linked.error) {
+    return [`Linked projects: unreadable (${linked.error})`];
+  }
+  return linked.open.map(
+    (row) =>
+      `Open linked project: ${row.name} (${row.scope}, ${row.path}): ${row.purpose}; after reading its records, acknowledge with \`oat project linked ack ${row.name}\``,
+  );
 }
 
 function formatProjectStatusLines(
@@ -118,7 +140,10 @@ function formatProjectStatusLines(
         `Rules: ${files.agents}`,
         `Shape: ${files.shape}`,
         ...(coordination
-          ? formatOrchestratorLines(coordination.orchestrator)
+          ? [
+              ...formatOrchestratorLines(coordination.orchestrator),
+              ...formatOpenLinkLines(coordination.linkedProjects),
+            ]
           : []),
       ]
     : [
@@ -342,6 +367,7 @@ async function writeProjectStatusOutput(
           await dependencies.readOrchestratorBranch(absoluteDir),
           await dependencies.readCurrentBranch(context.cwd),
         ),
+        linkedProjects: await dependencies.readOpenLinkedProjects(absoluteDir),
       }
     : null;
   const payload = files

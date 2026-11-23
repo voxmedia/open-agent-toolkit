@@ -137,6 +137,7 @@ function createHarness(options: HarnessOptions): {
     resolveUnpulledSyncedProject: async () => null,
     readCurrentBranch: async () => options.currentBranch ?? null,
     readOrchestratorBranch: async () => options.orchestratorBranch ?? null,
+    readOpenLinkedProjects: async () => ({ open: [] }),
   });
 
   return {
