@@ -721,6 +721,116 @@ describe('freestyle kickoff document starting points', () => {
   );
 });
 
+/** The lane report's sections, from the brief's Lane reports decision. */
+const LANE_REPORT_SECTIONS = [
+  'Summary',
+  'Delivered',
+  'Verification',
+  'Decisions',
+  'Deviations',
+  'Steering received',
+  'Review findings',
+  'Learnings',
+  'Open items',
+  'Proposed log entries',
+] as const;
+
+function h3Headings(content: string): string[] {
+  return [...content.matchAll(/^### (.+?)\s*$/gm)].map(
+    (match) => match[1] as string,
+  );
+}
+
+describe('freestyle lane report shape (p07)', () => {
+  const template = read(join(TEMPLATES_DIR, 'lane-report.md'));
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('pins the report sections in order, Summary split into this round and the lane so far', () => {
+    expect(h2Headings(template)).toEqual([...LANE_REPORT_SECTIONS]);
+    expect(h3Headings(template)).toEqual(['This round', 'Lane so far']);
+    expect(oneLine(template)).toContain(
+      '**Tested SHA:** {full SHA; it must equal the delivered head, or say why not}',
+    );
+    expect(oneLine(template)).toContain(
+      'as your final message for this dispatch, with nothing after it',
+    );
+    // Embedded whole in a brief, so it carries no template frontmatter.
+    expect(template.startsWith('# Lane report: {lane}-{dispatch}\n')).toBe(
+      true,
+    );
+  });
+
+  it('builds a dispatch brief that carries the report shape from the bundle alone (isolated HOME, no repository tier)', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'oat-lane-report-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-lane-report-home-'));
+    tempDirs.push(cwd, home);
+    const output = join(cwd, 'lane-report.md');
+
+    const result = await runTemplateResolve({
+      name: 'lane-report',
+      cwd,
+      home,
+      output,
+      resolveProjectRoot: async () => {
+        throw new CliError('not a repository', 1);
+      },
+      resolveAssetsRoot,
+    });
+    expect(result).toMatchObject({
+      found: true,
+      tier: 'bundle',
+      path: null,
+      output,
+    });
+    const shape = read(output);
+    expect(shape).toBe(template);
+
+    // The brief embeds the resolved shape whole, after the dispatch facts.
+    const brief = [
+      'You are lane l01 of project demo, dispatch d02.',
+      'Rules: .oat/projects/shared/demo/AGENTS.md',
+      'Shape: .oat/projects/shared/demo/shape.md',
+      'Return this report as your final message:',
+      '',
+      shape,
+    ].join('\n');
+    expect(h2Headings(brief)).toEqual([...LANE_REPORT_SECTIONS]);
+    expect(h3Headings(brief)).toEqual(['This round', 'Lane so far']);
+    expect(brief).toContain(shape);
+  });
+
+  it('lets a user-tier lane-report.md override the bundled shape', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'oat-lane-report-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-lane-report-home-'));
+    tempDirs.push(cwd, home);
+    mkdirSync(join(home, '.oat', 'templates'), { recursive: true });
+    writeFileSync(
+      join(home, '.oat', 'templates', 'lane-report.md'),
+      '# Our report\n',
+    );
+    const output = join(cwd, 'lane-report.md');
+    const result = await runTemplateResolve({
+      name: 'lane-report',
+      cwd,
+      home,
+      output,
+      resolveProjectRoot: async () => {
+        throw new CliError('not a repository', 1);
+      },
+      resolveAssetsRoot,
+    });
+    expect(result).toMatchObject({ found: true, tier: 'user' });
+    expect(read(output)).toBe('# Our report\n');
+  });
+});
+
 describe('oat-brainstorm freestyle route', () => {
   const brainstorm = read(
     join(REPO_ROOT, '.agents', 'skills', 'oat-brainstorm', 'SKILL.md'),
