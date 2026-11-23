@@ -1511,12 +1511,16 @@ Proof (this run): with the ignore, the same `oxfmt --check` exits 0 ("No files f
 
 ### Task p08-t08: (review) Refuse new --link-to for a name that is already a project
 
-**Status:** pending
+**Status:** completed
+**Commit:** 506de503fd97314c65cd58bcd7c86020cee31b93
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
 **Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-4)
 
 Intent: `project/new/index.ts:260`: `new <name> --link-to <parent>` on an existing standalone project exits 0, scaffolds nothing, opens the parent's row and leaves the child without `oat_linked_from`. In `prepareLinkedCreation`, before any write, refuse when the child's project folder already exists in the scope being created, naming `oat project linked add <name>` as the way to link an existing project. Ordinary `new` without `--link-to` is unchanged.
 Files: `project/new/index.ts` and its test.
 Proof: a test with an existing project: exit 1, the refusal names `linked add`, and the parent's `linked-projects.md` is unchanged; can-fail with the check removed.
+Confirmed before the fix: the new test, run against the unchanged command, failed (exit 1) on `expected +0 to be 1`; `new existing --mode freestyle --scope shared --link-to parent` exited 0 for an existing shared project. Fix: `prepareLinkedCreation` resolves the scope being created (`--scope`, else the default scope) and, after the parent checks and before any write, refuses when that scope's `<name>` folder exists: `Project <name> already exists in <scope> scope; --link-to creates a new child. Link the existing project with: oat project linked add <name> --project <parent path> --purpose <text>` (exit 1). `new` without `--link-to` returns before the check, unchanged. Files changed: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/linked/linked.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md` (one sentence on the refusal). Deviation: the test is in `linked/linked.test.ts`, where every `new --link-to` test runs the real command against a fixture repository; `new/index.test.ts` has no `--link-to` coverage.
+Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/linked src/commands/project/new` exit 0 (3 files, 157 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on the two source files exit 0; `pnpm --filter oat-docs docs:check` exit 0 (778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Can-fail: with the check disabled (`if (false && …)`) the new test exits 1 on the exit code (`expected +0 to be 1`), and with the exit and message assertions also removed it fails because the parent's `linked-projects.md` was written (`expected '# Linked projects: parent…' to be null`), the reviewer's reproduction; restored.
 
 ### Task p08-t09: (review) Name the child in the linked-child claim handoff
 
