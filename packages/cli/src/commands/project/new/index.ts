@@ -21,8 +21,9 @@ import {
   type ProjectScope,
 } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { shellQuote } from '@commands/shared/shell-quote';
 import { CliError } from '@errors/cli-error';
-import { dirExists } from '@fs/io';
+import { fileExists } from '@fs/io';
 import {
   WORKFLOW_MODES,
   type WorkflowMode,
@@ -181,8 +182,9 @@ function reportSuccess(
     context.logger.info(
       `Project shape: ${freestyle.projectFiles.shape} (not yet shaped)`,
     );
-    // The parent stays the active project, so a bare claim would name it.
-    const claimCommand = `${ORCHESTRATOR_SET_COMMAND} --project ${projectName}`;
+    // The parent stays the active project, so a bare claim would name it; the
+    // path, unlike the name, is unambiguous across scopes.
+    const claimCommand = `${ORCHESTRATOR_SET_COMMAND} --project ${shellQuote(result.projectPath)}`;
     if (freestyle.orchestratorBranch !== undefined) {
       context.logger.info(
         freestyle.orchestratorBranch === null
@@ -242,9 +244,11 @@ async function prepareLinkedCreation(
     await resolveProjectsRoot(repoRoot, process.env),
     scope,
   );
-  if (await dirExists(join(scopeRoot, projectName))) {
+  // `state.md` marks a project, as the link resolver reads it; a folder of
+  // preparatory notes is not one.
+  if (await fileExists(join(scopeRoot, projectName, 'state.md'))) {
     throw new CliError(
-      `Project ${projectName} already exists in ${scope} scope; --link-to creates a new child. Link the existing project with: oat project linked add ${projectName} --project ${parent.projectPath} --purpose <text>`,
+      `Project ${projectName} already exists in ${scope} scope; --link-to creates a new child. Link the existing project with: oat project linked add ${projectName} --project ${shellQuote(parent.projectPath)} --purpose <text>`,
       1,
     );
   }

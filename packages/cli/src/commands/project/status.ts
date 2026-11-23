@@ -28,6 +28,7 @@ import {
 } from '@commands/project/unpulled-synced';
 import { getProjectStateWithReviewAncestry } from '@commands/review/head-ancestry';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { shellQuote as quoteCommandWord } from '@commands/shared/shell-quote';
 import {
   resolveActiveProject,
   type ActiveProjectResolution,
@@ -151,7 +152,7 @@ function formatOpenLinkLines(
   }
   return linked.open.map(
     (row) =>
-      `Open linked project: ${row.name} (${row.scope}, ${row.path}): ${row.purpose}; after reading its records, acknowledge with \`oat project linked ack ${row.name} --project ${parentDir}\``,
+      `Open linked project: ${row.name} (${row.scope}, ${row.path}): ${row.purpose}; after reading its records, acknowledge with \`oat project linked ack ${row.name} --project ${quoteCommandWord(parentDir)}\``,
   );
 }
 

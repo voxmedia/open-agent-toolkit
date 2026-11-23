@@ -115,6 +115,7 @@ export async function setLane(options: SetLaneOptions): Promise<SetLaneResult> {
   await assertOrchestratorCheckout({
     projectDir: project.absolutePath,
     projectName: project.name,
+    projectPath: project.projectPath,
     repoRoot: options.repoRoot,
     action: `update lane ${options.request.lane}`,
     git: options.git,

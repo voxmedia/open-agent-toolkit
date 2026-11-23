@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -500,7 +500,7 @@ describe('freestyle linked projects', () => {
         for (const [name, result] of Object.entries({ create, add, ack })) {
           expect(result.exitCode, name).toBe(1);
           expect(result.stderr, name).toContain(
-            'project parent is unclaimed (oat_orchestrator_branch is empty or absent). The session designated as its orchestrator runs `oat project orchestrator set --project parent` first.',
+            `project parent is unclaimed (oat_orchestrator_branch is empty or absent). The session designated as its orchestrator runs \`oat project orchestrator set --project .oat/projects/${parentScope}/parent\` first.`,
           );
         }
         expect(existsSync(projectDir(root, 'shared', 'guarded-child'))).toBe(
@@ -650,6 +650,28 @@ describe('freestyle linked projects', () => {
     expect(await readFile(statePath, 'utf8')).toBe(stateBefore);
   });
 
+  it('creates a linked child over a folder that holds only preparatory notes, keeping the notes', async () => {
+    const { root } = await repo();
+    await newParent(root, 'shared');
+    const notesDir = join(projectDir(root, 'shared', 'noted'), 'references');
+    await mkdir(notesDir, { recursive: true });
+    await writeFile(join(notesDir, 'lane-brief.md'), '# Brief\n', 'utf8');
+
+    const result = await newProject(root, 'noted', 'shared', [
+      '--link-to',
+      'parent',
+      '--purpose',
+      'Pick up the brief',
+    ]);
+    expect(result.exitCode, result.stderr).toBe(0);
+    expect(
+      existsSync(join(projectDir(root, 'shared', 'noted'), 'state.md')),
+    ).toBe(true);
+    expect(await readFile(join(notesDir, 'lane-brief.md'), 'utf8')).toBe(
+      '# Brief\n',
+    );
+  });
+
   it('hands off a linked child with a claim command that names the child, which claims it from the parent checkout', async () => {
     const { root } = await repo();
     const parentDir = await newParent(root, 'shared');
@@ -672,7 +694,9 @@ describe('freestyle linked projects', () => {
     const handoff = /claims it with `oat (project orchestrator set[^`]*)`/.exec(
       created.stdout.split('\n').find((line) => line.startsWith('Next:')) ?? '',
     );
-    expect(handoff?.[1]).toBe('project orchestrator set --project child');
+    expect(handoff?.[1]).toBe(
+      'project orchestrator set --project .oat/projects/local/child',
+    );
 
     // The parent stays the active project in this checkout, so only the
     // named child is claimed.

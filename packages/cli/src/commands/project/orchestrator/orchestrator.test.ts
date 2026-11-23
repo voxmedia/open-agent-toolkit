@@ -7,6 +7,7 @@ import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
+import { formatOrchestratorLines } from './branch';
 import { setOrchestratorBranch } from './set';
 
 /** A `state.md` written by the m01 build: freestyle, with no branch field. */
@@ -146,7 +147,7 @@ describe('freestyle orchestrator branch', () => {
         '--no-dashboard',
       ]);
       expect(result.stdout).toContain(
-        'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set --project detached`)',
+        'Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set --project .oat/projects/local/detached`)',
       );
       expect(
         frontmatter(await readState(join(root, '.oat/projects/local/detached')))
@@ -425,5 +426,23 @@ describe('freestyle orchestrator branch', () => {
         },
       });
     });
+  });
+});
+
+describe('formatOrchestratorLines', () => {
+  it('quotes a project path with spaces in the unclaimed claim hint', () => {
+    const [line] = formatOrchestratorLines(
+      {
+        branch: null,
+        claimed: false,
+        currentBranch: 'main',
+        isOrchestrator: false,
+      },
+      [],
+      '/tmp/probe with spaces/.oat/projects/shared/alpha',
+    );
+    expect(line).toBe(
+      "Orchestrator branch: unclaimed (the orchestrator claims it with `oat project orchestrator set --project '/tmp/probe with spaces/.oat/projects/shared/alpha'`)",
+    );
   });
 });

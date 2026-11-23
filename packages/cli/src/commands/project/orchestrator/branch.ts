@@ -6,6 +6,7 @@ import {
   getFrontmatterBlock,
   parseFrontmatterScalarFields,
 } from '@commands/shared/frontmatter';
+import { shellQuote } from '@commands/shared/shell-quote';
 import { CliError } from '@errors/cli-error';
 
 /** The freestyle `state.md` field naming the orchestrator's branch. */
@@ -102,7 +103,7 @@ export function formatOrchestratorLines(
   if (!checkout.claimed) {
     // Name the inspected project: a bare claim would name the active one.
     return [
-      `Orchestrator branch: unclaimed (the orchestrator claims it with \`${ORCHESTRATOR_SET_COMMAND} --project ${project}\`)`,
+      `Orchestrator branch: unclaimed (the orchestrator claims it with \`${ORCHESTRATOR_SET_COMMAND} --project ${shellQuote(project)}\`)`,
       `Current branch: ${current}`,
     ];
   }
@@ -124,6 +125,8 @@ export function formatOrchestratorLines(
 export async function assertOrchestratorCheckout(options: {
   projectDir: string;
   projectName: string;
+  /** The project's path as `NamedProject.projectPath`, printed in the claim hint. */
+  projectPath: string;
   repoRoot: string;
   action: string;
   git?: GitRunner;
@@ -134,7 +137,7 @@ export async function assertOrchestratorCheckout(options: {
   );
   if (!checkout.claimed) {
     throw new CliError(
-      `Cannot ${options.action}: project ${options.projectName} is unclaimed (${ORCHESTRATOR_BRANCH_FIELD} is empty or absent). The session designated as its orchestrator runs \`${ORCHESTRATOR_SET_COMMAND} --project ${options.projectName}\` first.`,
+      `Cannot ${options.action}: project ${options.projectName} is unclaimed (${ORCHESTRATOR_BRANCH_FIELD} is empty or absent). The session designated as its orchestrator runs \`${ORCHESTRATOR_SET_COMMAND} --project ${shellQuote(options.projectPath)}\` first.`,
       1,
     );
   }

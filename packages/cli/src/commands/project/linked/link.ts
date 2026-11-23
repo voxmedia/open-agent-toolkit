@@ -54,6 +54,7 @@ export async function resolveLinkParent(options: {
   await assertOrchestratorCheckout({
     projectDir: parent.absolutePath,
     projectName: parent.name,
+    projectPath: parent.projectPath,
     repoRoot: options.repoRoot,
     action: options.action,
     git: options.git,
