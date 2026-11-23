@@ -133,7 +133,9 @@ Notable commands introduced in the current CLI surface:
   freestyle parent this checkout orchestrates: the child records
   `oat_linked_from: <parent>` and starts unclaimed, the parent gets an open
   row in its `linked-projects.md` (not committed or pushed), the active
-  project stays the parent, and `--json` adds `linkedTo`. See
+  project stays the parent, and `--json` adds `linkedTo`. A child name that
+  is already a project in that scope is refused before any write, naming
+  `oat project linked add`, which links an existing project. See
   [Running a Freestyle Project](../workflows/projects/execution/freestyle-projects.md#linked-projects).
   Rerunning `project new`
   for an existing project in the same scope with a different mode, where one

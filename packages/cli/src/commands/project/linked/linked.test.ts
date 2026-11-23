@@ -612,6 +612,44 @@ describe('freestyle linked projects', () => {
     });
   });
 
+  it('refuses new --link-to for a name that is already a project, naming linked add, before any write', async () => {
+    const { root } = await repo();
+    const parentDir = await newParent(root, 'shared');
+    expect((await newProject(root, 'existing', 'shared')).exitCode).toBe(0);
+    const ledgerPath = join(parentDir, 'linked-projects.md');
+    const ledgerBefore = existsSync(ledgerPath)
+      ? await readFile(ledgerPath, 'utf8')
+      : null;
+    const statePath = join(projectDir(root, 'shared', 'existing'), 'state.md');
+    const stateBefore = await readFile(statePath, 'utf8');
+
+    const result = await runOat(root, [
+      'project',
+      'new',
+      'existing',
+      '--mode',
+      'freestyle',
+      '--scope',
+      'shared',
+      '--no-dashboard',
+      '--link-to',
+      'parent',
+      '--purpose',
+      'Spun-off migration',
+    ]);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain(
+      'Project existing already exists in shared scope',
+    );
+    expect(result.stderr).toContain(
+      'oat project linked add existing --project .oat/projects/shared/parent --purpose <text>',
+    );
+    expect(
+      existsSync(ledgerPath) ? await readFile(ledgerPath, 'utf8') : null,
+    ).toBe(ledgerBefore);
+    expect(await readFile(statePath, 'utf8')).toBe(stateBefore);
+  });
+
   it('prints an ack command that closes the inspected parent row, not the active parent row', async () => {
     const { root } = await repo();
     expect((await newProject(root, 'child', 'shared')).exitCode).toBe(0);

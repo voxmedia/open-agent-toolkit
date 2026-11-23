@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
@@ -11,12 +13,16 @@ import {
 } from '@commands/project/linked/link';
 import { ORCHESTRATOR_SET_COMMAND } from '@commands/project/orchestrator/branch';
 import type { NamedProject } from '@commands/project/resolve-named-project';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   PROJECT_SCOPES,
+  resolveDefaultScope,
+  resolveScopeRoot,
   type ProjectScope,
 } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
+import { dirExists } from '@fs/io';
 import {
   WORKFLOW_MODES,
   type WorkflowMode,
@@ -200,7 +206,8 @@ function reportSuccess(
 /**
  * Before any write, check a `--link-to` request: the child is freestyle, the
  * purpose is one line, the parent is a freestyle project this checkout
- * orchestrates, and the parent has no open link of that name.
+ * orchestrates, the parent has no open link of that name, and the child is
+ * new (an existing project is linked with `linked add`).
  */
 async function prepareLinkedCreation(
   projectName: string,
@@ -226,6 +233,19 @@ async function prepareLinkedCreation(
     action: `link ${projectName} to ${options.linkTo}`,
   });
   await assertLinkable(parent, projectName);
+  const scope =
+    options.scope ?? (await resolveDefaultScope(repoRoot, process.env));
+  const scopeRoot = resolveScopeRoot(
+    repoRoot,
+    await resolveProjectsRoot(repoRoot, process.env),
+    scope,
+  );
+  if (await dirExists(join(scopeRoot, projectName))) {
+    throw new CliError(
+      `Project ${projectName} already exists in ${scope} scope; --link-to creates a new child. Link the existing project with: oat project linked add ${projectName} --project ${parent.projectPath} --purpose <text>`,
+      1,
+    );
+  }
   return { parent, purpose };
 }
 
