@@ -1387,7 +1387,7 @@ Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a
 **Status:** in_progress
 **Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
 **Executor:** phase-implementer:freestyle-projects-p08-implementation-1
-**Head:** dba09273410ce91b03b5c5aedda1a7b332cc62a1
+**Head:** 299537c8ffd353475016fd1d3cbed0d06fc8e1aa
 
 Phase verification at the head on a clean tree (only the untracked `references/`), in Definition of Done order with each exit code captured:
 
@@ -1576,6 +1576,19 @@ Proof: the contract test fails on the old `--ref` judgment example and passes on
 Confirmed before the fix: on the old template text the new contract test exits 1 with the reviewer's refusal, `judgment entry with --ref: Judgment entries cannot use structural flags --producer or --ref; add --structural or remove those flags.`, and a scratch judgment `log append … --ref l01-d02` with the branch build exits 1 with that message. Fix: `.oat/templates/project-agents.md` Lane reports step 3 reads "keyed by the dispatch ID (for example `l01-d02`): `--source <dispatch ID>` for a judgment entry and `--ref <dispatch ID>` for a structural entry."; the docs page's filing paragraph and `project-log.md` give `--source l01-d02` for a judgment entry and `--ref l01-d02` for a structural one. Test: the lane-option scan no longer drops `--project-path`, `--output` and `--ref`. Each flag the Dispatch, Lane reports and Lane placement sections name is attributed to the command named most recently before it (`lane set`, `log append` or `template resolve`) and must be an option of that command. Each log flag is then run, `--dry-run`, against a scratch freestyle project as the entry type its sentence gives it (both types when it names neither), and must exit 0. Files changed: `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, `apps/oat-docs/docs/workflows/projects/execution/project-log.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
 Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation bundle-consistency src/commands/project/log` exit 0 (41 files, 1665 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` and `oxfmt --check` on the changed files exit 0; `pnpm --filter oat-docs docs:check` exit 0 (778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Scratch with the branch build (temp repo and HOME, removed): `log append --type worked-well --scope project --area lanes --source l01-d02 --body …` exit 0 and `log append --structural --producer oat-project-freestyle --ref l01-d02 --body …` exit 0, both appended. Can-fail: with the old step 3 restored, the new test exits 1 on its `--source` guard (`expected [ '--ref', '--ref' ] to include '--source'`), and with that guard also removed it exits 1 on the judgment `--ref` refusal quoted above; restored.
 
+### Task p08-t13: (review) Name the project in the unclaimed status line and refusal claim hints
+
+**Status:** completed
+**Commit:** 299537c8ffd353475016fd1d3cbed0d06fc8e1aa
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-1 class; raised by the p08 fix implementer in the p08-t09 record)
+
+- Intent: the same defect as N-1 in two more places. `status` on an unclaimed project, and the guard's refusal, printed a bare `oat project orchestrator set`, which claims the active project, not the one inspected or named.
+- Files: `orchestrator/branch.ts` (`formatOrchestratorLines` takes the project and prints `--project <project path>`; the refusal prints `--project <project name>`), `status.ts` (passes the project path), and the three tests that pin the lines (`status.test.ts`, `orchestrator/orchestrator.test.ts`, `linked/linked.test.ts`).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts src/commands/project/orchestrator src/commands/project/linked src/commands/project/lane src/commands/project/new` exit 0 (244 tests); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `pnpm check` exit 0. Can-fail: with the bare command restored in `formatOrchestratorLines`, the status test exits 1. No docs page quotes either line.
+
+Late fix p08-t13 at `299537c8f`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
 ---
 
 ## Phase p09: Evidence fields
@@ -1624,6 +1637,9 @@ Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm 
 
 - run/v1 · request=freestyle-projects-p08-review-1 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p08 (task p08-t04 only, review round 1 M1 and L1 to L4) · reason: five sentence-level docs corrections on one page, smaller than a fix-mode resume · root model: claude-opus-5-5
+
+- run/v1 · request=freestyle-projects-p08-implementation-2 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p08 (task p08-t13 only, an N-1-class claim hint the fix implementer reported) · reason: one format function, one refusal string and three test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
