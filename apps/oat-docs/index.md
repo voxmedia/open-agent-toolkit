@@ -37,11 +37,12 @@
       - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](docs/workflows/projects/planning/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
       - [Project Splitting](docs/workflows/projects/planning/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.
     - Execution
-      - [Execution](docs/workflows/projects/execution/index.md) — Implementation execution, project observations and continuing shared work.
+      - [Execution](docs/workflows/projects/execution/index.md) — Implementation execution, project observations, continuing shared work and running freestyle projects.
       - [Execution and Reconciliation Skills](docs/workflows/projects/execution/execution-skills.md) — Execute an approved OAT plan or reconnect manually committed work to its task ledger without repeating implementation.
       - [Project Log](docs/workflows/projects/execution/project-log.md) — Capture append-only project observations and roll them into durable summary and ledger surfaces.
       - [Implementation Execution](docs/workflows/projects/execution/implementation-execution.md) — How OAT executes plans with root-owned phase agents, independent phase review, bounded fixes, and worktree fan-out.
       - [Picking Up Projects](docs/workflows/projects/execution/picking-up-projects.md) — Continue a synced OAT project on another machine or from another user through its dedicated Git ref.
+      - [Running a Freestyle Project](docs/workflows/projects/execution/freestyle-projects.md) — The orchestrator branch, lane ledger and reports, decisions and memories, and linked projects of a freestyle project.
     - Closeout
       - [Closeout](docs/workflows/projects/closeout/index.md) — Project retrospectives and progress or final PR flow.
       - [Project closeout skills](docs/workflows/projects/closeout/closeout-skills.md) — Prepare progress or final PRs, record outcomes, update documentation, handle feedback, and complete a tracked project.

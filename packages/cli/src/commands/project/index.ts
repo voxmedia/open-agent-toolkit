@@ -9,12 +9,15 @@ import { createProjectDeliveryCommand } from './delivery';
 import { createProjectDispatchCommand } from './dispatch';
 import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
 import { createProjectJournalCommand } from './journal-check/index';
+import { createProjectLaneCommand } from './lane/index';
+import { createProjectLinkedCommand } from './linked/index';
 import { createProjectLinksCommand } from './links';
 import { createProjectListCommand } from './list';
 import { createProjectLogCommand } from './log/index';
 import { createProjectMigrateCommand } from './migrate';
 import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
+import { createProjectOrchestratorCommand } from './orchestrator/index';
 import { createProjectPauseCommand } from './pause';
 import { createProjectPromoteCommand } from './promote';
 import { createProjectPruneCommand } from './prune';
@@ -38,12 +41,15 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectDispatchCommand())
     .addCommand(createProjectDispatchCeilingCommand())
     .addCommand(createProjectJournalCommand())
+    .addCommand(createProjectLaneCommand())
     .addCommand(createProjectListCommand())
+    .addCommand(createProjectLinkedCommand())
     .addCommand(createProjectLinksCommand())
     .addCommand(createProjectLogCommand())
     .addCommand(createProjectMigrateCommand())
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
+    .addCommand(createProjectOrchestratorCommand())
     .addCommand(createProjectPauseCommand())
     .addCommand(createProjectPromoteCommand())
     .addCommand(createProjectPruneCommand())

@@ -135,6 +135,90 @@ m01 integrated review cycle 3 (confirm only) received: J-1, J-2A, J-3, J-4 confi
 
 Registered d01 for m01 (p01, p02, p03, p04) at https://github.com/voxmedia/open-agent-toolkit/pull/429; freestyle-projects-register-d01
 
+### 2026-11-22 · structural · oat-project-goal · m01
+
+Re-alignment after m01 delivered (d01, PR #429 merged at 1e0b473c6); freestyle-projects-realign-m01
+
+### 2026-11-22 · project · friction · Delivery freshness after review
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m01-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-22T18:36:01Z
+
+Observation: after the integrated review passed, every non-tracking commit (self-review test fixes, a Bugbot fix, a CI test fix) and even rewriting ## Reviews artifact cells to archived paths marked d01 stale, and a waiver binds the last refreshed head, not the local HEAD.
+Impact: three extra waiver/refresh/commit rounds and one soft reset before merge.
+Recommendation: land PR-review fixes in one batch, then push, refresh, waive and commit the state.md bookkeeping in that order; never rewrite ## Reviews cells of a registered delivery.
+
+### 2026-11-22 · project · friction · Skill tests extract bash blocks by position
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m01-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-22T18:36:01Z
+
+Observation: oat-project-complete's resume tests take Step 1's first bash block as the archive entry; p04 inserted the freestyle mode read before it, and five tests failed in CI (pnpm test:skills) on every push while the skill-prose vitest run used for verification passed.
+Impact: CI was red from the PR's first push; diagnosis came only at landing.
+Recommendation: when a change adds or moves a bash block in a skill, run pnpm test:skills as well as the skill-prose vitest suite before review.
+
+### 2026-11-22 · project · feedback · Small review deferrals are dropped, not filed
+
+**Category:** decision
+**Source:** freestyle-projects-learning-m01-03
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-22T18:36:01Z
+
+Observation: m01 accumulated about ten deferred review findings (edge cases across scopes) that the operator dropped at landing; eight exit rounds and three integrated cycles were spent largely on cross-scope edge cases.
+Impact: review rounds and backlog growth with little user value.
+Recommendation: in m02, fix a small finding in the round it is raised or drop it; brief reviewers to apply a complexity lens and not to raise unlikely edge cases; file follow-ups only for work that is worthwhile on its own.
+
+### 2026-11-23 · structural · oat-project-goal · m02
+
+Activated m02 (p05, p07, p10, p08); freestyle-projects-activate-m02
+
+### 2026-11-23 · structural · oat-project-implement · p05
+
+**Subject:** p05
+
+p05 accepted: review passed (0 critical, 0 high, 0 medium, 1 low bookkeeping, fixed at receive); 0 fix loops. The p05-t05 scratch pair caught new --link-to switching the parent checkout's active project, fixed as p05-t04. freestyle-projects-p05-outcome
+
+### 2026-11-23 · structural · oat-project-implement · p07
+
+**Subject:** p07
+
+p07 accepted: review passed (0 critical, 0 high, 1 medium, 3 low); M1 and L1 fixed root-inline in p07-t06, L2 dismissed as new-hardening, L3 already corrected; 0 fix loops, no re-review. freestyle-projects-p07-outcome
+
+### 2026-11-23 · structural · oat-project-implement · p10
+
+**Subject:** p10
+
+p10 accepted: review passed (0 critical, 0 high, 0 medium, 2 low); L1 and L2 fixed root-inline in p10-t06; 0 fix loops, no re-review. freestyle-projects-p10-outcome
+
+### 2026-11-23 · project · friction · Scripted commit-paths calls must check the exit code
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m02-01
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-23T04:26:37Z
+
+Observation: at the p10 review fix the root ran commit-paths piped to tail inside a multi-step script; commitlint refused the 104-character header, the script recorded HEAD (the previous bookkeeping commit) as the fix commit, and the next steps committed a record and the phase bookkeeping on that wrong SHA. freestyle-projects-learning-m02-01
+Impact: two journal lines named the wrong commit and needed an appended correction and a head re-advance (f9edb6c1b, f4be7d8a9).
+Recommendation: run each commit-paths call on its own or under set -e without a trailing pipe, and keep commit headers under 100 characters (commitlint header-max-length).
+
+### 2026-11-23 · structural · oat-project-implement · p08
+
+**Subject:** p08
+
+p08 accepted: review freestyle-projects-p08-review-1 passed (0 critical, 0 high, 1 medium, 4 low; all five fixed root-inline in p08-t04, not re-reviewed per operator direction); fix loops: 1. m02 phases all accepted; m02 exit carrier project_disabled and fresh; m02 moved to reviewing. freestyle-projects-p08-outcome
+
+### 2026-11-23 · structural · oat-project-implement · p08
+
+p08 accepted after the m02 integrated review: cycle 1 (N-1 to N-8) fixed in p08-t05..p08-t13, cycle 2 confirm (P-1 to P-3) fixed by root in p08-t14, cycle 3 (operator-approved extra confirm) passed at 9ffa307eb with 0 findings; fix loops 3; exit carrier project_disabled refreshed to fresh; m02 -> delivering; next oat-project-pr-progress deliver m02; freestyle-projects-p08-outcome-m02-integrated
+
+### 2026-11-23 · structural · oat-project-pr-progress · d02
+
+Registered d02 for m02 (p05, p07, p10, p08) at https://github.com/voxmedia/open-agent-toolkit/pull/430; freestyle-projects-register-d02
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

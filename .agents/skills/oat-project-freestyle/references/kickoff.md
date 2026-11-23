@@ -29,6 +29,48 @@ compaction.
   `brainstorming/` folder and, with the user, record it (replacing `pending`
   with its path and a one-line summary) or resume the brainstorm first.
 
+## Before Shaping
+
+Step 1 runs on every resume, before any write (`SKILL.md` Step 2 sends you
+here); step 2 runs before the first topic. Each is skipped when it does not
+apply.
+
+1. **Claim the project.** `oat project status --project-path "{project-path}"`
+   prints the recorded orchestrator branch beside this checkout's branch.
+   - Unclaimed (`oat_orchestrator_branch` empty or absent, as for a linked
+     child or a project created before the field existed): confirm with the
+     user that this session is the project's orchestrator and that this
+     checkout is on the branch it will work on, then run
+     `oat project orchestrator set --project "{project-path}"`. The claim
+     writes `state.md` only; save it with `shape.md` as the commit agreement
+     says.
+   - Claimed by another branch: this session is a lane. Stop and tell the
+     user; a lane never shapes the project or writes its records.
+2. **A linked child adopts or defines its shape.** When `state.md` has
+   `oat_linked_from: <parent>` and every topic still reads
+   `_Not yet shaped._`, the first question is whether to adopt the parent's
+   shape or define a new one. Recommend adopting when the child will run the
+   way the parent does.
+   - **Adopt.** Find the parent's folder with `oat project list`; for a synced
+     parent not pulled here, run `oat project pull <parent>` first. When the
+     parent is not listed in this checkout (a local parent lives only in its
+     own checkout), ask the user for the path to the parent's `shape.md`, or
+     define a new shape. Copy the
+     parent's `shape.md` over this project's: a snapshot, not a live link, so
+     a later reshape of the parent never changes this project silently. Copy
+     only `shape.md`: this project keeps its own empty `decisions.md` and
+     `memories.md`. In the
+     copy, reset `## Goal` to `_Not yet shaped._`, rewrite `## Documents` to
+     name kinds of documents (for example "a brief and a phase journal"),
+     never the parent's files, set `**Last shaped:**` to today, and add this
+     line directly below it:
+     `**Adopted from:** <parent>, last shaped <the parent's Last shaped: date>; adopted sections not yet confirmed.`
+     Shaping then continues at `## Goal`. Once the goal is written, ask once
+     whether any adopted section should differ, change only those, and end the
+     line with `adopted sections confirmed <date>.` instead. A resumed session
+     that finds `not yet confirmed` after the goal asks that question next.
+   - **New.** Shape every topic below as for any project.
+
 ## Topics
 
 ### 1. Goal
@@ -76,7 +118,8 @@ is, a template adapted, or the project's own pattern. Lean toward the brief
 style (a brief plus a phase journal) for most projects, and toward goal-style
 milestones (a brief with a Milestones table) for a run of several deliveries.
 Whatever the pattern, keep the core elements: the outcome, what done means,
-the decisions with their reasons, and the open questions.
+the decisions with their reasons, and the open questions. Decisions about the
+work are kept in `decisions.md`, not in a document.
 
 #### Document Starting Points
 
@@ -124,7 +167,12 @@ instructions written for OAT's lifecycle skills. Before the document is used:
      `plan-brief.md` and `plan.md` (commits follow `shape.md` instead), and
      `plan-brief.md`'s `**Phase block grammar (strict):**` paragraph with its
      example block, which only OAT's lifecycle parsers need.
-4. Check the result. This prints nothing when the copy is clean; keep a line
+4. Point a decisions section at `decisions.md`: decisions about the work live
+   only there. For a brief-style document (`plan-brief.md` or `plan-lite.md`),
+   replace the body of its `## Decisions` section with a line such as
+   `Decisions about the work are in decisions.md.`, and write any decision it
+   held into `decisions.md` as an entry instead.
+5. Check the result. This prints nothing when the copy is clean; keep a line
    only when the project deliberately uses it:
 
    ```bash

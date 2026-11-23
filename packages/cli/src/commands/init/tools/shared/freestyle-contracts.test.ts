@@ -13,9 +13,16 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createProjectLaneCommand } from '@commands/project/lane/index';
+import { LANE_STATES, WAITING_ON_KINDS } from '@commands/project/lane/ledger';
+import { createProjectLogAppendCommand } from '@commands/project/log/append';
+import { scaffoldProject } from '@commands/project/new/scaffold';
+import { createTemplateCommand } from '@commands/template/index';
 import { runTemplateResolve } from '@commands/template/resolve';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
+import { initMainRepo, runOat } from '@test-support/run-oat';
+import type { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = join(import.meta.dirname, '../../../../../../..');
@@ -30,9 +37,19 @@ const AGENTS_HEADINGS = [
   'Project files',
   'Single writer',
   'Where records live',
+  'Decisions and memories',
+  'Orchestrator branch',
+  'Linked projects',
+  'Dispatch',
+  'Lane reports',
+  'Lane placement',
   'Records commands',
   'Shaping and reshaping',
 ] as const;
+
+/** The lane self-test, verbatim from the brief's Orchestrator branch decision. */
+const LANE_SELF_TEST =
+  "You are a lane if your brief says so, wherever you run. If `oat_orchestrator_branch` is empty or absent, the project is unclaimed: the session designated as its orchestrator runs `oat project orchestrator set` before shaping or writing records. Once it is claimed, if your branch isn't `oat_orchestrator_branch`, you are a lane even with no brief. Lanes don't write project records.";
 
 /** The shaping topics, in order, then the two fixed `shape.md` sections. */
 const SHAPING_TOPICS = [
@@ -46,6 +63,14 @@ const SHAPING_TOPICS = [
   'Reshape checkpoints',
 ] as const;
 const SHAPE_HEADINGS = [...SHAPING_TOPICS, 'Project log', 'Undecided'];
+
+/** The sections of the scaffolded decisions.md and memories.md, in order. */
+const DECISIONS_HEADINGS = ['Live', 'Superseded'] as const;
+const MEMORIES_HEADINGS = ['User preferences', 'Gotchas', 'Context'] as const;
+
+/** The project AGENTS.md first line: the resume order. */
+const AGENTS_FIRST_LINE =
+  'Read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` in this folder before acting: they hold how this project runs, what it has decided and what to keep in mind.';
 
 /** The templates the kickoff reference offers as document starting points. */
 const KICKOFF_TEMPLATES = [
@@ -94,12 +119,10 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
   const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
   const shape = read(join(TEMPLATES_DIR, 'shape.md'));
 
-  it('pins the project AGENTS.md headings and its read-shape.md first line', () => {
+  it('pins the project AGENTS.md headings and its resume-order first line', () => {
     expect(h2Headings(agents)).toEqual([...AGENTS_HEADINGS]);
     const body = agents.replace(/^---\n[\s\S]*?\n---\n+/, '');
-    expect(body.split('\n')[0]).toBe(
-      'Read `shape.md` in this folder before acting: it holds how this project runs.',
-    );
+    expect(body.split('\n')[0]).toBe(AGENTS_FIRST_LINE);
     expect(body).toMatch(/^# Freestyle project: \{Project Name\}$/m);
   });
 
@@ -122,6 +145,8 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
     const known = new Set([
       ...h2Headings(agents),
       ...h2Headings(shape),
+      ...DECISIONS_HEADINGS,
+      ...MEMORIES_HEADINGS,
       ...KICKOFF_TEMPLATES.flatMap((name) =>
         h2Headings(read(join(TEMPLATES_DIR, `${name}.md`))),
       ),
@@ -157,6 +182,215 @@ describe('freestyle project AGENTS.md and shape.md contract', () => {
       expect(skill).toContain(`\`${reference}\``);
       expect(existsSync(join(SKILL_DIR, reference)), reference).toBe(true);
     }
+  });
+});
+
+function oneLine(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function h2Section(content: string, heading: string): string {
+  const start = content.indexOf(`\n## ${heading}\n`);
+  expect(start, `section ## ${heading}`).toBeGreaterThanOrEqual(0);
+  const next = content.indexOf('\n## ', start + heading.length + 4);
+  return content.slice(start, next === -1 ? undefined : next);
+}
+
+describe('freestyle orchestrator branch and linked projects guidance (p05)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+
+  it('carries the lane self-test verbatim in the Orchestrator branch section', () => {
+    const section = oneLine(h2Section(agents, 'Orchestrator branch'));
+    expect(section).toContain(LANE_SELF_TEST);
+    for (const command of [
+      '`oat project orchestrator set`',
+      '`--replace`',
+      '`oat project new --link-to`',
+      '`oat project linked add`',
+      '`oat project linked ack`',
+    ]) {
+      expect(section, command).toContain(command);
+    }
+  });
+
+  it('tells the parent to create, save and acknowledge links, and the child never to write the parent', () => {
+    const section = oneLine(h2Section(agents, 'Linked projects'));
+    expect(section).toContain(
+      '`oat project new <child> --mode freestyle --link-to <parent> --purpose "<one line>"`',
+    );
+    expect(section).toContain('`oat project linked add <child>');
+    expect(section).toContain('After every merge and on resume');
+    expect(section).toContain('`oat project linked ack <child>`');
+    expect(section).toContain("The child never writes the parent's records.");
+    expect(section).toContain(
+      'claims the child with `oat project orchestrator set --project <child>` on its own branch',
+    );
+    const writer = oneLine(h2Section(agents, 'Single writer'));
+    expect(writer).toContain('`linked-projects.md`');
+    expect(writer).toContain("a linked project never writes another project's");
+  });
+
+  it('claims before shaping and opens a linked child with adopt-or-new in the kickoff reference', () => {
+    const { 'SKILL.md': skill, 'references/kickoff.md': kickoff } =
+      skillFiles();
+    const before = oneLine(between(kickoff, '## Before Shaping', '## Topics'));
+    expect(before).toContain(
+      '`oat project orchestrator set --project "{project-path}"`',
+    );
+    expect(before).toContain('this session is a lane. Stop');
+    expect(before).toContain(
+      "the first question is whether to adopt the parent's shape or define a new one",
+    );
+    expect(before).toContain('run `oat project pull <parent>` first');
+    expect(before).toContain(
+      "When the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape.",
+    );
+    expect(before).toContain('reset `## Goal` to `_Not yet shaped._`');
+    expect(before).toContain("never the parent's files");
+    expect(before).toContain(
+      "`**Adopted from:** <parent>, last shaped <the parent's Last shaped: date>; adopted sections not yet confirmed.`",
+    );
+    expect(before).toContain(
+      'ask once whether any adopted section should differ',
+    );
+    // The claim precedes every write in SKILL.md Step 2, the refresh included.
+    const step2 = between(skill, '### Step 2', '### Step 3');
+    expect(step2.indexOf('**Claim first.**')).toBeGreaterThan(-1);
+    expect(step2.indexOf('**Claim first.**')).toBeLessThan(
+      step2.indexOf('**Refresh an older `AGENTS.md`.**'),
+    );
+  });
+
+  describe("refreshes an older project's AGENTS.md from the current template", () => {
+    function refreshBlock(): string {
+      const section = between(
+        skillFiles()['SKILL.md'],
+        '**Refresh an older `AGENTS.md`.**',
+        'Then determine:',
+      );
+      const body = /```bash\n([\s\S]*?)```/.exec(section)?.[1];
+      expect(body, 'the refresh step has a bash block').toBeDefined();
+      return body as string;
+    }
+
+    async function scaffolded(root: string): Promise<string> {
+      // The real consumer: what `oat project new` writes from the repository
+      // template tier.
+      mkdirSync(join(root, '.oat', 'templates'), { recursive: true });
+      for (const name of [
+        'state-freestyle.md',
+        'project-agents.md',
+        'shape.md',
+        'decisions.md',
+        'memories.md',
+      ]) {
+        writeFileSync(
+          join(root, '.oat', 'templates', name),
+          read(join(TEMPLATES_DIR, name)),
+        );
+      }
+      const result = await scaffoldProject(
+        {
+          repoRoot: root,
+          projectName: 'older',
+          mode: 'freestyle',
+          scope: 'shared',
+          home: join(root, 'home'),
+          refreshDashboard: false,
+          setActive: false,
+        },
+        { resolveDefaultScope: async () => 'shared' },
+      );
+      return join(root, result.projectPath);
+    }
+
+    function run(
+      root: string,
+      projectPath: string,
+      resolveExit = 0,
+    ): { status: number | null; stdout: string; stderr: string } {
+      const bin = join(root, 'bin');
+      mkdirSync(bin, { recursive: true });
+      // `oat template resolve <name> --output <path>` copies the template raw.
+      writeFileSync(
+        join(bin, 'oat'),
+        [
+          '#!/bin/bash',
+          `[ "$1 $2" = "template resolve" ] || exit 9`,
+          `[ "${resolveExit}" = 0 ] || exit ${resolveExit}`,
+          `cp "${join(TEMPLATES_DIR, 'project-agents.md')}" "$5"`,
+          '',
+        ].join('\n'),
+      );
+      chmodSync(join(bin, 'oat'), 0o755);
+      const result = spawnSync(
+        '/bin/bash',
+        ['-c', `PROJECT_PATH="${projectPath}"\n${refreshBlock()}`],
+        {
+          cwd: root,
+          encoding: 'utf8',
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+        },
+      );
+      return {
+        status: result.status,
+        stdout: result.stdout,
+        stderr: result.stderr,
+      };
+    }
+
+    const roots: string[] = [];
+    afterEach(() => {
+      for (const root of roots) rmSync(root, { recursive: true, force: true });
+      roots.length = 0;
+    });
+
+    function tempRoot(): string {
+      const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-refresh-'));
+      roots.push(root);
+      return root;
+    }
+
+    it('replaces an AGENTS.md that lacks the m02 sections with exactly what the scaffold writes', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      const current = readFileSync(join(project, 'AGENTS.md'), 'utf8');
+      // An m01-era file: the same OAT text without the two m02 sections.
+      const older =
+        current.slice(0, current.indexOf('\n## Orchestrator branch\n')) +
+        current.slice(current.indexOf('\n## Records commands\n'));
+      expect(older).not.toContain('## Linked projects');
+      writeFileSync(join(project, 'AGENTS.md'), older);
+
+      const result = run(root, project);
+      expect(result.stderr).toBe('');
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain('## Orchestrator branch');
+      expect(result.stdout).toContain('## Linked projects');
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe(current);
+    });
+
+    it('leaves a current AGENTS.md untouched and silent', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      const current = readFileSync(join(project, 'AGENTS.md'), 'utf8');
+      const result = run(root, project);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toBe('');
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe(current);
+    });
+
+    it('stops and leaves the file when the template does not resolve', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      writeFileSync(join(project, 'AGENTS.md'), 'older\n');
+      const result = run(root, project, 3);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        'could not resolve the project-agents template',
+      );
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe('older\n');
+    });
   });
 });
 
@@ -343,6 +577,23 @@ describe('freestyle resume and review rules', () => {
     });
   });
 
+  it('asks the adopted-sections question before declaring an adopted shape complete', () => {
+    const routing = oneLine(
+      between(
+        skillFiles()['SKILL.md'],
+        'Then choose what to load:',
+        'Report what you found before asking anything',
+      ),
+    );
+    const marker = routing.indexOf(
+      'the `**Adopted from:**` line still says `adopted sections not yet confirmed` → read `references/kickoff.md`, ask its Before Shaping step 2 question whether any adopted section should differ',
+    );
+    expect(marker, 'routes the unconfirmed marker').toBeGreaterThan(-1);
+    expect(marker).toBeLessThan(
+      routing.indexOf('Otherwise report that the shape is complete'),
+    );
+  });
+
   it('checks the same reshape triggers on every resume in SKILL.md and reshape.md', () => {
     const { 'SKILL.md': skill, 'references/reshape.md': reshape } =
       skillFiles();
@@ -508,6 +759,573 @@ describe('freestyle kickoff document starting points', () => {
       expect(result).toMatchObject({ found: true, tier: 'bundle' });
     },
   );
+});
+
+describe('freestyle dispatch, lane reports and lane placement guidance (p07)', () => {
+  const tempDirs: string[] = [];
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const dispatch = oneLine(h2Section(agents, 'Dispatch'));
+  const reports = oneLine(h2Section(agents, 'Lane reports'));
+  const placement = oneLine(h2Section(agents, 'Lane placement'));
+
+  it('names every lane state and waiting-on kind lane set accepts', () => {
+    for (const state of LANE_STATES) {
+      expect(dispatch, state).toContain(`\`${state}\``);
+    }
+    expect(dispatch).toContain(`--waiting-on ${WAITING_ON_KINDS.join('|')}`);
+  });
+
+  /**
+   * Each flag the sections name, with the command it belongs to: the command
+   * named most recently before it (`oat project lane set` or `lane set`,
+   * `oat project log append`, `oat template resolve`), and for a log flag the
+   * entry types its sentence gives it (both when it names neither).
+   */
+  function namedFlags(): {
+    flag: string;
+    command: string;
+    entryTypes: ('judgment' | 'structural')[];
+  }[] {
+    const text = [dispatch, reports, placement].join(' ');
+    const pattern =
+      /`(?:oat )?(?:project )?(lane set|log append|template resolve)\b|(--[a-z][a-z-]+)/g;
+    const found = [];
+    let command = '';
+    for (const match of text.matchAll(pattern)) {
+      if (match[1]) {
+        command = match[1];
+        continue;
+      }
+      const flag = match[2] as string;
+      const index = match.index;
+      const sentence = text.slice(
+        text.lastIndexOf('. ', index) + 1,
+        text.indexOf('. ', index) === -1
+          ? undefined
+          : text.indexOf('. ', index),
+      );
+      const typed = new RegExp(
+        `\`${flag} <[^>]+>\` for a (judgment|structural) entry`,
+      ).exec(sentence)?.[1] as 'judgment' | 'structural' | undefined;
+      const entryTypes = typed
+        ? [typed]
+        : /structural/.test(sentence) && !/judgment/.test(sentence)
+          ? (['structural'] as const)
+          : (['judgment', 'structural'] as const);
+      found.push({ flag, command, entryTypes: [...entryTypes] });
+    }
+    return found;
+  }
+
+  it('names only options the command each flag belongs to has', () => {
+    const options = (command: { options: readonly { long?: string }[] }) =>
+      new Set(command.options.map((option) => option.long));
+    const accepted: Record<string, Set<string | undefined>> = {
+      'lane set': options(
+        createProjectLaneCommand().commands.find(
+          (command) => command.name() === 'set',
+        ) as Command,
+      ),
+      'log append': options(createProjectLogAppendCommand()),
+      'template resolve': options(
+        createTemplateCommand().commands.find(
+          (command) => command.name() === 'resolve',
+        ) as Command,
+      ),
+    };
+    const named = namedFlags();
+    expect(
+      named.filter((entry) => entry.command === 'lane set').length,
+    ).toBeGreaterThan(10);
+    for (const { flag, command } of named) {
+      expect(accepted[command]?.has(flag), `${command} ${flag}`).toBe(true);
+    }
+  });
+
+  it('keys each log entry by a flag its own entry type accepts', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-freestyle-log-flags-'));
+    tempDirs.push(root);
+    await initMainRepo(root);
+    const created = await runOat(root, [
+      'project',
+      'new',
+      'demo',
+      '--mode',
+      'freestyle',
+      '--scope',
+      'shared',
+      '--with-project-log',
+      '--no-dashboard',
+      '--no-commit',
+    ]);
+    expect(created.exitCode, created.stderr).toBe(0);
+    const base = {
+      judgment: {
+        '--type': 'worked-well',
+        '--scope': 'project',
+        '--area': 'lanes',
+      },
+      structural: {
+        '--structural': undefined,
+        '--producer': 'oat-project-freestyle',
+        '--ref': 'u001',
+      },
+    } as const;
+    const logFlags = namedFlags().filter(
+      (entry) => entry.command === 'log append',
+    );
+    expect(logFlags.map((entry) => entry.flag)).toContain('--source');
+    for (const { flag, entryTypes } of logFlags) {
+      for (const entryType of entryTypes) {
+        const fields: Record<string, string | undefined> = {
+          ...base[entryType],
+          [flag]: 'l01-d02',
+          '--body': 'Accepted from lane report l01-d02.',
+        };
+        const args = Object.entries(fields).flatMap(([name, value]) =>
+          value === undefined ? [name] : [name, value],
+        );
+        const result = await runOat(root, [
+          'project',
+          'log',
+          'append',
+          '--project',
+          '.oat/projects/shared/demo',
+          '--dry-run',
+          ...args,
+        ]);
+        expect(
+          result.exitCode,
+          `${entryType} entry with ${flag}: ${result.stderr}`,
+        ).toBe(0);
+      }
+    }
+  });
+
+  it('defines a dispatch, the steer and no-report cases, the brief contents and the resume reconcile', () => {
+    expect(dispatch).toContain(
+      'A dispatch is one request to a lane that ends in one report',
+    );
+    expect(dispatch).toContain('`--steer "<one line>"`');
+    expect(dispatch).toContain('Wakes are notifications, not dispatches.');
+    expect(dispatch).toContain(
+      'An interrupted turn closes its dispatch with `--no-report`.',
+    );
+    expect(dispatch).toContain(
+      '`oat template resolve lane-report --output <path>` and embed it whole',
+    );
+    expect(dispatch).toContain('that the lane writes no project records');
+    expect(dispatch).toContain(
+      'record what you find with `lane set` before any redispatch',
+    );
+  });
+
+  it('files a report verbatim before acting, never edits it, and keys log entries by dispatch ID', () => {
+    expect(reports).toContain('File it before acting on it');
+    expect(reports).toContain(
+      '`oat project lane set <lane> --report <file> --head <delivered head>`',
+    );
+    expect(reports).toContain('A filed report is never edited.');
+    expect(reports).toContain(
+      'In a repository whose commit hooks format Markdown, exclude `lane-reports/` from them so the committed report stays verbatim.',
+    );
+    expect(reports).toContain('keyed by the dispatch ID');
+    expect(reports).toContain(
+      'whose `--ref` is the update ID that `lane set` printed for the update recording the event; other ledger updates get no log entry',
+    );
+    expect(reports).toContain('Do not merge unreported commits unreviewed');
+  });
+
+  it('supports both placements and prescribes neither', () => {
+    expect(placement).toContain('OAT supports both and prescribes neither');
+    expect(placement).toContain('`shared-worktree`');
+    expect(placement).toContain('`own-worktree`');
+    expect(placement).toContain('the head-ahead check does not apply');
+    expect(placement).toContain('(`oat internal commit-paths`)');
+  });
+
+  it('lists the ledger and reports as orchestrator-only records and lane set as guarded', () => {
+    const writer = oneLine(h2Section(agents, 'Single writer'));
+    expect(writer).toContain('`lanes.md`');
+    expect(writer).toContain('`lane-reports/`');
+    expect(writer).toContain("a lane's final message is its report");
+    expect(oneLine(h2Section(agents, 'Orchestrator branch'))).toContain(
+      '`oat project lane set`) refuse to run off the recorded branch',
+    );
+    const files = oneLine(h2Section(agents, 'Project files'));
+    expect(files).toContain('`lanes.md`');
+    expect(files).toContain('`lane-reports/`');
+  });
+});
+
+/**
+ * Runs the skill's first-use block (`for NAME in decisions memories ...`) against a stub
+ * `oat template resolve` that copies the repository template raw, as the real
+ * resolver does.
+ */
+function runFirstUse(
+  root: string,
+  block: string,
+  env: Record<string, string>,
+  resolveExit = 0,
+): { status: number | null; stdout: string; stderr: string } {
+  const bin = join(root, 'bin');
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(
+    join(bin, 'oat'),
+    [
+      '#!/bin/bash',
+      `[ "$1 $2" = "template resolve" ] || exit 9`,
+      `[ "$4" = "--output" ] || exit 8`,
+      `[ "${resolveExit}" = 0 ] || exit ${resolveExit}`,
+      `cp "${TEMPLATES_DIR}/$3.md" "$5"`,
+      '',
+    ].join('\n'),
+  );
+  chmodSync(join(bin, 'oat'), 0o755);
+  const result = spawnSync('/bin/bash', ['-c', block], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, ...env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  return {
+    status: result.status,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
+}
+
+describe('freestyle decisions and memories (p10)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const decisions = read(join(TEMPLATES_DIR, 'decisions.md'));
+  const memories = read(join(TEMPLATES_DIR, 'memories.md'));
+  const section = oneLine(h2Section(agents, 'Decisions and memories'));
+  const roots: string[] = [];
+
+  afterEach(() => {
+    for (const root of roots) rmSync(root, { recursive: true, force: true });
+    roots.length = 0;
+  });
+
+  it('pins the decisions.md and memories.md sections, with no template frontmatter', () => {
+    expect(h2Headings(decisions)).toEqual([...DECISIONS_HEADINGS]);
+    expect(h2Headings(memories)).toEqual([...MEMORIES_HEADINGS]);
+    // `oat template resolve --output` copies raw, so first use writes exactly
+    // what the scaffold writes only when there is nothing to render.
+    for (const content of [decisions, memories]) {
+      expect(content).not.toMatch(/^---$/m);
+      expect(content).not.toMatch(/\{[A-Za-z ]+\}|YYYY-MM-DD/);
+    }
+    expect(decisions.startsWith('# Decisions\n')).toBe(true);
+    expect(memories.startsWith('# Memories\n')).toBe(true);
+    const form = oneLine(decisions);
+    expect(form).toContain('a `### drNN · <decision statement>` heading');
+    expect(form).toContain('`Supersedes: drNN`');
+    expect(form).toContain('`Superseded by drNN, <date>`');
+  });
+
+  it('names both files in the AGENTS.md project files, single-writer list and resume line', () => {
+    const files = oneLine(h2Section(agents, 'Project files'));
+    expect(files).toContain('- `decisions.md`:');
+    expect(files).toContain('- `memories.md`:');
+    const writer = oneLine(h2Section(agents, 'Single writer'));
+    expect(writer).toContain(
+      "the project records: `shape.md`, `decisions.md`, `memories.md`, the project's documents,",
+    );
+    const first = agents.replace(/^---\n[\s\S]*?\n---\n+/, '').split('\n')[0];
+    expect(first).toBe(AGENTS_FIRST_LINE);
+    const order = [
+      '`shape.md`',
+      '`## Live`',
+      '`decisions.md`',
+      '`memories.md`',
+    ];
+    const offsets = order.map((name) => first?.indexOf(name) ?? -1);
+    expect(offsets.every((offset) => offset >= 0)).toBe(true);
+    expect([...offsets].sort((x, y) => x - y)).toEqual(offsets);
+  });
+
+  it('states the authority rule, the supersession steps and first-use creation', () => {
+    expect(section).toContain(
+      '`shape.md` how this project works, `decisions.md` what it chose about the work and why, `memories.md` what a returning agent should keep in mind, and `project-log.md` what happened and when',
+    );
+    expect(section).toContain(
+      'A change to how the project works is a reshape: it stays in `shape.md`, with its `decision` entry in the project log.',
+    );
+    expect(section).toContain(
+      'A decision about the work lives only in `decisions.md`',
+    );
+    expect(section).toContain(
+      'points to `decisions.md` instead of repeating it',
+    );
+    expect(section).toContain('What is still true goes in `memories.md`');
+    expect(section).toContain('by hand, with no command');
+    expect(section).toContain(
+      'add the new entry under `## Live` with `Supersedes: drNN`, then move the replaced entry intact to `## Superseded` and add `Superseded by drNN, <date>` to it',
+    );
+    expect(section).toContain(
+      'Create each missing one with `oat template resolve <decisions|memories> --output <project-path>/<name>.md`, and only when it is absent',
+    );
+    expect(section).toContain(
+      'A linked project starts with its own empty files',
+    );
+    // The shape.md Project log paragraph defers to decisions.md.
+    const log = oneLine(
+      h2Section(read(join(TEMPLATES_DIR, 'shape.md')), 'Project log'),
+    );
+    expect(log).toContain(
+      'Decisions about the work live only in `decisions.md`',
+    );
+    expect(log).toContain('a `decision` entry may cite one by its `drNN`');
+    expect(log).toContain('what is still true goes in `memories.md`');
+  });
+
+  describe("creates a missing file in the skill's resume step (SKILL.md Step 2)", () => {
+    function step2(): string {
+      return between(skillFiles()['SKILL.md'], '### Step 2', '### Step 3');
+    }
+
+    function block(): string {
+      const body = /```bash\n([\s\S]*?)```/.exec(
+        between(
+          step2(),
+          '**Create a missing `decisions.md` or `memories.md`.**',
+          'Then determine:',
+        ),
+      )?.[1];
+      expect(body, 'the first-use step has a bash block').toBeDefined();
+      return body as string;
+    }
+
+    function project(): { root: string; project: string } {
+      const root = mkdtempSync(join(tmpdir(), 'oat-freestyle-resume-'));
+      roots.push(root);
+      const path = join(root, 'project');
+      mkdirSync(path);
+      return { root, project: path };
+    }
+
+    it('runs after the claim and the AGENTS.md refresh, then reads Live and memories', () => {
+      const text = step2();
+      const claim = text.indexOf('**Claim first.**');
+      const refresh = text.indexOf('**Refresh an older `AGENTS.md`.**');
+      const create = text.indexOf(
+        '**Create a missing `decisions.md` or `memories.md`.**',
+      );
+      expect(claim).toBeGreaterThan(-1);
+      expect(claim).toBeLessThan(refresh);
+      expect(refresh).toBeLessThan(create);
+      expect(create).toBeLessThan(text.indexOf('Then determine:'));
+      expect(oneLine(text)).toContain(
+        'Then read all of the `## Live` section of `decisions.md`, and `memories.md`',
+      );
+      expect(oneLine(text)).toContain(
+        'An entry under `## Superseded` is history; never act on it.',
+      );
+    });
+
+    it('creates each absent file from the template and leaves an existing one byte-identical', () => {
+      const { root, project: path } = project();
+      writeFileSync(join(path, 'decisions.md'), '# Decisions\n\n- kept\n');
+      const result = runFirstUse(root, block(), { PROJECT_PATH: path });
+      expect(result.stderr).toBe('');
+      expect(result.status).toBe(0);
+      expect(result.stdout).toBe(
+        `freestyle: created ${join(path, 'memories.md')}\n`,
+      );
+      expect(read(join(path, 'memories.md'))).toBe(memories);
+      expect(read(join(path, 'decisions.md'))).toBe('# Decisions\n\n- kept\n');
+
+      const again = runFirstUse(root, block(), { PROJECT_PATH: path }, 3);
+      expect(again.status).toBe(0);
+      expect(again.stdout).toBe('');
+    });
+
+    it('stops when the template does not resolve', () => {
+      const { root, project: path } = project();
+      const result = runFirstUse(root, block(), { PROJECT_PATH: path }, 3);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        'could not create decisions.md from the decisions template; stopping',
+      );
+      expect(existsSync(join(path, 'memories.md'))).toBe(false);
+    });
+  });
+
+  it("keeps the parent's decisions and memories out of an adopted shape, and points a document's decisions at decisions.md", () => {
+    const kickoff = skillFiles()['references/kickoff.md'];
+    const before = oneLine(between(kickoff, '## Before Shaping', '## Topics'));
+    expect(before).toContain(
+      'Copy only `shape.md`: this project keeps its own empty `decisions.md` and `memories.md`.',
+    );
+    const adapting = oneLine(
+      between(kickoff, '#### Adapting a Copied Template', '### 4. Execution'),
+    );
+    expect(adapting).toContain(
+      'Point a decisions section at `decisions.md`: decisions about the work live only there.',
+    );
+    expect(adapting).toContain(
+      'replace the body of its `## Decisions` section with a line such as',
+    );
+    expect(h2Headings(read(join(TEMPLATES_DIR, 'plan-brief.md')))).toContain(
+      'Decisions',
+    );
+  });
+
+  it('names the lane notes path as authorized scratch in the dispatch section, and promotion after filing', () => {
+    const dispatch = oneLine(h2Section(agents, 'Dispatch'));
+    expect(dispatch).toContain('its lane notes path; and the report shape');
+    expect(dispatch).toContain(
+      'to an uncommitted notes file in its own checkout, `.oat/analysis/lane-notes/<lane>-<dispatch>.md`',
+    );
+    expect(dispatch).toContain(
+      "builds its report's Decisions and Learnings from it",
+    );
+    expect(dispatch).toContain(
+      "names that path as authorized scratch, outside a same-checkout lane's `paths:`",
+    );
+    expect(dispatch).toContain('`.oat/**/analysis`');
+    expect(dispatch).toContain('the brief names a path outside the checkout');
+    expect(dispatch).toContain(
+      'A read-only delegate keeps no notes: its brief tells it to return its decisions and learnings in its final message.',
+    );
+    const reports = oneLine(h2Section(agents, 'Lane reports'));
+    expect(reports).toContain(
+      '4. Promote what you accept from its Decisions and Learnings: a decision as a `decisions.md` entry, and a gotcha, user preference or still-true context as a `memories.md` bullet, each citing the dispatch ID',
+    );
+    expect(reports.indexOf('3. Append')).toBeLessThan(
+      reports.indexOf('4. Promote'),
+    );
+  });
+
+  it('tells the lane to keep its notes file and build its Decisions and Learnings from it', () => {
+    const report = oneLine(read(join(TEMPLATES_DIR, 'lane-report.md')));
+    expect(report).toContain(
+      'While you work, write each decision you make and each gotcha you hit to the lane notes file your brief names, as it happens, so they survive your own compaction; never commit it. Build the Decisions and Learnings sections below from it.',
+    );
+    expect(report).toContain(
+      'A read-only lane keeps no notes file and writes its decisions and learnings straight into this report.',
+    );
+    expect(report).toContain(
+      "do not write project records (the ledger, the project log, `shape.md`, `decisions.md`, `memories.md` or the project's documents)",
+    );
+  });
+});
+
+/** The lane report's sections, from the brief's Lane reports decision. */
+const LANE_REPORT_SECTIONS = [
+  'Summary',
+  'Delivered',
+  'Verification',
+  'Decisions',
+  'Deviations',
+  'Steering received',
+  'Review findings',
+  'Learnings',
+  'Open items',
+  'Proposed log entries',
+] as const;
+
+function h3Headings(content: string): string[] {
+  return [...content.matchAll(/^### (.+?)\s*$/gm)].map(
+    (match) => match[1] as string,
+  );
+}
+
+describe('freestyle lane report shape (p07)', () => {
+  const template = read(join(TEMPLATES_DIR, 'lane-report.md'));
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('pins the report sections in order, Summary split into this round and the lane so far', () => {
+    expect(h2Headings(template)).toEqual([...LANE_REPORT_SECTIONS]);
+    expect(h3Headings(template)).toEqual(['This round', 'Lane so far']);
+    expect(oneLine(template)).toContain(
+      '**Tested SHA:** {full SHA; it must equal the delivered head}',
+    );
+    expect(oneLine(template)).toContain(
+      'as your final message for this dispatch, with nothing after it',
+    );
+    // Embedded whole in a brief, so it carries no template frontmatter.
+    expect(template.startsWith('# Lane report: {lane}-{dispatch}\n')).toBe(
+      true,
+    );
+  });
+
+  it('builds a dispatch brief that carries the report shape from the bundle alone (isolated HOME, no repository tier)', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'oat-lane-report-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-lane-report-home-'));
+    tempDirs.push(cwd, home);
+    const output = join(cwd, 'lane-report.md');
+
+    const result = await runTemplateResolve({
+      name: 'lane-report',
+      cwd,
+      home,
+      output,
+      resolveProjectRoot: async () => {
+        throw new CliError('not a repository', 1);
+      },
+      resolveAssetsRoot,
+    });
+    expect(result).toMatchObject({
+      found: true,
+      tier: 'bundle',
+      path: null,
+      output,
+    });
+    const shape = read(output);
+    expect(shape).toBe(template);
+
+    // The brief embeds the resolved shape whole, after the dispatch facts.
+    const brief = [
+      'You are lane l01 of project demo, dispatch d02.',
+      'Rules: .oat/projects/shared/demo/AGENTS.md',
+      'Shape: .oat/projects/shared/demo/shape.md',
+      'Return this report as your final message:',
+      '',
+      shape,
+    ].join('\n');
+    expect(h2Headings(brief)).toEqual([...LANE_REPORT_SECTIONS]);
+    expect(h3Headings(brief)).toEqual(['This round', 'Lane so far']);
+    expect(brief).toContain(shape);
+  });
+
+  it('lets a user-tier lane-report.md override the bundled shape', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'oat-lane-report-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-lane-report-home-'));
+    tempDirs.push(cwd, home);
+    mkdirSync(join(home, '.oat', 'templates'), { recursive: true });
+    writeFileSync(
+      join(home, '.oat', 'templates', 'lane-report.md'),
+      '# Our report\n',
+    );
+    const output = join(cwd, 'lane-report.md');
+    const result = await runTemplateResolve({
+      name: 'lane-report',
+      cwd,
+      home,
+      output,
+      resolveProjectRoot: async () => {
+        throw new CliError('not a repository', 1);
+      },
+      resolveAssetsRoot,
+    });
+    expect(result).toMatchObject({ found: true, tier: 'user' });
+    expect(read(output)).toBe('# Our report\n');
+  });
 });
 
 describe('oat-brainstorm freestyle route', () => {

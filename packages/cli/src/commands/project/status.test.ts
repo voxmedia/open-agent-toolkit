@@ -8,6 +8,7 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { LaneStatus } from '@commands/project/lane/head';
 import type { ProjectState } from '@open-agent-toolkit/control-plane';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
@@ -50,6 +51,9 @@ interface HarnessOptions {
   activeProjectPath?: string | null;
   projectState?: ProjectState;
   resolveProjectRoot?: () => Promise<string>;
+  currentBranch?: string | null;
+  orchestratorBranch?: string | null;
+  lanes?: LaneStatus;
 }
 
 function makeProjectState(path: string): ProjectState {
@@ -133,6 +137,10 @@ function createHarness(options: HarnessOptions): {
     // The unpulled synced reading runs against a real repository in
     // list.integration.test.ts; these mocked paths never name one.
     resolveUnpulledSyncedProject: async () => null,
+    readCurrentBranch: async () => options.currentBranch ?? null,
+    readOrchestratorBranch: async () => options.orchestratorBranch ?? null,
+    readOpenLinkedProjects: async () => ({ open: [] }),
+    readLaneStatus: async () => options.lanes ?? { current: [], headAhead: [] },
   });
 
   return {
@@ -971,6 +979,190 @@ oat_generated: false
           agents: `${synced}/AGENTS.md`,
           shape: `${synced}/shape.md`,
         },
+      });
+    });
+
+    describe('orchestrator branch line', () => {
+      const freestyleState: ProjectState = {
+        ...makeProjectState('.oat/projects/shared/demo'),
+        workflowMode: 'freestyle',
+        phase: null,
+        phaseStatus: null,
+      };
+
+      async function statusLines(
+        currentBranch: string | null,
+        orchestratorBranch: string | null,
+      ): Promise<{ lines: string[]; payload: unknown }> {
+        const text = createHarness({
+          cwd: '/repo',
+          projectState: freestyleState,
+          currentBranch,
+          orchestratorBranch,
+        });
+        await runCommand(text.command, []);
+        const json = createHarness({
+          cwd: '/repo',
+          projectState: freestyleState,
+          currentBranch,
+          orchestratorBranch,
+        });
+        await runCommand(json.command, [], ['--json']);
+        return {
+          lines: text.capture.info,
+          payload: json.capture.jsonPayloads[0],
+        };
+      }
+
+      it('says this checkout is the orchestrator on the recorded branch', async () => {
+        const { lines, payload } = await statusLines('main', 'main');
+        expect(lines).toContain('Orchestrator branch: main');
+        expect(lines).toContain(
+          'Current branch: main (this checkout is the orchestrator)',
+        );
+        expect(payload).toMatchObject({
+          orchestrator: {
+            branch: 'main',
+            claimed: true,
+            currentBranch: 'main',
+            isOrchestrator: true,
+          },
+        });
+      });
+
+      it('says a checkout on another branch is a lane', async () => {
+        const { lines, payload } = await statusLines('lane/l01', 'main');
+        expect(lines).toContain('Orchestrator branch: main');
+        expect(lines).toContain(
+          'Current branch: lane/l01 (not the orchestrator branch: this checkout is a lane)',
+        );
+        expect(payload).toMatchObject({
+          orchestrator: { claimed: true, isOrchestrator: false },
+        });
+      });
+
+      it('reports a detached HEAD as no branch and not the orchestrator', async () => {
+        const { lines, payload } = await statusLines(null, 'main');
+        expect(lines).toContain(
+          'Current branch: detached HEAD (not the orchestrator branch: this checkout is a lane)',
+        );
+        expect(payload).toMatchObject({
+          orchestrator: { currentBranch: null, isOrchestrator: false },
+        });
+      });
+
+      it('reports an empty or absent value as unclaimed and names the claim command', async () => {
+        const { lines, payload } = await statusLines('main', null);
+        expect(lines).toContainEqual(
+          expect.stringMatching(
+            /^Orchestrator branch: unclaimed \(the orchestrator claims it with `oat project orchestrator set --project \S+`\)$/,
+          ),
+        );
+        expect(lines).toContain('Current branch: main');
+        expect(payload).toMatchObject({
+          orchestrator: {
+            branch: null,
+            claimed: false,
+            currentBranch: 'main',
+            isOrchestrator: false,
+          },
+        });
+      });
+
+      it("names the lane lanes.md lists on this checkout's branch", async () => {
+        const lanes: LaneStatus = { current: ['l02'], headAhead: [] };
+        const text = createHarness({
+          cwd: '/repo',
+          projectState: freestyleState,
+          currentBranch: 'lane/l02',
+          orchestratorBranch: 'main',
+          lanes,
+        });
+        await runCommand(text.command, []);
+        expect(text.capture.info).toContain(
+          'Current branch: lane/l02 (not the orchestrator branch: this checkout is lane l02 in lanes.md)',
+        );
+        const json = createHarness({
+          cwd: '/repo',
+          projectState: freestyleState,
+          currentBranch: 'lane/l02',
+          orchestratorBranch: 'main',
+          lanes,
+        });
+        await runCommand(json.command, [], ['--json']);
+        expect(json.capture.jsonPayloads[0]).toMatchObject({
+          lanes: { current: ['l02'], headAhead: [] },
+        });
+      });
+
+      it('flags a lane whose branch is past its last report, and says when lanes.md is unreadable', async () => {
+        const flagged = createHarness({
+          cwd: '/repo',
+          projectState: freestyleState,
+          currentBranch: 'main',
+          orchestratorBranch: 'main',
+          lanes: {
+            current: [],
+            headAhead: [
+              {
+                lane: 'l01',
+                branch: 'lane/l01',
+                reportedHead: 'abc123',
+                status: 'ahead',
+                branchHead: 'def456',
+                commits: 2,
+              },
+              {
+                lane: 'l03',
+                branch: 'lane/l03',
+                reportedHead: 'fff000',
+                status: 'moved',
+                branchHead: 'aaa111',
+                commits: 1,
+              },
+            ],
+          },
+        });
+        await runCommand(flagged.command, []);
+        expect(flagged.capture.info).toContain(
+          "Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head abc123; do not merge unreported commits unreviewed.",
+        );
+        expect(flagged.capture.info).toContain(
+          "Lane head ahead of its report: l03 (branch lane/l03) has moved off the last report's head fff000 (1 commit not in it); do not merge unreported commits unreviewed.",
+        );
+
+        const unreadable = createHarness({
+          cwd: '/repo',
+          projectState: freestyleState,
+          currentBranch: 'main',
+          orchestratorBranch: 'main',
+          lanes: { current: [], headAhead: [], error: 'lanes.md is malformed' },
+        });
+        await runCommand(unreadable.command, []);
+        expect(unreadable.capture.info).toContain(
+          'Lanes: unreadable (lanes.md is malformed)',
+        );
+      });
+
+      it('prints no orchestrator line and no orchestrator field for a quick project', async () => {
+        const text = createHarness({
+          cwd: '/repo',
+          currentBranch: 'main',
+          orchestratorBranch: 'main',
+        });
+        await runCommand(text.command, []);
+        expect(text.capture.info.join('\n')).not.toMatch(
+          /^(Orchestrator|Current) branch:/m,
+        );
+        const json = createHarness({
+          cwd: '/repo',
+          currentBranch: 'main',
+          orchestratorBranch: 'main',
+        });
+        await runCommand(json.command, [], ['--json']);
+        expect(json.capture.jsonPayloads[0]).not.toHaveProperty('orchestrator');
+        expect(json.capture.jsonPayloads[0]).not.toHaveProperty('lanes');
+        expect(text.capture.info.join('\n')).not.toMatch(/^Lane/m);
       });
     });
 

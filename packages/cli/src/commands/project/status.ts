@@ -5,13 +5,30 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import {
+  formatHeadAhead,
+  readLaneStatus,
+  type LaneStatus,
+} from '@commands/project/lane/head';
+import {
+  readOpenLinkedProjects,
+  type OpenLinkedProjects,
+} from '@commands/project/linked/ledger';
 import { projectListHint } from '@commands/project/list';
+import {
+  describeOrchestratorCheckout,
+  formatOrchestratorLines,
+  readCurrentBranch,
+  readOrchestratorBranch,
+  type OrchestratorCheckout,
+} from '@commands/project/orchestrator/branch';
 import {
   resolveUnpulledSyncedProject,
   type UnpulledSyncedProject,
 } from '@commands/project/unpulled-synced';
 import { getProjectStateWithReviewAncestry } from '@commands/review/head-ancestry';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { shellQuote as quoteCommandWord } from '@commands/shared/shell-quote';
 import {
   resolveActiveProject,
   type ActiveProjectResolution,
@@ -29,6 +46,18 @@ interface ProjectStatusDependencies {
     projectDir: string,
     repoRoot?: string,
   ) => Promise<UnpulledSyncedProject | null>;
+  /** This checkout's branch; null on a detached HEAD or outside git. */
+  readCurrentBranch: (cwd: string) => Promise<string | null>;
+  /** A freestyle project's recorded orchestrator branch; null if unclaimed. */
+  readOrchestratorBranch: (projectDir: string) => Promise<string | null>;
+  /** A freestyle parent's open rows in its `linked-projects.md`. */
+  readOpenLinkedProjects: (projectDir: string) => Promise<OpenLinkedProjects>;
+  /** This checkout's lane and the head-ahead flags from `lanes.md`. */
+  readLaneStatus: (
+    projectDir: string,
+    cwd: string,
+    checkout: OrchestratorCheckout,
+  ) => Promise<LaneStatus>;
 }
 
 interface ProjectStatusOptions {
@@ -43,6 +72,11 @@ const DEFAULT_DEPENDENCIES: ProjectStatusDependencies = {
   resolveActiveProject,
   getProjectState: getProjectStateWithReviewAncestry,
   resolveUnpulledSyncedProject,
+  readCurrentBranch: (cwd) => readCurrentBranch(cwd),
+  readOrchestratorBranch,
+  readOpenLinkedProjects,
+  readLaneStatus: (projectDir, cwd, checkout) =>
+    readLaneStatus(projectDir, cwd, checkout),
 };
 
 function formatUnpulledStatusLines(project: UnpulledSyncedProject): string[] {
@@ -88,9 +122,45 @@ function freestyleProjectFiles(
   };
 }
 
+/** What status reports about a freestyle project beyond its files. */
+interface FreestyleCoordination {
+  orchestrator: OrchestratorCheckout;
+  lanes: LaneStatus;
+  linkedProjects: OpenLinkedProjects;
+}
+
+/** Lanes whose branch is past their last report, and an unreadable ledger. */
+function formatLaneLines(lanes: LaneStatus): string[] {
+  if (lanes.error) {
+    return [`Lanes: unreadable (${lanes.error})`];
+  }
+  return lanes.headAhead.map(formatHeadAhead);
+}
+
+/**
+ * One line per open link, so a parent cannot miss a linked project whose
+ * records it has not acknowledged; an unreadable ledger is said, not hidden.
+ * The printed command names the inspected parent, which need not be the
+ * active project that `linked ack` would otherwise close a row in.
+ */
+function formatOpenLinkLines(
+  linked: OpenLinkedProjects,
+  parentDir: string,
+): string[] {
+  if (linked.error) {
+    return [`Linked projects: unreadable (${linked.error})`];
+  }
+  return linked.open.map(
+    (row) =>
+      `Open linked project: ${row.name} (${row.scope}, ${row.path}): ${row.purpose}; after reading its records, acknowledge with \`oat project linked ack ${row.name} --project ${quoteCommandWord(parentDir)}\``,
+  );
+}
+
 function formatProjectStatusLines(
   project: ProjectState,
+  projectDir: string,
   files: FreestyleProjectFiles | null,
+  coordination: FreestyleCoordination | null,
 ): string[] {
   // Freestyle has no lifecycle phase, progress or current task to report.
   const position = files
@@ -98,6 +168,17 @@ function formatProjectStatusLines(
         'Mode: freestyle (no lifecycle workflow)',
         `Rules: ${files.agents}`,
         `Shape: ${files.shape}`,
+        ...(coordination
+          ? [
+              ...formatOrchestratorLines(
+                coordination.orchestrator,
+                coordination.lanes.current,
+                projectDir,
+              ),
+              ...formatLaneLines(coordination.lanes),
+              ...formatOpenLinkLines(coordination.linkedProjects, projectDir),
+            ]
+          : []),
       ]
     : [
         `Phase: ${project.phase} (${project.phaseStatus})`,
@@ -188,10 +269,12 @@ async function runProjectStatus(
         return;
       }
       const project = await dependencies.getProjectState(options.projectPath);
-      writeProjectStatusOutput(
+      await writeProjectStatusOutput(
         context,
+        dependencies,
         options,
         { status: 'ok', project },
+        options.projectPath,
         options.projectPath,
       );
       return;
@@ -213,11 +296,13 @@ async function runProjectStatus(
         return;
       }
       const project = await dependencies.getProjectState(targetPath);
-      writeProjectStatusOutput(
+      await writeProjectStatusOutput(
         context,
+        dependencies,
         options,
         { status: 'ok', project },
         options.projectPath,
+        targetPath,
       );
       return;
     }
@@ -266,14 +351,15 @@ async function runProjectStatus(
       return;
     }
 
-    const project = await dependencies.getProjectState(
-      join(repoRoot, activeProject.path),
-    );
-    writeProjectStatusOutput(
+    const activeDir = join(repoRoot, activeProject.path);
+    const project = await dependencies.getProjectState(activeDir);
+    await writeProjectStatusOutput(
       context,
+      dependencies,
       options,
       { status: 'ok', project },
       activeProject.path,
+      activeDir,
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -296,16 +382,40 @@ function writeUnpulledStatusOutput(
   );
 }
 
-function writeProjectStatusOutput(
+/**
+ * `projectDir` is the project folder as the caller named it, used in the
+ * printed paths; `absoluteDir` is the same folder resolved, used for reads.
+ */
+async function writeProjectStatusOutput(
   context: CommandContext,
+  dependencies: ProjectStatusDependencies,
   options: ProjectStatusOptions,
   status: { status: 'ok'; project: ProjectState },
   projectDir: string,
-): void {
+  absoluteDir: string,
+): Promise<void> {
   const files = freestyleProjectFiles(status.project, projectDir);
-  const payload = files ? { ...status, projectFiles: files } : status;
+  let coordination: FreestyleCoordination | null = null;
+  if (files) {
+    const orchestrator = describeOrchestratorCheckout(
+      await dependencies.readOrchestratorBranch(absoluteDir),
+      await dependencies.readCurrentBranch(context.cwd),
+    );
+    coordination = {
+      orchestrator,
+      lanes: await dependencies.readLaneStatus(
+        absoluteDir,
+        context.cwd,
+        orchestrator,
+      ),
+      linkedProjects: await dependencies.readOpenLinkedProjects(absoluteDir),
+    };
+  }
+  const payload = files
+    ? { ...status, projectFiles: files, ...coordination }
+    : status;
   writeStatusPayload(context, options, payload, () =>
-    formatProjectStatusLines(payload.project, files),
+    formatProjectStatusLines(payload.project, projectDir, files, coordination),
   );
 }
 

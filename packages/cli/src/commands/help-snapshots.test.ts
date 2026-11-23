@@ -1277,12 +1277,15 @@ describe('help output snapshots', () => {
         dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         journal                                      Validate the implementation journal (read-only)
+        lane                                         Manage a freestyle project's lane ledger (lanes.md)
         list [options]                               List tracked OAT projects
+        linked                                       Manage a freestyle project's linked projects (not reviewer links; see \`oat project links\`)
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
         log                                          Manage the append-only project observation log
         migrate [options] <project-path>             Migrate a shared OAT project to synced scope
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
+        orchestrator                                 Manage a freestyle project's orchestrator branch
         pause [options] [name]                       Pause an OAT project
         promote [options] <project-path>             Promote an authored lite, brief or settled goal project to the quick workflow
         prune [options] [project-path|slug]          Permanently remove a synced project and its ref
@@ -1603,6 +1606,11 @@ describe('help output snapshots', () => {
         --with-project-log  Create project-log.md regardless of workflow.projectLog
                             config
         --no-project-log    Do not create project-log.md during scaffolding
+        --link-to <parent>  Freestyle only: create a linked child of this parent
+                            (name or path); the child starts unclaimed and the parent
+                            gets an open row in its linked-projects.md
+        --purpose <text>    With --link-to: the one-line purpose recorded in the
+                            parent row
         -h, --help          display help for command
 
       Global Options:

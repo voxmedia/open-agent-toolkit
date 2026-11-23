@@ -67,11 +67,14 @@ _Not yet shaped._
 
 ## Project log
 
-The project log (`project-log.md`, when enabled) keeps judgment entries
-(decisions with their reasons, surprises, lessons learned) and structural
-entries for events that matter to the project's story, written only with
-`oat project log append`. Operational churn stays out of it. Every reshape
-attempts a `decision` entry; this file stands alone when an append is skipped.
+The project log (`project-log.md`, when enabled) records what happened and
+when: judgment entries (a reshape's decision with its reason, surprises,
+lessons learned) and structural entries for events that matter to the
+project's story, written only with `oat project log append`. Operational churn
+stays out of it. Decisions about the work live only in `decisions.md`, and a
+`decision` entry may cite one by its `drNN`; what is still true goes in
+`memories.md`. Every reshape attempts a `decision` entry; this file stands
+alone when an append is skipped.
 
 ## Undecided
 

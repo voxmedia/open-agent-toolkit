@@ -37,6 +37,9 @@
     // Explainer-kit run packages are immutable, hash-attested artifacts; a
     // formatter rewrite on commit breaks their durability attestation.
     ".oat/**/explainers/**",
+    // Filed lane reports are kept verbatim as the lane returned them; a
+    // formatter rewrite on commit (`*` list markers to `-`) edits the record.
+    ".oat/projects/**/lane-reports/**",
     ".oat/repo/reference/project-recaps/**",
   ],
 }

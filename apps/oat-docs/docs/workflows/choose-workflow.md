@@ -133,8 +133,9 @@ is what holds the planning conversation, so start with the skill.
 - If an orchestrating agent will run long work its own way, with many
   delegated lanes and pull requests, and you want its state in files rather
   than in the conversation, choose freestyle. OAT scaffolds the project folder,
-  its rules (`AGENTS.md`) and `shape.md`, and keeps the records commands
-  working; the shaping conversation agrees how the project runs, and no
+  its rules (`AGENTS.md`), `shape.md`, `decisions.md` and `memories.md`, and
+  keeps the records commands working, including the lane ledger and linked
+  projects; the shaping conversation agrees how the project runs, and no
   lifecycle skill or gate runs on it. There is no promotion to or from
   freestyle.
 

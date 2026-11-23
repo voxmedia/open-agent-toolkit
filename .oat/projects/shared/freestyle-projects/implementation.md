@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-22
-oat_current_task_id: p05
+oat_last_updated: 2026-11-23
+oat_current_task_id: p09
 oat_generated: false
 oat_template: false
 ---
@@ -45,13 +45,13 @@ oat_template: false
 | p02   | complete | 1     | 1/1      |
 | p03   | complete | 1     | 1/1      |
 | p04   | complete | 1     | 1/1      |
-| p05   | pending  | 1     | 0/1      |
-| p06   | pending  | 1     | 0/1      |
-| p07   | pending  | 1     | 0/1      |
-| p08   | pending  | 1     | 0/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
 | p09   | pending  | 1     | 0/1      |
 
-**Total:** 4/9 phases accepted
+**Total:** 8/9 phases accepted
 
 ---
 
@@ -1080,7 +1080,92 @@ Proof: `build:docs`, docs index freshness.
 
 ## Phase p05: Linked projects
 
-**Status:** pending
+**Status:** completed
+**Base:** 517d5e56699ad1dcba90239ecc8e3787fda3311d
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+**Head:** 352186e87a0aa1f8485484e31febafd2a995696b
+
+Phase verification at the head (clean tree, isolated `HOME`): `pnpm check` exit 0 (cli `check` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 455 files, 9920 tests); `pnpm build` exit 0 (cache hit, inputs unchanged since the 351b80aba build); `pnpm lint` exit 0. Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`.
+
+Renamed in plan.md at the m02 re-alignment: Orchestrator branch and linked projects.
+
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group (`oat_plan_parallel_groups: []`); root fan-out fails the independence test because the orchestrator-branch and linked-project slices share the freestyle state template, the project `AGENTS.md` template, `oat project status` and the kickoff reference; so one phase implementer (rung 3). The inline exception does not apply: p05 adds new commands and state fields.
+
+### Task p05-t01: Record the orchestrator branch, claim it with orchestrator set, and show it in status
+
+**Status:** completed
+**Commit:** be0debe724e02cfd13cfbd6f29471036cedc1498
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+
+- Intent: Outcome 4 and the Orchestrator branch decision. `oat_orchestrator_branch` in the freestyle state template, set to the current branch by `oat project new` (empty for a linked child, empty off a branch); `oat project orchestrator set` (`--branch`, `--replace`) claiming an empty or absent value; the shared guard the record-writing commands use; the `status` line comparing the recorded branch with the current one.
+- Files: `.oat/templates/state-freestyle.md`, `packages/cli/src/commands/project/orchestrator/*`, `packages/cli/src/commands/project/resolve-named-project.ts`, `packages/cli/src/commands/project/new/{scaffold.ts,index.ts}`, `packages/cli/src/commands/project/{status.ts,status.test.ts,index.ts}` and their tests.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build` (refreshes the bundled `state-freestyle.md`); `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/help-snapshots.test.ts src/commands/index.test.ts src/commands/commands.integration.test.ts src/commands/template` (72 files, 2111 passed); CLI `type-check` and `check` exit 0. `orchestrator/orchestrator.test.ts` runs the real program in scratch git repositories at the bundle tier (isolated `HOME`): `new` records `main` for shared, local and synced (read back from `refs/oat/projects/<slug>` in the origin) and leaves a detached-HEAD project unclaimed (`''`); `orchestrator set` claims an unclaimed project and one whose `state.md` is the m01 shape with no field, refuses a different branch without `--replace` (state unchanged) and replaces with it, is a no-op on the same branch, records `--branch`, refuses a detached HEAD without it, defaults to the active project, and claims a synced project in its nested worktree without moving its published ref; `status` prints the recorded and current branch for shared and synced. `status.test.ts` covers the on-branch, lane, detached and unclaimed lines and JSON `orchestrator`. Existing-mode controls: a quick scaffold writes no field and `new --json` no `orchestratorBranch`; `orchestrator set` refuses a quick project with its state unchanged; quick `status` prints no branch lines and no `orchestrator` field. The m01 freestyle minimal-state pin in `scaffold.test.ts` gains `oat_orchestrator_branch: ''`; the `project` help snapshot gains `orchestrator`.
+- Can-fail: replacing the `--replace` refusal with `if (false)` failed "refuses to replace a different recorded branch without --replace" on its exit code (expected 1, received 0); restored.
+- Decisions: the field is read with the YAML scalar parser, so `''`, `null` and an absent field all read as unclaimed; values are written double-quoted (the template keeps oxfmt's `''`). `orchestrator set` writes `state.md` and bumps `oat_project_state_updated`, and commits or pushes nothing (no automatic commits). A project argument is a name or a path, as `oat project open` reads it (see p05-t02 for the Known Unknown). On a detached HEAD, `new` leaves the project unclaimed, `status` prints `Current branch: detached HEAD` and says the checkout is not the orchestrator, and `orchestrator set` needs `--branch`.
+
+### Task p05-t02: Linked projects: new --link-to, linked add and ack, and open links in status
+
+**Status:** completed
+**Commit:** 1e4fe1c31f844b0cac4bd4ae6af04a1d3c6d4957
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+
+- Intent: Outcome 3 and the Linked projects decision. `oat project new <child> --mode freestyle --link-to <parent> --purpose <text>` scaffolds the child with `oat_linked_from: <parent>` and an empty orchestrator branch and opens a row (child name, path, scope, purpose, date) in the parent's own `linked-projects.md`; `oat project linked add <child> --purpose <text> [--project <parent>]` opens a row for an existing freestyle project, writing only the parent's file; `oat project linked ack <child> [--project <parent>]` moves the row to `## Closed` with the acknowledgment date, then attempts a structural log entry (`oat-project-linked · <child>`, `--time`, source project `<child>`); `status` on a freestyle parent prints one `Open linked project:` line per open row (JSON `linkedProjects.open`). All three writes are guarded by the parent's orchestrator branch (p05-t01's `assertOrchestratorCheckout`) and commit or push nothing for the parent.
+- Files: `packages/cli/src/commands/project/linked/{ledger.ts,link.ts,index.ts,linked.test.ts}`, `packages/cli/src/commands/project/{index.ts,new/index.ts,status.ts,status.test.ts}`, `packages/cli/src/commands/help-snapshots.test.ts`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/help-snapshots.test.ts src/commands/index.test.ts src/commands/commands.integration.test.ts src/commands/template` (73 files, 2136 passed); `pnpm check`, CLI `type-check` exit 0. `linked/linked.test.ts` (25 tests, real program, scratch repositories with an origin, bundle tier under an isolated `HOME`): with the parent in shared, local and synced scope, `new --link-to` writes the child's `oat_linked_from` and `oat_orchestrator_branch: ''`, the parent's open row, and commits only the child's own scaffold (the shared parent's `linked-projects.md` stays untracked; the synced parent's published ref does not move); `status` flags the row until `linked ack`, which clears it; `linked add` writes only the parent row (the child's `state.md` is byte-identical) and refuses a second open row; with a log present `linked ack` appends a structural entry parsed as `producer: oat-project-linked`, `ref` and `sourceProject` the child, with a time; with `--no-project-log` at creation and `workflow.projectLog: false`, `linked ack` reports `skipped`, closes the row and leaves `project-log.md` absent. Guard, on shared and synced parents: off the recorded branch, on a detached HEAD and while unclaimed, `new --link-to`, `linked add` and `linked ack` each exit 1 with the reason, create no child and leave the ledger byte-identical; on the recorded branch all three exit 0. A malformed ledger is reported by `status` (`Linked projects: unreadable (...)`) and refused by `linked add`, never shown as no links; an unpulled synced parent is refused with the pull instruction. Existing-mode controls: `--link-to` with `--mode quick` is refused before any write; a quick child (`linked add`) and a quick parent (`new --link-to`) are refused; a plain quick `new` writes no ledger; `--purpose` without `--link-to` is refused; quick `status` prints no link lines (the p05-t01 control covers the same code path).
+- Can-fail (the record-writing guard, one clause at a time): neutralizing the off-branch refusal failed the off-branch and detached-HEAD tests for both shared and synced parents on their exit code (expected 1, received 0); neutralizing the unclaimed refusal failed the unclaimed tests for both scopes on the refusal reason (the off-branch message ran instead of the unclaimed one). Each was restored.
+- Known Unknown settled (name or path; cross-scope resolution): `--link-to`, `linked add`, `linked ack` and `--project` take a name or a path, read as `oat project open` reads its argument: absolute or containing `/` is a path, anything else a name looked up in the shared, local and synced scope roots of this checkout; a name in more than one scope is refused as ambiguous (pass a path); a synced project known only by its pointer is refused with `oat project pull <name>`, never pulled implicitly. What is recorded: the child's `oat_linked_from` holds the parent's name, and the parent's row holds the child's name, its path and scope at link time; `linked ack` matches the row by name (a path argument is reduced to its folder name), so it needs no copy of the child in this checkout, and a parent or child that later migrates between scopes keeps its name. Reasons: names are unique across scopes at creation (`assertCrossScopeSlugAvailable`), paths change on migration, and every other project command already accepts a name.
+- Decisions: the ledger is CLI-written Markdown (`# Linked projects: <parent>`, `## Open` and `## Closed` tables), parsed by cell content so oxfmt re-padding is harmless; a purpose is one line with no `|`. A failed log append after the row closes is a warning with exit 0 (the brief says the entry is attempted); a `skipped` append is reported as the log being disabled. `--purpose` is required with `--link-to` and `linked add` because the row carries it. Output paths are repository-relative, like `new`'s other paths. Record note: this record was written at close; its scope is the second unit named at the phase start.
+
+### Task p05-t03: AGENTS.md orchestrator-branch and linked-projects sections, kickoff claim and adoption, and the AGENTS.md refresh
+
+**Status:** completed
+**Commit:** 84bc243453a109c486cb3efcd8cf20e0aa9a7f53
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+
+- Intent: the AGENTS.md and skill half of p05. The project `AGENTS.md` template gains `## Orchestrator branch` (the lane self-test verbatim from the brief, `orchestrator set` with `--branch`/`--replace`, the guarded commands, and the same-branch limit) and `## Linked projects` (create with `new --link-to`/`linked add` and save the row by the parent's scope; the child is run by its own orchestrator session that claims it first and never writes the parent; check open links after every merge and on resume, then `linked ack`); `## Project files`, `## Single writer` (adds `linked-projects.md`, the claim, and "each project writes only its own records") and `## Records commands` follow. The kickoff reference gains a Before Shaping section: step 1 claims an unclaimed project (or stops a lane), step 2 opens a linked child with adopt-or-new (find the parent, pull a synced parent first, copy its `shape.md` as a snapshot, reset `## Goal`, rewrite `## Documents` as kinds, add an `**Adopted from:**` line naming the parent and its `Last shaped:` date, continue at the goal, then ask once whether adopted sections should differ). `SKILL.md` Step 2 claims first, then refreshes an older `AGENTS.md`, then routes a linked child to step 2.
+- Files: `.oat/templates/project-agents.md`, `.agents/skills/oat-project-freestyle/{SKILL.md,references/kickoff.md}`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`. No `metadata.version` bump: p08 owns bumps for m02.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/project/linked src/commands/project/orchestrator src/commands/template` (38 files, 1505 passed, bundle-tier scaffold tests included); `pnpm oat:validate-skills` (69 OK), `pnpm exec oxlint .agents/skills`, `pnpm check` exit 0. Contract tests pin the seven AGENTS.md headings in order, the lane self-test verbatim, the linked-projects and single-writer lines, the kickoff Before Shaping claim and adoption wording, and that SKILL.md's claim precedes its refresh; the refresh block is executed against a stub `oat template resolve` that copies the repository template: an AGENTS.md lacking the two new sections becomes byte-identical to what `scaffoldProject` writes, a current one is left untouched with no output, and a template that does not resolve stops with exit 1 and the file unchanged.
+- Can-fail: forcing the refresh condition false (`if false; then`) failed the replacement test on its output (`expected '' to contain '## Orchestrator branch'`); restored.
+- Known Unknown settled (how an existing project's AGENTS.md picks up later sections): the `oat-project-freestyle` skill re-renders it, keyed on headings. On every resume, after the claim, it resolves the current `project-agents` template with `oat template resolve` (repository, user, then bundle tier, as the scaffold does); when the project's `AGENTS.md` lacks any `##` heading the template has, it replaces the file whole, rendered as `oat project new` renders it (template frontmatter dropped, `{Project Name}` filled). Whole replacement, not section merging, because the file is OAT-owned and holds no project answers (those live in `shape.md`); no CLI command, because the skill already runs on every resume and the guarded commands' refusal names `oat project orchestrator set` for an orchestrator that has not resumed through the skill. The refreshed file is saved like the other records, by the commit agreement.
+- Decision: the claim comes before any write, the refresh included, so a lane session stops before touching the project. Correction to p05-t02's record note: no units were named at the phase start; that record was written at close.
+
+### Task p05-t04: Keep the parent active when new --link-to creates a child
+
+**Status:** completed
+**Commit:** 351b80abad00e89e284f31d8bee1d85e97160f80
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+
+- Intent: the scratch run (p05-t05) showed `oat project new <child> --link-to <parent>` repointing the parent's checkout at the child (`new` sets the active project by default), so the parent's orchestrator's next default-target command (`oat project log append`, `linked ack`, `orchestrator set`) would act on the child. The Linked projects decision says the parent creates the child but does not run it, and the Single writer decision keeps each project's records to its own orchestrator; with `--link-to`, `new` now leaves the active project unchanged.
+- Files: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/linked/linked.test.ts`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/linked src/commands/project/new` (150 passed); CLI `check` exit 0. The creation test in each parent scope asserts `.oat/config.local.json` still names the parent after `new --link-to`.
+- Can-fail: restoring `setActive: options.setActive` failed the creation test in all three scopes on the pointer (`expected '.oat/projects/shared/child' to be '.oat/projects/shared/parent'`); restored.
+- Classification: recorded as a new execution record inside the open phase, not as a post-commit recovery against p05-t02, because it changes the behavior of the new `--link-to` option (outside the recovery predicate's no-public-behavior-change rule) while staying within the Linked projects decision; no recovery attempt is consumed. The edit was made before this classification was written down.
+
+### Task p05-t05: Parent/child scratch pair with the branch build
+
+**Status:** no-change
+**Executor:** phase-implementer:freestyle-projects-p05-implementation-1
+**Handle:** freestyle-projects-p05-implementation-1 (this session)
+
+- Intent: the scratch-pair exit evidence: a parent and a linked child in a throwaway repository under `$TMPDIR`, the child claimed by its own orchestrator session in a linked worktree on its own branch, its shaping opening with adopt-or-new and adopting the parent's shape, that worktree's guarded commands refusing for the parent, and the parent's `status` flagging the row until `linked ack`; plus the AGENTS.md refresh and claim on a project carrying m01-rendered files.
+- Files: none in the repository; transcript in `references/analysis/p05-scratch-transcript.md` (gitignored).
+- Proof: the transcript, branch build `node packages/cli/dist/index.js` built from `351b80abad00e89e284f31d8bee1d85e97160f80`.
+- Setup: a throwaway repository under `$TMPDIR/oat-p05-scratch` with an isolated `HOME` and global Git config, `oat` on `PATH` as a wrapper for the branch build. Sessions were played by the implementer from the skill and template text, not by a fresh-context agent; user answers were scripted.
+- Parent: `parent` created on `main` with the project log, shaped and committed; `oat_orchestrator_branch: "main"`.
+- Creation: `oat project new child --mode freestyle --scope shared --link-to parent --purpose "Migrate the CSV importer"` wrote `oat_linked_from: "parent"` and `oat_orchestrator_branch: ""`, kept `parent` active (p05-t04), committed only the child's three scaffold files, and left the parent's `linked-projects.md` uncommitted; `status` showed `Open linked project: child (shared, .oat/projects/shared/child): ...`.
+- Child session: in a linked worktree on `child-orch` branched from `main`, the SKILL.md Resume block made `child` active; `status` showed it unclaimed; the scripted user confirmed and `oat project orchestrator set` claimed `child-orch` (`this checkout is the orchestrator`); the refresh block was silent and left the current AGENTS.md byte-identical. Kickoff Before Shaping step 2 asked adopt or new; on adopt the parent's `shape.md` was copied, Goal reset, Documents rewritten as kinds, Last shaped set, and the `**Adopted from:** parent, last shaped 2026-11-20; adopted sections not yet confirmed.` line added; shaping resumed at Goal, then one confirmation changed only the Reviews effort and ended the line `adopted sections confirmed 2026-11-23.` (diff in the transcript).
+- Guard in the child's worktree: `linked ack child --project parent`, `linked add child --project parent` and `new grandchild --link-to parent` each exit 1 (`this checkout is on branch child-orch, but project parent's orchestrator branch is main`); the parent's ledger hash is unchanged and no grandchild folder exists; the parent's `status` there says `this checkout is a lane` and still lists the open row.
+- Acknowledge: the child's records committed on `child-orch` and merged into `main`; the parent's `status` on `main` still flagged the row; after reading the child's records, `oat project linked ack child` (active project) closed the row (`Acknowledged 2026-11-23`), appended `### 2026-11-23 · structural · oat-project-linked · child` with `**Source project:** child`, and `status` listed no open link; a second ack exits 1 (`has no open link`).
+- Existing project: `legacy` with the m01 AGENTS.md (commit `1e0b473c6`) and no branch field read as unclaimed, and `linked add --project legacy` exit 1 as unclaimed with no ledger written; after `orchestrator set` claimed it, the SKILL.md refresh block printed the two missing headings and replaced AGENTS.md byte-identical to a fresh scaffold; a second run was silent; `oat project check-state` exit 0.
+
+Known Unknown settled (how a shared child scaffolded on the parent's orchestrator branch reaches its own orchestrator's branch, and what `status` says on a detached HEAD; correcting line added at the p05 review receive, L1): a shared child's scaffold, and a synced child's pointer, are committed on the parent's orchestrator branch, so the child's orchestrator starts its own branch from there in its own worktree (pulling first for a synced child) and then claims it with `oat project orchestrator set` (`.oat/templates/project-agents.md` "Running one" bullet; p05-t05 scratch run section 3, `git worktree add -b child-orch ../child-wt main`). On a detached HEAD, `new` leaves the project unclaimed, `status` prints `Current branch: detached HEAD` and says the checkout is not the orchestrator, and `orchestrator set` needs `--branch` (p05-t01).
+
+### Review Received: p05
+
+- Review `freestyle-projects-p05-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `517d5e566..352186e87`, artifact `reviews/archived/p05-code-review-2026-11-23T024113Z.md` (local-only): 0 critical, 0 high, 0 medium, 1 low; reconnaissance not attempted; the reviewer re-ran the focused p05 suites (236 passed) and a branch-build check of `new --link-to`, `linked ack` on and off branch and the open-link flag.
+- L1 (Low): the Known Unknown on how a shared child reaches its own orchestrator's branch was answered in the shipped `project-agents.md` "Running one" bullet and the p05-t05 scratch run but not recorded as settled. Disposition: fixed at receive with an appended journal line (`15a4e1035`; its setext-heading formatting slip repaired at `37cebd3d0`, no recorded line rewritten).
+- **Finding classes:** L1 bookkeeping (provenance wording: records existing evidence in the journal).
+- Outcome: passed, bookkeeping-only fixes applied at receive; no fix round, no re-review. Root check after the phase report: `pnpm test:skills` exit 0 (the phase edited the `oat-project-freestyle` SKILL.md Step 2 block; m01 learning `freestyle-projects-learning-m01-02`).
 
 ---
 
@@ -1088,17 +1173,434 @@ Proof: `build:docs`, docs index freshness.
 
 **Status:** pending
 
+Retired at the m02 re-alignment (2026-11-22): the ancestry warning was dropped and the orchestrator branch moved into p05 (plan.md Decisions: Records branch, Orchestrator branch, m02 re-alignment). The ID is not reused; this stub stays because the journal is append-only.
+
 ---
 
 ## Phase p07: Lane ledger and reports
 
-**Status:** pending
+**Status:** completed
+**Base:** df8268ad2bd2493a5230694bd7910b98dbe03bb0
+**Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+**Head:** b65ebd8e3f12437e07b627a098b8e1c07c47a1d8
+
+Phase verification at the head (clean tree but the gitignored `references/`, isolated `HOME`): `pnpm check` exit 0 (cli `check` and `build` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 457 files, 9967 tests; control-plane 327, docs packages 85); `pnpm build` exit 0 (cache hit replaying the `d58dc67` build `pnpm check` executed at this head, inputs unchanged); `pnpm lint` exit 0. No `.agents/skills` file changed, so `pnpm test:skills` was not required. Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`. Correction to p07-t05: the final scratch run's transcript shows sha256 `4f2b0576…` for both the filed report and the returned file; `91756e3d…` was an earlier run of the same script, whose report embedded different SHAs.
+
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group; p07 cannot run beside p10 because both edit the project `AGENTS.md` template and `lane-report.md`. Root fan-out fails the independence test because the ledger command, report filing, head-ahead check and `status` lane line share `lanes.md` handling, `oat project status` and the `AGENTS.md` template. So one phase implementer (rung 3). The inline exception does not apply: p07 adds a new command, a new template and new status output.
+
+### Task p07-t01: The lane ledger and oat project lane set
+
+**Status:** completed
+**Commit:** cf9c095adff5d10e3d8bc26cb71ca2eb42cf8b42
+**Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+
+- Intent: Outcome 5 and the Lane ledger, Dispatch, IDs, Lane reports (filing half) and Single writer decisions. `lanes.md` with `## Active` (one block per open lane, rewritten in place), `## Closed` (one line per merged or superseded lane) and `## History` (append-only, one line per update with an update ID), written only by `oat project lane set` with an atomic write; create, update, dispatch, steer, no-report, close and supersede; `--report <file>` filing the returned text verbatim into `lane-reports/<lane>-<dispatch>.md` with the pointer set in the same update; the orchestrator-branch guard.
+- Files: `packages/cli/src/commands/project/lane/{ledger.ts,update.ts,set.ts,index.ts,ledger.test.ts,lane.test.ts}`, `packages/cli/src/commands/project/index.ts`, `packages/cli/src/commands/help-snapshots.test.ts` (the `project` help gains `lane`).
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane` (2 files, 30 passed) and `src/commands/help-snapshots.test.ts src/commands/index.test.ts src/commands/commands.integration.test.ts` (113 passed); CLI `check` and `type-check` exit 0. `ledger.test.ts` (pure, each case round-tripped through the rendered file): create (d01 open, state dispatched, one History line listing the fields), update in place with one History line per update, steer as a History line on the open dispatch with the block unchanged and refused once the dispatch closed, `--no-report` then `--dispatch` numbering d02 per lane and refused while d01 is open, report pointer `lane-reports/l01-d01.md` closing the dispatch, blocked with `waiting_on` and its clearing on unblock, merged moving the lane to Closed as one line and refusing later updates, superseded with `replaced_by` (and both refusals), History append-only across closures (u001..u006), field clearing, lane-ID format, and a malformed ledger refused. Atomic write: a temporary file that is half-written then fails, and a complete one whose rename fails, each leave the previous `lanes.md` byte-identical and no temporary file. `lane.test.ts` runs the real program in scratch repositories (isolated `HOME`): creation with every handle field, placement `own-worktree` for a linked worktree and `shared-worktree` for `--worktree .` with normalized `--paths`, nothing committed (HEAD unchanged, `lanes.md` untracked); a report with trailing spaces, no final newline, a tab and non-ASCII filed byte-identical and the pointer resolving to it; a clashing different file at the next report path refused with the file and the ledger unchanged, the same bytes accepted on retry; steer and no-report History lines through the CLI. Guard, shared and synced: off the recorded branch, on a detached HEAD and while unclaimed, `lane set` exits 1 with the reason and the ledger byte-identical (or absent). Existing-mode control: a quick project is refused before any write.
+- Can-fail: skipping the `assertOrchestratorCheckout` call in `setLane` failed all six guard tests (off-branch, detached, unclaimed; shared and synced) on their exit code (expected 1, received 0); writing the ledger straight to `lanes.md` instead of temporary-then-rename failed the atomic test (the previous ledger was overwritten with the partial content). Each was restored.
+- Known Unknown settled (the parseable block format inside `lanes.md`): CLI-written Markdown under a `# Lanes: <project>` title and a fixed preamble. `## Active` holds one `### lNN` block per open lane of `- <field>: <value>` lines in a fixed order (`state`, `dispatch`, `next`, `owner`, `waiting_on`, `blocker`, `replaced_by`, `task`, `thread`, `worktree`, `placement`, `branch`, `base`, `head`, `review_round`, `report`, `wake`, `provider`, `model`, `effort`, `observed_model`, `paths`, `last_observed`); an unset field is not written, and an unknown or repeated field is refused. `dispatch: dNN open|reported|no-report` carries the lane's current dispatch. `## Closed` and `## History` hold `- <id> · <text>` lines (`- l03 · merged · <time> · branch … · head … · report …`; `- u007 · <time> · l01 d02 · <changes>`), with `_None._` for an empty section. Values are one line; reading undoes Markdown backslash escapes, because the repository's pre-commit oxfmt rewrites a committed ledger's `*` as `\*` (captured real output in `ledger.test.ts`). Reasons: a Markdown file a fresh session reads in one pass; one block per lane rewritten in place keeps Active current; field lines survive formatter re-padding where a table would not hold optional fields.
+- Decisions: IDs `l01` (lanes), `d01` per lane (dispatches), `u001` (updates). Creation opens d01 in state `dispatched`; `--report` and `--no-report` imply `turn-finished` and `--dispatch` implies `dispatched` unless `--state` is given; leaving `blocked` clears `waiting_on` and `blocker`; `--waiting-on` is one of `owner`, `lane`, `linked-project`, `external`. `last_observed` is the time of each update. `head` is the head the lane's last report delivered, set by the orchestrator with `--head` when it files the report. `placement` is derived from `--worktree` when it is set: `shared-worktree` when it is this checkout (which the guard makes the orchestrator's), otherwise `own-worktree`. A report is copied before the ledger is written, so a failed write never leaves a pointer to a missing file; a report is never edited, so a different existing file is refused and the same bytes accepted. Nothing is committed or pushed.
+
+### Task p07-t02: The bundled lane-report.md template
+
+**Status:** completed
+**Commit:** dec97ac02d284b8617b9a30e2bf5b9235bd6c322
+**Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+
+- Intent: the Lane reports decision's report shape as the bundled `lane-report.md` template (bundle inputs and the workflows pack), resolved with `oat template resolve lane-report --output <path>` and embedded in each dispatch brief.
+- Files: `.oat/templates/lane-report.md`, `packages/cli/scripts/bundle-inputs.mjs`, `packages/cli/src/commands/tools/shared/pack-manifest.ts`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build` (bundles the template); `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/commands/template src/commands/tools src/validation` (73 files, 1898 passed) and `src/commands/init src/commands/project/new src/release` (59 files, 1494 passed; the bundle-consistency and pack-manifest checks cover the new entry); CLI `check` exit 0. The new `freestyle lane report shape (p07)` tests pin the ten sections in the decision's order with Summary split into This round and Lane so far, the tested-SHA line and the final-message instruction; resolve `lane-report` under an isolated `HOME` with no repository tier (tier `bundle`, no path, the `--output` copy byte-identical to the repository template), build a dispatch brief that embeds it after the dispatch facts and assert the brief carries every section in order; and show a user-tier `~/.oat/templates/lane-report.md` overriding the bundle.
+- Decisions: the template has no frontmatter, unlike the document templates, because `--output` copies raw and the shape is embedded whole in a brief (a repository or user override is embedded the same way). It tells the lane it writes no project records and that every turn end, partial ones included, gets a report; the lane-notes instruction is p10's. Placeholders use `{...}` like the other templates, and the prose names no heading literally (the template heading-literal guard).
+
+### Task p07-t03: The head-ahead check and the status lane lines
+
+**Status:** completed
+**Commit:** f99dcb511887483a60f9aa6ca350b71201c9d133
+**Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+
+- Intent: the Head-ahead check decision (for a lane in its own worktree, `lane set` and `status` flag a branch head past the last report's head) and the Orchestrator branch decision's lane naming (`status` names the lane when `lanes.md` lists this checkout's branch).
+- Files: `packages/cli/src/commands/project/lane/{head.ts,set.ts,index.ts,lane.test.ts}`, `packages/cli/src/commands/project/orchestrator/branch.ts`, `packages/cli/src/commands/project/{status.ts,status.test.ts}`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/commands/help-snapshots.test.ts src/commands/commands.integration.test.ts` (73 files, 2146 passed); CLI `check` and `type-check` exit 0. `lane.test.ts` (real program, real git, a linked worktree on `lane/l01` with one commit reported through `--report --head`): no flag while the branch head is the reported head (JSON `headCheck.status: current`); two further commits make `lane set` print `Warning: Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>; do not merge unreported commits unreviewed.` and `status` print the same line (JSON `lanes.headAhead` with both heads and `commits: 2`), and filing the next report at the new head clears it; a branch reset and recommitted past the reported head is flagged as `has moved off the last report's head <sha> (1 commit not in it)`; a `shared-worktree` lane is never checked (`headCheck: null`, no flag after the orchestrator commits on its branch), and a lane whose branch is not in this clone is `unknown` with the reason and no flag. `status` run in the lane's worktree prints `Current branch: lane/l04 (not the orchestrator branch: this checkout is lane l04 in lanes.md)`, and in the orchestrator's checkout still `this checkout is the orchestrator`. `status.test.ts` (mocked dependencies): the lane-naming line and JSON `lanes`, both flag wordings, `Lanes: unreadable (...)` for a ledger that cannot be read, and the existing-mode control (a quick project prints no lane line and no `lanes` field); the p05 orchestrator-line tests pass unchanged (`a lane` when the ledger lists no lane on the branch).
+- Can-fail: making `isHeadFlagged` return false failed the ahead and moved tests on their expected text (`expected '' to contain 'Warning: Lane head ahead of its repor…'`, and the `status` output lacking the line); dropping the `shared-worktree` exclusion from `headCheckApplies` failed the orchestrator-checkout test (`expected { lane: 'l02', … } to be null`). Each was restored.
+- Decisions: the branch is read as `refs/heads/<branch>` in this clone, because the check is for lanes in their own worktree, which share the clone; a remote delegate's branch is not compared (reported `unknown`, never flagged), and `status` prints only flagged lanes. A head that differs from the reported one is flagged whether it descends from it (`ahead`) or not (`moved`), since both mean unreported commits. Only active lanes are named or checked. `status` reads the `lanes.md` of the project folder it reads: in a lane worktree of a shared project that copy is the one committed when the lane branched, so it lists the lane only if the ledger was saved before the lane's branch was cut; `status --project-path <the orchestrator checkout's project folder>` reads the current ledger from any worktree of the clone (used in the test and the scratch run).
+
+### Task p07-t04: AGENTS.md dispatch, lane reports and lane placement sections
+
+**Status:** completed
+**Commit:** 0eb3ad2fed1ad90323b38597b02cf45b1cb5d949
+**Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+
+- Intent: the project `AGENTS.md` sections for dispatch, reports and lane placement (Lanes and linked projects, Dispatch, Lane reports, Lane placement and Head-ahead check decisions), and the ledger and reports in its project files, single-writer list, guarded commands and records commands.
+- Files: `.oat/templates/project-agents.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`. No skill edit: the `oat-project-freestyle` refresh step is keyed on the template's `##` headings, so an existing project's `AGENTS.md` lacking the three new sections is replaced whole on its next resume (p05-t03's mechanism, whose tests render from the current template).
+- Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/template src/commands/project/linked src/commands/project/orchestrator src/commands/commands.integration.test.ts` (39 files, 1545 passed, the bundle-tier scaffold tests included); CLI `check` and `type-check` exit 0. Contract tests: the pinned heading list gains Dispatch, Lane reports and Lane placement between Linked projects and Records commands; the Dispatch section names every state in `LANE_STATES` and the `WAITING_ON_KINDS` the code accepts; every `--flag` the three sections name exists on the real `lane set` command; the Dispatch section defines a dispatch, the steer, wake and no-report cases, the brief contents with `oat template resolve lane-report --output <path>` embedded whole, and the resume rule (check each open dispatch's handle and the forge and record it with `lane set` before any redispatch); Lane reports files before acting, never edits, keys log entries by dispatch ID and forbids merging unreported commits unreviewed; Lane placement supports both placements and prescribes neither, with the derived `shared-worktree`/`own-worktree` and the shared-checkout rules; Single writer, Orchestrator branch and Project files name `lanes.md`, `lane-reports/` and `lane set`.
+- Decisions: the section names are Dispatch, Lane reports and Lane placement, after Linked projects so the lane self-test and the lane definition read in order. Dispatch carries the ledger commands, the brief contents and the reconcile-on-resume rule; Records commands gains `lane set` and says that `status` from a lane worktree reads the current ledger through `--project-path` at the orchestrator checkout's project folder (p07-t03 decision).
+
+### Task p07-t05: Multi-lane scratch run with the branch build
+
+**Status:** no-change
+**Executor:** phase-implementer:freestyle-projects-p07-implementation-1
+**Handle:** freestyle-projects-p07-implementation-1 (this session)
+
+- Intent: the scratch-run exit evidence: a multi-lane freestyle project with one shared-worktree lane that ends with one unfinished dispatch, a fresh session given only the project files and forge access identifying that lane's handle, owner and next action before any redispatch; one completed dispatch's returned text filed with `lane set --report` and its pointer resolving to a verbatim copy; `status` run from a listed lane branch naming the lane; a dispatch brief built under an isolated `HOME` from the bundled `lane-report.md`.
+- Files: none in the repository; transcript in `references/analysis/p07-scratch-transcript.md` (gitignored).
+- Proof: the transcript; branch build `node packages/cli/dist/index.js` built from `ee05a1bb7027779493f3327fa372c338b3775b1f` (code at `0eb3ad2fed1ad90323b38597b02cf45b1cb5d949`).
+- Setup: a throwaway repository under `$TMPDIR/oat-p07-scratch` with an isolated `HOME` and global Git config and `oat` on `PATH` as a wrapper for the branch build. Forge access is simulated by a local bare repository `forge.git` (pushed branches stand in for PRs); `orch` is its clone and the orchestrator's checkout on `main`; lanes `lane-l01` and `lane-l03` are linked worktrees of that clone. The orchestrator and the delegates were played by the implementer from the scaffolded `AGENTS.md`, with scripted delegate final messages.
+- Project: `oat project new demo --mode freestyle --scope shared --with-project-log` on `main`; the scaffolded `AGENTS.md` carries the ten sections including Dispatch, Lane reports and Lane placement.
+- Dispatch brief: `oat template resolve lane-report --output <briefs>/l01-d01-report.md --json` reported tier `bundle`, path `null` (no repository or user template); the brief composed by the Dispatch section (lane and dispatch IDs, the `AGENTS.md` and `shape.md` paths, worktree and branch, no project records, the shape embedded whole) carries all ten report sections and both Summary subsections.
+- Lane l01 (own worktree): created with task, thread, worktree, branch, base, next, owner, provider, model, effort and wake (`placement: own-worktree`); the lane committed and pushed `lane/l01`; its returned text, saved verbatim, was filed with `lane set l01 --report <file> --head <sha> --state work-settled`: the pointer `lane-reports/l01-d01.md` resolves to a copy `cmp` reports identical (both sha256 `91756e3d…` on the first run; same check on the final run), and the accepted log entry was appended keyed by the dispatch ID (`--ref l01-d01`). After one unreported commit on `lane/l01`, `status` on `main` printed `Lane head ahead of its report: l01 (branch lane/l01) is 1 commit past the last report's head <sha>; do not merge unreported commits unreviewed.` and `lane set` repeated it as a warning.
+- Lane l02 (shared worktree): a subagent in the orchestrator's checkout (`--worktree .`, `placement: shared-worktree`, `paths: docs/guide.md`), state running, one steer recorded as History `u005`; left with `dispatch: d01 open` and an uncommitted edit in `docs/guide.md`, the one unfinished dispatch.
+- Lane l03 (own worktree): recorded and saved on `main` before its worktree was cut, then closed d01 with a partial blocked report (`--state blocked --waiting-on external`, owner `user`).
+- Lane naming: `status --project-path .oat/projects/shared/demo` in `lane-l03` printed `Current branch: lane/l03 (not the orchestrator branch: this checkout is lane l03 in lanes.md)` (its copy was committed with the l03 entry); in `lane-l01`, `status --project-path <orch>/.oat/projects/shared/demo` printed `... this checkout is lane l01 in lanes.md`, while its own copy, branched before the ledger existed, says `this checkout is a lane` (p07-t03 decision). From `lane-l01`, `lane set l01 --project .oat/projects/shared/demo --state running` exit 1: `Cannot update lane l01: this checkout is on branch lane/l01, but project demo's orchestrator branch is main.`
+- Fresh session: request `freestyle-projects-p07-t05-fresh-session-1`, one fresh-context read-only `general-purpose` subagent (Agent model `sonnet`, provider-default effort; bounded intelligent recon at the economy route, the root's suggested class), accepted and completed. Its brief held only the project folder path, the forge path and the question (which lane has the unfinished dispatch; its handle, owner and next action; what it would do before any redispatch), read-only. It answered l02 d01, handle `subagent-a1b2`, owner `orchestrator`, next action "wait for the docs subagent to finish its turn, then file its report", and before any redispatch: check whether the handle is alive, read the `docs/guide.md` diff against the task and the steer, record the finding with `lane set` (`--no-report` if interrupted), redispatch only if incomplete; it also flagged l01's unreported forge commit. Answer verbatim in the transcript; `lanes.md` (sha256 `2ec1b57e…`), the `orch` HEAD and working tree, and the forge refs were unchanged afterwards. It read the orchestrator checkout's `git status` beyond the project folder to see the uncommitted edit.
+- Known Unknown settled (whether existing `oat project dispatch record` IDs can serve as dispatch IDs): no. `oat project dispatch record` validates a launcher's complete dispatch record and OAT event (provider envelope, role, model and effort selectors, launch status) and writes nothing; its `request_id` is a free-form, project-wide string chosen by a lifecycle launcher (for example `freestyle-projects-p07-implementation-1`), not allocated per lane, and a freestyle orchestrator's launches (a native subagent, a T3 delegate, a remote run) need not pass through it. The ledger therefore allocates its own dispatch IDs, numbered per lane (`d01`, `d02`) by `lane set` and naming the report files (`lane-reports/l07-d02.md`), as the IDs decision says; when an orchestrator does validate a launch with `dispatch record`, it records that request ID as the lane's `--task` handle (this run used free-form handles such as `run-7f3a`).
+
+### Task p07-t06: Fix p07 review findings (M1, L1)
+
+**Status:** completed
+**Commit:** 3a3103ba76e8436e6d51c1080c1a9690f3a6122e
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p07 review `freestyle-projects-p07-review-1` M1 (accepted-requirement, Ledger vs project log decision: story events in the project log point to a ledger update ID) and L1 (accepted-requirement, Lane reports decision: the tested SHA must equal the delivered head).
+- Files: `.oat/templates/project-agents.md` (Lane reports: structural entries for merges and other story events take the `lane set` update ID as `--ref`; other ledger updates get no log entry), `.oat/templates/lane-report.md` (drops ", or say why not"), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (pins both).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project` exit 0 (104 files, 3382 tests); `pnpm check` exit 0; `pnpm lint` exit 0.
+
+Late fix p07-t06 (p07 review round 1: M1 and L1, accepted requirements) at `3a3103ba7`, recorded at `b65ebd8e3`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `c4fafff2a`.
+
+### Review Received: p07
+
+- Review `freestyle-projects-p07-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `df8268ad2..c4fafff2a`, artifact `reviews/archived/p07-code-review-2026-11-23T032928Z.md` (local-only): 0 critical, 0 high, 1 medium, 3 low; reconnaissance not attempted. The reviewer re-ran the focused p07 suites (119 passed) and a branch-build check of the off-branch refusal, verbatim filing, the head-ahead flag, the status lane line and the formatter round trip. It accepted the two items the implementer flagged (the Markdown unescape on read; the lane worktree reading the ledger as of the branch cut, documented).
+- M1 (Medium): the project `AGENTS.md` never said that story events in the project log point to a ledger update ID. Fixed in p07-t06.
+- L1 (Low): `lane-report.md` softened "tested SHA must equal the delivered head" with ", or say why not". Fixed in p07-t06.
+- L2 (Low): filing an own-worktree lane's first report without `--head` turns the head-ahead check off for it. Dismissed: no contract source requires a refusal or warning, the AGENTS.md filing step always passes `--head`, and the operator's standing direction for m02 is to drop small unrequired hardening rather than defer it.
+- L3 (Low): the p07-t05 record cites an earlier run's report checksum. Already addressed: the phase `**Head:**` paragraph carries the appended correction (`4f2b0576…`); committed record lines are not rewritten.
+- **Finding classes:** M1 accepted-requirement (plan.md Decisions: Ledger vs project log) · L1 accepted-requirement (Decisions: Lane reports) · L2 new-hardening (no contract source) · L3 bookkeeping (provenance wording).
+- Outcome: passed (0 critical, 0 high). The two fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p07-t06 record.
+
+---
+
+## Phase p10: Decisions and memories
+
+**Status:** completed
+**Base:** d4af984a5beadc33d0c115d6fc52094b34affbf0
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Head:** f9edb6c1b515f0e7e94e92dde58c5b04f04b1cd3
+
+Phase verification at the head (clean tree but the gitignored `references/`, isolated `HOME`): `pnpm check` exit 0 (cli `check` and `build` cache miss, executed); `pnpm type-check` exit 0 (cli cache miss); `pnpm test` exit 0 under `scripts/with-isolated-home.sh` (cli `test` cache miss, executed: 457 files, 9984 tests; control-plane 327 replayed, no control-plane input changed; the root script's `test:smoke` 165, `test:skills` 754 and `test:scripts` 7 ran); `pnpm build` exit 0 (cache hit replaying the `ac25269` build `pnpm check` executed at this head, inputs unchanged); `pnpm lint` exit 0; `pnpm test:skills` exit 0 (754). Not run, owned by p08: `check:skill-bumps`, `release:*`, `build:docs`. An earlier `pnpm test` run at `a9907936` was stopped before it finished, to add p10-t05; no result from it is claimed.
+
+Added by the second m02 amendment (2026-11-22): `decisions.md` and `memories.md` scaffolded beside `shape.md`, lane notes, and promotion from lane reports (plan.md Decisions: Decisions and memories).
+
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout; committing owner: the phase implementer. Parallelism assessment: no declared parallel group; p10 cannot run beside p08, which documents it. Root fan-out fails the independence test because the templates, scaffold, project `AGENTS.md` template, `lane-report.md` and the skill's kickoff and resume steps all change together and share the contract tests. So one phase implementer (rung 3). The inline exception does not apply: p10 adds new scaffolded files and a scratch run.
+
+### Task p10-t01: Scaffold decisions.md and memories.md for every freestyle project
+
+**Status:** completed
+**Commit:** 9bd980b08e8b2ce0bb55bb4069e36d2904480ce2
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Handle:** freestyle-projects-p10-implementation-1 (this session)
+
+- Intent: Outcome 8 and the Decisions and memories decision (scaffold half). Bundled `decisions.md` (`## Live`, `## Superseded`, the `### drNN · <decision statement>` entry form and the supersession pointers) and `memories.md` (`## User preferences`, `## Gotchas`, `## Context`, dated and sourced bullets) templates, scaffolded for every freestyle project in every scope, `--link-to` children included, and for no other mode.
+- Files: `.oat/templates/{decisions.md,memories.md}`, `packages/cli/src/commands/project/new/scaffold.ts`, `packages/cli/scripts/bundle-inputs.mjs`, `packages/cli/src/commands/tools/shared/pack-manifest.ts`, `packages/cli/src/commands/project/new/scaffold.test.ts`, `packages/cli/src/commands/project/linked/linked.test.ts`, `packages/cli/src/commands/commands.integration.test.ts`.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new src/commands/project/linked src/commands/commands.integration.test.ts src/commands/init/tools/shared src/commands/tools src/release` exit 0 (74 files, 1721 passed); CLI `check` and `type-check` exit 0. Bundle-tier scaffold tests (isolated `HOME`, no repository tier) in shared (committed with the scaffold), local (uncommitted) and synced (read back from `refs/oat/projects/<slug>` in the origin) assert `createdFiles` ends with `decisions.md` and `memories.md`, the headings (`Live`, `Superseded`; `User preferences`, `Gotchas`, `Context`), every section `_None yet._`, the entry form and both supersession pointers, no frontmatter, and each file byte-identical to the bundled template. `linked.test.ts`, with the parent in each scope, gives the parent a `dr01` entry first, then asserts the `--link-to` child's two files equal the empty templates, the parent's `decisions.md` is unchanged, and the child's scaffold commit holds the five files. Existing-mode controls: spec-driven, quick, import, lite, brief and goal scaffolds at the bundle tier create neither file (nor `AGENTS.md` or `shape.md`). The same-mode freestyle rerun skips all five; the `new --json` integration test lists them.
+- Can-fail: dropping `decisions.md` from the freestyle `TEMPLATES_BY_MODE` entry failed nine tests (the three bundle-tier scope tests, the three `--link-to` creation tests, the bundled floor, the rerun and the real-template freestyle scaffold) on `createdFiles` and the missing file; restored.
+- Decisions: both templates carry no frontmatter and no placeholder, like `lane-report.md`, so `oat template resolve decisions --output <path>` (raw copy) writes exactly what the scaffold writes; first-use creation in a project created before p10 needs no rendering step. Titles are `# Decisions` and `# Memories`. The entry form is described in the preamble rather than shown as a heading, so the files open with no entry and the heading-literal guard holds (the prose names the sections as "the Live section", never `## Live`). `oat project new` output is unchanged: it still names `AGENTS.md` and `shape.md`, and `createdFiles` lists the new pair.
+
+### Task p10-t02: AGENTS.md decisions and memories rules, lane notes and promotion, and the shape.md Project log paragraph
+
+**Status:** completed
+**Commit:** 1fbd1e22b6237dc4927c9b39bd5931642691cfbd
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Handle:** freestyle-projects-p10-implementation-1 (this session)
+
+- Intent: the AGENTS.md and template half of p10's Intent. The project `AGENTS.md` names `decisions.md` and `memories.md` in its opening resume line (`shape.md`, then `decisions.md` `## Live`, then `memories.md`), `## Project files` and `## Single writer`, and gains a `## Decisions and memories` section (the authority rule, writing by hand, the supersession steps, first-use creation only when a file is absent, a linked project starts empty); `## Dispatch` gains the lane notes path as authorized scratch in each brief, with the ignore qualification and the read-only delegate case, and `## Lane reports` the promotion step after a report is filed; `lane-report.md` gains the lane-notes instruction; the `shape.md` template's `## Project log` paragraph defers decisions about the work to `decisions.md`.
+- Files: `.oat/templates/{project-agents.md,lane-report.md,shape.md}`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`, `packages/cli/src/commands/project/new/scaffold.test.ts`.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new src/commands/project/linked src/commands/project/lane src/commands/template src/commands/commands.integration.test.ts` exit 0 (40 files, 1580 passed, the bundle-tier scaffold tests included); CLI `check` and `type-check` exit 0. Contract tests (`freestyle decisions and memories (p10)`): the two templates' sections in order (`Live`, `Superseded`; `User preferences`, `Gotchas`, `Context`) with no frontmatter or placeholder, and the entry form and both supersession pointers; the AGENTS.md first line verbatim with `shape.md`, `## Live`, `decisions.md`, `memories.md` in that order, both files in Project files and in the single-writer list; the authority rule, writing by hand with no command, the supersession steps, create only when absent and the linked-project rule; the `shape.md` Project log paragraph's deferral to `decisions.md`, `drNN` citation and `memories.md`; the Dispatch lane notes path (`.oat/analysis/lane-notes/<lane>-<dispatch>.md`), authorized scratch outside `paths:`, the `.oat/**/analysis` qualification and the read-only delegate; the Lane reports promotion step after the log step, citing the dispatch ID; the `lane-report.md` lane-notes instruction verbatim. The AGENTS.md first-use block is executed against a stub `oat template resolve` that copies the repository template raw: a missing `decisions.md` is created byte-identical to the template while a hand-written `memories.md` is left byte-identical, and with both present a resolver that would fail is never called. The pinned AGENTS heading list gains `Decisions and memories` after `Where records live`; the existing `names only lane set options the command has` test still passes (the new Dispatch text names no other flag). The bundle-tier scaffold tests pin the new first line in every scope.
+- Can-fail: replacing the block's `[ -e ... ] ||` with `true &&` (always copy) failed the first-use test on the hand-written `memories.md` (`expected '# Memories\n\nWhat a returning agent …' to be '# Memories\n\n- kept\n'`); restored.
+- Decisions: the rules are a new `## Decisions and memories` section between Where records live and Orchestrator branch, so the `oat-project-freestyle` refresh (keyed on `##` headings, p05-t03) replaces an older project's `AGENTS.md` on its next resume and the project then carries the first-use step before it needs the files; editing only existing sections would not have triggered the refresh for a project scaffolded by p05 or p07 code. The promotion is step 4 of the filing steps. The lane-notes path is named once, in Dispatch, and `lane-report.md` refers to "the lane notes file your brief names", because the brief may name a path outside the checkout.
+
+### Task p10-t03: The skill's resume step and the kickoff reference
+
+**Status:** completed
+**Commit:** beb4563c03198985ec8d78afc65a1283a85222ee
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Handle:** freestyle-projects-p10-implementation-1 (this session)
+
+- Intent: the skill half of p10's Intent. `oat-project-freestyle` SKILL.md Step 2 creates a missing `decisions.md` or `memories.md` from OAT's template after the claim and the AGENTS.md refresh (only when absent), then reads all of `decisions.md` `## Live` and `memories.md`; the kickoff reference keeps the parent's decisions and memories out of an adopted shape and points an adapted brief-style document's `## Decisions` at `decisions.md`.
+- Files: `.agents/skills/oat-project-freestyle/{SKILL.md,references/kickoff.md}`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`. No `metadata.version` bump: p08 owns bumps for m02.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`; `bash scripts/with-isolated-home.sh pnpm test:skills`; `pnpm oat:validate-skills`; `pnpm exec oxlint .agents/skills`; `pnpm run format:root`. All exit 0: vitest 33 files, 1349 passed; `test:skills` 754 passed; 69 skills validated; CLI `check` and `type-check` exit 0. Contract tests: in Step 2 the claim precedes the refresh, which precedes the new first-use step, which precedes `Then determine:`; Step 2 reads all of `## Live` and `memories.md` and never acts on a `## Superseded` entry. The Step 2 block is executed against a stub `oat template resolve` (repository template copied raw): with a hand-written `decisions.md` present it creates only `memories.md` (byte-identical to the template, one `created` line) and leaves `decisions.md` byte-identical; a second run with a failing resolver is silent and exit 0; with nothing present and a failing resolver it exits 1 (`could not create decisions.md from the decisions template; stopping`) and creates nothing. Kickoff: an adopted shape copies only `shape.md`; Adapting step 4 points a brief-style `## Decisions` at `decisions.md` (a heading `plan-brief.md` carries). The `names only headings` contract test now also accepts the decisions and memories headings.
+- Can-fail: replacing the block's `[ -e ... ] && continue` with `false && continue` failed the existing-file test on its output (both files reported created, the hand-written `decisions.md` replaced); restored.
+- Decisions: the skill's block and the AGENTS.md block do the same thing; the skill's adds the stop on a failed resolve and the `created` line because it runs unattended in the resume flow, the AGENTS.md one is the hand recipe for an orchestrator not resuming through the skill. Interaction with the AGENTS.md refresh (p05-t03): on a project created before p10 the refresh runs first (the new `## Decisions and memories` heading is missing, so AGENTS.md is replaced whole), then the first-use step creates both files, so the refreshed rules and the files they name arrive in the same resume. Step 1 (create) still confirms only `state.md`, `AGENTS.md` and `shape.md`, so a newer skill on an older CLI reaches Step 2, where a template that does not resolve stops the run. Adapting step 4 is new and the leftover check is renumbered 5.
+
+### Task p10-t04: Scratch run from an m01 project with the branch build
+
+**Status:** no-change
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Handle:** freestyle-projects-p10-implementation-1 (this session)
+
+- Intent: the scratch-run exit evidence: starting from a freestyle project created by the m01 build, the orchestrator creates each missing file without touching an existing one; one lane writes a decision and a gotcha to its notes file during its dispatch, its report carries both, and the orchestrator promotes them citing the dispatch ID; a later decision supersedes an earlier one with pointers both ways; a fresh session given only the project files lists every `## Live` decision and none superseded, and names the gotcha and its source.
+- Files: none in the repository; transcript in `references/analysis/p10-scratch-transcript.md` (gitignored).
+- Proof: the transcript. m01 build: `node packages/cli/dist/index.js` built in a detached worktree at `1e0b473c66865c4f6af3acdd2e09f532edc6ccc5` under `$TMPDIR/oat-p10-m01` (`pnpm install --frozen-lockfile --prefer-offline`, `pnpm --filter @open-agent-toolkit/cli... build`, both exit 0), removed after the run; it was built, not reproduced from templates. Branch build: this checkout's `node packages/cli/dist/index.js` built at `62a09f918142446e4436c92ef6a1b0ec97d6b3ca` (code at `beb4563c0`).
+- Setup: a throwaway repository under `$TMPDIR/oat-p10-scratch` with an isolated `HOME` and global Git config, `.oat/**/analysis/` ignored (the `oat init` choice), and wrappers `oat-m01` and `oat` on `PATH`. The orchestrator was played by the implementer from the branch `SKILL.md` Step 2 blocks (extracted verbatim and run) and the project `AGENTS.md`, with scripted user answers.
+- m01 project: `oat-m01 project new legacy --mode freestyle --scope shared --with-project-log` wrote `AGENTS.md` (first line `Read shape.md in this folder before acting...`, five sections), `shape.md` and `state.md` with no `oat_orchestrator_branch`, and no `decisions.md` or `memories.md`; it was shaped (scripted) and committed.
+- Resume with the branch build: `orchestrator set` claimed the unclaimed project on `main`; the SKILL.md refresh block printed the six missing headings (`## Decisions and memories` first) and replaced `AGENTS.md`, whose first line became the resume order; the first-use block printed `created` for `decisions.md` and `memories.md`, with `shape.md`, `state.md` and the refreshed `AGENTS.md` hashes unchanged across it, and the new `decisions.md` identical (`cmp`) to `oat template resolve decisions --output` at the bundle tier. After the orchestrator wrote `dr01` (source: the user) and committed the records with exact paths, a second run of the block printed nothing and both files' hashes were unchanged.
+- Lane: `lane set l01` (own worktree `lane-l01` on `lane/l01`); `git check-ignore -v` showed `.oat/**/analysis/` covering `.oat/analysis/lane-notes/l01-d01.md`; the brief (dispatch facts by the AGENTS.md Dispatch section, notes path as authorized scratch, `lane-report` shape from the bundle embedded whole) was dispatched verbatim as request `freestyle-projects-p10-t04-lane-l01-d01-1`, one fresh-context `general-purpose` subagent (Agent model `sonnet`, provider-default effort; accepted, completed). It committed `e207ce05b5ad8154f9d525a58de0301a6cc4a676` (`src/csv.mjs`, `test/csv.test.mjs`, a one-line `package.json` test-glob fix it reported as a deviation) and returned its report, recorded verbatim. Its notes file was born at 21:59:06, six seconds before its commit at 21:59:12, ignored (`!!`) and uncommitted, and holds the doubled-quote decision and the zero-test gotcha; the report's Decisions and Learnings carry both; nothing under `.oat/projects/` changed in either checkout. The implementer re-ran `npm test` in the lane worktree (`tests 9`, `pass 9`).
+- Filing and promotion: `lane set l01 --report <returned file> --head e207ce0... --state work-settled` (u002) filed a copy `cmp` reports identical; one accepted decision entry was appended with `--source l01-d01` citing `dr02` (a first attempt with a nonexistent `--kind` option failed and wrote nothing; recorded in the transcript); the orchestrator promoted the decision as `dr02` (Source: `l01-d01`) and the gotcha as a `## Gotchas` bullet ending `(2026-11-22, l01-d01)`, and did not promote the other bullets (the zsh note is about the lane's shell).
+- Supersession: the user's SQLite decision became `dr03` under `## Live` with `Supersedes: dr01`; `dr01` moved intact to `## Superseded` with `Superseded by dr03, 2026-11-22`; the records were committed with exact paths.
+- Fresh session: request `freestyle-projects-p10-t04-fresh-session-1`, one fresh-context read-only `general-purpose` subagent (Agent model `sonnet`, provider-default effort; accepted, completed); its brief held only the project path, a read-only instruction and the question. It listed dr02 and dr03 as in force, named dr01 only as no longer in force (under `## Superseded`, superseded by dr03), and named the gotcha with its source `l01-d01` and the lane report; answer verbatim in the transcript. The project tree hash (`84e2d263…`), HEAD and the clean working tree were unchanged afterwards, and `oat project check-state` passed. It also noted that the lane's ledger `next` was stale after the report was filed (the run did not update it).
+
+### Task p10-t05: Name decisions.md and memories.md among the records a lane report says a lane never writes
+
+**Status:** completed
+**Commit:** 8949649d42c94cc5009688418785f9aa4d8274a3
+**Executor:** phase-implementer:freestyle-projects-p10-implementation-1
+**Handle:** freestyle-projects-p10-implementation-1 (this session)
+
+- Intent: phase self-review. `lane-report.md` lists the project records a lane must not write (the ledger, the project log, `shape.md`, the project's documents) but not the two new files, while the Single writer and Decisions and memories decisions keep both orchestrator-only; a lane reading only its brief could take them as writable.
+- Files: `.oat/templates/lane-report.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+- Proof: `pnpm --filter @open-agent-toolkit/cli build`; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/template` exit 0 (34 files, 1364 passed, including the p07 bundle-tier dispatch-brief test against the rebuilt bundle). The p10 lane-notes contract test now also pins the lane-report record list with `decisions.md` and `memories.md`. Found at the phase self-review after p10-t04; the scratch lane's brief already named both files as records it must not write, so the run's evidence stands.
+
+### Task p10-t06: Fix p10 review findings (L1, L2)
+
+**Status:** completed
+**Commit:** dfe4e2a38c87f6a729d79cd6bfa5255149d72c91
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p10 review `freestyle-projects-p10-review-1` L1 (complexity: the AGENTS.md First use bullet repeated the skill's creation block with its own test) and L2 (the Linked projects bullet went beyond the brief's "starts with its own empty files").
+- Files: `.oat/templates/project-agents.md` (First use is one sentence naming `oat template resolve <decisions|memories> --output …`, only when absent, done by the skill on resume; Linked projects keeps only the brief's wording), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (drops the AGENTS.md block-run test, keeps the SKILL.md Step 2 block tests, pins the new sentence).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project` exit 0 (104 files, 3398 tests); `pnpm check`, `pnpm lint` and `pnpm type-check` exit 0.
+
+Late fix p10-t06 (p10 review round 1: L1 and L2) at `dfe4e2a38`, recorded at `40cc01897`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `07e828dab`.
+
+### Review Received: p10
+
+- Review `freestyle-projects-p10-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `d4af984a5..07e828dab`, artifact `reviews/archived/p10-code-review-2026-11-23T041712Z.md` (local-only): 0 critical, 0 high, 0 medium, 2 low; reconnaissance not attempted. The reviewer re-ran the freestyle contract, scaffold and linked suites (192 passed) and probed the first-use step with the branch build's real `oat template resolve` (absent file created byte-identical; existing file left alone; the `[ -e ]` check is what protects it). It found the authority, supersession and first-use rules stated consistently across the templates, AGENTS.md, `lane-report.md`, `shape.md`, kickoff and the skill, p05's refresh and p07's lane sections intact, and accepted the implementer's five choices where the brief was silent.
+- L1 (Low, complexity): the AGENTS.md First use bullet repeated the skill's creation block with its own test. Fixed in p10-t06 (one sentence; the skill's block and its tests remain).
+- L2 (Low): "never copies another project's decisions or memories" went beyond the brief. Fixed in p10-t06 (the brief's wording only).
+- **Finding classes:** L1 accepted-requirement (Decisions and memories: first use with `oat template resolve`, only when absent; the complexity lens the operator set for m02) · L2 regression (the bullet overstated plan.md Decisions and memories: "A linked child starts with empty files").
+- Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p10-t06 record.
+
+Correction to the p10-t06 record and the late-fix line above: both name `dfe4e2a38` (the p10 Step 7a bookkeeping commit) as the fix commit. The first implementation commit attempt was refused by commitlint (header over 100 characters) and the root's script recorded `HEAD` without checking the result. The p10-t06 implementation commit is `fd0366c3f00c6361e8203d7c0367f78692a8a78a`, made after the p10 bookkeeping commit `b373b426c`; its content and verification are the ones the record describes.
 
 ---
 
 ## Phase p08: m02 docs and release
 
-**Status:** pending
+**Status:** completed
+**Base:** 6430f47ad53025b99bf8ba83661ad8f5fe435ead
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Head:** 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
+
+Phase verification at the head on a clean tree (only the untracked `references/`), in Definition of Done order with each exit code captured:
+
+- `pnpm check`: exit 0 (11 tasks, 4 cached; every package `check` a cache miss).
+- `pnpm type-check`: exit 0 (11 tasks, 5 cached).
+- `pnpm test` under `scripts/with-isolated-home.sh`: exit 0. Every package `test` was a cache miss and executed: cli 457 files, 9989 tests; control-plane 327; docs-config 24, docs-theme 159, docs-transforms 72, oat-docs 93. The chained `test:smoke` (165), `test:skills` (754) and `test:scripts` (7) passed.
+- `pnpm build`: exit 0. It replayed from cache (FULL TURBO), so it was re-run with `turbo run build --filter='!oat-docs' --force`: exit 0 (5 tasks, 0 cached).
+- `pnpm run check:skill-bumps`: exit 0 (1 changed canonical skill and agent role checked), after `git fetch origin main` (`699f8ee43`).
+- `pnpm release:check-versions`: exit 0.
+- `pnpm release:validate`: exit 0 (5 packages at 0.3.57).
+- `pnpm build:docs`: exit 0. It also replayed from cache and was re-run with `turbo run build --filter=oat-docs... --force`: exit 0 (6 tasks, 0 cached).
+- Docs-index `generate-index`, then `git diff --exit-code -- apps/oat-docs/index.md`: exit 0.
+- Also exit 0: `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills` (69 OK, within `pnpm check` and separately), and the isolated `vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` (41 files, 1532 passed, at p08-t03).
+
+`pnpm test:evidence` was not run: the uncached `pnpm test` above executed every package suite. Recovery: 0/10 used, none pending. No nested dispatch.
+
+Late fixes p08-t05 to p08-t12 (m02 integrated review N-1 to N-8), run `freestyle-projects-p08-implementation-2`: phase verification at `dba09273410ce91b03b5c5aedda1a7b332cc62a1` (the p08-t12 record) on a clean tree (only the untracked `references/`), `origin/main` `699f8ee43` (the merge base, unchanged), each exit code captured: `pnpm check` exit 0 (11 tasks; every `check` a cache miss, only dependency builds cached); `pnpm type-check` exit 0 (every `type-check` a cache miss); `pnpm test` under `scripts/with-isolated-home.sh` exit 0, every package `test` a cache miss (cli 457 files, 9995 tests; control-plane 327; docs-config 24; docs-theme 159; docs-transforms 72; oat-docs 93; `test:smoke` 165, `test:skills` 754, `test:scripts` 7); `pnpm build` exit 0 replayed from cache (FULL TURBO), re-run as `turbo run build --filter='!oat-docs' --force` exit 0 (5 tasks, 0 cached); `git fetch origin main` then `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked); `pnpm release:check-versions` exit 0; `pnpm release:validate` exit 0 (5 packages at 0.3.57); `pnpm build:docs` exit 0 replayed from cache, re-run as `turbo run build --filter=oat-docs... --force` exit 0 (6 tasks, 0 cached); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `pnpm lint` exit 0 and `pnpm format` exit 0. No later phase has a `**Base:**`, so the head advanced under the late-fix rule. Recovery: 0/10 used, none pending. No nested dispatch.
+
+Worktree: the project branch `feat/freestyle-projects-m02` in this checkout, after the root merged `origin/main` (`6430f47ad`, #428, packages at 0.3.56 on main); committing owner: the phase implementer. Parallelism assessment: no declared parallel group and p08 is the last m02 phase. Root fan-out fails the independence test because the docs pages, skill bumps, lockstep versions and provider views share generated outputs (docs index, sync manifest) and the release gates. So one phase implementer (rung 3). The inline exception does not apply: p08 spans many docs pages and the release gates.
+
+### Task p08-t01: Document the m02 freestyle records and commands in the docs pages
+
+**Status:** completed
+**Commit:** 9b3eaa4c037864ebb0d50442599952bd68223bca
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Handle:** freestyle-projects-p08-implementation-1 (this session)
+
+- Intent: document the orchestrator branch, linked projects, shape adoption, the lane ledger and reports, and decisions and memories, as the m02 code ships them, in the docs pages that describe freestyle.
+- New page `workflows/projects/execution/freestyle-projects.md` (Running a Freestyle Project): no existing page covers running a freestyle project after creation (`starting-projects.md` covers the skill, `cli-reference.md` is a flat command list), so the topic had no natural home. Sections: Project files (each file, what it holds, who writes it), The orchestrator branch (`orchestrator/branch.ts`, `orchestrator/set.ts`, the guard and the AGENTS.md self-test), Lanes and lane reports (`lane/index.ts`, `lane/ledger.ts`, `lane/head.ts`, `lane-report.md`, the filing and promotion steps, lane notes, resume), Decisions and memories (`decisions.md`, `memories.md`, the authority and supersession rules, first use), Linked projects (`linked/link.ts`, `linked/ledger.ts`, `new/index.ts`, name-or-path resolution in `resolve-named-project.ts`, shape adoption from `kickoff.md`), Older projects (the skill's AGENTS.md refresh and first-use step). Listed in `execution/index.md`; nav sync added it to `execution/meta.json`.
+- Updated: `reference/cli-reference.md` (`new`: `decisions.md`/`memories.md`, `oat_orchestrator_branch`, `--link-to`/`--purpose`, JSON `orchestratorBranch` and `linkedTo`; `status`: orchestrator, head-ahead and open-link lines, the unreadable-ledger lines, JSON `orchestrator`, `lanes`, `linkedProjects`; new entries for `orchestrator set`, `linked add`/`ack`, `lane set` and the guard; `template resolve`: `lane-report`, `decisions`, `memories`), `reference/oat-directory-structure.md`, `reference/project-artifacts.md` (freestyle row), `reference/project-state-machine.md` (`oat_orchestrator_branch`, `oat_linked_from`), `workflows/choose-workflow.md`, `workflows/projects/index.md` (folder contents; Execution map line), `execution/picking-up-projects.md` (status lines and resume order), `execution/project-log.md` (`linked ack`'s structural entry; lane-report and update-ID refs), `planning/starting-projects.md` (resume: claim, AGENTS.md refresh, first-use files, adopt-or-new; expected output; "the three scaffolded files" corrected to "the scaffolded files"), and the regenerated `apps/oat-docs/index.md`.
+- Proof: `pnpm --filter oat-docs docs:validate` exit 0 (0 errors, 778 warnings; the same validator on the committed docs at `ea2f6c0ff` gives 777, and the one new warning is the provenance rule on the new page's lane-notes path `.oat/analysis/lane-notes/<lane>-<dispatch>.md`, kept because the path is the contract; two other new provenance hits were reworded away; the existing `starting-projects.md` page-length warning grew from 694 to 713 lines); `docs nav sync --check` exit 0; `pnpm --filter oat-docs check` exit 0 (catalog current at 74 skills); `pnpm --filter oat-docs test` exit 0; `generate-index` regenerated two entries.
+- Inspected, unchanged: `approvals-and-automation.md` ("after creation OAT commits, pushes, dispatches and opens nothing" stays true: the m02 commands write files and commit nothing), `starting-projects.md` situation-table row (a summary), `lifecycle.md`, `skills/index.md` (generated catalog row; the skill description is unchanged), and the other freestyle mentions from p04 (mode lists and stops that m02 does not change).
+
+### Task p08-t02: Name the m02 status fields in the CLI README and check the m02 help text
+
+**Status:** completed
+**Commit:** e25357c86d7277446499ee6c9700d6feeafa53bd
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Handle:** freestyle-projects-p08-implementation-1 (this session)
+
+- Intent: the CLI and package READMEs and the help text the m02 commands touch.
+- `packages/cli/README.md`: the `status --json` entry names the top-level `orchestrator`, `lanes` and `linkedProjects` objects a freestyle payload carries (`status.ts` `writeProjectStatusOutput`).
+- Inspected, unchanged: root `README.md` (the freestyle sentence names files and records generally and stays true); `packages/control-plane/README.md` (m02 changes no control-plane code); root `AGENTS.md` (the Freestyle workflow option stays true); CLI help (`oat project --help` lists `lane`, `linked` and `orchestrator` with their descriptions, each subcommand's options match the docs, `oat project new --help` describes `--link-to` and `--purpose`; `oat template resolve` and `status` help name no template or field list). The freestyle `new` output line `Project rules: <path> (OAT-owned; read shape.md first)` stays true (`shape.md` is still read first) and is left as shipped.
+- Files: `packages/cli/README.md`.
+- Proof: `oxfmt --check packages/cli/README.md` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts src/commands/help-snapshots.test.ts` exit 0 (2 files, 101 passed).
+
+### Task p08-t03: Release: the oat-project-freestyle bump, lockstep versions and provider views
+
+**Status:** completed
+**Commit:** dd8b401f8919c33335fea15e1c39c88e65e1314a
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-1
+**Handle:** freestyle-projects-p08-implementation-1 (this session)
+
+- Intent: one `metadata.version` bump per canonical skill the m02 diff changed, the lockstep bump of the five public packages above `origin/main`, and provider views regenerated with the branch build.
+- Inventory: `git diff --stat origin/main...HEAD` (`origin/main` `699f8ee43`, the merge base) changes one canonical skill, `oat-project-freestyle` (`SKILL.md`, `references/kickoff.md`), no agent role under `.agents/agents/`, and the bundled templates `decisions.md`, `memories.md`, `lane-report.md`, `project-agents.md`, `shape.md` and `state-freestyle.md` plus CLI source, which put the CLI release surface in the lockstep policy. No `.agents/docs/` file changed.
+- Skill bump: `oat-project-freestyle` `metadata.version` 1.0.0 to 1.1.0 (minor: m02 adds the claim, the AGENTS.md refresh, first-use creation and linked-child adoption, as `oat-brainstorm` took 1.4.0 for its freestyle route). No test pins the version.
+- Lockstep: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` 0.3.56 to 0.3.57 (`origin/main` is 0.3.56 after #428); `packages/cli/assets/public-package-versions.json` followed from `pnpm build`, and `.oat/sync/manifest.json` `oatVersion` (0.3.55 to 0.3.57) from the sync.
+- Provider views: `pnpm build` (5 tasks, 0 cached) then `node packages/cli/dist/index.js sync --scope project` exit 0: "Manifest version refreshed; no content changes required". `.claude/skills/oat-project-freestyle` is a symlink to the canonical skill, so the bump needs no view change, and no agent role changed.
+- Files: `.agents/skills/oat-project-freestyle/SKILL.md`, the five `package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json`.
+- Proof: `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/release src/commands/init/tools/shared src/validation src/commands/sync bundle-consistency` exit 0 (41 files, 1532 passed); `bash scripts/with-isolated-home.sh pnpm test:skills` exit 0 (754 passed); `pnpm oat:validate-skills` exit 0 (69 OK); `oxfmt --check` on the changed files exit 0. After the commit and `git fetch origin main`: `pnpm run check:skill-bumps` exit 0 (1 changed canonical skill and agent role checked) and `pnpm release:check-versions` exit 0.
+
+### Task p08-t04: Fix p08 review findings (M1, L1-L4)
+
+**Status:** completed
+**Commit:** 29e87c4baaa1dc9659afbb9662f57a963f5a64f8
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+
+- Intent: p08 review `freestyle-projects-p08-review-1` M1 (resume order) and L1 to L4 (`linked ack` lookup, the no-commit opening line, the local-child run step, the head-ahead wording), each checked against the code before the edit.
+- Files: `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`. On resume the orchestrator reads `lanes.md` before acting, after `shape.md`, `decisions.md` `## Live` and `memories.md` (`.oat/templates/project-agents.md`). `linked ack` matches its child argument, or the last part of a path, against the parent's open rows (`linked/link.ts` `ackLinkedProject`). The opening line names the one exception, `new --link-to` saving the child's scaffold. A local child exists only in the checkout that created it (the template's sentence). The head check also flags a branch that moved off the reported head (`lane/head.ts` `moved`); a branch not in this clone is not flagged, and `lane set --json` reports its `headCheck` as `unknown`.
+- Proof: `pnpm --filter oat-docs docs:check` exit 0 (0 errors, 778 warnings; the only one on this page is the accepted lane-notes provenance warning); `pnpm docs:validate` exit 0; `generate-index` exit 0 with no change to `apps/oat-docs/index.md`; `pnpm check` exit 0.
+
+Late fix p08-t04 (p08 review round 1: M1 and L1 to L4) at `29e87c4ba`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule; the reviewed head stays `bb8793296`.
+
+### Review Received: p08
+
+- Review `freestyle-projects-p08-review-1` (Claude Opus 5.5 high, `oat-reviewer-claude-claude-opus-5-5-high`) on `6430f47ad..bb8793296`, the fresh-context docs review against the code that p08's exit evidence names; artifact `reviews/archived/p08-code-review-2026-11-23T045600Z.md` (local-only): 0 critical, 0 high, 1 medium, 4 low; reconnaissance not attempted. The reviewer found the commands, flags, help text, status lines and JSON fields, ledger grammar, IDs, states, guard, link rows and log entry documented as the code ships them, and the release work correct: `oat-project-freestyle` the only changed canonical skill, bumped once to 1.1.0, no agent role changed, the five public packages at 0.3.57 above main's 0.3.56, and the versions asset and sync manifest in agreement. It accepted the new page, the lane-notes provenance warning and the longer `starting-projects.md`.
+- M1 (Medium): the new page said the orchestrator reads `lanes.md` first on resume. Fixed in p08-t04.
+- L1 (Low): the name-resolution paragraph overstated what `linked ack <child>` looks up. Fixed in p08-t04.
+- L2 (Low): the opening said no command commits, while `new --link-to` saves the child's scaffold. Fixed in p08-t04.
+- L3 (Low): the run-the-child step assumed another worktree, which a local child cannot have. Fixed in p08-t04.
+- L4 (Low): the head-ahead text left out the moved-off case and said a missing branch is reported as unknown. Fixed in p08-t04.
+- **Finding classes:** M1 regression (the page contradicted the resume order in `.oat/templates/project-agents.md` and `picking-up-projects.md`) · L1 regression (overstated `linked/link.ts`) · L2 regression (contradicted the page's own Linked projects section) · L3 regression (dropped the template's local-child sentence) · L4 regression (understated `lane/head.ts` and misdescribed `status`).
+- Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p08-t04 record.
+
+### Task p08-t05: (review) Name the inspected parent in the printed linked ack command
+
+**Status:** completed
+**Commit:** 6abb794a00a3c5719d7d8ced8a8713f7a5a5f0a3
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-1)
+
+Intent: `packages/cli/src/commands/project/status.ts:149` prints `oat project linked ack <child>` with no parent, so for a project other than the active one it acknowledges the active parent's row. Print `--project <inspected parent path>` in the command.
+Files: `status.ts`, its test, and the docs that quote the line (`reference/cli-reference.md`, `execution/freestyle-projects.md`, `execution/picking-up-projects.md` where they quote it).
+Proof: a `status --project-path <A>` test with B active whose printed command closes A's row; can-fail with the old line.
+Confirmed before the fix: `formatOpenLinkLines` printed `oat project linked ack <child>` with no parent, and `linked ack` defaults to the active project (`resolveProjectOrActive`). Fix: the line now ends `` `oat project linked ack <child> --project <parent>` ``, where the parent is the project folder as status names it (the `--project-path` argument, or the active project's path), which `--project` resolves as a path. Files changed: `packages/cli/src/commands/project/status.ts`, `packages/cli/src/commands/project/linked/linked.test.ts` (the existing line assertion, and a new test: `child`, `alpha` and `beta` with `beta` active, both parents linked to `child`, `status --project-path .oat/projects/shared/alpha`, the printed command run as printed). Docs inspected, unchanged: `cli-reference.md`, `freestyle-projects.md` and `picking-up-projects.md` name the `Open linked project:` line but quote none of its command text.
+Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/linked src/commands/project/status.test.ts` exit 0 (2 files, 63 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on both files exit 0. Can-fail: with the `--project` part removed from `status.ts` the new test fails (exit 1) on the printed command (`expected 'project linked ack child' to be 'project linked ack child --project .oat/projects/shared/alpha'`), and with that assertion also removed it fails because alpha's row stays open (`expected [ { name: 'child', … } ] to deeply equal []`), the reviewer's reproduction; restored.
+
+### Task p08-t06: (review) Round-trip literal backslashes in the lane ledger
+
+**Status:** completed
+**Commit:** 6401dfba76bd27ed87d3f6b63c4e2cdf33c38d0f
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-2)
+
+Intent: `lane/ledger.ts:177` unescapes Markdown backslash escapes on read, but the writer writes values raw. A value such as `rg 'api\.v1'` loses its backslash, and the next update rewrites both the field and its earlier history line. Escape backslashes on write so a read returns what `lane set` wrote; keep reading a formatter's `\*` as `*`.
+Files: `lane/ledger.ts` and its test.
+Proof: a test that sets a field containing `\.`, makes a second update to another field and reads both the field and the first history line back unchanged; plus a formatter-escaped `\*` still reads as `*`; can-fail with the writer escape removed.
+Confirmed before the fix: the new test, run against the unchanged writer, failed (exit 1) with `expected 'verify with rg \'api.v1\'' to be 'verify with rg \'api\.v1\''`; `renderLaneLedger` wrote values raw and `unescapeMarkdown` dropped the backslash on read. Fix: `renderLaneLedger` escapes each backslash as `\\` in field values and Closed and History lines; the reader is unchanged, so `\\` reads back as `\` and a formatter's `\*` still reads as `*`. Files changed: `packages/cli/src/commands/project/lane/ledger.ts`, `packages/cli/src/commands/project/lane/ledger.test.ts` (new test: `next: verify with rg 'api\.v1'`, then an owner-only update; the field, the first history line and the rendered `\\.` are checked). The existing formatter test (captured oxfmt output with `src/\*.ts`) covers `\*` reading as `*`. `pnpm exec oxfmt --write` on a rendered ledger keeps `api\\.v1` and escapes only `src/*.ts` to `src/\*.ts`, so a hook-formatted ledger still round-trips.
+Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/lane src/commands/project/status.test.ts src/commands/project/orchestrator` exit 0 (4 files, 86 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on both files exit 0. Can-fail: with `escapeBackslashes` reduced to `return value`, `vitest run src/commands/project/lane/ledger.test.ts` exits 1 with only the new test failing on the same `api.v1` assertion (19 others passed, the `\*` formatter test among them); restored.
+
+### Task p08-t07: (review) Keep filed lane reports byte-for-byte through a formatting commit hook
+
+**Status:** completed
+**Commit:** 3cf22df79acce99e6da1fcff211070ad8c0cabe6
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-3)
+
+Intent: This repository's lint-staged oxfmt hook rewrites `lane-reports/*.md` on commit (`*` list markers become `-`), so a filed report is edited. Add `.oat/projects/**/lane-reports/**` to the `.oxfmtrc.jsonc` ignore list, next to the explainer precedent and with a comment. In `.oat/templates/project-agents.md` Lane reports and the docs page, add one sentence: in a repository whose commit hooks format Markdown, exclude `lane-reports/` from them so the committed report stays verbatim.
+Files: `.oxfmtrc.jsonc`, `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, and any contract pin.
+Proof: `oxfmt --check` on a report fixture using `*` markers reports nothing to change under the repo config (and does with the ignore removed); the template sentence is pinned.
+Confirmed before the fix: a scratch report `.oat/projects/shared/p08-fmt-probe/lane-reports/l01-d01.md` with `*` list markers gave `pnpm exec oxfmt --check --no-error-on-unmatched-pattern <report>` exit 1 (format issues found) under the repository config, the lint-staged Markdown command's flags. Fix: `.oxfmtrc.jsonc` ignores `.oat/projects/**/lane-reports/**`, next to the explainer precedent and with a comment; `.oat/templates/project-agents.md` Lane reports step 2 and the docs page's filing paragraph add the sentence "In a repository whose commit hooks format Markdown, exclude `lane-reports/` from them so the committed report stays verbatim."; `freestyle-contracts.test.ts` pins it. Files changed: `.oxfmtrc.jsonc`, `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`. The scratch report was removed.
+Proof (this run): with the ignore, the same `oxfmt --check` exits 0 ("No files found matching the given patterns") and `oxfmt --write --no-error-on-unmatched-pattern` leaves the report byte-identical (`cmp`); `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/new/scaffold.test.ts bundle-consistency` exit 0 (34 files, 1458 passed); `pnpm --filter oat-docs docs:check` exit 0 (0 errors, 778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0; `oxfmt --check` on the four files exit 0. Can-fail: the ignore removed, `oxfmt --check` exits 1 on the report (the reproduction above); the template sentence removed, `freestyle-contracts.test.ts` exits 1 on the new pin (`expected '## Lane reports A lane\'s final messa…' to contain 'In a repository whose commit hooks fo…'`); restored.
+
+### Task p08-t08: (review) Refuse new --link-to for a name that is already a project
+
+**Status:** completed
+**Commit:** 506de503fd97314c65cd58bcd7c86020cee31b93
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-4)
+
+Intent: `project/new/index.ts:260`: `new <name> --link-to <parent>` on an existing standalone project exits 0, scaffolds nothing, opens the parent's row and leaves the child without `oat_linked_from`. In `prepareLinkedCreation`, before any write, refuse when the child's project folder already exists in the scope being created, naming `oat project linked add <name>` as the way to link an existing project. Ordinary `new` without `--link-to` is unchanged.
+Files: `project/new/index.ts` and its test.
+Proof: a test with an existing project: exit 1, the refusal names `linked add`, and the parent's `linked-projects.md` is unchanged; can-fail with the check removed.
+Confirmed before the fix: the new test, run against the unchanged command, failed (exit 1) on `expected +0 to be 1`; `new existing --mode freestyle --scope shared --link-to parent` exited 0 for an existing shared project. Fix: `prepareLinkedCreation` resolves the scope being created (`--scope`, else the default scope) and, after the parent checks and before any write, refuses when that scope's `<name>` folder exists: `Project <name> already exists in <scope> scope; --link-to creates a new child. Link the existing project with: oat project linked add <name> --project <parent path> --purpose <text>` (exit 1). `new` without `--link-to` returns before the check, unchanged. Files changed: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/linked/linked.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md` (one sentence on the refusal). Deviation: the test is in `linked/linked.test.ts`, where every `new --link-to` test runs the real command against a fixture repository; `new/index.test.ts` has no `--link-to` coverage.
+Proof (this run): `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/linked src/commands/project/new` exit 0 (3 files, 157 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on the two source files exit 0; `pnpm --filter oat-docs docs:check` exit 0 (778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Can-fail: with the check disabled (`if (false && …)`) the new test exits 1 on the exit code (`expected +0 to be 1`), and with the exit and message assertions also removed it fails because the parent's `linked-projects.md` was written (`expected '# Linked projects: parent…' to be null`), the reviewer's reproduction; restored.
+
+### Task p08-t09: (review) Name the child in the linked-child claim handoff
+
+**Status:** completed
+**Commit:** 0cdfa316e94b2c35e6e0fadd30367af9b6fe50ef
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-5)
+
+Intent: `project/new/index.ts:190` hands off `oat project orchestrator set` with no project. The parent stays the active project, so in a local child's checkout that command reports the parent as already claimed. Print `oat project orchestrator set --project <child>`, and use the same form where `.oat/templates/project-agents.md`, `references/kickoff.md` and the docs describe the child's claim.
+Files: `project/new/index.ts`, its test, `.oat/templates/project-agents.md`, `.agents/skills/oat-project-freestyle/references/kickoff.md` (if it gives the claim command), and the docs pages that quote it.
+Proof: a `new --link-to` output test asserting `--project <child>`; a scratch local child claimed by running the printed command.
+Confirmed before the fix: the new test, run against the unchanged command, failed (exit 1) with `expected 'project orchestrator set' to be 'project orchestrator set --project child'`. Fix: `new` prints `oat project orchestrator set --project <child>` in the `Next:` handoff and in the `Orchestrator branch: unclaimed (…)` line of the same output, so the two agree (the unclaimed line also covers a project created on a detached HEAD, which is the active project, so naming it is right there too). `.oat/templates/project-agents.md` Linked projects "Running one" and the docs page's "Run the child" step give the same form; `references/kickoff.md` already claims with `--project "{project-path}"` and is unchanged. Files changed: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/linked/linked.test.ts` (new test: a local child linked to a shared parent, the printed command run in the parent's checkout claims the child and leaves the parent's `state.md` unchanged), `packages/cli/src/commands/project/orchestrator/orchestrator.test.ts` (the detached-HEAD assertion now expects `--project detached`), `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (the Linked projects pin), `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`. Observation, not changed (outside the Intent): `status` prints the bare `oat project orchestrator set` on its unclaimed line (`orchestrator/branch.ts` `formatOrchestratorLines`).
+Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation src/commands/project/linked src/commands/project/new src/commands/project/orchestrator src/commands/project/status.test.ts bundle-consistency` exit 0 (38 files, 1556 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` on the four test and source files exit 0; `pnpm --filter oat-docs docs:check` exit 0 (778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Scratch with the branch build (`node packages/cli/dist/index.js`, temp repo and HOME, removed): shared `parent`, then `new child --mode freestyle --scope local --link-to parent` exit 0 printing `` claims it with `oat project orchestrator set --project child` ``; running the printed command exit 0 (`Claimed child: orchestrator branch main`, child `oat_orchestrator_branch: "main"`), while the bare `oat project orchestrator set` printed `Already claimed: parent`. Can-fail: with `claimCommand` reduced to the bare command the new test exits 1 on the handoff assertion, and with that assertion also removed it fails because the child stays unclaimed (`expected '' to be 'main'`), the reviewer's reproduction; restored.
+
+### Task p08-t10: (review) Say how a child adopts a shape its checkout cannot see
+
+**Status:** completed
+**Commit:** cb9f2864bcb89555a966f2ac311c318195fd2c3e
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-6)
+
+Intent: `references/kickoff.md:54` finds the parent's folder with `oat project list`, which does not list a local parent from another worktree. Add one sentence: when the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape. No new command.
+Files: `.agents/skills/oat-project-freestyle/references/kickoff.md` and any contract pin.
+Proof: the sentence is pinned in the freestyle contract test.
+Confirmed before the fix: `references/kickoff.md` Adopt found the parent only through `oat project list`, and `git check-ignore -v .oat/projects/local/x/state.md` reports `.gitignore:72:.oat/projects/local/**`, so a local parent never reaches another worktree's list. Fix, one sentence after the synced pull instruction: "When the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape." No command added. Files changed: `.agents/skills/oat-project-freestyle/references/kickoff.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (the sentence pinned in the kickoff adopt-or-new test). No skill bump: `oat-project-freestyle` is already at 1.1.0 in this PR.
+Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation bundle-consistency` exit 0 (33 files, 1348 passed); `pnpm oat:validate-skills` exit 0 (69 OK); `oxfmt --check` on both files exit 0. Can-fail: with the sentence removed, `freestyle-contracts.test.ts` exits 1 on the new pin (`expected '## Before Shaping Step 1 runs on ever…' to contain 'When the parent is not listed in this…'`); restored.
+
+### Task p08-t11: (review) Resume the adoption question before declaring the shape complete
+
+**Status:** completed
+**Commit:** a29c7a576c30995f3b713853fc1f5910109859cf
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-7)
+
+Intent: `SKILL.md:275`: when the child's goal is written and the session stops before the adoption question, every topic reads shaped. Resume then takes the complete-and-stop branch, although `shape.md` still says `adopted sections not yet confirmed`. Route that marker to `references/kickoff.md`'s confirmation question before the complete-and-stop branch.
+Files: `.agents/skills/oat-project-freestyle/SKILL.md` and its contract test.
+Proof: a contract test asserting the routing names the marker ahead of the complete-and-stop branch.
+Confirmed before the fix: SKILL.md Step 2 routed a resume with every topic shaped and no trigger to "Otherwise report that the shape is complete … and stop", and nothing in the routing read the `**Adopted from:**` marker, so an adopted child whose goal was written before the confirmation question stopped with `adopted sections not yet confirmed` in `shape.md`. Fix: a routing branch ahead of the reshape and complete-and-stop branches: "Every topic is shaped, and the `**Adopted from:**` line still says `adopted sections not yet confirmed` → read `references/kickoff.md`, ask its Before Shaping step 2 question whether any adopted section should differ, and continue at Step 3." (A topic still unshaped already reaches kickoff, whose step 2 asks that question next.) Files changed: `.agents/skills/oat-project-freestyle/SKILL.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (new test: the routing names the marker and the kickoff question, and does so before `Otherwise report that the shape is complete`). No skill bump: already 1.1.0 in this PR.
+Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation bundle-consistency` exit 0 (33 files, 1349 passed); `pnpm oat:validate-skills` exit 0; `oxfmt --check` and `oxlint` on the changed files exit 0. Can-fail: against the committed SKILL.md (before this task) the new test exits 1 (`routes the unconfirmed marker: expected -1 to be greater than -1`), and with the new branch moved after the complete-and-stop branch it exits 1 (`expected 476 to be less than 373`); restored.
+
+### Task p08-t12: (review) Key accepted lane-report log entries by the flag each entry type takes
+
+**Status:** completed
+**Commit:** 8d22fe8e41903f63c33458f7ecd593f36bb8b024
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-8)
+
+Intent: `.oat/templates/project-agents.md:230` and the docs say accepted proposed entries are keyed with `--ref l01-d02`. `oat project log append` refuses `--ref` on judgment entries; they take `--source`. State `--source <dispatch ID>` for a judgment entry and `--ref <dispatch ID>` for a structural one. Replace the contract test's exclusion of log flags from the lane-option scan (`freestyle-contracts.test.ts:753`) with a check that each example uses a flag its own command accepts.
+Files: `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md` (and `project-log.md` if it repeats the example), `freestyle-contracts.test.ts`.
+Proof: the contract test fails on the old `--ref` judgment example and passes on the new text; a scratch `log append` with each documented form exits 0.
+Confirmed before the fix: on the old template text the new contract test exits 1 with the reviewer's refusal, `judgment entry with --ref: Judgment entries cannot use structural flags --producer or --ref; add --structural or remove those flags.`, and a scratch judgment `log append … --ref l01-d02` with the branch build exits 1 with that message. Fix: `.oat/templates/project-agents.md` Lane reports step 3 reads "keyed by the dispatch ID (for example `l01-d02`): `--source <dispatch ID>` for a judgment entry and `--ref <dispatch ID>` for a structural entry."; the docs page's filing paragraph and `project-log.md` give `--source l01-d02` for a judgment entry and `--ref l01-d02` for a structural one. Test: the lane-option scan no longer drops `--project-path`, `--output` and `--ref`. Each flag the Dispatch, Lane reports and Lane placement sections name is attributed to the command named most recently before it (`lane set`, `log append` or `template resolve`) and must be an option of that command. Each log flag is then run, `--dry-run`, against a scratch freestyle project as the entry type its sentence gives it (both types when it names neither), and must exit 0. Files changed: `.oat/templates/project-agents.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`, `apps/oat-docs/docs/workflows/projects/execution/project-log.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`.
+Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation bundle-consistency src/commands/project/log` exit 0 (41 files, 1665 passed); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `oxlint` and `oxfmt --check` on the changed files exit 0; `pnpm --filter oat-docs docs:check` exit 0 (778 warnings, unchanged); docs-index `generate-index` exit 0 and `git diff --exit-code -- apps/oat-docs/index.md` exit 0. Scratch with the branch build (temp repo and HOME, removed): `log append --type worked-well --scope project --area lanes --source l01-d02 --body …` exit 0 and `log append --structural --producer oat-project-freestyle --ref l01-d02 --body …` exit 0, both appended. Can-fail: with the old step 3 restored, the new test exits 1 on its `--source` guard (`expected [ '--ref', '--ref' ] to include '--source'`), and with that guard also removed it exits 1 on the judgment `--ref` refusal quoted above; restored.
+
+### Task p08-t13: (review) Name the project in the unclaimed status line and refusal claim hints
+
+**Status:** completed
+**Commit:** 299537c8ffd353475016fd1d3cbed0d06fc8e1aa
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-1 class; raised by the p08 fix implementer in the p08-t09 record)
+
+- Intent: the same defect as N-1 in two more places. `status` on an unclaimed project, and the guard's refusal, printed a bare `oat project orchestrator set`, which claims the active project, not the one inspected or named.
+- Files: `orchestrator/branch.ts` (`formatOrchestratorLines` takes the project and prints `--project <project path>`; the refusal prints `--project <project name>`), `status.ts` (passes the project path), and the three tests that pin the lines (`status.test.ts`, `orchestrator/orchestrator.test.ts`, `linked/linked.test.ts`).
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/status.test.ts src/commands/project/orchestrator src/commands/project/linked src/commands/project/lane src/commands/project/new` exit 0 (244 tests); `pnpm --filter @open-agent-toolkit/cli type-check` exit 0; `pnpm check` exit 0. Can-fail: with the bare command restored in `formatOrchestratorLines`, the status test exits 1. No docs page quotes either line.
+
+Late fix p08-t13 at `299537c8f`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
+
+### Task p08-t14: (review) Quote and scope printed project commands; let a notes-only folder take a child
+
+**Status:** completed
+**Commit:** 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
+**Executor:** root (root-inline review fix; see `## Orchestration Runs`)
+**Source review:** reviews/archived/m02-integrated-review-2026-11-23T060440Z.md (P-1, P-2, P-3)
+
+- Intent: P-1, the ack and claim hints `status` prints fail on a project path with a space; P-2, the child handoff and the guard refusal print the project name, which is ambiguous when the name exists in two scopes; P-3, p08-t08's existing-project check refused any folder, so a folder of preparatory notes blocked `new --link-to`.
+- Files: new `commands/shared/shell-quote.ts` (bare for a plain path, single-quoted otherwise) with its test; `status.ts` and `orchestrator/branch.ts` quote the printed path; `assertOrchestratorCheckout` takes `projectPath` (callers `lane/set.ts`, `linked/link.ts`) and prints it; `new/index.ts` prints the scaffolded path in the handoff, quotes the `linked add` hint, and treats a folder as a project only when it has `state.md`; pins updated in `linked.test.ts` and `orchestrator.test.ts`, plus a notes-folder test and a spaced-path formatter test.
+- Proof: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run` over shell-quote, status, orchestrator, linked, lane, new, log and the freestyle contracts exit 0 (17 files, 621 tests); `tsc --noEmit` exit 0; `pnpm check` exit 0; CLI `lint` exit 0. Can-fail: with the folder check restored, the notes-folder test exits 1; with the name restored in the handoff, the handoff test exits 1 (its printed path is the assertion); with `shellQuote` made the identity, the round-trip and spaced-path formatter tests exit 1; each restored.
+
+Late fix p08-t14 at `9ffa307eb`. No later phase has a `**Base:**`, so the head advanced under the late-fix rule.
 
 ---
 
@@ -1126,6 +1628,32 @@ Proof: `build:docs`, docs index freshness.
 - run/v1 · request=freestyle-projects-p04-review-2 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p04-review-3 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p04 (task p04-t08 only, review round 3 L1) · reason: a one-sentence docs wording fix, smaller than a fix-mode resume and its gate run · root model: claude-opus-5-5
+
+- run/v1 · request=freestyle-projects-p05-implementation-1 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=freestyle-projects-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=freestyle-projects-p07-implementation-1 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Nested (phase-implementer-owned, p07-t05 exit evidence): request=freestyle-projects-p07-t05-fresh-session-1 · read-only general-purpose fresh-context check on Sonnet at provider-default effort · launch=accepted · outcome=completed · no structured dispatch record (the phase report names it; answer kept verbatim in the gitignored p07 scratch transcript)
+
+- run/v1 · request=freestyle-projects-p07-review-1 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p07 (task p07-t06 only, review round 1 M1 and L1) · reason: two template sentences and their contract pins, smaller than a fix-mode resume · root model: claude-opus-5-5
+
+- run/v1 · request=freestyle-projects-p10-implementation-1 · scope=p10 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Nested (phase-implementer-owned, p10-t04 exit evidence): request=freestyle-projects-p10-t04-lane-l01-d01-1 · general-purpose scratch lane l01 on Sonnet at provider-default effort, writes confined to the scratch repo · launch=accepted · outcome=completed · no structured dispatch record (the phase report names it; transcript in the gitignored p10 scratch transcript)
+- Nested (phase-implementer-owned, p10-t04 exit evidence): request=freestyle-projects-p10-t04-fresh-session-1 · read-only general-purpose fresh-context check on Sonnet at provider-default effort · launch=accepted · outcome=completed · no structured dispatch record (answer kept verbatim in the gitignored p10 scratch transcript)
+
+- run/v1 · request=freestyle-projects-p10-review-1 · scope=p10 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p10 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p10 (task p10-t06 only, review round 1 L1 and L2) · reason: one template bullet rewritten and its contract pin, smaller than a fix-mode resume · root model: claude-opus-5-5
+
+- run/v1 · request=freestyle-projects-p08-implementation-1 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=freestyle-projects-p08-review-1 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p08 (task p08-t04 only, review round 1 M1 and L1 to L4) · reason: five sentence-level docs corrections on one page, smaller than a fix-mode resume · root model: claude-opus-5-5
+
+- run/v1 · request=freestyle-projects-p08-implementation-2 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p08 (task p08-t13 only, an N-1-class claim hint the fix implementer reported) · reason: one format function, one refusal string and three test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
+- Root-inline phase: p08 (task p08-t14 only, m02 confirm-round P-1 to P-3) · reason: a four-line quoting helper, one marker-file check and their test pins, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 <!-- orchestration-runs-end -->
 
@@ -1206,6 +1734,66 @@ Confirmed by the reviewer: J-1, J-2 case A (with a pointer), J-3, J-4, each with
 Review-cycle count for m01 integrated: 3 of 3.
 
 **Outcome:** passed, deferred items only (K-1, operator-approved Medium deferral, 2026-11-22). No fix tasks.
+
+### Review Received: m02
+
+**Date:** 2026-11-22
+**Review artifact (local-only):** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md
+
+Integrated milestone review of m02 (p05, p07, p10, p08) on `699f8ee43..52589cbea` (origin/main to the m02 head), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only), complexity lens, per the m02 review plan. Root checked every cited line at `52589cbea`; each defect is in code or text m02 introduced.
+
+**Findings:** Critical 0 · High 1 · Medium 5 · Low 2
+**Finding classes:** N-1 accepted-requirement (Outcome 3, p05 Intent: `linked ack` on the parent whose records were read) · N-2 accepted-requirement (Outcome 5, Lane ledger decision: append-only history) · N-3 accepted-requirement (p07, Lane reports decision: filed verbatim, never edited) · N-4 accepted-requirement (Outcome 3: `--link-to` creates a child, `linked add` links an existing project) · N-5 accepted-requirement (Outcome 4, p05: the child's own session claims it) · N-6 accepted-requirement (Shape adoption decision) · N-7 accepted-requirement (Shape adoption decision: ask once whether adopted sections differ) · N-8 accepted-requirement (Lane reports and Ledger vs project log decisions: entries keyed by dispatch ID)
+
+- N-1 (High): `status` prints an unscoped `linked ack` that can close the active parent's row → p08-t05.
+- N-2 (Medium): the ledger reader strips literal backslashes and the next write rewrites history → p08-t06.
+- N-3 (Medium): the repository's formatting hook rewrites filed lane reports on commit → p08-t07.
+- N-4 (Medium): `new --link-to` on an existing project reports success and opens a row → p08-t08.
+- N-5 (Medium): the child claim handoff omits `--project <child>` → p08-t09.
+- N-6 (Medium): a local parent's shape is not findable from a child worktree → p08-t10 (one kickoff sentence; no new command, per the complexity lens).
+- N-7 (Low): resume can skip the adoption confirmation → p08-t11.
+- N-8 (Low): the `--ref` example fails for judgment log entries → p08-t12.
+
+Confirmed by the reviewer: base and head behave identically for spec-driven, quick, lite, brief, goal and import (scaffold, `new --json`, `status` text and JSON); focused suites pass (296 tests); lockstep 0.3.57 and `oat-project-freestyle` 1.1.0.
+
+Review-cycle count for m02 integrated: 1 (the plan allows at most one confirm round after this one).
+
+**Outcome:** fixes queued: p08-t05 to p08-t12 (late-fix rule: no later phase has a `**Base:**`, so the records land in p08, status back to `in_progress`, base unchanged). m02 exit carrier marked stale; m02 back to `implementing`.
+
+### Review Received: m02 (cycle 2)
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m02-integrated-review-2026-11-23T060440Z.md
+
+Integrated milestone review of m02 (p05, p07, p10, p08), cycle 2, confirm only, on `52589cbea..020ebb740` (the cycle-1 fixes p08-t05 to p08-t13), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only). Root checked each cited line at `020ebb740`.
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 1
+**Finding classes:** P-1 accepted-requirement (Outcomes 3 and 4: the printed commands are the documented way to act on a link and claim a child) · P-2 accepted-requirement (Outcome 4) · P-3 regression (p08-t08, `506de503f`: the existing-project check refused a notes-only folder the base accepted)
+
+- P-1 (Medium): unquoted path in the ack and claim hints → p08-t14.
+- P-2 (Low): the handoff and guard print an ambiguous name → p08-t14.
+- P-3 (Medium): a notes-only folder blocks `new --link-to` → p08-t14.
+
+Confirmed by the reviewer: N-1 to N-8 and p08-t13 by behaviour; no regression in spec-driven, quick, lite, brief, goal or import; focused suites pass (617 tests).
+
+Review-cycle count for m02 integrated: 2 (the plan's one confirm round is used).
+
+**Outcome:** fixes applied as p08-t14 (`9ffa307eb`, late-fix rule, records in p08), root-verified with can-fail checks. Under the operator's now-or-never rule no further round was planned, but `oat project delivery check` needs a passed integrated review row, so the operator decides whether a review of `020ebb740..9ffa307eb` runs before delivery.
+
+### Review Received: m02 (cycle 3)
+
+**Date:** 2026-11-23
+**Review artifact (local-only):** reviews/archived/m02-integrated-review-2026-11-23T063938Z.md
+
+Integrated milestone review of m02 (p05, p07, p10, p08), cycle 3, confirm only, on `020ebb740..9ffa307eb` (p08-t14), manual, GPT 6.2 Astra effort high via T3 `delegate_task` (read-only). **Operator decision (2026-11-23):** run this one extra round so delivery has a passed integrated review covering the cycle-2 fix.
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Confirmed by the reviewer: P-1, P-2 and P-3 by behaviour with the branch build (45 tests in the touched suites pass).
+
+Review-cycle count for m02 integrated: 3.
+
+**Outcome:** passed at `9ffa307eb`. p08 accepted (fix loops 3: p08-t04, p08-t05 to p08-t13, p08-t14); m02 exit carrier refreshed to fresh; m02 reviewing -> delivering.
 
 ## Deferred Findings
 

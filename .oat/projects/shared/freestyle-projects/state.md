@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05
-oat_last_commit: 1045632864dd29b948d80a1e3aa85a853381c01f
+oat_current_task: p09
+oat_last_commit: 9ffa307eb6bbb42f5661c90bf529f2a56b231dba
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -47,7 +47,7 @@ oat_phase_recovery_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
-oat_milestone: m01
+oat_milestone: m02
 oat_milestone_status: delivered
 oat_goal_status: active
 oat_goal_outcome_audit: null
@@ -77,13 +77,37 @@ oat_milestone_gates:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-22T16:02:01Z'
+  m02:
+    plan:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject:
+        kind: plan
+        scope: [p05, p07, p10, p08]
+        ref: 1874426187e7ef1e9e6a4613ff10ff72bf4426da
+      decided_at: '2026-11-23T00:54:44Z'
+    exit:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject:
+        kind: code
+        scope: [p05, p07, p10, p08]
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-23T06:39:38Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
     scope: [p01, p02, p03, p04]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -95,9 +119,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
         base: '78b88baba57847a417cbba1f8294e82ffa3d34c6'
         reviewed_head: '32919c56a87403c526f8d7251b791d8210f192c7'
-        observed_head: e711fdade8db9045cf486d9f24a48a250e853386
+        observed_head: cbb0dfe4a2bc1eab5a43cf7c1b2ae0f5249e1584
         observed_base: 78b88baba57847a417cbba1f8294e82ffa3d34c6
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/m01-integrated-review-2026-11-22T174038Z.md
       scope: [p01, p02, p03, p04]
@@ -120,7 +144,13 @@ oat_deliveries:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-22T16:02:01Z'
-    endpoint_attainment: null
+    endpoint_attainment:
+      observed_at: 2026-11-22T18:35:20.274Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
+          head: cbb0dfe4a2bc1eab5a43cf7c1b2ae0f5249e1584
+          base: 78b88baba57847a417cbba1f8294e82ffa3d34c6
+          status: merged
     freshness_waivers:
       - waived_by: Thomas Stang
         reason: 'Operator (2026-11-22): fine waiving another review for straightforward fixes. Head moved by test-only PR #429 self-review fixes (ffaefa31b: T-1..T-4) plus OAT bookkeeping; no product code changed.'
@@ -134,6 +164,48 @@ oat_deliveries:
         members:
           - url: https://github.com/voxmedia/open-agent-toolkit/pull/429
             waived_head: e711fdade8db9045cf486d9f24a48a250e853386
+  - delivery_id: d02
+    milestone: m02
+    scope: [p05, p07, p10, p08]
+    endpoint: merged
+    kind: pr
+    status: open
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: feat/freestyle-projects-m02
+      head_sha_at_registration: '337d3e069dd5bc60e3ed3a0db67572851f774b45'
+    members:
+      - url: https://github.com/voxmedia/open-agent-toolkit/pull/430
+        base: '699f8ee43e4e1e8ba7f315e9d2d2cc451e097222'
+        reviewed_head: '9ffa307eb6bbb42f5661c90bf529f2a56b231dba'
+        observed_head: 813474dfd59afcbcf2aa498e447df4235bc3174c
+        observed_base: 699f8ee43e4e1e8ba7f315e9d2d2cc451e097222
+        status: open
+    integrated_review:
+      artifact: reviews/archived/m02-integrated-review-2026-11-23T063938Z.md
+      scope: [p05, p07, p10, p08]
+      bound_revisions:
+        [
+          {
+            member: 0,
+            base: '699f8ee43e4e1e8ba7f315e9d2d2cc451e097222',
+            head: '9ffa307eb6bbb42f5661c90bf529f2a56b231dba',
+          },
+        ]
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [p05, p07, p10, p08] }
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-23T06:39:38Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -198,10 +270,10 @@ oat_skill_gate_overrides:
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/429 # null | string — tracked PR URL when a PR exists
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/430 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-22T17:45:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-11-23T06:57:00Z'
 oat_generated: false
 ---
 

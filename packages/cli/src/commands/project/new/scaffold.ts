@@ -4,6 +4,10 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
 import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
+import {
+  ORCHESTRATOR_BRANCH_FIELD,
+  readCurrentBranch,
+} from '@commands/project/orchestrator/branch';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   buildSyncedRecord,
@@ -16,7 +20,14 @@ import {
   pushSynced,
   rollbackCreatedSyncedProject,
 } from '@commands/project/sync/ref-sync';
-import { readStateWorkflowModeFile } from '@commands/shared/frontmatter';
+import {
+  getFrontmatterBlock,
+  readStateWorkflowModeFile,
+} from '@commands/shared/frontmatter';
+import {
+  replaceFrontmatter,
+  upsertFrontmatterField,
+} from '@commands/shared/frontmatter-write';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   canonicalizePath,
@@ -60,6 +71,13 @@ export interface ScaffoldProjectOptions {
    * `oat project new` command enables it by default.
    */
   commit?: boolean;
+  /**
+   * Freestyle only: the parent project's name for a child created with
+   * `--link-to`. The child records it as `oat_linked_from` and starts with an
+   * empty (unclaimed) orchestrator branch, because the parent creates the
+   * child but does not run it.
+   */
+  linkedFrom?: string;
   env?: NodeJS.ProcessEnv;
   home?: string;
   today?: string;
@@ -95,6 +113,11 @@ export interface ScaffoldProjectResult {
   commitError?: string;
   ref?: string;
   sha?: string;
+  /**
+   * Freestyle only: the orchestrator branch written to `state.md`, or `null`
+   * when the project starts unclaimed (a linked child, or no current branch).
+   */
+  orchestratorBranch?: string | null;
 }
 
 export interface ScaffoldProjectDependencies {
@@ -152,12 +175,15 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     { source: 'implementation-brief.md', target: 'implementation.md' },
   ],
   // Freestyle scaffolds its minimal, lifecycle-free state, the OAT-owned
-  // project AGENTS.md and the not-yet-shaped shape.md. Documents are chosen
-  // while the project is shaped, never scaffolded.
+  // project AGENTS.md, the not-yet-shaped shape.md, and the empty
+  // decisions.md and memories.md the orchestrator writes by hand. Documents
+  // are chosen while the project is shaped, never scaffolded.
   freestyle: [
     { source: 'state-freestyle.md', target: 'state.md' },
     { source: 'project-agents.md', target: 'AGENTS.md' },
     { source: 'shape.md', target: 'shape.md' },
+    'decisions.md',
+    'memories.md',
   ],
 };
 
@@ -569,6 +595,42 @@ async function assertNoFreestyleModeChange(
   );
 }
 
+/** The freestyle identity fields `oat project new` writes into `state.md`. */
+interface FreestyleStateFields {
+  orchestratorBranch: string | null;
+  linkedFrom?: string;
+}
+
+/**
+ * Record the orchestrator branch (empty while unclaimed) and, for a linked
+ * child, its parent in a rendered freestyle `state.md`. The values are
+ * double-quoted so every branch or project name stays a YAML string.
+ */
+function applyFreestyleStateFields(
+  rendered: string,
+  fields: FreestyleStateFields,
+): string {
+  const block = getFrontmatterBlock(rendered);
+  if (block === null) {
+    return rendered;
+  }
+  let nextBlock = upsertFrontmatterField(
+    block,
+    ORCHESTRATOR_BRANCH_FIELD,
+    JSON.stringify(fields.orchestratorBranch ?? ''),
+    true,
+  ).nextBlock;
+  if (fields.linkedFrom !== undefined) {
+    nextBlock = upsertFrontmatterField(
+      nextBlock,
+      'oat_linked_from',
+      JSON.stringify(fields.linkedFrom),
+      true,
+    ).nextBlock;
+  }
+  return replaceFrontmatter(rendered, nextBlock);
+}
+
 async function scaffoldModeTemplates(
   home: string,
   repoRoot: string,
@@ -577,6 +639,7 @@ async function scaffoldModeTemplates(
   mode: WorkflowMode,
   today: string,
   nowUtc: string,
+  freestyleState?: FreestyleStateFields,
 ): Promise<{ createdFiles: string[]; skippedFiles: string[] }> {
   const createdFiles: string[] = [];
   const skippedFiles: string[] = [];
@@ -610,6 +673,9 @@ async function scaffoldModeTemplates(
     }
     if (mode === 'goal' && target === 'plan.md') {
       rendered = renderGoalBrief(rendered);
+    }
+    if (freestyleState && target === 'state.md') {
+      rendered = applyFreestyleStateFields(rendered, freestyleState);
     }
     assertNoUnresolvedOatPlaceholders(rendered, source);
     if (target === 'state.md') {
@@ -829,6 +895,12 @@ export async function scaffoldProject(
   const nowUtc = options.nowUtc ?? now.toISOString();
 
   validateProjectName(options.projectName);
+  if (options.linkedFrom !== undefined && mode !== 'freestyle') {
+    throw new CliError(
+      'Only a freestyle project can be linked to a parent; pass --mode freestyle.',
+      1,
+    );
+  }
   const projectsRoot = await resolveProjectsRoot(options.repoRoot, env);
   const scope =
     options.scope ??
@@ -900,6 +972,7 @@ export async function scaffoldProject(
   let commitError: string | undefined;
   let createdFiles: string[] = [];
   let skippedFiles: string[] = [];
+  let orchestratorBranch: string | null = null;
 
   try {
     if (scope === 'local') {
@@ -952,6 +1025,15 @@ export async function scaffoldProject(
     }
 
     await ensureStructure(absoluteProjectPath, mode);
+    // Whoever creates a freestyle project runs it, so its orchestrator branch
+    // is this checkout's branch; a linked child's parent creates it but does
+    // not run it, so the child starts unclaimed.
+    if (mode === 'freestyle') {
+      orchestratorBranch =
+        options.linkedFrom === undefined
+          ? await readCurrentBranch(options.repoRoot, dependencies.gitRunner)
+          : null;
+    }
     ({ createdFiles, skippedFiles } = await scaffoldModeTemplates(
       home,
       options.repoRoot,
@@ -960,6 +1042,9 @@ export async function scaffoldProject(
       mode,
       today,
       nowUtc,
+      mode === 'freestyle'
+        ? { orchestratorBranch, linkedFrom: options.linkedFrom }
+        : undefined,
     ));
     const effectiveProjectLog =
       options.projectLog ??
@@ -1189,5 +1274,8 @@ export async function scaffoldProject(
     commitError,
     ref,
     sha,
+    ...(mode === 'freestyle' && createdFiles.includes('state.md')
+      ? { orchestratorBranch }
+      : {}),
   };
 }

@@ -1,14 +1,29 @@
+import { join } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { validatePurpose } from '@commands/project/linked/ledger';
+import {
+  assertLinkable,
+  recordLink,
+  resolveLinkParent,
+} from '@commands/project/linked/link';
+import { ORCHESTRATOR_SET_COMMAND } from '@commands/project/orchestrator/branch';
+import type { NamedProject } from '@commands/project/resolve-named-project';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   PROJECT_SCOPES,
+  resolveDefaultScope,
+  resolveScopeRoot,
   type ProjectScope,
 } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { shellQuote } from '@commands/shared/shell-quote';
 import { CliError } from '@errors/cli-error';
+import { fileExists } from '@fs/io';
 import {
   WORKFLOW_MODES,
   type WorkflowMode,
@@ -37,6 +52,15 @@ interface ProjectNewCommandOptions {
   withProjectLog?: boolean;
   projectLog?: boolean;
   scope?: ProjectScope;
+  linkTo?: string;
+  purpose?: string;
+}
+
+/** The parent a `--link-to` child is linked to, and the row it records. */
+interface LinkedCreation {
+  parent: NamedProject;
+  purpose: string;
+  ledgerPath?: string;
 }
 
 interface ProjectNewDependencies {
@@ -51,6 +75,7 @@ interface ProjectNewDependencies {
     commit: boolean;
     projectLog?: boolean;
     scope?: ProjectScope;
+    linkedFrom?: string;
   }) => Promise<ScaffoldProjectResult>;
 }
 
@@ -80,12 +105,16 @@ function reportSuccess(
   context: CommandContext,
   projectName: string,
   result: ScaffoldProjectResult,
+  link?: LinkedCreation,
 ): void {
   const freestyle =
     result.mode === 'freestyle'
       ? {
           projectFiles: freestyleProjectFiles(result.projectPath),
           nextSkill: FREESTYLE_SKILL,
+          ...(result.orchestratorBranch !== undefined
+            ? { orchestratorBranch: result.orchestratorBranch }
+            : {}),
         }
       : undefined;
   if (context.json) {
@@ -108,6 +137,15 @@ function reportSuccess(
       commitStatus: result.commitStatus,
       commitError: result.commitError,
       ...freestyle,
+      ...(link
+        ? {
+            linkedTo: {
+              project: link.parent.name,
+              projectPath: link.parent.projectPath,
+              ledgerPath: link.ledgerPath,
+            },
+          }
+        : {}),
     });
     return;
   }
@@ -144,10 +182,77 @@ function reportSuccess(
     context.logger.info(
       `Project shape: ${freestyle.projectFiles.shape} (not yet shaped)`,
     );
-    context.logger.info(
-      `Next: shape the project with the user through the ${FREESTYLE_SKILL} skill.`,
+    // The parent stays the active project, so a bare claim would name it; the
+    // path, unlike the name, is unambiguous across scopes.
+    const claimCommand = `${ORCHESTRATOR_SET_COMMAND} --project ${shellQuote(result.projectPath)}`;
+    if (freestyle.orchestratorBranch !== undefined) {
+      context.logger.info(
+        freestyle.orchestratorBranch === null
+          ? `Orchestrator branch: unclaimed (the orchestrator claims it with \`${claimCommand}\`)`
+          : `Orchestrator branch: ${freestyle.orchestratorBranch}`,
+      );
+    }
+    if (link) {
+      context.logger.info(
+        `Linked to ${link.parent.name}: open row in ${link.ledgerPath} (not committed or pushed; the parent's orchestrator saves it as the parent's shape.md agrees)`,
+      );
+      context.logger.info(
+        `Next: hand ${projectName} to its own orchestrator session, which claims it with \`${claimCommand}\` and then shapes it through the ${FREESTYLE_SKILL} skill.`,
+      );
+    } else {
+      context.logger.info(
+        `Next: shape the project with the user through the ${FREESTYLE_SKILL} skill.`,
+      );
+    }
+  }
+}
+
+/**
+ * Before any write, check a `--link-to` request: the child is freestyle, the
+ * purpose is one line, the parent is a freestyle project this checkout
+ * orchestrates, the parent has no open link of that name, and the child is
+ * new (an existing project is linked with `linked add`).
+ */
+async function prepareLinkedCreation(
+  projectName: string,
+  options: ProjectNewCommandOptions,
+  repoRoot: string,
+): Promise<LinkedCreation | undefined> {
+  if (options.linkTo === undefined) {
+    if (options.purpose !== undefined) {
+      throw new CliError('--purpose is only used with --link-to.', 1);
+    }
+    return undefined;
+  }
+  if (options.mode !== 'freestyle') {
+    throw new CliError(
+      '--link-to creates a freestyle child of a freestyle parent; pass --mode freestyle.',
+      1,
     );
   }
+  const purpose = validatePurpose(options.purpose);
+  const parent = await resolveLinkParent({
+    repoRoot,
+    parent: options.linkTo,
+    action: `link ${projectName} to ${options.linkTo}`,
+  });
+  await assertLinkable(parent, projectName);
+  const scope =
+    options.scope ?? (await resolveDefaultScope(repoRoot, process.env));
+  const scopeRoot = resolveScopeRoot(
+    repoRoot,
+    await resolveProjectsRoot(repoRoot, process.env),
+    scope,
+  );
+  // `state.md` marks a project, as the link resolver reads it; a folder of
+  // preparatory notes is not one.
+  if (await fileExists(join(scopeRoot, projectName, 'state.md'))) {
+    throw new CliError(
+      `Project ${projectName} already exists in ${scope} scope; --link-to creates a new child. Link the existing project with: oat project linked add ${projectName} --project ${shellQuote(parent.projectPath)} --purpose <text>`,
+      1,
+    );
+  }
+  return { parent, purpose };
 }
 
 async function runProjectNew(
@@ -157,12 +262,15 @@ async function runProjectNew(
   dependencies: ProjectNewDependencies,
 ): Promise<void> {
   try {
+    const link = await prepareLinkedCreation(projectName, options, context.cwd);
     const result = await dependencies.scaffoldProject({
       repoRoot: context.cwd,
       projectName,
       mode: options.mode,
       force: options.force,
-      setActive: options.setActive,
+      // The parent's orchestrator creates a linked child but does not run it,
+      // so its active project stays the parent.
+      setActive: link ? false : options.setActive,
       refreshDashboard: options.dashboard,
       commit: options.commit,
       projectLog:
@@ -172,9 +280,33 @@ async function runProjectNew(
             ? false
             : undefined,
       scope: options.scope,
+      ...(link ? { linkedFrom: link.parent.name } : {}),
     });
 
-    reportSuccess(context, projectName, result);
+    if (link) {
+      try {
+        link.ledgerPath = (
+          await recordLink({
+            parent: link.parent,
+            child: {
+              name: projectName,
+              path: result.projectPath,
+              scope: result.scope,
+            },
+            purpose: link.purpose,
+            today: new Date().toISOString().slice(0, 10),
+          })
+        ).ledgerPath;
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new CliError(
+          `Created ${projectName} at ${result.projectPath}, but the parent's link row was not written: ${detail}. Record it with: oat project linked add ${projectName} --project ${link.parent.projectPath} --purpose <text>`,
+          error instanceof CliError ? error.exitCode : 2,
+        );
+      }
+    }
+
+    reportSuccess(context, projectName, result, link);
     process.exitCode = 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -220,6 +352,14 @@ export function createProjectNewCommand(
     .option(
       '--no-project-log',
       'Do not create project-log.md during scaffolding',
+    )
+    .option(
+      '--link-to <parent>',
+      'Freestyle only: create a linked child of this parent (name or path); the child starts unclaimed and the parent gets an open row in its linked-projects.md',
+    )
+    .option(
+      '--purpose <text>',
+      'With --link-to: the one-line purpose recorded in the parent row',
     )
     .action(
       async (

@@ -18,9 +18,11 @@ depend on the workflow mode or on a choice such as running a retrospective.
 [Lifecycle](lifecycle.md) shows the stage order and each mode's lane.
 
 A freestyle project runs none of these stages. Its folder holds `state.md`,
-the OAT-owned `AGENTS.md`, `shape.md`, empty `reviews/` and `pr/` folders, and
-the documents `shape.md` lists; see
-[Project Artifacts](../../reference/project-artifacts.md).
+the OAT-owned `AGENTS.md`, `shape.md`, `decisions.md`, `memories.md`, empty
+`reviews/` and `pr/` folders, and the documents `shape.md` lists, and gains
+`linked-projects.md`, `lanes.md` and `lane-reports/` on first use; see
+[Project Artifacts](../../reference/project-artifacts.md) and
+[Running a Freestyle Project](execution/freestyle-projects.md).
 
 === "Diagram"
 
@@ -74,7 +76,7 @@ Read [Project Artifacts](../../reference/project-artifacts.md) for project file 
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
 - [Reviews](reviews/index.md) - How review request/receive loops work inside OAT projects.
 - [Planning](planning/index.md) - Design modes, HiLL checkpoints and project splitting.
-- [Execution](execution/index.md) - Implementation execution, project logs and picking up shared projects.
+- [Execution](execution/index.md) - Implementation execution, project logs, picking up shared projects and running freestyle projects.
 - [Closeout](closeout/index.md) - Retrospectives and PR flow.
 
 ## What This Section Is
