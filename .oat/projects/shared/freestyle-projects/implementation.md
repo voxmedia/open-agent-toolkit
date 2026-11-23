@@ -1537,12 +1537,16 @@ Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm 
 
 ### Task p08-t10: (review) Say how a child adopts a shape its checkout cannot see
 
-**Status:** pending
+**Status:** completed
+**Commit:** cb9f2864bcb89555a966f2ac311c318195fd2c3e
+**Executor:** phase-implementer:freestyle-projects-p08-implementation-2
 **Source review:** reviews/archived/m02-integrated-review-2026-11-23T051139Z.md (N-6)
 
 Intent: `references/kickoff.md:54` finds the parent's folder with `oat project list`, which does not list a local parent from another worktree. Add one sentence: when the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape. No new command.
 Files: `.agents/skills/oat-project-freestyle/references/kickoff.md` and any contract pin.
 Proof: the sentence is pinned in the freestyle contract test.
+Confirmed before the fix: `references/kickoff.md` Adopt found the parent only through `oat project list`, and `git check-ignore -v .oat/projects/local/x/state.md` reports `.gitignore:72:.oat/projects/local/**`, so a local parent never reaches another worktree's list. Fix, one sentence after the synced pull instruction: "When the parent is not listed in this checkout (a local parent lives only in its own checkout), ask the user for the path to the parent's `shape.md`, or define a new shape." No command added. Files changed: `.agents/skills/oat-project-freestyle/references/kickoff.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts` (the sentence pinned in the kickoff adopt-or-new test). No skill bump: `oat-project-freestyle` is already at 1.1.0 in this PR.
+Proof (this run): `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation bundle-consistency` exit 0 (33 files, 1348 passed); `pnpm oat:validate-skills` exit 0 (69 OK); `oxfmt --check` on both files exit 0. Can-fail: with the sentence removed, `freestyle-contracts.test.ts` exits 1 on the new pin (`expected '## Before Shaping Step 1 runs on ever…' to contain 'When the parent is not listed in this…'`); restored.
 
 ### Task p08-t11: (review) Resume the adoption question before declaring the shape complete
 
