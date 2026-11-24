@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: null
+oat_current_task_id: p-rev1
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,24 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | complete | 1     | 1/1      |
-| p07   | complete | 1     | 1/1      |
-| p10   | complete | 1     | 1/1      |
-| p08   | complete | 1     | 1/1      |
-| p11   | complete | 1     | 1/1      |
-| p12   | complete | 1     | 1/1      |
-| p13   | complete | 1     | 1/1      |
-| p14   | complete | 1     | 1/1      |
-| p15   | complete | 1     | 1/1      |
+| Phase  | Status   | Units | Accepted |
+| ------ | -------- | ----- | -------- |
+| p01    | complete | 1     | 1/1      |
+| p02    | complete | 1     | 1/1      |
+| p03    | complete | 1     | 1/1      |
+| p04    | complete | 1     | 1/1      |
+| p05    | complete | 1     | 1/1      |
+| p07    | complete | 1     | 1/1      |
+| p10    | complete | 1     | 1/1      |
+| p08    | complete | 1     | 1/1      |
+| p11    | complete | 1     | 1/1      |
+| p12    | complete | 1     | 1/1      |
+| p13    | complete | 1     | 1/1      |
+| p14    | complete | 1     | 1/1      |
+| p15    | complete | 1     | 1/1      |
+| p-rev1 | pending  | 1     | 0/1      |
 
-**Total:** 13/13 phases accepted
+**Total:** 13/14 phases accepted
 
 ---
 
@@ -2024,6 +2025,15 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - Reviewer: `freestyle-projects-p15-review-2`, GPT-6.1 Sol high, fresh native confirmation on `994c63b36..68cbbdfd7`.
 - Artifact: `reviews/archived/p15-code-review-2026-11-24T201707Z.md` (local).
 - Outcome: passed. H1 settled, with no new findings. Retired synced freestyle closeout retains its receipt and follows the shape's publication agreement. The existing quick-mode continuation still passes.
+
+---
+
+## Phase p-rev1: Render quoted pause reasons in the dashboard
+
+**Status:** pending
+**Corrects:** p13
+
+The branch CLI reproduced the issue in the dashboard's line-based reader. An ordinary quoted reason retains its quotes and a hash truncates the value. This correction preserves the existing dashboard display and adds no new project behavior.
 
 ---
 

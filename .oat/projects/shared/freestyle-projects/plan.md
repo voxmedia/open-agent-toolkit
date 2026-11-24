@@ -141,12 +141,12 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 
 ## Milestones
 
-| Milestone | Phases             |
-| --------- | ------------------ |
-| m01       | p01, p02, p03, p04 |
-| m02       | p05, p07, p10, p08 |
-| m03       | p11, p12           |
-| m04       | p13, p14, p15      |
+| Milestone | Phases                |
+| --------- | --------------------- |
+| m01       | p01, p02, p03, p04    |
+| m02       | p05, p07, p10, p08    |
+| m03       | p11, p12              |
+| m04       | p13, p14, p15, p-rev1 |
 
 ## Phase p01: Mode recognition and opt-outs
 
@@ -228,6 +228,14 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 
 ---
 
+## Phase p-rev1: Render quoted pause reasons in the dashboard
+
+**Intent:** Correct the dashboard regression introduced by p13. Read the stored pause reason as a YAML value so its serialization quotes and embedded hashes do not change its display. Keep compatibility with legacy unquoted reasons.
+**Exit evidence:** A dashboard test reproduces the regression and passes with the fix. The existing unquoted-reason control still passes, the applicable repository checks pass, and the correction is reviewed.
+**Provisional:** no
+
+---
+
 ## Parallelism
 
 Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
@@ -244,38 +252,39 @@ Default is `[]` (fully sequential, no worktrees).
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                                     | Reviewed Head                            | Invocation | Gate Target |
-| ----- | -------- | --------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ---------- | ----------- |
-| plan  | artifact | passed          | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
-| plan  | artifact | passed          | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
-| plan  | artifact | passed          | 2026-11-22 | -                                                            | ac2798528b1222acb010c8cb163e17bbdc77714a | manual     | -           |
-| plan  | artifact | passed          | 2026-11-22 | -                                                            | 3c183933bec68d2f54cd41d3abc8bb3db102fcef | manual     | -           |
-| plan  | artifact | passed          | 2026-11-23 | -                                                            | c649bc670d712964cb024e6680370c0267052970 | manual     | -           |
-| plan  | artifact | fixes_added     | 2026-11-24 | -                                                            | 9920f87324c51b2b73e5e0f39558731abdf98ab8 | manual     | -           |
-| plan  | artifact | fixes_added     | 2026-11-24 | -                                                            | 86aeb3f31656de819e542582ee16f739d1072614 | manual     | -           |
-| p01   | code     | passed          | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md                        | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
-| p02   | code     | passed          | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md                        | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
-| p03   | code     | passed          | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md                        | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
-| p04   | code     | passed          | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md                        | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
-| p05   | code     | passed          | 2026-11-22 | p05-code-review-2026-11-23T024113Z.md                        | 352186e87a0aa1f8485484e31febafd2a995696b | auto       | -           |
-| p07   | code     | passed          | 2026-11-22 | p07-code-review-2026-11-23T032928Z.md                        | c4fafff2ae655554e9dc130418ed969253a119a7 | auto       | -           |
-| p10   | code     | passed          | 2026-11-22 | p10-code-review-2026-11-23T041712Z.md                        | 07e828dab203ff41d286565f0bb0be5a3c703849 | auto       | -           |
-| p08   | code     | passed          | 2026-11-22 | p08-code-review-2026-11-23T045600Z.md                        | bb87932965ebb7de2f952aac788747cb2d90226e | auto       | -           |
-| p11   | code     | passed          | 2026-11-23 | p11-code-review-2026-11-23T174803Z.md                        | 5e7732ccf5a681b963d346d80716096ab0910094 | auto       | -           |
-| p12   | code     | passed          | 2026-11-23 | p12-code-review-2026-11-23T181920Z.md                        | 6d5e523ac31ec325efd85ad38b29b2c3886cc1bf | auto       | -           |
-| m02   | code     | fixes_added     | 2026-11-22 | reviews/archived/m02-integrated-review-2026-11-23T051139Z.md | 52589cbea2a707b82fbb43c3dd8861d2c6dac4e0 | manual     | -           |
-| m02   | code     | fixes_added     | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T060440Z.md | 020ebb7409183ac2b162e8df24d2b9ec64b48b59 | manual     | -           |
-| m02   | code     | passed          | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T063938Z.md | 9ffa307eb6bbb42f5661c90bf529f2a56b231dba | manual     | -           |
-| m03   | code     | fixes_added     | 2026-11-23 | reviews/archived/m03-integrated-review-2026-11-23T185019Z.md | 2a747dc33f305724b52a31cba429a31f824c692f | manual     | -           |
-| m03   | code     | passed          | 2026-11-23 | reviews/archived/m03-integrated-review-2026-11-23T185647Z.md | 22212dabbee17dba426eaf4794c4d4e7c5d81566 | manual     | -           |
-| final | code     | pending         | -          | -                                                            | -                                        | -          | -           |
-| m01   | code     | fixes_added     | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
-| m01   | code     | fixes_added     | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |
-| m01   | code     | passed          | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T174038Z.md | 32919c56a87403c526f8d7251b791d8210f192c7 | manual     | -           |
-| p13   | code     | passed          | 2026-11-24 | reviews/archived/p13-code-review-2026-11-24T185752Z.md       | c4633498513c0f522ecb23841afa4764fb17575d | auto       | -           |
-| p14   | code     | passed          | 2026-11-24 | reviews/archived/p14-code-review-2026-11-24T192440Z.md       | b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317 | auto       | -           |
-| p15   | code     | fixes_completed | 2026-11-24 | reviews/archived/p15-code-review-2026-11-24T195617Z.md       | 4234ff23ec375249747f49e3bce818dff854df2c | auto       | -           |
-| p15   | code     | passed          | 2026-11-24 | reviews/archived/p15-code-review-2026-11-24T201707Z.md       | 68cbbdfd71641e692f3d2bb44ab127e8add2946d | auto       | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                     | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ---------- | ----------- |
+| plan   | artifact | passed          | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | auto       | -           |
+| plan   | artifact | passed          | 2026-11-21 | -                                                            | 987d479b798cbc2b2b28df9a3b414d3262cea1df | manual     | -           |
+| plan   | artifact | passed          | 2026-11-22 | -                                                            | ac2798528b1222acb010c8cb163e17bbdc77714a | manual     | -           |
+| plan   | artifact | passed          | 2026-11-22 | -                                                            | 3c183933bec68d2f54cd41d3abc8bb3db102fcef | manual     | -           |
+| plan   | artifact | passed          | 2026-11-23 | -                                                            | c649bc670d712964cb024e6680370c0267052970 | manual     | -           |
+| plan   | artifact | fixes_added     | 2026-11-24 | -                                                            | 9920f87324c51b2b73e5e0f39558731abdf98ab8 | manual     | -           |
+| plan   | artifact | fixes_added     | 2026-11-24 | -                                                            | 86aeb3f31656de819e542582ee16f739d1072614 | manual     | -           |
+| p01    | code     | passed          | 2026-11-21 | p01-code-review-2026-11-21T204635Z.md                        | 8220a9dab90b0c1e7bd2d5f56994c0128fcd7862 | auto       | -           |
+| p02    | code     | passed          | 2026-11-21 | p02-code-review-2026-11-21T225453Z.md                        | 539e419e891bdbacf1993cb88e4ce23444eaba32 | auto       | -           |
+| p03    | code     | passed          | 2026-11-21 | p03-code-review-2026-11-21T233055Z.md                        | 9b3b265b1ac4e5e6f7c41ed0180cfd03ba8eaeb1 | auto       | -           |
+| p04    | code     | passed          | 2026-11-22 | p04-code-review-2026-11-22T021641Z.md                        | 1af188b5c2aadaf47b1fa54ef90fc22510a2f970 | auto       | -           |
+| p05    | code     | passed          | 2026-11-22 | p05-code-review-2026-11-23T024113Z.md                        | 352186e87a0aa1f8485484e31febafd2a995696b | auto       | -           |
+| p07    | code     | passed          | 2026-11-22 | p07-code-review-2026-11-23T032928Z.md                        | c4fafff2ae655554e9dc130418ed969253a119a7 | auto       | -           |
+| p10    | code     | passed          | 2026-11-22 | p10-code-review-2026-11-23T041712Z.md                        | 07e828dab203ff41d286565f0bb0be5a3c703849 | auto       | -           |
+| p08    | code     | passed          | 2026-11-22 | p08-code-review-2026-11-23T045600Z.md                        | bb87932965ebb7de2f952aac788747cb2d90226e | auto       | -           |
+| p11    | code     | passed          | 2026-11-23 | p11-code-review-2026-11-23T174803Z.md                        | 5e7732ccf5a681b963d346d80716096ab0910094 | auto       | -           |
+| p12    | code     | passed          | 2026-11-23 | p12-code-review-2026-11-23T181920Z.md                        | 6d5e523ac31ec325efd85ad38b29b2c3886cc1bf | auto       | -           |
+| m02    | code     | fixes_added     | 2026-11-22 | reviews/archived/m02-integrated-review-2026-11-23T051139Z.md | 52589cbea2a707b82fbb43c3dd8861d2c6dac4e0 | manual     | -           |
+| m02    | code     | fixes_added     | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T060440Z.md | 020ebb7409183ac2b162e8df24d2b9ec64b48b59 | manual     | -           |
+| m02    | code     | passed          | 2026-11-23 | reviews/archived/m02-integrated-review-2026-11-23T063938Z.md | 9ffa307eb6bbb42f5661c90bf529f2a56b231dba | manual     | -           |
+| m03    | code     | fixes_added     | 2026-11-23 | reviews/archived/m03-integrated-review-2026-11-23T185019Z.md | 2a747dc33f305724b52a31cba429a31f824c692f | manual     | -           |
+| m03    | code     | passed          | 2026-11-23 | reviews/archived/m03-integrated-review-2026-11-23T185647Z.md | 22212dabbee17dba426eaf4794c4d4e7c5d81566 | manual     | -           |
+| final  | code     | pending         | -          | -                                                            | -                                        | -          | -           |
+| m01    | code     | fixes_added     | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T134403Z.md | 6d97810c30cc24cf9fe96e4f189866b0f80a64b1 | manual     | -           |
+| m01    | code     | fixes_added     | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T152500Z.md | 9267361de90123f9a4c4c888c14f338b6e341d4e | manual     | -           |
+| m01    | code     | passed          | 2026-11-22 | reviews/archived/m01-integrated-review-2026-11-22T174038Z.md | 32919c56a87403c526f8d7251b791d8210f192c7 | manual     | -           |
+| p13    | code     | passed          | 2026-11-24 | reviews/archived/p13-code-review-2026-11-24T185752Z.md       | c4633498513c0f522ecb23841afa4764fb17575d | auto       | -           |
+| p14    | code     | passed          | 2026-11-24 | reviews/archived/p14-code-review-2026-11-24T192440Z.md       | b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317 | auto       | -           |
+| p15    | code     | fixes_completed | 2026-11-24 | reviews/archived/p15-code-review-2026-11-24T195617Z.md       | 4234ff23ec375249747f49e3bce818dff854df2c | auto       | -           |
+| p15    | code     | passed          | 2026-11-24 | reviews/archived/p15-code-review-2026-11-24T201707Z.md       | 68cbbdfd71641e692f3d2bb44ab127e8add2946d | auto       | -           |
+| p-rev1 | code     | pending         | -          | -                                                            | -                                        | -          | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 
