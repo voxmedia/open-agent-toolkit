@@ -242,7 +242,7 @@ oat_deliveries:
     scope: [p11, p12]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     superseded_by: null
     corrects_delivery_id: null
     covers_scope_of: null
@@ -254,9 +254,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/431
         base: '4dc1b86870fb95391b7a596f42fb3176f17ce6f0'
         reviewed_head: '22212dabbee17dba426eaf4794c4d4e7c5d81566'
-        observed_head: 0a18a4aed2aba403e75d3925c8a184520ac46466
+        observed_head: 80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a
         observed_base: 4dc1b86870fb95391b7a596f42fb3176f17ce6f0
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/m03-integrated-review-2026-11-23T185647Z.md
       scope: [p11, p12]
@@ -279,6 +279,13 @@ oat_deliveries:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-23T18:56:47Z'
+    endpoint_attainment:
+      observed_at: 2026-11-23T19:42:48.110Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/431
+          head: 80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a
+          base: 4dc1b86870fb95391b7a596f42fb3176f17ce6f0
+          status: merged
 oat_dispatch_policy:
   mode: managed
   policy: high
