@@ -311,6 +311,10 @@ Recommendation: before a re-alignment amendment, send the item-by-item verdicts 
 
 Activated m04 (p13, p14, p15); freestyle-projects-activate-m04
 
+### 2026-11-24 · structural · oat-project-implement · p13
+
+p13 accepted after independent review with no findings, 0 review-fix rounds and 1 verified snapshot recovery; freestyle-projects-p13-accepted
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

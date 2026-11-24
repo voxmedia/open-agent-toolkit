@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: p13
+oat_current_task_id: p14
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | complete    | 1     | 1/1      |
-| p08   | complete    | 1     | 1/1      |
-| p11   | complete    | 1     | 1/1      |
-| p12   | complete    | 1     | 1/1      |
-| p13   | in_progress | 1     | 0/1      |
-| p14   | pending     | 1     | 0/1      |
-| p15   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
+| p11   | complete | 1     | 1/1      |
+| p12   | complete | 1     | 1/1      |
+| p13   | complete | 1     | 1/1      |
+| p14   | pending  | 1     | 0/1      |
+| p15   | pending  | 1     | 0/1      |
 
-**Total:** 10/13 phases accepted
+**Total:** 11/13 phases accepted
 
 ---
 
@@ -1814,7 +1814,7 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 
 ## Phase p13: Setup and publication
 
-**Status:** in_progress
+**Status:** completed
 **Base:** e0b2f81ef4a45f188996ac2376c025ff305425f6
 **Head:** c4633498513c0f522ecb23841afa4764fb17575d
 **Executor:** phase-implementer:freestyle-projects-p13-implementation-1
@@ -1871,6 +1871,12 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - Recovery commit: c4633498513c0f522ecb23841afa4764fb17575d
 - Verification: focused help suite and phase check/types/full tests passed before and immediately after commit.
 - Reason: Updated only the stale creation-help snapshot and p13 ledger. Same handle and target preserved; original commits remain immutable.
+
+### Review Received: p13
+
+- Reviewer: `freestyle-projects-p13-review-1`, GPT-6.1 Sol high, fresh native review on `e0b2f81ef..c46334985`.
+- Artifact: `reviews/archived/p13-code-review-2026-11-24T185752Z.md` (local).
+- Outcome: passed with 0 Critical, High, Medium, or Low findings. The reviewer ran 348 targeted tests under pinned Node 22.23.4 and isolated HOME, and checked the original negative controls and docs against the code.
 
 ---
 
@@ -1940,6 +1946,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - Root-inline phase: p12 (task p12-t06 only, m03 integrated review I-1 to I-6) · reason: a matcher flag, one git flag, prose lines and three tests, smaller than a fix-mode resume · root model: claude-opus-5-5
 
 - run/v1 · request=freestyle-projects-p13-implementation-1 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p13-review-1 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
