@@ -191,8 +191,13 @@ process.stdout.write(value.route);
     ARCHIVED_PROJECT_STATUS_ASSIGNMENTS=$(oat project status \
       --project-path "$ARCHIVE_PATH" --shell \
       oat_pr_status=project.prStatus \
-      oat_pr_url=project.prUrl) || exit 1
+      oat_pr_url=project.prUrl \
+      WORKFLOW_MODE=project.workflowMode) || exit 1
     eval "$ARCHIVED_PROJECT_STATUS_ASSIGNMENTS" || exit 1
+    if [[ "$WORKFLOW_MODE" == "freestyle" ]]; then
+      echo "Freestyle synced archive resume: terminal receipt retained; follow references/freestyle-completion.md, Retired synced archive resume."
+      exit 0
+    fi
     WAS_PR_OPEN_AT_START="false"
     if [[ "${oat_pr_status:-}" == "open" ]]; then
       WAS_PR_OPEN_AT_START="true"
@@ -228,6 +233,16 @@ if [[ "$PROJECT_SCOPE" == "shared" && ! -d "$PROJECT_PATH" ]]; then
 fi
 # shared-archive-resume:end
 ```
+
+When the archived status decoder reports `WORKFLOW_MODE="freestyle"`, the
+shell block ends before selecting the generic continuation. Follow
+[Retired synced archive resume](references/freestyle-completion.md#retired-synced-archive-resume)
+and end this invocation there. Retain `ARCHIVE_OUTPUT`, `ARCHIVE_PATH` and the
+validated lifecycle receipt; do not enter Step 8.5, dashboard, mandatory
+code-branch push or PR steps. The generic synced continuation below applies
+only to other modes. An archive retry remains governed by its originating
+archive/publication agreement; do not authorize new publications merely by
+re-entering this skill.
 
 When `SHARED_ARCHIVE_RESUME="true"`, continue directly at **Step 12**. This is
 the single recognized shared-scope checkpoint: the archive already succeeded

@@ -10228,9 +10228,9 @@ describe('freestyle mode skill contracts', () => {
       });
     }
 
-    it('keeps each existing arrival block byte-identical to the one before the mode read', async () => {
-      // The mode read is a separate block placed before the arrival; the
-      // arrival block itself, and so every other mode's pull, is unchanged.
+    it('preserves existing arrival routes while completion decodes the validated archive mode', async () => {
+      // The mode read remains before arrival. Terminal completion also reads
+      // its validated archive mode; other modes retain their arrival route.
       const expected: Record<Skill, string> = {
         'review-provide':
           'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
@@ -10242,9 +10242,14 @@ describe('freestyle mode skill contracts', () => {
       for (const skill of Object.keys(SKILLS) as Skill[]) {
         const { arrival } = await blocks(skill);
         expect(arrival, `${skill} arrival`).toContain(expected[skill]);
-        expect(arrival, `${skill} arrival has no mode read`).not.toContain(
-          'WORKFLOW_MODE=',
-        );
+        if (skill === 'complete') {
+          // H1: only a validated terminal archive decodes its retained mode.
+          expect(arrival).toContain('WORKFLOW_MODE=project.workflowMode');
+        } else {
+          expect(arrival, `${skill} arrival has no mode read`).not.toContain(
+            'WORKFLOW_MODE=',
+          );
+        }
       }
     });
   });

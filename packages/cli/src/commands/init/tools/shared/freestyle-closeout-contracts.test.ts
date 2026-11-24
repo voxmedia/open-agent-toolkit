@@ -1,4 +1,12 @@
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -185,4 +193,156 @@ describe('freestyle closing skills (p15, Outcome 13)', () => {
       'Freestyle requires no final review, summary or PR',
     );
   });
+});
+
+// H1: exercise the actual shipped entry shell, not a second router in the test.
+// The archive command is the external seam; its report matches the existing
+// resolve-synced-archive-entry fixture. Real executor/decoder/finalizer scripts
+// consume it. This proves route selection, not the archive transaction itself.
+describe('retired synced archive mode routing (p15 H1)', () => {
+  it.each(['freestyle', 'quick'])(
+    '%s retains its completion route after the active source and record retire',
+    (mode) => {
+      const directory = mkdtempSync(join(tmpdir(), 'oat-p15-resume-'));
+      try {
+        const bin = join(directory, 'bin');
+        const archive = join(directory, '.oat/projects/archived/demo');
+        const project = join(directory, '.oat/projects/synced/demo');
+        const trace = join(directory, 'calls.jsonl');
+        mkdirSync(bin, { recursive: true });
+        mkdirSync(archive, { recursive: true });
+        writeFileSync(
+          join(archive, 'shape.md'),
+          '## Commits, PRs and merges\nNo code-branch pushes. Archive and project-ref publication are permitted.\n',
+        );
+        const report = {
+          status: 'ok',
+          mode: 'apply',
+          archivePath: archive,
+          snapshotId: '20261124-demo',
+          lifecycleCommit: 'b'.repeat(40),
+          completedRef: 'refs/oat/completed/demo',
+          verifiedSourceSha: 'a'.repeat(40),
+          activeAliasDisposition: 'removed',
+          recordRetired: true,
+        };
+        const stub = `#!/usr/bin/env node
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.P15_TRACE, JSON.stringify(['oat', ...args]) + '\\n');
+if (args[0] === 'project' && args[1] === 'scope') process.stdout.write('synced\\n');
+else if (args[0] === 'project' && args[1] === 'archive') process.stdout.write(process.env.P15_REPORT);
+else if (args[0] === 'project' && args[1] === 'status') {
+  for (const mapping of args.filter(arg => arg.includes('='))) {
+    const [key, field] = mapping.split('=');
+    const value = field === 'project.workflowMode' ? process.env.P15_MODE : 'null';
+    process.stdout.write(key + '=' + value + '\\n');
+  }
+} else if (!(args[0] === 'config' && args[1] === 'set' && args[2] === 'activeProject' && args[3] === '')) process.exit(91);
+`;
+        writeFileSync(join(bin, 'oat'), stub, { mode: 0o755 });
+        writeFileSync(
+          join(bin, 'git'),
+          `#!/usr/bin/env node
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.P15_TRACE, JSON.stringify(['git', ...args]) + '\\n');
+if (args[0] === 'rev-parse' && args[1] === '--show-toplevel') process.stdout.write(process.env.P15_ROOT + '\\n');
+else process.exit(92);
+`,
+          { mode: 0o755 },
+        );
+        const scripts = join(
+          root,
+          '.agents/skills/oat-project-complete/scripts',
+        );
+        const env = {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          P15_TRACE: trace,
+          P15_REPORT: JSON.stringify(report),
+          P15_MODE: mode,
+          P15_ROOT: directory,
+          PROJECT_PATH: project,
+          PROJECT_NAME: 'demo',
+          SYNCED_ARCHIVE_EXECUTE_SCRIPT: join(
+            scripts,
+            'execute-synced-archive-entry.mjs',
+          ),
+          SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT: join(
+            scripts,
+            'parse-synced-archive-resume-fields.mjs',
+          ),
+          SYNCED_ARCHIVE_FINALIZE_SCRIPT: join(
+            scripts,
+            'finalize-synced-archive.mjs',
+          ),
+        };
+        const content = readFileSync(
+          join(root, '.agents/skills/oat-project-complete/SKILL.md'),
+          'utf8',
+        );
+        const start = content.lastIndexOf(
+          'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)',
+          content.indexOf('SYNCED_ARCHIVE_RESUME="false"'),
+        );
+        const end = content.indexOf('PROJECT_RETAINED_REF=""', start);
+        expect(start).toBeGreaterThan(0);
+        expect(end).toBeGreaterThan(start);
+        const generic = 'generic lifecycle Step 8.5';
+        const run = spawnSync(
+          '/bin/bash',
+          ['-c', `${content.slice(start, end)}\nprintf '%s\\n' '${generic}'`],
+          { cwd: directory, env, encoding: 'utf8' },
+        );
+        expect(run.status, run.stderr).toBe(0);
+        if (mode === 'freestyle') {
+          expect(run.stdout).not.toContain(generic);
+          expect(run.stdout).toContain('Freestyle synced archive resume');
+          // The archived shape withholds code-branch pushes but permits the
+          // completed archive. Execute its terminal-only finalizer block.
+          const reference = readFileSync(
+            join(
+              root,
+              '.agents/skills/oat-project-complete/references/freestyle-completion.md',
+            ),
+            'utf8',
+          );
+          const terminal =
+            /# freestyle-synced-archive-finalize:start([\s\S]*?)# freestyle-synced-archive-finalize:end/.exec(
+              reference,
+            );
+          expect(terminal).not.toBeNull();
+          const finalized = spawnSync('/bin/bash', ['-c', terminal![1]!], {
+            cwd: directory,
+            env: { ...env, ARCHIVE_OUTPUT: JSON.stringify(report) },
+            encoding: 'utf8',
+          });
+          expect(finalized.status, finalized.stderr).toBe(0);
+          expect(JSON.parse(finalized.stdout)).toMatchObject({
+            pointerCleared: true,
+            lifecycleCommit: report.lifecycleCommit,
+          });
+        } else {
+          expect(run.stdout).toContain(generic);
+          expect(run.stdout).toContain('continuing at Step 8.5');
+        }
+        const calls: string[][] = readFileSync(trace, 'utf8')
+          .trim()
+          .split('\n')
+          .map((line) => JSON.parse(line) as string[]);
+        expect(calls.some((call) => call.includes('push'))).toBe(false);
+        expect(
+          calls.filter(
+            (call) => call[1] === 'project' && call[2] === 'archive',
+          ),
+        ).toHaveLength(1);
+        expect(
+          calls.some((call) => call[1] === 'config' && call[2] === 'set'),
+        ).toBe(mode === 'freestyle');
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
 });

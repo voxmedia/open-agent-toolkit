@@ -6,6 +6,50 @@ preparation, mandatory bookkeeping commit or push. Freestyle requires no final
 review, summary or PR. Do not invoke `oat-project-summary`,
 `oat-project-pr-final` or the configured post-implement sequence.
 
+## Retired synced archive resume
+
+Use this section only when Step 1 obtained a validated `archive-resumed`
+result and the archived project's status decoded `WORKFLOW_MODE="freestyle"`.
+The active checkout, active ref and discovery record may already be retired;
+`ARCHIVE_PATH` holds the authoritative archived project, and `ARCHIVE_OUTPUT`
+holds the existing transaction's validated terminal report. Preserve them,
+including its original `lifecycleCommit`; do not create a replacement receipt
+or commit. Read `AGENTS.md` and `shape.md` from that archive.
+
+Finish only terminal reporting and the pointer clear below. Do not rejoin
+lifecycle Step 8.5, refresh dashboards, update links/PRs, regenerate documents,
+repeat synthesis or optional work, or invoke archive again. The original
+archive agreement governs any archive-retry publication; resuming grants no
+new permission to publish.
+
+Apply the archived shape's publication agreement to the existing receipt and
+exported outputs. In particular, when it permits archive's local lifecycle
+commit but withholds code-branch publication, leave that commit unpushed and
+report its SHA; there is no mandatory bookkeeping push. If the agreement
+requires a publication that is still due, perform it only under that agreement
+and verify the existing receipt was published. A failed or unresolved required
+publication retains the pointer and is reported as pending. Never invent a
+new commit or treat an unpersisted old answer as publication authority.
+
+When archive is terminal and no agreed publication remains pending, use the
+existing synced finalizer to revalidate the same terminal report and clear the
+retained active pointer. First require that the active pointer still names
+`ACTIVE_PROJECT_PATH`; if a different project is now active, leave it alone.
+The mode's existing normal-path reporting rules below still apply.
+
+```bash
+# freestyle-synced-archive-finalize:start
+FREESTYLE_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
+  node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
+    --project-name "$PROJECT_NAME") || exit 1
+printf '%s\n' "$FREESTYLE_ARCHIVE_FINALIZATION"
+# freestyle-synced-archive-finalize:end
+```
+
+Report the archive location, its original lifecycle commit, the actual
+publication disposition and pointer result. End here with no lifecycle
+continuation.
+
 ## 1. Resolve the project and confirm done
 
 Use the repository root and resolved `PROJECT_PATH` from Step 1. If the synced
