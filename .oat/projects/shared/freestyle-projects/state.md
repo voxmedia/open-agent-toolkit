@@ -313,6 +313,37 @@ oat_deliveries:
           head: 80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a
           base: 4dc1b86870fb95391b7a596f42fb3176f17ce6f0
           status: merged
+  - delivery_id: d04
+    milestone: m04
+    scope: [p13, p14, p15, p-rev1, p-rev2]
+    endpoint: merged
+    kind: pr
+    status: registering
+    lookup:
+      repository: voxmedia/open-agent-toolkit
+      head_branch: feat/freestyle-projects-m04
+      head_sha_at_registration: 'da6e73b4e7d62c00d575f3497d25a383b8660045'
+    members: []
+    integrated_review:
+      artifact: reviews/archived/m04-integrated-review-2026-11-24T213227Z.md
+      scope: [p13, p14, p15, p-rev1, p-rev2]
+      bound_revisions:
+        - member: 0
+          base: '5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f'
+          head: '243acef2aae94895e4a6815ee26bf724a8b7c7ea'
+      disposition: passed
+    exit_gate:
+      status: allowed
+      disposition: project_disabled
+      resolution: project_disabled
+      config_fingerprint: null
+      reviewed_head: null
+      subject:
+        kind: code
+        scope: [p13, p14, p15, p-rev1, p-rev2]
+      freshness: fresh
+      freshness_reason: null
+      decided_at: '2026-11-24T21:30:07Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
