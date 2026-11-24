@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.3
+  version: 1.3.4
 ---
 
 # Remote Review Receive (Ad-hoc GitHub PR)
@@ -133,6 +133,7 @@ For each item in JSON:
 - Use comment body + context to assign severity (`critical`, `high`, `medium`, `low`).
 - Treat `CHANGES_REQUESTED` review state as a strong hint toward `high+`, not an automatic override.
 - Normalize into the shared findings model.
+- A pre-existing defect the change did not cause or worsen is a finding only when it stops the change from delivering what it promised, or its consequence is a security hole, data loss or a broken assurance contract. Otherwise it is a note, whether it stands alone or sits beside findings in a review body: relay it with the overview and a fix-now-or-leave recommendation, and give it no ID, severity, count or disposition. When only notes remain, follow the clean path in Step 2 and include them in its report.
 
 ID assignment per severity bucket:
 
@@ -156,8 +157,9 @@ Disposition options per finding:
 
 Rules:
 
-- Require concrete rationale for `defer`/`dismiss` at any severity, including low. Small findings are usually cheaper to fix inline than to track as backlog items, so a low `defer` must be justified just like any other deferral.
-- For any deferral (low included), require a concrete reason (duplicate, dependency, explicit out-of-scope follow-up, risky churn).
+- Require concrete rationale for `defer`/`dismiss` at any severity, including low.
+- `dismiss` covers a false positive, a duplicate, and a finding that is true but not worth its cost (an unlikely edge case, or a test for one).
+- Propose `defer` only for work worth its own backlog item: a credible consequence, too large to do here, and a concrete reason to wait. Anything smaller is fixed now or dismissed.
 
 ### Step 5: Generate Standalone Task List
 

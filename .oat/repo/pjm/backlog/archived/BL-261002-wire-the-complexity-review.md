@@ -1,7 +1,7 @@
 ---
 id: BL-261002-wire-the-complexity-review
 title: Wire the complexity review into the sibling gate-capable skills
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - skills
 assignee: null
 created: 2026-10-02T22:53:37.882Z
-updated: 2026-10-02T22:53:37.882Z
+updated: '2026-11-23T19:11:42Z'
 associated_issues: []
 external_plans: []
 ---

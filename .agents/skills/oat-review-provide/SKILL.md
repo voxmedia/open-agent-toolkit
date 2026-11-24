@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.6
+  version: 1.2.7
 ---
 
 # Ad-Hoc Review
@@ -191,6 +191,9 @@ Set `oat_generated_at` in the artifact frontmatter to the matching full UTC time
 Use the same severity model and checklist as project reviews:
 
 - Critical / High / Medium / Low findings
+- the same bar for a finding: raise what the change broke, made materially worse, or promised and did not deliver. Leave out an edge case that is not likely, unless its consequence is a security hole, data loss or a broken assurance contract
+- pre-existing defects: one the change did not worsen is a finding only when it stops the change from delivering what it promised, or has one of those three consequences; otherwise describe it in the summary, outside the severity sections, and only when it is likely to bite or plainly cheapest to fix now
+- proportion: flag machinery, defensive code and tests the change added with neither a requirement nor a credible failure behind them, and recommend the smallest fix
 - file:line references
 - actionable fix guidance
 - verification commands

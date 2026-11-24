@@ -334,8 +334,8 @@ the tracked `.oat/repo/reviews/`, commit the move yourself.
 
 **Example scenario:** The callback review has one High finding and a Low
 cleanup note. Receive shows both before asking for dispositions. You convert
-the missing input check into a task and either convert the cleanup or explain
-why it should be deferred. Use this local ad-hoc variant because the input is
+the missing input check into a task and either convert the cleanup or dismiss it
+with a reason. Use this local ad-hoc variant because the input is
 a Markdown artifact and the output should remain outside project tracking.
 
 **Expected output:** Severity counts, converted/deferred/dismissed decisions

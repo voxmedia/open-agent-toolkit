@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.7
+  version: 1.5.8
 ---
 
 # Project Remote Review Receive
@@ -185,6 +185,7 @@ For each comment:
 - classify severity using 4-tier model.
 - use review state (e.g., `CHANGES_REQUESTED`) as a hint, not a hard override.
 - assign stable IDs by severity bucket (`C`, `H`, `M`, `L`).
+- a pre-existing defect the change did not cause or worsen is a finding only when it stops the change from delivering what it promised, or its consequence is a security hole, data loss or a broken assurance contract. Otherwise it is a note, whether it stands alone or sits beside findings in a review body: relay it with the overview and a fix-now-or-leave recommendation, and give it no ID, severity, count or disposition. When only notes remain, follow the clean path in Step 2 and include them in its report.
 
 ### Step 4: Present Findings Overview and Triage
 
@@ -199,7 +200,7 @@ Disposition options:
 - `defer`
 - `dismiss`
 
-Require concrete rationale for `defer`/`dismiss` at any severity, including low. Small findings are usually cheaper to fix inline than to track as backlog items, so a low `defer` must be justified just like any other deferral.
+Require concrete rationale for `defer`/`dismiss` at any severity, including low. `dismiss` covers a false positive, a duplicate, and a finding that is true but not worth its cost (an unlikely edge case, or a test for one). Propose `defer` only for work worth its own backlog item: a credible consequence, too large to do here, and a concrete reason to wait. Anything smaller is fixed now or dismissed.
 
 ### Step 5: Convert Findings to Plan Tasks
 

@@ -281,10 +281,13 @@ It never changes the ledger and blocks no lifecycle step.
 
 ## Current policy
 
+- What a code review raises: what the change broke, made materially worse, or promised and did not deliver, with its credible consequence. An edge case that is not likely to occur is not a finding, unless its consequence is a security hole, data loss or a broken assurance contract. Reviewers also flag machinery, defensive code and tests the change added with neither a requirement nor a credible failure behind them, and recommend the smallest fix.
+- Pre-existing defects: a defect the change did not cause or worsen is a finding only when it stops the change from delivering what it promised, or is a security hole, data loss or a broken assurance contract. Otherwise the reviewer may describe it in the review summary, when it is likely to bite or plainly cheapest to fix now. Receive relays that note with a fix-now-or-leave recommendation; it has no severity and never blocks.
 - Critical/High: address before pass.
 - Medium: address by default; defer only with explicit approval and recorded rationale/disposition.
-- Low: **default to `convert`** (fix inline). Small non-blocking findings are usually cheaper to fix than to track as backlog items, so the receive skills convert them by default rather than deferring.
-- Deferring (or dismissing) a finding **at any severity, including low**, requires a concrete recorded rationale (duplicate, blocked dependency, explicit out-of-scope follow-up, or disproportionate churn now). This brings the manual receive path in line with the auto-review path, which already converts low findings.
+- Low: **default to `convert`** (fix inline), or reject it when it is not worth its cost (an unlikely edge case, or a test for one).
+- Deferral bar: defer only work the operator would pick up today as its own backlog item: a credible consequence, too large to do here, and a concrete reason to wait. Anything smaller is fixed in the project or dropped, because there is no cheaper time to fix it.
+- Rejecting or deferring a finding **at any severity, including low**, requires a concrete recorded rationale.
 - Low (final scope): still require explicit per-finding user disposition after a plain-language explanation, with `convert` as the recommended default.
 
 ## Auto-review at HiLL checkpoints
@@ -302,7 +305,7 @@ latest stamp as the producer for the whole scope.
 
 This is separate from Tier 1 phase gate reviews. Tier 1 implementation always runs `oat-reviewer` after each phase; `workflow.autoReviewAtHillCheckpoints` only controls the additional lifecycle review when a HiLL checkpoint is reached. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks.
 
-Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` auto-converts all findings to fix tasks without user prompts (Low findings that are clearly out of scope are deferred with a note).
+Auto-triggered reviews use `oat_review_invocation: auto` in the review artifact frontmatter. In auto mode, `oat-project-review-receive` converts findings to fix tasks by default, without user prompts. It rejects with the reason a Low that is clearly out of scope or not worth its cost, and any finding it has a concrete reason to disagree with; it creates no deferral. A finding that [routing](#finding-classes-at-receive) sends to the operator still goes to the operator first.
 
 This preference is unset by default: interactive implementation asks with
 "no" suggested. Autonomous non-lite implementation forces it on; lite bypasses
@@ -333,7 +336,7 @@ separate from optional observed or self-reported producer identity. Missing or
 mismatched values produce `artifact_validation_failed` before finding severity
 is evaluated.
 
-- **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Low — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/High concern it escalates to the blocking path.
+- **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each finding below the threshold — address now (small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), reject with rationale (a false positive, or a finding not worth its cost), or defer to final review (only for a finding that meets the deferral bar, recorded so [final review](#phase-and-final-review) resurfaces it) — then archives the artifact. If an address-now fix reveals a Critical/High concern it escalates to the blocking path. A High that a `critical` threshold let through is always fixed unless there is a concrete reason to reject it, and is never deferred: address-now when the fix is small, otherwise as a fix task on the blocking path below, which re-runs the reviewer and the gate.
 - **Blocking gate, bookkeeping findings only**: receive fixes them in one commit and records the review `passed`; the gate has passed for the phase, with no fix loop, no rerun and no retry round ([Bookkeeping-only findings](#bookkeeping-only-findings)).
 - **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
 
@@ -538,7 +541,10 @@ The classes are one line in the receipt the path already writes, beside its
 ```
 
 **Routing.** Only a `bookkeeping` or `regression` finding, or an
-`accepted-requirement` finding that names its source, becomes fix work. A
+`accepted-requirement` finding that names its source, becomes fix work. The
+source is the passage that requires the specific behavior the finding asks
+for; a goal or outcome line the behavior would merely serve makes the finding
+`new-hardening`. A
 `new-hardening` finding, an `accepted-requirement` with no source, or an
 unclassified finding goes to the operator first, who accepts it as a
 requirement, defers it, or rejects it. No receive mode decides it by default.

@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.21
+  version: 1.5.22
 ---
 
 # Request Review
@@ -1027,26 +1027,6 @@ the reviewer evaluates explicit ceiling rows without treating omitted rows as a
 gap. A named ceiling is a maximum; lower configured candidates remain eligible
 for later task selection.
 
-### Step 4.5: Gather Deferred Findings Ledger (Final Scope Only)
-
-If `review type == code` and `scope == final`, gather unresolved deferred findings from prior review cycles.
-
-Preferred sources:
-
-- the lines under `implementation.md`'s `## Deferred Findings` section (older journals: sections titled `Deferred Findings (...)`)
-- prior review artifacts under `reviews/archived/` when implementation notes are incomplete and the files are still on this machine (plus the current active review file in `reviews/`, if one exists for the in-flight cycle); review files are local-only, so a missing one is never a finding
-
-Build:
-
-- `DEFERRED_MEDIUM_COUNT`
-- `DEFERRED_LOW_COUNT`
-- `DEFERRED_LEDGER` (one-line summary per finding with source artifact)
-
-Rules:
-
-- Include this ledger in review metadata so final review explicitly re-evaluates carry-forward debt.
-- Final review should call out whether each deferred Medium remains acceptable or should now be fixed.
-
 ### Step 4.6: Journal Check for the Review Scope (Code Reviews)
 
 For a `code` review whose scope resolves to phases, run the read-only journal
@@ -1113,12 +1093,6 @@ Build the "Review Scope" metadata for the reviewer:
   review artifact and reviewed head it builds on. Treat requirements coverage
   outside the narrowed range as inherited from that artifact, not re-verified
   by this pass.
-
-**Deferred Findings Ledger (final scope only):**
-
-- Deferred Medium count: {DEFERRED_MEDIUM_COUNT}
-- Deferred Low count: {DEFERRED_LOW_COUNT}
-  {DEFERRED_LEDGER}
 
 **Changed-Boundary Probe Guidance (code review only):**
 
@@ -1509,11 +1483,10 @@ If running inline (Tier 3), execute the review and write artifact.
 
 1. Verify scope (don't review out-of-scope changes)
 2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite; the brief's Outcomes, Constraints and Out of Scope, Decisions, and the in-scope phases' Intent and Exit evidence for brief and goal)
-3. If code review: verify code quality (correctness, tests, security, maintainability)
+3. If code review: verify code quality (correctness, tests, security, maintainability, proportion), applying the `oat-reviewer` Step 6 rules for what to raise, pre-existing defects and proportion
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/High/Medium/Low)
-6. For final scope: explicitly disposition deferred Medium ledger items (fix now vs accept defer)
-7. Write artifact with file:line references and fix guidance
+6. Write artifact with file:line references and fix guidance
 
 **Review artifact template:** (see
 `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` for full format)
@@ -1572,9 +1545,9 @@ oat_review_narrowed_from: { range before narrowing, only when narrowed }
 
 **Frontmatter field: `oat_review_invocation`**
 
-- `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, low findings auto-deferred for non-final scopes).
+- `manual` (default): Review was manually triggered by the user. `oat-project-review-receive` uses standard disposition behavior (user prompts for triage, low findings converted to fix tasks by default).
 - `auto`: Review was spawned by the auto-review checkpoint trigger in `oat-project-implement`. `oat-project-review-receive` uses relaxed disposition: low findings are auto-converted to fix tasks (not deferred), no user prompts for disposition decisions.
-- `gate`: Review was spawned by `oat gate review` for a workflow gate. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. The gate CLI maps the review artifact findings to exit status, and `oat-project-review-receive` dispositions gate reviews autonomously (no user prompts) — selecting convert-to-fix-tasks when the gate **blocked** at its threshold, or non-pausing judgment-sweep disposition (defer / small-fix-now / reject, with sub-threshold findings recorded durably) when the gate **passed**.
+- `gate`: Review was spawned by `oat gate review` for a workflow gate. Gate-originated reviews use normal stateful review-provide behavior: write the review artifact, update the `## Reviews` row, and commit review bookkeeping. The gate CLI maps the review artifact findings to exit status, and `oat-project-review-receive` dispositions gate reviews autonomously (no user prompts) — selecting convert-to-fix-tasks when the gate **blocked** at its threshold, or non-pausing judgment-sweep disposition (small-fix-now / reject / defer, with sub-threshold findings recorded durably) when the gate **passed**.
 
 When `oat-project-implement` spawns this skill for auto-review at checkpoints, it passes context indicating auto invocation. Set `oat_review_invocation: auto` in the artifact frontmatter.
 
@@ -1824,7 +1797,6 @@ Next: Run the oat-project-review-receive skill to convert findings into plan tas
 - Review artifact written to the correct branch's working directory (worktree path if applicable; inline-only if user chose that option)
 - Plan.md Reviews section updated
 - Review artifact + plan bookkeeping committed atomically on the correct branch (or explicitly deferred with user approval)
-- For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (`oat-project-review-receive`)
 
 ```

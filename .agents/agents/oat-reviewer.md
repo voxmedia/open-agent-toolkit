@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.2.15
+version: 1.2.16
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
@@ -32,7 +32,8 @@ Reviews catch issues before they ship:
 - Missing requirements that were specified but not implemented
 - Extra work that wasn't requested (scope creep)
 - Contradictions with design decisions
-- Bugs, edge cases, and missing tests
+- Bugs, and missing tests for behavior the change promises
+- Machinery, defensive code and tests added for failures that are not likely
 - Security and error handling gaps
 - Maintainability issues that slow future changes
 
@@ -173,7 +174,7 @@ In `goal` mode an integrated milestone or delivery review judges exactly the exp
 Do NOT:
 
 - Review unrelated work outside the scope
-- Comment on pre-existing issues unless they affect the scope
+- Raise a pre-existing defect as a finding, except as Step 6 allows
 - Expand scope beyond what was requested
 
 ### Step 3: Verify Requirements Alignment
@@ -369,16 +370,30 @@ Review the analysis artifact as a fact-checking target, not as a rewrite request
 
 This step applies to **code reviews** only.
 
-Pragmatic code quality review (not exhaustive):
+Pragmatic code quality review (not exhaustive).
+
+**What to raise.** Raise a finding for what this change broke, made materially
+worse, or promised and did not deliver, and state its credible consequence. An
+edge case that is not likely to occur is not a finding, unless its consequence
+is a security hole, data loss or a broken assurance contract.
+
+**Pre-existing defects.** A defect that predates the change and that the
+change did not worsen is a finding in two cases: it stops the change from
+delivering what it promised, or its consequence is a security hole, data loss
+or a broken assurance contract. Raise it at its real severity. Describe any
+other pre-existing defect in the review summary, outside the severity
+sections, only when it is likely to bite or plainly cheapest to fix now; say
+what it costs and that the change did not cause it. Such a note is not a
+finding and has no severity or count.
 
 1. **Correctness risks**
-   - Logic errors and edge cases
+   - Logic errors on inputs and states the change will meet in use
    - Off-by-one errors, null handling
    - Missing error handling for likely failures
 
 2. **Evidence coverage**
    - Critical paths have evidence matching the declared proof strategy
-   - Edge cases are covered where relevant
+   - Likely edge cases are covered
    - Behavioral claims have a control that fails without the change
 
 3. **Security**
@@ -390,6 +405,16 @@ Pragmatic code quality review (not exhaustive):
    - Code is readable without excessive comments
    - No obvious duplication
    - Follows project conventions (from knowledge base)
+
+5. **Proportion**
+   - Each mechanism, defensive branch and test the change adds earns its
+     cost by satisfying or proving a requirement, or by addressing a failure
+     whose likelihood or credible consequence justifies it.
+   - When one does not, raise it as a finding that recommends removing or
+     simplifying it, graded by what it costs to own.
+   - Recommend the smallest fix that resolves each finding. Do not ask for a
+     new safeguard, abstraction or test where a smaller change, or none,
+     would do.
 
 ### Step 7: Categorize Findings
 
@@ -405,7 +430,7 @@ Group findings by severity:
 **High** (should fix before merge)
 
 - Missing P1 requirements
-- Missing error handling
+- Missing error handling for likely failures
 - Significant maintainability issues
 - Missing capable evidence for important paths
 - Stale spec/design/plan artifact that conflicts with a defensible implementation and should be aligned before closeout
@@ -414,7 +439,6 @@ Group findings by severity:
 
 - P2 requirements with meaningful behavior or quality impact
 - Moderate maintainability or testability issues
-- Contract gaps that can cause future regressions
 
 **Low** (fix if time permits)
 
@@ -491,7 +515,7 @@ oat_invocation_source: { exec-target-config|unknown }
 
 ## Summary
 
-{2-3 sentence summary of findings}
+{2-3 sentence summary of findings, then any pre-existing defect worth noting (Step 6)}
 
 Findings by severity: {N} critical, {N} high, {N} medium, {N} low
 
@@ -619,7 +643,7 @@ When the dispatch payload sets `oat_output_mode: structured`, the output sink ch
 
 ```typescript
 interface StructuredFindings {
-  summary: string; // 2-3 sentence review summary; include compact orchestration when reconnaissance was attempted
+  summary: string; // 2-3 sentence review summary, then any pre-existing defect worth noting (Step 6); include compact orchestration when reconnaissance was attempted
   findings: Array<{
     id: string; // C1, H1, M1, L1 — stable per dispatch (C/H/M/L prefix matches the severity model)
     severity: 'critical' | 'high' | 'medium' | 'low';
