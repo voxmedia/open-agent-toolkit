@@ -469,10 +469,13 @@ any adopted section should differ.
 
 **Example scenario:** You want to try page layouts without a plan or review
 gates. Freestyle creates the project, asks for the goal and its size first, then
-walks the remaining topics in order (brainstorm or discovery, documents,
-execution, reviews, commits and merges, your involvement, reshape checkpoints),
-writing each answer into `shape.md` as you give it. Any topic can be deferred to
-a named moment, such as "before the first PR".
+offers to step through the remaining topics or show a table of recommended
+defaults to accept whole or except for named topics. The topics are brainstorm
+or discovery, documents, execution, reviews, commits and merges, your
+involvement and reshape checkpoints.
+The involvement topic asks which required checks need a person, device or
+session available, and when. The skill writes each answer into `shape.md` as
+you give it. Any topic can be deferred to a named moment, such as "before the first PR".
 
 When the project adopts a plan written elsewhere, for example for another
 workflow, the documents topic keeps what the plan delivers (its changes, their

@@ -40,10 +40,7 @@ const AGENTS_HEADINGS = [
   'Decisions and memories',
   'Orchestrator branch',
   'Linked projects',
-  'Dispatch',
-  'Lane brief',
-  'Lane reports',
-  'Lane placement',
+  'Working with lanes',
   'Records commands',
   'Shaping and reshaping',
 ] as const;
@@ -404,6 +401,29 @@ describe('freestyle orchestrator branch and linked projects guidance (p05)', () 
       expect(result.stdout).toContain('## Orchestrator branch');
       expect(result.stdout).toContain('## Linked projects');
       expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe(current);
+    });
+
+    it('refreshes the captured m03 template because Working with lanes is missing', async () => {
+      const root = tempRoot();
+      const project = await scaffolded(root);
+      const current = read(join(project, 'AGENTS.md'));
+      const older = read(
+        join(import.meta.dirname, 'fixtures', 'project-agents-m03.md'),
+      );
+      expect(h2Headings(older)).not.toContain('Working with lanes');
+      for (const heading of [
+        'Dispatch',
+        'Lane brief',
+        'Lane reports',
+        'Lane placement',
+      ]) {
+        expect(h2Headings(older)).toContain(heading);
+      }
+      writeFileSync(join(project, 'AGENTS.md'), older);
+      const result = run(root, project);
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain('## Working with lanes');
+      expect(read(join(project, 'AGENTS.md'))).toBe(current);
     });
 
     it('leaves a current AGENTS.md untouched and silent', async () => {
@@ -806,10 +826,18 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     tempDirs.length = 0;
   });
   const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
-  const dispatch = oneLine(h2Section(agents, 'Dispatch'));
-  const reports = oneLine(h2Section(agents, 'Lane reports'));
-  const placement = oneLine(h2Section(agents, 'Lane placement'));
-  const laneBrief = oneLine(h2Section(agents, 'Lane brief'));
+  const dispatch = oneLine(
+    h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Dispatch'),
+  );
+  const reports = oneLine(
+    h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Lane reports'),
+  );
+  const placement = oneLine(
+    h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Lane placement'),
+  );
+  const laneBrief = oneLine(
+    h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Lane brief'),
+  );
 
   it('names every lane state and waiting-on kind lane set accepts', () => {
     for (const state of LANE_STATES) {
@@ -960,10 +988,12 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     expect(dispatch).toContain(
       'Each dispatch brief extends the standing lane brief (see Lane brief) instead of repeating its rules',
     );
-    expect(oneLine(h2Section(agents, 'Lane brief'))).toContain(
-      'the lane writes no project records',
-    );
-    expect(dispatch).toContain(
+    expect(
+      oneLine(
+        h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Lane brief'),
+      ),
+    ).toContain('the lane writes no project records');
+    expect(oneLine(h2Section(agents, 'Working with lanes'))).toContain(
       'record what you find with `lane set` before any redispatch',
     );
   });
@@ -996,7 +1026,9 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     const writer = oneLine(h2Section(agents, 'Single writer'));
     expect(writer).toContain('`lanes.md`');
     expect(writer).toContain('`lane-reports/`');
-    expect(writer).toContain("a lane's final message is its report");
+    expect(writer).toContain(
+      "a remote or read-only lane's final message is its report",
+    );
     expect(oneLine(h2Section(agents, 'Orchestrator branch'))).toContain(
       '`oat project lane set`) refuse to run off the recorded branch',
     );
@@ -1221,9 +1253,11 @@ describe('freestyle decisions and memories (p10)', () => {
   });
 
   it('names the lane notes path as authorized scratch in the dispatch section, and promotion after filing', () => {
-    const dispatch = oneLine(h2Section(agents, 'Dispatch'));
+    const dispatch = oneLine(
+      h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Dispatch'),
+    );
     expect(dispatch).toContain(
-      'its lane notes path; the task; and the report shape',
+      'its lane notes path and report path; the task; and the report shape',
     );
     expect(dispatch).toContain(
       'to an uncommitted notes file in its own checkout, `.oat/analysis/lane-notes/<lane>-<dispatch>.md`',
@@ -1234,12 +1268,17 @@ describe('freestyle decisions and memories (p10)', () => {
     expect(dispatch).toContain(
       "names that path as authorized scratch, outside a same-checkout lane's `paths:`",
     );
-    expect(dispatch).toContain('`.oat/**/analysis`');
-    expect(dispatch).toContain('the brief names a path outside the checkout');
+    expect(dispatch).toContain(
+      '`oat init` ignores `.oat/analysis/lane-notes/`',
+    );
+    expect(dispatch).toContain('`git check-ignore`');
+    expect(dispatch).toContain('the brief names paths outside the checkout');
     expect(dispatch).toContain(
       'A read-only delegate keeps no notes: its brief tells it to return its decisions and learnings in its final message.',
     );
-    const reports = oneLine(h2Section(agents, 'Lane reports'));
+    const reports = oneLine(
+      h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Lane reports'),
+    );
     expect(reports).toContain(
       '4. Promote what you accept from its Decisions and Learnings: a decision as a `decisions.md` entry, and a gotcha, user preference or still-true context as a `memories.md` bullet, each citing the dispatch ID',
     );
@@ -1342,7 +1381,7 @@ describe('freestyle lane report shape (p07)', () => {
       '**Tested SHA:** {full SHA; it must equal the delivered head}',
     );
     expect(oneLine(template)).toContain(
-      'as your final message for this dispatch, with nothing after it',
+      'as its final message, with nothing after it',
     );
     // Embedded whole in a brief, so it carries no template frontmatter.
     expect(template.startsWith('# Lane report: {lane}-{dispatch}\n')).toBe(
@@ -1455,9 +1494,7 @@ describe('freestyle lane brief (p12)', () => {
     ]) {
       expect(records, file).toContain(file);
     }
-    expect(records).toContain(
-      'Your final message for the dispatch is your report',
-    );
+    expect(records).toContain('Return your report by the route below');
     expect(oneLine(h2Section(template, 'Lane notes'))).toContain(
       'It is authorized scratch, outside any `paths:` you were given; never commit it.',
     );
@@ -1469,8 +1506,10 @@ describe('freestyle lane brief (p12)', () => {
     );
   });
 
-  it('adds a Lane brief section to the project AGENTS.md that Dispatch links to', () => {
-    const laneBrief = oneLine(h2Section(agents, 'Lane brief'));
+  it('keeps Lane brief in the guide that Dispatch links to', () => {
+    const laneBrief = oneLine(
+      h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Lane brief'),
+    );
     expect(laneBrief).toContain(
       '`oat template resolve lane-brief --output <path>` and embed it whole in every dispatch brief, which extends it',
     );
@@ -1478,9 +1517,11 @@ describe('freestyle lane brief (p12)', () => {
     expect(laneBrief).toContain(
       "report's Tested SHA equals the delivered head",
     );
-    expect(oneLine(h2Section(agents, 'Dispatch'))).toContain(
-      'extends the standing lane brief (see Lane brief)',
-    );
+    expect(
+      oneLine(
+        h2Section(read(join(TEMPLATES_DIR, 'lane-guide.md')), 'Dispatch'),
+      ),
+    ).toContain('extends the standing lane brief (see Lane brief)');
     expect(oneLine(h2Section(agents, 'Records commands'))).toContain(
       '`lane-brief` and `lane-report` for a dispatch brief',
     );
@@ -1492,7 +1533,7 @@ describe('freestyle lane brief (p12)', () => {
     tempDirs.push(cwd, home);
 
     const resolved: Record<string, string> = {};
-    for (const name of ['lane-brief', 'lane-report']) {
+    for (const name of ['lane-guide', 'lane-brief', 'lane-report']) {
       const output = join(cwd, `${name}.md`);
       const result = await runTemplateResolve({
         name,
@@ -1513,6 +1554,9 @@ describe('freestyle lane brief (p12)', () => {
       resolved[name] = read(output);
     }
     expect(resolved['lane-brief']).toBe(template);
+    expect(resolved['lane-guide']).toBe(
+      read(join(TEMPLATES_DIR, 'lane-guide.md')),
+    );
 
     // The standing brief, then only the dispatch's own facts, then the shape.
     const brief = [
@@ -1893,5 +1937,78 @@ describe('documented journal check commands', () => {
     ).toBe(true);
     expect(invocations.length).toBeGreaterThanOrEqual(10);
     expect(missing).toEqual([]);
+  });
+});
+
+describe('lean freestyle lane guidance (p14, Outcome 12)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const guide = read(join(TEMPLATES_DIR, 'lane-guide.md'));
+
+  it('keeps resume reconciliation and guide triggers in AGENTS, with moved rules only in the guide', () => {
+    expect(h2Headings(guide)).toEqual([
+      'Dispatch',
+      'Lane brief',
+      'Lane reports',
+      'Lane placement',
+    ]);
+    for (const heading of h2Headings(guide))
+      expect(h2Headings(agents)).not.toContain(heading);
+    const working = oneLine(h2Section(agents, 'Working with lanes'));
+    expect(working).toContain('On resume, read `lanes.md` before acting');
+    expect(working).toContain('before any redispatch');
+    expect(working).toContain(
+      "before dispatching or re-dispatching a lane, when a lane reports back and before integrating a lane's branch",
+    );
+    expect(working).toContain(
+      '`oat template resolve lane-guide --output <path>`',
+    );
+    expect(oneLine(guide)).toContain(
+      'the rebased equivalent of the last reported commit, not the new branch tip',
+    );
+    expect(oneLine(guide)).toContain(
+      'When you cannot identify that commit, leave the warning in place',
+    );
+  });
+
+  it('authorizes a local scratch report, keeps remote/read-only final reports, and files before removal', () => {
+    const brief = oneLine(read(join(TEMPLATES_DIR, 'lane-brief.md')));
+    expect(brief).toContain(
+      'brief authorizes that report path as scratch outside any `paths:`',
+    );
+    expect(brief).toContain('`git check-ignore`');
+    expect(brief).toContain(
+      'paths outside the checkout authorized by your brief',
+    );
+    for (const text of [
+      brief,
+      oneLine(read(join(TEMPLATES_DIR, 'lane-report.md'))),
+      oneLine(guide),
+      oneLine(h2Section(agents, 'Single writer')),
+    ]) {
+      expect(text).toContain('absolute path in');
+      expect(text).toMatch(/remote or read-only lane.*final message/);
+    }
+    expect(oneLine(guide)).toContain("before the lane's worktree is removed");
+    expect(oneLine(h2Section(agents, 'Single writer'))).toContain(
+      'stays the only writer of `lane-reports/`',
+    );
+  });
+
+  it('offers step-through or recommended defaults after the goal, and asks about check availability', () => {
+    const kickoff = read(join(SKILL_DIR, 'references', 'kickoff.md'));
+    const goal = oneLine(
+      between(kickoff, '### 1. Goal', '### 2. Brainstorm or discovery'),
+    );
+    expect(goal).toContain('Once the goal is written');
+    expect(goal).toContain('step through the remaining shaping topics');
+    expect(goal).toContain(
+      'table of recommended defaults to accept whole or except for named topics',
+    );
+    expect(oneLine(h2Section(kickoff, 'Topics'))).toContain(
+      'Ask which required checks need a person, device or session available, and when',
+    );
+    expect(oneLine(read(join(SKILL_DIR, 'SKILL.md')))).not.toContain(
+      'one topic at a time',
+    );
   });
 });

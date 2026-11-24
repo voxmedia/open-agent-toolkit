@@ -109,6 +109,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'shape.md',
     'decisions.md',
     'memories.md',
+    'lane-guide.md',
     'lane-brief.md',
     'lane-report.md',
     'discovery.md',

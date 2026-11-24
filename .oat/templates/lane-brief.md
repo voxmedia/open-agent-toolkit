@@ -13,7 +13,7 @@ Your dispatch brief names:
 - the paths of the project's `AGENTS.md` and `shape.md`;
 - your worktree and branch, or the `paths:` you may change in the
   orchestrator's checkout;
-- your lane notes path;
+- your lane notes path and, when writable on the orchestrator's machine, your report path;
 - the task; and
 - the report shape to return.
 
@@ -21,9 +21,8 @@ Your dispatch brief names:
 
 You write no project records: not the lane ledger (`lanes.md`),
 `lane-reports/`, the project log, `shape.md`, `decisions.md`, `memories.md`,
-`linked-projects.md` or the project's documents. Your final message for the
-dispatch is your report; the orchestrator files it and updates the records
-from it. A pull request you open holds code only.
+`linked-projects.md` or the project's documents. Return your report by the
+route below; the orchestrator files it and updates the records from it. A pull request you open holds code only.
 
 ## Lane notes
 
@@ -44,8 +43,16 @@ notes file and writes its decisions and learnings straight into its report.
 
 ## Report
 
-Return the report shape your brief embeds, filled in, as your final message
-for the dispatch, with nothing after it. Every turn end gets one, partial
+Fill in the report shape your brief embeds. When you have write access on the
+orchestrator's machine, write it to the authorized ignored report path beside
+your notes and name its absolute path in your final message. Your dispatch
+brief authorizes that report path as scratch outside any `paths:` you were
+given, just as it authorizes the notes file. Confirm both paths with
+`git check-ignore`; if either is not ignored, use the paths outside the
+checkout authorized by your brief (for example under `$TMPDIR`). Never commit
+the report. The orchestrator files it before your worktree is removed.
+A remote or read-only lane returns the filled report as its final message,
+with nothing after it. Every turn end gets one, partial
 turns and blockers included. Its Tested SHA must equal the delivered head, the
 last commit you made. Record each message you received while running under
 Steering received.

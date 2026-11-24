@@ -47,8 +47,9 @@ project) stays its own step.
 use. Apart from `AGENTS.md`, which only OAT changes, only the orchestrator
 writes these files, by hand or through the commands above. A lane, or any other
 delegate, returns its results to the orchestrator and never edits a project
-record. Its final message is its report, and its pull request holds code
-only.
+record. A writable lane on the orchestrator's machine returns an ignored
+report file's absolute path; a remote or read-only lane returns the report in
+its final message. Its pull request holds code only.
 
 ## The orchestrator branch
 
@@ -120,29 +121,42 @@ free text, for their scope's audience: everyone who can read `origin` from
 creation for synced projects, everyone who can read the branch once pushed
 for shared projects, and this checkout only for local projects.
 
+The project `AGENTS.md` keeps the resume rule: read `lanes.md` and reconcile
+open dispatches before acting. Before dispatching or re-dispatching a lane,
+when it reports back and before integrating its branch, read the lane guide
+with `oat template resolve lane-guide --output <path>`. It holds the Dispatch,
+Lane brief, Lane reports and Lane placement rules.
+
 Every lane follows the same standing rules, so they ship as a template
 instead of being repeated in each brief. Copy them with
 `oat template resolve lane-brief --output <path>` and embed them whole at the
 start of every dispatch brief. The bundled `lane-brief.md` has five sections:
 Your dispatch (what the brief adds), Project records (the lane writes none, and
-its final message is its report), Lane notes, Paths and commits (exact-path
+the orchestrator files its report), Lane notes, Paths and commits (exact-path
 commits in the orchestrator's checkout, every commit listed in the report) and
 Report (every turn end gets one, and its Tested SHA equals the delivered head).
 The brief then adds only what is particular to the dispatch: the lane and
 dispatch IDs, the paths of `AGENTS.md` and `shape.md`, the worktree and branch
-or the `paths:` the lane may change, its lane notes path and the task.
+or the `paths:` the lane may change, its lane notes and report paths and the task. Both paths are authorized scratch
+outside a same-checkout lane's `paths:`. Confirm they are ignored with
+`git check-ignore`; if either is not, authorize paths outside the checkout
+instead, for example under `$TMPDIR`.
 
 Each dispatch brief also embeds the report shape, copied with
 `oat template resolve lane-report --output <path>`. The bundled
 `lane-report.md` asks for Summary (this round and the lane so far), Delivered,
 Verification, Decisions, Deviations, Steering received, Review findings,
-Learnings, Open items and Proposed log entries. A `lane-brief.md` or
+Learnings, Open items and Proposed log entries. A `lane-guide.md`, `lane-brief.md` or
 `lane-report.md` at the repository or user template tier overrides the bundled
 one (see
 [File Locations](../../../reference/file-locations.md)).
 
-When the lane returns its report, the orchestrator saves the text to a file
-outside the project records and runs
+A lane with write access on the orchestrator's machine writes its report to
+the authorized ignored file beside its notes and names the absolute path in
+its final message. A remote or read-only lane returns the report as its final
+message; the orchestrator saves that text verbatim outside the project
+records. Before acting on either report and before removing the lane's
+worktree, the orchestrator runs
 `oat project lane set <lane> --report <file> --head <delivered head>`. That
 one update copies the file verbatim into `lane-reports/<lane>-<dispatch>.md`,
 sets the report pointer and head, and closes the dispatch. A different file
@@ -159,6 +173,9 @@ and head whose dispatch has closed (`reported` or `no-report`), `lane set` and
 `status` warn when the branch head in this clone has moved past the last
 report's head, or no longer contains it after a rebase or reset:
 `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>; do not merge unreported commits unreviewed.`
+After rebasing a lane's branch, record with `lane set --head` the rebased
+equivalent of the last reported commit, not the new branch tip. If you cannot
+identify that commit, leave the warning in place.
 A branch that no longer contains the reported head gets the same warning,
 saying it has moved off that head. While the lane's dispatch is `open` its work
 is in flight, so the lane is not checked (`lane set --json` reports `headCheck`
@@ -284,8 +301,8 @@ A project created by an earlier OAT has an `AGENTS.md` without the newer
 sections. On every resume, after the claim, `oat-project-freestyle` compares
 the file's `##` headings with OAT's current `project-agents` template. When
 one is missing, it replaces the file whole, because the file holds no project
-answers. A project created before the `## Lane brief` section existed gets it
-this way, together with the `--commit` lines in `## Records commands`. It then creates a missing `decisions.md` or `memories.md`. A project
+answers. An m03-era project lacks `## Working with lanes`, so the refresh adds that
+section and removes the four sections now in the lane guide. It then creates a missing `decisions.md` or `memories.md`. A project
 with no `oat_orchestrator_branch` reads as unclaimed until its orchestrator
 runs `oat project orchestrator set`.
 

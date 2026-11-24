@@ -30,9 +30,9 @@ orchestrator works as `shape.md` says.
 
 **OAT MODE: Freestyle**
 
-**Purpose:** Create the project with the CLI, then shape it with the user one
-topic at a time, writing each answer into `shape.md` as it is given, so the
-shape survives a detour, a restart or context compaction.
+**Purpose:** Create the project with the CLI, then shape it with the user by
+stepping through the topics or agreeing recommended defaults, writing each
+answer into `shape.md` as it is given, so the shape survives a detour, a restart or context compaction.
 
 **BLOCKED Activities:**
 

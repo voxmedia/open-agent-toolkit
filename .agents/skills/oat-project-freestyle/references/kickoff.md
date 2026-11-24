@@ -80,6 +80,13 @@ project is (an afternoon, a few PRs, a multi-week orchestrated run). Record all
 three. Use the description given at creation as the starting point, but write
 only what the user confirms.
 
+Once the goal is written, offer the user a choice: step through the remaining
+shaping topics, or see a table of recommended defaults to accept whole or
+except for named topics. Recommend defaults in proportion to the goal and
+show each topic, its recommended answer and its tradeoff. Write only the
+answers the user accepts; ask about named exceptions and retain deferred
+items in `## Undecided`.
+
 ### 2. Brainstorm or discovery
 
 Section: `## Brainstorm or discovery`. Offer this only after the goal is
@@ -265,6 +272,9 @@ code commits.
 
 Section: `## User involvement`. What the user approves before it happens (for
 example opening or merging a PR, a reshape) and what they are only told.
+Ask which required checks need a person, device or session available, and
+when. Record the availability needed alongside the approval or notification
+agreement.
 
 ### 8. Reshape checkpoints
 
