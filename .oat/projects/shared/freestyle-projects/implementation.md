@@ -2060,7 +2060,7 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 **Status:** completed
 **Base:** b270a5c05349431b0ac61f7a0333771ac0eca63d
-**Head:** 243acef2aae94895e4a6815ee26bf724a8b7c7ea
+**Head:** cd23122a4bc5d9888528f71e93557cc78a778828
 **Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
 **Corrects:** p15
 
@@ -2099,6 +2099,15 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 - Reviewer: `freestyle-projects-p-rev2-review-1`, GPT-6.1 Sol high, on `b270a5c05..243acef2`.
 - Artifact: `reviews/archived/p-rev2-review-2026-11-24T212749Z.md` (local).
 - Outcome: passed with no findings. All archive-publication, terminal-ref and lane-History controls were verified. H1/M1 changed in `5ab19373d`; L1 changed in `8a9d9275b`. The approved manual integrated confirmation follows.
+
+### Task prev2-t03: (review) Refresh synced freestyle closeout inputs
+
+**Status:** completed
+**Commit:** cd23122a4bc5d9888528f71e93557cc78a778828
+**Executor:** root
+**Source review:** PR #433 Bugbot stale synced reads.
+**Intent:** Refresh the selected synced records before the completion, documentation and retrospective paths read the shape. Stop on pull failure. Optional work can reuse the successful refresh of the same checkout within completion.
+**Proof:** Isolated CLI Vitest closeout, archive retry and pull suites passed all 93 tests. The three ordering cases failed before the fix. The pull suite verifies skipping child pulls and leaving adopted discovery records uncommitted.
 
 ---
 
@@ -2170,6 +2179,12 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: d04 (PR #433)
+
+- **Finding classes:** stale synced reads accepted-requirement (DR-260828-per-worktree-detached and Outcome 13).
+- Fixed stale reads in `c64a3d38a` and `cd23122a4`. The High archive preview finding was dismissed based on the existing recordless dry-run/apply and source-absent retry tests. Both the preview and the executor use the persisted terminal identity.
+- GPT-6.2 Astra high reviewed the repair through `cd23122a4bc5d9888528f71e93557cc78a778828` in two bounded passes, with no findings. Artifact `reviews/archived/d04-integrated-review-2026-11-24T230855Z.md` (local). Prior integrated confirmation covers the unchanged milestone product. The scoped exit carrier remains allowed under the project's configured override.
 
 - m04 exit refreshed after p-rev2. All five phase reviews passed. The scope p13, p14, p15, p-rev1 and p-rev2 resolves to the project-disabled exit gate, with the CLI reading an allowed, fresh carrier. Manual integrated confirmation follows.
 - Final product proof at clean commit `243acef2aae94895e4a6815ee26bf724a8b7c7ea`, against fresh `origin/main` `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, on Darwin arm64, Node 22.23.4 and pnpm 10.13.1. Check, types, isolated `pnpm test:evidence` (12 of 12 tasks ran uncached, including 10,058 CLI tests), standalone smoke, skills and scripts (165, 754 and 7 tests), build, post-commit skill/version checks, successful Git fetch, release validation of all five 0.3.60 packages, docs build, direct manifest freshness, lint and format all exited 0. Build tasks could reuse Turbo cache. Exact commands, inputs, timings, exits and focused before/after evidence are in the local `references/analysis/m04-rev2-run.7HAY5t/` log directory. Unit and contract tests only, as agreed.

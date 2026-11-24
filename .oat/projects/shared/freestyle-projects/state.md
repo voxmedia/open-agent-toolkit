@@ -151,7 +151,7 @@ oat_milestone_gates:
         scope: [p13, p14, p15, p-rev1, p-rev2]
       freshness: fresh
       freshness_reason: null
-      decided_at: '2026-11-24T21:30:07Z'
+      decided_at: '2026-11-24T23:08:55Z'
 oat_deliveries:
   - delivery_id: d01
     milestone: m01
@@ -326,17 +326,17 @@ oat_deliveries:
     members:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/433
         base: '5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f'
-        reviewed_head: '243acef2aae94895e4a6815ee26bf724a8b7c7ea'
-        observed_head: f7e43d7662d9f375c2090f1fbcd33c422c6ef853
+        reviewed_head: 'cd23122a4bc5d9888528f71e93557cc78a778828'
+        observed_head: 2903b9472b0345f0d05b5981c34fc034687c9b1b
         observed_base: 5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f
         status: open
     integrated_review:
-      artifact: reviews/archived/m04-integrated-review-2026-11-24T213227Z.md
+      artifact: reviews/archived/d04-integrated-review-2026-11-24T230855Z.md
       scope: [p13, p14, p15, p-rev1, p-rev2]
       bound_revisions:
         - member: 0
           base: '5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f'
-          head: '243acef2aae94895e4a6815ee26bf724a8b7c7ea'
+          head: 'cd23122a4bc5d9888528f71e93557cc78a778828'
       disposition: passed
     exit_gate:
       status: allowed
@@ -349,7 +349,7 @@ oat_deliveries:
         scope: [p13, p14, p15, p-rev1, p-rev2]
       freshness: fresh
       freshness_reason: null
-      decided_at: '2026-11-24T21:30:07Z'
+      decided_at: '2026-11-24T23:08:55Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -417,7 +417,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/433 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-11-24T22:42:29Z'
+oat_project_state_updated: '2026-11-24T23:08:55Z'
 oat_generated: false
 ---
 
