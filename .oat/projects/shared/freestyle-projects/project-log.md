@@ -307,6 +307,10 @@ Observation: my source-checked verdicts on the run feedback contained two wrong 
 Impact: without the second opinion m04 would have shipped an unnecessary commit offer and a visibility check built on a helper that cannot do it.
 Recommendation: before a re-alignment amendment, send the item-by-item verdicts with their citations to a different model for verification and give the feedback's author a chance to rebut.
 
+### 2026-11-24 · structural · oat-project-goal · m04
+
+Activated m04 (p13, p14, p15); freestyle-projects-activate-m04
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
