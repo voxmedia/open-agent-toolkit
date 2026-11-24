@@ -314,7 +314,13 @@ agreed `oat project push <project-path>` before
 **complete locally, with archive pending until the agreed push succeeds**;
 the checkout and active pointer stay in place. Archive's own commit and storage
 publication also follow the shape. Shared and local archives need no project-ref
-push, and local records remain uncommitted. The skill reports archive's actual
+push, and local records remain uncommitted. For every scope, the skill previews
+archive with `--dry-run --json` and checks its actual effects against the scope
+and shape. A non-null `s3Path` would upload the records; local records are never
+uploaded automatically. If publication is not permitted, the completed checkout
+and pointer remain in place with archive pending. A retry after synced archive
+uses the existing receipt, including when the remote retains a matching active
+alias that cannot be pulled; its preview and shape still govern any effects. The skill reports archive's actual
 result and any pending work.
 
 Freestyle requires no final review, summary or PR, and completion runs none.

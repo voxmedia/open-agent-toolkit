@@ -10084,13 +10084,13 @@ describe('freestyle mode skill contracts', () => {
             '  rev-parse) echo "$STUB_ROOT" ;;',
             '  ls-remote)',
             '    code="${STUB_LS:-0}"',
-            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            '    [ "$code" = 0 ] && printf "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\trefs/oat/projects/proj\\n"',
             // Like git, an absent ref exits 2 only under --exit-code.
             '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
             '    exit "$code" ;;',
             '  fetch) exit 0 ;;',
             '  show)',
-            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    [ "$2" = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:state.md ] || exit 128',
             '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
             'esac',
             '',
@@ -10170,7 +10170,9 @@ describe('freestyle mode skill contracts', () => {
       it(`${skill}: a freestyle project stops before the arrival and other modes still arrive`, async () => {
         const { paragraph } = await blocks(skill);
         expect(paragraph.replace(/\s+/g, ' ')).toContain(
-          'With no checkout here yet, add: "Run `oat project pull <slug>` to bring it here."',
+          skill === 'complete'
+            ? 'Only an ordinary unpulled project gets: "Run `oat project pull <slug>` to bring it here."'
+            : 'With no checkout here yet, add: "Run `oat project pull <slug>` to bring it here."',
         );
 
         const here = await run(skill, { checkout: 'freestyle', record: true });
@@ -10220,7 +10222,9 @@ describe('freestyle mode skill contracts', () => {
         );
         expect(failedLookup.status).toBe(1);
         expect(failedLookup.stderr).toContain(
-          'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
+          skill === 'complete'
+            ? 'cannot look up terminal refs for proj on origin (git ls-remote exit 128)'
+            : 'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
         );
         expect(failedLookup.pulled, `${skill}: failed lookup: no pull`).toBe(
           false,
@@ -10369,13 +10373,13 @@ describe('freestyle mode skill contracts', () => {
             '    [ "$(wc -l < "$STUB_ROOT/ls-codes")" -gt 0 ] && sed -i.bak 1d "$STUB_ROOT/ls-codes"',
             '    [ -n "$code" ] || code=$(cat "$STUB_ROOT/ls-last")',
             '    echo "$code" > "$STUB_ROOT/ls-last"',
-            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            '    [ "$code" = 0 ] && printf "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\trefs/oat/projects/proj\\n"',
             // Like git, an absent ref exits 2 only under --exit-code.
             '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
             '    exit "$code" ;;',
             '  fetch) exit 0 ;;',
             '  show)',
-            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    [ "$2" = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:state.md ] || exit 128',
             '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
             'esac',
             '',

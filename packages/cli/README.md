@@ -106,8 +106,12 @@ Use these commands when you want structured runtime/project state out of the CLI
 For freestyle, `oat-project-complete` confirms the shape's done criteria, offers
 retro and documentation, completes a pending log synthesis, runs `complete-state`,
 then pushes synced records as `shape.md` agrees before `archive`. A withheld push
-leaves archive pending and retains the active pointer. Local records stay
-uncommitted; no final review, summary or PR is required.
+leaves archive pending and retains the active pointer. In every scope it previews
+archive with `--dry-run --json` and requires the shape to permit the actual
+exports and publication, including a non-null `s3Path`. Local records stay
+uncommitted and are never uploaded automatically. A terminal synced alias uses
+its existing archive receipt instead of a refused pull; retry effects follow
+the same agreement. No final review, summary or PR is required.
 
 For lifecycle modes, the `oat-project-complete` skill observes a tracked PR live before writing. For
 a shared or synced project with an already merged original it prepares a fresh branch from the updated PR base

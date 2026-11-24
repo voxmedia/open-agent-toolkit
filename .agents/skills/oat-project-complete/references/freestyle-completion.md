@@ -8,13 +8,53 @@ review, summary or PR. Do not invoke `oat-project-summary`,
 
 ## Retired synced archive resume
 
-Use this section only when Step 1 obtained a validated `archive-resumed`
-result and the archived project's status decoded `WORKFLOW_MODE="freestyle"`.
-The active checkout, active ref and discovery record may already be retired;
-`ARCHIVE_PATH` holds the authoritative archived project, and `ARCHIVE_OUTPUT`
-holds the existing transaction's validated terminal report. Preserve them,
-including its original `lifecycleCommit`; do not create a replacement receipt
-or commit. Read `AGENTS.md` and `shape.md` from that archive.
+Use this section when the first Step 1 selector found freestyle mode at the
+exact completed ref (`COMPLETED_REF_SHA`), whether its active alias was retained
+or removed, or when the existing executor already returned a validated
+`archive-resumed` result with archived `WORKFLOW_MODE="freestyle"`.
+
+For the first-selector route, no archive execution has occurred. Preview the
+existing transaction read-only before invoking its executor:
+
+```bash
+oat project archive "$PROJECT_PATH" --dry-run --json
+```
+
+Check success and retain the preview's exact destinations, including `s3Path`.
+Read the archived `AGENTS.md` and `shape.md` at the preview's `archivePath`
+when present. If that snapshot must be restored, read the same files from the
+already fetched exact completed object with
+`git show "$COMPLETED_REF_SHA:AGENTS.md"` and
+`git show "$COMPLETED_REF_SHA:shape.md"`; do not pull the terminal alias or
+restore records merely to learn the agreement. Apply **Archive effects and
+publication authority** below to this preview and shape, including any retry
+upload to S3. Missing source files or unresolved authority stop before the
+executor. Only after the scope and shape permit all previewed effects, use the
+existing executor and receipt decoder (set `SKILL_DIR` to this loaded skill):
+
+```bash
+# freestyle-synced-archive-resume:start
+PROJECT_NAME=$(basename "$PROJECT_PATH")
+ACTIVE_PROJECT_PATH="$PROJECT_PATH"
+SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
+SYNCED_ARCHIVE_ENTRY=$(node "$SKILL_DIR/scripts/execute-synced-archive-entry.mjs" \
+  --repo-root "$(git rev-parse --show-toplevel)" \
+  --record-path "${PROJECT_PATH}.json" \
+  --project-name "$PROJECT_NAME" \
+  --project-path "$PROJECT_PATH") || exit 1
+SYNCED_ARCHIVE_RESUME_ASSIGNMENTS=$(node \
+  "$SKILL_DIR/scripts/parse-synced-archive-resume-fields.mjs" \
+  "$SYNCED_ARCHIVE_ENTRY") || exit 1
+eval "$SYNCED_ARCHIVE_RESUME_ASSIGNMENTS" || exit 1
+# freestyle-synced-archive-resume:end
+```
+
+For either route, `ARCHIVE_PATH` now holds the authoritative archived project,
+and `ARCHIVE_OUTPUT` holds the existing transaction's validated terminal report.
+Preserve them, including its original `lifecycleCommit`; do not create a
+replacement receipt or commit. If the executor already returned that result,
+skip the preview/executor block above and read `AGENTS.md` and `shape.md` from
+that archive.
 
 Finish only terminal reporting and the pointer clear below. Do not rejoin
 lifecycle Step 8.5, refresh dashboards, update links/PRs, regenerate documents,
@@ -148,15 +188,33 @@ records and resume at archive without repeating optional work or rewriting an
 existing synthesis. A push failure likewise leaves archive pending; report the
 CLI diagnostic and recovery, without bypassing it.
 
-For shared or local scope, archive requires no project-ref push. Before
-archiving, explain its moves/exports and use `oat project archive --dry-run`
-when needed to inspect them. Honor `shape.md` for any resulting shared
-bookkeeping commit or publication; local records stay uncommitted. Synced
-archive itself retires the discovery record with a parent-branch lifecycle
-commit, retains completed history and may publish configured archive storage.
-The agreement must allow those effects too; if it withholds them, retain the
-completed checkout and report archive pending. Do not use `--no-commit` to
-bypass the synced archive receipt contract.
+### Archive effects and publication authority
+
+For every scope (shared, local and synced), before any archive execution or
+retry, inspect the actual effects with the existing read-only preview:
+
+```bash
+oat project archive "$PROJECT_PATH" --dry-run --json
+```
+
+Require a successful preview and explain its moves, exports, lifecycle commit
+and publication destinations. A non-null `s3Path` means records will be uploaded,
+including on a local or shared project. Require that the scope and
+`shape.md`'s publication agreement permit every actual effect before running
+archive; local records must not be uploaded automatically. Meeting done
+criteria does not grant publication authority. An unshaped, deferred or withheld
+agreement leaves **complete locally; archive pending because publication is not permitted**.
+Retain the completed checkout and active pointer; do not invoke archive or its
+retry executor, clear the pointer, or claim durable archive completion.
+
+For shared or local scope, archive requires no project-ref push. A local archive
+with no conflicting export or publication can proceed; local records stay
+uncommitted. Honor the shape for shared bookkeeping commits and exports too.
+Synced archive itself retires the discovery record with a parent-branch lifecycle commit,
+retains completed history and may publish configured archive storage. The
+agreement must allow those effects too. Do not use `--no-commit` to bypass the
+synced archive receipt contract. Permission for a project-ref push alone does
+not authorize an S3 upload or a code-branch push.
 
 ```bash
 oat project archive "$PROJECT_PATH" --json
