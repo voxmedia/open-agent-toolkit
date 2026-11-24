@@ -136,6 +136,9 @@ one piece of work. Its scope decides where those files live.
 | `oat project new <name> --scope shared`   | Commits six Markdown files under `.oat/projects/shared/<name>/` to the current branch. The commit contains only those files; other staged or unstaged changes are left alone.           | Nothing                                                      |
 | `oat project new <name> --scope local`    | Writes the project under `.oat/projects/local/<name>/`, which is ignored. No commit.                                                                                                    | Nothing                                                      |
 
+`--no-commit` skips the shared scaffold commit or synced pointer commit; it
+does not stop synced creation from publishing the initial project ref.
+
 Every scope also writes two ignored files: `.oat/config.local.json`, which
 records the active project, and `.oat/state.md`, a generated dashboard. A
 synced project also adds Git's own `.git/worktrees/<name>` and a local

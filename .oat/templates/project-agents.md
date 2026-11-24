@@ -9,7 +9,15 @@ Read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md
 
 This is a freestyle OAT project: OAT keeps its structure and records and runs
 no lifecycle workflow, so there are no gates, checkpoints, required reviews,
-automatic commits, pushes or PRs. This file holds the fixed rules OAT supplies.
+automatic commits, pushes or PRs after creation.
+
+A shared project's creation commits its scaffold unless `--no-commit` is
+passed. Synced creation publishes its initial ref and writes its pointer,
+committing the pointer on the code branch unless `--no-commit` is passed.
+`--no-commit` does not stop the synced publish. Nothing else is committed or
+pushed until commits are shaped.
+
+This file holds the fixed rules OAT supplies.
 It is OAT-owned: agents do not edit it, and only OAT-supplied content changes
 it. Agreements made with the user belong in `shape.md`, never here.
 
@@ -70,6 +78,10 @@ oat project scope <project-path> --format value
   Never stage them on the code branch.
 - `local`: the records stay uncommitted in this checkout, on one machine.
   There is nothing to commit, push or pull.
+
+Write all records, including ledger free text, for their audience: everyone
+who can read `origin` from creation in synced scope; everyone who can read the
+branch once pushed in shared scope; this checkout only in local scope.
 
 When records are committed, pushed or opened as PRs is agreed in `shape.md`
 under `## Commits, PRs and merges`. OAT does none of it after creation; while

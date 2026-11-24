@@ -22,6 +22,9 @@ which holds paths picked in interactive `oat init` or added with
 `oat local add`. Installing every pack at project scope
 (`oat tools install --scope project`) also adds `projects/**/pr/` and
 `projects/**/reviews/archived/` there; naming the workflows pack does not.
+`oat init` always puts `.oat/analysis/lane-notes/` in the core block. It adds
+no other analysis folder there; broader analysis ignores remain an explicit
+local-path choice.
 User-scope files and the
 default PJM remote state live outside the working tree. See
 [What OAT writes](what-oat-writes.md#what-to-commit) for each team-choice

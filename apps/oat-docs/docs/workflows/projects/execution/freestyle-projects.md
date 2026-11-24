@@ -111,6 +111,14 @@ message sent while the lane runs, and `--no-report` closes an interrupted
 turn. `--worktree` sets the placement: this checkout is `shared-worktree`, any
 other path `own-worktree`. Run `oat project lane set --help` for every field;
 `--commit` commits what the update wrote (see the start of this page).
+Worktrees inside the repository are stored relative to it, paths elsewhere
+under your home as `~/...`, and other paths as absolute values. Placement is
+derived from the full path before shortening; older absolute entries keep
+working when updated without `--worktree`. Active blocks keep task and thread
+handles; new History lines omit them. Write all records, including ledger
+free text, for their scope's audience: everyone who can read `origin` from
+creation for synced projects, everyone who can read the branch once pushed
+for shared projects, and this checkout only for local projects.
 
 Every lane follows the same standing rules, so they ship as a template
 instead of being repeated in each brief. Copy them with

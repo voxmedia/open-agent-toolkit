@@ -197,6 +197,41 @@ function h2Section(content: string, heading: string): string {
   return content.slice(start, next === -1 ? undefined : next);
 }
 
+describe('freestyle creation and record audiences (p13)', () => {
+  const skill = oneLine(read(join(SKILL_DIR, 'SKILL.md')));
+  const agents = oneLine(read(join(TEMPLATES_DIR, 'project-agents.md')));
+  const shape = oneLine(read(join(TEMPLATES_DIR, 'shape.md')));
+  const kickoff = oneLine(read(join(SKILL_DIR, 'references/kickoff.md')));
+
+  it('states creation side effects on every required surface and in the completion checklist', () => {
+    const creation =
+      "A shared project's creation commits its scaffold unless `--no-commit` is passed. Synced creation publishes its initial ref and writes its pointer, committing the pointer on the code branch unless `--no-commit` is passed. `--no-commit` does not stop the synced publish. Nothing else is committed or pushed until commits are shaped.";
+    for (const surface of [skill, agents, shape, kickoff])
+      expect(surface).toContain(creation);
+    expect(skill.slice(skill.indexOf('## Success Criteria'))).toContain(
+      creation,
+    );
+  });
+
+  it('places the scope notice before the scaffold call and continues after showing a dirty tree', () => {
+    const notice = skill.indexOf(
+      'Before running `oat project new`, tell the user who can read the records',
+    );
+    expect(notice).toBeGreaterThan(0);
+    expect(notice).toBeLessThan(skill.indexOf('SCAFFOLD=$(oat project new'));
+    expect(skill).toContain(
+      'synced means everyone who can read `origin`, from creation; shared means everyone who can read the branch once pushed; local means the records stay in this checkout.',
+    );
+    expect(skill).toContain('Continue after showing a dirty tree.');
+    expect(skill).toContain(
+      'If the CLI needs to repair `.gitignore` and refuses, follow its error before retrying.',
+    );
+    expect(agents).toContain(
+      'Write all records, including ledger free text, for their audience: everyone who can read `origin` from creation in synced scope; everyone who can read the branch once pushed in shared scope; this checkout only in local scope.',
+    );
+  });
+});
+
 describe('freestyle orchestrator branch and linked projects guidance (p05)', () => {
   const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
 

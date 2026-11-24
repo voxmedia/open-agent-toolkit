@@ -104,6 +104,14 @@ async function runCommand(
 }
 
 describe('createProjectNewCommand', () => {
+  it('explains that --no-commit does not stop the synced publish', () => {
+    expect(
+      createProjectNewCommand().options.find(
+        (option) => option.long === '--no-commit',
+      )?.description,
+    ).toContain('does not stop the synced publish');
+  });
+
   let originalExitCode: number | undefined;
 
   beforeEach(() => {

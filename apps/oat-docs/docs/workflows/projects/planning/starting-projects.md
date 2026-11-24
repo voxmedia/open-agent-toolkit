@@ -493,9 +493,15 @@ and a `shape.md` in which every topic holds an answer or a deferral.
 `oat project status` names `AGENTS.md` and `shape.md`.
 
 **What it does without asking:** It creates the project through
-`oat project new --mode freestyle`. In shared scope that commits the
-scaffolded files, in synced scope it publishes them to the project ref, and in
-local scope nothing is committed. A claim, a refreshed `AGENTS.md` and newly
+`oat project new --mode freestyle`. Shared creation commits the scaffold
+unless `--no-commit` is passed. Synced creation publishes its initial ref and
+writes its pointer, committing the pointer on the code branch unless
+`--no-commit` is passed; that flag does not stop the synced publish. Local
+records stay in this checkout, uncommitted. Before creation, the skill tells
+you who can read the records: everyone who can read `origin` for synced scope
+from creation, everyone who can read the branch once pushed for shared scope,
+and this checkout only for local scope. It shows a dirty tree and continues,
+following any CLI error that requires `.gitignore` repair. A claim, a refreshed `AGENTS.md` and newly
 created `decisions.md` and `memories.md` are saved with the other records, as
 `shape.md` agrees. After creation it commits and pushes nothing
 unless the commits topic in `shape.md` says so. It asks you to choose the scope,

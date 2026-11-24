@@ -249,9 +249,14 @@ neither is available, stop and ask the user.
 ### 6. Commits, PRs and merges
 
 Section: `## Commits, PRs and merges`. Agree who commits (records and code)
-and when, when PRs open, and who merges. Until this topic holds an answer,
-nothing is committed or pushed, by this skill or by `oat-brainstorm`. Once it
-does, follow it together with the records rule for the project's scope in
+and when, when PRs open, and who merges.
+
+A shared project's creation commits its scaffold unless `--no-commit` is
+passed. Synced creation publishes its initial ref and writes its pointer,
+committing the pointer on the code branch unless `--no-commit` is passed.
+`--no-commit` does not stop the synced publish. Nothing else is committed or
+pushed until commits are shaped. Until this topic holds an answer, no further commit or push is made
+by this skill or by `oat-brainstorm`. Once it does, follow it together with the records rule for the project's scope in
 `AGENTS.md` (`## Where records live`). In a local project the project records
 stay uncommitted whatever this section says; the agreed shape still governs
 code commits.

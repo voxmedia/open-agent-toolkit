@@ -13,8 +13,8 @@ metadata:
 
 Create or resume a **freestyle** OAT project and shape it with the user. A
 freestyle project has OAT's structure and records but no lifecycle workflow: no
-gates, checkpoints, required reviews, automatic commits, pushes or PRs. How it
-runs is agreed with the user in a shaping conversation and written into the
+gates, checkpoints, required reviews, or automatic commits, pushes or PRs after
+creation. How it runs is agreed with the user in a shaping conversation and written into the
 project's `shape.md`. This skill owns that conversation and every later
 reshape. It does not run the project's work: once the shape is agreed, the
 orchestrator works as `shape.md` says.
@@ -88,8 +88,9 @@ conversation:
 ### Step 1: Resolve or Create the Project
 
 Surface the working tree first: run `git status --porcelain` and show the user
-anything dirty. This skill commits nothing, and `oat project new` commits only
-the files it creates, so unrelated changes stay where they are.
+anything dirty. Continue after showing a dirty tree. `oat project new` commits
+only its own files, so unrelated changes stay where they are. If the CLI needs
+to repair `.gitignore` and refuses, follow its error before retrying.
 
 **Resume.** When the user names an existing project, or the active project
 (`oat config get activeProject`) has `oat_workflow_mode: freestyle` in its
@@ -146,6 +147,17 @@ recommending the repository default; scope is chosen here, not shaped:
 - `local`: the project stays uncommitted in this checkout, on one machine.
 - `synced`: the project lives in a nested worktree and is published to
   `refs/oat/projects/<slug>`; it needs an `origin` remote.
+
+A shared project's creation commits its scaffold unless `--no-commit` is
+passed. Synced creation publishes its initial ref and writes its pointer,
+committing the pointer on the code branch unless `--no-commit` is passed.
+`--no-commit` does not stop the synced publish. Nothing else is committed or
+pushed until commits are shaped.
+
+Before running `oat project new`, tell the user who can read the records in
+the chosen scope: synced means everyone who can read `origin`, from creation;
+shared means everyone who can read the branch once pushed; local means the
+records stay in this checkout.
 
 ```bash
 SCAFFOLD=$(oat project new "{project-name}" --mode freestyle --scope "{scope}" --json) || {
@@ -322,8 +334,16 @@ exact path in the same command, and neither pushes.
   re-asking answered ones, and checks the three reshape triggers from Step 2:
   reached reshape checkpoints, Undecided items that are due, and agreements
   that stopped working.
-- ✅ No commit, push or PR is made except as `shape.md` agrees; none while the
-  commit agreement is not yet shaped or is deferred.
+- ✅ A shared project's creation commits its scaffold unless `--no-commit` is
+  passed. Synced creation publishes its initial ref and writes its pointer,
+  committing the pointer on the code branch unless `--no-commit` is passed.
+  `--no-commit` does not stop the synced publish. Nothing else is committed or
+  pushed until commits are shaped.
+- ✅ No further commit, push or PR is made except as `shape.md` agrees; none
+  while the commit agreement is not yet shaped or is deferred.
+- ✅ The user hears the chosen scope's record audience before creation; a
+  dirty tree is shown and the skill continues unless the CLI reports a repair
+  that must be resolved.
 - ✅ The project `AGENTS.md` is never edited by hand; an older one is only
   replaced whole with OAT's current template.
 - ✅ A missing `decisions.md` or `memories.md` is created from OAT's template;
