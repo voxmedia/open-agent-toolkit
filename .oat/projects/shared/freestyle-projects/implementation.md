@@ -2037,6 +2037,15 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 The branch CLI reproduced the issue in the dashboard's line-based reader. An ordinary quoted reason retains its quotes and a hash truncates the value. This correction preserves the existing dashboard display and adds no new project behavior. The root executes this one-reader correction inline. It uses the existing YAML parser and dashboard test with no new surface or design decision.
 
+### Task prev1-t01: Render the decoded pause reason
+
+**Status:** completed
+**Commit:** 02a2c665f1bef2dadc3d1a9b47e4b640a7435cd2
+**Executor:** root
+**Intent:** Read YAML pause text before rendering the dashboard, preserving legacy reasons and Markdown table structure.
+**Files:** `packages/cli/src/commands/state/generate.ts`, `packages/cli/src/commands/state/generate.test.ts`.
+**Proof:** Isolated-HOME dashboard Vitest suite with an actual generated dashboard and an unquoted legacy control. The old reader reproduced the truncation at the hash (one failed, one passing legacy control). The fixed dashboard and pause suites passed all 82 tests on pinned Node 22.23.4.
+
 ---
 
 ## Orchestration Runs
