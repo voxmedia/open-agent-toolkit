@@ -1923,7 +1923,11 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 ## Phase p15: Closing a freestyle project
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 994c63b36064f54ad0878120cf782b305c92a8ff
+**Executor:** phase-implementer:freestyle-projects-p15-implementation-1
+
+One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules this phase sequentially. Its templates, skills and docs share contract tests and generated assets, so there is no independent fan-out.
 
 ---
 
