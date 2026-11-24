@@ -196,21 +196,24 @@ export function phaseInHillList(
 }
 
 /**
- * Parses the HiLL lists from the state frontmatter as YAML, so block arrays
- * are read whole (a line-oriented field read sees only the first item). A
- * frontmatter block that is not valid YAML falls back to the textual lists.
+ * Read block arrays and quoted pause reasons as YAML. Preserve the textual
+ * fallback when an older state file is malformed.
  */
-async function readHillLists(
-  stateFile: string,
-): Promise<{ checkpoints: string[]; completed: string[] }> {
+async function readDashboardFields(stateFile: string): Promise<{
+  checkpoints: string[];
+  completed: string[];
+  pauseReason?: string;
+}> {
   try {
     const block = getFrontmatterBlock(await readFile(stateFile, 'utf8'));
     const parsed: unknown = block ? YAML.parse(block) : null;
     if (parsed && typeof parsed === 'object') {
       const record = parsed as Record<string, unknown>;
+      const reason = record.oat_pause_reason;
       return {
         checkpoints: toPhaseList(record.oat_hill_checkpoints),
         completed: toPhaseList(record.oat_hill_completed),
+        pauseReason: typeof reason === 'string' ? reason.trim() : undefined,
       };
     }
   } catch {
@@ -246,14 +249,18 @@ async function readProjectState(
     lifecycle === 'paused'
       ? await parseFrontmatterField(stateFile, 'oat_pause_timestamp')
       : '';
+  const {
+    checkpoints: hillCheckpoints,
+    completed: hillCompleted,
+    pauseReason: storedPauseReason,
+  } = await readDashboardFields(stateFile);
   const pauseReason =
     lifecycle === 'paused'
-      ? await parseFrontmatterField(stateFile, 'oat_pause_reason')
+      ? (storedPauseReason ??
+        (await parseFrontmatterField(stateFile, 'oat_pause_reason')))
       : '';
   const blockers =
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
-  const { checkpoints: hillCheckpoints, completed: hillCompleted } =
-    await readHillLists(stateFile);
   // A freestyle project is recognized from the parsed YAML, as `status` does,
   // so a quoted or commented declaration still reads as freestyle. Other
   // modes keep the line reading they always had.
@@ -838,7 +845,10 @@ function buildDashboardMarkdown(
         lines.push(`| Pause Timestamp | ${state.pauseTimestamp} |`);
       }
       if (state.pauseReason) {
-        lines.push(`| Pause Reason | ${state.pauseReason} |`);
+        const reason = state.pauseReason
+          .replace(/[\r\n]+/g, ' ')
+          .replaceAll('|', '\\|');
+        lines.push(`| Pause Reason | ${reason} |`);
       }
     }
     if (!freestyle) {
