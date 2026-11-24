@@ -307,6 +307,34 @@ describe('lane ledger', () => {
     expect(ledger.history[2]?.text).toContain('steer: skip the docs');
   });
 
+  it.each([
+    ['task', 'replacement-task'],
+    ['thread', 'replacement-thread'],
+    ['task', ''],
+    ['thread', ''],
+  ] as const)(
+    'describes a %s handle update without disclosing its value (%s)',
+    (field, value) => {
+      const result = applyLaneUpdate(
+        run(create),
+        { lane: 'l01', fields: { [field]: value } },
+        at(1),
+      );
+      expect(result.block.fields[field]).toBe(value || undefined);
+      expect(result.ledger.history.at(-1)?.text).toBe(
+        '2026-11-22T10:01:00Z · l01 d01 · handles updated',
+      );
+      const noChange = applyLaneUpdate(
+        result.ledger,
+        { lane: 'l01', fields: { [field]: value } },
+        at(2),
+      );
+      expect(noChange.ledger.history.at(-1)?.text).toBe(
+        '2026-11-22T10:02:00Z · l01 d01 · observed, no change',
+      );
+    },
+  );
+
   it('clears a field given an empty value, and records an update with no change as observed', () => {
     const cleared = applyLaneUpdate(
       run(create),

@@ -269,7 +269,8 @@ export function applyLaneUpdate(
       `${lane} ${dispatch.id}`,
       changes
         .filter((change) => !/^(?:task|thread)(?::| cleared$)/.test(change))
-        .join('; ') || 'observed, no change',
+        .join('; ') ||
+        (changes.length > 0 ? 'handles updated' : 'observed, no change'),
     ].join(' · '),
   });
 
