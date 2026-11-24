@@ -630,6 +630,25 @@ interface SectionClassification {
   absentBlocks: string[];
 }
 
+/** The exact pre-m04 adoption block is current too; existing bytes stay intact. */
+function isCurrentAdoptionBlock(
+  key: string,
+  block: string,
+  existing: string,
+): boolean {
+  if (existing === block) return true;
+  const heading =
+    key === 'project-management'
+      ? 'Project Management'
+      : key === 'decisions'
+        ? 'Decision Records'
+        : undefined;
+  return (
+    heading !== undefined &&
+    existing === block.replace(`\n## ${heading}\n`, `\n### ${heading}\n`)
+  );
+}
+
 /** Read-only ownership/conflict classification shared by preview and mutation. */
 function classifySections(
   plan: AgentsMdPlan,
@@ -664,8 +683,13 @@ function classifySections(
     ...legacy.map(({ range }) => range),
   ]);
   const changed = managed.filter(
-    ({ block, range }) =>
-      !range || content.slice(range.start, range.end) !== block,
+    ({ key, block, range }) =>
+      !range ||
+      !isCurrentAdoptionBlock(
+        key,
+        block,
+        content.slice(range.start, range.end),
+      ),
   );
   if (changed.length === 0 && legacy.length === 0) {
     return {
@@ -697,8 +721,13 @@ function classifySections(
 
   const absent = managed.filter(({ range }) => !range);
   const different = managed.filter(
-    ({ block, range }) =>
-      range !== undefined && content.slice(range.start, range.end) !== block,
+    ({ key, block, range }) =>
+      range !== undefined &&
+      !isCurrentAdoptionBlock(
+        key,
+        block,
+        content.slice(range.start, range.end),
+      ),
   );
   const refusal =
     appendRefusal ??

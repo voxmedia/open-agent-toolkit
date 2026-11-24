@@ -34,7 +34,7 @@ export function buildDecisionAgentsSectionBody(
   decisionsPath = DEFAULT_DECISIONS_PATH,
 ): string {
   return [
-    '### Decision Records',
+    '## Decision Records',
     '',
     `- Durable repository decisions live under \`${decisionsPath}/\`; read \`${decisionsPath}/AGENTS.md\` before working with them.`,
     `- Before finalizing a durable repository decision, review \`${decisionsPath}/index.md\` and any relevant records.`,

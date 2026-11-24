@@ -26,6 +26,7 @@ import {
 import { isFreestyleState } from '@commands/shared/frontmatter';
 import { generateStateDashboard } from '@commands/state/generate';
 import { CliError } from '@errors/cli-error';
+import { initMainRepo, runOat } from '@test-support/run-oat';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -613,8 +614,9 @@ fi
     );
   });
 
-  it('persists pause reason when provided', async () => {
+  it('quotes a pause reason that status reads back unchanged', async () => {
     const root = await createRepoRoot();
+    await initMainRepo(root);
     const statePath = await writeProjectState(root, 'demo');
     await writeFile(
       join(root, '.oat', 'config.local.json'),
@@ -623,10 +625,18 @@ fi
     );
 
     const { command } = createHarness({ cwd: root });
-    await runCommand(command, ['--reason', 'waiting on review']);
+    const reason = 'waiting: review # required "quoted" $&';
+    await runCommand(command, ['--reason', reason]);
 
     const state = await readFile(statePath, 'utf8');
-    expect(state).toContain('oat_pause_reason: waiting on review');
+    expect(state).toContain(`oat_pause_reason: ${JSON.stringify(reason)}`);
+    const status = await runOat(
+      root,
+      ['project', 'status', '--project-path', '.oat/projects/shared/demo'],
+      ['--json'],
+    );
+    expect(status.exitCode, status.stdout + status.stderr).toBe(0);
+    expect(JSON.parse(status.stdout).project.pauseReason).toBe(reason);
     expect(process.exitCode).toBe(0);
   });
 

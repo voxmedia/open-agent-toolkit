@@ -2,7 +2,7 @@ export const PROJECT_MANAGEMENT_AGENTS_SECTION_KEY = 'project-management';
 
 export function buildProjectManagementAgentsSectionBody(): string {
   return [
-    '### Project Management',
+    '## Project Management',
     '',
     '- Installed project-management tools provide capability; they do not prove that this repository adopted PJM.',
     '- Run `oat pjm doctor --json` and inspect `adoption.state` before any PJM write.',

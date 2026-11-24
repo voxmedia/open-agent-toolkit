@@ -210,9 +210,9 @@ describe('initializeRepoReference', () => {
     // Pack placement must not write these; adoption must.
     const rootGuidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(rootGuidance).toContain('<!-- OAT project-management -->');
-    expect(rootGuidance).toContain('### Project Management');
+    expect(rootGuidance).toContain('## Project Management');
     expect(rootGuidance).toContain('<!-- OAT decisions -->');
-    expect(rootGuidance).toContain('### Decision Records');
+    expect(rootGuidance).toContain('## Decision Records');
     expect(rootGuidance).not.toContain('oat decision init');
   });
 

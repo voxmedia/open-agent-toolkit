@@ -26,7 +26,10 @@ export function upsertFrontmatterField(
 }
 
 export function replaceFrontmatter(content: string, nextBlock: string): string {
-  return content.replace(/^---\n([\s\S]*?)\n---/, `---\n${nextBlock}\n---`);
+  return content.replace(
+    /^---\n([\s\S]*?)\n---/,
+    () => `---\n${nextBlock}\n---`,
+  );
 }
 
 export function removeFrontmatterField(block: string, field: string): string {
