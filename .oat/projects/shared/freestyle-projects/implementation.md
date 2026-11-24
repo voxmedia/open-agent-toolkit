@@ -2078,6 +2078,19 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 **Commit:** 5ab19373d77646f9d2cc996bc963e91b46838717
 **Verification:** pass — 16 focused controls, 120 completion script tests, and 1,383 skill prose/validation tests; scoped lint and skill validation exit 0. Pre-fix negative controls failed on missing all-scope authority and terminal route/ref checks (5 failed, 2 valid controls passed); the same controls pass on the fixed input. Existing quick continuation and the actual freestyle reference retry/finalizer pass. Logs are retained under `references/analysis/m04-rev2-run.7HAY5t/`.
 
+### Task prev2-t02: (review) Describe handle-only History updates accurately
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
+**Handle:** /root/m04_revision
+**Source review:** m04-integrated-review-2026-11-24T210432Z.md — L1
+**Intent:** Record handle-only edits as a value-free update while preserving genuine no-op wording and omitting all handle values.
+**Files:** packages/cli/src/commands/project/lane/update.ts and ledger.test.ts.
+**Proof:** isolated CLI Vitest project/lane/ledger.test.ts and lane.test.ts; scoped lint, format and CLI build. Replacement and clear controls for both handle fields fail on the pre-fix source, pass after the fix, and preserve the true no-op control.
+
+**Commit:** 8a9d9275b1fa011c1441af8c4e9c145555454fae
+**Verification:** pass — 46 lane ledger/command controls, scoped lint, formatting and CLI build all exit 0. Four handle replacement/clearing controls fail on the pre-fix code with the false no-op wording, then pass with value-free `handles updated`; true no-op assertions remain passing.
+
 ---
 
 ## Orchestration Runs
