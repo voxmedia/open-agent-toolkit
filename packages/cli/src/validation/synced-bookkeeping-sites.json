@@ -496,5 +496,11 @@
     "anchor": "--message \"chore(oat): record completion-before-merge exception\" --json",
     "kind": "write",
     "guard": "project-scope"
+  },
+  {
+    "file": ".agents/skills/oat-project-complete/references/freestyle-completion.md",
+    "anchor": "oat project push \"$PROJECT_PATH\" --message \"chore(oat): complete freestyle project $PROJECT_SLUG\"",
+    "kind": "write",
+    "guard": "project-scope"
   }
 ]

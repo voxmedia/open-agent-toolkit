@@ -824,6 +824,36 @@ const PLAN_WRITING_CONTRACT_CLAUSE =
   'load the current `oat-project-plan-writing/SKILL.md` and follow that contract as written';
 
 const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
+  // p15: optional freestyle closing work is loaded only after user consent.
+  {
+    file: '.agents/skills/oat-project-complete/references/freestyle-completion.md',
+    anchor: 'Closing a Freestyle Project',
+    match: 'Do not invoke',
+    classification: 'non-executing',
+    skills: ['oat-project-summary', 'oat-project-pr-final'],
+    reason:
+      'Explicitly excludes these lifecycle skills from freestyle completion.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/references/freestyle-completion.md',
+    anchor: '1. Resolve the project and confirm done',
+    match: 'prompt offer the optional',
+    classification: 'non-executing',
+    skills: ['oat-project-retro', 'oat-project-document'],
+    reason: 'An offer only; accepted work loads the current skills in step 2.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/references/freestyle-completion.md',
+    anchor: '2. Run the selected optional work',
+    match: 'Load the current',
+    classification: 'load-required',
+    skills: ['oat-project-retro', 'oat-project-document'],
+    requires: [
+      'Load the current `oat-project-retro/SKILL.md`',
+      '`oat-project-document/SKILL.md` only when documentation was accepted',
+    ],
+  },
+
   // Non-executing reference, ownership and commit operation identity mentions.
   {
     file: '.agents/skills/oat-project-autonomous/SKILL.md',

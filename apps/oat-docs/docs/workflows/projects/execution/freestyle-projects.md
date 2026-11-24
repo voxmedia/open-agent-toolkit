@@ -30,17 +30,17 @@ project) stays its own step.
 
 ## Project files
 
-| File                 | What it holds                                                                                                        | Written by                                                      |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `AGENTS.md`          | OAT's fixed rules. Its first line: read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` | OAT only; agents never edit it                                  |
-| `shape.md`           | How the project runs, agreed with you                                                                                | The orchestrator, by hand                                       |
-| `decisions.md`       | What the project chose about its work, and why (`## Live`, `## Superseded`)                                          | The orchestrator, by hand                                       |
-| `memories.md`        | What a returning agent should keep in mind (`## User preferences`, `## Gotchas`, `## Context`)                       | The orchestrator, by hand                                       |
-| `state.md`           | The mode, the orchestrator's branch and, for a linked project, its parent                                            | `oat project new`, `oat project orchestrator set`               |
-| `linked-projects.md` | One row per linked project, open until acknowledged                                                                  | `oat project new --link-to`, `oat project linked add` and `ack` |
-| `lanes.md`           | The lane ledger                                                                                                      | `oat project lane set` only                                     |
-| `lane-reports/`      | Each lane's filed reports, one per dispatch, never edited                                                            | `oat project lane set --report`                                 |
-| `project-log.md`     | What happened and when, when the project log is enabled                                                              | `oat project log append`                                        |
+| File                 | What it holds                                                                                                        | Written by                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `AGENTS.md`          | OAT's fixed rules. Its first line: read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` | OAT only; agents never edit it                                                  |
+| `shape.md`           | How the project runs, agreed with you                                                                                | The orchestrator, by hand                                                       |
+| `decisions.md`       | What the project chose about its work, and why (`## Live`, `## Superseded`)                                          | The orchestrator, by hand                                                       |
+| `memories.md`        | What a returning agent should keep in mind (`## User preferences`, `## Gotchas`, `## Context`)                       | The orchestrator, by hand                                                       |
+| `state.md`           | The mode, the orchestrator's branch and, for a linked project, its parent                                            | `oat project new`, `oat project orchestrator set`, `oat project complete-state` |
+| `linked-projects.md` | One row per linked project, open until acknowledged                                                                  | `oat project new --link-to`, `oat project linked add` and `ack`                 |
+| `lanes.md`           | The lane ledger                                                                                                      | `oat project lane set` only                                                     |
+| `lane-reports/`      | Each lane's filed reports, one per dispatch, never edited                                                            | `oat project lane set --report`                                                 |
+| `project-log.md`     | What happened and when, when the project log is enabled                                                              | `oat project log append` and `synthesize`                                       |
 
 `oat project new --mode freestyle` scaffolds the first five, and
 `project-log.md` when the project log is enabled; the others appear on first
@@ -295,13 +295,38 @@ of a path, against the parent's open rows. A name found in more than one scope
 is refused as ambiguous. A synced project that is not pulled here is refused
 with the `oat project pull <name>` instruction.
 
+## Closing the project
+
+Invoke `oat-project-complete` when you are ready to close. It asks you to
+confirm `shape.md`'s done criteria and offers a retrospective and documentation
+sync. Neither is required. Documentation uses the shape's documents,
+`decisions.md` `## Live`, lane reports, the project log and merged changes;
+retro uses the available evidence and names anything missing. Neither needs a
+lifecycle plan or journal. Their commits and pushes follow `shape.md` and the
+scope: local records stay uncommitted. Retro apply proposals stay pending when
+their required durable receipts cannot be saved.
+
+Completion synthesizes an existing project log only while synthesis is pending,
+keeps an existing synthesis and skips an absent log. It then runs
+`oat project complete-state <project-path>`. For synced scope it runs the
+agreed `oat project push <project-path>` before
+`oat project archive <project-path>`. Withheld publication leaves the project
+**complete locally, with archive pending until the agreed push succeeds**;
+the checkout and active pointer stay in place. Archive's own commit and storage
+publication also follow the shape. Shared and local archives need no project-ref
+push, and local records remain uncommitted. The skill reports archive's actual
+result and any pending work.
+
+Freestyle requires no final review, summary or PR, and completion runs none.
+`oat-project-summary` and `oat-project-pr-final` still stop for freestyle.
+
 ## Older projects
 
 A project created by an earlier OAT has an `AGENTS.md` without the newer
 sections. On every resume, after the claim, `oat-project-freestyle` compares
 the file's `##` headings with OAT's current `project-agents` template. When
 one is missing, it replaces the file whole, because the file holds no project
-answers. An m03-era project lacks `## Working with lanes`, so the refresh adds that
+answers. An older project may also lack `## Closing the project`. An m03-era project lacks `## Working with lanes`, so the refresh adds that
 section and removes the four sections now in the lane guide. It then creates a missing `decisions.md` or `memories.md`. A project
 with no `oat_orchestrator_branch` reads as unclaimed until its orchestrator
 runs `oat project orchestrator set`.

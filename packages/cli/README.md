@@ -103,7 +103,13 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat project delivery waive --project <path> --delivery <dNN> --reason <text> [--by <name>]` - operator-only head-bound freshness waiver for a registered goal delivery that is stale only through head movement; restores its passed record in `state.md` (refuses under `OAT_AUTONOMOUS=1`, with a stable `code` under `--json`)
 - `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`; refuses the same incomplete closeout `closeout-check` reports; on success for a goal project it lists the terminal deliveries' freshness waivers (`waivers` under `--json`)
 
-The `oat-project-complete` skill observes a tracked PR live before writing. For
+For freestyle, `oat-project-complete` confirms the shape's done criteria, offers
+retro and documentation, completes a pending log synthesis, runs `complete-state`,
+then pushes synced records as `shape.md` agrees before `archive`. A withheld push
+leaves archive pending and retains the active pointer. Local records stay
+uncommitted; no final review, summary or PR is required.
+
+For lifecycle modes, the `oat-project-complete` skill observes a tracked PR live before writing. For
 a shared or synced project with an already merged original it prepares a fresh branch from the updated PR base
 and routes bookkeeping through a separate follow-up under existing explicit
 authority, preserving the original URL/status/body. Unsafe local inputs stop

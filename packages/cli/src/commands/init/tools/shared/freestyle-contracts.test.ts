@@ -43,6 +43,7 @@ const AGENTS_HEADINGS = [
   'Working with lanes',
   'Records commands',
   'Shaping and reshaping',
+  'Closing the project',
 ] as const;
 
 /** The lane self-test, verbatim from the brief's Orchestrator branch decision. */

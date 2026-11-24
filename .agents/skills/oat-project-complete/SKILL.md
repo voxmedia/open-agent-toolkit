@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.21
+  version: 1.7.22
 ---
 
 # Complete Project
@@ -43,9 +43,10 @@ and materialize the checkout, read the mode from the repository root: from the
 checkout when it is here, otherwise read-only from the synced ref (an
 objects-only fetch; no local ref, record, checkout or commit). A failed ref
 lookup, or a ref whose mode cannot be read, stops before the arrival. When
-`WORKFLOW_MODE` is `freestyle`, stop there, before the synced archive entry and
-any write, and tell the user what the freestyle stop at the end of this step
-tells them. With no checkout here yet, add: "Run `oat project pull <slug>` to
+`WORKFLOW_MODE` is `freestyle`, route to
+[references/freestyle-completion.md](references/freestyle-completion.md)
+and end this invocation there, before the synced archive entry and the lifecycle
+steps below. The shell block only selects that route; it does not complete the project. With no checkout here yet, add: "Run `oat project pull <slug>` to
 bring it here."
 
 ```bash
@@ -81,7 +82,7 @@ if [ -n "$PROJECT_PATH" ]; then
     fi
   fi
   if [ "$WORKFLOW_MODE" = "freestyle" ]; then
-    echo "oat: $PROJECT_SLUG is a freestyle project; stopping before arrival" >&2
+    echo "oat: $PROJECT_SLUG is a freestyle project; follow references/freestyle-completion.md before any arrival" >&2
     exit 0
   fi
 fi
@@ -255,16 +256,12 @@ initialized every resume-safe downstream receipt and choice. A resume never
 opens a new PR from an unpersisted prior answer; `SHOULD_OPEN_PR="false"`, while
 an already-tracked open PR is updated by Step 11.5.
 
-**Freestyle projects.** If `"$PROJECT_PATH/state.md"` records
-`oat_workflow_mode: freestyle`, stop before any write: this skill's completion
-gates (final review, summary, documentation sync, PR) belong to the lifecycle
-modes, and a freestyle project has none of them. Tell the user: "This is a
-freestyle project. When `shape.md`'s done criteria are met,
-`oat project complete-state <project-path>` marks it complete (it needs no
-closeout snapshot or journal); for a synced project,
-`oat project push <project-path>` then publishes the completed state, subject to
-the publication agreement in `shape.md`; and
-`oat project archive <project-path>` archives it."
+**Freestyle projects.** If the resolved project records
+`oat_workflow_mode: freestyle`, follow
+[references/freestyle-completion.md](references/freestyle-completion.md)
+and return. Never continue into Step 1.5 or the lifecycle steps below for it.
+The freestyle path requires no final review, summary, PR, recap, closeout
+snapshot or journal. Other workflow modes keep the process below.
 
 ### Step 1.5: Closeout Invariant Gate
 

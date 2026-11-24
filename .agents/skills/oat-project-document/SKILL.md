@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat project check-state:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
-  version: 1.8.18
+  version: 1.8.19
 ---
 
 # Project Documentation Sync
@@ -21,7 +21,8 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 
 **Required:**
 
-- Active OAT project (or explicit project path) with at least `plan.md` or `implementation.md`
+- Active OAT project (or explicit project path) with at least `plan.md` or `implementation.md`,
+  or a freestyle project with `state.md` and `shape.md`
 - Project should have completed some implementation work (artifacts describe what was built)
 
 ## Mode Assertion
@@ -134,12 +135,12 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   ```bash
   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
   ```
-  For `oat_workflow_mode: freestyle`, stop: a freestyle project has no
-  lifecycle artifact set to document from, so stop here, before the artifact
-  checks below and before Step 1 can invoke a PJM writer. Tell the user: "This
-  is a freestyle project; this skill reads lifecycle artifacts it does not
-  have. Update documentation as `shape.md` agrees."
-- Verify at least one of `plan.md` or `implementation.md` exists (need to know what was built)
+  For `oat_workflow_mode: freestyle`, read the project's `AGENTS.md` and
+  `shape.md`, resolve scope with `oat project scope`, and confirm this is the
+  claimed orchestrator checkout before any record write. Use the freestyle
+  sources in Step 2; do not require a lifecycle plan or journal.
+- For other modes, verify at least one of `plan.md` or `implementation.md`
+  exists (need to know what was built).
 - If validation fails, report the error and STOP
 
 Derive `{project-name}` as the directory name: `basename "$PROJECT_PATH"`.
@@ -179,6 +180,31 @@ Glob: **/docusaurus.config.{js,ts}
 
 Store resolved values for use in later steps. Do not write auto-detected values to config.
 
+### Freestyle output and consent rules
+
+For freestyle, `--auto` authorizes content application only; it never overrides
+`shape.md`'s `## Commits, PRs and merges`. No commit or push is allowed while
+that agreement is unshaped, deferred or withheld. Apply these rules to every
+exit, including no recommendations, user skip, partial failure and success:
+do not add `oat_docs_updated` or lifecycle timestamps to freestyle `state.md`.
+Report the result instead. Steps 6 and 8's lifecycle state writes and mandatory
+commits are for other modes only.
+
+Before any save, resolve `oat project scope "$PROJECT_PATH" --format value`
+and stop on failure. Shared project records use an agreed exact-path commit;
+synced project records use an agreed `oat project push`; local records stay
+uncommitted. Keep ordinary repository documentation separate from project
+records: commit its exact producer-owned paths only when `shape.md` agrees,
+even for a local or synced project, and push the code branch only when agreed.
+If saving is withheld, retain edits and report their paths; never fall through
+to Step 8's unconditional commit. No recommendations or a skip returns without
+a record mutation. A successful or partial apply reports its actual outputs
+and returns after the permitted saves. Do not require a summary or PR.
+
+For freestyle, skip Step 1's automatic PJM writer: include relevant repository
+reference updates in the delta plan instead, so their edits and saves follow
+the same approval and shape agreement as other documentation.
+
 ### Step 1: Check for PJM Infrastructure
 
 Check capability availability, then separately inspect repository adoption:
@@ -215,6 +241,15 @@ adoption could not be determined — the usual causes are `jq` missing from
 `PATH` or `oat pjm doctor` failing — and proceed with documentation-only work.
 
 ### Step 2: Read Project Artifacts
+
+**Freestyle sources.** Read `shape.md`'s documents, `decisions.md` `## Live`,
+the lane reports, the project log when present, and the merged changes. Use
+those sources instead of requiring `plan.md` and `implementation.md`; read
+any documents the shape actually names, regardless of their filenames. Verify
+claims against the merged code in Step 3. Missing optional evidence is named,
+never invented. Continue through the same capability inventory, delta plan,
+content approval and documentation tooling in Steps 3–7. The lifecycle-only
+artifact reading list below applies to other modes.
 
 Read all available project artifacts to build an understanding of what was built.
 
@@ -571,6 +606,9 @@ If `$DOCS_CONFIG` exists and new files were created in the docs directory:
 
 ### Step 8: Commit and Update State
 
+For freestyle, use **Freestyle output and consent rules** above and return;
+the remaining state/commit procedure applies only to lifecycle modes.
+
 **8a. Stage and commit documentation changes:**
 
 ```bash
@@ -661,6 +699,7 @@ Next steps:
 - `--auto` mode applies all changes without user interaction
 - New files and splits are handled correctly
 - Docs tooling nav is updated when applicable
-- `oat_docs_updated` state is set correctly in all paths
+- `oat_docs_updated` state is set correctly for lifecycle modes; freestyle reports
+  the outcome without adding lifecycle fields
 - Skill works on both active and completed/archived projects
 - Skill does not modify source code or project phase state (except `oat_docs_updated`)

@@ -12,17 +12,20 @@ proposals. Completion finalizes lifecycle state and any selected archive work.
 
 ## Usual order
 
-A freestyle project has no closeout sequence: summary, document, PR, revise
-and complete each stop for it before writing anything. When its `shape.md`
-done criteria are met, `oat project complete-state <project-path>` marks it
-complete (it needs no closeout snapshot or journal); for a synced project,
-`oat project push <project-path>` then publishes the completed state, subject
-to the publication agreement in `shape.md`; and
-`oat project archive <project-path>` archives it. Archive refuses a synced
-project with unpushed changes. Pull requests open as
-`shape.md` agrees.
+A freestyle project closes through `oat-project-complete` after the user
+confirms `shape.md`'s done criteria. It offers retro and documentation, writes
+only a pending synthesis in an existing log, then runs
+`oat project complete-state <project-path>`; for a synced project,
+`oat project push <project-path>` publishes completed state, subject to the
+publication agreement in `shape.md`; then
+`oat project archive <project-path>` archives it. If the push is withheld,
+completion reports **complete locally; archive pending until the agreed push
+succeeds** and retains the checkout and active pointer. No final review,
+summary or PR is required or run. `oat-project-summary`, `oat-project-pr-final`
+and revise keep their freestyle stops. See
+[Closing a freestyle project](../execution/freestyle-projects.md#closing-the-project).
 
-When no closeout sequence is stored for the project, finish it in this order:
+For lifecycle modes with no stored closeout sequence, finish in this order:
 
 1. `oat-project-summary` records what shipped and why.
 2. `oat-project-document` updates reader documentation. Skip it when nothing
@@ -268,6 +271,12 @@ while the PR is open, its archive-aware flow updates the PR description links.
 
 ## oat-project-retro
 
+**Freestyle:** generate and apply both follow `shape.md` and the project's
+scope for commits and pushes. Use available project records and session
+evidence; missing lifecycle artifacts are normal. Local records remain
+uncommitted. An apply proposal whose required target/writeback receipts cannot
+be saved stays pending, without a fabricated `Applied-ref`.
+
 Use retrospective to explain how execution went and propose changes that can
 improve later work. The summary records the product outcome. The retrospective
 records incidents, lessons, and actionable repository or OAT feedback.
@@ -439,6 +448,13 @@ changes or declare the requested changes complete.
 
 ## oat-project-document
 
+**Freestyle:** use the documents named in `shape.md`, `decisions.md` `## Live`,
+lane reports, the project log and merged changes as evidence. The usual delta
+plan and content approval still apply. No lifecycle plan, journal or
+`oat_docs_updated` state write is required. `--auto` authorizes content, while
+`shape.md` and the scope govern every commit or push; local records stay
+uncommitted. The lifecycle prerequisites below apply to other modes.
+
 Use document to reconcile reader documentation with the project's shipped
 capabilities. It compares artifacts, source code, and existing documentation
 before proposing where information belongs.
@@ -575,6 +591,14 @@ and later project handoff. Refresh it after revisions. Complete the project
 only when its lifecycle closeout requirements are satisfied.
 
 ## oat-project-complete
+
+**Freestyle:** the separate path described above runs before the lifecycle
+entry below. It needs `state.md`, `AGENTS.md` and `shape.md`, uses optional
+retro/document skills only when accepted, and requires no lifecycle gates,
+summary, recap or PR machinery. Its log and archive results follow the
+[freestyle closing flow](../execution/freestyle-projects.md#closing-the-project).
+The prerequisites and mandatory completion actions below apply to lifecycle
+modes.
 
 Use complete when you want to finalize the tracked lifecycle and its selected
 completion actions. Archiving, the project recap, a summary refresh, and PR

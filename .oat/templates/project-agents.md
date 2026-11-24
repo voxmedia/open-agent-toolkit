@@ -252,3 +252,16 @@ an unattended run.
 When a review recorded in `shape.md` comes due, re-check its mechanism before
 using it. If it is unavailable, keep the review's intent, tell the user, log
 it, and reshape: an agreement that stopped working is a reshape trigger.
+
+## Closing the project
+
+Use `oat-project-complete` when the user confirms `shape.md`'s done criteria
+are met. It offers `oat-project-retro` and `oat-project-document`, then runs
+`oat project log synthesize` only when an existing log has pending synthesis
+(keeps an existing synthesis; skips an absent log). It runs
+`oat project complete-state`, then `oat project push` for synced scope as
+`shape.md` agrees, then `oat project archive`. If that push is withheld,
+report complete locally with archive pending until the agreed push succeeds;
+retain the checkout and active pointer. Archive's own commit and publication
+effects also need the shape's agreement. Local records stay uncommitted.
+Freestyle requires no final review, summary or PR; completion runs none of them.

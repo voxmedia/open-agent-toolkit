@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(mkdir:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.10
+  version: 1.0.11
 ---
 
 # Project Retrospective
@@ -27,6 +27,14 @@ Resolve exactly one mode before reading evidence:
 Do not auto-invoke merely because implementation, summary, or completion work
 finished. A configured sequence step or direct confirmation is explicit
 consent to generate.
+
+For both modes, resolve the explicit or active project and read its workflow
+mode with `oat project status --project-path "$PROJECT_PATH" --field project.workflowMode`
+before taking the apply shortcut below. For freestyle, read the project's
+`AGENTS.md` and `shape.md` and follow
+[references/freestyle.md](references/freestyle.md) for evidence and every
+output save. This replaces mandatory commit/push instructions in generate and
+apply; it adds no lifecycle prerequisite.
 
 For apply mode, follow
 [references/apply-procedure.md](references/apply-procedure.md) and skip the
@@ -306,7 +314,9 @@ Verify:
   reused for action outcomes; and
 - no unrelated implementation file changed.
 
-Commit the artifact, project-log append, and any approved apply outputs. Use
+For freestyle, save the artifact, project-log append and approved apply outputs
+only through `references/freestyle.md`; report any uncommitted outputs. For
+other modes, commit the artifact, project-log append, and any approved apply outputs. Use
 one reviewed batch when items are tightly coupled; otherwise use one commit per
 item as described in the apply procedure. Never stage unrelated changes.
 
