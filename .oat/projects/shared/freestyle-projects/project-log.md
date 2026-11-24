@@ -339,6 +339,10 @@ m04 implementation passed p13, p14, p15 and p-rev1 phase reviews and final verif
 
 Accepted integrated findings H1 and M1 on archive publication and recovery, and L1 on lane History. Bounded corrections are queued in p-rev2; freestyle-projects-m04-integrated-fixes
 
+### 2026-11-24 · structural · oat-project-implement · p-rev2
+
+Integrated corrections H1 M1 and L1 passed p-rev2 phase review with no findings; freestyle-projects-m04-revision-accepted
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

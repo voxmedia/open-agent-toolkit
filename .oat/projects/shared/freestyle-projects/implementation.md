@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: p-rev2
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | complete    | 1     | 1/1      |
-| p02    | complete    | 1     | 1/1      |
-| p03    | complete    | 1     | 1/1      |
-| p04    | complete    | 1     | 1/1      |
-| p05    | complete    | 1     | 1/1      |
-| p07    | complete    | 1     | 1/1      |
-| p10    | complete    | 1     | 1/1      |
-| p08    | complete    | 1     | 1/1      |
-| p11    | complete    | 1     | 1/1      |
-| p12    | complete    | 1     | 1/1      |
-| p13    | complete    | 1     | 1/1      |
-| p14    | complete    | 1     | 1/1      |
-| p15    | complete    | 1     | 1/1      |
-| p-rev1 | complete    | 1     | 1/1      |
-| p-rev2 | in_progress | 1     | 0/1      |
+| Phase  | Status   | Units | Accepted |
+| ------ | -------- | ----- | -------- |
+| p01    | complete | 1     | 1/1      |
+| p02    | complete | 1     | 1/1      |
+| p03    | complete | 1     | 1/1      |
+| p04    | complete | 1     | 1/1      |
+| p05    | complete | 1     | 1/1      |
+| p07    | complete | 1     | 1/1      |
+| p10    | complete | 1     | 1/1      |
+| p08    | complete | 1     | 1/1      |
+| p11    | complete | 1     | 1/1      |
+| p12    | complete | 1     | 1/1      |
+| p13    | complete | 1     | 1/1      |
+| p14    | complete | 1     | 1/1      |
+| p15    | complete | 1     | 1/1      |
+| p-rev1 | complete | 1     | 1/1      |
+| p-rev2 | complete | 1     | 1/1      |
 
-**Total:** 14/15 phases accepted
+**Total:** 15/15 phases accepted
 
 ---
 
@@ -2058,7 +2058,7 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 ## Phase p-rev2: Resolve m04 integrated review findings
 
-**Status:** in_progress
+**Status:** completed
 **Base:** b270a5c05349431b0ac61f7a0333771ac0eca63d
 **Head:** 243acef2aae94895e4a6815ee26bf724a8b7c7ea
 **Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
@@ -2093,6 +2093,12 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 
 **Commit:** 8a9d9275b1fa011c1441af8c4e9c145555454fae
 **Verification:** pass — 46 lane ledger/command controls, scoped lint, formatting and CLI build all exit 0. Four handle replacement/clearing controls fail on the pre-fix code with the false no-op wording, then pass with value-free `handles updated`; true no-op assertions remain passing.
+
+### Review Received: p-rev2
+
+- Reviewer: `freestyle-projects-p-rev2-review-1`, GPT-6.1 Sol high, on `b270a5c05..243acef2`.
+- Artifact: `reviews/archived/p-rev2-review-2026-11-24T212749Z.md` (local).
+- Outcome: passed with no findings. All archive-publication, terminal-ref and lane-History controls were verified. H1/M1 changed in `5ab19373d`; L1 changed in `8a9d9275b`. The approved manual integrated confirmation follows.
 
 ---
 
@@ -2160,6 +2166,7 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 - Root-inline phase: p-rev1 · reason: one dashboard reader and its regression control · root model: gpt-6.2-sol
 - run/v1 · request=freestyle-projects-p-rev1-review-1 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p-rev2-implementation-1 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p-rev2-review-1 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
