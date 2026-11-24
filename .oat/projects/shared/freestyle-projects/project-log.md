@@ -327,6 +327,10 @@ p15 accepted after one review-fix round and passing confirmation; freestyle-proj
 
 Added a narrow p13 revision after reproducing the dashboard display regression from quoted pause reasons; freestyle-projects-pause-display-revision
 
+### 2026-11-24 · structural · oat-project-implement · p-rev1
+
+Dashboard display correction accepted after isolated tests and independent review with no findings; freestyle-projects-pause-dashboard-accepted
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: p-rev1
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,24 +39,24 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | complete    | 1     | 1/1      |
-| p02    | complete    | 1     | 1/1      |
-| p03    | complete    | 1     | 1/1      |
-| p04    | complete    | 1     | 1/1      |
-| p05    | complete    | 1     | 1/1      |
-| p07    | complete    | 1     | 1/1      |
-| p10    | complete    | 1     | 1/1      |
-| p08    | complete    | 1     | 1/1      |
-| p11    | complete    | 1     | 1/1      |
-| p12    | complete    | 1     | 1/1      |
-| p13    | complete    | 1     | 1/1      |
-| p14    | complete    | 1     | 1/1      |
-| p15    | complete    | 1     | 1/1      |
-| p-rev1 | in_progress | 1     | 0/1      |
+| Phase  | Status   | Units | Accepted |
+| ------ | -------- | ----- | -------- |
+| p01    | complete | 1     | 1/1      |
+| p02    | complete | 1     | 1/1      |
+| p03    | complete | 1     | 1/1      |
+| p04    | complete | 1     | 1/1      |
+| p05    | complete | 1     | 1/1      |
+| p07    | complete | 1     | 1/1      |
+| p10    | complete | 1     | 1/1      |
+| p08    | complete | 1     | 1/1      |
+| p11    | complete | 1     | 1/1      |
+| p12    | complete | 1     | 1/1      |
+| p13    | complete | 1     | 1/1      |
+| p14    | complete | 1     | 1/1      |
+| p15    | complete | 1     | 1/1      |
+| p-rev1 | complete | 1     | 1/1      |
 
-**Total:** 13/14 phases accepted
+**Total:** 14/14 phases accepted
 
 ---
 
@@ -2030,7 +2030,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 ## Phase p-rev1: Render quoted pause reasons in the dashboard
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 0d6f528dfc5dd72710c300ed9d2ebde8ef6b0e9b
 **Head:** 9d578becd0cedcc271ebc6e90f5b9f9449baab37
 **Executor:** inline:pause-dashboard
@@ -2046,6 +2046,12 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 **Intent:** Read YAML pause text before rendering the dashboard, preserving legacy reasons and Markdown table structure.
 **Files:** `packages/cli/src/commands/state/generate.ts`, `packages/cli/src/commands/state/generate.test.ts`.
 **Proof:** Isolated-HOME dashboard Vitest suite with an actual generated dashboard and an unquoted legacy control. The old reader reproduced the truncation at the hash (one failed, one passing legacy control). The fixed dashboard and pause suites passed all 82 tests on pinned Node 22.23.4.
+
+### Review Received: p-rev1
+
+- Reviewer: `freestyle-projects-p-rev1-review-1`, GPT-6.1 Sol high, on `0d6f528df..9d578becd`.
+- Artifact: `reviews/archived/p-rev1-review-2026-11-24T205542Z.md` (local).
+- Outcome: passed with no findings. The new dashboard control failed on the old reader with the legacy control still passing. The fix decodes the value, preserves the table, and uses no new parser or project behavior.
 
 ---
 
@@ -2111,6 +2117,7 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 - run/v1 · request=freestyle-projects-p15-fix-1 · scope=p15 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-freestyle-projects-p15-fix-1 · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p15-review-2 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p-rev1 · reason: one dashboard reader and its regression control · root model: gpt-6.2-sol
+- run/v1 · request=freestyle-projects-p-rev1-review-1 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
