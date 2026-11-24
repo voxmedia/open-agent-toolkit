@@ -4,7 +4,7 @@ Apply these overrides in both generate and apply mode, including every output
 of `references/apply-procedure.md`. The normal evidence-quality, proposal,
 content-consent, idempotence and walkthrough rules still apply. Resolve scope
 with `oat project scope "$PROJECT_PATH" --format value` and stop on failure.
-For synced scope, run `oat --json project pull "$PROJECT_PATH" --no-children --no-commit`.
+For synced scope, run `oat project pull "$PROJECT_PATH" --no-children --no-commit --json`.
 If the result is `status: "dirty"`, compare its reported `sha` with the fetched
 `ref` using `git rev-parse --verify "<ref>^{commit}"` from the repository root.
 Continue only when they match and keep the local edits in place. On a mismatch,

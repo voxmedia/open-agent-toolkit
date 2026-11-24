@@ -97,7 +97,7 @@ Use the repository root and resolved `PROJECT_PATH` from Step 1. Resolve scope
 with `oat project scope "$PROJECT_PATH" --format value` and stop on failure.
 If an ordinary synced checkout is absent, report `oat project pull <slug>` and
 resume after the user brings it here. For a present synced checkout, run
-`oat --json project pull "$PROJECT_PATH" --no-children --no-commit`. If the
+`oat project pull "$PROJECT_PATH" --no-children --no-commit --json`. If the
 result is `status: "dirty"`, compare its reported `sha` with the fetched `ref`
 using `git rev-parse --verify "<ref>^{commit}"` from the repository root.
 Continue only when they match. Keep the local edits in place. On a mismatch,
