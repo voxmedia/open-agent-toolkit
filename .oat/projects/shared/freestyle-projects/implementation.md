@@ -1884,7 +1884,14 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 **Status:** in_progress
 **Base:** a344c4b7feb522b7983c8f8bc205b47369679101
+**Head:** b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317
 **Executor:** phase-implementer:freestyle-projects-p14-implementation-1
+
+**Verification:** Passed at clean committed HEAD `b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317`, with implementation bytes unchanged from the tested inputs of `60a1e7b544c02f49347009a7907af394699a2c6d`. Phase-boundary `pnpm check`, `pnpm type-check` and isolated-HOME `pnpm test` exited 0; workspace tasks replayed 11/11, 11/11 and 12/12 respectively, while root validation/format and smoke (165), skills (754), scripts (7) ran live. The pre-commit final-input workspace tests ran uncached (CLI 458 files / 10037 tests), as did 1367 prose contract tests and 73 focused freestyle contracts. Build and docs build passed from cache, with direct docs index generation and manifest freshness exit 0. Darwin arm64, pinned Node 22.23.4, pnpm 10.13.1; unchanged integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. Phase logs: `/tmp/p14-phase-{check,types,test}.log`.
+
+**Recovery:** Prior and final usage 0/10, remaining 10; no pending attempt or recovery event. Initial pre-commit bundle-routing omissions and stale pins were corrected before the task commit.
+
+**Milestone coordination:** Root owns fresh-context docs/code review. No manual scratch-project runs were performed. Skill/package version bumps and release gates remain assigned to p15.
 
 One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules this phase sequentially. Its templates, skills and docs share contract tests and generated assets, so there is no independent fan-out.
 
@@ -1900,6 +1907,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 - Verification: all commands exited 0 on the implementation inputs, whose SHA-256 checksums remained identical after the hook-safe commit. Focused freestyle contracts: 73 tests. Isolated skill-prose contracts: 33 files, 1367 tests. Full isolated `pnpm test`: CLI 458 files / 10037 tests, plus the other workspace packages, smoke 165, skills 754, scripts 7. `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`, `pnpm build`, `pnpm build:docs`, direct docs index generation and manifest freshness passed. Runtime: Darwin arm64, pinned Node 22.23.4, pnpm 10.13.1; base `c840893ec1488c364192db391e1162cfd1ae618f`, unchanged `origin/main` `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. Logs: `/tmp/p14-{check,types,test,lint,format}-final.log`, `/tmp/p14-prose-final.log`, `/tmp/p14-{build,docs,index}.log`.
 - Cache evidence: check 0/11; type-check 5/11; test 5/12 (the five build dependencies replayed, all seven workspace test tasks ran); lint and format each 5/10; build 5/5 and docs build 6/6. Focused and prose Vitest runs executed directly, without Turbo cache. Direct docs manifest generation ran even though docs build replayed.
+- Cache-count correction: the seven cache misses in the pre-commit full run were six workspace test tasks plus the docs build; the five other build tasks replayed. The previous line's "seven workspace test tasks" wording over-counted tests by one.
 - Conservation review: Dispatch, Lane brief, Lane reports and Lane placement moved intact except the approved report routes, precise core ignore path, and rebase guidance. Existing protections moved to guide reads rather than being removed. Single-writer ownership, remote/read-only final reports, p13 publication wording and runtime behavior remain intact. No instruction changes outside these OAT-owned templates are needed.
 - Fixture rationale: protects against missing-heading refresh failing an actual m03 template; the existing synthetic m01/current fixtures cannot prove that version's headings. The captured source names m03 merge `80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a` in its provenance header.
 - Mechanical asset routing: enrolled the new template in both `packages/cli/scripts/bundle-inputs.mjs` and `packages/cli/src/commands/tools/shared/pack-manifest.ts`. Initial focused/prose/full checks caught the missing entries and stale pins before the implementation commit; all were corrected and checks rerun as prevention. Recovery usage remains 0/10, remaining 10, no pending attempt or recovery event.
