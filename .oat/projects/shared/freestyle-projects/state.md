@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p-rev2
 oat_last_commit: 9d578becd0cedcc271ebc6e90f5b9f9449baab37
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -51,7 +51,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: goal # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 oat_milestone: m04
-oat_milestone_status: reviewing
+oat_milestone_status: implementing
 oat_goal_status: active
 oat_goal_outcome_audit: null
 oat_goal_recovery: null
@@ -149,8 +149,8 @@ oat_milestone_gates:
       subject:
         kind: code
         scope: [p13, p14, p15, p-rev1]
-      freshness: fresh
-      freshness_reason: null
+      freshness: stale
+      freshness_reason: integrated review fixes in p-rev2
       decided_at: '2026-11-24T20:57:59Z'
 oat_deliveries:
   - delivery_id: d01

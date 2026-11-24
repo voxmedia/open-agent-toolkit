@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: null
+oat_current_task_id: p-rev2
 oat_generated: false
 oat_template: false
 ---
@@ -55,8 +55,9 @@ oat_template: false
 | p14    | complete | 1     | 1/1      |
 | p15    | complete | 1     | 1/1      |
 | p-rev1 | complete | 1     | 1/1      |
+| p-rev2 | pending  | 1     | 0/1      |
 
-**Total:** 14/14 phases accepted
+**Total:** 14/15 phases accepted
 
 ---
 
@@ -2055,6 +2056,15 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 ---
 
+## Phase p-rev2: Resolve m04 integrated review findings
+
+**Status:** pending
+**Corrects:** p15
+
+This revision also corrects p13’s History description. H1 and M1 check publication and recovery already promised in Outcomes 11 and 13. L1 preserves accurate History when a handle value is omitted.
+
+---
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -2121,6 +2131,12 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: m04 (round 1)
+
+- Manual GPT-6.2 Astra high reviewed scope p13, p14, p15, p-rev1 at `9d578becd`. Artifact `reviews/archived/m04-integrated-review-2026-11-24T210432Z.md`.
+- H1 (High): archive may publish to S3 from local scope. M1 (Medium): a retained terminal alias can incorrectly recommend pull. L1 (Low): a handle-only update can say no change.
+- **Finding classes:** H1 accepted-requirement (Outcomes 11 and 13 and the post-creation publication constraint); M1 accepted-requirement (Outcome 13 and p15 archive recovery); L1 regression (Outcome 11’s existing History behavior). All three go to p-rev2. No scope change.
 
 - m04 milestone exit for p13, p14, p15 and p-rev1. The CLI resolved the configured implement gate as project-disabled and the scope-specific delivery check read the exit carrier as allowed and fresh. The pending integrated review remains the approved GPT-6.2 Astra high review.
 - m04 Definition of Done ran against product inputs at `9d578becd0cedcc271ebc6e90f5b9f9449baab37` on Darwin arm64, Node 22.23.4 and pnpm 10.13.1 with an isolated test home. Check, types, tests, build, skill bumps, release version check, release validation, docs build and direct manifest freshness exited 0. The CLI suite executed uncached with 10,047 passes. Smoke, skills and script suites passed 165, 754 and 7 tests. Direct Git fetch exited 128 because transport to GitHub was unreachable. Two GitHub API reads resolved live `main` to `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, the local `origin/main` commit used by the passing version check. Version 0.3.60 validated for all five public packages. Local exact exit and command logs are in `references/analysis/m04-run.y8WuGm/dashboard-gates.tsv` and its sibling `dashboard-*.log` files.

@@ -335,6 +335,10 @@ Dashboard display correction accepted after isolated tests and independent revie
 
 m04 implementation passed p13, p14, p15 and p-rev1 phase reviews and final verification; configured exit gate is project-disabled, with integrated review next; freestyle-projects-m04-exit
 
+### 2026-11-24 · structural · oat-project-implement · m04
+
+Accepted integrated findings H1 and M1 on archive publication and recovery, and L1 on lane History. Bounded corrections are queued in p-rev2; freestyle-projects-m04-integrated-fixes
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

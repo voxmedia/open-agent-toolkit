@@ -141,12 +141,12 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 
 ## Milestones
 
-| Milestone | Phases                |
-| --------- | --------------------- |
-| m01       | p01, p02, p03, p04    |
-| m02       | p05, p07, p10, p08    |
-| m03       | p11, p12              |
-| m04       | p13, p14, p15, p-rev1 |
+| Milestone | Phases                        |
+| --------- | ----------------------------- |
+| m01       | p01, p02, p03, p04            |
+| m02       | p05, p07, p10, p08            |
+| m03       | p11, p12                      |
+| m04       | p13, p14, p15, p-rev1, p-rev2 |
 
 ## Phase p01: Mode recognition and opt-outs
 
@@ -236,6 +236,14 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 
 ---
 
+## Phase p-rev2: Resolve m04 integrated review findings
+
+**Intent:** Preserve all scopes’ archive-publication consent (H1), route validated retained terminal refs through archive recovery (M1), and distinguish handle-only lane History updates from genuine no-ops without revealing values (L1). This corrects accepted p15 and p13 behavior without changing the approved outcomes.
+**Exit evidence:** Archive publication and first-selector controls preserve local/no-upload and ordinary unpulled behavior. A lane-history control preserves value omission and actual no-op wording. The focused suites and milestone gates pass and review confirms the corrections.
+**Provisional:** no
+
+---
+
 ## Parallelism
 
 Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
@@ -285,6 +293,8 @@ Default is `[]` (fully sequential, no worktrees).
 | p15    | code     | fixes_completed | 2026-11-24 | reviews/archived/p15-code-review-2026-11-24T195617Z.md       | 4234ff23ec375249747f49e3bce818dff854df2c | auto       | -           |
 | p15    | code     | passed          | 2026-11-24 | reviews/archived/p15-code-review-2026-11-24T201707Z.md       | 68cbbdfd71641e692f3d2bb44ab127e8add2946d | auto       | -           |
 | p-rev1 | code     | passed          | 2026-11-24 | reviews/archived/p-rev1-review-2026-11-24T205542Z.md         | 9d578becd0cedcc271ebc6e90f5b9f9449baab37 | auto       | -           |
+| p-rev2 | code     | pending         | -          | -                                                            | -                                        | -          | -           |
+| m04    | code     | fixes_added     | 2026-11-24 | reviews/archived/m04-integrated-review-2026-11-24T210432Z.md | 9d578becd0cedcc271ebc6e90f5b9f9449baab37 | manual     | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 
