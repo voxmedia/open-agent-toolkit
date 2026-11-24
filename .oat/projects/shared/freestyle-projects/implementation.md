@@ -2060,10 +2060,13 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 **Status:** in_progress
 **Base:** b270a5c05349431b0ac61f7a0333771ac0eca63d
+**Head:** 243acef2aae94895e4a6815ee26bf724a8b7c7ea
 **Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
 **Corrects:** p15
 
 This revision also corrects p13’s History description. H1 and M1 check publication and recovery already promised in Outcomes 11 and 13. L1 preserves accurate History when a handle value is omitted.
+
+**Phase verification:** pass at committed clean HEAD `243acef2aae94895e4a6815ee26bf724a8b7c7ea`, Darwin arm64, Node 22.23.4, pnpm 10.13.1. Dispatch base `1a8b8e69264b4be20dff995757dff15c0e189171`; integration/version base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, freshly fetched before phase work and release checks. No dependency or configuration changes. `pnpm check`, `pnpm type-check`, `pnpm test:evidence` (isolated self-removing HOME; all 12 Turbo tasks executed, zero cache replays), isolated standalone `test:smoke`, `test:skills`, `test:scripts`, `pnpm build`, post-commit `check:skill-bumps`, fetch, `release:check-versions`, `release:validate`, `build:docs`, direct docs-index generation/freshness, `pnpm lint` and `pnpm format` all exit 0 in that order. The CLI passed 10,058 tests in 459 files; smoke, skills and scripts passed 165, 754 and 7. Build/docs gates reused Turbo cache; direct manifest freshness ran independently. Exact commands/exits, runtime and inputs are in `references/analysis/m04-rev2-run.7HAY5t/{gates.tsv,inputs.json}` with adjacent logs. Prior 120 completion-script and 1,383 skill prose/validation passes remain applicable; the full run also covers those committed inputs. Negative fixtures and valid controls are retained in the same directory. No scratch project or live publication was used. Recovery remains 0/10, pending attempt null, remaining capacity 10; no reservation or event occurred. Independent acceptance remains root-owned.
 
 ### Task prev2-t01: (review) Honor archive authority and terminal alias routing
 
