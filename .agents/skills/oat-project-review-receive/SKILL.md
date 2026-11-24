@@ -478,8 +478,8 @@ unmet, so the existing cycle cap and exhaustion stop apply.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
 - If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
   - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
-    - The gate verdict decided whether the phase stops; it did **not** decide whether Medium/Low findings are ignored. There are, by definition, no unresolved Critical/High findings in a passing gate (if there were, the gate would have blocked).
-    - Make a per-finding **judgment call** for each Medium/Low — do not mechanically dump them all:
+    - The gate verdict decided whether the phase stops; it did **not** decide whether the findings below the threshold are ignored. At the `critical` threshold those include High findings; address each of them now unless a concrete reason supports rejecting it.
+    - Make a per-finding **judgment call** for each finding below the threshold — do not mechanically dump them all:
       - **Address now:** for small, contained, low-risk fixes that are worth making. Apply the fix, commit it with the phase bookkeeping, and record the disposition. Do **not** re-run the standard reviewer or re-gate the phase for address-now fixes.
       - **Reject** as false-positive, out-of-scope, or true but not worth its cost (an unlikely edge case, a test for one, polish nobody will miss), with concrete rationale.
       - **Defer to final:** only for a finding that meets the Step 9 deferral bar. Record one line under the journal's `## Deferred Findings` section (Mediums tagged `Medium` so Step 8.5 resurfacing picks them up) with the finding ID and substance and concrete rationale.
