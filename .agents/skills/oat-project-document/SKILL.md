@@ -4,7 +4,7 @@ description: Use when the user requests or confirms documenting an active OAT pr
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat project check-state:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat project check-state:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project pull:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
   version: 1.8.19
 ---
@@ -135,10 +135,15 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   ```bash
   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
   ```
-  For `oat_workflow_mode: freestyle`, read the project's `AGENTS.md` and
-  `shape.md`, resolve scope with `oat project scope`, and confirm this is the
-  claimed orchestrator checkout before any record write. Use the freestyle
-  sources in Step 2; do not require a lifecycle plan or journal.
+  For `oat_workflow_mode: freestyle`, resolve scope with
+  `oat project scope "$PROJECT_PATH" --format value` and stop on failure. For
+  synced scope, run `oat project pull "$PROJECT_PATH"`, or reuse the successful
+  pull for this exact checkout when called by freestyle completion in the same
+  invocation. If the pull fails, stop and report its diagnostic. Recheck mode
+  after the pull, then read the project's `AGENTS.md` and `shape.md`.
+  Confirm this is the claimed orchestrator checkout before any record write.
+  Use the freestyle sources in Step 2 without requiring a lifecycle plan or
+  journal.
 - For other modes, verify at least one of `plan.md` or `implementation.md`
   exists (need to know what was built).
 - If validation fails, report the error and STOP

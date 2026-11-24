@@ -62,6 +62,37 @@ describe('freestyle closing skills (p15, Outcome 13)', () => {
     expect(completion).toContain('it is not a completion gate');
   });
 
+  it.each([
+    [
+      'complete',
+      completion
+        .split('## 1. Resolve the project and confirm done')[1]!
+        .split('## 2.')[0]!,
+    ],
+    [
+      'document',
+      skill('document')
+        .split('For `oat_workflow_mode: freestyle`,')[1]!
+        .split('For other modes')[0]!,
+    ],
+    [
+      'retro',
+      read('.agents/skills/oat-project-retro/references/freestyle.md').split(
+        '## Evidence',
+      )[0]!,
+    ],
+  ])('refreshes synced %s records before using the shape', (_skill, entry) => {
+    const scope = 'oat project scope "$PROJECT_PATH" --format value';
+    const pull = 'oat project pull "$PROJECT_PATH"';
+    const policy = "read the project's `AGENTS.md` and `shape.md`";
+    expect(entry.indexOf(scope)).toBeGreaterThanOrEqual(0);
+    expect(entry.indexOf(pull)).toBeGreaterThan(entry.indexOf(scope));
+    expect(entry.toLowerCase().indexOf(policy.toLowerCase())).toBeGreaterThan(
+      entry.indexOf(pull),
+    );
+    expect(entry).toContain('If the pull fails, stop');
+  });
+
   it('skips an absent log, writes pending synthesis, and preserves existing synthesis', () => {
     expect(completion).toContain(
       '`status: "absent"`: skip synthesis; do not create `project-log.md`',

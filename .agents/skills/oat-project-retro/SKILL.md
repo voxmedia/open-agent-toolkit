@@ -3,7 +3,7 @@ name: oat-project-retro
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(mkdir:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(mkdir:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project pull:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
   version: 1.0.11
 ---
@@ -30,10 +30,9 @@ consent to generate.
 
 For both modes, resolve the explicit or active project and read its workflow
 mode with `oat project status --project-path "$PROJECT_PATH" --field project.workflowMode`
-before taking the apply shortcut below. For freestyle, read the project's
-`AGENTS.md` and `shape.md` and follow
-[references/freestyle.md](references/freestyle.md) for evidence and every
-output save. This replaces mandatory commit/push instructions in generate and
+before taking the apply shortcut below. For freestyle, follow
+[references/freestyle.md](references/freestyle.md) for arrival, evidence and
+every output save. This replaces mandatory commit/push instructions in generate and
 apply; it adds no lifecycle prerequisite.
 
 For apply mode, follow

@@ -306,6 +306,10 @@ lifecycle plan or journal. Their commits and pushes follow `shape.md` and the
 scope: local records stay uncommitted. Retro apply proposals stay pending when
 their required durable receipts cannot be saved.
 
+On an active synced project, completion, documentation and retro refresh the
+checkout before reading the shape. A failed pull stops that run. Optional work
+invoked by completion uses the checkout that completion already refreshed.
+
 Completion synthesizes an existing project log only while synthesis is pending,
 keeps an existing synthesis and skips an absent log. It then runs
 `oat project complete-state <project-path>`. For synced scope it runs the

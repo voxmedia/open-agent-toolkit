@@ -3,9 +3,12 @@
 Apply these overrides in both generate and apply mode, including every output
 of `references/apply-procedure.md`. The normal evidence-quality, proposal,
 content-consent, idempotence and walkthrough rules still apply. Resolve scope
-with `oat project scope "$PROJECT_PATH" --format value` and stop on failure;
-read the project's `AGENTS.md` and `shape.md` and require the claimed
-orchestrator checkout before record writes.
+with `oat project scope "$PROJECT_PATH" --format value` and stop on failure.
+For synced scope, run `oat project pull "$PROJECT_PATH"`, or reuse the
+successful pull for this exact checkout when called by freestyle completion in
+the same invocation. If the pull fails, stop and report its diagnostic.
+Recheck mode after the pull, then read the project's `AGENTS.md` and `shape.md`.
+Require the claimed orchestrator checkout before record writes.
 
 ## Evidence
 
