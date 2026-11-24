@@ -2060,7 +2060,7 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 **Status:** completed
 **Base:** b270a5c05349431b0ac61f7a0333771ac0eca63d
-**Head:** cd23122a4bc5d9888528f71e93557cc78a778828
+**Head:** e3a48922b299aaefe23620b02f09faf978d1b28c
 **Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
 **Corrects:** p15
 
@@ -2108,6 +2108,15 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 **Source review:** PR #433 Bugbot stale synced reads.
 **Intent:** Refresh the selected synced records before the completion, documentation and retrospective paths read the shape. Stop on pull failure. Optional work can reuse the successful refresh of the same checkout within completion.
 **Proof:** Isolated CLI Vitest closeout, archive retry and pull suites passed all 93 tests. The three ordering cases failed before the fix. The pull suite verifies skipping child pulls and leaving adopted discovery records uncommitted.
+
+### Task prev2-t04: (review) Preserve closeout retries with local records
+
+**Status:** completed
+**Commit:** e3a48922b299aaefe23620b02f09faf978d1b28c
+**Executor:** root
+**Source review:** PR #433 Bugbot closeout pull blocks unpushed checkouts.
+**Intent:** Accept a dirty synced checkout only when its HEAD matches the fetched active ref. Select the terminal receipt path for a verified completed ref even if the checkout remains. Maintain the existing skill permission prefix and autonomy inventory.
+**Proof:** Closeout, skill validation and autonomy inventory suites passed 314 tests. Both live-checkout terminal cases failed when the pre-fix selector was restored. After the permission-prefix correction, 26 focused tests passed and a rejected input confirmed trailing `--json` yields a structured response.
 
 ---
 
@@ -2179,6 +2188,12 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: d04 (PR #433 closeout retry)
+
+- **Finding classes:** terminal checkout and dirty records regression (synced refresh could block receipt recovery and previously allowed uncommitted local closeout); pull invocation prefix regression (standalone skill permission declarations).
+- The rerun finding is fixed by `2fe9535e` and the independent review's permission-prefix finding by `e3a48922`. The autonomy gate inventory validation passes after updating two existing site mappings.
+- GPT-6.2 Astra high confirmed the final delta at `e3a48922b299aaefe23620b02f09faf978d1b28c`. Artifact `reviews/archived/d04-integrated-review-2026-11-24T232127Z.md` (local), building on the preceding d04 review. The scoped exit carrier remains allowed under the project's configured override.
 
 ### Review Received: d04 (PR #433)
 
