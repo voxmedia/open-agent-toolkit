@@ -1929,6 +1929,60 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules this phase sequentially. Its templates, skills and docs share contract tests and generated assets, so there is no independent fan-out.
 
+### Task p15-t01: Close freestyle projects through scope-aware skills
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p15-implementation-1
+**Handle:** /root/p15 (Codex native, managed high)
+**Commit:** 279d129e5c64fd2c5e2fd90d5be708c9e8310bfa
+
+**Intent:** Implement Outcome 13 across completion, documentation and retro guidance, its scaffold and human docs; preserve lifecycle mode behavior and summary/PR stops; apply m04 skill and lockstep version bumps.
+**Files:** Completion/document/retro skills and references; freestyle skill metadata and project-agents template; closeout/freestyle docs, README and CLI README; skill applicability catalog; CLI skill contract tests; five public package manifests.
+**Proof command:** Isolated-HOME `pnpm test` (includes CLI skill contracts/validation and complete-state/archive/push/log suites), `pnpm check`, `pnpm type-check`, `pnpm build`, `pnpm lint`, `pnpm format`. Committed-history version/release and docs gates run at the phase boundary.
+**Recovery capacity:** limit 10, used 0, remaining 10, pending_attempt null; report any post-commit defect to root before reservation.
+
+**Verification:** All task checks exited 0 on the exact final owned inputs from `53740e39d30c25f1bd8d2541bd3ea91ba276d6b6`; the task commit retains their byte-identical contents (input manifest SHA-256 `79e7aa42781f73467722d146cc6c86200fb8afa04e6f7f4e76e9246ede0e997c`, `/tmp/p15-tested-inputs.json`). CLI executed 10,044 tests in 459 files; smoke 165, skills 754 and scripts 7 passed. The seven new text-contract tests also passed after two can-fail probes: removing the retained-pointer clause and document's no-commit clause each failed its intended assertion, then all original bytes were restored. These probes verify instruction contracts, not live skill execution. Node 22.23.4, pnpm 10.13.1, Darwin arm64, isolated HOME; workspace test tasks were cache misses, build 5/5 cached, check/type-check mixed cached/live. Logs: `/tmp/p15-{check-final,types-final,test,build,lint,format}.log`, `/tmp/p15-negative-{1,2,restored}.log`.
+
+**Scope observations:** No CLI command behavior changed. The new writer required its synced-bookkeeping inventory entry; named-skill loads and unreachable freestyle prompt sites required inventory updates. The prompt inventory is the canonical `.agents/docs/autonomy-contract.md` via the gate-inventory symlink, so all eight linking skills received the required PR-scoped version bump. Other lifecycle paths changed only those metadata versions and their pins. The new closing branch replaces the obsolete freestyle complete/document stop assertions; summary and pr-final stops remain. Retro application proposals remain pending when their existing durable target/writeback receipt requirements cannot be met under the shape/scope.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md`
+- `.agents/skills/oat-project-complete/references/freestyle-completion.md`
+- `.agents/skills/oat-project-document/SKILL.md`
+- `.agents/skills/oat-project-retro/SKILL.md`
+- `.agents/skills/oat-project-retro/references/freestyle.md`
+- `.agents/skills/oat-project-retro/references/evidence-and-lanes.md`
+- `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- `.oat/templates/project-agents.md`
+- `.agents/skills/oat-project-freestyle/SKILL.md`
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+- `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`
+- `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+- `apps/oat-docs/docs/workflows/projects/closeout/retro.md`
+- `README.md`
+- `packages/cli/README.md`
+- `apps/oat-docs/skill-docs.json`
+- `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`
+- `packages/cli/src/validation/skills.test.ts`
+- `packages/cli/src/commands/init/tools/shared/freestyle-closeout-contracts.test.ts`
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- `packages/cli/src/validation/synced-bookkeeping-sites.json`
+- `.agents/skills/oat-project-autonomous/SKILL.md`
+- `packages/cli/src/validation/named-skill-load-contract.test.ts`
+- `packages/cli/assets/public-package-versions.json`
+- `.agents/skills/oat-project-brief/SKILL.md`
+- `.agents/skills/oat-project-goal/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.agents/skills/oat-project-lite/SKILL.md`
+- `.agents/skills/oat-project-pr-final/SKILL.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `.agents/docs/autonomy-contract.md`
+
 ---
 
 ## Orchestration Runs
