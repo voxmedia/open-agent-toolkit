@@ -2030,10 +2030,12 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 ## Phase p-rev1: Render quoted pause reasons in the dashboard
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 0d6f528dfc5dd72710c300ed9d2ebde8ef6b0e9b
+**Executor:** inline:pause-dashboard
 **Corrects:** p13
 
-The branch CLI reproduced the issue in the dashboard's line-based reader. An ordinary quoted reason retains its quotes and a hash truncates the value. This correction preserves the existing dashboard display and adds no new project behavior.
+The branch CLI reproduced the issue in the dashboard's line-based reader. An ordinary quoted reason retains its quotes and a hash truncates the value. This correction preserves the existing dashboard display and adds no new project behavior. The root executes this one-reader correction inline. It uses the existing YAML parser and dashboard test with no new surface or design decision.
 
 ---
 
@@ -2098,6 +2100,7 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 - run/v1 · request=freestyle-projects-p15-review-1 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p15-fix-1 · scope=p15 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-freestyle-projects-p15-fix-1 · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p15-review-2 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p-rev1 · reason: one dashboard reader and its regression control · root model: gpt-6.2-sol
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
