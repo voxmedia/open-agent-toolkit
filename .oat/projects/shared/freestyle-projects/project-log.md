@@ -351,6 +351,10 @@ m04 exit refreshed after p-rev2 acceptance and passing final gates; freestyle-pr
 
 m04 manual integrated confirmation passed on all five accepted phase units; H1 M1 and L1 resolved and exit fresh; freestyle-projects-m04-integrated-passed
 
+### 2026-11-24 · structural · oat-project-pr-progress · d04
+
+Registered d04 for m04 (p13, p14, p15, p-rev1, p-rev2) at https://github.com/voxmedia/open-agent-toolkit/pull/433. Key: freestyle-projects-register-d04
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
