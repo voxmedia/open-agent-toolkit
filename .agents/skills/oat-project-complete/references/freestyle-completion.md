@@ -97,7 +97,7 @@ Use the repository root and resolved `PROJECT_PATH` from Step 1. Resolve scope
 with `oat project scope "$PROJECT_PATH" --format value` and stop on failure.
 If an ordinary synced checkout is absent, report `oat project pull <slug>` and
 resume after the user brings it here. For a present synced checkout, run
-`oat project pull "$PROJECT_PATH"`. If the pull fails, stop and report its
+`oat project pull "$PROJECT_PATH" --no-children --no-commit`. If the pull fails, stop and report its
 diagnostic. Run `oat project status --project-path "$PROJECT_PATH"` after the
 pull for synced scope. Require freestyle mode, then read the project's
 `AGENTS.md` and `shape.md`. Before any record write, require the claimed

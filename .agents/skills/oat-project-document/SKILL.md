@@ -137,7 +137,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
   ```
   For `oat_workflow_mode: freestyle`, resolve scope with
   `oat project scope "$PROJECT_PATH" --format value` and stop on failure. For
-  synced scope, run `oat project pull "$PROJECT_PATH"`, or reuse the successful
+  synced scope, run `oat project pull "$PROJECT_PATH" --no-children --no-commit`, or reuse the successful
   pull for this exact checkout when called by freestyle completion in the same
   invocation. If the pull fails, stop and report its diagnostic. Recheck mode
   after the pull, then read the project's `AGENTS.md` and `shape.md`.

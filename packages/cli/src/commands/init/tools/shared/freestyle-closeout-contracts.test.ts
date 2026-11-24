@@ -83,7 +83,7 @@ describe('freestyle closing skills (p15, Outcome 13)', () => {
     ],
   ])('refreshes synced %s records before using the shape', (_skill, entry) => {
     const scope = 'oat project scope "$PROJECT_PATH" --format value';
-    const pull = 'oat project pull "$PROJECT_PATH"';
+    const pull = 'oat project pull "$PROJECT_PATH" --no-children --no-commit';
     const policy = "read the project's `AGENTS.md` and `shape.md`";
     expect(entry.indexOf(scope)).toBeGreaterThanOrEqual(0);
     expect(entry.indexOf(pull)).toBeGreaterThan(entry.indexOf(scope));
