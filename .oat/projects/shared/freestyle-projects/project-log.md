@@ -343,6 +343,10 @@ Accepted integrated findings H1 and M1 on archive publication and recovery, and 
 
 Integrated corrections H1 M1 and L1 passed p-rev2 phase review with no findings; freestyle-projects-m04-revision-accepted
 
+### 2026-11-24 · structural · oat-project-implement · m04
+
+m04 exit refreshed after p-rev2 acceptance and passing final gates; freestyle-projects-m04-exit-refreshed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
