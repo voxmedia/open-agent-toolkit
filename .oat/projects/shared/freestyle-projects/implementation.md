@@ -1888,6 +1888,23 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules this phase sequentially. Its templates, skills and docs share contract tests and generated assets, so there is no independent fan-out.
 
+### Task p14-t01: Move lane guidance and add report-file handoff
+
+**Status:** completed
+**Commit:** 60a1e7b544c02f49347009a7907af394699a2c6d
+**Executor:** phase-implementer:freestyle-projects-p14-implementation-1
+**Handle:** /root/p14
+**Intent:** Preserve lane rules in a bundled guide, support local report files and remote/read-only final reports, and make shaping choices explicit (Outcome 12).
+**Files:** `packages/cli/src/commands/tools/shared/pack-manifest.ts`, `packages/cli/scripts/bundle-inputs.mjs`, `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`, `.oat/templates/project-agents.md`, `.oat/templates/lane-guide.md`, `.oat/templates/lane-brief.md`, `.oat/templates/lane-report.md`, `.agents/skills/oat-project-freestyle/SKILL.md`, `.agents/skills/oat-project-freestyle/references/kickoff.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`, `packages/cli/src/commands/init/tools/shared/fixtures/project-agents-m03.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`.
+**Proof:** Isolated-HOME freestyle contract suite, including bundle resolution and m03 refresh; phase gates `pnpm check`, `pnpm type-check`, isolated `pnpm test`, `pnpm lint`, `pnpm format`, and isolated skill-prose contracts.
+
+- Verification: all commands exited 0 on the implementation inputs, whose SHA-256 checksums remained identical after the hook-safe commit. Focused freestyle contracts: 73 tests. Isolated skill-prose contracts: 33 files, 1367 tests. Full isolated `pnpm test`: CLI 458 files / 10037 tests, plus the other workspace packages, smoke 165, skills 754, scripts 7. `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`, `pnpm build`, `pnpm build:docs`, direct docs index generation and manifest freshness passed. Runtime: Darwin arm64, pinned Node 22.23.4, pnpm 10.13.1; base `c840893ec1488c364192db391e1162cfd1ae618f`, unchanged `origin/main` `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. Logs: `/tmp/p14-{check,types,test,lint,format}-final.log`, `/tmp/p14-prose-final.log`, `/tmp/p14-{build,docs,index}.log`.
+- Cache evidence: check 0/11; type-check 5/11; test 5/12 (the five build dependencies replayed, all seven workspace test tasks ran); lint and format each 5/10; build 5/5 and docs build 6/6. Focused and prose Vitest runs executed directly, without Turbo cache. Direct docs manifest generation ran even though docs build replayed.
+- Conservation review: Dispatch, Lane brief, Lane reports and Lane placement moved intact except the approved report routes, precise core ignore path, and rebase guidance. Existing protections moved to guide reads rather than being removed. Single-writer ownership, remote/read-only final reports, p13 publication wording and runtime behavior remain intact. No instruction changes outside these OAT-owned templates are needed.
+- Fixture rationale: protects against missing-heading refresh failing an actual m03 template; the existing synthetic m01/current fixtures cannot prove that version's headings. The captured source names m03 merge `80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a` in its provenance header.
+- Mechanical asset routing: enrolled the new template in both `packages/cli/scripts/bundle-inputs.mjs` and `packages/cli/src/commands/tools/shared/pack-manifest.ts`. Initial focused/prose/full checks caught the missing entries and stale pins before the implementation commit; all were corrected and checks rerun as prevention. Recovery usage remains 0/10, remaining 10, no pending attempt or recovery event.
+- Milestone coordination: no manual scratch-project runs, per the approved unit/contract-test scope. Skill and lockstep package bumps and their release gates stay assigned to p15. Root owns the fresh-context docs/code review.
+
 ---
 
 ## Phase p15: Closing a freestyle project
