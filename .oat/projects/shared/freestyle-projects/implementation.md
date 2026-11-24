@@ -2058,7 +2058,9 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 ## Phase p-rev2: Resolve m04 integrated review findings
 
-**Status:** pending
+**Status:** in_progress
+**Base:** b270a5c05349431b0ac61f7a0333771ac0eca63d
+**Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
 **Corrects:** p15
 
 This revision also corrects p13’s History description. H1 and M1 check publication and recovery already promised in Outcomes 11 and 13. L1 preserves accurate History when a handle value is omitted.
