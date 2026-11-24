@@ -1840,6 +1840,16 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 **Files:** CLI init gitignore and tests, PJM/decision guidance and tests, shared AGENTS classifier and frontmatter writer, pause command and tests. The frontmatter replacement callback is a mechanically required addition: a literal `$&` in the reason otherwise substitutes the old frontmatter into the new quoted value.
 **Proof:** Node 22.23.4; isolated-HOME Vitest init/gitignore, PJM, decision, shared/agents-md, shared/frontmatter-write, init/tools and project/pause: 345/345 passed, uncached (exit 0). CLI check, type-check and build exited 0. Baseline-source negative control failed all four selected assertions (lane-notes ignore, both fresh heading producers, quoted pause reason); patched cases also prove unchanged legacy bytes accepted and user-edited blocks refused as manual-required.
 
+### Task p13-t03: Explain creation, publication and record audiences
+
+**Status:** completed
+**Commit:** 497a8fa6b64406283e9a177cbba271749399daac
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+**Handle:** /root/p13
+**Intent:** Align freestyle skill, kickoff, project templates, CLI help and covering docs with scope-specific creation, audience and dirty-tree behavior, plus the setup and lane changes.
+**Files:** freestyle skill/kickoff, project-agents and shape templates, new command/help test, freestyle contracts, CLI README/AGENTS, affected docs pages.
+**Proof:** Node 22.23.4; isolated-HOME shared skill-prose contracts, validation and new help tests: 1383/1383 passed, uncached (exit 0). Root check, type-check, lint and format exited 0; scoped CLI build exited 0. Baseline-source creation/audience/help controls failed all three intended assertions. A first suite run overlapped a root-check build and observed partially rewritten dist imports; sequential build then full rerun passed. No source repair was made for that overlap. Skill/package release bumps and their final gates belong to p15.
+
 ---
 
 ## Phase p14: Lean project AGENTS.md and lane reports
