@@ -319,6 +319,10 @@ p13 accepted after independent review with no findings, 0 review-fix rounds and 
 
 p14 accepted after independent code and docs review with no findings and zero review-fix rounds; freestyle-projects-p14-accepted
 
+### 2026-11-24 · structural · oat-project-implement · p15
+
+p15 accepted after one review-fix round and passing confirmation; freestyle-projects-p15-accepted
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

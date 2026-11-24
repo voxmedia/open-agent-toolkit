@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: p15
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | complete    | 1     | 1/1      |
-| p08   | complete    | 1     | 1/1      |
-| p11   | complete    | 1     | 1/1      |
-| p12   | complete    | 1     | 1/1      |
-| p13   | complete    | 1     | 1/1      |
-| p14   | complete    | 1     | 1/1      |
-| p15   | in_progress | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
+| p11   | complete | 1     | 1/1      |
+| p12   | complete | 1     | 1/1      |
+| p13   | complete | 1     | 1/1      |
+| p14   | complete | 1     | 1/1      |
+| p15   | complete | 1     | 1/1      |
 
-**Total:** 12/13 phases accepted
+**Total:** 13/13 phases accepted
 
 ---
 
@@ -1923,7 +1923,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 ## Phase p15: Closing a freestyle project
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 994c63b36064f54ad0878120cf782b305c92a8ff
 **Head:** 68cbbdfd71641e692f3d2bb44ab127e8add2946d
 **Executor:** phase-implementer:freestyle-projects-p15-implementation-1
@@ -2019,6 +2019,12 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 **Round 1 disposition:** H1 fixed in `5b5f95c85932ef18ffabdd0a7bd3759e48dc11f2` and recorded by p15-t02. The original phase verification paragraph was restored verbatim in the pre-review commit after `6e64800e` replaced it and failed the append-only working-tree check. The new H1 verification evidence is kept alongside it. This correction changes the journal only.
 
+### Review Received: p15 (round 2)
+
+- Reviewer: `freestyle-projects-p15-review-2`, GPT-6.1 Sol high, fresh native confirmation on `994c63b36..68cbbdfd7`.
+- Artifact: `reviews/archived/p15-code-review-2026-11-24T201707Z.md` (local).
+- Outcome: passed. H1 settled, with no new findings. Retired synced freestyle closeout retains its receipt and follows the shape's publication agreement. The existing quick-mode continuation still passes.
+
 ---
 
 ## Orchestration Runs
@@ -2081,6 +2087,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - run/v1 · request=freestyle-projects-p15-implementation-1 · scope=p15 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p15-review-1 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p15-fix-1 · scope=p15 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-freestyle-projects-p15-fix-1 · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p15-review-2 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
