@@ -23,6 +23,18 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
 oat_phase_recovery_policy:
   phase_attempt_usage:
+    p13:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p13-recovery-001
+        original_request_id: freestyle-projects-p13-implementation-1
+        original_task_id: p13-t03
+        original_commit: 497a8fa6b64406283e9a177cbba271749399daac
+        discovered_by: bash scripts/with-isolated-home.sh pnpm test
+        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
+        reservation_head: 4f67c17a22cc59c652746628b03c2b829a82a1a0
+        status: completed
     p01:
       used_attempts: 1
       pending_attempt: null
