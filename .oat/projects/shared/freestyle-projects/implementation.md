@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status   | Units | Accepted |
-| ------ | -------- | ----- | -------- |
-| p01    | complete | 1     | 1/1      |
-| p02    | complete | 1     | 1/1      |
-| p03    | complete | 1     | 1/1      |
-| p04    | complete | 1     | 1/1      |
-| p05    | complete | 1     | 1/1      |
-| p07    | complete | 1     | 1/1      |
-| p10    | complete | 1     | 1/1      |
-| p08    | complete | 1     | 1/1      |
-| p11    | complete | 1     | 1/1      |
-| p12    | complete | 1     | 1/1      |
-| p13    | complete | 1     | 1/1      |
-| p14    | complete | 1     | 1/1      |
-| p15    | complete | 1     | 1/1      |
-| p-rev1 | complete | 1     | 1/1      |
-| p-rev2 | pending  | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | complete    | 1     | 1/1      |
+| p02    | complete    | 1     | 1/1      |
+| p03    | complete    | 1     | 1/1      |
+| p04    | complete    | 1     | 1/1      |
+| p05    | complete    | 1     | 1/1      |
+| p07    | complete    | 1     | 1/1      |
+| p10    | complete    | 1     | 1/1      |
+| p08    | complete    | 1     | 1/1      |
+| p11    | complete    | 1     | 1/1      |
+| p12    | complete    | 1     | 1/1      |
+| p13    | complete    | 1     | 1/1      |
+| p14    | complete    | 1     | 1/1      |
+| p15    | complete    | 1     | 1/1      |
+| p-rev1 | complete    | 1     | 1/1      |
+| p-rev2 | in_progress | 1     | 0/1      |
 
 **Total:** 14/15 phases accepted
 
@@ -2159,6 +2159,7 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 - run/v1 · request=freestyle-projects-p15-review-2 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p-rev1 · reason: one dashboard reader and its regression control · root model: gpt-6.2-sol
 - run/v1 · request=freestyle-projects-p-rev1-review-1 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p-rev2-implementation-1 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
