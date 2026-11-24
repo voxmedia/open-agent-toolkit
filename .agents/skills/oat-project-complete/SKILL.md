@@ -47,11 +47,12 @@ lookup, or a ref whose mode cannot be read, stops before the arrival. When
 [references/freestyle-completion.md](references/freestyle-completion.md)
 and end this invocation there, before the synced archive entry and the lifecycle
 steps below. The shell block only selects that route; it does not complete the project.
-With no checkout here, first compare the exact active and completed ref
-identities. A matching terminal alias (retained or removed) uses the
-reference's **Retired synced archive resume** section before any executor can invoke
-archive. Only an ordinary unpulled project gets: "Run `oat project pull <slug>`
-to bring it here."
+For a synced freestyle checkout, even one still on disk, compare the exact
+active and completed ref identities. Also compare them when no checkout is
+present and the remote mode is needed. A matching terminal alias (retained or
+removed) uses the reference's **Retired synced archive resume** section before
+any executor can invoke archive. Only an ordinary unpulled project gets: "Run
+`oat project pull <slug>` to bring it here."
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
@@ -64,7 +65,8 @@ if [ -n "$PROJECT_PATH" ]; then
   PROJECT_SLUG=$(basename "$PROJECT_PATH")
   if [ -f "$PROJECT_PATH/state.md" ]; then
     WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
-  elif [ "$PROJECT_SCOPE" = "synced" ]; then
+  fi
+  if [ "$PROJECT_SCOPE" = "synced" ] && { [ "$WORKFLOW_MODE" = "freestyle" ] || [ ! -f "$PROJECT_PATH/state.md" ]; }; then
     # Probe both names: an exact matching completed ref proves that a
     # retained active alias is terminal and cannot be pulled.
     ACTIVE_REF="refs/oat/projects/$PROJECT_SLUG"
@@ -93,22 +95,25 @@ if ((!active && !completed) || (active && completed && active !== completed)) {
 console.log(`ACTIVE_REF_SHA=${active}\nCOMPLETED_REF_SHA=${completed}`);
 ' "$REF_LINES" "$ACTIVE_REF" "$COMPLETED_REF") || exit 1
       eval "$REF_IDENTITIES" || exit 1
-      MODE_REF="$ACTIVE_REF"
-      MODE_SHA="$ACTIVE_REF_SHA"
+      MODE_REF=""
       if [ -n "$COMPLETED_REF_SHA" ]; then
         MODE_REF="$COMPLETED_REF"
         MODE_SHA="$COMPLETED_REF_SHA"
+      elif [ ! -f "$PROJECT_PATH/state.md" ]; then
+        MODE_REF="$ACTIVE_REF"
+        MODE_SHA="$ACTIVE_REF_SHA"
       fi
-      REF_STATE=$(mktemp -d)
-      # --refmap= keeps configured refspecs from rewriting any local ref.
-      # Read completed mode too when the active alias has already retired.
-      git fetch --quiet --no-tags --refmap= --no-write-fetch-head origin "$MODE_REF" 2>/dev/null &&
-        git show "$MODE_SHA:state.md" > "$REF_STATE/state.md" 2>/dev/null &&
-        WORKFLOW_MODE=$(oat project status --project-path "$REF_STATE" --field project.workflowMode 2>/dev/null)
-      rm -rf "$REF_STATE"
-      if [ -z "$WORKFLOW_MODE" ] || [ "$WORKFLOW_MODE" = "null" ]; then
-        echo "oat: cannot read the mode of $PROJECT_SLUG from origin; stopping before arrival" >&2
-        exit 1
+      if [ -n "$MODE_REF" ]; then
+        REF_STATE=$(mktemp -d)
+        # --refmap= keeps configured refspecs from rewriting any local ref.
+        git fetch --quiet --no-tags --refmap= --no-write-fetch-head origin "$MODE_REF" 2>/dev/null &&
+          git show "$MODE_SHA:state.md" > "$REF_STATE/state.md" 2>/dev/null &&
+          WORKFLOW_MODE=$(oat project status --project-path "$REF_STATE" --field project.workflowMode 2>/dev/null) || WORKFLOW_MODE=null
+        rm -rf "$REF_STATE"
+        if [ -z "$WORKFLOW_MODE" ] || [ "$WORKFLOW_MODE" = "null" ]; then
+          echo "oat: cannot read the mode of $PROJECT_SLUG from origin; stopping before arrival" >&2
+          exit 1
+        fi
       fi
     elif [ "$LS_STATUS" -ne 2 ]; then
       echo "oat: cannot look up terminal refs for $PROJECT_SLUG on origin (git ls-remote exit $LS_STATUS); stopping before arrival" >&2

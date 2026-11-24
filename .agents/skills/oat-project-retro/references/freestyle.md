@@ -4,10 +4,14 @@ Apply these overrides in both generate and apply mode, including every output
 of `references/apply-procedure.md`. The normal evidence-quality, proposal,
 content-consent, idempotence and walkthrough rules still apply. Resolve scope
 with `oat project scope "$PROJECT_PATH" --format value` and stop on failure.
-For synced scope, run `oat project pull "$PROJECT_PATH" --no-children --no-commit`, or reuse the
-successful pull for this exact checkout when called by freestyle completion in
-the same invocation. If the pull fails, stop and report its diagnostic.
-Recheck mode after the pull, then read the project's `AGENTS.md` and `shape.md`.
+For synced scope, run `oat --json project pull "$PROJECT_PATH" --no-children --no-commit`.
+If the result is `status: "dirty"`, compare its reported `sha` with the fetched
+`ref` using `git rev-parse --verify "<ref>^{commit}"` from the repository root.
+Continue only when they match and keep the local edits in place. On a mismatch,
+conflict or any other pull failure, stop and report the diagnostic. When called
+by freestyle completion in the same invocation, reuse its successful freshness
+check for this exact checkout. Recheck mode, then read the project's `AGENTS.md`
+and `shape.md`.
 Require the claimed orchestrator checkout before record writes.
 
 ## Evidence

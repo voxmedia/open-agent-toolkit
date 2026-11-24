@@ -97,9 +97,13 @@ Use the repository root and resolved `PROJECT_PATH` from Step 1. Resolve scope
 with `oat project scope "$PROJECT_PATH" --format value` and stop on failure.
 If an ordinary synced checkout is absent, report `oat project pull <slug>` and
 resume after the user brings it here. For a present synced checkout, run
-`oat project pull "$PROJECT_PATH" --no-children --no-commit`. If the pull fails, stop and report its
-diagnostic. Run `oat project status --project-path "$PROJECT_PATH"` after the
-pull for synced scope. Require freestyle mode, then read the project's
+`oat --json project pull "$PROJECT_PATH" --no-children --no-commit`. If the
+result is `status: "dirty"`, compare its reported `sha` with the fetched `ref`
+using `git rev-parse --verify "<ref>^{commit}"` from the repository root.
+Continue only when they match. Keep the local edits in place. On a mismatch,
+conflict or any other pull failure, stop and report the diagnostic. Run
+`oat project status --project-path "$PROJECT_PATH"` after this check for
+synced scope. Require freestyle mode, then read the project's
 `AGENTS.md` and `shape.md`. Before any record write, require the claimed
 orchestrator branch. An unclaimed project or a lane returns to the orchestrator
 for that check.
@@ -119,9 +123,9 @@ so their project-log entries are included. Each skill follows its freestyle
 path, including its own apply/content consent. A declined offer skips that
 work; it is not a completion gate.
 
-For synced scope, pass the successful pull and exact project path to each
-selected skill in this invocation. This lets them read the refreshed checkout
-with any local outputs the first step was allowed to leave uncommitted.
+For synced scope, pass the successful freshness check and exact project path
+to each selected skill in this invocation. This lets them read the refreshed
+checkout with any local outputs the first step was allowed to leave uncommitted.
 
 Read `shape.md`'s `## Commits, PRs and merges` agreement before any commit or
 push in this path or a child skill. Unshaped, deferred or withheld permission

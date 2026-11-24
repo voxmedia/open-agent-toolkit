@@ -83,14 +83,18 @@ describe('freestyle closing skills (p15, Outcome 13)', () => {
     ],
   ])('refreshes synced %s records before using the shape', (_skill, entry) => {
     const scope = 'oat project scope "$PROJECT_PATH" --format value';
-    const pull = 'oat project pull "$PROJECT_PATH" --no-children --no-commit';
+    const pull =
+      'oat --json project pull "$PROJECT_PATH" --no-children --no-commit';
     const policy = "read the project's `AGENTS.md` and `shape.md`";
     expect(entry.indexOf(scope)).toBeGreaterThanOrEqual(0);
     expect(entry.indexOf(pull)).toBeGreaterThan(entry.indexOf(scope));
     expect(entry.toLowerCase().indexOf(policy.toLowerCase())).toBeGreaterThan(
       entry.indexOf(pull),
     );
-    expect(entry).toContain('If the pull fails, stop');
+    expect(entry).toContain('If the result is `status: "dirty"`');
+    expect(entry).toContain('`git rev-parse --verify "<ref>^{commit}"`');
+    expect(entry).toContain('Continue only when they match');
+    expect(entry).toContain('conflict or any other pull failure, stop');
   });
 
   it('skips an absent log, writes pending synthesis, and preserves existing synthesis', () => {
@@ -421,31 +425,43 @@ else process.exit(92);
 // shell itself decides whether to give pull advice or reach archive recovery.
 describe('first completion selector (m04 M1)', () => {
   it.each([
-    ['retained', 'freestyle', 'terminal'],
-    ['removed', 'freestyle', 'terminal'],
-    ['ordinary', 'freestyle', 'unpulled'],
-    ['retained', 'quick', 'lifecycle'],
-    ['mismatched', 'freestyle', 'refused'],
-    ['malformed', 'freestyle', 'refused'],
-  ])('%s alias in %s selects %s', (alias, mode, expected) => {
-    const directory = mkdtempSync(join(tmpdir(), 'oat-rev2-selector-'));
-    try {
-      const bin = join(directory, 'bin');
-      mkdirSync(bin);
-      const sha = 'a'.repeat(40);
-      const active = `${sha}\trefs/oat/projects/demo`;
-      const completed = `${alias === 'mismatched' ? 'b'.repeat(40) : sha}\trefs/oat/completed/demo`;
-      const refs =
-        alias === 'ordinary'
-          ? active
-          : alias === 'removed'
-            ? completed
-            : alias === 'malformed'
-              ? 'broken advertisement'
-              : `${active}\n${completed}`;
-      writeFileSync(
-        join(bin, 'git'),
-        `#!/usr/bin/env node
+    ['retained', 'freestyle', 'terminal', false],
+    ['retained', 'freestyle', 'terminal', true],
+    ['removed', 'freestyle', 'terminal', false],
+    ['removed', 'freestyle', 'terminal', true],
+    ['ordinary', 'freestyle', 'unpulled', false],
+    ['retained', 'quick', 'lifecycle', false],
+    ['mismatched', 'freestyle', 'refused', false],
+    ['malformed', 'freestyle', 'refused', false],
+  ])(
+    '%s alias in %s selects %s (checkout present: %s)',
+    (alias, mode, expected, checkoutPresent) => {
+      const directory = mkdtempSync(join(tmpdir(), 'oat-rev2-selector-'));
+      try {
+        const bin = join(directory, 'bin');
+        mkdirSync(bin);
+        if (checkoutPresent) {
+          const checkout = join(directory, '.oat/projects/synced/demo');
+          mkdirSync(checkout, { recursive: true });
+          writeFileSync(
+            join(checkout, 'state.md'),
+            'oat_workflow_mode: freestyle\n',
+          );
+        }
+        const sha = 'a'.repeat(40);
+        const active = `${sha}\trefs/oat/projects/demo`;
+        const completed = `${alias === 'mismatched' ? 'b'.repeat(40) : sha}\trefs/oat/completed/demo`;
+        const refs =
+          alias === 'ordinary'
+            ? active
+            : alias === 'removed'
+              ? completed
+              : alias === 'malformed'
+                ? 'broken advertisement'
+                : `${active}\n${completed}`;
+        writeFileSync(
+          join(bin, 'git'),
+          `#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args[0] === 'rev-parse') console.log(process.env.SELECTOR_ROOT);
 else if (args[0] === 'ls-remote') {
@@ -457,58 +473,59 @@ else if (args[0] === 'fetch') {}
 else if (args[0] === 'show') console.log('oat_workflow_mode: ' + process.env.SELECTOR_MODE);
 else process.exit(92);
 `,
-        { mode: 0o755 },
-      );
-      writeFileSync(
-        join(bin, 'oat'),
-        `#!/usr/bin/env node
+          { mode: 0o755 },
+        );
+        writeFileSync(
+          join(bin, 'oat'),
+          `#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args[0] === 'config' && args[1] === 'get') console.log('.oat/projects/synced/demo');
 else if (args[1] === 'scope') console.log('synced');
 else if (args[1] === 'status') console.log(process.env.SELECTOR_MODE);
 else process.exit(91);
 `,
-        { mode: 0o755 },
-      );
-      const content = readFileSync(
-        join(root, '.agents/skills/oat-project-complete/SKILL.md'),
-        'utf8',
-      );
-      const selector = /```bash\n(PROJECT_PATH=([\s\S]*?))\n```/.exec(
-        content,
-      )?.[1];
-      expect(selector).toBeDefined();
-      const run = spawnSync(
-        '/bin/bash',
-        ['-c', `${selector}\necho reached-archive-classifier`],
-        {
-          cwd: directory,
-          encoding: 'utf8',
-          env: {
-            ...process.env,
-            PATH: `${bin}:${process.env.PATH}`,
-            SELECTOR_ROOT: directory,
-            SELECTOR_MODE: mode,
-            SELECTOR_REFS: refs,
+          { mode: 0o755 },
+        );
+        const content = readFileSync(
+          join(root, '.agents/skills/oat-project-complete/SKILL.md'),
+          'utf8',
+        );
+        const selector = /```bash\n(PROJECT_PATH=([\s\S]*?))\n```/.exec(
+          content,
+        )?.[1];
+        expect(selector).toBeDefined();
+        const run = spawnSync(
+          '/bin/bash',
+          ['-c', `${selector}\necho reached-archive-classifier`],
+          {
+            cwd: directory,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              PATH: `${bin}:${process.env.PATH}`,
+              SELECTOR_ROOT: directory,
+              SELECTOR_MODE: mode,
+              SELECTOR_REFS: refs,
+            },
           },
-        },
-      );
-      if (expected === 'refused') {
-        expect(run.status).toBe(1);
-        expect(run.stderr).toMatch(/terminal refs|Git advertisement/);
-      } else {
-        expect(run.status, run.stderr).toBe(0);
-        if (expected === 'terminal')
-          expect(run.stderr).toContain('Retired synced archive resume');
-        if (expected === 'unpulled') {
-          expect(run.stderr).toContain('references/freestyle-completion.md');
-          expect(run.stderr).not.toContain('Retired synced archive resume');
+        );
+        if (expected === 'refused') {
+          expect(run.status).toBe(1);
+          expect(run.stderr).toMatch(/terminal refs|Git advertisement/);
+        } else {
+          expect(run.status, run.stderr).toBe(0);
+          if (expected === 'terminal')
+            expect(run.stderr).toContain('Retired synced archive resume');
+          if (expected === 'unpulled') {
+            expect(run.stderr).toContain('references/freestyle-completion.md');
+            expect(run.stderr).not.toContain('Retired synced archive resume');
+          }
+          if (expected === 'lifecycle')
+            expect(run.stdout).toContain('reached-archive-classifier');
         }
-        if (expected === 'lifecycle')
-          expect(run.stdout).toContain('reached-archive-classifier');
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
       }
-    } finally {
-      rmSync(directory, { recursive: true, force: true });
-    }
-  });
+    },
+  );
 });

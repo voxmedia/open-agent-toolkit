@@ -307,8 +307,10 @@ scope: local records stay uncommitted. Retro apply proposals stay pending when
 their required durable receipts cannot be saved.
 
 On an active synced project, completion, documentation and retro refresh the
-checkout before reading the shape. A failed pull stops that run. Optional work
-invoked by completion uses the checkout that completion already refreshed.
+checkout before reading the shape. They can continue with uncommitted edits
+when the checkout is already at the fetched revision. A stale dirty checkout
+or another pull failure stops the run. Optional work invoked by completion
+uses the checkout that completion already checked.
 
 Completion synthesizes an existing project log only while synthesis is pending,
 keeps an existing synthesis and skips an absent log. It then runs
@@ -324,7 +326,8 @@ and shape. A non-null `s3Path` would upload the records; local records are never
 uploaded automatically. If publication is not permitted, the completed checkout
 and pointer remain in place with archive pending. A retry after synced archive
 uses the existing receipt, including when the remote retains a matching active
-alias that cannot be pulled; its preview and shape still govern any effects. The skill reports archive's actual
+alias or local checkout cleanup was interrupted. Its preview and shape still
+govern any effects. The skill reports archive's actual
 result and any pending work.
 
 Freestyle requires no final review, summary or PR, and completion runs none.
