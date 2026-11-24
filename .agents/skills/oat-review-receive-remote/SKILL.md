@@ -133,7 +133,7 @@ For each item in JSON:
 - Use comment body + context to assign severity (`critical`, `high`, `medium`, `low`).
 - Treat `CHANGES_REQUESTED` review state as a strong hint toward `high+`, not an automatic override.
 - Normalize into the shared findings model.
-- A review body that only describes a pre-existing defect the change did not cause is not a finding: relay it with the overview and a fix-now-or-leave recommendation, and give it no ID, severity, count or disposition.
+- A pre-existing defect the change did not cause or worsen is a finding only when it stops the change from delivering what it promised, or its consequence is a security hole, data loss or a broken assurance contract. Otherwise it is a note, whether it stands alone or sits beside findings in a review body: relay it with the overview and a fix-now-or-leave recommendation, and give it no ID, severity, count or disposition. When only notes remain, follow the clean path in Step 2 and include them in its report.
 
 ID assignment per severity bucket:
 

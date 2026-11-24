@@ -478,7 +478,7 @@ unmet, so the existing cycle cap and exhaustion stop apply.
   - Follow the task-conversion flow in Steps 3-10 with these adjusted defaults.
 - If `oat_review_type == code` AND `oat_review_invocation == gate` from a **passing** gate (the gate-originated context indicates a passing-gate judgment sweep):
   - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
-    - The gate verdict decided whether the phase stops; it did **not** decide whether the findings below the threshold are ignored. At the `critical` threshold those include High findings; address each of them now unless a concrete reason supports rejecting it.
+    - The gate verdict decided whether the phase stops; it did **not** decide whether the findings below the threshold are ignored. At the `critical` threshold those include High findings. A valid High is always fixed: inline when the fix is small, otherwise as a fix task under the escalation exception below. Reject one only with a concrete reason, and never defer it.
     - Make a per-finding **judgment call** for each finding below the threshold — do not mechanically dump them all:
       - **Address now:** for small, contained, low-risk fixes that are worth making. Apply the fix, commit it with the phase bookkeeping, and record the disposition. Do **not** re-run the standard reviewer or re-gate the phase for address-now fixes.
       - **Reject** as false-positive, out-of-scope, or true but not worth its cost (an unlikely edge case, a test for one, polish nobody will miss), with concrete rationale.
@@ -503,9 +503,9 @@ Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, th
 **Brief modes (`oat_workflow_mode: brief`).** The brief never carries planned
 tasks, so fix work becomes execution records in the journal and
 `oat-project-brief/references/brief-contract.md` (sections 3, 7, and 10) wins
-where this skill differs. When at least one finding converts to fix work,
-resolve the target phase and apply the late-fix rule; when none does, leave
-every phase and resume pointer as it is:
+where this skill differs. When no finding converts to fix work, the late-fix
+rule below does not apply: leave every phase and resume pointer as it is.
+Otherwise resolve the target phase and apply it:
 
 1. **Reviewed phase.** For `pNN` or `p-revN`, the reviewed phase is that
    phase. For `pNN-pMM`, `final`, or an explicit SHA range, it is the last
@@ -881,6 +881,7 @@ re-review.
 
 **Restart safety (required):**
 
+- In brief modes, when no finding converts (Step 3), skip the task-pointer, Progress Overview and `state.md` updates in this list. The receipt is still written, where the placement rule above puts it.
 - If `{PROJECT_PATH}/implementation.md` exists, ensure it will resume correctly after this skill:
   - If `oat_current_task_id` is `null` (or points at already-completed work), set it to the **first newly-added review-fix task ID** (or the next incomplete task in plan order).
   - Update the Progress Overview table totals (tasks + completed) if they are present and depend on task counts.
@@ -899,9 +900,7 @@ re-review.
     `implementation.md` and `oat_current_task` in `state.md` to the target
     phase ID (the reviewed phase, or the new `p-revN`), and update that phase's
     Progress Overview row status. The phase-unit totals change only when a
-    revision phase was appended. When no finding converts (Step 3), write only
-    the note, in the reviewed phase's section, and leave `oat_phase_status`,
-    both task pointers and the row status as they are.
+    revision phase was appended.
 
 After this state-frontmatter write, run `oat project check-state "$PROJECT_PATH"`.
 On nonzero, stop; repair and recheck before committing or continuing.
