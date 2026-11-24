@@ -9,8 +9,14 @@ import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { commitLaneRecords, type LaneCommitResult } from './commit';
 import { formatHeadAhead, isHeadFlagged } from './head';
-import { LANE_STATES, WAITING_ON_KINDS, type LaneState } from './ledger';
+import {
+  LANE_STATES,
+  LANES_FILENAME,
+  WAITING_ON_KINDS,
+  type LaneState,
+} from './ledger';
 import { setLane, validateOneLine, type SetLaneResult } from './set';
 import type { SettableLaneField } from './update';
 
@@ -53,6 +59,7 @@ interface LaneSetOptions {
   effort?: string;
   observedModel?: string;
   paths?: string;
+  commit?: boolean;
 }
 
 /** Each field option, its flag and its ledger field. */
@@ -83,6 +90,14 @@ const FIELD_OPTIONS: readonly [
 
 const SAVE_HINT =
   "Nothing was committed or pushed: save it by the records rule for the project's scope in its AGENTS.md.";
+
+/** The line after `Wrote <ledger>.`, for `--commit`. */
+function describeCommit(commit: LaneCommitResult): string {
+  if (commit.outcome === 'committed') {
+    return `Committed ${commit.paths.join(', ')} (${commit.commit?.slice(0, 9) ?? 'unknown'}). Nothing was pushed.`;
+  }
+  return "Nothing to commit on this checkout's branch: the project's scope keeps its records off it. Save it by the records rule for that scope in its AGENTS.md.";
+}
 
 function requestFields(
   options: LaneSetOptions,
@@ -182,9 +197,15 @@ function createSetCommand(dependencies: LaneDependencies): Command {
       '--paths <list>',
       "Comma-separated paths a lane in the orchestrator's checkout may change",
     )
+    .option(
+      '--commit',
+      'Commit lanes.md and the report this update filed, by exact path; other changes stay uncommitted and nothing is pushed',
+    )
     .addHelpText(
       'after',
-      '\nAn empty value (for example --blocker "") clears a field. Each update appends one History line.',
+      `
+An empty value (for example --blocker "") clears a field. Each update appends one History line.
+With --commit, a shared project's records are committed on this branch; a synced project's live in its nested worktree (publish them with oat project push) and a local project's stay uncommitted, so there is nothing to commit. Pushing is a separate step.`,
     )
     .action(async (lane: string, options: LaneSetOptions, command: Command) => {
       const context = dependencies.buildCommandContext(
@@ -217,6 +238,19 @@ function createSetCommand(dependencies: LaneDependencies): Command {
           now: dependencies.now(),
           git: dependencies.gitRunner,
         });
+        const commit = options.commit
+          ? await commitLaneRecords({
+              repoRoot,
+              projectDir: result.project.absolutePath,
+              files: [
+                LANES_FILENAME,
+                ...(result.reportPath ? [result.reportPath] : []),
+              ],
+              lane: result.block.id,
+              updateId: result.updateId,
+              git: dependencies.gitRunner,
+            })
+          : undefined;
         if (context.json) {
           context.logger.json({
             status: 'ok',
@@ -231,17 +265,26 @@ function createSetCommand(dependencies: LaneDependencies): Command {
             changes: result.changes,
             reportPath: result.reportPath ?? null,
             headCheck: result.headCheck,
+            ...(commit ? { commit } : {}),
           });
         } else {
           context.logger.info(describe(result));
-          context.logger.info(`Wrote ${result.ledgerPath}. ${SAVE_HINT}`);
+          if (commit?.outcome === 'failed') {
+            context.logger.error(
+              `Wrote ${result.ledgerPath} but could not commit it: ${commit.error ?? 'no detail'}`,
+            );
+          } else {
+            context.logger.info(
+              `Wrote ${result.ledgerPath}. ${commit ? describeCommit(commit) : SAVE_HINT}`,
+            );
+          }
           if (result.headCheck && isHeadFlagged(result.headCheck)) {
             context.logger.warn(
               `Warning: ${formatHeadAhead(result.headCheck)}`,
             );
           }
         }
-        process.exitCode = 0;
+        process.exitCode = commit?.outcome === 'failed' ? 1 : 0;
       } catch (error) {
         reportError(context, error);
       }

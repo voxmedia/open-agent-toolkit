@@ -182,6 +182,26 @@ instructions written for OAT's lifecycle skills. Before the document is used:
 Record each document in the section: its path, what it is for, and the
 template it started from (or "own pattern").
 
+#### Adopting an Existing Plan
+
+When the project adopts a plan written elsewhere (in another session or tool,
+or for another workflow), keep its _what_ and decide its _how_:
+
+1. Keep what the plan delivers as written: its changes, their order and its
+   acceptance criteria.
+2. Record each item of how it runs (its bookkeeping, gates, branches, review
+   cadence and PR size) in this section beside the plan, one line each, as
+   **kept**, **mapped** to a freestyle record (for example a phase tracker to
+   `lanes.md` and lane reports, or a review cadence to `## Reviews`), or
+   **dropped**. Carry each kept or mapped item into its topic as that topic is
+   shaped.
+3. A required gate, a review or an owner approval that the owner or the
+   repository requires, is kept or mapped to an equivalent check, never
+   dropped. Only discretionary process is dropped.
+
+The proportionality tests in `references/reshape.md` (Checkpoint Questions)
+help decide what to drop.
+
 ### 4. Execution
 
 Section: `## Execution`. A single agent working through the documents, or an
@@ -220,8 +240,11 @@ Record each review as two parts:
   it was last verified (or "unverified").
 
 When a review comes due, re-check its mechanism. If it is unavailable, keep
-the intent, tell the user, and log it. Reviews never block: a freestyle
-project has no required reviews.
+the intent, tell the user, and log it. Freestyle adds no review gate of its
+own, so an optional review never blocks. A review an adopted plan requires
+(see the adopted-plan intake above) still must pass, through its agreed
+mechanism or an equivalent check, before the work it guards moves on; when
+neither is available, stop and ask the user.
 
 ### 6. Commits, PRs and merges
 
@@ -242,7 +265,10 @@ example opening or merging a PR, a reshape) and what they are only told.
 
 Section: `## Reshape checkpoints`. The moments to revisit the shape. Suggest
 checkpoints that fit the project, for example after the first PR merges, when
-the execution style changes, or before the final delivery. A reshape at a
+the execution style changes, or before the final delivery. At each checkpoint,
+and when a plan written after shaping is accepted, the two checkpoint
+questions in `references/reshape.md` are asked: does the shape still fit, and
+is the plan and its process proportionate to its value. A reshape at a
 checkpoint follows `references/reshape.md`.
 
 ## Finishing

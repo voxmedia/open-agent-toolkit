@@ -474,6 +474,17 @@ execution, reviews, commits and merges, your involvement, reshape checkpoints),
 writing each answer into `shape.md` as you give it. Any topic can be deferred to
 a named moment, such as "before the first PR".
 
+When the project adopts a plan written elsewhere, for example for another
+workflow, the documents topic keeps what the plan delivers (its changes, their
+order and its acceptance criteria) and records each part of how it runs
+(bookkeeping, gates, branches, review cadence, PR size) in `shape.md` as kept,
+mapped to a freestyle record, or dropped. A review or approval that you or the
+repository require is kept or mapped to an equivalent check; only
+discretionary process is dropped. Each reshape checkpoint, and acceptance of a
+plan written after shaping, asks whether the shape still fits and whether the
+plan and its process are proportionate to their value (see
+[Reshape checkpoints](../execution/freestyle-projects.md#reshape-checkpoints)).
+
 **Expected output:** A project folder with `state.md` (recording the
 orchestrator's branch), an OAT-owned `AGENTS.md` that tells agents to read
 `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md`,

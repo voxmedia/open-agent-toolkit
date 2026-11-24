@@ -41,6 +41,7 @@ const AGENTS_HEADINGS = [
   'Orchestrator branch',
   'Linked projects',
   'Dispatch',
+  'Lane brief',
   'Lane reports',
   'Lane placement',
   'Records commands',
@@ -773,6 +774,7 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
   const dispatch = oneLine(h2Section(agents, 'Dispatch'));
   const reports = oneLine(h2Section(agents, 'Lane reports'));
   const placement = oneLine(h2Section(agents, 'Lane placement'));
+  const laneBrief = oneLine(h2Section(agents, 'Lane brief'));
 
   it('names every lane state and waiting-on kind lane set accepts', () => {
     for (const state of LANE_STATES) {
@@ -792,7 +794,7 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     command: string;
     entryTypes: ('judgment' | 'structural')[];
   }[] {
-    const text = [dispatch, reports, placement].join(' ');
+    const text = [dispatch, laneBrief, reports, placement].join(' ');
     const pattern =
       /`(?:oat )?(?:project )?(lane set|log append|template resolve)\b|(--[a-z][a-z-]+)/g;
     const found = [];
@@ -920,7 +922,12 @@ describe('freestyle dispatch, lane reports and lane placement guidance (p07)', (
     expect(dispatch).toContain(
       '`oat template resolve lane-report --output <path>` and embed it whole',
     );
-    expect(dispatch).toContain('that the lane writes no project records');
+    expect(dispatch).toContain(
+      'Each dispatch brief extends the standing lane brief (see Lane brief) instead of repeating its rules',
+    );
+    expect(oneLine(h2Section(agents, 'Lane brief'))).toContain(
+      'the lane writes no project records',
+    );
     expect(dispatch).toContain(
       'record what you find with `lane set` before any redispatch',
     );
@@ -1180,7 +1187,9 @@ describe('freestyle decisions and memories (p10)', () => {
 
   it('names the lane notes path as authorized scratch in the dispatch section, and promotion after filing', () => {
     const dispatch = oneLine(h2Section(agents, 'Dispatch'));
-    expect(dispatch).toContain('its lane notes path; and the report shape');
+    expect(dispatch).toContain(
+      'its lane notes path; the task; and the report shape',
+    );
     expect(dispatch).toContain(
       'to an uncommitted notes file in its own checkout, `.oat/analysis/lane-notes/<lane>-<dispatch>.md`',
     );
@@ -1204,16 +1213,21 @@ describe('freestyle decisions and memories (p10)', () => {
     );
   });
 
-  it('tells the lane to keep its notes file and build its Decisions and Learnings from it', () => {
+  it('builds Decisions and Learnings from the lane notes and leaves the standing rules to the lane brief', () => {
     const report = oneLine(read(join(TEMPLATES_DIR, 'lane-report.md')));
     expect(report).toContain(
-      'While you work, write each decision you make and each gotcha you hit to the lane notes file your brief names, as it happens, so they survive your own compaction; never commit it. Build the Decisions and Learnings sections below from it.',
+      'Build the Decisions and Learnings sections below from your lane notes file.',
     );
     expect(report).toContain(
-      'A read-only lane keeps no notes file and writes its decisions and learnings straight into this report.',
+      'The standing lane rules (no project records, the notes file, a report at every turn end) are in the lane brief.',
     );
-    expect(report).toContain(
-      "do not write project records (the ledger, the project log, `shape.md`, `decisions.md`, `memories.md` or the project's documents)",
+    // The lane brief carries them once; the report does not repeat them.
+    expect(report).not.toContain('do not write project records');
+    expect(report).not.toContain('never commit it');
+    const brief = oneLine(read(join(TEMPLATES_DIR, 'lane-brief.md')));
+    expect(brief).toContain('You write no project records');
+    expect(brief).toContain(
+      'A read-only lane keeps no notes file and writes its decisions and learnings straight into its report.',
     );
   });
 });
@@ -1237,6 +1251,43 @@ function h3Headings(content: string): string[] {
     (match) => match[1] as string,
   );
 }
+
+describe('freestyle record upkeep commands (p11)', () => {
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const records = oneLine(h2Section(agents, 'Records commands'));
+
+  it('names --commit on lane set and log append beside the push step, with each scope', () => {
+    const commit = records.indexOf(
+      '`--commit` on `oat project lane set` and `oat project log append`',
+    );
+    const push = records.indexOf('`oat project push` and `oat project pull`');
+    expect(commit).toBeGreaterThan(0);
+    expect(push).toBeGreaterThan(commit);
+    const bullet = records.slice(commit, push);
+    expect(bullet).toContain(
+      'by exact path, leaving every other change uncommitted',
+    );
+    expect(bullet).toContain('In a synced or local project');
+    expect(bullet).toContain('Neither pushes');
+    expect(bullet).toContain(
+      '`git push` (shared) or `oat project push` (synced)',
+    );
+    const laneSet = createProjectLaneCommand().commands.find(
+      (command) => command.name() === 'set',
+    ) as Command;
+    for (const command of [laneSet, createProjectLogAppendCommand()]) {
+      expect(command.options.map((option) => option.long)).toContain(
+        '--commit',
+      );
+    }
+  });
+
+  it('says the log key is optional and is added to a body that lacks it', () => {
+    expect(records).toContain(
+      '`--idempotency-key` is optional here: without one the command derives a key from the entry, so running the same append again writes nothing; a key the body lacks is added to its end.',
+    );
+  });
+});
 
 describe('freestyle lane report shape (p07)', () => {
   const template = read(join(TEMPLATES_DIR, 'lane-report.md'));
@@ -1325,6 +1376,234 @@ describe('freestyle lane report shape (p07)', () => {
     });
     expect(result).toMatchObject({ found: true, tier: 'user' });
     expect(read(output)).toBe('# Our report\n');
+  });
+});
+
+/** The standing lane brief's sections (p12, Outcome 10). */
+const LANE_BRIEF_SECTIONS = [
+  'Your dispatch',
+  'Project records',
+  'Lane notes',
+  'Paths and commits',
+  'Report',
+] as const;
+
+describe('freestyle lane brief (p12)', () => {
+  const template = read(join(TEMPLATES_DIR, 'lane-brief.md'));
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('pins the lane brief sections and the standing boundaries, with no template frontmatter', () => {
+    expect(h2Headings(template)).toEqual([...LANE_BRIEF_SECTIONS]);
+    // Embedded whole in a dispatch brief, so it carries no frontmatter.
+    expect(template.startsWith('# Lane brief\n')).toBe(true);
+    const text = oneLine(template);
+    expect(text).toContain(
+      "Your dispatch brief extends them with this dispatch's facts and task and does not repeat them.",
+    );
+    const records = oneLine(h2Section(template, 'Project records'));
+    expect(records).toContain('You write no project records');
+    for (const file of [
+      '`lanes.md`',
+      '`lane-reports/`',
+      '`shape.md`',
+      '`decisions.md`',
+      '`memories.md`',
+      '`linked-projects.md`',
+    ]) {
+      expect(records, file).toContain(file);
+    }
+    expect(records).toContain(
+      'Your final message for the dispatch is your report',
+    );
+    expect(oneLine(h2Section(template, 'Lane notes'))).toContain(
+      'It is authorized scratch, outside any `paths:` you were given; never commit it.',
+    );
+    expect(oneLine(h2Section(template, 'Paths and commits'))).toContain(
+      'commit with exact paths (`oat internal commit-paths`), never a broad `git add`',
+    );
+    expect(oneLine(h2Section(template, 'Report'))).toContain(
+      'Its Tested SHA must equal the delivered head',
+    );
+  });
+
+  it('adds a Lane brief section to the project AGENTS.md that Dispatch links to', () => {
+    const laneBrief = oneLine(h2Section(agents, 'Lane brief'));
+    expect(laneBrief).toContain(
+      '`oat template resolve lane-brief --output <path>` and embed it whole in every dispatch brief, which extends it',
+    );
+    expect(laneBrief).toContain('never repeating its rules');
+    expect(laneBrief).toContain(
+      "report's Tested SHA equals the delivered head",
+    );
+    expect(oneLine(h2Section(agents, 'Dispatch'))).toContain(
+      'extends the standing lane brief (see Lane brief)',
+    );
+    expect(oneLine(h2Section(agents, 'Records commands'))).toContain(
+      '`lane-brief` and `lane-report` for a dispatch brief',
+    );
+  });
+
+  it('builds a dispatch brief from the bundled lane brief and report shape alone (isolated HOME, no repository tier)', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'oat-lane-brief-'));
+    const home = await mkdtemp(join(tmpdir(), 'oat-lane-brief-home-'));
+    tempDirs.push(cwd, home);
+
+    const resolved: Record<string, string> = {};
+    for (const name of ['lane-brief', 'lane-report']) {
+      const output = join(cwd, `${name}.md`);
+      const result = await runTemplateResolve({
+        name,
+        cwd,
+        home,
+        output,
+        resolveProjectRoot: async () => {
+          throw new CliError('not a repository', 1);
+        },
+        resolveAssetsRoot,
+      });
+      expect(result).toMatchObject({
+        found: true,
+        tier: 'bundle',
+        path: null,
+        output,
+      });
+      resolved[name] = read(output);
+    }
+    expect(resolved['lane-brief']).toBe(template);
+
+    // The standing brief, then only the dispatch's own facts, then the shape.
+    const brief = [
+      resolved['lane-brief'],
+      '## This dispatch',
+      '',
+      '- Lane l01, dispatch d02 of project demo.',
+      '- Rules: .oat/projects/shared/demo/AGENTS.md; shape: .oat/projects/shared/demo/shape.md',
+      '- Worktree: ../demo-l01 on branch lane/l01',
+      '- Lane notes: .oat/analysis/lane-notes/l01-d02.md',
+      '- Task: add the export command.',
+      '',
+      'Return this report as your final message:',
+      '',
+      resolved['lane-report'],
+    ].join('\n');
+    expect(h2Headings(brief)).toEqual([
+      ...LANE_BRIEF_SECTIONS,
+      'This dispatch',
+      ...LANE_REPORT_SECTIONS,
+    ]);
+    expect(brief.match(/You write no project records/g)).toHaveLength(1);
+  });
+});
+
+/** The two checkpoint questions, from Outcome 10. */
+const CHECKPOINT_QUESTIONS = [
+  'Does the shape still fit?',
+  'Is the plan and its process proportionate to its value?',
+] as const;
+
+describe('freestyle adopted plans and checkpoint questions (p12)', () => {
+  const {
+    'SKILL.md': skill,
+    'references/kickoff.md': kickoff,
+    'references/reshape.md': reshape,
+  } = skillFiles();
+  const shape = read(join(TEMPLATES_DIR, 'shape.md'));
+  const agents = read(join(TEMPLATES_DIR, 'project-agents.md'));
+
+  it('keeps an adopted plan as written and records each process item as kept, mapped or dropped', () => {
+    const documents = between(kickoff, '### 3. Documents', '### 4. Execution');
+    // The intake is the last subsection of the Documents topic.
+    const start = documents.indexOf('#### Adopting an Existing Plan');
+    expect(start, 'Documents has an Adopting an Existing Plan step').toBe(
+      documents.lastIndexOf('\n#### ') + 1,
+    );
+    const intake = oneLine(documents.slice(start));
+    expect(intake).toContain('keep its _what_ and decide its _how_');
+    expect(intake).toContain(
+      'Keep what the plan delivers as written: its changes, their order and its acceptance criteria.',
+    );
+    expect(intake).toContain(
+      '(its bookkeeping, gates, branches, review cadence and PR size) in this section beside the plan, one line each, as **kept**, **mapped** to a freestyle record',
+    );
+    expect(intake).toContain('or **dropped**');
+    expect(intake).toContain(
+      'A required gate, a review or an owner approval that the owner or the repository requires, is kept or mapped to an equivalent check, never dropped. Only discretionary process is dropped.',
+    );
+  });
+
+  it('asks both checkpoint questions with their tests in reshape.md', () => {
+    const questions = oneLine(h2Section(reshape, 'Checkpoint Questions'));
+    expect(questions).toContain(
+      'At every reshape checkpoint, and when a plan written after shaping is accepted, ask two questions',
+    );
+    for (const question of CHECKPOINT_QUESTIONS) {
+      expect(questions, question).toContain(question);
+    }
+    expect(questions).toContain(
+      'process above about 3x the code time needs a stated reason. This is a prompt to explain, not a hard rule',
+    );
+    expect(questions).toContain(
+      'what risk it covers, and whether that risk exists now',
+    );
+    expect(questions).toContain(
+      '**the lightest process that keeps the real gates:**',
+    );
+    expect(questions).toContain(
+      'A "no" goes to the owner as a recommendation, with the lighter alternative, even in an unattended run.',
+    );
+    expect(oneLine(h2Section(reshape, 'Procedure'))).toContain(
+      'At a checkpoint, ask the Checkpoint Questions first.',
+    );
+  });
+
+  it('carries both checkpoint questions and their tests in the shape.md template and the project AGENTS.md', () => {
+    const checkpoints = oneLine(h2Section(shape, 'Reshape checkpoints'));
+    const rules = oneLine(h2Section(agents, 'Shaping and reshaping'));
+    for (const [name, text] of [
+      ['shape.md', checkpoints],
+      ['AGENTS.md', rules],
+    ] as const) {
+      expect(text, name).toContain(
+        'when a plan written after shaping is accepted',
+      );
+      expect(text, name).toContain('process time against code time');
+      expect(text, name).toContain('safeguard');
+      expect(text, name).toContain(
+        'the lightest process that keeps the real gates',
+      );
+      expect(text, name).toContain(
+        'A "no" goes to the owner as a recommendation, even in an unattended run.',
+      );
+    }
+    for (const question of CHECKPOINT_QUESTIONS) {
+      expect(checkpoints, question).toContain(question);
+    }
+    expect(checkpoints).toContain('(above about 3x needs a stated reason)');
+    expect(rules).toContain(
+      'does the shape still fit, and is the plan and its process proportionate to its value',
+    );
+    expect(
+      oneLine(between(kickoff, '### 8. Reshape checkpoints', '## Finishing')),
+    ).toContain(
+      'and when a plan written after shaping is accepted, the two checkpoint questions in `references/reshape.md` are asked',
+    );
+  });
+
+  it('names --commit on lane set and log append where the skill hands record upkeep over', () => {
+    expect(oneLine(skill)).toContain(
+      '`--commit` on `oat project lane set` and `oat project log append` commits each update by exact path in the same command, and neither pushes',
+    );
+    expect(oneLine(reshape)).toContain(
+      '`--commit` on the step 6 append commits the project log by exact path in the same command; it pushes nothing.',
+    );
   });
 });
 

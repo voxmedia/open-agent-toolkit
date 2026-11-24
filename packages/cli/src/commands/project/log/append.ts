@@ -34,6 +34,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { commitExactPaths } from '@commands/shared/exact-path-commit';
+import { isFreestyleState } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
@@ -519,7 +520,7 @@ export interface CommitProjectLogInput {
    * log whose content still carries this entry is a log whose HEAD content
    * carries it too.
    */
-  identity?: { key: string; body: string };
+  identity?: { key: string; body: string; exact?: boolean };
 }
 
 export interface CommitProjectLogDependencies {
@@ -682,6 +683,7 @@ function logCarriesIdentity(input: CommitProjectLogInput): boolean {
         readFileSync(input.logPath, 'utf8'),
         input.identity.key,
         input.identity.body,
+        input.identity.exact,
       ) !== undefined
     );
   } catch {
@@ -734,12 +736,14 @@ function committedIdentityState(
   logPath: string,
   key: string,
   body?: string,
+  exact?: boolean,
 ): CommittedLogIdentityState {
   const committed = readCommittedProjectLog(run, logPath);
   if (committed === undefined) {
     return 'unknown';
   }
-  return findProjectLogEntryByIdempotencyKey(committed, key, body) !== undefined
+  return findProjectLogEntryByIdempotencyKey(committed, key, body, exact) !==
+    undefined
     ? 'present'
     : 'absent';
 }
@@ -782,6 +786,7 @@ function committedInputIdentityState(
     input.logPath,
     input.identity.key,
     input.identity.body,
+    input.identity.exact,
   );
 }
 
@@ -1015,13 +1020,22 @@ function idempotencyToken(key: string, body?: string): string | undefined {
 }
 
 /**
+ * A freestyle key matches whole: the bare key or the `key:<key>` word the CLI
+ * adds, never a longer word that contains it.
+ */
+function isExactKeyWord(word: string, key: string): boolean {
+  return word === key || word === `key:${key}`;
+}
+
+/**
  * Returns the heading of the first existing entry whose body already carries
  * this idempotency identity, or undefined when the log has no such entry.
  *
  * With `body` supplied the match is the exact whole-word token derived from it;
  * without one — the advisory staleness check, which has only a run id — any
  * word containing `key` counts. Callers that must not duplicate an entry always
- * pass the body.
+ * pass the body. With `exact` (freestyle logs) a word matches only as the
+ * bare key or `key:<key>`, and `body` is not consulted.
  *
  * The scan lives here, in the log module, because log reads and mutations are
  * CLI-owned (DR-260718); callers such as the gate never open `project-log.md`
@@ -1031,13 +1045,18 @@ export function findProjectLogEntryByIdempotencyKey(
   content: string,
   key: string,
   body?: string,
+  exact = false,
 ): string | undefined {
   const token = idempotencyToken(key, body);
   const carries = (line: string): boolean =>
     line
       .split(/\s+/)
       .some((word) =>
-        token === undefined ? word.includes(key) : word === token,
+        exact
+          ? isExactKeyWord(word, key)
+          : token === undefined
+            ? word.includes(key)
+            : word === token,
       );
 
   let heading: string | undefined;
@@ -1171,12 +1190,15 @@ export type ProjectLogAppendResult =
        * the bytes on disk then differ from the bytes the caller passed.
        */
       normalizedLineEndings?: true;
+      /** A freestyle project's key, given or derived; see `freestyleKey`. */
+      idempotencyKey?: string;
     }
   | {
       status: 'already-appended';
       logPath: string;
       heading: string;
       created: false;
+      idempotencyKey?: string;
     }
   | {
       status: 'skipped';
@@ -1609,6 +1631,92 @@ function validateEntry(
 }
 
 /**
+ * The key a freestyle append derives when the caller gives none: a short hash
+ * of every caller-supplied entry field, so the same command run again finds
+ * its own entry. Only what the caller passed counts; the heading date, the
+ * `--time` value and `**Recorded:**` are generated, so `--time` counts only as
+ * having been passed.
+ */
+export function deriveProjectLogKey(input: AppendProjectLogInput): string {
+  const fields = {
+    structural: input.structural === true,
+    type: input.type,
+    scope: input.scope,
+    area: input.area,
+    producer: input.producer,
+    ref: input.ref,
+    category: input.category,
+    source: input.source,
+    origin: input.origin,
+    time: input.time === true,
+    subject: input.subject,
+    sourceProject: input.sourceProject,
+    versionNote: input.versionNote,
+    body: input.body,
+  };
+  const normalized = JSON.stringify(fields, (_key, value: unknown) =>
+    typeof value === 'string' ? value.trim() : value,
+  );
+  return `log-${createHash('sha256').update(normalized).digest('hex').slice(0, 12)}`;
+}
+
+/** Whether the project folder holding `logPath` is a freestyle project. */
+async function isFreestyleLog(logPath: string): Promise<boolean> {
+  try {
+    return isFreestyleState(
+      await readFile(join(dirname(logPath), 'state.md'), 'utf8'),
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A freestyle project's key: the given one, or one derived from the entry.
+ * A key the body lacks as a whole word is added as `key:<key>`, at the end
+ * of a one-line body or as its own paragraph after a multiline one (so it
+ * never lands on a closing code fence). Replay matches the key exactly; every
+ * other mode still refuses a key missing from the body.
+ */
+function freestyleKey(
+  input: AppendProjectLogInput,
+  now: Date,
+  entry: ReturnType<typeof validateEntry>,
+): { idempotencyKey: string; entry: ReturnType<typeof validateEntry> } {
+  const idempotencyKey =
+    input.idempotencyKey === undefined
+      ? deriveProjectLogKey(input)
+      : validateKeyWord(input.idempotencyKey);
+  if (
+    entry.keyBody
+      .split(/\s+/)
+      .some((word) => isExactKeyWord(word, idempotencyKey))
+  ) {
+    return { idempotencyKey, entry };
+  }
+  const body = (input.body ?? '').trimEnd();
+  const separator = body.includes('\n') ? '\n\n' : ' ';
+  return {
+    idempotencyKey,
+    entry: validateEntry(
+      {
+        ...input,
+        body: `${body}${separator}key:${idempotencyKey}`,
+      },
+      now,
+    ),
+  };
+}
+
+function validateKeyWord(value: string): string {
+  const key = validateSingleLine(value, '--idempotency-key');
+  if (/\s/.test(key)) {
+    throw new Error('--idempotency-key must not contain whitespace.');
+  }
+  return key;
+}
+
+/**
  * Validates the optional idempotency key and requires it to be present in the
  * body.
  *
@@ -1624,10 +1732,7 @@ function validateIdempotencyKey(
   if (value === undefined) {
     return undefined;
   }
-  const key = validateSingleLine(value, '--idempotency-key');
-  if (/\s/.test(key)) {
-    throw new Error('--idempotency-key must not contain whitespace.');
-  }
+  const key = validateKeyWord(value);
   if (idempotencyToken(key, body) === undefined) {
     throw new Error(
       '--idempotency-key must appear in --body so a replayed append can recognize its own entry.',
@@ -1748,6 +1853,7 @@ type PreparedProjectLogAppend =
       versionNote: string | undefined;
       normalized: boolean;
       instantiated: string | undefined;
+      freestyleKey: string | undefined;
     };
 
 type ProjectLogAppendPreview =
@@ -1832,6 +1938,9 @@ async function appendLockedProjectLog(
     heading: prepared.heading,
     created: prepared.instantiated !== undefined,
     ...(prepared.normalized ? { normalizedLineEndings: true as const } : {}),
+    ...(prepared.freestyleKey !== undefined
+      ? { idempotencyKey: prepared.freestyleKey }
+      : {}),
   };
 }
 
@@ -1855,11 +1964,19 @@ async function prepareProjectLogAppend(
 
   const now = dependencies.now();
   const date = now.toISOString().slice(0, 10);
-  const { heading, body, versionNote, normalized, keyBody } = validateEntry(
-    input,
-    now,
-  );
-  const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, keyBody);
+  let entry = validateEntry(input, now);
+  let idempotencyKey: string | undefined;
+  let keyed: string | undefined;
+  if (await isFreestyleLog(logPath)) {
+    ({ idempotencyKey, entry } = freestyleKey(input, now, entry));
+    keyed = idempotencyKey;
+  } else {
+    idempotencyKey = validateIdempotencyKey(
+      input.idempotencyKey,
+      entry.keyBody,
+    );
+  }
+  const { heading, body, versionNote, normalized, keyBody } = entry;
   let instantiated: string | undefined;
 
   if (logExists) {
@@ -1931,6 +2048,7 @@ async function prepareProjectLogAppend(
           content,
           idempotencyKey,
           keyBody,
+          keyed !== undefined,
         );
         if (existing !== undefined) {
           // Append-only order is preserved (DR-260714): a replay observes the
@@ -1940,6 +2058,7 @@ async function prepareProjectLogAppend(
             logPath,
             heading: existing,
             created: false,
+            ...(keyed !== undefined ? { idempotencyKey: keyed } : {}),
           };
         }
       }
@@ -1988,6 +2107,7 @@ async function prepareProjectLogAppend(
     versionNote,
     normalized,
     instantiated,
+    freestyleKey: keyed,
   };
 }
 
@@ -2270,14 +2390,17 @@ async function runAppendCommand(
       result.status !== 'skipped' &&
       result.status !== 'dry-run'
     ) {
+      // A freestyle append reports the key it used, given or derived.
+      const key = options.idempotencyKey ?? result.idempotencyKey;
       commit = await commitProjectLog({
         repoRoot,
         logPath: result.logPath,
-        ...(options.idempotencyKey !== undefined && body !== undefined
+        ...(key !== undefined && body !== undefined
           ? {
               identity: {
-                key: options.idempotencyKey,
+                key,
                 body: identityBody(options, body),
+                exact: result.idempotencyKey !== undefined,
               },
             }
           : {}),
@@ -2313,7 +2436,9 @@ async function runAppendCommand(
       context.logger.success(`Appended project log entry: ${result.logPath}`);
     } else if (result.status === 'already-appended') {
       context.logger.success(
-        `Project log entry already present for --idempotency-key: ${result.heading}`,
+        options.idempotencyKey === undefined && result.idempotencyKey
+          ? `Project log entry already present for the derived key ${result.idempotencyKey}: ${result.heading}`
+          : `Project log entry already present for --idempotency-key: ${result.heading}`,
       );
     }
 
@@ -2371,7 +2496,7 @@ export function createProjectLogAppendCommand(
     )
     .option(
       '--idempotency-key <key>',
-      'Globally unique key (a run id, not a common word) that must appear in --body; an entry already carrying it is reported as already-appended instead of duplicated',
+      'Globally unique key (a run id, not a common word) that must appear in --body; an entry already carrying it is reported as already-appended instead of duplicated. In a freestyle project it is optional and is added to the body when missing',
     )
     .option(
       '--category <category>',
@@ -2413,6 +2538,7 @@ Entry contract:
   Add --version-note for tool-related observations.
   Learnings: --category, --source, and --origin write a body head (**Category:**, **Source:**, **Origin:**, **Recorded:**) above a judgment body; --category requires --source, and the category must be one of the six.
   Pass --idempotency-key so a replay reports already-appended instead of duplicating the entry; the key must appear in --body as its own word. Adding --commit also finalizes a gate partial-finalization receipt.
+  In a freestyle project --idempotency-key is optional: without one the append derives a key (log-<12 hex>) from every entry field you pass, never the date or the --time value, so running the same command again appends nothing. A key matches only as a whole word, bare or as key:<key>. A derived or given key missing from the body is added as key:<key> (its own paragraph after a multiline body); --json reports it as idempotencyKey.
   The completion seal (--structural --producer oat-project-complete --ref seal) dedupes on its own, and every append carrying new content onto a sealed log is refused.
   A replay recognized by its own --idempotency-key still reports already-appended on a sealed log and writes nothing.
   Never record secret values (tokens, keys, signed URLs, or credentials); reference secrets by name or source.

@@ -1,7 +1,7 @@
 import type { OrchestratorCheckout } from '@commands/project/orchestrator/branch';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 
-import { readLaneLedger, type LaneBlock } from './ledger';
+import { laneDispatch, readLaneLedger, type LaneBlock } from './ledger';
 
 export type LaneHeadStatus = 'current' | 'ahead' | 'moved' | 'unknown';
 
@@ -21,12 +21,15 @@ export interface LaneHeadCheck {
 
 /**
  * The check applies to a lane in its own worktree that records a branch and
- * a reported head. A lane in the orchestrator's checkout commits onto the
- * orchestrator's branch, so its attribution comes from its report's commit
- * list instead.
+ * a reported head, once its dispatch has closed (`reported` or `no-report`).
+ * While the dispatch is open the lane is still working, so commits past the
+ * last report are expected. A lane in the orchestrator's checkout commits
+ * onto the orchestrator's branch, so its attribution comes from its report's
+ * commit list instead.
  */
 export function headCheckApplies(block: LaneBlock): boolean {
   return (
+    laneDispatch(block).status !== 'open' &&
     block.fields.placement !== 'shared-worktree' &&
     Boolean(block.fields.branch) &&
     Boolean(block.fields.head)

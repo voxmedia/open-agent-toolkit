@@ -1,6 +1,6 @@
 ---
 title: Running a Freestyle Project
-description: 'The orchestrator branch, lane ledger and reports, decisions and memories, and linked projects of a freestyle project.'
+description: 'The orchestrator branch, lane ledger, lane brief and reports, decisions and memories, reshape checkpoints, and linked projects of a freestyle project.'
 ---
 
 # Running a Freestyle Project
@@ -12,13 +12,21 @@ records that a long, multi-lane run would otherwise hold only in the
 conversation, where compaction loses them. This page covers those records and
 the commands that write them.
 
-None of these commands commits or pushes the records it writes, except that
-`oat project new --link-to` saves the new child's scaffold as its scope does
-(see [Linked projects](#linked-projects)). The orchestrator saves the records
-by the rule the project's `AGENTS.md` gives for its scope: an exact-path commit
-on the orchestrator's branch for a shared project, `oat project push` for a
-synced project, and nothing for a local one. Run
+None of these commands commits or pushes the records it writes unless asked,
+except that `oat project new --link-to` saves the new child's scaffold as its
+scope does (see [Linked projects](#linked-projects)). The orchestrator saves
+the records by the rule the project's `AGENTS.md` gives for its scope: an
+exact-path commit on the orchestrator's branch for a shared project,
+`oat project push` for a synced project, and nothing for a local one. Run
 `oat project scope <project-path> --format value` to see the current scope.
+
+`oat project lane set --commit` and `oat project log append --commit` make the
+shared project's exact-path commit in the same command: `lane set` commits
+`lanes.md` and the report the update filed, `log append` the project log, and
+any other change in the checkout stays uncommitted. In a synced or local
+project the code branch holds no records, so they report `nothing-to-commit`.
+Neither pushes; pushing (`git push`, or `oat project push` for a synced
+project) stays its own step.
 
 ## Project files
 
@@ -101,14 +109,28 @@ lane moves to `## Closed` and cannot be updated again. A blocked lane takes
 next dispatch once the last one has closed, `--steer "<text>"` records a
 message sent while the lane runs, and `--no-report` closes an interrupted
 turn. `--worktree` sets the placement: this checkout is `shared-worktree`, any
-other path `own-worktree`. Run `oat project lane set --help` for every field.
+other path `own-worktree`. Run `oat project lane set --help` for every field;
+`--commit` commits what the update wrote (see the start of this page).
 
-Each dispatch brief embeds the report shape, copied with
+Every lane follows the same standing rules, so they ship as a template
+instead of being repeated in each brief. Copy them with
+`oat template resolve lane-brief --output <path>` and embed them whole at the
+start of every dispatch brief. The bundled `lane-brief.md` has five sections:
+Your dispatch (what the brief adds), Project records (the lane writes none, and
+its final message is its report), Lane notes, Paths and commits (exact-path
+commits in the orchestrator's checkout, every commit listed in the report) and
+Report (every turn end gets one, and its Tested SHA equals the delivered head).
+The brief then adds only what is particular to the dispatch: the lane and
+dispatch IDs, the paths of `AGENTS.md` and `shape.md`, the worktree and branch
+or the `paths:` the lane may change, its lane notes path and the task.
+
+Each dispatch brief also embeds the report shape, copied with
 `oat template resolve lane-report --output <path>`. The bundled
 `lane-report.md` asks for Summary (this round and the lane so far), Delivered,
 Verification, Decisions, Deviations, Steering received, Review findings,
-Learnings, Open items and Proposed log entries. A `lane-report.md` at the
-repository or user template tier overrides it (see
+Learnings, Open items and Proposed log entries. A `lane-brief.md` or
+`lane-report.md` at the repository or user template tier overrides the bundled
+one (see
 [File Locations](../../../reference/file-locations.md)).
 
 When the lane returns its report, the orchestrator saves the text to a file
@@ -125,14 +147,16 @@ decisions and gotchas (see
 [Decisions and memories](#decisions-and-memories)).
 
 **Head-ahead check.** For a lane in its own worktree with a recorded branch
-and head, `lane set` and `status` warn when the branch head in this clone has
-moved past the last report's head, or no longer contains it after a rebase or
-reset:
+and head whose dispatch has closed (`reported` or `no-report`), `lane set` and
+`status` warn when the branch head in this clone has moved past the last
+report's head, or no longer contains it after a rebase or reset:
 `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>; do not merge unreported commits unreviewed.`
 A branch that no longer contains the reported head gets the same warning,
-saying it has moved off that head. A lane in the orchestrator's checkout is not
-checked, and a branch that is not in this clone is not flagged
-(`lane set --json` reports its `headCheck` as `unknown`).
+saying it has moved off that head. While the lane's dispatch is `open` its work
+is in flight, so the lane is not checked (`lane set --json` reports `headCheck`
+as `null`). A lane in the orchestrator's checkout is not checked either, and a
+branch that is not in this clone is not flagged (`lane set --json` reports its
+`headCheck` as `unknown`).
 
 **Lane notes.** A lane writes each decision and gotcha, as it happens, to an
 uncommitted notes file in its own checkout,
@@ -177,6 +201,26 @@ created before OAT scaffolded them gets each file on its next resume through
 `oat template resolve <decisions|memories> --output <path>` only when the file
 is absent, because the copy replaces its target. A linked child starts with
 its own empty files.
+
+## Reshape checkpoints
+
+`shape.md` lists the moments to revisit how the project runs. At each one, and
+when a plan written after shaping is accepted, the orchestrator asks two
+questions, which the `shape.md` template, the project's `AGENTS.md` and the
+skill's reshape reference all carry:
+
+1. **Does the shape still fit?**
+2. **Is the plan and its process proportionate to its value?** It is tested by
+   process time against code time (above about 3x needs a stated reason, a
+   prompt to explain rather than a hard rule), by what risk each safeguard
+   covers and whether that risk exists now, and by the lightest process that
+   keeps the real gates: the reviews and approvals that you or the repository
+   require.
+
+Each answer carries its reason; a bare "no change" answers neither. A "no"
+reaches you as a recommendation with the lighter alternative, even in an
+unattended run, and the shape changes only once you agree, through
+[oat-project-freestyle](../planning/starting-projects.md#oat-project-freestyle).
 
 ## Linked projects
 
@@ -232,7 +276,8 @@ A project created by an earlier OAT has an `AGENTS.md` without the newer
 sections. On every resume, after the claim, `oat-project-freestyle` compares
 the file's `##` headings with OAT's current `project-agents` template. When
 one is missing, it replaces the file whole, because the file holds no project
-answers. It then creates a missing `decisions.md` or `memories.md`. A project
+answers. A project created before the `## Lane brief` section existed gets it
+this way, together with the `--commit` lines in `## Records commands`. It then creates a missing `decisions.md` or `memories.md`. A project
 with no `oat_orchestrator_branch` reads as unclaimed until its orchestrator
 runs `oat project orchestrator set`.
 

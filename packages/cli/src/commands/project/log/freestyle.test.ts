@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -40,6 +41,10 @@ const FREESTYLE_STATE = [
   '# Project State: demo',
   '',
 ].join('\n');
+
+/** An existing (lifecycle) mode, for the controls freestyle must not change. */
+const QUICK_STATE =
+  '---\noat_workflow_mode: quick\noat_phase: implement\n---\n';
 
 const PLAN = '# Plan\n\n## Phase P7: Native phase\n\nBody.\n';
 const JOURNAL = '# Journal\n\n## Phase P7: Native phase\n\nNotes.\n';
@@ -100,6 +105,18 @@ async function run(
   await program.parseAsync(['--json', 'project', 'log', subcommand, ...args], {
     from: 'user',
   });
+}
+
+/**
+ * The key a keyless freestyle append derived and added to the body (p11), as
+ * the last `--json` payload reports it.
+ */
+function derivedKey(harness: Harness): string {
+  const payload = harness.capture.jsonPayloads.at(-1) as {
+    idempotencyKey?: string;
+  };
+  expect(payload.idempotencyKey).toMatch(/^log-[0-9a-f]{12}$/);
+  return payload.idempotencyKey as string;
 }
 
 describe('project log on a freestyle project, by path', () => {
@@ -409,6 +426,7 @@ describe('structural event fields', () => {
       ]),
     );
     expect(process.exitCode).toBe(0);
+    const key = derivedKey(harness);
 
     const content = await readFile(logPath, 'utf8');
     expect(content).toContain(
@@ -419,7 +437,7 @@ describe('structural event fields', () => {
         '**Subject:** l07',
         '**Source project:** child-project',
         '',
-        'Merged PR #12; lanes.md update u0031.',
+        `Merged PR #12; lanes.md update u0031. key:${key}`,
         '',
       ].join('\n'),
     );
@@ -431,7 +449,7 @@ describe('structural event fields', () => {
           date: '2026-07-17',
           producer: 'orchestrator',
           ref: 'merged',
-          body: '**Time:** 14:05:09Z\n**Subject:** l07\n**Source project:** child-project\n\nMerged PR #12; lanes.md update u0031.',
+          body: `**Time:** 14:05:09Z\n**Subject:** l07\n**Source project:** child-project\n\nMerged PR #12; lanes.md update u0031. key:${key}`,
           time: '14:05:09Z',
           subject: 'l07',
           sourceProject: 'child-project',
@@ -468,7 +486,7 @@ describe('structural event fields', () => {
     );
     expect(process.exitCode).toBe(0);
     expect(await readFile(logPath, 'utf8')).toContain(
-      '### 2026-07-17 · structural · orchestrator · merged\n\n**Subject:** p03\n**Source project:** child\n\nMerged PR #12; lanes.md update u0031.\n',
+      `### 2026-07-17 · structural · orchestrator · merged\n\n**Subject:** p03\n**Source project:** child\n\nMerged PR #12; lanes.md update u0031. key:${derivedKey(harness)}\n`,
     );
   });
 
@@ -696,7 +714,7 @@ describe('review round 1 fixes (p03-t04)', () => {
     tempDirs.length = 0;
   });
 
-  async function createProject(): Promise<{
+  async function createProject(state = FREESTYLE_STATE): Promise<{
     root: string;
     projectPath: string;
     logPath: string;
@@ -705,7 +723,7 @@ describe('review round 1 fixes (p03-t04)', () => {
     tempDirs.push(root);
     const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
-    await writeFile(join(projectPath, 'state.md'), FREESTYLE_STATE, 'utf8');
+    await writeFile(join(projectPath, 'state.md'), state, 'utf8');
     return { root, projectPath, logPath: join(projectPath, 'project-log.md') };
   }
 
@@ -740,7 +758,7 @@ describe('review round 1 fixes (p03-t04)', () => {
       date: '2026-07-17',
       producer: 'orchestrator',
       ref: 'merged',
-      body: '**Subject:** fake rest',
+      body: `**Subject:** fake rest key:${derivedKey(harness)}`,
     });
   });
 
@@ -773,7 +791,7 @@ describe('review round 1 fixes (p03-t04)', () => {
       parseProjectLogStructuralHead((entry as { body: string }).body),
     ).toEqual({
       head: { time: '14:05:09Z', subject: 'l07', sourceProject: 'child' },
-      rest: 'Merged PR #12.',
+      rest: `Merged PR #12. key:${derivedKey(harness)}`,
     });
   });
 
@@ -850,8 +868,10 @@ describe('review round 1 fixes (p03-t04)', () => {
   });
 
   // L3: a structural key must appear in the caller's --body.
-  it('refuses a structural idempotency key that appears only in the event head (review repro)', async () => {
-    const { root, projectPath, logPath } = await createProject();
+  // A freestyle project now writes the missing key into the body (p11-t02);
+  // every other mode still refuses it.
+  it('refuses a structural idempotency key that appears only in the event head (review repro, existing mode)', async () => {
+    const { root, projectPath, logPath } = await createProject(QUICK_STATE);
     const harness = createHarness(root, NOW);
     await run(
       harness.command,
@@ -905,6 +925,298 @@ describe('review round 1 fixes (p03-t04)', () => {
     expect(replay.capture.jsonPayloads).toEqual([
       expect.objectContaining({ status: 'already-appended' }),
     ]);
+  });
+});
+
+describe('a derived key in a freestyle project (p11)', () => {
+  const tempDirs: string[] = [];
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
+  afterEach(async () => {
+    process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function createProject(state = FREESTYLE_STATE): Promise<{
+    root: string;
+    projectPath: string;
+    logPath: string;
+  }> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-log-key-'));
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), state, 'utf8');
+    return { root, projectPath, logPath: join(projectPath, 'project-log.md') };
+  }
+
+  // Each run reads a later clock, so a key taken from the date, the --time
+  // value or **Recorded:** would differ between runs.
+  let minute = 0;
+  async function append(root: string, args: string[]) {
+    minute += 1;
+    const harness = createHarness(
+      root,
+      new Date(Date.UTC(2026, 10, 23, 9, minute, 7)),
+    );
+    await run(harness.command, 'append', args);
+    expect(process.exitCode).toBe(0);
+    return harness.capture.jsonPayloads.at(-1) as {
+      status: string;
+      idempotencyKey?: string;
+    };
+  }
+
+  async function entries(logPath: string) {
+    return parseProjectLogEntries(await readFile(logPath, 'utf8')).entries;
+  }
+
+  const event = (
+    projectPath: string,
+    change: { body?: string; ref?: string; sourceProject?: string } = {},
+  ): string[] => [
+    '--project',
+    projectPath,
+    '--structural',
+    '--producer',
+    'orchestrator',
+    '--ref',
+    change.ref ?? 'merged',
+    '--time',
+    '--subject',
+    'l07',
+    '--source-project',
+    change.sourceProject ?? 'child',
+    '--body',
+    change.body ?? 'Merged PR #12.',
+  ];
+
+  it('appends the same keyless entry once, writing the derived key into the body', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const first = await append(root, event(projectPath));
+    expect(first.status).toBe('appended');
+    const key = first.idempotencyKey as string;
+    expect(key).toMatch(/^log-[0-9a-f]{12}$/);
+    const replay = await append(root, event(projectPath));
+    expect(replay).toMatchObject({
+      status: 'already-appended',
+      idempotencyKey: key,
+    });
+    const written = await entries(logPath);
+    expect(written).toHaveLength(1);
+    expect(
+      parseProjectLogStructuralHead((written[0] as { body: string }).body).rest,
+    ).toBe(`Merged PR #12. key:${key}`);
+  });
+
+  it('commits a keyless entry with --commit once, and a replay commits nothing', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    await writeFile(logPath, '# Project Log: demo\n\n## Entries\n', 'utf8');
+    const git = (args: string[]): string =>
+      execFileSync('git', args, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).trim();
+    git(['init', '-q', '--initial-branch=main']);
+    git(['config', 'user.email', 'log@example.test']);
+    git(['config', 'user.name', 'Log Test']);
+    git(['config', 'commit.gpgsign', 'false']);
+    git(['add', '-A']);
+    git(['commit', '-q', '-m', 'baseline']);
+    const baseline = git(['rev-parse', 'HEAD']);
+
+    const first = (await append(root, [...event(projectPath), '--commit'])) as {
+      status: string;
+      idempotencyKey?: string;
+      commit?: unknown;
+    };
+    expect(first).toMatchObject({
+      status: 'appended',
+      commit: { outcome: 'committed', committed: true },
+    });
+    const committed = git(['rev-parse', 'HEAD']);
+    expect(committed).not.toBe(baseline);
+    expect(git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      '.oat/projects/shared/demo/project-log.md',
+    );
+
+    const replay = (await append(root, [
+      ...event(projectPath),
+      '--commit',
+    ])) as { status: string; idempotencyKey?: string; commit?: unknown };
+    expect(replay).toMatchObject({
+      status: 'already-appended',
+      idempotencyKey: first.idempotencyKey,
+    });
+    expect(git(['rev-parse', 'HEAD'])).toBe(committed);
+    expect(await entries(logPath)).toHaveLength(1);
+  });
+
+  it('dedupes a keyless judgment entry whose **Recorded:** time differs', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const args = [
+      '--project',
+      projectPath,
+      '--type',
+      'friction',
+      '--scope',
+      'project',
+      '--area',
+      'merge',
+      '--category',
+      'gotcha',
+      '--source',
+      'l07-d02',
+      '--body',
+      'Rebase before merging.',
+    ];
+    expect((await append(root, args)).status).toBe('appended');
+    expect((await append(root, args)).status).toBe('already-appended');
+    expect(await entries(logPath)).toHaveLength(1);
+  });
+
+  it.each([
+    ['the body', { body: 'Merged PR #13.' }],
+    ['the ref', { ref: 'reverted' }],
+    ['--source-project', { sourceProject: 'other-child' }],
+  ])(
+    'appends again when only %s changes, and its replay appends nothing',
+    async (_label, change) => {
+      const { root, projectPath, logPath } = await createProject();
+      const first = await append(root, event(projectPath));
+      const changed = await append(root, event(projectPath, change));
+      expect(changed.status).toBe('appended');
+      expect(changed.idempotencyKey).not.toBe(first.idempotencyKey);
+      expect(await entries(logPath)).toHaveLength(2);
+      expect((await append(root, event(projectPath, change))).status).toBe(
+        'already-appended',
+      );
+      expect(await entries(logPath)).toHaveLength(2);
+    },
+  );
+
+  it('uses a given key instead of a derived one and writes it into a body that lacks it', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const keyed = (body: string) => [
+      ...event(projectPath, { body }),
+      '--idempotency-key',
+      'merge-l07-u0031',
+    ];
+    const first = await append(root, keyed('Merged PR #12.'));
+    expect(first).toMatchObject({
+      status: 'appended',
+      idempotencyKey: 'merge-l07-u0031',
+    });
+    // The given key decides: a different body under it is the same entry.
+    expect((await append(root, keyed('Merged PR #12 again.'))).status).toBe(
+      'already-appended',
+    );
+    const written = await entries(logPath);
+    expect(written).toHaveLength(1);
+    expect((written[0] as { body: string }).body).toMatch(
+      /\n\nMerged PR #12\. key:merge-l07-u0031$/,
+    );
+  });
+
+  it('leaves a body that already carries the given key as it is', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    await append(root, [
+      ...event(projectPath, { body: 'Merged PR #12; merge-l07-u0031' }),
+      '--idempotency-key',
+      'merge-l07-u0031',
+    ]);
+    expect((await readFile(logPath, 'utf8')).includes('key:')).toBe(false);
+  });
+
+  it('matches a given key exactly: a longer word is not a prior append, the bare key is', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const keyed = (body: string, key: string) => [
+      ...event(projectPath, { body }),
+      '--idempotency-key',
+      key,
+    ];
+    await append(root, keyed('Merged change release-123', 'release-123'));
+    // release-12 is a different key, though release-123 contains it.
+    expect(
+      (await append(root, keyed('Reverted release-123', 'release-12'))).status,
+    ).toBe('appended');
+    // dispatch-47 was written as key:dispatch-47; a retry naming it bare
+    // in the body is the same entry.
+    await append(root, keyed('Dispatched l07.', 'dispatch-47'));
+    expect(
+      (await append(root, keyed('Dispatched l07 dispatch-47', 'dispatch-47')))
+        .status,
+    ).toBe('already-appended');
+    expect(await entries(logPath)).toHaveLength(3);
+  });
+
+  it('puts the key in its own paragraph after a multiline body ending in a code fence', async () => {
+    const { root, projectPath, logPath } = await createProject();
+    const body = 'Observation: the hook ran.\n\n```bash\npnpm check\n```';
+    const first = await append(root, [
+      '--project',
+      projectPath,
+      '--type',
+      'friction',
+      '--scope',
+      'project',
+      '--area',
+      'hooks',
+      '--body',
+      body,
+    ]);
+    expect(await readFile(logPath, 'utf8')).toContain(
+      `pnpm check\n\`\`\`\n\nkey:${first.idempotencyKey as string}\n`,
+    );
+  });
+
+  it('keeps an existing mode unchanged: a keyless append is not deduped and a missing key is refused', async () => {
+    const { root, projectPath, logPath } = await createProject(QUICK_STATE);
+    const args = [
+      '--project',
+      projectPath,
+      '--structural',
+      '--producer',
+      'oat-project-implement',
+      '--ref',
+      'p01',
+      '--body',
+      'Phase p01 accepted.',
+    ];
+    const first = await append(root, args);
+    expect(first.status).toBe('appended');
+    expect(first).not.toHaveProperty('idempotencyKey');
+    expect((await append(root, args)).status).toBe('appended');
+    const written = await entries(logPath);
+    expect(written.map((entry) => (entry as { body: string }).body)).toEqual([
+      'Phase p01 accepted.',
+      'Phase p01 accepted.',
+    ]);
+
+    const harness = createHarness(root, new Date('2026-11-23T10:00:00Z'));
+    await run(harness.command, 'append', [
+      ...args,
+      '--idempotency-key',
+      'k-missing',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(harness.capture.jsonPayloads).toEqual([
+      {
+        status: 'error',
+        message:
+          '--idempotency-key must appear in --body so a replayed append can recognize its own entry.',
+      },
+    ]);
+    expect(await entries(logPath)).toHaveLength(2);
   });
 });
 

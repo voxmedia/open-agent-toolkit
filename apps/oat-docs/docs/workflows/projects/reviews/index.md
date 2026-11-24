@@ -18,7 +18,9 @@ it before writing; `oat-project-review-provide` reads the mode before pulling a
 synced project, so it adopts and commits nothing. Review its work with the ad-hoc skills
 ([`oat-review-provide`](review-flavors.md#oat-review-provide) and
 [`oat-review-receive`](review-flavors.md#oat-review-receive)) or the
-mechanism its `shape.md` records; reviews never block a freestyle project.
+mechanism its `shape.md` records. Freestyle adds no review gate of its own;
+a review that an adopted plan requires must still pass before the work it
+guards moves on.
 
 ## Storage contract
 
