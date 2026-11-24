@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-24
-oat_current_task_id: p14
+oat_current_task_id: p15
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | complete    | 1     | 1/1      |
-| p02   | complete    | 1     | 1/1      |
-| p03   | complete    | 1     | 1/1      |
-| p04   | complete    | 1     | 1/1      |
-| p05   | complete    | 1     | 1/1      |
-| p07   | complete    | 1     | 1/1      |
-| p10   | complete    | 1     | 1/1      |
-| p08   | complete    | 1     | 1/1      |
-| p11   | complete    | 1     | 1/1      |
-| p12   | complete    | 1     | 1/1      |
-| p13   | complete    | 1     | 1/1      |
-| p14   | in_progress | 1     | 0/1      |
-| p15   | pending     | 1     | 0/1      |
+| Phase | Status   | Units | Accepted |
+| ----- | -------- | ----- | -------- |
+| p01   | complete | 1     | 1/1      |
+| p02   | complete | 1     | 1/1      |
+| p03   | complete | 1     | 1/1      |
+| p04   | complete | 1     | 1/1      |
+| p05   | complete | 1     | 1/1      |
+| p07   | complete | 1     | 1/1      |
+| p10   | complete | 1     | 1/1      |
+| p08   | complete | 1     | 1/1      |
+| p11   | complete | 1     | 1/1      |
+| p12   | complete | 1     | 1/1      |
+| p13   | complete | 1     | 1/1      |
+| p14   | complete | 1     | 1/1      |
+| p15   | pending  | 1     | 0/1      |
 
-**Total:** 11/13 phases accepted
+**Total:** 12/13 phases accepted
 
 ---
 
@@ -1882,7 +1882,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 ## Phase p14: Lean project AGENTS.md and lane reports
 
-**Status:** in_progress
+**Status:** completed
 **Base:** a344c4b7feb522b7983c8f8bc205b47369679101
 **Head:** b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317
 **Executor:** phase-implementer:freestyle-projects-p14-implementation-1
@@ -1912,6 +1912,12 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - Fixture rationale: protects against missing-heading refresh failing an actual m03 template; the existing synthetic m01/current fixtures cannot prove that version's headings. The captured source names m03 merge `80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a` in its provenance header.
 - Mechanical asset routing: enrolled the new template in both `packages/cli/scripts/bundle-inputs.mjs` and `packages/cli/src/commands/tools/shared/pack-manifest.ts`. Initial focused/prose/full checks caught the missing entries and stale pins before the implementation commit; all were corrected and checks rerun as prevention. Recovery usage remains 0/10, remaining 10, no pending attempt or recovery event.
 - Milestone coordination: no manual scratch-project runs, per the approved unit/contract-test scope. Skill and lockstep package bumps and their release gates stay assigned to p15. Root owns the fresh-context docs/code review.
+
+### Review Received: p14
+
+- Reviewer: `freestyle-projects-p14-review-1`, GPT-6.1 Sol high, fresh native review on `a344c4b7f..b6085cce2`.
+- Artifact: `reviews/archived/p14-code-review-2026-11-24T192440Z.md` (local).
+- Outcome: passed with 0 Critical, High, Medium, or Low findings. The fresh-context review checked docs, rules moved to the guide, and focused and full-suite evidence against the implementation.
 
 ---
 
@@ -1977,6 +1983,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - run/v1 · request=freestyle-projects-p13-implementation-1 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p13-review-1 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p14-implementation-1 · scope=p14 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p14 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p14-review-1 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
