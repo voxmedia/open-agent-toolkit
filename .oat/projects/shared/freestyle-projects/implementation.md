@@ -1814,7 +1814,11 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 
 ## Phase p13: Setup and publication
 
-**Status:** pending
+**Status:** in_progress
+**Base:** e0b2f81ef4a45f188996ac2376c025ff305425f6
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+
+One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules p13 sequentially. Its implementation and docs share contract tests, formatter and build output, so there is no independent fan-out.
 
 ---
 
