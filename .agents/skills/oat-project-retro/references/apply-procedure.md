@@ -4,6 +4,12 @@ Use this procedure only for `RP-NN` items whose authoritative field is
 `Disposition: apply`. Never mutate RP file-items or any UP item; those belong
 to `oat-project-retro-file`.
 
+For freestyle, read `freestyle.md` before applying anything. Its scope and
+shape-consent rules override every commit/push below, including project-log
+correction and retro-writeback transactions. When their required durable
+receipts cannot be saved, keep the proposal pending rather than applying it
+or inventing an `Applied-ref`. Other modes retain the procedure below.
+
 ## Classification and Routing
 
 | Type                 | Default disposition | Apply behavior                                        |

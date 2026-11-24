@@ -49,7 +49,7 @@ _Not yet shaped._
 
 ## Commits, PRs and merges
 
-<!-- Who commits and when, when PRs open, who merges. Until this is shaped, nothing is committed or pushed. -->
+<!-- Who commits and when, when PRs open, who merges. A shared project's creation commits its scaffold unless `--no-commit` is passed. Synced creation publishes its initial ref and writes its pointer, committing the pointer on the code branch unless `--no-commit` is passed. `--no-commit` does not stop the synced publish. Nothing else is committed or pushed until commits are shaped. -->
 
 _Not yet shaped._
 

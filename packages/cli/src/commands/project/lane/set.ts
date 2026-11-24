@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { assertOrchestratorCheckout } from '@commands/project/orchestrator/branch';
 import {
@@ -62,6 +63,25 @@ function placementFor(worktree: string, repoRoot: string): string {
   return worktree === canonicalizePath(repoRoot)
     ? 'shared-worktree'
     : 'own-worktree';
+}
+
+/** Prefer a repository-relative path, then a home-relative one. */
+function portableWorktree(absolute: string, repoRoot: string): string {
+  for (const [root, prefix] of [
+    [canonicalizePath(repoRoot), ''],
+    [canonicalizePath(homedir()), '~'],
+  ] as const) {
+    const path = relative(root, absolute);
+    if (path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path)) {
+      const portable = path.split(sep).join('/');
+      return prefix
+        ? portable
+          ? `${prefix}/${portable}`
+          : prefix
+        : portable || '.';
+    }
+  }
+  return absolute;
 }
 
 /**
@@ -130,8 +150,14 @@ export async function setLane(options: SetLaneOptions): Promise<SetLaneResult> {
   };
   const worktree = request.fields.worktree;
   if (worktree) {
-    const absolute = canonicalizePath(resolve(options.cwd, worktree));
-    request.fields.worktree = absolute;
+    const expanded =
+      worktree === '~'
+        ? homedir()
+        : worktree.startsWith('~/')
+          ? join(homedir(), worktree.slice(2))
+          : worktree;
+    const absolute = canonicalizePath(resolve(options.cwd, expanded));
+    request.fields.worktree = portableWorktree(absolute, options.repoRoot);
     request.fields.placement = placementFor(absolute, options.repoRoot);
   } else if (worktree === '') {
     request.fields.placement = '';

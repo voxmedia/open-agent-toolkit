@@ -241,6 +241,39 @@ describe('oat pjm', () => {
     ).resolves.not.toContain('oat_template:');
   });
 
+  it.each(['pjm', 'decision'])(
+    '%s init uses level-two headings and accepts unchanged legacy blocks without writing',
+    async (family) => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      expect((await runCli(root, ['--json', 'pjm', 'init'])).exitCode).toBe(0);
+      const agentsPath = join(root, 'AGENTS.md');
+      await rm(agentsPath);
+      const fresh = await runCli(root, ['--json', family, 'init']);
+      expect(fresh.exitCode, fresh.stderr).toBe(0);
+      const current = await readFile(agentsPath, 'utf8');
+      expect(current).toContain('\n## Decision Records\n');
+      if (family === 'pjm')
+        expect(current).toContain('\n## Project Management\n');
+      const legacy = current
+        .replace('\n## Project Management\n', '\n### Project Management\n')
+        .replace('\n## Decision Records\n', '\n### Decision Records\n');
+      await writeFile(agentsPath, legacy);
+      const rerun = await runCli(root, ['--json', family, 'init']);
+      expect(rerun.exitCode, rerun.stderr).toBe(0);
+      expect(await readFile(agentsPath, 'utf8')).toBe(legacy);
+      const edited = legacy.replace(
+        '### Decision Records',
+        '### My Decision Records',
+      );
+      await writeFile(agentsPath, edited);
+      const refused = await runCli(root, ['--json', family, 'init']);
+      expect(refused.exitCode).toBe(1);
+      expect(refused.stdout).toContain('manual-required');
+      expect(await readFile(agentsPath, 'utf8')).toBe(edited);
+    },
+  );
+
   it.each([false, true])(
     'reports completed adoption with both guidance outcomes in json=%s mode',
     async (json) => {

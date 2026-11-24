@@ -14,7 +14,8 @@ Inventory and read available evidence in this order:
    title, each exactly); keep a distinct lesson that only shares a title. Its
    absence is recorded as `oat-execution-learnings: unavailable`, which is the
    normal state for projects whose learnings live in the log.
-3. Lifecycle artifacts — at minimum `implementation.md`, `state.md`, and
+3. For freestyle, use `references/freestyle.md`'s project evidence without
+   requiring lifecycle artifacts. For other modes, lifecycle artifacts — at minimum `implementation.md`, `state.md`, and
    `plan.md`; also read load-bearing `discovery.md`, `design.md`, `spec.md`,
    reviews, references, and evidence ledgers when present.
 4. Session/run evidence — use the environment-appropriate route below.

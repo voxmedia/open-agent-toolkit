@@ -30,25 +30,26 @@ project) stays its own step.
 
 ## Project files
 
-| File                 | What it holds                                                                                                        | Written by                                                      |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `AGENTS.md`          | OAT's fixed rules. Its first line: read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` | OAT only; agents never edit it                                  |
-| `shape.md`           | How the project runs, agreed with you                                                                                | The orchestrator, by hand                                       |
-| `decisions.md`       | What the project chose about its work, and why (`## Live`, `## Superseded`)                                          | The orchestrator, by hand                                       |
-| `memories.md`        | What a returning agent should keep in mind (`## User preferences`, `## Gotchas`, `## Context`)                       | The orchestrator, by hand                                       |
-| `state.md`           | The mode, the orchestrator's branch and, for a linked project, its parent                                            | `oat project new`, `oat project orchestrator set`               |
-| `linked-projects.md` | One row per linked project, open until acknowledged                                                                  | `oat project new --link-to`, `oat project linked add` and `ack` |
-| `lanes.md`           | The lane ledger                                                                                                      | `oat project lane set` only                                     |
-| `lane-reports/`      | Each lane's filed reports, one per dispatch, never edited                                                            | `oat project lane set --report`                                 |
-| `project-log.md`     | What happened and when, when the project log is enabled                                                              | `oat project log append`                                        |
+| File                 | What it holds                                                                                                        | Written by                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `AGENTS.md`          | OAT's fixed rules. Its first line: read `shape.md`, then the `## Live` section of `decisions.md`, then `memories.md` | OAT only; agents never edit it                                                  |
+| `shape.md`           | How the project runs, agreed with you                                                                                | The orchestrator, by hand                                                       |
+| `decisions.md`       | What the project chose about its work, and why (`## Live`, `## Superseded`)                                          | The orchestrator, by hand                                                       |
+| `memories.md`        | What a returning agent should keep in mind (`## User preferences`, `## Gotchas`, `## Context`)                       | The orchestrator, by hand                                                       |
+| `state.md`           | The mode, the orchestrator's branch and, for a linked project, its parent                                            | `oat project new`, `oat project orchestrator set`, `oat project complete-state` |
+| `linked-projects.md` | One row per linked project, open until acknowledged                                                                  | `oat project new --link-to`, `oat project linked add` and `ack`                 |
+| `lanes.md`           | The lane ledger                                                                                                      | `oat project lane set` only                                                     |
+| `lane-reports/`      | Each lane's filed reports, one per dispatch, never edited                                                            | `oat project lane set --report`                                                 |
+| `project-log.md`     | What happened and when, when the project log is enabled                                                              | `oat project log append` and `synthesize`                                       |
 
 `oat project new --mode freestyle` scaffolds the first five, and
 `project-log.md` when the project log is enabled; the others appear on first
 use. Apart from `AGENTS.md`, which only OAT changes, only the orchestrator
 writes these files, by hand or through the commands above. A lane, or any other
 delegate, returns its results to the orchestrator and never edits a project
-record. Its final message is its report, and its pull request holds code
-only.
+record. A writable lane on the orchestrator's machine returns an ignored
+report file's absolute path; a remote or read-only lane returns the report in
+its final message. Its pull request holds code only.
 
 ## The orchestrator branch
 
@@ -111,30 +112,51 @@ message sent while the lane runs, and `--no-report` closes an interrupted
 turn. `--worktree` sets the placement: this checkout is `shared-worktree`, any
 other path `own-worktree`. Run `oat project lane set --help` for every field;
 `--commit` commits what the update wrote (see the start of this page).
+Worktrees inside the repository are stored relative to it, paths elsewhere
+under your home as `~/...`, and other paths as absolute values. Placement is
+derived from the full path before shortening; older absolute entries keep
+working when updated without `--worktree`. Active blocks keep task and thread
+handles; new History lines omit them. Write all records, including ledger
+free text, for their scope's audience: everyone who can read `origin` from
+creation for synced projects, everyone who can read the branch once pushed
+for shared projects, and this checkout only for local projects.
+
+The project `AGENTS.md` keeps the resume rule: read `lanes.md` and reconcile
+open dispatches before acting. Before dispatching or re-dispatching a lane,
+when it reports back and before integrating its branch, read the lane guide
+with `oat template resolve lane-guide --output <path>`. It holds the Dispatch,
+Lane brief, Lane reports and Lane placement rules.
 
 Every lane follows the same standing rules, so they ship as a template
 instead of being repeated in each brief. Copy them with
 `oat template resolve lane-brief --output <path>` and embed them whole at the
 start of every dispatch brief. The bundled `lane-brief.md` has five sections:
 Your dispatch (what the brief adds), Project records (the lane writes none, and
-its final message is its report), Lane notes, Paths and commits (exact-path
+the orchestrator files its report), Lane notes, Paths and commits (exact-path
 commits in the orchestrator's checkout, every commit listed in the report) and
 Report (every turn end gets one, and its Tested SHA equals the delivered head).
 The brief then adds only what is particular to the dispatch: the lane and
 dispatch IDs, the paths of `AGENTS.md` and `shape.md`, the worktree and branch
-or the `paths:` the lane may change, its lane notes path and the task.
+or the `paths:` the lane may change, its lane notes and report paths and the task. Both paths are authorized scratch
+outside a same-checkout lane's `paths:`. Confirm they are ignored with
+`git check-ignore`; if either is not, authorize paths outside the checkout
+instead, for example under `$TMPDIR`.
 
 Each dispatch brief also embeds the report shape, copied with
 `oat template resolve lane-report --output <path>`. The bundled
 `lane-report.md` asks for Summary (this round and the lane so far), Delivered,
 Verification, Decisions, Deviations, Steering received, Review findings,
-Learnings, Open items and Proposed log entries. A `lane-brief.md` or
+Learnings, Open items and Proposed log entries. A `lane-guide.md`, `lane-brief.md` or
 `lane-report.md` at the repository or user template tier overrides the bundled
 one (see
 [File Locations](../../../reference/file-locations.md)).
 
-When the lane returns its report, the orchestrator saves the text to a file
-outside the project records and runs
+A lane with write access on the orchestrator's machine writes its report to
+the authorized ignored file beside its notes and names the absolute path in
+its final message. A remote or read-only lane returns the report as its final
+message; the orchestrator saves that text verbatim outside the project
+records. Before acting on either report and before removing the lane's
+worktree, the orchestrator runs
 `oat project lane set <lane> --report <file> --head <delivered head>`. That
 one update copies the file verbatim into `lane-reports/<lane>-<dispatch>.md`,
 sets the report pointer and head, and closes the dispatch. A different file
@@ -151,6 +173,9 @@ and head whose dispatch has closed (`reported` or `no-report`), `lane set` and
 `status` warn when the branch head in this clone has moved past the last
 report's head, or no longer contains it after a rebase or reset:
 `Lane head ahead of its report: l01 (branch lane/l01) is 2 commits past the last report's head <sha>; do not merge unreported commits unreviewed.`
+After rebasing a lane's branch, record with `lane set --head` the rebased
+equivalent of the last reported commit, not the new branch tip. If you cannot
+identify that commit, leave the warning in place.
 A branch that no longer contains the reported head gets the same warning,
 saying it has moved off that head. While the lane's dispatch is `open` its work
 is in flight, so the lane is not checked (`lane set --json` reports `headCheck`
@@ -270,14 +295,52 @@ of a path, against the parent's open rows. A name found in more than one scope
 is refused as ambiguous. A synced project that is not pulled here is refused
 with the `oat project pull <name>` instruction.
 
+## Closing the project
+
+Invoke `oat-project-complete` when you are ready to close. It asks you to
+confirm `shape.md`'s done criteria and offers a retrospective and documentation
+sync. Neither is required. Documentation uses the shape's documents,
+`decisions.md` `## Live`, lane reports, the project log and merged changes;
+retro uses the available evidence and names anything missing. Neither needs a
+lifecycle plan or journal. Their commits and pushes follow `shape.md` and the
+scope: local records stay uncommitted. Retro apply proposals stay pending when
+their required durable receipts cannot be saved.
+
+On an active synced project, completion, documentation and retro refresh the
+checkout before reading the shape. They can continue with uncommitted edits
+when the checkout is already at the fetched revision. A stale dirty checkout
+or another pull failure stops the run. Optional work invoked by completion
+uses the checkout that completion already checked.
+
+Completion synthesizes an existing project log only while synthesis is pending,
+keeps an existing synthesis and skips an absent log. It then runs
+`oat project complete-state <project-path>`. For synced scope it runs the
+agreed `oat project push <project-path>` before
+`oat project archive <project-path>`. Withheld publication leaves the project
+**complete locally, with archive pending until the agreed push succeeds**;
+the checkout and active pointer stay in place. Archive's own commit and storage
+publication also follow the shape. Shared and local archives need no project-ref
+push, and local records remain uncommitted. For every scope, the skill previews
+archive with `--dry-run --json` and checks its actual effects against the scope
+and shape. A non-null `s3Path` would upload the records; local records are never
+uploaded automatically. If publication is not permitted, the completed checkout
+and pointer remain in place with archive pending. A retry after synced archive
+uses the existing receipt, including when the remote retains a matching active
+alias or local checkout cleanup was interrupted. Its preview and shape still
+govern any effects. The skill reports archive's actual
+result and any pending work.
+
+Freestyle requires no final review, summary or PR, and completion runs none.
+`oat-project-summary` and `oat-project-pr-final` still stop for freestyle.
+
 ## Older projects
 
 A project created by an earlier OAT has an `AGENTS.md` without the newer
 sections. On every resume, after the claim, `oat-project-freestyle` compares
 the file's `##` headings with OAT's current `project-agents` template. When
 one is missing, it replaces the file whole, because the file holds no project
-answers. A project created before the `## Lane brief` section existed gets it
-this way, together with the `--commit` lines in `## Records commands`. It then creates a missing `decisions.md` or `memories.md`. A project
+answers. An older project may also lack `## Closing the project`. An m03-era project lacks `## Working with lanes`, so the refresh adds that
+section and removes the four sections now in the lane guide. It then creates a missing `decisions.md` or `memories.md`. A project
 with no `oat_orchestrator_branch` reads as unclaimed until its orchestrator
 runs `oat project orchestrator set`.
 

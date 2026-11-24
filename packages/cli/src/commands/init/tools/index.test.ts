@@ -2726,14 +2726,14 @@ describe('buildToolPacksSectionBody', () => {
     const projectManagementBody = buildProjectManagementAgentsSectionBody();
     const decisionBody = buildDecisionAgentsSectionBody();
 
-    expect(projectManagementBody).toContain('### Project Management');
+    expect(projectManagementBody).toContain('## Project Management');
     expect(projectManagementBody).toContain('.oat/repo/AGENTS.md');
     expect(projectManagementBody).toContain('`pjm/` for active state');
     expect(projectManagementBody).toContain('`reference/` for durable records');
     expect(projectManagementBody).toContain('oat pjm init');
-    expect(projectManagementBody).not.toContain('### Decision Records');
+    expect(projectManagementBody).not.toContain('## Decision Records');
 
-    expect(decisionBody).toContain('### Decision Records');
+    expect(decisionBody).toContain('## Decision Records');
     expect(decisionBody).toContain('.oat/repo/reference/decisions/index.md');
     expect(decisionBody).toContain('oat-pjm-decision');
     expect(decisionBody).toContain('oat decision new');
@@ -2745,9 +2745,9 @@ describe('buildToolPacksSectionBody', () => {
       { pack: 'project-management', scope: 'project' },
     ]);
 
-    expect(body).not.toContain('### Project Management');
+    expect(body).not.toContain('## Project Management');
     expect(body).not.toContain('.oat/repo/AGENTS.md');
-    expect(body).not.toContain('### Decision Records');
+    expect(body).not.toContain('## Decision Records');
     expect(body).not.toContain('.oat/repo/reference/decisions/index.md');
   });
 

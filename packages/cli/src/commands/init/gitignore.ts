@@ -15,6 +15,7 @@ const OAT_STATE_DASHBOARD_PATH = '.oat/state.md';
 const execFileAsync = promisify(execFile);
 
 const CORE_ENTRIES = [
+  '.oat/analysis/lane-notes/',
   '.oat/config.local.json',
   '.oat/state.md',
   '.oat/projects/local/**',

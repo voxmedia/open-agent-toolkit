@@ -176,7 +176,7 @@ function createSetCommand(dependencies: LaneDependencies): Command {
     .option('--thread <handle>', 'Thread handle')
     .option(
       '--worktree <path>',
-      "The lane's worktree; this checkout means the lane shares the orchestrator's",
+      "The lane's worktree (stored relative to the repository or ~ when possible); this checkout means the lane shares the orchestrator's",
     )
     .option('--branch <name>', "The lane's branch")
     .option('--base <sha>', "The lane's base")

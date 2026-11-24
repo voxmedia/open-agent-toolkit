@@ -1104,41 +1104,50 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('**paused-demo**');
   });
 
-  it('computeNextStep resumes when active project lifecycle is paused', async () => {
-    const root = await createTempRepo();
-    tempDirs.push(root);
+  it.each([
+    { stored: 'qa hold', displayed: 'qa hold' },
+    {
+      stored: JSON.stringify('QA: review #42 | "hold"\nuntil Monday'),
+      displayed: 'QA: review #42 \\| "hold" until Monday',
+    },
+  ])(
+    'resumes a paused active project and displays $displayed',
+    async ({ stored, displayed }) => {
+      const root = await createTempRepo();
+      tempDirs.push(root);
 
-    await writeStateFile(root, '.oat/projects/shared/paused-active', {
-      oat_phase: 'implement',
-      oat_phase_status: 'in_progress',
-      oat_current_task: 'p03-t01',
-      oat_workflow_mode: 'full',
-      oat_hill_checkpoints: '[]',
-      oat_hill_completed: '[]',
-      oat_lifecycle: 'paused',
-      oat_pause_timestamp: '2026-02-20T12:00:00.000Z',
-      oat_pause_reason: 'qa hold',
-    });
-    await writeLocalConfig(root, {
-      activeProject: '.oat/projects/shared/paused-active',
-    });
+      await writeStateFile(root, '.oat/projects/shared/paused-active', {
+        oat_phase: 'implement',
+        oat_phase_status: 'in_progress',
+        oat_current_task: 'p03-t01',
+        oat_workflow_mode: 'full',
+        oat_hill_checkpoints: '[]',
+        oat_hill_completed: '[]',
+        oat_lifecycle: 'paused',
+        oat_pause_timestamp: '2026-02-20T12:00:00.000Z',
+        oat_pause_reason: stored,
+      });
+      await writeLocalConfig(root, {
+        activeProject: '.oat/projects/shared/paused-active',
+      });
 
-    const result = await generateStateDashboard({
-      repoRoot: root,
-      today: '2026-02-21',
-      git: mockGit,
-    });
+      const result = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-02-21',
+        git: mockGit,
+      });
 
-    expect(result.recommendedStep).toBe('oat project open paused-active');
-    expect(result.recommendedReason).toContain('paused');
+      expect(result.recommendedStep).toBe('oat project open paused-active');
+      expect(result.recommendedReason).toContain('paused');
 
-    const dashboard = await readFile(result.dashboardPath, 'utf8');
-    expect(dashboard).toContain('| Lifecycle | paused |');
-    expect(dashboard).toContain(
-      '| Pause Timestamp | 2026-02-20T12:00:00.000Z |',
-    );
-    expect(dashboard).toContain('| Pause Reason | qa hold |');
-  });
+      const dashboard = await readFile(result.dashboardPath, 'utf8');
+      expect(dashboard).toContain('| Lifecycle | paused |');
+      expect(dashboard).toContain(
+        '| Pause Timestamp | 2026-02-20T12:00:00.000Z |',
+      );
+      expect(dashboard).toContain(`| Pause Reason | ${displayed} |`);
+    },
+  );
 
   it('routes to oat-project-revise when phase status is pr_open', async () => {
     const root = await createTempRepo();

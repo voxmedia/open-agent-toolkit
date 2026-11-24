@@ -344,7 +344,10 @@ export function createProjectNewCommand(
     )
     .option('--no-set-active', 'Do not update active project in local config')
     .option('--no-dashboard', 'Do not refresh .oat/state.md after scaffold')
-    .option('--no-commit', 'Do not git-commit the scaffolded project directory')
+    .option(
+      '--no-commit',
+      'Do not commit the shared scaffold or synced pointer; does not stop the synced publish',
+    )
     .option(
       '--with-project-log',
       'Create project-log.md regardless of workflow.projectLog config',

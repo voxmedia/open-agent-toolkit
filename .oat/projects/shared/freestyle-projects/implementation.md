@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-23
-oat_current_task_id: p12
+oat_last_updated: 2026-11-24
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,20 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | complete | 1     | 1/1      |
-| p07   | complete | 1     | 1/1      |
-| p10   | complete | 1     | 1/1      |
-| p08   | complete | 1     | 1/1      |
-| p11   | complete | 1     | 1/1      |
-| p12   | complete | 1     | 1/1      |
+| Phase  | Status   | Units | Accepted |
+| ------ | -------- | ----- | -------- |
+| p01    | complete | 1     | 1/1      |
+| p02    | complete | 1     | 1/1      |
+| p03    | complete | 1     | 1/1      |
+| p04    | complete | 1     | 1/1      |
+| p05    | complete | 1     | 1/1      |
+| p07    | complete | 1     | 1/1      |
+| p10    | complete | 1     | 1/1      |
+| p08    | complete | 1     | 1/1      |
+| p11    | complete | 1     | 1/1      |
+| p12    | complete | 1     | 1/1      |
+| p13    | complete | 1     | 1/1      |
+| p14    | complete | 1     | 1/1      |
+| p15    | complete | 1     | 1/1      |
+| p-rev1 | complete | 1     | 1/1      |
+| p-rev2 | complete | 1     | 1/1      |
 
-**Total:** 10/10 phases accepted
+**Total:** 15/15 phases accepted
 
 ---
 
@@ -1809,6 +1814,312 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 
 ---
 
+## Phase p13: Setup and publication
+
+**Status:** completed
+**Base:** e0b2f81ef4a45f188996ac2376c025ff305425f6
+**Head:** c4633498513c0f522ecb23841afa4764fb17575d
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+
+**Verification:** Passed on clean committed HEAD `c4633498513c0f522ecb23841afa4764fb17575d`, against unchanged `origin/main` / integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, on Darwin arm64, Node 22.23.4 and pnpm 10.13.1. `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, `pnpm build:docs`, direct docs index generation and manifest freshness all exited 0. Post-commit check/type-check replayed 11/11 Turbo tasks, test replayed 12/12 workspace tasks, build 5/5 and docs build 6/6; live root validation/format, focused help tests (71), smoke (165), skill (754) and script (7) cases passed. The recovery's pre-commit CLI suite executed uncached: 10,032 tests in 458 files passed. Scoped task proofs and earlier live root lint/format also passed. Lockfile and package/configuration inputs were unchanged; branch bundled assets were rebuilt for CLI 0.3.59. Gate logs are `/tmp/p13-recovery-{focused,check,types,phase}-{pre,post}.log` and `/tmp/p13-phase-{build,docs,manifest}.log`.
+
+**Recovery:** `p13-recovery-001` corrected the existing inline `project new --help` snapshot in `packages/cli/src/commands/help-snapshots.test.ts`, mechanically discovered by full phase tests after p13-t03. Append-only recovery commit `c4633498513c0f522ecb23841afa4764fb17575d` passed focused and relevant phase checks both before and immediately after commit; original p13-t03 remains immutable. Prior durable usage 0; current usage 1/10, remaining 9. The matching committed `completed` marker remains for root validation/settlement. No fallback or other correction was made.
+
+**Milestone coordination:** Package and skill version bumps, `check:skill-bumps`, `release:check-versions` and `release:validate` remain assigned to p15. Manual scratch-project runs were not performed, per the approved m04 unit/contract-test scope.
+
+One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules p13 sequentially. Its implementation and docs share contract tests, formatter and build output, so there is no independent fan-out.
+
+### Task p13-t01: Keep lane locations portable and history concise
+
+**Status:** completed
+**Commit:** 87d4a93871da30de8717460358796b30550aaf2c
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+**Handle:** /root/p13
+**Intent:** Store newly supplied worktrees relative to the repository or home, derive placement from the absolute path, retain legacy placement, and keep handles only in Active blocks.
+**Files:** packages/cli/src/commands/project/lane/set.ts, update.ts, index.ts, lane.test.ts, ledger.test.ts
+**Proof:** Node 22.23.4; isolated-HOME Vitest project/lane 42/42 passed (exit 0, uncached). CLI check, type-check and build exited 0. Baseline source with the new assertions failed (exit 1) for the retained handles and absolute repository path; restored source is byte-identical to the passing run. Initial generated asset version mismatch was resolved by the scoped build before tests.
+
+### Task p13-t02: Fix setup guidance and pause serialization
+
+**Status:** completed
+**Commit:** cd4da212c4278be2da9fc5657fc850da40f378c0
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+**Handle:** /root/p13
+**Intent:** Always ignore lane notes at init, write new adoption headings at level two while accepting exact legacy blocks without writes, and serialize any pause reason as a quoted scalar.
+**Files:** CLI init gitignore and tests, PJM/decision guidance and tests, shared AGENTS classifier and frontmatter writer, pause command and tests. The frontmatter replacement callback is a mechanically required addition: a literal `$&` in the reason otherwise substitutes the old frontmatter into the new quoted value.
+**Proof:** Node 22.23.4; isolated-HOME Vitest init/gitignore, PJM, decision, shared/agents-md, shared/frontmatter-write, init/tools and project/pause: 345/345 passed, uncached (exit 0). CLI check, type-check and build exited 0. Baseline-source negative control failed all four selected assertions (lane-notes ignore, both fresh heading producers, quoted pause reason); patched cases also prove unchanged legacy bytes accepted and user-edited blocks refused as manual-required.
+
+### Task p13-t03: Explain creation, publication and record audiences
+
+**Status:** completed
+**Commit:** 497a8fa6b64406283e9a177cbba271749399daac
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+**Handle:** /root/p13
+**Intent:** Align freestyle skill, kickoff, project templates, CLI help and covering docs with scope-specific creation, audience and dirty-tree behavior, plus the setup and lane changes.
+**Files:** freestyle skill/kickoff, project-agents and shape templates, new command/help test, freestyle contracts, CLI README/AGENTS, affected docs pages.
+**Proof:** Node 22.23.4; isolated-HOME shared skill-prose contracts, validation and new help tests: 1383/1383 passed, uncached (exit 0). Root check, type-check, lint and format exited 0; scoped CLI build exited 0. Baseline-source creation/audience/help controls failed all three intended assertions. A first suite run overlapped a root-check build and observed partially rewritten dist imports; sequential build then full rerun passed. No source repair was made for that overlap. Skill/package release bumps and their final gates belong to p15.
+
+### Recovery Event p13-recovery-001
+
+- Phase/task: p13 / p13-t03
+- Original request: freestyle-projects-p13-implementation-1
+- Original commit: 497a8fa6b64406283e9a177cbba271749399daac
+- Defect class: test
+- Discovered by: bash scripts/with-isolated-home.sh pnpm test
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: c4633498513c0f522ecb23841afa4764fb17575d
+- Verification: focused help suite and phase check/types/full tests passed before and immediately after commit.
+- Reason: Updated only the stale creation-help snapshot and p13 ledger. Same handle and target preserved; original commits remain immutable.
+
+### Review Received: p13
+
+- Reviewer: `freestyle-projects-p13-review-1`, GPT-6.1 Sol high, fresh native review on `e0b2f81ef..c46334985`.
+- Artifact: `reviews/archived/p13-code-review-2026-11-24T185752Z.md` (local).
+- Outcome: passed with 0 Critical, High, Medium, or Low findings. The reviewer ran 348 targeted tests under pinned Node 22.23.4 and isolated HOME, and checked the original negative controls and docs against the code.
+
+---
+
+## Phase p14: Lean project AGENTS.md and lane reports
+
+**Status:** completed
+**Base:** a344c4b7feb522b7983c8f8bc205b47369679101
+**Head:** b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317
+**Executor:** phase-implementer:freestyle-projects-p14-implementation-1
+
+**Verification:** Passed at clean committed HEAD `b6085cce22d5ef9cf37d2e8ee0ca5c5c981fb317`, with implementation bytes unchanged from the tested inputs of `60a1e7b544c02f49347009a7907af394699a2c6d`. Phase-boundary `pnpm check`, `pnpm type-check` and isolated-HOME `pnpm test` exited 0; workspace tasks replayed 11/11, 11/11 and 12/12 respectively, while root validation/format and smoke (165), skills (754), scripts (7) ran live. The pre-commit final-input workspace tests ran uncached (CLI 458 files / 10037 tests), as did 1367 prose contract tests and 73 focused freestyle contracts. Build and docs build passed from cache, with direct docs index generation and manifest freshness exit 0. Darwin arm64, pinned Node 22.23.4, pnpm 10.13.1; unchanged integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. Phase logs: `/tmp/p14-phase-{check,types,test}.log`.
+
+**Recovery:** Prior and final usage 0/10, remaining 10; no pending attempt or recovery event. Initial pre-commit bundle-routing omissions and stale pins were corrected before the task commit.
+
+**Milestone coordination:** Root owns fresh-context docs/code review. No manual scratch-project runs were performed. Skill/package version bumps and release gates remain assigned to p15.
+
+One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules this phase sequentially. Its templates, skills and docs share contract tests and generated assets, so there is no independent fan-out.
+
+### Task p14-t01: Move lane guidance and add report-file handoff
+
+**Status:** completed
+**Commit:** 60a1e7b544c02f49347009a7907af394699a2c6d
+**Executor:** phase-implementer:freestyle-projects-p14-implementation-1
+**Handle:** /root/p14
+**Intent:** Preserve lane rules in a bundled guide, support local report files and remote/read-only final reports, and make shaping choices explicit (Outcome 12).
+**Files:** `packages/cli/src/commands/tools/shared/pack-manifest.ts`, `packages/cli/scripts/bundle-inputs.mjs`, `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`, `.oat/templates/project-agents.md`, `.oat/templates/lane-guide.md`, `.oat/templates/lane-brief.md`, `.oat/templates/lane-report.md`, `.agents/skills/oat-project-freestyle/SKILL.md`, `.agents/skills/oat-project-freestyle/references/kickoff.md`, `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`, `packages/cli/src/commands/init/tools/shared/fixtures/project-agents-m03.md`, `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`.
+**Proof:** Isolated-HOME freestyle contract suite, including bundle resolution and m03 refresh; phase gates `pnpm check`, `pnpm type-check`, isolated `pnpm test`, `pnpm lint`, `pnpm format`, and isolated skill-prose contracts.
+
+- Verification: all commands exited 0 on the implementation inputs, whose SHA-256 checksums remained identical after the hook-safe commit. Focused freestyle contracts: 73 tests. Isolated skill-prose contracts: 33 files, 1367 tests. Full isolated `pnpm test`: CLI 458 files / 10037 tests, plus the other workspace packages, smoke 165, skills 754, scripts 7. `pnpm check`, `pnpm type-check`, `pnpm lint`, `pnpm format`, `pnpm build`, `pnpm build:docs`, direct docs index generation and manifest freshness passed. Runtime: Darwin arm64, pinned Node 22.23.4, pnpm 10.13.1; base `c840893ec1488c364192db391e1162cfd1ae618f`, unchanged `origin/main` `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. Logs: `/tmp/p14-{check,types,test,lint,format}-final.log`, `/tmp/p14-prose-final.log`, `/tmp/p14-{build,docs,index}.log`.
+- Cache evidence: check 0/11; type-check 5/11; test 5/12 (the five build dependencies replayed, all seven workspace test tasks ran); lint and format each 5/10; build 5/5 and docs build 6/6. Focused and prose Vitest runs executed directly, without Turbo cache. Direct docs manifest generation ran even though docs build replayed.
+- Cache-count correction: the seven cache misses in the pre-commit full run were six workspace test tasks plus the docs build; the five other build tasks replayed. The previous line's "seven workspace test tasks" wording over-counted tests by one.
+- Conservation review: Dispatch, Lane brief, Lane reports and Lane placement moved intact except the approved report routes, precise core ignore path, and rebase guidance. Existing protections moved to guide reads rather than being removed. Single-writer ownership, remote/read-only final reports, p13 publication wording and runtime behavior remain intact. No instruction changes outside these OAT-owned templates are needed.
+- Fixture rationale: protects against missing-heading refresh failing an actual m03 template; the existing synthetic m01/current fixtures cannot prove that version's headings. The captured source names m03 merge `80e9a4c0d0c7bd2cf32fbbdbf019eabf9805838a` in its provenance header.
+- Mechanical asset routing: enrolled the new template in both `packages/cli/scripts/bundle-inputs.mjs` and `packages/cli/src/commands/tools/shared/pack-manifest.ts`. Initial focused/prose/full checks caught the missing entries and stale pins before the implementation commit; all were corrected and checks rerun as prevention. Recovery usage remains 0/10, remaining 10, no pending attempt or recovery event.
+- Milestone coordination: no manual scratch-project runs, per the approved unit/contract-test scope. Skill and lockstep package bumps and their release gates stay assigned to p15. Root owns the fresh-context docs/code review.
+
+### Review Received: p14
+
+- Reviewer: `freestyle-projects-p14-review-1`, GPT-6.1 Sol high, fresh native review on `a344c4b7f..b6085cce2`.
+- Artifact: `reviews/archived/p14-code-review-2026-11-24T192440Z.md` (local).
+- Outcome: passed with 0 Critical, High, Medium, or Low findings. The fresh-context review checked docs, rules moved to the guide, and focused and full-suite evidence against the implementation.
+
+---
+
+## Phase p15: Closing a freestyle project
+
+**Status:** completed
+**Base:** 994c63b36064f54ad0878120cf782b305c92a8ff
+**Head:** 68cbbdfd71641e692f3d2bb44ab127e8add2946d
+**Executor:** phase-implementer:freestyle-projects-p15-implementation-1
+
+**Verification:** Passed at clean committed HEAD `4234ff23ec375249747f49e3bce818dff854df2c`, against unchanged `origin/main` / integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. In Definition of Done order, `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, post-commit `pnpm run check:skill-bumps`, fetch of `origin/main` then `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, direct docs-index generation and `git diff --exit-code -- apps/oat-docs/index.md` all exited 0. The skill gate validated 11 changed skills; all five public packages validated at 0.3.60. Phase check/type-check replayed 11/11 workspace tasks, test 12/12, build 5/5 and docs 6/6; root validation/format and smoke 165, skill 754 and script 7 cases ran live. Pre-commit workspace tests executed uncached, including CLI 10,044 tests in 459 files and all seven new closing contracts. `pnpm lint` and `pnpm format` also passed. Runtime: Darwin arm64, Node 22.23.4, pnpm 10.13.1; dependency/lockfile/config inputs unchanged; bundled assets rebuilt for 0.3.60. Exact exits: `/tmp/p15-phase-exits.tsv`; gate logs: `/tmp/p15-phase-{check,types,test,build,skill-bumps,fetch,versions,release,docs,manifest,manifest-diff}.log`.
+
+**Verification:** Review fix H1 passed at clean committed HEAD `68cbbdfd71641e692f3d2bb44ab127e8add2946d`, against unchanged `origin/main` / integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. In full Definition of Done order, `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, post-commit `pnpm run check:skill-bumps`, fetch of `origin/main` then `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, direct docs-index generation and manifest freshness all exited 0. Phase workspace check/types replayed 11/11 tasks, test 12/12, build 5/5 and docs 6/6; root validation/format and smoke 165, skill 754 and script 7 cases ran live. Pre-commit CLI tests executed uncached: 10,046 tests / 459 files; isolated skill/validation contracts passed 1,376 / 34 files, and the existing archive-entry helpers passed 10/10. The new regression rejects the pre-fix generic continuation for retired-source freestyle while preserving quick's valid control, then verifies the existing finalizer without a push. `pnpm lint` and `pnpm format` also passed. Runtime: Node 22.23.4, pnpm 10.13.1, Darwin arm64, isolated test HOME; dependency/lockfile/config inputs unchanged. No version re-bump: the five public packages remain 0.3.60 and the PR-scoped skill gate passes. Logs: `/tmp/p15-fix-phase-*.log`, `/tmp/p15-fix-phase-exits.tsv`; original p15-t01 evidence remains in its execution record.
+
+**Recovery:** Prior and final usage 0/10, remaining 10, pending attempt null; no post-commit failure or recovery event. Stale pins, missing inventory entries and stale bundled assets were corrected before the implementation commit.
+
+**Milestone coordination:** Root owns fresh-context docs review, phase acceptance and integrated review. Manual scratch-project runs were not performed, per the approved unit/contract-test scope. No push, PR or release publication was performed.
+
+One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules this phase sequentially. Its templates, skills and docs share contract tests and generated assets, so there is no independent fan-out.
+
+### Task p15-t01: Close freestyle projects through scope-aware skills
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p15-implementation-1
+**Handle:** /root/p15 (Codex native, managed high)
+**Commit:** 279d129e5c64fd2c5e2fd90d5be708c9e8310bfa
+
+**Intent:** Implement Outcome 13 across completion, documentation and retro guidance, its scaffold and human docs; preserve lifecycle mode behavior and summary/PR stops; apply m04 skill and lockstep version bumps.
+**Files:** Completion/document/retro skills and references; freestyle skill metadata and project-agents template; closeout/freestyle docs, README and CLI README; skill applicability catalog; CLI skill contract tests; five public package manifests.
+**Proof command:** Isolated-HOME `pnpm test` (includes CLI skill contracts/validation and complete-state/archive/push/log suites), `pnpm check`, `pnpm type-check`, `pnpm build`, `pnpm lint`, `pnpm format`. Committed-history version/release and docs gates run at the phase boundary.
+**Recovery capacity:** limit 10, used 0, remaining 10, pending_attempt null; report any post-commit defect to root before reservation.
+
+**Verification:** All task checks exited 0 on the exact final owned inputs from `53740e39d30c25f1bd8d2541bd3ea91ba276d6b6`; the task commit retains their byte-identical contents (input manifest SHA-256 `79e7aa42781f73467722d146cc6c86200fb8afa04e6f7f4e76e9246ede0e997c`, `/tmp/p15-tested-inputs.json`). CLI executed 10,044 tests in 459 files; smoke 165, skills 754 and scripts 7 passed. The seven new text-contract tests also passed after two can-fail probes: removing the retained-pointer clause and document's no-commit clause each failed its intended assertion, then all original bytes were restored. These probes verify instruction contracts, not live skill execution. Node 22.23.4, pnpm 10.13.1, Darwin arm64, isolated HOME; workspace test tasks were cache misses, build 5/5 cached, check/type-check mixed cached/live. Logs: `/tmp/p15-{check-final,types-final,test,build,lint,format}.log`, `/tmp/p15-negative-{1,2,restored}.log`.
+
+**Scope observations:** No CLI command behavior changed. The new writer required its synced-bookkeeping inventory entry; named-skill loads and unreachable freestyle prompt sites required inventory updates. The prompt inventory is the canonical `.agents/docs/autonomy-contract.md` via the gate-inventory symlink, so all eight linking skills received the required PR-scoped version bump. Other lifecycle paths changed only those metadata versions and their pins. The new closing branch replaces the obsolete freestyle complete/document stop assertions; summary and pr-final stops remain. Retro application proposals remain pending when their existing durable target/writeback receipt requirements cannot be met under the shape/scope.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md`
+- `.agents/skills/oat-project-complete/references/freestyle-completion.md`
+- `.agents/skills/oat-project-document/SKILL.md`
+- `.agents/skills/oat-project-retro/SKILL.md`
+- `.agents/skills/oat-project-retro/references/freestyle.md`
+- `.agents/skills/oat-project-retro/references/evidence-and-lanes.md`
+- `.agents/skills/oat-project-retro/references/apply-procedure.md`
+- `.oat/templates/project-agents.md`
+- `.agents/skills/oat-project-freestyle/SKILL.md`
+- `packages/cli/package.json`
+- `packages/control-plane/package.json`
+- `packages/docs-config/package.json`
+- `packages/docs-theme/package.json`
+- `packages/docs-transforms/package.json`
+- `apps/oat-docs/docs/workflows/projects/execution/freestyle-projects.md`
+- `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+- `apps/oat-docs/docs/workflows/projects/closeout/retro.md`
+- `README.md`
+- `packages/cli/README.md`
+- `apps/oat-docs/skill-docs.json`
+- `packages/cli/src/commands/init/tools/shared/freestyle-contracts.test.ts`
+- `packages/cli/src/validation/skills.test.ts`
+- `packages/cli/src/commands/init/tools/shared/freestyle-closeout-contracts.test.ts`
+- `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- `packages/cli/src/validation/synced-bookkeeping-sites.json`
+- `.agents/skills/oat-project-autonomous/SKILL.md`
+- `packages/cli/src/validation/named-skill-load-contract.test.ts`
+- `packages/cli/assets/public-package-versions.json`
+- `.agents/skills/oat-project-brief/SKILL.md`
+- `.agents/skills/oat-project-goal/SKILL.md`
+- `.agents/skills/oat-project-implement/SKILL.md`
+- `.agents/skills/oat-project-lite/SKILL.md`
+- `.agents/skills/oat-project-pr-final/SKILL.md`
+- `.agents/skills/oat-project-quick-start/SKILL.md`
+- `.agents/docs/autonomy-contract.md`
+
+### Review Received: p15 (round 1)
+
+- Reviewer: `freestyle-projects-p15-review-1`, GPT-6.1 Sol high, fresh native review on `994c63b36..4234ff23e`.
+- Artifact: `reviews/archived/p15-code-review-2026-11-24T195617Z.md` (local).
+- Outcome: fixes required. H1 (High) confirmed: after a synced archive retires the active ref and checkout, a retained freestyle active pointer can enter the generic archive continuation and its mandatory code-branch push. Route a verified freestyle retry to the shape-aware terminal path.
+- **Finding classes:** H1 accepted-requirement (Outcome 13, p15 Intent, and the constraint governing post-creation publication).
+
+### Task p15-t02: (review) Preserve freestyle mode on retired synced archive resume
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p15-implementation-1
+**Handle:** /root/p15 (same accepted Codex handle)
+**Commit:** 5b5f95c85932ef18ffabdd0a7bd3759e48dc11f2
+**Source review:** reviews/archived/p15-code-review-2026-11-24T195617Z.md — H1
+**Fix request:** freestyle-projects-p15-fix-1
+**Continuation event:** cont-freestyle-projects-p15-fix-1 → freestyle-projects-p15-implementation-1
+
+**Intent:** Decode the validated archive's workflow mode before generic continuation; finish a freestyle retry through shape-aware terminal reporting and the existing synced finalizer, preserving lifecycle-mode resumes.
+**Files:** `.agents/skills/oat-project-complete/SKILL.md`, `.agents/skills/oat-project-complete/references/freestyle-completion.md`, `packages/cli/src/commands/init/tools/shared/freestyle-closeout-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (directly affected archived-mode assertion).
+**Proof command:** Execute the shipped entry shell with a missing source/ref/discovery and mocked terminal archive/status, using real archive executor/decoder/finalizer; freestyle withholding code-branch publication must bypass generic continuation, while quick retains it. Run focused completion tests, isolated skill contracts, relevant repository gates, and committed-history/release/docs checks. No manual scratch-project run.
+
+**Verification:** H1's pre-fix probe failed because freestyle reached `generic lifecycle Step 8.5`, while quick's control passed (exit 1, one intended failure; `/tmp/p15-fix-red.log`). After the correction, the shipped shell branch plus real archive executor/decoder/finalizer passed both mode controls; the mocked CLI fixture withholds code-branch publication, records no push and clears only through the validated finalizer. This proves routing and terminal continuation, not a live model run or archive-transaction correctness. The existing archive-entry helper suite passed 10/10. Isolated skill/validation contracts passed 1,376 tests / 34 files. Final pre-commit `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, `pnpm lint` and `pnpm format` exited 0; CLI executed 10,046 tests / 459 files, smoke 165, skills 754, scripts 7. Node 22.23.4, pnpm 10.13.1, Darwin arm64. Inputs are preserved in `/tmp/p15-fix-tested-inputs.json`; logs and exits: `/tmp/p15-fix-{prose,helper,check,types,test,build,lint,format}.log`, `/tmp/p15-fix-exits.tsv`.
+
+**Scope:** H1 only. No CLI source, archive transaction, release version, other project record or unrelated finding changed. The direct arrival assertion now permits completion's archived-mode decode; its ordinary lifecycle route control remains. No manual scratch run, push, PR or post-commit recovery.
+
+**Round 1 disposition:** H1 fixed in `5b5f95c85932ef18ffabdd0a7bd3759e48dc11f2` and recorded by p15-t02. The original phase verification paragraph was restored verbatim in the pre-review commit after `6e64800e` replaced it and failed the append-only working-tree check. The new H1 verification evidence is kept alongside it. This correction changes the journal only.
+
+### Review Received: p15 (round 2)
+
+- Reviewer: `freestyle-projects-p15-review-2`, GPT-6.1 Sol high, fresh native confirmation on `994c63b36..68cbbdfd7`.
+- Artifact: `reviews/archived/p15-code-review-2026-11-24T201707Z.md` (local).
+- Outcome: passed. H1 settled, with no new findings. Retired synced freestyle closeout retains its receipt and follows the shape's publication agreement. The existing quick-mode continuation still passes.
+
+---
+
+## Phase p-rev1: Render quoted pause reasons in the dashboard
+
+**Status:** completed
+**Base:** 0d6f528dfc5dd72710c300ed9d2ebde8ef6b0e9b
+**Head:** 9d578becd0cedcc271ebc6e90f5b9f9449baab37
+**Executor:** inline:pause-dashboard
+**Corrects:** p13
+
+The branch CLI reproduced the issue in the dashboard's line-based reader. An ordinary quoted reason retains its quotes and a hash truncates the value. This correction preserves the existing dashboard display and adds no new project behavior. The root executes this one-reader correction inline. It uses the existing YAML parser and dashboard test with no new surface or design decision.
+
+### Task prev1-t01: Render the decoded pause reason
+
+**Status:** completed
+**Commit:** 02a2c665f1bef2dadc3d1a9b47e4b640a7435cd2
+**Executor:** root
+**Intent:** Read YAML pause text before rendering the dashboard, preserving legacy reasons and Markdown table structure.
+**Files:** `packages/cli/src/commands/state/generate.ts`, `packages/cli/src/commands/state/generate.test.ts`.
+**Proof:** Isolated-HOME dashboard Vitest suite with an actual generated dashboard and an unquoted legacy control. The old reader reproduced the truncation at the hash (one failed, one passing legacy control). The fixed dashboard and pause suites passed all 82 tests on pinned Node 22.23.4.
+
+### Review Received: p-rev1
+
+- Reviewer: `freestyle-projects-p-rev1-review-1`, GPT-6.1 Sol high, on `0d6f528df..9d578becd`.
+- Artifact: `reviews/archived/p-rev1-review-2026-11-24T205542Z.md` (local).
+- Outcome: passed with no findings. The new dashboard control failed on the old reader with the legacy control still passing. The fix decodes the value, preserves the table, and uses no new parser or project behavior.
+
+---
+
+## Phase p-rev2: Resolve m04 integrated review findings
+
+**Status:** completed
+**Base:** b270a5c05349431b0ac61f7a0333771ac0eca63d
+**Head:** e3a48922b299aaefe23620b02f09faf978d1b28c
+**Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
+**Corrects:** p15
+
+This revision also corrects p13’s History description. H1 and M1 check publication and recovery already promised in Outcomes 11 and 13. L1 preserves accurate History when a handle value is omitted.
+
+**Phase verification:** pass at committed clean HEAD `243acef2aae94895e4a6815ee26bf724a8b7c7ea`, Darwin arm64, Node 22.23.4, pnpm 10.13.1. Dispatch base `1a8b8e69264b4be20dff995757dff15c0e189171`; integration/version base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, freshly fetched before phase work and release checks. No dependency or configuration changes. `pnpm check`, `pnpm type-check`, `pnpm test:evidence` (isolated self-removing HOME; all 12 Turbo tasks executed, zero cache replays), isolated standalone `test:smoke`, `test:skills`, `test:scripts`, `pnpm build`, post-commit `check:skill-bumps`, fetch, `release:check-versions`, `release:validate`, `build:docs`, direct docs-index generation/freshness, `pnpm lint` and `pnpm format` all exit 0 in that order. The CLI passed 10,058 tests in 459 files; smoke, skills and scripts passed 165, 754 and 7. Build/docs gates reused Turbo cache; direct manifest freshness ran independently. Exact commands/exits, runtime and inputs are in `references/analysis/m04-rev2-run.7HAY5t/{gates.tsv,inputs.json}` with adjacent logs. Prior 120 completion-script and 1,383 skill prose/validation passes remain applicable; the full run also covers those committed inputs. Negative fixtures and valid controls are retained in the same directory. No scratch project or live publication was used. Recovery remains 0/10, pending attempt null, remaining capacity 10; no reservation or event occurred. Independent acceptance remains root-owned.
+
+### Task prev2-t01: (review) Honor archive authority and terminal alias routing
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
+**Handle:** /root/m04_revision
+**Source review:** m04-integrated-review-2026-11-24T210432Z.md — H1, M1
+**Intent:** Preview archive effects for every freestyle scope and terminal retry before applying the shape's publication agreement; recognize matching completed aliases before the missing-checkout pull instruction.
+**Files:** completion SKILL.md and freestyle-completion.md reference; freestyle-closeout-contracts.test.ts; CLI README and freestyle project docs; validation/skills.test.ts (existing first-selector contract mechanically updated for the narrowed pull advice and full Git SHA fixture).
+**Proof:** isolated CLI Vitest freestyle-closeout-contracts.test.ts; completion script tests; scoped lint/format and skill validation. Negative first-selector and prose controls run against the pre-fix input, followed by the same passing controls and existing-mode continuation.
+
+**Commit:** 5ab19373d77646f9d2cc996bc963e91b46838717
+**Verification:** pass — 16 focused controls, 120 completion script tests, and 1,383 skill prose/validation tests; scoped lint and skill validation exit 0. Pre-fix negative controls failed on missing all-scope authority and terminal route/ref checks (5 failed, 2 valid controls passed); the same controls pass on the fixed input. Existing quick continuation and the actual freestyle reference retry/finalizer pass. Logs are retained under `references/analysis/m04-rev2-run.7HAY5t/`.
+
+### Task prev2-t02: (review) Describe handle-only History updates accurately
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
+**Handle:** /root/m04_revision
+**Source review:** m04-integrated-review-2026-11-24T210432Z.md — L1
+**Intent:** Record handle-only edits as a value-free update while preserving genuine no-op wording and omitting all handle values.
+**Files:** packages/cli/src/commands/project/lane/update.ts and ledger.test.ts.
+**Proof:** isolated CLI Vitest project/lane/ledger.test.ts and lane.test.ts; scoped lint, format and CLI build. Replacement and clear controls for both handle fields fail on the pre-fix source, pass after the fix, and preserve the true no-op control.
+
+**Commit:** 8a9d9275b1fa011c1441af8c4e9c145555454fae
+**Verification:** pass — 46 lane ledger/command controls, scoped lint, formatting and CLI build all exit 0. Four handle replacement/clearing controls fail on the pre-fix code with the false no-op wording, then pass with value-free `handles updated`; true no-op assertions remain passing.
+
+### Review Received: p-rev2
+
+- Reviewer: `freestyle-projects-p-rev2-review-1`, GPT-6.1 Sol high, on `b270a5c05..243acef2`.
+- Artifact: `reviews/archived/p-rev2-review-2026-11-24T212749Z.md` (local).
+- Outcome: passed with no findings. All archive-publication, terminal-ref and lane-History controls were verified. H1/M1 changed in `5ab19373d`; L1 changed in `8a9d9275b`. The approved manual integrated confirmation follows.
+
+### Task prev2-t03: (review) Refresh synced freestyle closeout inputs
+
+**Status:** completed
+**Commit:** cd23122a4bc5d9888528f71e93557cc78a778828
+**Executor:** root
+**Source review:** PR #433 Bugbot stale synced reads.
+**Intent:** Refresh the selected synced records before the completion, documentation and retrospective paths read the shape. Stop on pull failure. Optional work can reuse the successful refresh of the same checkout within completion.
+**Proof:** Isolated CLI Vitest closeout, archive retry and pull suites passed all 93 tests. The three ordering cases failed before the fix. The pull suite verifies skipping child pulls and leaving adopted discovery records uncommitted.
+
+### Task prev2-t04: (review) Preserve closeout retries with local records
+
+**Status:** completed
+**Commit:** e3a48922b299aaefe23620b02f09faf978d1b28c
+**Executor:** root
+**Source review:** PR #433 Bugbot closeout pull blocks unpushed checkouts.
+**Intent:** Accept a dirty synced checkout only when its HEAD matches the fetched active ref. Select the terminal receipt path for a verified completed ref even if the checkout remains. Maintain the existing skill permission prefix and autonomy inventory.
+**Proof:** Closeout, skill validation and autonomy inventory suites passed 314 tests. Both live-checkout terminal cases failed when the pre-fix selector was restored. After the permission-prefix correction, 26 focused tests passed and a rejected input confirmed trailing `--json` yields a structured response.
+
+---
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -1862,9 +2173,50 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 - Root-inline phase: p12 (task p12-t05 only, review round 1 M1 and L1) · reason: one template preamble, one pin and one docs line, smaller than a fix-mode resume · root model: claude-opus-5-5
 - Root-inline phase: p12 (task p12-t06 only, m03 integrated review I-1 to I-6) · reason: a matcher flag, one git flag, prose lines and three tests, smaller than a fix-mode resume · root model: claude-opus-5-5
 
+- run/v1 · request=freestyle-projects-p13-implementation-1 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p13-review-1 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p14-implementation-1 · scope=p14 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p14 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p14-review-1 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p15-implementation-1 · scope=p15 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p15-review-1 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p15-fix-1 · scope=p15 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-freestyle-projects-p15-fix-1 · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p15-review-2 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- Root-inline phase: p-rev1 · reason: one dashboard reader and its regression control · root model: gpt-6.2-sol
+- run/v1 · request=freestyle-projects-p-rev1-review-1 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p-rev2-implementation-1 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p-rev2-review-1 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: d04 (PR #433 closeout retry)
+
+- **Finding classes:** terminal checkout and dirty records regression (synced refresh could block receipt recovery and previously allowed uncommitted local closeout); pull invocation prefix regression (standalone skill permission declarations).
+- The rerun finding is fixed by `2fe9535e` and the independent review's permission-prefix finding by `e3a48922`. The autonomy gate inventory validation passes after updating two existing site mappings.
+- GPT-6.2 Astra high confirmed the final delta at `e3a48922b299aaefe23620b02f09faf978d1b28c`. Artifact `reviews/archived/d04-integrated-review-2026-11-24T232127Z.md` (local), building on the preceding d04 review. The scoped exit carrier remains allowed under the project's configured override.
+
+### Review Received: d04 (PR #433)
+
+- **Finding classes:** stale synced reads accepted-requirement (DR-260828-per-worktree-detached and Outcome 13).
+- Fixed stale reads in `c64a3d38a` and `cd23122a4`. The High archive preview finding was dismissed based on the existing recordless dry-run/apply and source-absent retry tests. Both the preview and the executor use the persisted terminal identity.
+- GPT-6.2 Astra high reviewed the repair through `cd23122a4bc5d9888528f71e93557cc78a778828` in two bounded passes, with no findings. Artifact `reviews/archived/d04-integrated-review-2026-11-24T230855Z.md` (local). Prior integrated confirmation covers the unchanged milestone product. The scoped exit carrier remains allowed under the project's configured override.
+
+- m04 exit refreshed after p-rev2. All five phase reviews passed. The scope p13, p14, p15, p-rev1 and p-rev2 resolves to the project-disabled exit gate, with the CLI reading an allowed, fresh carrier. Manual integrated confirmation follows.
+- Final product proof at clean commit `243acef2aae94895e4a6815ee26bf724a8b7c7ea`, against fresh `origin/main` `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, on Darwin arm64, Node 22.23.4 and pnpm 10.13.1. Check, types, isolated `pnpm test:evidence` (12 of 12 tasks ran uncached, including 10,058 CLI tests), standalone smoke, skills and scripts (165, 754 and 7 tests), build, post-commit skill/version checks, successful Git fetch, release validation of all five 0.3.60 packages, docs build, direct manifest freshness, lint and format all exited 0. Build tasks could reuse Turbo cache. Exact commands, inputs, timings, exits and focused before/after evidence are in the local `references/analysis/m04-rev2-run.7HAY5t/` log directory. Unit and contract tests only, as agreed.
+
+### Review Received: m04 (round 2)
+
+- Manual GPT-6.2 Astra high confirmed p13, p14, p15, p-rev1 and p-rev2 at `243acef2`. Artifact `reviews/archived/m04-integrated-review-2026-11-24T213227Z.md` (local).
+- Outcome: passed, with no new findings. H1 (archive publication consent in all scopes), M1 (retained terminal-ref recovery) and L1 (value-free History) are settled. The scoped exit carrier is allowed and fresh.
+
+### Review Received: m04 (round 1)
+
+- Manual GPT-6.2 Astra high reviewed scope p13, p14, p15, p-rev1 at `9d578becd`. Artifact `reviews/archived/m04-integrated-review-2026-11-24T210432Z.md`.
+- H1 (High): archive may publish to S3 from local scope. M1 (Medium): a retained terminal alias can incorrectly recommend pull. L1 (Low): a handle-only update can say no change.
+- **Finding classes:** H1 accepted-requirement (Outcomes 11 and 13 and the post-creation publication constraint); M1 accepted-requirement (Outcome 13 and p15 archive recovery); L1 regression (Outcome 11’s existing History behavior). All three go to p-rev2. No scope change.
+
+- m04 milestone exit for p13, p14, p15 and p-rev1. The CLI resolved the configured implement gate as project-disabled and the scope-specific delivery check read the exit carrier as allowed and fresh. The pending integrated review remains the approved GPT-6.2 Astra high review.
+- m04 Definition of Done ran against product inputs at `9d578becd0cedcc271ebc6e90f5b9f9449baab37` on Darwin arm64, Node 22.23.4 and pnpm 10.13.1 with an isolated test home. Check, types, tests, build, skill bumps, release version check, release validation, docs build and direct manifest freshness exited 0. The CLI suite executed uncached with 10,047 passes. Smoke, skills and script suites passed 165, 754 and 7 tests. Direct Git fetch exited 128 because transport to GitHub was unreachable. Two GitHub API reads resolved live `main` to `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, the local `origin/main` commit used by the passing version check. Version 0.3.60 validated for all five public packages. Local exact exit and command logs are in `references/analysis/m04-run.y8WuGm/dashboard-gates.tsv` and its sibling `dashboard-*.log` files.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 

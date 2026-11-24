@@ -63,6 +63,15 @@ a YAML mapping only; keep lifecycle validation and command-owned state writes
 in their existing owners. Stop on nonzero, repair and recheck before committing
 or continuing. Do not replace it with tolerant plan validation or state refresh.
 
+## Setup and freestyle records
+
+`oat init` always includes only `.oat/analysis/lane-notes/` among analysis
+folders in the core ignore block; broader analysis ignores are local choices.
+New PJM/decision root guidance uses `##` headings. Exact previous `###` bodies
+are current and must never be rewritten on rerun; changed bodies still require
+manual action. Lane worktree values can be repository-relative, home-relative
+or legacy absolute paths; derive placement from the full path before storage.
+
 ## Completion checks
 
 - Tests updated for changed behavior.

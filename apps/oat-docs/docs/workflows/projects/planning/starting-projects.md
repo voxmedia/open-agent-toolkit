@@ -469,10 +469,13 @@ any adopted section should differ.
 
 **Example scenario:** You want to try page layouts without a plan or review
 gates. Freestyle creates the project, asks for the goal and its size first, then
-walks the remaining topics in order (brainstorm or discovery, documents,
-execution, reviews, commits and merges, your involvement, reshape checkpoints),
-writing each answer into `shape.md` as you give it. Any topic can be deferred to
-a named moment, such as "before the first PR".
+offers to step through the remaining topics or show a table of recommended
+defaults to accept whole or except for named topics. The topics are brainstorm
+or discovery, documents, execution, reviews, commits and merges, your
+involvement and reshape checkpoints.
+The involvement topic asks which required checks need a person, device or
+session available, and when. The skill writes each answer into `shape.md` as
+you give it. Any topic can be deferred to a named moment, such as "before the first PR".
 
 When the project adopts a plan written elsewhere, for example for another
 workflow, the documents topic keeps what the plan delivers (its changes, their
@@ -493,9 +496,15 @@ and a `shape.md` in which every topic holds an answer or a deferral.
 `oat project status` names `AGENTS.md` and `shape.md`.
 
 **What it does without asking:** It creates the project through
-`oat project new --mode freestyle`. In shared scope that commits the
-scaffolded files, in synced scope it publishes them to the project ref, and in
-local scope nothing is committed. A claim, a refreshed `AGENTS.md` and newly
+`oat project new --mode freestyle`. Shared creation commits the scaffold
+unless `--no-commit` is passed. Synced creation publishes its initial ref and
+writes its pointer, committing the pointer on the code branch unless
+`--no-commit` is passed; that flag does not stop the synced publish. Local
+records stay in this checkout, uncommitted. Before creation, the skill tells
+you who can read the records: everyone who can read `origin` for synced scope
+from creation, everyone who can read the branch once pushed for shared scope,
+and this checkout only for local scope. It shows a dirty tree and continues,
+following any CLI error that requires `.gitignore` repair. A claim, a refreshed `AGENTS.md` and newly
 created `decisions.md` and `memories.md` are saved with the other records, as
 `shape.md` agrees. After creation it commits and pushes nothing
 unless the commits topic in `shape.md` says so. It asks you to choose the scope,

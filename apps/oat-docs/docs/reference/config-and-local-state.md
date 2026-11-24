@@ -107,6 +107,11 @@ The decision index uses managed marker pairs and is deterministic, so an index m
 
 `oat decision init` is a lightweight decision-scaffold path after repository PJM adoption. It does not require the `project-management` tool pack and does not itself create current state, roadmap, or backlog artifacts. It is not an alternate adoption path: `oat decision` mutations, including init, fail closed with `oat pjm init` as the recovery when the repository has not adopted PJM. Its AGENTS guidance uses `oat decision` directly while also recognizing `oat-pjm-decision` when that optional skill is installed later.
 
+New root `AGENTS.md` blocks from `oat pjm init` and `oat decision init` use
+`## Project Management` and `## Decision Records`. An unchanged previous
+`###` block is accepted on rerun with exit 0 and no byte changes. A user-edited
+block still needs manual action; OAT never rewrites existing guidance.
+
 ## `oat local ...`
 
 `oat local` manages local-only, gitignored paths that still need to follow you between the main repo and worktrees.

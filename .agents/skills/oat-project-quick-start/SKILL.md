@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.29
+  version: 2.3.30
 ---
 
 # Quick Start Project

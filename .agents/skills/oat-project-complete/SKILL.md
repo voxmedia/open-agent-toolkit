@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.21
+  version: 1.7.22
 ---
 
 # Complete Project
@@ -43,14 +43,21 @@ and materialize the checkout, read the mode from the repository root: from the
 checkout when it is here, otherwise read-only from the synced ref (an
 objects-only fetch; no local ref, record, checkout or commit). A failed ref
 lookup, or a ref whose mode cannot be read, stops before the arrival. When
-`WORKFLOW_MODE` is `freestyle`, stop there, before the synced archive entry and
-any write, and tell the user what the freestyle stop at the end of this step
-tells them. With no checkout here yet, add: "Run `oat project pull <slug>` to
-bring it here."
+`WORKFLOW_MODE` is `freestyle`, route to
+[references/freestyle-completion.md](references/freestyle-completion.md)
+and end this invocation there, before the synced archive entry and the lifecycle
+steps below. The shell block only selects that route; it does not complete the project.
+For a synced freestyle checkout, even one still on disk, compare the exact
+active and completed ref identities. Also compare them when no checkout is
+present and the remote mode is needed. A matching terminal alias (retained or
+removed) uses the reference's **Retired synced archive resume** section before
+any executor can invoke archive. Only an ordinary unpulled project gets: "Run
+`oat project pull <slug>` to bring it here."
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 WORKFLOW_MODE=null
+COMPLETED_REF_SHA=""
 if [ -n "$PROJECT_PATH" ]; then
   # activeProject is repo-relative: check paths from the repository root.
   cd "$(git rev-parse --show-toplevel)" || { echo "oat: cannot resolve the repository root; refusing project arrival" >&2; exit 1; }
@@ -58,30 +65,67 @@ if [ -n "$PROJECT_PATH" ]; then
   PROJECT_SLUG=$(basename "$PROJECT_PATH")
   if [ -f "$PROJECT_PATH/state.md" ]; then
     WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
-  elif [ "$PROJECT_SCOPE" = "synced" ]; then
-    # Exit 2 means origin has no such ref: arrival continues as before. Any
-    # other failure, or a ref whose mode cannot be read, stops before the pull.
-    REF_LINE=$(git ls-remote --exit-code origin "refs/oat/projects/$PROJECT_SLUG" 2>/dev/null)
+  fi
+  if [ "$PROJECT_SCOPE" = "synced" ] && { [ "$WORKFLOW_MODE" = "freestyle" ] || [ ! -f "$PROJECT_PATH/state.md" ]; }; then
+    # Probe both names: an exact matching completed ref proves that a
+    # retained active alias is terminal and cannot be pulled.
+    ACTIVE_REF="refs/oat/projects/$PROJECT_SLUG"
+    COMPLETED_REF="refs/oat/completed/$PROJECT_SLUG"
+    REF_LINES=$(git ls-remote --exit-code origin "$ACTIVE_REF" "$COMPLETED_REF" 2>/dev/null)
     LS_STATUS=$?
     if [ "$LS_STATUS" -eq 0 ]; then
-      REF_STATE=$(mktemp -d)
-      # --refmap= keeps a configured refs/oat/projects/* fetch refspec from
-      # rewriting the local ref: this fetch writes objects only.
-      git fetch --quiet --no-tags --refmap= --no-write-fetch-head origin "refs/oat/projects/$PROJECT_SLUG" 2>/dev/null &&
-        git show "${REF_LINE%%[[:space:]]*}:state.md" > "$REF_STATE/state.md" 2>/dev/null &&
-        WORKFLOW_MODE=$(oat project status --project-path "$REF_STATE" --field project.workflowMode 2>/dev/null)
-      rm -rf "$REF_STATE"
-      if [ -z "$WORKFLOW_MODE" ] || [ "$WORKFLOW_MODE" = "null" ]; then
-        echo "oat: cannot read the mode of $PROJECT_SLUG from origin; stopping before arrival" >&2
-        exit 1
+      REF_IDENTITIES=$(node -e '
+const [rows, activeRef, completedRef] = process.argv.slice(1);
+const refs = new Map();
+for (const row of rows.split("\n").filter(Boolean)) {
+  const fields = row.trim().split(/\s+/);
+  if (fields.length !== 2 || !/^[0-9a-f]{40}$/.test(fields[0]) ||
+      ![activeRef, completedRef].includes(fields[1]) || refs.has(fields[1])) {
+    console.error("oat: malformed Git advertisement; stopping before arrival");
+    process.exit(1);
+  }
+  refs.set(fields[1], fields[0]);
+}
+const active = refs.get(activeRef) || "";
+const completed = refs.get(completedRef) || "";
+if ((!active && !completed) || (active && completed && active !== completed)) {
+  console.error("oat: mismatched terminal refs; stopping before arrival");
+  process.exit(1);
+}
+console.log(`ACTIVE_REF_SHA=${active}\nCOMPLETED_REF_SHA=${completed}`);
+' "$REF_LINES" "$ACTIVE_REF" "$COMPLETED_REF") || exit 1
+      eval "$REF_IDENTITIES" || exit 1
+      MODE_REF=""
+      if [ -n "$COMPLETED_REF_SHA" ]; then
+        MODE_REF="$COMPLETED_REF"
+        MODE_SHA="$COMPLETED_REF_SHA"
+      elif [ ! -f "$PROJECT_PATH/state.md" ]; then
+        MODE_REF="$ACTIVE_REF"
+        MODE_SHA="$ACTIVE_REF_SHA"
+      fi
+      if [ -n "$MODE_REF" ]; then
+        REF_STATE=$(mktemp -d)
+        # --refmap= keeps configured refspecs from rewriting any local ref.
+        git fetch --quiet --no-tags --refmap= --no-write-fetch-head origin "$MODE_REF" 2>/dev/null &&
+          git show "$MODE_SHA:state.md" > "$REF_STATE/state.md" 2>/dev/null &&
+          WORKFLOW_MODE=$(oat project status --project-path "$REF_STATE" --field project.workflowMode 2>/dev/null) || WORKFLOW_MODE=null
+        rm -rf "$REF_STATE"
+        if [ -z "$WORKFLOW_MODE" ] || [ "$WORKFLOW_MODE" = "null" ]; then
+          echo "oat: cannot read the mode of $PROJECT_SLUG from origin; stopping before arrival" >&2
+          exit 1
+        fi
       fi
     elif [ "$LS_STATUS" -ne 2 ]; then
-      echo "oat: cannot look up refs/oat/projects/$PROJECT_SLUG on origin (git ls-remote exit $LS_STATUS); stopping before arrival" >&2
+      echo "oat: cannot look up terminal refs for $PROJECT_SLUG on origin (git ls-remote exit $LS_STATUS); stopping before arrival" >&2
       exit 1
     fi
   fi
   if [ "$WORKFLOW_MODE" = "freestyle" ]; then
-    echo "oat: $PROJECT_SLUG is a freestyle project; stopping before arrival" >&2
+    if [ -n "$COMPLETED_REF_SHA" ]; then
+      echo "oat: $PROJECT_SLUG is a terminal freestyle archive; follow references/freestyle-completion.md, Retired synced archive resume, before any archive execution" >&2
+      exit 0
+    fi
+    echo "oat: $PROJECT_SLUG is a freestyle project; follow references/freestyle-completion.md before any arrival" >&2
     exit 0
   fi
 fi
@@ -190,8 +234,13 @@ process.stdout.write(value.route);
     ARCHIVED_PROJECT_STATUS_ASSIGNMENTS=$(oat project status \
       --project-path "$ARCHIVE_PATH" --shell \
       oat_pr_status=project.prStatus \
-      oat_pr_url=project.prUrl) || exit 1
+      oat_pr_url=project.prUrl \
+      WORKFLOW_MODE=project.workflowMode) || exit 1
     eval "$ARCHIVED_PROJECT_STATUS_ASSIGNMENTS" || exit 1
+    if [[ "$WORKFLOW_MODE" == "freestyle" ]]; then
+      echo "Freestyle synced archive resume: terminal receipt retained; follow references/freestyle-completion.md, Retired synced archive resume."
+      exit 0
+    fi
     WAS_PR_OPEN_AT_START="false"
     if [[ "${oat_pr_status:-}" == "open" ]]; then
       WAS_PR_OPEN_AT_START="true"
@@ -228,6 +277,16 @@ fi
 # shared-archive-resume:end
 ```
 
+When the archived status decoder reports `WORKFLOW_MODE="freestyle"`, the
+shell block ends before selecting the generic continuation. Follow
+[Retired synced archive resume](references/freestyle-completion.md#retired-synced-archive-resume)
+and end this invocation there. Retain `ARCHIVE_OUTPUT`, `ARCHIVE_PATH` and the
+validated lifecycle receipt; do not enter Step 8.5, dashboard, mandatory
+code-branch push or PR steps. The generic synced continuation below applies
+only to other modes. An archive retry remains governed by its originating
+archive/publication agreement; do not authorize new publications merely by
+re-entering this skill.
+
 When `SHARED_ARCHIVE_RESUME="true"`, continue directly at **Step 12**. This is
 the single recognized shared-scope checkpoint: the archive already succeeded
 and the run died before the Step 12 clear. Do not execute Steps 2 through 11.5,
@@ -255,16 +314,12 @@ initialized every resume-safe downstream receipt and choice. A resume never
 opens a new PR from an unpersisted prior answer; `SHOULD_OPEN_PR="false"`, while
 an already-tracked open PR is updated by Step 11.5.
 
-**Freestyle projects.** If `"$PROJECT_PATH/state.md"` records
-`oat_workflow_mode: freestyle`, stop before any write: this skill's completion
-gates (final review, summary, documentation sync, PR) belong to the lifecycle
-modes, and a freestyle project has none of them. Tell the user: "This is a
-freestyle project. When `shape.md`'s done criteria are met,
-`oat project complete-state <project-path>` marks it complete (it needs no
-closeout snapshot or journal); for a synced project,
-`oat project push <project-path>` then publishes the completed state, subject to
-the publication agreement in `shape.md`; and
-`oat project archive <project-path>` archives it."
+**Freestyle projects.** If the resolved project records
+`oat_workflow_mode: freestyle`, follow
+[references/freestyle-completion.md](references/freestyle-completion.md)
+and return. Never continue into Step 1.5 or the lifecycle steps below for it.
+The freestyle path requires no final review, summary, PR, recap, closeout
+snapshot or journal. Other workflow modes keep the process below.
 
 ### Step 1.5: Closeout Invariant Gate
 

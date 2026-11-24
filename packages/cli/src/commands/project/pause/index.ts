@@ -305,9 +305,9 @@ async function runProjectPause(
 
     if (options.reason) {
       nextBlock = upsertFrontmatterField(
-        nextBlock,
+        removeFrontmatterField(nextBlock, 'oat_pause_reason'),
         'oat_pause_reason',
-        options.reason,
+        JSON.stringify(options.reason),
         true,
       ).nextBlock;
     } else {

@@ -281,6 +281,80 @@ p12 accepted after the m03 integrated review: cycle 1 (I-1 to I-6) fixed by root
 
 Registered d03 for m03 (p11, p12) at https://github.com/voxmedia/open-agent-toolkit/pull/431; freestyle-projects-register-d03
 
+### 2026-11-24 · structural · oat-project-goal · m03
+
+Re-alignment entered after m03 delivered (d03, PR #431 merged at 0658ac5f7); input: mvp-followups freestyle run feedback (slack-council, OAT 0.3.58); freestyle-projects-realign-m03
+
+### 2026-11-24 · project · feedback · Freestyle prose contradicted the CLI and itself
+
+**Category:** documentation-gap
+**Source:** freestyle-projects-learning-m03-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-24T15:59:55Z
+
+Observation: the second real freestyle run (mvp-followups) hit three places where the skill or project AGENTS.md said something the CLI or the kickoff contradicted: no commits or pushes before shaping while project new commits and pushes; one topic at a time while the kickoff allows batched defaults; analysis folders described as an oat init choice that non-interactive init never offers.
+Impact: the orchestrator treated correct behavior as a deviation and worked around a missing ignore rule by hand.
+Recommendation: when a milestone adds or changes a rule, grep the skill, its references and the project AGENTS.md template for the old wording and for claims about other commands' behavior.
+
+### 2026-11-24 · project · friction · Source-checked feedback verdicts still need an independent check
+
+**Category:** gotcha
+**Source:** freestyle-projects-learning-m03-02
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-24T15:59:55Z
+
+Observation: my source-checked verdicts on the run feedback contained two wrong load-bearing claims (W1: project new does not fail on a dirty .gitignore in the default layout; O2: the GitHub publication-safety helper takes visibility as input and fetches nothing). An independent GPT 6.2 Astra xhigh review caught both; the orchestrator's rebuttal added the History-handles option for O6.
+Impact: without the second opinion m04 would have shipped an unnecessary commit offer and a visibility check built on a helper that cannot do it.
+Recommendation: before a re-alignment amendment, send the item-by-item verdicts with their citations to a different model for verification and give the feedback's author a chance to rebut.
+
+### 2026-11-24 · structural · oat-project-goal · m04
+
+Activated m04 (p13, p14, p15); freestyle-projects-activate-m04
+
+### 2026-11-24 · structural · oat-project-implement · p13
+
+p13 accepted after independent review with no findings, 0 review-fix rounds and 1 verified snapshot recovery; freestyle-projects-p13-accepted
+
+### 2026-11-24 · structural · oat-project-implement · p14
+
+p14 accepted after independent code and docs review with no findings and zero review-fix rounds; freestyle-projects-p14-accepted
+
+### 2026-11-24 · structural · oat-project-implement · p15
+
+p15 accepted after one review-fix round and passing confirmation; freestyle-projects-p15-accepted
+
+### 2026-11-24 · structural · oat-project-implement · p-rev1
+
+Added a narrow p13 revision after reproducing the dashboard display regression from quoted pause reasons; freestyle-projects-pause-display-revision
+
+### 2026-11-24 · structural · oat-project-implement · p-rev1
+
+Dashboard display correction accepted after isolated tests and independent review with no findings; freestyle-projects-pause-dashboard-accepted
+
+### 2026-11-24 · structural · oat-project-implement · m04
+
+m04 implementation passed p13, p14, p15 and p-rev1 phase reviews and final verification; configured exit gate is project-disabled, with integrated review next; freestyle-projects-m04-exit
+
+### 2026-11-24 · structural · oat-project-implement · m04
+
+Accepted integrated findings H1 and M1 on archive publication and recovery, and L1 on lane History. Bounded corrections are queued in p-rev2; freestyle-projects-m04-integrated-fixes
+
+### 2026-11-24 · structural · oat-project-implement · p-rev2
+
+Integrated corrections H1 M1 and L1 passed p-rev2 phase review with no findings; freestyle-projects-m04-revision-accepted
+
+### 2026-11-24 · structural · oat-project-implement · m04
+
+m04 exit refreshed after p-rev2 acceptance and passing final gates; freestyle-projects-m04-exit-refreshed
+
+### 2026-11-24 · structural · oat-project-review-receive · m04
+
+m04 manual integrated confirmation passed on all five accepted phase units; H1 M1 and L1 resolved and exit fresh; freestyle-projects-m04-integrated-passed
+
+### 2026-11-24 · structural · oat-project-pr-progress · d04
+
+Registered d04 for m04 (p13, p14, p15, p-rev1, p-rev2) at https://github.com/voxmedia/open-agent-toolkit/pull/433. Key: freestyle-projects-register-d04
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

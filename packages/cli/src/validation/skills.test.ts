@@ -2244,7 +2244,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.29',
+        version: '2.3.30',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2253,7 +2253,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.17',
+        version: '1.1.18',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -2261,7 +2261,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.32',
+        version: '2.3.33',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2762,7 +2762,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.32');
+    expect(readDeclaredVersion(content)).toBe('2.3.33');
   });
 
   it('allows model invocation of oat-project-implement only when the user asked', async () => {
@@ -3114,7 +3114,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.32');
+    expect(readDeclaredVersion(content)).toBe('2.3.33');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3212,7 +3212,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.32');
+    expect(readDeclaredVersion(content)).toBe('2.3.33');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3396,9 +3396,9 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.20'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.12'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.18'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.21'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.29'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.19'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.22'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.30'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3715,7 +3715,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.32');
+    expect(readDeclaredVersion(implement)).toBe('2.3.33');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -5206,10 +5206,10 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.5.22'],
       ['oat-project-review-receive', '1.6.20'],
       ['oat-project-review-receive-remote', '1.5.8'],
-      ['oat-project-implement', '2.3.32'],
-      ['oat-project-pr-final', '1.6.21'],
+      ['oat-project-implement', '2.3.33'],
+      ['oat-project-pr-final', '1.6.22'],
       ['oat-project-pr-progress', '1.3.12'],
-      ['oat-project-complete', '1.7.21'],
+      ['oat-project-complete', '1.7.22'],
       ['oat-project-next', '1.1.10'],
     ] as const;
 
@@ -6624,9 +6624,9 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.45'],
       ['oat-project-plan', '1.4.24'],
-      ['oat-project-quick-start', '2.3.29'],
+      ['oat-project-quick-start', '2.3.30'],
       ['oat-project-import-plan', '1.4.26'],
-      ['oat-project-lite', '1.1.17'],
+      ['oat-project-lite', '1.1.18'],
       ['oat-project-review-provide', '1.5.22'],
     ] as const;
 
@@ -6696,7 +6696,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.32'],
+      ['oat-project-implement', '2.3.33'],
       ['oat-project-review-provide', '1.5.22'],
       ['oat-project-review-provide-remote', '1.1.12'],
     ] as const;
@@ -7674,7 +7674,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.29');
+    expect(readDeclaredVersion(content)).toBe('2.3.30');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -8655,7 +8655,7 @@ describe('lite mode skill contracts', () => {
       '`Assumptions`',
     );
     expect(readDeclaredVersion(summary)).toBe('1.5.12');
-    expect(readDeclaredVersion(document)).toBe('1.8.18');
+    expect(readDeclaredVersion(document)).toBe('1.8.19');
   });
 
   it('routes lite projects through progress and next', async () => {
@@ -8871,7 +8871,7 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.32');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.33');
     expect(readDeclaredVersion(implementer)).toBe('1.1.11');
   });
 
@@ -9535,10 +9535,6 @@ describe('freestyle mode skill contracts', () => {
         /records `oat_workflow_mode: freestyle`:\*\* stop\s+before any write/,
       ],
       [
-        '.agents/skills/oat-project-complete/SKILL.md',
-        /\*\*Freestyle projects\.\*\*[^]*?stop before any write[^]*?### Step 1\.5: Closeout Invariant Gate/,
-      ],
-      [
         '.agents/skills/oat-project-import-plan/SKILL.md',
         /When `TARGET_MODE` is `freestyle`, stop before any write[^]*?promotion from freestyle is not supported/,
       ],
@@ -9569,14 +9565,6 @@ describe('freestyle mode skill contracts', () => {
         [
           'oat config set activeProject',
           '### Step 0.5: Archive Residual Active Review Artifacts',
-        ],
-      ],
-      [
-        '.agents/skills/oat-project-document/SKILL.md',
-        'For `oat_workflow_mode: freestyle`, stop:',
-        [
-          'Verify at least one of `plan.md` or `implementation.md` exists',
-          '### Step 1: Check for PJM Infrastructure',
         ],
       ],
       [
@@ -9663,7 +9651,7 @@ describe('freestyle mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-complete/SKILL.md',
-        '`WORKFLOW_MODE` is `freestyle`, stop there, before the synced archive entry',
+        '`WORKFLOW_MODE` is `freestyle`, route to',
         [
           'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
           '### Step 1.5: Closeout Invariant Gate',
@@ -10096,13 +10084,13 @@ describe('freestyle mode skill contracts', () => {
             '  rev-parse) echo "$STUB_ROOT" ;;',
             '  ls-remote)',
             '    code="${STUB_LS:-0}"',
-            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            '    [ "$code" = 0 ] && printf "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\trefs/oat/projects/proj\\n"',
             // Like git, an absent ref exits 2 only under --exit-code.
             '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
             '    exit "$code" ;;',
             '  fetch) exit 0 ;;',
             '  show)',
-            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    [ "$2" = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:state.md ] || exit 128',
             '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
             'esac',
             '',
@@ -10182,7 +10170,9 @@ describe('freestyle mode skill contracts', () => {
       it(`${skill}: a freestyle project stops before the arrival and other modes still arrive`, async () => {
         const { paragraph } = await blocks(skill);
         expect(paragraph.replace(/\s+/g, ' ')).toContain(
-          'With no checkout here yet, add: "Run `oat project pull <slug>` to bring it here."',
+          skill === 'complete'
+            ? 'Only an ordinary unpulled project gets: "Run `oat project pull <slug>` to bring it here."'
+            : 'With no checkout here yet, add: "Run `oat project pull <slug>` to bring it here."',
         );
 
         const here = await run(skill, { checkout: 'freestyle', record: true });
@@ -10194,7 +10184,9 @@ describe('freestyle mode skill contracts', () => {
           false,
         );
         expect(here.stderr).toContain(
-          'proj is a freestyle project; stopping before arrival',
+          skill === 'complete'
+            ? 'proj is a freestyle project; follow references/freestyle-completion.md before any arrival'
+            : 'proj is a freestyle project; stopping before arrival',
         );
 
         const fromRef = await run(skill, { refMode: 'freestyle' });
@@ -10207,7 +10199,9 @@ describe('freestyle mode skill contracts', () => {
           `${skill}: freestyle read from the ref: no pull`,
         ).toBe(false);
         expect(fromRef.stderr).toContain(
-          'proj is a freestyle project; stopping before arrival',
+          skill === 'complete'
+            ? 'proj is a freestyle project; follow references/freestyle-completion.md before any arrival'
+            : 'proj is a freestyle project; stopping before arrival',
         );
 
         const quick = await run(skill, { refMode: 'quick' });
@@ -10228,7 +10222,9 @@ describe('freestyle mode skill contracts', () => {
         );
         expect(failedLookup.status).toBe(1);
         expect(failedLookup.stderr).toContain(
-          'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
+          skill === 'complete'
+            ? 'cannot look up terminal refs for proj on origin (git ls-remote exit 128)'
+            : 'cannot look up refs/oat/projects/proj on origin (git ls-remote exit 128)',
         );
         expect(failedLookup.pulled, `${skill}: failed lookup: no pull`).toBe(
           false,
@@ -10236,9 +10232,9 @@ describe('freestyle mode skill contracts', () => {
       });
     }
 
-    it('keeps each existing arrival block byte-identical to the one before the mode read', async () => {
-      // The mode read is a separate block placed before the arrival; the
-      // arrival block itself, and so every other mode's pull, is unchanged.
+    it('preserves existing arrival routes while completion decodes the validated archive mode', async () => {
+      // The mode read remains before arrival. Terminal completion also reads
+      // its validated archive mode; other modes retain their arrival route.
       const expected: Record<Skill, string> = {
         'review-provide':
           'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
@@ -10250,9 +10246,14 @@ describe('freestyle mode skill contracts', () => {
       for (const skill of Object.keys(SKILLS) as Skill[]) {
         const { arrival } = await blocks(skill);
         expect(arrival, `${skill} arrival`).toContain(expected[skill]);
-        expect(arrival, `${skill} arrival has no mode read`).not.toContain(
-          'WORKFLOW_MODE=',
-        );
+        if (skill === 'complete') {
+          // H1: only a validated terminal archive decodes its retained mode.
+          expect(arrival).toContain('WORKFLOW_MODE=project.workflowMode');
+        } else {
+          expect(arrival, `${skill} arrival has no mode read`).not.toContain(
+            'WORKFLOW_MODE=',
+          );
+        }
       }
     });
   });
@@ -10262,12 +10263,12 @@ describe('freestyle mode skill contracts', () => {
     // must name the push between the two commands that bracket it.
     const sites = [
       {
-        path: '.agents/skills/oat-project-complete/SKILL.md',
-        anchor: 'freestyle project. When `shape.md`',
+        path: '.agents/skills/oat-project-complete/references/freestyle-completion.md',
+        anchor: 'For a freestyle project, `oat project complete-state',
       },
       {
         path: 'apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md',
-        anchor: 'A freestyle project has no closeout sequence',
+        anchor: 'A freestyle project closes through',
       },
     ];
     for (const site of sites) {
@@ -10372,13 +10373,13 @@ describe('freestyle mode skill contracts', () => {
             '    [ "$(wc -l < "$STUB_ROOT/ls-codes")" -gt 0 ] && sed -i.bak 1d "$STUB_ROOT/ls-codes"',
             '    [ -n "$code" ] || code=$(cat "$STUB_ROOT/ls-last")',
             '    echo "$code" > "$STUB_ROOT/ls-last"',
-            '    [ "$code" = 0 ] && printf "abc123\\trefs/oat/projects/proj\\n"',
+            '    [ "$code" = 0 ] && printf "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\trefs/oat/projects/proj\\n"',
             // Like git, an absent ref exits 2 only under --exit-code.
             '    [ "$code" = 2 ] && [ "$2" != --exit-code ] && exit 0',
             '    exit "$code" ;;',
             '  fetch) exit 0 ;;',
             '  show)',
-            '    [ "$2" = abc123:state.md ] || exit 128',
+            '    [ "$2" = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:state.md ] || exit 128',
             '    printf -- "---\\noat_workflow_mode: %s\\n---\\n" "$STUB_REF_MODE" ;;',
             'esac',
             '',

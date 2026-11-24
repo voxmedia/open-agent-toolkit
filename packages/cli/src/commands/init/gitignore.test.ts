@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { defaultGitRunner } from '@commands/project/sync/git';
+import { runOat } from '@test-support/run-oat';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -27,6 +28,26 @@ describe('applyOatCoreGitignore', () => {
       tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
     );
     tempDirs.length = 0;
+  });
+
+  it('non-interactive project init ignores lane notes and no other analysis folder', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    const result = await runOat(root, ['init', '--scope', 'project']);
+    expect(result.exitCode, result.stderr).toBe(0);
+    expect(
+      execFileSync(
+        'git',
+        ['check-ignore', '.oat/analysis/lane-notes/l01-d01.md'],
+        { cwd: root, encoding: 'utf8' },
+      ).trim(),
+    ).toBe('.oat/analysis/lane-notes/l01-d01.md');
+    expect(() =>
+      execFileSync('git', ['check-ignore', '.oat/repo/analysis/notes.md'], {
+        cwd: root,
+        stdio: 'pipe',
+      }),
+    ).toThrow();
   });
 
   it('creates .gitignore with core section when none exists', async () => {

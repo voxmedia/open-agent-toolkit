@@ -1602,7 +1602,8 @@ describe('help output snapshots', () => {
                             non-destructive
         --no-set-active     Do not update active project in local config
         --no-dashboard      Do not refresh .oat/state.md after scaffold
-        --no-commit         Do not git-commit the scaffolded project directory
+        --no-commit         Do not commit the shared scaffold or synced pointer; does
+                            not stop the synced publish
         --with-project-log  Create project-log.md regardless of workflow.projectLog
                             config
         --no-project-log    Do not create project-log.md during scaffolding

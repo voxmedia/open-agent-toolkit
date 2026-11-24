@@ -247,7 +247,7 @@
       "page": "workflows/projects/closeout/closeout-skills.md",
       "anchor": "oat-project-complete",
       "applicability": "required",
-      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+      "applicabilityNotes": "Requires an existing project; freestyle uses shape.md and available records, with commits and pushes governed by its shape and scope. Lifecycle modes retain their artifact prerequisites."
     },
     {
       "name": "oat-project-design",
@@ -271,7 +271,7 @@
       "page": "workflows/projects/closeout/closeout-skills.md",
       "anchor": "oat-project-document",
       "applicability": "required",
-      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+      "applicabilityNotes": "Requires an existing project; freestyle uses shape.md and available records, with commits and pushes governed by its shape and scope. Lifecycle modes retain their artifact prerequisites."
     },
     {
       "name": "oat-project-implement",
@@ -399,7 +399,7 @@
       "page": "workflows/projects/closeout/closeout-skills.md",
       "anchor": "oat-project-retro",
       "applicability": "required",
-      "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
+      "applicabilityNotes": "Requires an existing project; freestyle uses shape.md and available records, with commits and pushes governed by its shape and scope. Lifecycle modes retain their artifact prerequisites."
     },
     {
       "name": "oat-project-retro-file",

@@ -19,6 +19,15 @@ after final feedback exists and before project completion freezes lifecycle
 artifacts. Interactive completion also offers generation when the artifact is
 missing. Neither path applies or files findings without separate consent.
 
+## Freestyle projects
+
+Retro also works with a freestyle project's shape, live decisions, lane reports,
+project log and merged changes. Missing lifecycle artifacts are recorded as
+unavailable. Generate and apply both follow `shape.md`'s commit and push
+agreement: local records stay uncommitted, and application proposals stay
+pending if their required durable receipts cannot be saved. See
+[Closing a freestyle project](../execution/freestyle-projects.md#closing-the-project).
+
 ## Generate a retrospective
 
 Ask to run the project retro, or configure `retro` in

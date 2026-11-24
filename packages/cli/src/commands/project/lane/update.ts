@@ -267,7 +267,10 @@ export function applyLaneUpdate(
     text: [
       stamp,
       `${lane} ${dispatch.id}`,
-      changes.length === 0 ? 'observed, no change' : changes.join('; '),
+      changes
+        .filter((change) => !/^(?:task|thread)(?::| cleared$)/.test(change))
+        .join('; ') ||
+        (changes.length > 0 ? 'handles updated' : 'observed, no change'),
     ].join(' · '),
   });
 

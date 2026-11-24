@@ -57,6 +57,23 @@ Fumadocs starters constrain `mdast-util-to-markdown` to 2.1.2 for the current up
 
 Framework starters expose `docs:check` and run it before build; MkDocs `test` is a real check. Bootstrap proposes approved PR CI edits with explicit generated-manifest freshness. Markdown needs neither an app build nor a default manifest.
 
+## Freestyle setup and records
+
+`oat project new <name> --mode freestyle` commits the scaffold in shared scope
+unless `--no-commit` is passed. Synced creation publishes its initial ref and
+writes its pointer, committing the pointer on the code branch unless
+`--no-commit` is passed; the flag does not stop that publish. Local records
+stay uncommitted. The shaping skill explains who can read the selected scope
+before creation; further commits and pushes follow `shape.md`.
+
+`oat project lane set --worktree` stores repository-relative paths, then home
+paths as `~/...`, leaving other paths absolute. Task and thread handles stay
+in Active blocks and are omitted from new History lines. `oat init` always
+ignores `.oat/analysis/lane-notes/`; other analysis folders remain optional.
+New root guidance from `oat pjm init` and `oat decision init` uses level-two
+headings, while exact old level-three blocks are accepted without rewriting.
+`oat project pause --reason` quotes its free text for a lossless status read.
+
 ## Update Notifications
 
 On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice.
@@ -86,7 +103,17 @@ Use these commands when you want structured runtime/project state out of the CLI
 - `oat project delivery waive --project <path> --delivery <dNN> --reason <text> [--by <name>]` - operator-only head-bound freshness waiver for a registered goal delivery that is stale only through head movement; restores its passed record in `state.md` (refuses under `OAT_AUTONOMOUS=1`, with a stable `code` under `--json`)
 - `oat project complete-state <project-path>` - emit the canonical completed lifecycle shape into a tracked project's `state.md`; refuses the same incomplete closeout `closeout-check` reports; on success for a goal project it lists the terminal deliveries' freshness waivers (`waivers` under `--json`)
 
-The `oat-project-complete` skill observes a tracked PR live before writing. For
+For freestyle, `oat-project-complete` confirms the shape's done criteria, offers
+retro and documentation, completes a pending log synthesis, runs `complete-state`,
+then pushes synced records as `shape.md` agrees before `archive`. A withheld push
+leaves archive pending and retains the active pointer. In every scope it previews
+archive with `--dry-run --json` and requires the shape to permit the actual
+exports and publication, including a non-null `s3Path`. Local records stay
+uncommitted and are never uploaded automatically. A terminal synced alias uses
+its existing archive receipt instead of a refused pull; retry effects follow
+the same agreement. No final review, summary or PR is required.
+
+For lifecycle modes, the `oat-project-complete` skill observes a tracked PR live before writing. For
 a shared or synced project with an already merged original it prepares a fresh branch from the updated PR base
 and routes bookkeeping through a separate follow-up under existing explicit
 authority, preserving the original URL/status/body. Unsafe local inputs stop

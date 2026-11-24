@@ -80,6 +80,13 @@ project is (an afternoon, a few PRs, a multi-week orchestrated run). Record all
 three. Use the description given at creation as the starting point, but write
 only what the user confirms.
 
+Once the goal is written, offer the user a choice: step through the remaining
+shaping topics, or see a table of recommended defaults to accept whole or
+except for named topics. Recommend defaults in proportion to the goal and
+show each topic, its recommended answer and its tradeoff. Write only the
+answers the user accepts; ask about named exceptions and retain deferred
+items in `## Undecided`.
+
 ### 2. Brainstorm or discovery
 
 Section: `## Brainstorm or discovery`. Offer this only after the goal is
@@ -249,9 +256,14 @@ neither is available, stop and ask the user.
 ### 6. Commits, PRs and merges
 
 Section: `## Commits, PRs and merges`. Agree who commits (records and code)
-and when, when PRs open, and who merges. Until this topic holds an answer,
-nothing is committed or pushed, by this skill or by `oat-brainstorm`. Once it
-does, follow it together with the records rule for the project's scope in
+and when, when PRs open, and who merges.
+
+A shared project's creation commits its scaffold unless `--no-commit` is
+passed. Synced creation publishes its initial ref and writes its pointer,
+committing the pointer on the code branch unless `--no-commit` is passed.
+`--no-commit` does not stop the synced publish. Nothing else is committed or
+pushed until commits are shaped. Until this topic holds an answer, no further commit or push is made
+by this skill or by `oat-brainstorm`. Once it does, follow it together with the records rule for the project's scope in
 `AGENTS.md` (`## Where records live`). In a local project the project records
 stay uncommitted whatever this section says; the agreed shape still governs
 code commits.
@@ -260,6 +272,9 @@ code commits.
 
 Section: `## User involvement`. What the user approves before it happens (for
 example opening or merging a PR, a reshape) and what they are only told.
+Ask which required checks need a person, device or session available, and
+when. Record the availability needed alongside the approval or notification
+agreement.
 
 ### 8. Reshape checkpoints
 
