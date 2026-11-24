@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-11-23
+oat_last_updated: 2026-11-24
 oat_current_task_id: p13
 oat_generated: false
 oat_template: false
@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | complete | 1     | 1/1      |
-| p07   | complete | 1     | 1/1      |
-| p10   | complete | 1     | 1/1      |
-| p08   | complete | 1     | 1/1      |
-| p11   | complete | 1     | 1/1      |
-| p12   | complete | 1     | 1/1      |
-| p13   | pending  | 1     | 0/1      |
-| p14   | pending  | 1     | 0/1      |
-| p15   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | complete    | 1     | 1/1      |
+| p05   | complete    | 1     | 1/1      |
+| p07   | complete    | 1     | 1/1      |
+| p10   | complete    | 1     | 1/1      |
+| p08   | complete    | 1     | 1/1      |
+| p11   | complete    | 1     | 1/1      |
+| p12   | complete    | 1     | 1/1      |
+| p13   | in_progress | 1     | 0/1      |
+| p14   | pending     | 1     | 0/1      |
+| p15   | pending     | 1     | 0/1      |
 
 **Total:** 10/13 phases accepted
 
@@ -1857,6 +1857,21 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 **Files:** freestyle skill/kickoff, project-agents and shape templates, new command/help test, freestyle contracts, CLI README/AGENTS, affected docs pages.
 **Proof:** Node 22.23.4; isolated-HOME shared skill-prose contracts, validation and new help tests: 1383/1383 passed, uncached (exit 0). Root check, type-check, lint and format exited 0; scoped CLI build exited 0. Baseline-source creation/audience/help controls failed all three intended assertions. A first suite run overlapped a root-check build and observed partially rewritten dist imports; sequential build then full rerun passed. No source repair was made for that overlap. Skill/package release bumps and their final gates belong to p15.
 
+### Recovery Event p13-recovery-001
+
+- Phase/task: p13 / p13-t03
+- Original request: freestyle-projects-p13-implementation-1
+- Original commit: 497a8fa6b64406283e9a177cbba271749399daac
+- Defect class: test
+- Discovered by: bash scripts/with-isolated-home.sh pnpm test
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: c4633498513c0f522ecb23841afa4764fb17575d
+- Verification: focused help suite and phase check/types/full tests passed before and immediately after commit.
+- Reason: Updated only the stale creation-help snapshot and p13 ledger. Same handle and target preserved; original commits remain immutable.
+
 ---
 
 ## Phase p14: Lean project AGENTS.md and lane reports
@@ -1924,6 +1939,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - Root-inline phase: p12 (task p12-t05 only, review round 1 M1 and L1) · reason: one template preamble, one pin and one docs line, smaller than a fix-mode resume · root model: claude-opus-5-5
 - Root-inline phase: p12 (task p12-t06 only, m03 integrated review I-1 to I-6) · reason: a matcher flag, one git flag, prose lines and three tests, smaller than a fix-mode resume · root model: claude-opus-5-5
 
+- run/v1 · request=freestyle-projects-p13-implementation-1 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
