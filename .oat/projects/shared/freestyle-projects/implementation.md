@@ -1925,7 +1925,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 **Status:** in_progress
 **Base:** 994c63b36064f54ad0878120cf782b305c92a8ff
-**Head:** 4234ff23ec375249747f49e3bce818dff854df2c
+**Head:** 5b5f95c85932ef18ffabdd0a7bd3759e48dc11f2
 **Executor:** phase-implementer:freestyle-projects-p15-implementation-1
 
 **Verification:** Passed at clean committed HEAD `4234ff23ec375249747f49e3bce818dff854df2c`, against unchanged `origin/main` / integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`. In Definition of Done order, `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, post-commit `pnpm run check:skill-bumps`, fetch of `origin/main` then `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, direct docs-index generation and `git diff --exit-code -- apps/oat-docs/index.md` all exited 0. The skill gate validated 11 changed skills; all five public packages validated at 0.3.60. Phase check/type-check replayed 11/11 workspace tasks, test 12/12, build 5/5 and docs 6/6; root validation/format and smoke 165, skill 754 and script 7 cases ran live. Pre-commit workspace tests executed uncached, including CLI 10,044 tests in 459 files and all seven new closing contracts. `pnpm lint` and `pnpm format` also passed. Runtime: Darwin arm64, Node 22.23.4, pnpm 10.13.1; dependency/lockfile/config inputs unchanged; bundled assets rebuilt for 0.3.60. Exact exits: `/tmp/p15-phase-exits.tsv`; gate logs: `/tmp/p15-phase-{check,types,test,build,skill-bumps,fetch,versions,release,docs,manifest,manifest-diff}.log`.
@@ -1996,6 +1996,24 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - Artifact: `reviews/archived/p15-code-review-2026-11-24T195617Z.md` (local).
 - Outcome: fixes required. H1 (High) confirmed: after a synced archive retires the active ref and checkout, a retained freestyle active pointer can enter the generic archive continuation and its mandatory code-branch push. Route a verified freestyle retry to the shape-aware terminal path.
 - **Finding classes:** H1 accepted-requirement (Outcome 13, p15 Intent, and the constraint governing post-creation publication).
+
+### Task p15-t02: (review) Preserve freestyle mode on retired synced archive resume
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p15-implementation-1
+**Handle:** /root/p15 (same accepted Codex handle)
+**Commit:** 5b5f95c85932ef18ffabdd0a7bd3759e48dc11f2
+**Source review:** reviews/archived/p15-code-review-2026-11-24T195617Z.md — H1
+**Fix request:** freestyle-projects-p15-fix-1
+**Continuation event:** cont-freestyle-projects-p15-fix-1 → freestyle-projects-p15-implementation-1
+
+**Intent:** Decode the validated archive's workflow mode before generic continuation; finish a freestyle retry through shape-aware terminal reporting and the existing synced finalizer, preserving lifecycle-mode resumes.
+**Files:** `.agents/skills/oat-project-complete/SKILL.md`, `.agents/skills/oat-project-complete/references/freestyle-completion.md`, `packages/cli/src/commands/init/tools/shared/freestyle-closeout-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` (directly affected archived-mode assertion).
+**Proof command:** Execute the shipped entry shell with a missing source/ref/discovery and mocked terminal archive/status, using real archive executor/decoder/finalizer; freestyle withholding code-branch publication must bypass generic continuation, while quick retains it. Run focused completion tests, isolated skill contracts, relevant repository gates, and committed-history/release/docs checks. No manual scratch-project run.
+
+**Verification:** H1's pre-fix probe failed because freestyle reached `generic lifecycle Step 8.5`, while quick's control passed (exit 1, one intended failure; `/tmp/p15-fix-red.log`). After the correction, the shipped shell branch plus real archive executor/decoder/finalizer passed both mode controls; the mocked CLI fixture withholds code-branch publication, records no push and clears only through the validated finalizer. This proves routing and terminal continuation, not a live model run or archive-transaction correctness. The existing archive-entry helper suite passed 10/10. Isolated skill/validation contracts passed 1,376 tests / 34 files. Final pre-commit `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, `pnpm lint` and `pnpm format` exited 0; CLI executed 10,046 tests / 459 files, smoke 165, skills 754, scripts 7. Node 22.23.4, pnpm 10.13.1, Darwin arm64. Inputs are preserved in `/tmp/p15-fix-tested-inputs.json`; logs and exits: `/tmp/p15-fix-{prose,helper,check,types,test,build,lint,format}.log`, `/tmp/p15-fix-exits.tsv`.
+
+**Scope:** H1 only. No CLI source, archive transaction, release version, other project record or unrelated finding changed. The direct arrival assertion now permits completion's archived-mode decode; its ordinary lifecycle route control remains. No manual scratch run, push, PR or post-commit recovery.
 
 ---
 
