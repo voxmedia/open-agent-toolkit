@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-23
-oat_current_task_id: p12
+oat_current_task_id: p13
 oat_generated: false
 oat_template: false
 ---
@@ -51,8 +51,11 @@ oat_template: false
 | p08   | complete | 1     | 1/1      |
 | p11   | complete | 1     | 1/1      |
 | p12   | complete | 1     | 1/1      |
+| p13   | pending  | 1     | 0/1      |
+| p14   | pending  | 1     | 0/1      |
+| p15   | pending  | 1     | 0/1      |
 
-**Total:** 10/10 phases accepted
+**Total:** 10/13 phases accepted
 
 ---
 
@@ -1806,6 +1809,24 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 - L1 (Low, docs): derived-key field list missing `structural`. Fixed in p12-t05.
 - **Finding classes:** M1 accepted-requirement (Outcome 10: a lane brief each dispatch brief extends instead of repeating; the incident of about 150-line briefs) · L1 regression (docs overstated nothing but omitted a hashed field, against `append.ts` `deriveProjectLogKey`).
 - Outcome: passed (0 critical, 0 high). The fixes were not re-reviewed (operator direction: no re-review for straightforward fixes); root verification is in the p12-t05 record.
+
+---
+
+## Phase p13: Setup and publication
+
+**Status:** pending
+
+---
+
+## Phase p14: Lean project AGENTS.md and lane reports
+
+**Status:** pending
+
+---
+
+## Phase p15: Closing a freestyle project
+
+**Status:** pending
 
 ---
 
