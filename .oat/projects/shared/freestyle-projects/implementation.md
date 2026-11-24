@@ -1820,6 +1820,16 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 
 One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules p13 sequentially. Its implementation and docs share contract tests, formatter and build output, so there is no independent fan-out.
 
+### Task p13-t01: Keep lane locations portable and history concise
+
+**Status:** completed
+**Commit:** 87d4a93871da30de8717460358796b30550aaf2c
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+**Handle:** /root/p13
+**Intent:** Store newly supplied worktrees relative to the repository or home, derive placement from the absolute path, retain legacy placement, and keep handles only in Active blocks.
+**Files:** packages/cli/src/commands/project/lane/set.ts, update.ts, index.ts, lane.test.ts, ledger.test.ts
+**Proof:** Node 22.23.4; isolated-HOME Vitest project/lane 42/42 passed (exit 0, uncached). CLI check, type-check and build exited 0. Baseline source with the new assertions failed (exit 1) for the retained handles and absolute repository path; restored source is byte-identical to the passing run. Initial generated asset version mismatch was resolved by the scoped build before tests.
+
 ---
 
 ## Phase p14: Lean project AGENTS.md and lane reports
