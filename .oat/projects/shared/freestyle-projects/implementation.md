@@ -1830,6 +1830,16 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 **Files:** packages/cli/src/commands/project/lane/set.ts, update.ts, index.ts, lane.test.ts, ledger.test.ts
 **Proof:** Node 22.23.4; isolated-HOME Vitest project/lane 42/42 passed (exit 0, uncached). CLI check, type-check and build exited 0. Baseline source with the new assertions failed (exit 1) for the retained handles and absolute repository path; restored source is byte-identical to the passing run. Initial generated asset version mismatch was resolved by the scoped build before tests.
 
+### Task p13-t02: Fix setup guidance and pause serialization
+
+**Status:** completed
+**Commit:** cd4da212c4278be2da9fc5657fc850da40f378c0
+**Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+**Handle:** /root/p13
+**Intent:** Always ignore lane notes at init, write new adoption headings at level two while accepting exact legacy blocks without writes, and serialize any pause reason as a quoted scalar.
+**Files:** CLI init gitignore and tests, PJM/decision guidance and tests, shared AGENTS classifier and frontmatter writer, pause command and tests. The frontmatter replacement callback is a mechanically required addition: a literal `$&` in the reason otherwise substitutes the old frontmatter into the new quoted value.
+**Proof:** Node 22.23.4; isolated-HOME Vitest init/gitignore, PJM, decision, shared/agents-md, shared/frontmatter-write, init/tools and project/pause: 345/345 passed, uncached (exit 0). CLI check, type-check and build exited 0. Baseline-source negative control failed all four selected assertions (lane-notes ignore, both fresh heading producers, quoted pause reason); patched cases also prove unchanged legacy bytes accepted and user-edited blocks refused as manual-required.
+
 ---
 
 ## Phase p14: Lean project AGENTS.md and lane reports
