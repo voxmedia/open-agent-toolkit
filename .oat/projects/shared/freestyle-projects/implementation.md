@@ -1990,6 +1990,13 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - `.agents/skills/oat-project-quick-start/SKILL.md`
 - `.agents/docs/autonomy-contract.md`
 
+### Review Received: p15 (round 1)
+
+- Reviewer: `freestyle-projects-p15-review-1`, GPT-6.1 Sol high, fresh native review on `994c63b36..4234ff23e`.
+- Artifact: `reviews/archived/p15-code-review-2026-11-24T195617Z.md` (local).
+- Outcome: fixes required. H1 (High) confirmed: after a synced archive retires the active ref and checkout, a retained freestyle active pointer can enter the generic archive continuation and its mandatory code-branch push. Route a verified freestyle retry to the shape-aware terminal path.
+- **Finding classes:** H1 accepted-requirement (Outcome 13, p15 Intent, and the constraint governing post-creation publication).
+
 ---
 
 ## Orchestration Runs
@@ -2050,6 +2057,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 - run/v1 · request=freestyle-projects-p14-implementation-1 · scope=p14 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p14 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p14-review-1 · scope=p14 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p14 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p15-implementation-1 · scope=p15 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p15-review-1 · scope=p15 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p15 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
