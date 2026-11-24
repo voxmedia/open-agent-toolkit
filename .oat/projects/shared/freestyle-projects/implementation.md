@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status   | Units | Accepted |
-| ----- | -------- | ----- | -------- |
-| p01   | complete | 1     | 1/1      |
-| p02   | complete | 1     | 1/1      |
-| p03   | complete | 1     | 1/1      |
-| p04   | complete | 1     | 1/1      |
-| p05   | complete | 1     | 1/1      |
-| p07   | complete | 1     | 1/1      |
-| p10   | complete | 1     | 1/1      |
-| p08   | complete | 1     | 1/1      |
-| p11   | complete | 1     | 1/1      |
-| p12   | complete | 1     | 1/1      |
-| p13   | complete | 1     | 1/1      |
-| p14   | pending  | 1     | 0/1      |
-| p15   | pending  | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | complete    | 1     | 1/1      |
+| p02   | complete    | 1     | 1/1      |
+| p03   | complete    | 1     | 1/1      |
+| p04   | complete    | 1     | 1/1      |
+| p05   | complete    | 1     | 1/1      |
+| p07   | complete    | 1     | 1/1      |
+| p10   | complete    | 1     | 1/1      |
+| p08   | complete    | 1     | 1/1      |
+| p11   | complete    | 1     | 1/1      |
+| p12   | complete    | 1     | 1/1      |
+| p13   | complete    | 1     | 1/1      |
+| p14   | in_progress | 1     | 0/1      |
+| p15   | pending     | 1     | 0/1      |
 
 **Total:** 11/13 phases accepted
 
@@ -1976,6 +1976,7 @@ One phase implementer owns commits in the orchestration worktree on `feat/freest
 
 - run/v1 · request=freestyle-projects-p13-implementation-1 · scope=p13 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=freestyle-projects-p13-review-1 · scope=p13 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p13 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=freestyle-projects-p14-implementation-1 · scope=p14 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p14 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
