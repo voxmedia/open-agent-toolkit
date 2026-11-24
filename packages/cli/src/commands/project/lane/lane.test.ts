@@ -1,5 +1,12 @@
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -132,6 +139,9 @@ describe('oat project lane set', () => {
 
     const ledger = await ledgerOf(root);
     expect(ledger.title).toBe('Lanes: demo');
+    expect(ledger.history[0]?.text).not.toMatch(
+      /task-123|thread-abc|task:|thread:/,
+    );
     expect(ledger.active[0]?.fields).toMatchObject({
       state: 'dispatched',
       dispatch: 'd01 open',
@@ -172,9 +182,55 @@ describe('oat project lane set', () => {
       'Wrote .oat/projects/shared/demo/lanes.md. Nothing was committed or pushed',
     );
     expect((await ledgerOf(root)).active[1]?.fields).toMatchObject({
-      worktree: git(root, ['rev-parse', '--show-toplevel']),
+      worktree: '.',
       placement: 'shared-worktree',
       paths: 'docs/a.md, docs/b.md',
+    });
+  });
+
+  it('stores repository, home and outside paths while preserving legacy placement', async () => {
+    const root = await sharedRepo();
+    await newProject(root);
+    const repository = git(root, ['rev-parse', '--show-toplevel']);
+    const underHome = join(process.env.HOME as string, 'lane-checkout');
+    const outside = await mkdtemp(join(tmpdir(), 'oat-outside-lane-'));
+    tempDirs.push(outside);
+    const paths = [
+      { input: join(root, 'nested'), stored: 'nested' },
+      { input: underHome, stored: '~/lane-checkout' },
+      { input: outside, stored: outside },
+    ];
+    // The outside path is not a Git checkout; canonicalize it through realpath.
+    paths[2]!.stored = await realpath(outside);
+    for (const [index, path] of paths.entries()) {
+      const result = await laneSet(root, [
+        `l0${index + 1}`,
+        '--worktree',
+        path.input,
+      ]);
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect((await ledgerOf(root)).active[index]?.fields).toMatchObject({
+        worktree: path.stored,
+        placement: 'own-worktree',
+      });
+    }
+    const ledgerPath = join(projectDir(root, 'shared'), 'lanes.md');
+    await writeFile(
+      ledgerPath,
+      (await readFile(ledgerPath, 'utf8')).replace(
+        '- worktree: nested\n- placement: own-worktree',
+        `- worktree: ${repository}\n- placement: shared-worktree`,
+      ),
+    );
+    const updated = await laneSet(root, [
+      'l01',
+      '--next',
+      'resume legacy lane',
+    ]);
+    expect(updated.exitCode, updated.stderr).toBe(0);
+    expect((await ledgerOf(root)).active[0]?.fields).toMatchObject({
+      worktree: repository,
+      placement: 'shared-worktree',
     });
   });
 

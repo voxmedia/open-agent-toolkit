@@ -67,7 +67,7 @@ describe('lane ledger', () => {
     expect(ledger.history).toEqual([
       {
         id: 'u001',
-        text: '2026-11-22T10:00:00Z · l01 d01 · created; d01 opened; task: task-123; thread: thread-abc; branch: lane/l01; next: wait for the lane to report; owner: lane; state dispatched',
+        text: '2026-11-22T10:00:00Z · l01 d01 · created; d01 opened; branch: lane/l01; next: wait for the lane to report; owner: lane; state dispatched',
       },
     ]);
     expect(ledger.closed).toEqual([]);
