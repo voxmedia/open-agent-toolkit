@@ -2122,6 +2122,9 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 ## Reviews and Gates
 
+- m04 milestone exit for p13, p14, p15 and p-rev1. The CLI resolved the configured implement gate as project-disabled and the scope-specific delivery check read the exit carrier as allowed and fresh. The pending integrated review remains the approved GPT-6.2 Astra high review.
+- m04 Definition of Done ran against product inputs at `9d578becd0cedcc271ebc6e90f5b9f9449baab37` on Darwin arm64, Node 22.23.4 and pnpm 10.13.1 with an isolated test home. Check, types, tests, build, skill bumps, release version check, release validation, docs build and direct manifest freshness exited 0. The CLI suite executed uncached with 10,047 passes. Smoke, skills and script suites passed 165, 754 and 7 tests. Direct Git fetch exited 128 because transport to GitHub was unreachable. Two GitHub API reads resolved live `main` to `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, the local `origin/main` commit used by the passing version check. Version 0.3.60 validated for all five public packages. Local exact exit and command logs are in `references/analysis/m04-run.y8WuGm/dashboard-gates.tsv` and its sibling `dashboard-*.log` files.
+
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
 - 2026-11-21 · brief and m01 amendment review, manual substitute for the project-disabled `oat-project-goal` gate · GPT 6.2 Astra, effort high, via T3 `delegate_task` (read-only) · reviewed head `987d479b798cbc2b2b28df9a3b414d3262cea1df` · 0 blocking; all findings folded into the brief across rounds at `dc3d90918`, `ec7dd284f`, `9b16c94d6`.
