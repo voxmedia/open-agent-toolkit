@@ -2065,6 +2065,19 @@ The branch CLI reproduced the issue in the dashboard's line-based reader. An ord
 
 This revision also corrects p13’s History description. H1 and M1 check publication and recovery already promised in Outcomes 11 and 13. L1 preserves accurate History when a handle value is omitted.
 
+### Task prev2-t01: (review) Honor archive authority and terminal alias routing
+
+**Status:** completed
+**Executor:** phase-implementer:freestyle-projects-p-rev2-implementation-1
+**Handle:** /root/m04_revision
+**Source review:** m04-integrated-review-2026-11-24T210432Z.md — H1, M1
+**Intent:** Preview archive effects for every freestyle scope and terminal retry before applying the shape's publication agreement; recognize matching completed aliases before the missing-checkout pull instruction.
+**Files:** completion SKILL.md and freestyle-completion.md reference; freestyle-closeout-contracts.test.ts; CLI README and freestyle project docs; validation/skills.test.ts (existing first-selector contract mechanically updated for the narrowed pull advice and full Git SHA fixture).
+**Proof:** isolated CLI Vitest freestyle-closeout-contracts.test.ts; completion script tests; scoped lint/format and skill validation. Negative first-selector and prose controls run against the pre-fix input, followed by the same passing controls and existing-mode continuation.
+
+**Commit:** 5ab19373d77646f9d2cc996bc963e91b46838717
+**Verification:** pass — 16 focused controls, 120 completion script tests, and 1,383 skill prose/validation tests; scoped lint and skill validation exit 0. Pre-fix negative controls failed on missing all-scope authority and terminal route/ref checks (5 failed, 2 valid controls passed); the same controls pass on the fixed input. Existing quick continuation and the actual freestyle reference retry/finalizer pass. Logs are retained under `references/analysis/m04-rev2-run.7HAY5t/`.
+
 ---
 
 ## Orchestration Runs
