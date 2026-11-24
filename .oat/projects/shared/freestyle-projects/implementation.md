@@ -1816,7 +1816,14 @@ Late fix p12-t06 (m03 integrated review cycle 1) at `22212dabb`. p12 is the last
 
 **Status:** in_progress
 **Base:** e0b2f81ef4a45f188996ac2376c025ff305425f6
+**Head:** c4633498513c0f522ecb23841afa4764fb17575d
 **Executor:** phase-implementer:freestyle-projects-p13-implementation-1
+
+**Verification:** Passed on clean committed HEAD `c4633498513c0f522ecb23841afa4764fb17575d`, against unchanged `origin/main` / integration base `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, on Darwin arm64, Node 22.23.4 and pnpm 10.13.1. `pnpm check`, `pnpm type-check`, isolated-HOME `pnpm test`, `pnpm build`, `pnpm build:docs`, direct docs index generation and manifest freshness all exited 0. Post-commit check/type-check replayed 11/11 Turbo tasks, test replayed 12/12 workspace tasks, build 5/5 and docs build 6/6; live root validation/format, focused help tests (71), smoke (165), skill (754) and script (7) cases passed. The recovery's pre-commit CLI suite executed uncached: 10,032 tests in 458 files passed. Scoped task proofs and earlier live root lint/format also passed. Lockfile and package/configuration inputs were unchanged; branch bundled assets were rebuilt for CLI 0.3.59. Gate logs are `/tmp/p13-recovery-{focused,check,types,phase}-{pre,post}.log` and `/tmp/p13-phase-{build,docs,manifest}.log`.
+
+**Recovery:** `p13-recovery-001` corrected the existing inline `project new --help` snapshot in `packages/cli/src/commands/help-snapshots.test.ts`, mechanically discovered by full phase tests after p13-t03. Append-only recovery commit `c4633498513c0f522ecb23841afa4764fb17575d` passed focused and relevant phase checks both before and immediately after commit; original p13-t03 remains immutable. Prior durable usage 0; current usage 1/10, remaining 9. The matching committed `completed` marker remains for root validation/settlement. No fallback or other correction was made.
+
+**Milestone coordination:** Package and skill version bumps, `check:skill-bumps`, `release:check-versions` and `release:validate` remain assigned to p15. Manual scratch-project runs were not performed, per the approved m04 unit/contract-test scope.
 
 One phase implementer owns commits in the orchestration worktree on `feat/freestyle-projects-m04`. The milestone schedules p13 sequentially. Its implementation and docs share contract tests, formatter and build output, so there is no independent fan-out.
 
