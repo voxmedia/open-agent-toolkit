@@ -347,6 +347,10 @@ Integrated corrections H1 M1 and L1 passed p-rev2 phase review with no findings;
 
 m04 exit refreshed after p-rev2 acceptance and passing final gates; freestyle-projects-m04-exit-refreshed
 
+### 2026-11-24 · structural · oat-project-review-receive · m04
+
+m04 manual integrated confirmation passed on all five accepted phase units; H1 M1 and L1 resolved and exit fresh; freestyle-projects-m04-integrated-passed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

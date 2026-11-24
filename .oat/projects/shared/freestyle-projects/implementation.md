@@ -2174,6 +2174,11 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 - m04 exit refreshed after p-rev2. All five phase reviews passed. The scope p13, p14, p15, p-rev1 and p-rev2 resolves to the project-disabled exit gate, with the CLI reading an allowed, fresh carrier. Manual integrated confirmation follows.
 - Final product proof at clean commit `243acef2aae94895e4a6815ee26bf724a8b7c7ea`, against fresh `origin/main` `5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f`, on Darwin arm64, Node 22.23.4 and pnpm 10.13.1. Check, types, isolated `pnpm test:evidence` (12 of 12 tasks ran uncached, including 10,058 CLI tests), standalone smoke, skills and scripts (165, 754 and 7 tests), build, post-commit skill/version checks, successful Git fetch, release validation of all five 0.3.60 packages, docs build, direct manifest freshness, lint and format all exited 0. Build tasks could reuse Turbo cache. Exact commands, inputs, timings, exits and focused before/after evidence are in the local `references/analysis/m04-rev2-run.7HAY5t/` log directory. Unit and contract tests only, as agreed.
 
+### Review Received: m04 (round 2)
+
+- Manual GPT-6.2 Astra high confirmed p13, p14, p15, p-rev1 and p-rev2 at `243acef2`. Artifact `reviews/archived/m04-integrated-review-2026-11-24T213227Z.md` (local).
+- Outcome: passed, with no new findings. H1 (archive publication consent in all scopes), M1 (retained terminal-ref recovery) and L1 (value-free History) are settled. The scoped exit carrier is allowed and fresh.
+
 ### Review Received: m04 (round 1)
 
 - Manual GPT-6.2 Astra high reviewed scope p13, p14, p15, p-rev1 at `9d578becd`. Artifact `reviews/archived/m04-integrated-review-2026-11-24T210432Z.md`.
