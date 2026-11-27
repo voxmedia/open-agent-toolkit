@@ -112,8 +112,8 @@ const PREAMBLE = [
   "The lane ledger. Written only by `oat project lane set` in the orchestrator's",
   'checkout; never edit it by hand, and lanes never write it. Active holds one',
   'block per open lane, rewritten in place. Closed has one line per merged,',
-  'completed or superseded lane. History has one append-only line per update, each with its',
-  'update ID. Filed lane reports are in `lane-reports/`.',
+  'completed or superseded lane. History has one append-only line per update,',
+  'each with its update ID. Filed lane reports are in `lane-reports/`.',
 ];
 
 export function lanesPath(projectDir: string): string {

@@ -123,10 +123,11 @@ creation for synced projects, everyone who can read the branch once pushed
 for shared projects, and this checkout only for local projects.
 
 Use `oat project lane set l12 --state completed` when you accept a verification
-or advisory result that needs no PR merge. The final dispatch must be settled.
-You can file its report with `--report <file>` in the same update. A filed report
-ends the dispatch, and `completed` ends the lane. The Closed row retains the
-head and report pointer, and History records the transition.
+or advisory result that needs no PR merge. Settle the final dispatch with
+`--report <file>`, or `--no-report` for an interrupted turn. You can file the
+report and complete the lane in the same update. A filed report ends the
+dispatch, and `completed` ends the lane. The Closed row retains the head and
+report pointer, and History records the transition.
 
 The project `AGENTS.md` keeps the resume rule: read `lanes.md` and reconcile
 open dispatches before acting. Before dispatching or re-dispatching a lane,

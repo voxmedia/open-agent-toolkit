@@ -27,9 +27,10 @@ happens:
   or `superseded` (with `--replaced-by <lane>`). The terminal states `merged`,
   `completed` and `superseded` move the lane to Closed permanently.
 - Use `oat project lane set l12 --state completed` when you accept a result
-  that needs no PR merge and the final dispatch is settled. You can file that
-  dispatch's report with `--report <file>` in the same update. The Closed row
-  keeps the report pointer and delivered head, and History records completion.
+  that needs no PR merge. Settle the final dispatch with `--report <file>`, or
+  `--no-report` for an interrupted turn. You can file the report and complete
+  the lane in the same update. The Closed row keeps the report pointer and
+  delivered head, and History records completion.
 - `--dispatch` opens the lane's next dispatch once its last one has closed.
 - A message to a lane while it runs (a steer) amends the open dispatch: record
   it with `--steer "<one line>"`. Wakes are notifications, not dispatches.
