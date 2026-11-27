@@ -2216,6 +2216,11 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 
 ## Reviews and Gates
 
+### Review Received: m05
+
+- Claude Opus 5.5 high passed the integrated confirmation for `p16` at `f9b34532` against `0058f191`. Artifact `reviews/archived/m05-integrated-review-2026-11-27T153651Z.md` (local).
+- The review reused the independent phase code review at `85c94df6`, checked the final wording and verified the gate evidence. The CLI reference's wording already covers the dispatch prerequisite and flags, so the optional editorial note left no fix task.
+
 - m05 exit: the existing project override disabled the configured implementation exit gate. The p16 phase review and the local repository gates passed. The scoped exit carrier is recorded before the integrated confirmation.
 
 - m05 brief amendment: Opus 5.5 high reviewed `ca15522c` and confirmed the evidence clarifications at `c7698727471cfcf9f6c7e79b96815798c910e2e9`. Finding classes: missing Outcome and docs evidence accepted-requirement (brief contract and p16 scope). The decision to preserve the existing reported and no-report dispatch dispositions added no approval or report requirement. The existing project override disabled the goal plan gate.
