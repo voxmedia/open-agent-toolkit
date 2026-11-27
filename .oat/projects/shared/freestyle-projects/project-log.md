@@ -380,6 +380,10 @@ Accepted p16 after independent Opus 5.5 high review and full repository checks. 
 
 Registered d05 for m05 (p16) at https://github.com/voxmedia/open-agent-toolkit/pull/434; freestyle-projects-register-d05
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+All five milestone PRs merged, and the outcome audit accepted all 14 current brief outcomes. The shared-scope Factory Platform run and the synced-scope Slack Council run informed the record-keeping and closeout changes. The final milestone gave verification and advisory lanes a terminal disposition.
+
+The useful practices were keeping one writer for project records, filing reports verbatim before integrating work, and checking live dispatch and PR state when resuming. The recurring friction was overlapping bookkeeping and guidance copied into each dispatch. The project addressed it through one-command updates, an adopt-existing-plan checklist, and a bundled lane guide and brief.
+
+Legacy ledger diagnostics still require a reproducible case. The final review recorded an editorial gap in the report template for read-only lanes. The wording is preserved in the archive for future reference.

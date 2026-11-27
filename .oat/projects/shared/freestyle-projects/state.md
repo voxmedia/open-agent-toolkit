@@ -595,7 +595,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p16
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   approval_source: null
   post_approval: []
