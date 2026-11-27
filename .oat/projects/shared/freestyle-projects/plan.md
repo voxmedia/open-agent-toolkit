@@ -343,15 +343,24 @@ Writers must preserve every existing row and every unknown trailing cell.
 
 ## Implementation Complete
 
-**Summary:**
+- p01: Mode recognition and opt-outs.
+- p02: Project AGENTS.md, shape.md and the shaping skill.
+- p03: Records commands.
+- p04: m01 docs and release.
+- p05: Orchestrator branch and linked projects.
+- p07: Lane ledger and reports.
+- p10: Decisions and memories.
+- p08: m02 docs and release.
+- p11: Record upkeep commands.
+- p12: Adopted plans, proportionality checkpoints and lane brief.
+- p13: Setup and publication.
+- p14: Lean project AGENTS.md and lane reports.
+- p15: Closing a freestyle project.
+- p-rev1: Render quoted pause reasons in the dashboard.
+- p-rev2: Resolve m04 integrated review findings.
+- p16: Close settled lanes without a pull request.
 
-- Phase p01: [Description]
-
-**Total: [N] phases**
-
-Ready for final code review and PR preparation.
-
----
+**Total: 16 accepted phases across five merged milestone PRs.**
 
 ## References
 

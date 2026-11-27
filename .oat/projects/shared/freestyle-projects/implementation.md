@@ -2459,29 +2459,46 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **Goal declared met:** 2026-11-27 by user at c7698727471cfcf9f6c7e79b96815798c910e2e9
 
-**What shipped:**
+**What shipped**
 
-- [capability 1]
+- m01 added freestyle recognition, scaffolding, shaping, and record commands.
+- m02 added orchestrator ownership, linked projects, lane reports, decisions, and memories.
+- m03 added exact-path record commits, retry-safe log entries, and adopted-plan guidance.
+- m04 clarified setup and publication, moved lane guidance to the bundle, and added freestyle closeout.
+- m05 added the terminal `completed` lane state for accepted work delivered without a PR.
 
-**Behavioral changes (user-facing):**
+**Behavior and modules**
 
-- [bullet]
+- The CLI and dashboard recognize freestyle in shared, local, and synced scopes. The project shape controls how the work runs and who can read its records.
+- The lane ledger preserves dispatch history and filed reports. It records whether a lane merged, was superseded, or completed without a PR.
+- The bundled freestyle, documentation, retrospective, and completion skills use the project's own records and agreements.
 
-**Key files / modules:**
+**Verification**
 
-- `[path]` - [purpose]
+- All five milestone PRs merged into `main`. The delivery registry retains the verified review, exit and endpoint evidence for each.
+- The phase journal records scratch-project walkthroughs, compatibility controls and the repository checks. For m05, all 12 local commands passed and all three GitHub checks passed on PR #434. The 98 focused checks also passed on the Node version pinned in CI.
 
-**Verification performed:**
+**Outcomes audit**
 
-- [tests/lint/typecheck/build/manual steps]
+- Outcome 1: p01-t01–t03 and p02-t04/t06: mode-consumer coverage and shared, local and synced scratch runs, including synced push/pull and the unpulled status path.
+- Outcome 2: p03-t01–t03: journal coverage fixtures, log grammar and corpus parity, and scratch append/check/synthesize.
+- Outcome 3: p05-t02/t04/t05: linked creation, add, status and acknowledgment plus the branch-build parent/child walkthrough.
+- Outcome 4: p05-t01/t03/t05 and p07-t05: branch claim, guarded write fixtures and a refused off-branch write in the scratch pair.
+- Outcome 5: p07-t01/t03/t05: ledger and head-ahead tests, verbatim report hashes and fresh-session recovery of the unfinished dispatch.
+- Outcome 6: p02-t02/t04 and its project-log observation: contract tests and scripted shape, brainstorm detour, new-session resume and reshaping.
+- Outcome 7: p04 and p08 docs reviews, p12 and m04 docs review and build, and p16 CLI help and integrated docs confirmation.
+- Outcome 8: p10-t01–t04: scaffold and resume contracts plus the scratch lane decision promotion, supersession and fresh-session readback.
+- Outcome 9: p11-t01–t03 and m03 confirmation: isolated shared/local/synced commit paths, replay identity and dispatch-conditioned warning controls.
+- Outcome 10: p12-t01–t03 and its phase verification: bundled brief, adopted-plan intake, proportionality contracts and m02-era resume under an isolated home.
+- Outcome 11: p13-t01–t03 and p-rev1: scaffold/visibility contracts, portable lane paths and legacy controls, ignore/adoption checks and quoted pause regression.
+- Outcome 12: p14 and p-rev2: lean AGENTS contracts, lane-note report filing, refreshed legacy guide and handle/report checks.
+- Outcome 13: p15, p-rev2 and d04: freestyle closeout/documentation contracts, paused and terminal receipt cases, and synced refresh/retry review.
+- Outcome 14: p16 and d05: transition and report preservation tests, refusal negative control, independent Opus review and all three checks on merged PR #434.
 
-**Outcomes audit:**
+**Brief deltas**
 
-- Outcome 1: [observed evidence (accepted phase, commit, or verification result) or the recorded deferral]
-
-**Brief deltas (if any):**
-
-- [what changed vs plan.md and why]
+- p06 (ancestry warning) and p09 (extra report evidence fields) were retired at approved re-alignments. The journal preserves both historical stubs.
+- The current brief has 16 accepted phases and 14 met outcomes. Earlier unrelated review follow-ups were dropped by operator decision.
 
 ## References
 
