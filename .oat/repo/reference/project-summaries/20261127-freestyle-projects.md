@@ -34,6 +34,8 @@ OAT now offers freestyle projects for orchestrators who need durable records acr
 
 OAT confirmed all five registered deliveries reached their merged endpoint with fresh evidence. The terminal audit mapped all 14 current outcomes to evidence from 16 accepted phases. The journal records scratch shared, local, and synced walkthroughs, linked-project and lane recovery exercises, and focused regression controls. PR #434 passed CI, the release dry run, and Bugbot. The final product delta also passed the full local repository gate sequence, with focused tests run separately on the CI-pinned Node version.
 
+Delivery d01 retains two operator-approved freshness waivers for head movement on PR #429. Both are recorded in the delivery registry.
+
 ## Scope changes
 
 The operator retired p06, the ancestry-warning phase, and p09, the extra evidence-fields phase, during approved milestone re-alignments. The current brief has no undelivered outcome. Legacy ledger diagnostics remain contingent on a reproducible failure.
@@ -46,30 +48,30 @@ The terminal review recorded a wording gap in the bundled report template. For v
 
 ## Workflow Observations
 
-- **2026-11-27 · feedback · Settled verification and advisory lanes** (project, decision) `oat-project:freestyle-projects#2026-11-27-feedback-settled-verification-and-advisory-lanes-1`
+- **2026-11-27 · feedback · Settled verification and advisory lanes** (project, decision) `oat-archive:20261127-freestyle-projects#2026-11-27-feedback-settled-verification-and-advisory-lanes-1`
   Factory Platform filed and accepted its Slack app scope verification and outage review reports, and both lanes remained Active.
-- **2026-11-24 · friction · Source-checked feedback verdicts still need an independent check** (project, gotcha) `oat-project:freestyle-projects#2026-11-24-friction-source-checked-feedback-verdicts-still-need-an-independent-check-1`
+- **2026-11-24 · friction · Source-checked feedback verdicts still need an independent check** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-24-friction-source-checked-feedback-verdicts-still-need-an-independent-check-1`
   my source-checked verdicts on the run feedback contained two wrong load-bearing claims (W1: project new does not fail on a dirty .gitignore in the default layout; O2: the GitHub publication-safety helper takes visibility as input and fetches nothing).
-- **2026-11-24 · feedback · Freestyle prose contradicted the CLI and itself** (project, documentation-gap) `oat-project:freestyle-projects#2026-11-24-feedback-freestyle-prose-contradicted-the-cli-and-itself-1`
+- **2026-11-24 · feedback · Freestyle prose contradicted the CLI and itself** (project, documentation-gap) `oat-archive:20261127-freestyle-projects#2026-11-24-feedback-freestyle-prose-contradicted-the-cli-and-itself-1`
   the second real freestyle run (mvp-followups) hit three places where the skill or project AGENTS.md said something the CLI or the kickoff contradicted: no commits or pushes before shaping while project new commits and pushes; one topic at a time while the kickoff allows batched defaults; analysis folders described as an oat init choice that non-interactive init never offers.
-- **2026-11-23 · feedback · Review table rows are events** (project, decision) `oat-project:freestyle-projects#2026-11-23-feedback-review-table-rows-are-events-1`
+- **2026-11-23 · feedback · Review table rows are events** (project, decision) `oat-archive:20261127-freestyle-projects#2026-11-23-feedback-review-table-rows-are-events-1`
   an amendment-fix commit rewrote the manual 987d479b plan artifact row in ## Reviews instead of appending; Bugbot caught it on PR #430 and the row was restored after delivery registration.
-- **2026-11-23 · friction · Pre-merge refresh writes uncommittable bookkeeping** (project, gotcha) `oat-project:freestyle-projects#2026-11-23-friction-pre-merge-refresh-writes-uncommittable-bookkeeping-1`
+- **2026-11-23 · friction · Pre-merge refresh writes uncommittable bookkeeping** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-23-friction-pre-merge-refresh-writes-uncommittable-bookkeeping-1`
   the delivery refresh required immediately before merge rewrote observed_head and reflowed state.md flow sequences; committing it would have moved the PR head after the final green sweep.
   Uncertainty: whether refresh should skip writing when only observed_head on an open member changed.
-- **2026-11-23 · friction · Scripted commit-paths calls must check the exit code** (project, gotcha) `oat-project:freestyle-projects#2026-11-23-friction-scripted-commit-paths-calls-must-check-the-exit-code-1`
+- **2026-11-23 · friction · Scripted commit-paths calls must check the exit code** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-23-friction-scripted-commit-paths-calls-must-check-the-exit-code-1`
   at the p10 review fix the root ran commit-paths piped to tail inside a multi-step script; commitlint refused the 104-character header, the script recorded HEAD (the previous bookkeeping commit) as the fix commit, and the next steps committed a record and the phase bookkeeping on that wrong SHA.
-- **2026-11-23 · worked-well · Complexity-lens review briefs** (project, efficiency) `oat-project:freestyle-projects#2026-11-23-worked-well-complexity-lens-review-briefs-1`
+- **2026-11-23 · worked-well · Complexity-lens review briefs** (project, efficiency) `oat-archive:20261127-freestyle-projects#2026-11-23-worked-well-complexity-lens-review-briefs-1`
   with reviewers briefed to apply a complexity lens and skip unlikely edge cases, and with small findings fixed in the round they were raised, m02 needed three integrated cycles and no exit rounds, against eight exit rounds and three cycles for m01, and left no deferred findings.
-- **2026-11-22 · feedback · Small review deferrals are dropped, not filed** (project, decision) `oat-project:freestyle-projects#2026-11-22-feedback-small-review-deferrals-are-dropped-not-filed-1`
+- **2026-11-22 · feedback · Small review deferrals are dropped, not filed** (project, decision) `oat-archive:20261127-freestyle-projects#2026-11-22-feedback-small-review-deferrals-are-dropped-not-filed-1`
   m01 accumulated about ten deferred review findings (edge cases across scopes) that the operator dropped at landing; eight exit rounds and three integrated cycles were spent largely on cross-scope edge cases.
-- **2026-11-22 · friction · A mode stop must precede every write on every project-resolution path** (project, gotcha) `oat-project:freestyle-projects#2026-11-22-friction-a-mode-stop-must-precede-every-write-on-every-project-resolution-path-1`
+- **2026-11-22 · friction · A mode stop must precede every write on every project-resolution path** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-22-friction-a-mode-stop-must-precede-every-write-on-every-project-resolution-path-1`
   p04 needed three review rounds to place the freestyle stops in six lifecycle skills: first after writing steps, then after the activeProject pointer write for a project the user names when asked, and in import-plan for a Step 0.5 name.
-- **2026-11-22 · friction · Delivery freshness after review** (project, gotcha) `oat-project:freestyle-projects#2026-11-22-friction-delivery-freshness-after-review-1`
+- **2026-11-22 · friction · Delivery freshness after review** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-22-friction-delivery-freshness-after-review-1`
   after the integrated review passed, every non-tracking commit (self-review test fixes, a Bugbot fix, a CI test fix) and even rewriting ## Reviews artifact cells to archived paths marked d01 stale, and a waiver binds the last refreshed head, not the local HEAD.
-- **2026-11-22 · friction · Skill tests extract bash blocks by position** (project, gotcha) `oat-project:freestyle-projects#2026-11-22-friction-skill-tests-extract-bash-blocks-by-position-1`
+- **2026-11-22 · friction · Skill tests extract bash blocks by position** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-22-friction-skill-tests-extract-bash-blocks-by-position-1`
   oat-project-complete's resume tests take Step 1's first bash block as the archive entry; p04 inserted the freestyle mode read before it, and five tests failed in CI (pnpm test:skills) on every push while the skill-prose vitest run used for verification passed.
-- **2026-11-22 · friction · zsh does not word-split a command held in a variable** (project, gotcha) `oat-project:freestyle-projects#2026-11-22-friction-zsh-does-not-word-split-a-command-held-in-a-variable-1`
+- **2026-11-22 · friction · zsh does not word-split a command held in a variable** (project, gotcha) `oat-archive:20261127-freestyle-projects#2026-11-22-friction-zsh-does-not-word-split-a-command-held-in-a-variable-1`
   C="node packages/cli/dist/index.js"; $C internal commit-paths ...
 
 _6 more judgment entries are omitted by the digest bound (12 entries, 60 lines); the archived project log keeps every entry._
