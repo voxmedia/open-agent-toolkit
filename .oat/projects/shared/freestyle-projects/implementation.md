@@ -56,8 +56,9 @@ oat_template: false
 | p15    | complete | 1     | 1/1      |
 | p-rev1 | complete | 1     | 1/1      |
 | p-rev2 | complete | 1     | 1/1      |
+| p16    | pending  | 1     | 0/1      |
 
-**Total:** 15/15 phases accepted
+**Total:** 15/16 phases accepted
 
 ---
 
@@ -2120,6 +2121,12 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 
 ---
 
+## Phase p16: Close settled lanes without a pull request
+
+**Status:** pending
+
+---
+
 ## Orchestration Runs
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
@@ -2188,6 +2195,8 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+- m05 brief amendment: Opus 5.5 high reviewed `ca15522c` and confirmed the evidence clarifications at `c7698727471cfcf9f6c7e79b96815798c910e2e9`. Finding classes: missing Outcome and docs evidence accepted-requirement (brief contract and p16 scope). The decision to preserve the existing reported and no-report dispatch dispositions added no approval or report requirement. The existing project override disabled the goal plan gate.
 
 ### Review Received: d04 (PR #433 closeout retry)
 

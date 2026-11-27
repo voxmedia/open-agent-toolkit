@@ -143,6 +143,8 @@ Delivery follows the repository's Workflow Mode Change Inventory: p01 enumerates
 - **Milestone m03 approved:** 2026-11-23 by user at 74f6ac43ca7471de628de9a4f2f200c397f006a9 (m03 amendment: p11 and p12, p09 retired; re-review of its four review fixes waived by the operator)
 - **Milestone m04 approved:** 2026-11-24 by user at a700322d86dd30c96e145f073b576f3ba13da6da (m04 amendment: p13, p14 and p15; two review rounds; re-review of the confirm round's five fixes waived by the operator)
 
+- **Milestone m05 approved:** 2026-11-27 by user at c7698727471cfcf9f6c7e79b96815798c910e2e9. The user approved the agreed completed-lane scope and requested Opus 5.5 high before the PR. The amendment review confirmed the same scope.
+
 ## Milestones
 
 | Milestone | Phases                        |
@@ -310,6 +312,7 @@ Default is `[]` (fully sequential, no worktrees).
 | d04    | code     | passed          | 2026-11-24 | reviews/archived/d04-integrated-review-2026-11-24T230855Z.md | cd23122a4bc5d9888528f71e93557cc78a778828 | manual     | -           |
 | d04    | code     | passed          | 2026-11-24 | reviews/archived/d04-integrated-review-2026-11-24T232127Z.md | e3a48922b299aaefe23620b02f09faf978d1b28c | manual     | -           |
 | p16    | code     | pending         | -          | -                                                            | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-11-27 | -                                                            | c7698727471cfcf9f6c7e79b96815798c910e2e9 | auto       | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
 
