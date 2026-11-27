@@ -368,6 +368,10 @@ Re-aligned after merged m04 to add the final no-PR lane outcome. Key: freestyle-
 
 Observation: Factory Platform filed and accepted its Slack app scope verification and outage review reports, and both lanes remained Active. Impact: The ledger still showed open lanes after their work settled. Recommendation: Add an explicit completed disposition for no-PR lanes.
 
+### 2026-11-27 · structural · oat-project-goal · m05
+
+Activated m05 (p16). Key: freestyle-projects-activate-m05
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
