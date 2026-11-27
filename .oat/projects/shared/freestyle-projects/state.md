@@ -595,13 +595,13 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p16
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: skipped # null | skipped | complete — documentation sync status
 oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/434 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set once at project creation
