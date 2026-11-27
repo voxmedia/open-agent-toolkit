@@ -570,6 +570,37 @@ oat_skill_gate_overrides:
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
+oat_implement_exit_gate:
+  status: allowed
+  resolution: configured
+  disposition: project_disabled
+  config_fingerprint: '52438a5fafab07d8968af03009cd6d5240f5dc9984023ab84b0f684350289457'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override:
+    { 'value': 'disabled', 'source': 'state.md:oat_skill_gate_overrides' }
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: bf10ba93027e71c7f7582c823315a4acc710923b
+  implementation_base_ref: refs/remotes/origin/main
+  implementation_fingerprint: sha256:effective-delta-v2:a3ba103e421bde5e88cdbf12b0a55968ffc433b7283ac57f62fdf4e367d62757
+  freshness_head: bf10ba93027e71c7f7582c823315a4acc710923b
+  freshness_fingerprint: sha256:effective-delta-v2:a3ba103e421bde5e88cdbf12b0a55968ffc433b7283ac57f62fdf4e367d62757
+  launch_state: not_started
+  updated_at: '2026-11-27T20:28:17.535Z'
+  decided_at: '2026-11-27T20:28:17.535Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p16
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/434 # null | string — tracked PR URL when a PR exists
@@ -577,6 +608,10 @@ oat_project_created: '2026-11-21T00:32:07.467Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-11-27T20:23:19Z'
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-11-27T20:28:16.662Z'
 ---
 
 # Project State: freestyle-projects
