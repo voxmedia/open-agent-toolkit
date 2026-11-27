@@ -376,6 +376,10 @@ Activated m05 (p16). Key: freestyle-projects-activate-m05
 
 Accepted p16 after independent Opus 5.5 high review and full repository checks. Key: freestyle-projects-p16-outcome
 
+### 2026-11-27 · structural · oat-project-pr-progress · d05
+
+Registered d05 for m05 (p16) at https://github.com/voxmedia/open-agent-toolkit/pull/434; freestyle-projects-register-d05
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
