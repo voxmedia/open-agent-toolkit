@@ -591,12 +591,13 @@ oat_implement_exit_gate:
   updated_at: '2026-11-27T20:28:17.535Z'
   decided_at: '2026-11-27T20:28:17.535Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p16
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
-  approval: pending
+  pre_approval_completed: [summary, document, pr]
+  satisfied_by: { pr: delivery-coverage }
+  approval: not_required
   approval_source: null
   post_approval: []
   post_approval_completed: []
