@@ -311,7 +311,7 @@ Default is `[]` (fully sequential, no worktrees).
 | m04    | code     | passed          | 2026-11-24 | reviews/archived/m04-integrated-review-2026-11-24T213227Z.md | 243acef2aae94895e4a6815ee26bf724a8b7c7ea | manual     | -           |
 | d04    | code     | passed          | 2026-11-24 | reviews/archived/d04-integrated-review-2026-11-24T230855Z.md | cd23122a4bc5d9888528f71e93557cc78a778828 | manual     | -           |
 | d04    | code     | passed          | 2026-11-24 | reviews/archived/d04-integrated-review-2026-11-24T232127Z.md | e3a48922b299aaefe23620b02f09faf978d1b28c | manual     | -           |
-| p16    | code     | pending         | -          | -                                                            | -                                        | -          | -           |
+| p16    | code     | passed          | 2026-11-27 | reviews/archived/p16-code-review-2026-11-27T152833Z.md       | 85c94df6cec8534bbb00dc673f0c7afed6135d17 | manual     | -           |
 | plan   | artifact | passed          | 2026-11-27 | -                                                            | c7698727471cfcf9f6c7e79b96815798c910e2e9 | auto       | -           |
 
 **Plan artifact review (auto, Claude Opus 5.5 high):** brief rounds at `dc3d90918` (clean after two retries); amendment rounds at `ec7dd284f`, `9b16c94d6` and `987d479b7` (retry bound 2 reached; final retry's one low finding folded at receive without changing intent).
