@@ -318,7 +318,7 @@ oat_deliveries:
     scope: [p13, p14, p15, p-rev1, p-rev2]
     endpoint: merged
     kind: pr
-    status: open
+    status: at_endpoint
     lookup:
       repository: voxmedia/open-agent-toolkit
       head_branch: feat/freestyle-projects-m04
@@ -327,9 +327,9 @@ oat_deliveries:
       - url: https://github.com/voxmedia/open-agent-toolkit/pull/433
         base: '5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f'
         reviewed_head: 'e3a48922b299aaefe23620b02f09faf978d1b28c'
-        observed_head: 2fea1b8f977f8b1245fc99e35f5cd8113ad37be2
+        observed_head: 9d30a54aa1d35ac4467cc5a79380ba50861eb40a
         observed_base: 5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f
-        status: open
+        status: merged
     integrated_review:
       artifact: reviews/archived/d04-integrated-review-2026-11-24T232127Z.md
       scope: [p13, p14, p15, p-rev1, p-rev2]
@@ -350,6 +350,13 @@ oat_deliveries:
       freshness: fresh
       freshness_reason: null
       decided_at: '2026-11-24T23:21:27Z'
+    endpoint_attainment:
+      observed_at: 2026-11-27T15:16:02.754Z
+      members:
+        - url: https://github.com/voxmedia/open-agent-toolkit/pull/433
+          head: 9d30a54aa1d35ac4467cc5a79380ba50861eb40a
+          base: 5fca44a5c784c4eb221fc1c7f70bf6f5e95b3f6f
+          status: merged
 oat_dispatch_policy:
   mode: managed
   policy: high
