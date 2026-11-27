@@ -355,6 +355,31 @@ m04 manual integrated confirmation passed on all five accepted phase units; H1 M
 
 Registered d04 for m04 (p13, p14, p15, p-rev1, p-rev2) at https://github.com/voxmedia/open-agent-toolkit/pull/433. Key: freestyle-projects-register-d04
 
+### 2026-11-27 · structural · oat-project-goal · m04
+
+Re-aligned after merged m04 to add the final no-PR lane outcome. Key: freestyle-projects-realign-m04
+
+### 2026-11-27 · project · feedback · Settled verification and advisory lanes
+
+**Category:** decision
+**Source:** freestyle-projects-learning-m04-01
+**Origin:** oat-project-goal
+**Recorded:** 2026-11-27T15:16:08Z
+
+Observation: Factory Platform filed and accepted its Slack app scope verification and outage review reports, and both lanes remained Active. Impact: The ledger still showed open lanes after their work settled. Recommendation: Add an explicit completed disposition for no-PR lanes.
+
+### 2026-11-27 · structural · oat-project-goal · m05
+
+Activated m05 (p16). Key: freestyle-projects-activate-m05
+
+### 2026-11-27 · structural · oat-project-implement · p16
+
+Accepted p16 after independent Opus 5.5 high review and full repository checks. Key: freestyle-projects-p16-outcome
+
+### 2026-11-27 · structural · oat-project-pr-progress · d05
+
+Registered d05 for m05 (p16) at https://github.com/voxmedia/open-agent-toolkit/pull/434; freestyle-projects-register-d05
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

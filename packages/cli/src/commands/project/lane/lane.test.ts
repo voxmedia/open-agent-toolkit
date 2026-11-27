@@ -322,6 +322,95 @@ describe('oat project lane set', () => {
     ]);
   });
 
+  it.each(['reported', 'same-update', 'no-report'] as const)(
+    'completes a lane with a %s final dispatch and preserves its records',
+    async (disposition) => {
+      const root = await sharedRepo();
+      await newProject(root);
+      const directory = projectDir(root, 'shared');
+      const ledgerPath = join(directory, 'lanes.md');
+      const reportPath = 'lane-reports/l12-d01.md';
+      const report = '# Scope verification\r\n\r\nScopes verified.  ';
+      const returnedFile = join(root, 'returned.md');
+      await writeFile(returnedFile, report, 'utf8');
+      expect((await laneSet(root, ['l12', '--head', 'abc123'])).exitCode).toBe(
+        0,
+      );
+
+      if (disposition === 'reported') {
+        const filed = await laneSet(root, [
+          'l12',
+          '--report',
+          returnedFile,
+          '--state',
+          'work-settled',
+        ]);
+        expect(filed.exitCode, filed.stderr).toBe(0);
+        expect((await ledgerOf(root)).active[0]?.fields.state).toBe(
+          'work-settled',
+        );
+      } else if (disposition === 'no-report') {
+        expect((await laneSet(root, ['l12', '--no-report'])).exitCode).toBe(0);
+      } else {
+        const before = await readFile(ledgerPath, 'utf8');
+        const refused = await laneSet(root, ['l12', '--state', 'completed']);
+        expect(refused.exitCode).toBe(1);
+        expect(refused.stderr).toContain('dispatch d01 is still open');
+        expect(await readFile(ledgerPath, 'utf8')).toBe(before);
+      }
+
+      const before = await ledgerOf(root);
+      const complete = await laneSet(
+        root,
+        [
+          'l12',
+          '--state',
+          'completed',
+          ...(disposition === 'same-update' ? ['--report', returnedFile] : []),
+        ],
+        true,
+      );
+      expect(complete.exitCode, complete.stderr || complete.stdout).toBe(0);
+      expect(JSON.parse(complete.stdout)).toMatchObject({
+        closed: true,
+        dispatch: {
+          id: 'd01',
+          status: disposition === 'no-report' ? 'no-report' : 'reported',
+        },
+        fields: { state: 'completed' },
+      });
+      const after = await ledgerOf(root);
+      expect(after.active).toEqual([]);
+      expect(after.closed).toEqual([
+        {
+          id: 'l12',
+          text: expect.stringMatching(
+            /^completed · .+ · branch - · head abc123 · report /,
+          ),
+        },
+      ]);
+      expect(after.closed[0]?.text).toMatch(
+        disposition === 'no-report'
+          ? /report -$/
+          : /report lane-reports\/l12-d01\.md$/,
+      );
+      expect(after.history.slice(0, -1)).toEqual(before.history);
+      expect(after.history.at(-1)?.text).toMatch(
+        /state .* → completed; closed$/,
+      );
+      if (disposition !== 'no-report') {
+        expect(await readFile(join(directory, reportPath), 'utf8')).toBe(
+          report,
+        );
+      }
+      const closedBytes = await readFile(ledgerPath, 'utf8');
+      const reopen = await laneSet(root, ['l12', '--dispatch']);
+      expect(reopen.exitCode).toBe(1);
+      expect(reopen.stderr).toContain('Lane l12 is closed');
+      expect(await readFile(ledgerPath, 'utf8')).toBe(closedBytes);
+    },
+  );
+
   describe('--commit', () => {
     function committedPaths(root: string): string[] {
       return git(root, ['show', '--name-only', '--format=', 'HEAD'])

@@ -105,8 +105,8 @@ function validateFields(
  * Apply one `lane set` to the ledger, without touching the file. The order is
  * fixed: a report or no-report closes the open dispatch, `dispatch` opens the
  * next one, a steer amends the open one, then fields and the state change.
- * Every update appends one `## History` line with a new update ID; a lane that
- * becomes merged or superseded moves from `## Active` to `## Closed`.
+ * Every update appends one `## History` line with a new update ID. A terminal
+ * state moves the lane from `## Active` to `## Closed`.
  */
 export function applyLaneUpdate(
   ledger: LaneLedger,
@@ -126,7 +126,7 @@ export function applyLaneUpdate(
   }
   if (ledger.closed.some((line) => line.id === lane)) {
     throw refuse(
-      `Lane ${lane} is closed (merged or superseded); a closed lane is not reopened. Start a new lane instead.`,
+      `Lane ${lane} is closed and cannot be reopened. Start a new lane instead.`,
     );
   }
   validateFields(lane, request.fields);
@@ -208,6 +208,11 @@ export function applyLaneUpdate(
   }
 
   const state = request.state ?? impliedState ?? (before.state as LaneState);
+  if (state === 'completed' && dispatch.status === 'open') {
+    throw refuse(
+      `Lane ${lane}'s dispatch ${dispatch.id} is still open. File its report with --report or settle it with --no-report before completing the lane.`,
+    );
+  }
   if (state !== before.state) {
     block.fields.state = state;
     changes.push(
@@ -251,7 +256,7 @@ export function applyLaneUpdate(
       text: [
         state === 'superseded'
           ? `superseded by ${block.fields.replaced_by}`
-          : 'merged',
+          : state,
         stamp,
         `branch ${block.fields.branch ?? '-'}`,
         `head ${block.fields.head ?? '-'}`,

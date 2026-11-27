@@ -6,7 +6,7 @@ orchestrator's lane rules; the lane brief holds the standing lane boundaries.
 ## Dispatch
 
 A lane is one delegated line of work inside this project: a delegate in its
-own worktree and branch with its own PR, or a subagent in the orchestrator's
+own worktree and branch, or a subagent in the orchestrator's
 checkout limited to the `paths:` its ledger entry gives it. A lane has no
 records or orchestrator of its own. A dispatch is one request to a lane that
 ends in one report: the first launch, then each follow-up after the lane's turn
@@ -22,10 +22,15 @@ happens:
   `--effort` and `--observed-model` when they are known, and `--wake` for what
   wakes you for this lane.
 - `--state` is one of `dispatched`, `running`, `turn-finished`,
-  `work-settled`, `review-accepted`, `merged`, `blocked` (with
+  `work-settled`, `review-accepted`, `merged`, `completed`, `blocked` (with
   `--waiting-on owner|lane|linked-project|external` and `--blocker "<one line>"`)
-  or `superseded` (with `--replaced-by <lane>`). Merged and superseded lanes
-  move to the closed list and are not reopened.
+  or `superseded` (with `--replaced-by <lane>`). The terminal states `merged`,
+  `completed` and `superseded` move the lane to Closed permanently.
+- Use `oat project lane set l12 --state completed` when you accept a result
+  that needs no PR merge. Settle the final dispatch with `--report <file>`, or
+  `--no-report` for an interrupted turn. You can file the report and complete
+  the lane in the same update. The Closed row keeps the report pointer and
+  delivered head, and History records completion.
 - `--dispatch` opens the lane's next dispatch once its last one has closed.
 - A message to a lane while it runs (a steer) amends the open dispatch: record
   it with `--steer "<one line>"`. Wakes are notifications, not dispatches.

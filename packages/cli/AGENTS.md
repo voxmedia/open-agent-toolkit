@@ -71,6 +71,9 @@ New PJM/decision root guidance uses `##` headings. Exact previous `###` bodies
 are current and must never be rewritten on rerun; changed bodies still require
 manual action. Lane worktree values can be repository-relative, home-relative
 or legacy absolute paths; derive placement from the full path before storage.
+The `completed` lane state requires a settled dispatch and uses the existing
+Closed and History records, including when the same update files the final
+report. Preserve the behavior of the other terminal states.
 
 ## Completion checks
 

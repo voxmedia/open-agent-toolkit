@@ -56,8 +56,9 @@ oat_template: false
 | p15    | complete | 1     | 1/1      |
 | p-rev1 | complete | 1     | 1/1      |
 | p-rev2 | complete | 1     | 1/1      |
+| p16    | complete | 1     | 1/1      |
 
-**Total:** 15/15 phases accepted
+**Total:** 16/16 phases accepted
 
 ---
 
@@ -2120,7 +2121,33 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 
 ---
 
+## Phase p16: Close settled lanes without a pull request
+
+**Status:** completed
+**Base:** 10e99bc3e50b428bea46a21bb4b1ef31d5e1ce1b
+**Head:** f9b345324372c3b6538c5035a60dad5d15d7bb74
+**Executor:** root
+
+### Task p16-t01: Record completed verification and advisory lanes
+
+**Status:** completed
+**Commit:** 85c94df6cec8534bbb00dc673f0c7afed6135d17
+**Executor:** root
+**Intent:** Allow the orchestrator to close an accepted no-PR lane after settling its final dispatch, retaining its report and history.
+**Files:** Lane CLI, ledger and integration tests; lane guide, CLI guidance and human docs; lockstep public package versions.
+**Proof:** Three CLI transition cases failed before the new state was recognized and passed after it was added. Removing only the open-dispatch guard made that test fail because the command exited zero. Restoring it passed. Focused lane and freestyle suites passed 122 tests.
+
+### Review Received: p16
+
+- Claude Opus 5.5 high passed the product review at `85c94df6cec8534bbb00dc673f0c7afed6135d17` with two non-blocking suggestions. The final wording at `f9b345324372c3b6538c5035a60dad5d15d7bb74` names both dispatch settlement options and wraps the ledger preamble.
+- Artifact `reviews/archived/p16-code-review-2026-11-27T152833Z.md` (local).
+- Full local gate sequence at clean product commit `f9b345324372c3b6538c5035a60dad5d15d7bb74`, main `0058f191cad6e0a053c305f6c6500442d1da9a6a`, v26.11.1, 10.13.1, Darwin arm64. Isolated `pnpm test` passed 10,066 CLI tests plus the standalone smoke, skill and script suites. The workspace reported five cached tasks and the CLI suite ran. Release validation, docs build, direct docs-index regeneration comparison and built CLI help passed. Exact commands, exits and runtime evidence are in `references/analysis/m05-final.Qcs78u/` (local).
+
+---
+
 ## Orchestration Runs
+
+- Root-inline phase: p16 was a single bounded CLI and docs change, implemented by GPT-6.2 Sol. The operator selected independent Opus 5.5 high review.
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
 
@@ -2188,6 +2215,15 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Review Received: m05
+
+- Claude Opus 5.5 high passed the integrated confirmation for `p16` at `f9b34532` against `0058f191`. Artifact `reviews/archived/m05-integrated-review-2026-11-27T153651Z.md` (local).
+- The review reused the independent phase code review at `85c94df6`, checked the final wording and verified the gate evidence. The CLI reference's wording already covers the dispatch prerequisite and flags, so the optional editorial note left no fix task.
+
+- m05 exit: the existing project override disabled the configured implementation exit gate. The p16 phase review and the local repository gates passed. The scoped exit carrier is recorded before the integrated confirmation.
+
+- m05 brief amendment: Opus 5.5 high reviewed `ca15522c` and confirmed the evidence clarifications at `c7698727471cfcf9f6c7e79b96815798c910e2e9`. Finding classes: missing Outcome and docs evidence accepted-requirement (brief contract and p16 scope). The decision to preserve the existing reported and no-report dispatch dispositions added no approval or report requirement. The existing project override disabled the goal plan gate.
 
 ### Review Received: d04 (PR #433 closeout retry)
 

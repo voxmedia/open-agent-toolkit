@@ -205,6 +205,9 @@ function createSetCommand(dependencies: LaneDependencies): Command {
       'after',
       `
 An empty value (for example --blocker "") clears a field. Each update appends one History line.
+Use --state completed to close a lane after accepting a result that needs no PR merge.
+Settle the final dispatch with --report, or with --no-report for an interrupted turn.
+You can file the report and complete the lane in the same update.
 With --commit, a shared project's records are committed on this branch; a synced project's live in its nested worktree (publish them with oat project push) and a local project's stay uncommitted, so there is nothing to commit. Pushing is a separate step.`,
     )
     .action(async (lane: string, options: LaneSetOptions, command: Command) => {
