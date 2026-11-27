@@ -74,6 +74,10 @@ New root guidance from `oat pjm init` and `oat decision init` uses level-two
 headings, while exact old level-three blocks are accepted without rewriting.
 `oat project pause --reason` quotes its free text for a lossless status read.
 
+Use `oat project lane set <lane> --state completed` to close a settled freestyle
+lane after accepting a result that needs no PR merge. The ledger keeps its
+report pointer and history.
+
 ## Update Notifications
 
 On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice.

@@ -86,7 +86,7 @@ project is claimed, you are also a lane if your branch is not
 ## Lanes and lane reports
 
 A lane is one delegated line of work inside the project. It is either a
-delegate in its own worktree and branch, with its own pull request, or a
+delegate in its own worktree and branch, or a
 subagent in the orchestrator's checkout limited to the paths its ledger entry
 gives it. A dispatch is one request to a lane that ends in one report: the
 first launch, then each follow-up after the lane's turn ends. Lanes are
@@ -99,13 +99,14 @@ replaces the file in one atomic write. The ledger has three sections:
 - `## Active` holds one block per open lane, rewritten in place, with fields
   such as state, dispatch, next action and owner, handles, worktree, branch,
   base, head and report pointer.
-- `## Closed` holds one line per merged or superseded lane.
+- `## Closed` holds one line per merged, completed or superseded lane.
 - `## History` holds one append-only line per update, with its update ID.
 
 A lane ID not yet listed creates the lane, with dispatch `d01` open. `--state`
 sets one of `dispatched`, `running`, `turn-finished`, `work-settled`,
-`review-accepted`, `merged`, `blocked` or `superseded`; a merged or superseded
-lane moves to `## Closed` and cannot be updated again. A blocked lane takes
+`review-accepted`, `merged`, `completed`, `blocked` or `superseded`. The terminal
+states `merged`, `completed` and `superseded` move the lane to `## Closed`
+permanently. A blocked lane takes
 `--waiting-on owner|lane|linked-project|external`. `--dispatch` opens the
 next dispatch once the last one has closed, `--steer "<text>"` records a
 message sent while the lane runs, and `--no-report` closes an interrupted
@@ -120,6 +121,12 @@ handles; new History lines omit them. Write all records, including ledger
 free text, for their scope's audience: everyone who can read `origin` from
 creation for synced projects, everyone who can read the branch once pushed
 for shared projects, and this checkout only for local projects.
+
+Use `oat project lane set l12 --state completed` when you accept a verification
+or advisory result that needs no PR merge. The final dispatch must be settled.
+You can file its report with `--report <file>` in the same update. A filed report
+ends the dispatch, and `completed` ends the lane. The Closed row retains the
+head and report pointer, and History records the transition.
 
 The project `AGENTS.md` keeps the resume rule: read `lanes.md` and reconcile
 open dispatches before acting. Before dispatching or re-dispatching a lane,

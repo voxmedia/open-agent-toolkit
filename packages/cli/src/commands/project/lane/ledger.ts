@@ -22,6 +22,7 @@ export const LANE_STATES = [
   'work-settled',
   'review-accepted',
   'merged',
+  'completed',
   'blocked',
   'superseded',
 ] as const;
@@ -30,6 +31,7 @@ export type LaneState = (typeof LANE_STATES)[number];
 /** States that move a lane from `## Active` to `## Closed`. */
 export const CLOSED_LANE_STATES: readonly LaneState[] = [
   'merged',
+  'completed',
   'superseded',
 ];
 
@@ -109,8 +111,8 @@ const SEPARATOR = ' · ';
 const PREAMBLE = [
   "The lane ledger. Written only by `oat project lane set` in the orchestrator's",
   'checkout; never edit it by hand, and lanes never write it. Active holds one',
-  'block per open lane, rewritten in place; Closed one line per merged or',
-  'superseded lane; History one line per update, append-only, each with its',
+  'block per open lane, rewritten in place. Closed has one line per merged,',
+  'completed or superseded lane. History has one append-only line per update, each with its',
   'update ID. Filed lane reports are in `lane-reports/`.',
 ];
 
