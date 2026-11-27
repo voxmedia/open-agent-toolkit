@@ -2216,6 +2216,12 @@ This revision also corrects p13’s History description. H1 and M1 check publica
 
 ## Reviews and Gates
 
+### Terminal review
+
+- GPT-6.2 Astra high passed terminal review at `bf10ba93027e71c7f7582c823315a4acc710923b`. Artifact: `reviews/archived/final-code-review-2026-11-27T202737Z.md` (local).
+- Reviewed the five squash deliveries and the terminal bookkeeping. L1 (low, accepted requirement) records a shipped report-template wording gap for no-commit lanes. The archive PR is limited to bookkeeping. L2 (low, bookkeeping) corrected the project state route.
+- All five milestone reviews and exit carriers are fresh. `pnpm check` passed on the terminal branch. The remaining product verification is reused from the merged deliveries, which are unchanged by this branch.
+
 ### Review Received: m05
 
 - Claude Opus 5.5 high passed the integrated confirmation for `p16` at `f9b34532` against `0058f191`. Artifact `reviews/archived/m05-integrated-review-2026-11-27T153651Z.md` (local).

@@ -606,6 +606,6 @@ All five milestones have merged. The goal declaration and outcome audit are reco
 
 None
 
-## Next Milestone
+## Next Action
 
-Run `oat-project-goal` to author the brief and its milestones and approve the first milestone
+Finish the configured closeout sequence and archive the project.
